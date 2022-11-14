@@ -1,0 +1,16 @@
+Language: Cpp
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+IndentWidth: 4
+SpacesBeforeTrailingComments: 2
+BreakBeforeBraces: Allman
+ColumnLimit: 80
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+TabWidth: 4
+UseTab: Never
+BreakBeforeBinaryOperators: All
+AllowAllParametersOfDeclarationOnNextLine: true
+SortIncludes: true
+BreakBeforeTernaryOperators: true
+BinPackArguments: false
+BinPackParameters: false

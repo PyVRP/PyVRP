@@ -1,0 +1,4 @@
+[submodule "hgs/extern/pybind11"]
+	path = hgs/extern/pybind11
+	url = https://github.com/pybind/pybind11
+	branch = stable
