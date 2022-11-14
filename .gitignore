@@ -159,7 +159,7 @@ dmypy.json
 
 # IDE and compiled assets
 .idea/
-build/
+debug/
 release/
 
 # Ignore Mac DS_Store files
