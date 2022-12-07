@@ -1,6 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <algorithm>
 #include <vector>
 
 // Implementation of a matrix in a C++ vector
