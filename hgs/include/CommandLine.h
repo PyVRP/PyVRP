@@ -3,12 +3,15 @@
 
 #include "Config.h"
 
-#include <iostream>  // needed for parse() below
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
-// Class interacting with the command line
-// Parameters can be read from the command line and information can be written
-// to the command line
+/**
+ * The CommandLine class takes the argc and argv parameters and parses them
+ * for algorithm configuration settings, as well as the instance (input data)
+ * and solution (output result) paths.
+ */
 class CommandLine
 {
     int argc;
@@ -25,7 +28,7 @@ public:
     CommandLine(int argc, char **argv) : argc(argc), argv(argv)
     {
         // Check if the number of arguments is odd and at least three, since
-        // the two paths (+program name) should at least be given
+        // the two paths and program name should at least be given.
         if (argc % 2 != 1 || argc < 3)
             throw std::invalid_argument("Incorrect number of arguments");
     }
@@ -34,48 +37,83 @@ public:
 
     [[nodiscard]] char const *solPath() const { return argv[2]; }
 
-    // Extracts run configurations from command line arguments
+    /**
+     * Extracts algorithm configuration.
+     */
     Config parse()
     {
         Config config;
 
-        // Go over all possible command line arguments and store their
-        // values. Explanations per command line argument can be found at
-        // their variable declaration.
-        for (int i = 3; i < argc; i += 2)
+        for (auto idx = 3; idx != argc; idx += 2)
         {
-            if (std::string(argv[i]) == "-t")
-                config.timeLimit = atoi(argv[i + 1]);
-            else if (std::string(argv[i]) == "-it")
-                config.nbIter = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-seed")
-                config.seed = atoi(argv[i + 1]);
-            else if (std::string(argv[i]) == "-veh")
-                config.nbVeh = atoi(argv[i + 1]);
-            else if (std::string(argv[i]) == "-collectStatistics")
-                config.collectStatistics = atoi(argv[i + 1]) != 0;
-            else if (std::string(argv[i]) == "-nbGranular")
-                config.nbGranular = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-initialTimeWarpPenalty")
-                config.initialTimeWarpPenalty
-                    = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-feasBooster")
-                config.feasBooster = atof(argv[i + 1]);
-            else if (std::string(argv[i]) == "-minPopSize")
-                config.minPopSize = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-generationSize")
-                config.generationSize = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-nbElite")
-                config.nbElite = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-nbClose")
-                config.nbClose = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-targetFeasible")
-                config.targetFeasible = atof(argv[i + 1]);
-            else if (std::string(argv[i]) == "-repairProbability")
-                config.repairProbability
-                    = static_cast<size_t>(atoi(argv[i + 1]));
-            else if (std::string(argv[i]) == "-repairBooster")
-                config.repairBooster = static_cast<size_t>(atoi(argv[i + 1]));
+            std::istringstream stream(argv[idx + 1]);
+
+            if (std::string(argv[idx]) == "--seed")
+                stream >> config.seed;
+            else if (std::string(argv[idx]) == "--nbIter")
+                stream >> config.nbIter;
+            else if (std::string(argv[idx]) == "--timeLimit")
+                stream >> config.timeLimit;
+            else if (std::string(argv[idx]) == "--collectStatistics")
+                stream >> std::boolalpha >> config.collectStatistics;
+            else if (std::string(argv[idx]) == "--initialTimeWarpPenalty")
+                stream >> config.initialTimeWarpPenalty;
+            else if (std::string(argv[idx]) == "--nbPenaltyManagement")
+                stream >> config.nbPenaltyManagement;
+            else if (std::string(argv[idx]) == "--feasBooster")
+                stream >> config.feasBooster;
+            else if (std::string(argv[idx]) == "--penaltyIncrease")
+                stream >> config.penaltyIncrease;
+            else if (std::string(argv[idx]) == "--penaltyDecrease")
+                stream >> config.penaltyDecrease;
+            else if (std::string(argv[idx]) == "--minPopSize")
+                stream >> config.minPopSize;
+            else if (std::string(argv[idx]) == "--generationSize")
+                stream >> config.generationSize;
+            else if (std::string(argv[idx]) == "--nbElite")
+                stream >> config.nbElite;
+            else if (std::string(argv[idx]) == "--lbDiversity")
+                stream >> config.lbDiversity;
+            else if (std::string(argv[idx]) == "--ubDiversity")
+                stream >> config.ubDiversity;
+            else if (std::string(argv[idx]) == "--nbClose")
+                stream >> config.nbClose;
+            else if (std::string(argv[idx]) == "--targetFeasible")
+                stream >> config.targetFeasible;
+            else if (std::string(argv[idx]) == "--nbKeepOnRestart")
+                stream >> config.nbKeepOnRestart;
+            else if (std::string(argv[idx]) == "--repairProbability")
+                stream >> config.repairProbability;
+            else if (std::string(argv[idx]) == "--repairBooster")
+                stream >> config.repairBooster;
+            else if (std::string(argv[idx]) == "--selectProbability")
+                stream >> config.selectProbability;
+            else if (std::string(argv[idx]) == "--nbVeh")
+                stream >> config.nbVeh;
+            else if (std::string(argv[idx]) == "--nbGranular")
+                stream >> config.nbGranular;
+            else if (std::string(argv[idx]) == "--weightWaitTime")
+                stream >> config.weightWaitTime;
+            else if (std::string(argv[idx]) == "--weightTimeWarp")
+                stream >> config.weightTimeWarp;
+            else if (std::string(argv[idx]) == "--shouldIntensify")
+                stream >> std::boolalpha >> config.shouldIntensify;
+            else if (std::string(argv[idx]) == "--postProcessPathLength")
+                stream >> config.postProcessPathLength;
+
+            if (stream.fail())
+            {
+                std::ostringstream msg;
+                // clang-format off
+                msg << "Invalid argument: '"
+                    << argv[idx]
+                    << "' cannot be '"
+                    << argv[idx + 1]
+                    << "'.";
+                // clang-format on
+
+                throw std::invalid_argument(msg.str());
+            }
         }
 
         return config;
