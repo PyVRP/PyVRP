@@ -46,6 +46,5 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          ignore: hgs/test
           gcov: true
           gcov_ignore: hgs/extern/* release/* /usr/include/*
