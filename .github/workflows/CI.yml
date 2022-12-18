@@ -39,3 +39,12 @@ jobs:
         run: |
           cmake -Brelease -Shgs
           make --directory=release
+      - name: Test all
+        run: |
+          cd release
+          ctest
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          gcov: true
+          gcov_ignore: hgs/extern

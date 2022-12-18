@@ -15,9 +15,6 @@ template <typename T> class Matrix
                            // represents the matrix)
 
 public:
-    // Empty constructor: with zero columns and a vector of size zero
-    Matrix() : cols_(0), data_(0) {}
-
     // Constructor: create a matrix of size dimension by dimension, using a C++
     // vector of size dimension * dimension.
     explicit Matrix(size_t dimension)
