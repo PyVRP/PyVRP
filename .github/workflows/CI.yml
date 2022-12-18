@@ -43,3 +43,7 @@ jobs:
         run: |
           cd release
           ctest
+      - uses: codecov/codecov-action@v3
+        with:
+          gcov: true
+          gcov_include: hgs/src

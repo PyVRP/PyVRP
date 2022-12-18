@@ -13,6 +13,10 @@ add_definitions(-Werror -Wall -Wextra -Wpedantic -fPIC -Wno-unused-parameter)
 
 if (CMAKE_BUILD_TYPE MATCHES RELEASE)
     add_definitions(-O3 -flto)
+else ()
+    # For code coverage on the test builds
+    add_definitions(-fprofile-arcs -ftest-coverage)
+    add_link_options(-lgcov --coverage)
 endif ()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
