@@ -25,3 +25,6 @@ include_directories(include/stop)
 
 add_subdirectory(extern)
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(test)
