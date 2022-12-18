@@ -22,7 +22,7 @@ public:
 
     // Constructor of the Xorshift random number generator, given a seed stored
     // as state_[0]
-    explicit XorShift128(const int seed = 42)
+    explicit XorShift128(int const seed = 42)
     {
         state_[0] = seed;
         state_[1] = 123456789;
