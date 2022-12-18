@@ -346,18 +346,13 @@ Params::Params(Config const &config,
                std::vector<int> const &servDurs,
                std::vector<std::vector<int>> const &distMat,
                std::vector<int> const &releases)
-    : dist_(distMat.size()),
+    : dist_(distMat),
+      maxDist_(dist_.max()),
       config(config),
       nbClients(static_cast<int>(coords.size()) - 1),
       nbVehicles(std::max(std::min(config.nbVeh, nbClients), 1)),
       vehicleCapacity(vehicleCap)
 {
-    for (size_t i = 0; i != distMat.size(); ++i)
-        for (size_t j = 0; j != distMat[i].size(); ++j)
-            dist(i, j) = distMat[i][j];
-
-    maxDist_ = dist_.max();
-
     // A reasonable scale for the initial values of the penalties
     int const maxDemand = *std::max_element(demands.begin(), demands.end());
     int const initCapPenalty = maxDist_ / std::max(maxDemand, 1);

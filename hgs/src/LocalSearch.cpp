@@ -248,7 +248,7 @@ int LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
 void LocalSearch::loadIndividual(Individual const &indiv)
 {
     for (int client = 0; client <= params.nbClients; client++)
-        clients[client].tw = {&params,
+        clients[client].tw = {&params.dist_,
                               client,
                               client,
                               params.clients[client].servDur,

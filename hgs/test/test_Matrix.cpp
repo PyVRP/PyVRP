@@ -2,15 +2,26 @@
 
 #include "Matrix.h"
 
-TEST(TestMatrix, Constructor)
+TEST(TestMatrix, DimensionConstructors)
 {
-    Matrix<int> square(10);
+    Matrix<int> const square(10);
     ASSERT_EQ(square.size(), 10 * 10);
     ASSERT_EQ(square.max(), 0);  // matrix initialises all zero
 
-    Matrix<int> rectangle(10, 20);
+    Matrix<int> const rectangle(10, 20);
     ASSERT_EQ(rectangle.size(), 10 * 20);
     ASSERT_EQ(square.max(), 0);  // matrix initialises all zero
+}
+
+TEST(TestMatrix, DataConstructor)
+{
+    std::vector<std::vector<int>> data = {{}, {}};
+    Matrix<int> const empty(data);
+    ASSERT_EQ(empty.size(), 0);
+
+    Matrix<int> const nonEmpty({{1, 2}, {1, 2}});
+    ASSERT_EQ(nonEmpty(0, 0), 1);
+    ASSERT_EQ(nonEmpty(0, 1), 2);
 }
 
 TEST(TestMatrix, Elements)
