@@ -47,4 +47,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-          gcov_exclude: hgs/test/*.cpp
+          gcov_ignore: hgs/test/*.cpp
