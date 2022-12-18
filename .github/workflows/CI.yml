@@ -45,5 +45,6 @@ jobs:
           ctest
       - uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-          gcov_include: hgs/src
+          gcov_ignore: hgs/extern
