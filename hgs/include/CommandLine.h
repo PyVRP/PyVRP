@@ -104,11 +104,13 @@ public:
             if (stream.fail())
             {
                 std::ostringstream msg;
+                // clang-format off
                 msg << "Invalid argument: '"
                     << argv[idx]
                     << "' cannot be '"
                     << argv[idx + 1]
                     << "'.";
+                // clang-format on
 
                 throw std::invalid_argument(msg.str());
             }
