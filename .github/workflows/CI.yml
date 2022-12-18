@@ -32,7 +32,7 @@ jobs:
           version: 9
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
-          source: hgs/src, hgs/include
+          source: hgs/src hgs/include
           extensions: h, cpp
           clangFormatVersion: 11
       - name: Make all
