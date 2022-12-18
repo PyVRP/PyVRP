@@ -47,9 +47,6 @@ class Params
     // nbClients + 1, but nothing stored for the depot!)
     std::vector<std::vector<int>> neighbours;
 
-    Matrix<int> dist_;  // Distance matrix (+depot)
-    int maxDist_;       // Maximum distance in the distance matrix
-
     /**
      * Calculate, for all vertices, the correlation ('nearness') of the
      * nbGranular closest vertices.
@@ -58,6 +55,8 @@ class Params
 
 public:
     // TODO make members private
+    Matrix<int> dist_;  // Distance matrix (+depot)
+    int maxDist_;       // Maximum distance in the distance matrix
 
     Config const config;  // Stores all the parameter values
 

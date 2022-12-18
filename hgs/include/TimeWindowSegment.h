@@ -1,37 +1,36 @@
 #ifndef TIMEWINDOWDATA_H
 #define TIMEWINDOWDATA_H
 
-#include "Params.h"
+#include "Matrix.h"
 
 class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    Params const *params = nullptr;
-
-    int idxFirst = 0;     // Index of the first client in the segment
-    int idxLast = 0;      // Index of the last client in the segment
-    int duration = 0;     // Total duration, incl. waiting and servicing
-    int timeWarp = 0;     // Cumulative time warp
-    int twEarly = 0;      // Earliest visit moment of first client in segment
-    int twLate = 0;       // Latest visit moment of last client in segment
-    int lastRelease = 0;  // Latest release time; cannot leave depot before
+    Matrix<int> const *dist = nullptr;  // Distance matrix
+    int idxFirst = 0;  // Index of the first client in the segment
+    int idxLast = 0;   // Index of the last client in the segment
+    int duration = 0;  // Total duration, incl. waiting and servicing
+    int timeWarp = 0;  // Cumulative time warp
+    int twEarly = 0;   // Earliest visit moment of first client
+    int twLate = 0;    // Latest visit moment of last client
+    int release = 0;   // Release time; cannot leave depot earlier
 
     [[nodiscard]] TWS merge(TWS const &other) const
     {
-        int const dist = params->dist(idxLast, other.idxFirst);
-        int const delta = duration - timeWarp + dist;
+        int const distance = (*dist)(idxLast, other.idxFirst);
+        int const delta = duration - timeWarp + distance;
         int const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
         int const deltaTimeWarp = std::max(twEarly + delta - other.twLate, 0);
 
-        return {params,
+        return {dist,
                 idxFirst,
                 other.idxLast,
-                duration + other.duration + dist + deltaWaitTime,
+                duration + other.duration + distance + deltaWaitTime,
                 timeWarp + other.timeWarp + deltaTimeWarp,
                 std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
                 std::min(other.twLate - delta, twLate) + deltaTimeWarp,
-                std::max(lastRelease, other.lastRelease)};
+                std::max(release, other.release)};
     }
 
 public:
@@ -58,27 +57,27 @@ public:
      */
     [[nodiscard]] int totalTimeWarp() const
     {
-        return segmentTimeWarp() + std::max(lastRelease - twLate, 0);
+        return segmentTimeWarp() + std::max(release - twLate, 0);
     }
 
     TimeWindowSegment() = default;  // TODO get rid of this constructor
 
-    TimeWindowSegment(Params const *params,
+    TimeWindowSegment(Matrix<int> const *dist,
                       int idxFirst,
                       int idxLast,
                       int duration,
                       int timeWarp,
                       int twEarly,
                       int twLate,
-                      int latestReleaseTime)
-        : params(params),
+                      int release)
+        : dist(dist),
           idxFirst(idxFirst),
           idxLast(idxLast),
           duration(duration),
           timeWarp(timeWarp),
           twEarly(twEarly),
           twLate(twLate),
-          lastRelease(latestReleaseTime)
+          release(release)
     {
     }
 };
