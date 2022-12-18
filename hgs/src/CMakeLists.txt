@@ -37,8 +37,8 @@ set(statisticsSources
 set(timeWindowSegmentSources
         TimeWindowSegment.cpp)
 
-# (Internal) library
-add_library(hgs
+# Internal library
+add_library(libhgs
         ${geneticSources}
         ${individualSources}
         ${localSearchSources}
@@ -51,9 +51,9 @@ add_library(hgs
         ${timeWindowSegmentSources})
 
 # Executable
-add_executable(genvrp main.cpp)
-target_link_libraries(genvrp PRIVATE hgs)
+add_executable(hgs main.cpp)
+target_link_libraries(hgs PRIVATE libhgs)
 
 # Python bindings
 pybind11_add_module(hgspy bindings.cpp)
-target_link_libraries(hgspy PRIVATE hgs)
+target_link_libraries(hgspy PRIVATE libhgs)
