@@ -11,7 +11,7 @@
 #include <vector>
 
 Params::Params(Config const &config, std::string const &instPath)
-    : config(config)
+    : dist_(0), config(config)
 {
     // Initialize some parameter values
     std::string content, content2, content3;
@@ -346,13 +346,12 @@ Params::Params(Config const &config,
                std::vector<int> const &servDurs,
                std::vector<std::vector<int>> const &distMat,
                std::vector<int> const &releases)
-    : config(config),
+    : dist_(distMat.size()),
+      config(config),
       nbClients(static_cast<int>(coords.size()) - 1),
       nbVehicles(std::max(std::min(config.nbVeh, nbClients), 1)),
       vehicleCapacity(vehicleCap)
 {
-    dist_ = Matrix<int>(distMat.size());
-
     for (size_t i = 0; i != distMat.size(); ++i)
         for (size_t j = 0; j != distMat[i].size(); ++j)
             dist(i, j) = distMat[i][j];

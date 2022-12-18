@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 include(GoogleTest)
 
-add_executable(test_Individual test_Individual.cpp)
-target_link_libraries(test_Individual GTest::gtest_main)
+add_executable(test_Matrix test_Matrix.cpp)
+target_link_libraries(test_Matrix GTest::gtest_main)
+gtest_discover_tests(test_Matrix)
 
-gtest_discover_tests(test_Individual)
+add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
+target_link_libraries(test_TimeWindowSegment GTest::gtest_main)
+gtest_discover_tests(test_TimeWindowSegment)
