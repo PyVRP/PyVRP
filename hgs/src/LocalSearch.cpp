@@ -4,6 +4,7 @@
 #include "Params.h"
 
 #include <numeric>
+#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -40,7 +41,7 @@ void LocalSearch::search(Individual &indiv)
 
             // Shuffling the neighbours in this loop should not matter much as
             // we are already randomizing the nodes U.
-            for (auto const vClient : params.getNeighboursOf(uClient))
+            for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
 
@@ -245,6 +246,83 @@ int LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
     return totalDist + params.twPenalty(tws.totalTimeWarp());
 }
 
+void LocalSearch::calculateNeighbours()
+{
+    // TODO clean up this method / rethink proximity determination
+    auto proximities
+        = std::vector<std::vector<std::pair<int, int>>>(params.nbClients + 1);
+
+    for (int i = 1; i <= params.nbClients; i++)  // exclude depot
+    {
+        auto &proximity = proximities[i];
+
+        for (int j = 1; j <= params.nbClients; j++)  // exclude depot
+        {
+            if (i == j)  // exclude the current client
+                continue;
+
+            // Compute proximity using Eq. 4 in Vidal 2012. The proximity is
+            // computed by the distance, min. wait time and min. time warp
+            // going from either i -> j or j -> i, whichever is the least.
+            int const maxRelease = std::max(params.clients[i].releaseTime,
+                                            params.clients[j].releaseTime);
+
+            // Proximity from j to i
+            int const waitTime1 = params.clients[i].twEarly - params.dist(j, i)
+                                  - params.clients[j].servDur
+                                  - params.clients[j].twLate;
+
+            int const earliestArrival1 = std::max(
+                maxRelease + params.dist(0, j), params.clients[j].twEarly);
+
+            int const timeWarp1 = earliestArrival1 + params.clients[j].servDur
+                                  + params.dist(j, i)
+                                  - params.clients[i].twLate;
+
+            int const prox1
+                = params.dist(j, i)
+                  + params.config.weightWaitTime * std::max(0, waitTime1)
+                  + params.config.weightTimeWarp * std::max(0, timeWarp1);
+
+            // Proximity from i to j
+            int const waitTime2 = params.clients[j].twEarly - params.dist(i, j)
+                                  - params.clients[i].servDur
+                                  - params.clients[i].twLate;
+            int const earliestArrival2 = std::max(
+                maxRelease + params.dist(0, i), params.clients[i].twEarly);
+            int const timeWarp2 = earliestArrival2 + params.clients[i].servDur
+                                  + params.dist(i, j)
+                                  - params.clients[j].twLate;
+            int const prox2
+                = params.dist(i, j)
+                  + params.config.weightWaitTime * std::max(0, waitTime2)
+                  + params.config.weightTimeWarp * std::max(0, timeWarp2);
+
+            proximity.emplace_back(std::min(prox1, prox2), j);
+        }
+
+        std::sort(proximity.begin(), proximity.end());
+    }
+
+    // First create a set of correlated vertices for each vertex (where the
+    // depot is not taken into account)
+    std::vector<std::set<int>> set(params.nbClients + 1);
+    size_t const granularity = std::min(
+        params.config.nbGranular, static_cast<size_t>(params.nbClients) - 1);
+
+    for (int i = 1; i <= params.nbClients; i++)  // again exclude depot
+    {
+        auto const &orderProximity = proximities[i];
+
+        for (size_t j = 0; j != granularity; ++j)
+            set[i].insert(orderProximity[j].second);
+    }
+
+    for (int i = 1; i <= params.nbClients; i++)
+        for (int x : set[i])
+            neighbours[i].push_back(x);
+}
+
 void LocalSearch::loadIndividual(Individual const &indiv)
 {
     for (int client = 0; client <= params.nbClients; client++)
@@ -343,6 +421,7 @@ Individual LocalSearch::exportIndividual()
 LocalSearch::LocalSearch(Params &params, XorShift128 &rng)
     : params(params),
       rng(rng),
+      neighbours(params.nbClients + 1),
       orderNodes(params.nbClients),
       orderRoutes(params.nbVehicles),
       lastModified(params.nbVehicles, -1)
@@ -354,6 +433,8 @@ LocalSearch::LocalSearch(Params &params, XorShift128 &rng)
     routes = std::vector<Route>(params.nbVehicles);
     startDepots = std::vector<Node>(params.nbVehicles);
     endDepots = std::vector<Node>(params.nbVehicles);
+
+    calculateNeighbours();
 
     for (int i = 0; i <= params.nbClients; i++)
     {

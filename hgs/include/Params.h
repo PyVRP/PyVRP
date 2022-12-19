@@ -43,20 +43,9 @@ class Params
         }
     };
 
-    // Neighborhood restrictions: For each client, list of nearby clients (size
-    // nbClients + 1, but nothing stored for the depot!)
-    std::vector<std::vector<int>> neighbours;
-
-    /**
-     * Calculate, for all vertices, the correlation ('nearness') of the
-     * nbGranular closest vertices.
-     */
-    void calculateNeighbours();
-
 public:
     // TODO make members private
     Matrix<int> dist_;  // Distance matrix (+depot)
-    int maxDist_;       // Maximum distance in the distance matrix
 
     Config const config;  // Stores all the parameter values
 
@@ -93,16 +82,6 @@ public:
     {
         return PenaltyBooster(this);
     }
-
-    /**
-     * Returns the nbGranular clients nearest/closest to the passed-in client.
-     */
-    [[nodiscard]] std::vector<int> const &getNeighboursOf(size_t client) const
-    {
-        return neighbours[client];
-    }
-
-    [[nodiscard]] int maxDist() const { return maxDist_; }
 
     [[nodiscard]] int &dist(size_t row, size_t col) { return dist_(row, col); }
 

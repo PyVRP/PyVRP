@@ -20,6 +20,10 @@ class LocalSearch
     Params &params;    // Problem parameters
     XorShift128 &rng;  // Random number generator
 
+    // Neighborhood restrictions: For each client, list of nearby clients (size
+    // nbClients + 1, but nothing stored for the depot!)
+    std::vector<std::vector<int>> neighbours;
+
     std::vector<int> orderNodes;   // random node order used in RI operators
     std::vector<int> orderRoutes;  // random route order used in SWAP* operators
 
@@ -57,6 +61,12 @@ class LocalSearch
                                Node const *before,
                                Node const *after,
                                Route const &route) const;
+
+    /**
+     * Calculate, for all vertices, the correlation ('nearness') of the
+     * nbGranular closest vertices.
+     */
+    void calculateNeighbours();
 
 public:
     /**

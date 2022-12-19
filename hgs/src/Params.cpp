@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -296,45 +295,20 @@ Params::Params(Config const &config, std::string const &instPath)
         }
 
         if (nbClients <= 0)
-        {
             throw std::runtime_error("Number of nodes is undefined");
-        }
+
         if (vehicleCapacity == INT_MAX)
             throw std::runtime_error("Vehicle capacity is undefined");
     }
 
     nbVehicles = config.nbVeh >= nbClients ? nbClients : config.nbVeh;
-    maxDist_ = dist_.max();
 
-    // Calculate, for all vertices, the correlation for the nbGranular closest
-    // vertices
-    calculateNeighbours();
-
-    // Safeguards to avoid possible numerical instability in case of instances
-    // containing arbitrarily small or large numerical values
-    if (maxDist_ < 0.1 || maxDist_ > 100000)
-    {
-        throw std::runtime_error(
-            "The distances are of very small or large scale. This could impact "
-            "numerical stability. Please rescale the dataset and run again.");
-    }
-    if (maxDemand < 0.1 || maxDemand > 100000)
-    {
-        throw std::runtime_error(
-            "The demand quantities are of very small or large scale. This "
-            "could impact numerical stability. Please rescale the dataset and "
-            "run again.");
-    }
     if (nbVehicles < std::ceil(totalDemand / vehicleCapacity))
-    {
-        throw std::runtime_error(
-            "Fleet size is insufficient to service the considered clients.");
-    }
+        throw std::runtime_error("Fleet size insufficient for all clients.");
 
     // A reasonable scale for the initial values of the penalties
-    penaltyCapacity = std::max(1, std::min(1000, maxDist_ / maxDemand));
+    penaltyCapacity = std::max(1, std::min(1000, dist_.max() / maxDemand));
 
-    // Initial parameter values of this parameter is not argued
     penaltyTimeWarp = static_cast<int>(config.initialTimeWarpPenalty);
 }
 
@@ -347,7 +321,6 @@ Params::Params(Config const &config,
                std::vector<std::vector<int>> const &distMat,
                std::vector<int> const &releases)
     : dist_(distMat),
-      maxDist_(dist_.max()),
       config(config),
       nbClients(static_cast<int>(coords.size()) - 1),
       nbVehicles(std::max(std::min(config.nbVeh, nbClients), 1)),
@@ -355,10 +328,9 @@ Params::Params(Config const &config,
 {
     // A reasonable scale for the initial values of the penalties
     int const maxDemand = *std::max_element(demands.begin(), demands.end());
-    int const initCapPenalty = maxDist_ / std::max(maxDemand, 1);
+    int const initCapPenalty = dist_.max() / std::max(maxDemand, 1);
     penaltyCapacity = std::max(std::min(1000, initCapPenalty), 1);
 
-    // Initial parameter values of this parameter is not argued
     penaltyTimeWarp = static_cast<int>(config.initialTimeWarpPenalty);
 
     clients = std::vector<Client>(nbClients + 1);
@@ -371,75 +343,4 @@ Params::Params(Config const &config,
                         timeWindows[idx].first,
                         timeWindows[idx].second,
                         releases[idx]};
-
-    calculateNeighbours();
-}
-
-void Params::calculateNeighbours()
-{
-    auto proximities
-        = std::vector<std::vector<std::pair<int, int>>>(nbClients + 1);
-
-    for (int i = 1; i <= nbClients; i++)  // exclude depot
-    {
-        auto &proximity = proximities[i];
-
-        for (int j = 1; j <= nbClients; j++)  // exclude depot
-        {
-            if (i == j)  // exclude the current client
-                continue;
-
-            // Compute proximity using Eq. 4 in Vidal 2012. The proximity is
-            // computed by the distance, min. wait time and min. time warp
-            // going from either i -> j or j -> i, whichever is the least.
-            int const maxRelease
-                = std::max(clients[i].releaseTime, clients[j].releaseTime);
-
-            // Proximity from j to i
-            int const waitTime1 = clients[i].twEarly - dist(j, i)
-                                  - clients[j].servDur - clients[j].twLate;
-            int const earliestArrival1
-                = std::max(maxRelease + dist(0, j), clients[j].twEarly);
-            int const timeWarp1 = earliestArrival1 + clients[j].servDur
-                                  + dist(j, i) - clients[i].twLate;
-            int const prox1 = dist(j, i)
-                              + config.weightWaitTime * std::max(0, waitTime1)
-                              + config.weightTimeWarp * std::max(0, timeWarp1);
-
-            // Proximity from i to j
-            int const waitTime2 = clients[j].twEarly - dist(i, j)
-                                  - clients[i].servDur - clients[i].twLate;
-            int const earliestArrival2
-                = std::max(maxRelease + dist(0, i), clients[i].twEarly);
-            int const timeWarp2 = earliestArrival2 + clients[i].servDur
-                                  + dist(i, j) - clients[j].twLate;
-            int const prox2 = dist(i, j)
-                              + config.weightWaitTime * std::max(0, waitTime2)
-                              + config.weightTimeWarp * std::max(0, timeWarp2);
-
-            proximity.emplace_back(std::min(prox1, prox2), j);
-        }
-
-        std::sort(proximity.begin(), proximity.end());
-    }
-
-    neighbours = std::vector<std::vector<int>>(nbClients + 1);
-
-    // First create a set of correlated vertices for each vertex (where the
-    // depot is not taken into account)
-    std::vector<std::set<int>> set(nbClients + 1);
-    size_t const granularity
-        = std::min(config.nbGranular, static_cast<size_t>(nbClients) - 1);
-
-    for (int i = 1; i <= nbClients; i++)  // again exclude depot
-    {
-        auto const &orderProximity = proximities[i];
-
-        for (size_t j = 0; j != granularity; ++j)
-            set[i].insert(orderProximity[j].second);
-    }
-
-    for (int i = 1; i <= nbClients; i++)
-        for (int x : set[i])
-            neighbours[i].push_back(x);
 }
