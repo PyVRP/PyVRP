@@ -2,6 +2,8 @@
 
 #include "Matrix.h"
 
+#include <stdexcept>
+
 TEST(TestMatrix, dimensionCtor)
 {
     Matrix<int> const square(10);

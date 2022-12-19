@@ -2,7 +2,7 @@
 
 #include "XorShift128.h"
 
-TEST(TestXorShift128, Bounds)
+TEST(TestXorShift128, bounds)
 {
     XorShift128 rng;
     ASSERT_EQ(rng.min(), 0);
