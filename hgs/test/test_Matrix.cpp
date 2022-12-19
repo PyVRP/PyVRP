@@ -24,6 +24,15 @@ TEST(TestMatrix, DataConstructor)
     ASSERT_EQ(nonEmpty(0, 1), 2);
 }
 
+TEST(TestMatrix, DataConstructorThrows)
+{
+    // Second row is shorter than first, so this should throw.
+    ASSERT_THROW(Matrix<int>({{1, 2}, {1}}), std::invalid_argument);
+
+    // Second row is longer than first, so this should also throw.
+    ASSERT_THROW(Matrix<int>({{1, 2}, {1, 2, 3}}), std::invalid_argument);
+}
+
 TEST(TestMatrix, Elements)
 {
     Matrix<int> m(10);

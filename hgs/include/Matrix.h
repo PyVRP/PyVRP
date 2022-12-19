@@ -2,18 +2,15 @@
 #define MATRIX_H
 
 #include <algorithm>
-#include <initializer_list>
+#include <sstream>
+#include <stdexcept>
 #include <vector>
 
-// Implementation of a matrix in a C++ vector
-// This class is used because a flat vector is faster than a vector of vectors
-// which requires two lookup operations rather than one to index a matrix
-// element
 template <typename T> class Matrix
 {
     size_t cols_;          // The number of columns of the matrix
-    std::vector<T> data_;  // The vector where all the data is stored (this
-                           // represents the matrix)
+    size_t rows_;          // The number of rows of the matrix
+    std::vector<T> data_;  // Data vector
 
 public:
     /**
@@ -22,7 +19,18 @@ public:
      * @param dimension Size of one side.
      */
     explicit Matrix(size_t dimension)
-        : cols_(dimension), data_(dimension * dimension)
+        : cols_(dimension), rows_(dimension), data_(dimension * dimension)
+    {
+    }
+
+    /**
+     * Creates a matrix of size nRows * nCols.
+     *
+     * @param nRows Number of rows.
+     * @param nCols Number of columns.
+     */
+    Matrix(size_t nRows, size_t nCols)
+        : cols_(nCols), rows_(nRows), data_(nRows * nCols)
     {
     }
 
@@ -35,20 +43,21 @@ public:
     explicit Matrix(std::vector<std::vector<T>> const &data)
         : Matrix(data.size(), data.empty() ? 0 : data[0].size())
     {
-        auto const nRows = data_.empty() ? 0 : data_.size() / cols_;
+        for (size_t i = 0; i != rows_; ++i)
+        {
+            auto const size = data[i].size();
 
-        for (size_t i = 0; i != nRows; ++i)
+            if (size != cols_)
+            {
+                std::ostringstream msg;
+                msg << "Expected " << cols_ << "elements, got " << size << ".";
+                throw std::invalid_argument(msg.str());
+            }
+
             for (size_t j = 0; j != cols_; ++j)
                 data_[cols_ * i + j] = data[i][j];
+        }
     }
-
-    /**
-     * Creates a matrix of size nRows * nCols.
-     *
-     * @param nRows Number of rows.
-     * @param nCols Number of columns.
-     */
-    Matrix(size_t nRows, size_t nCols) : cols_(nCols), data_(nRows * nCols) {}
 
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col)
     {
