@@ -2,7 +2,9 @@
 
 #include "Matrix.h"
 
-TEST(TestMatrix, DimensionConstructors)
+#include <stdexcept>
+
+TEST(TestMatrix, dimensionCtor)
 {
     Matrix<int> const square(10);
     ASSERT_EQ(square.size(), 10 * 10);
@@ -13,7 +15,7 @@ TEST(TestMatrix, DimensionConstructors)
     ASSERT_EQ(square.max(), 0);  // matrix initialises all zero
 }
 
-TEST(TestMatrix, DataConstructor)
+TEST(TestMatrix, dataCtor)
 {
     std::vector<std::vector<int>> data = {{}, {}};
     Matrix<int> const empty(data);
@@ -24,7 +26,16 @@ TEST(TestMatrix, DataConstructor)
     ASSERT_EQ(nonEmpty(0, 1), 2);
 }
 
-TEST(TestMatrix, Elements)
+TEST(TestMatrix, dataCtorThrows)
+{
+    // Second row is shorter than first, so this should throw.
+    ASSERT_THROW(Matrix<int>({{1, 2}, {1}}), std::invalid_argument);
+
+    // Second row is longer than first, so this should also throw.
+    ASSERT_THROW(Matrix<int>({{1, 2}, {1, 2, 3}}), std::invalid_argument);
+}
+
+TEST(TestMatrix, elementAccess)
 {
     Matrix<int> m(10);
 

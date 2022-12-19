@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 include(GoogleTest)
 
+add_executable(test_CommandLine test_CommandLine.cpp)
+target_link_libraries(test_CommandLine GTest::gtest_main)
+gtest_discover_tests(test_CommandLine)
+
 add_executable(test_Matrix test_Matrix.cpp)
 target_link_libraries(test_Matrix GTest::gtest_main)
 gtest_discover_tests(test_Matrix)
