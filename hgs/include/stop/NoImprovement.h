@@ -4,6 +4,7 @@
 #include "StoppingCriterion.h"
 
 #include <climits>
+#include <stdexcept>
 
 class NoImprovement : public StoppingCriterion
 {
@@ -14,20 +15,21 @@ class NoImprovement : public StoppingCriterion
 public:
     bool operator()(size_t const bestCost) override
     {
+        currIters++;
+
         if (bestCost < target)
         {
             target = bestCost;
             currIters = 0;
-            return false;
         }
 
-        return maxIters < ++currIters;
+        return maxIters <= currIters;
     }
 
     explicit NoImprovement(size_t const maxIterations) : maxIters(maxIterations)
     {
         if (maxIterations == 0)
-            throw std::runtime_error("Zero iterations is not understood.");
+            throw std::invalid_argument("Zero iterations is not understood.");
     }
 };
 
