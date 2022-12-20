@@ -6,15 +6,6 @@
 #include <memory>
 #include <vector>
 
-void Population::generatePopulation(size_t numToGenerate)
-{
-    for (size_t count = 0; count != numToGenerate; ++count)  // generate random
-    {                                                        // individuals
-        Individual randomIndiv(&params, &rng);
-        addIndividual(randomIndiv);
-    }
-}
-
 void Population::addIndividual(Individual const &indiv)
 {
     auto &subPop = indiv.isFeasible() ? feasible : infeasible;
@@ -97,14 +88,6 @@ void Population::removeWorstBiasedFitness(SubPopulation &subPop)
     subPop.erase(subPop.begin() + worstIdx);
 }
 
-void Population::restart()
-{
-    feasible.resize(std::min(params.config.nbKeepOnRestart, feasible.size()));
-    infeasible.clear();
-
-    generatePopulation(params.config.minPopSize);
-}
-
 Individual const *Population::getBinaryTournament()
 {
     auto const fSize = feasible.size();
@@ -143,5 +126,10 @@ Population::Population(Params &params, XorShift128 &rng)
       rng(rng),
       bestSol(&params, &rng)  // random initial best solution
 {
-    generatePopulation(params.config.minPopSize);
+    // Generate minPopSize random individuals to seed the population.
+    for (size_t count = 0; count != params.config.minPopSize; ++count)
+    {
+        Individual randomIndiv(&params, &rng);
+        addIndividual(randomIndiv);
+    }
 }

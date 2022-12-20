@@ -51,9 +51,6 @@ private:
     // Removes the worst individual in terms of biased fitness
     static void removeWorstBiasedFitness(SubPopulation &subPop);
 
-    // Generates a population of passed-in size
-    void generatePopulation(size_t popSize);
-
     // Selects an individual by binary tournament
     Individual const *getBinaryTournament();
 
@@ -61,11 +58,6 @@ public:
     // Add an individual in the population. Survivor selection is automatically
     // triggered whenever the population reaches its maximum size.
     void addIndividual(Individual const &indiv);
-
-    // Cleans all solutions and generates a new initial population (only used
-    // when running HGS until a time limit, in which case the algorithm restarts
-    // until the time limit is reached)
-    void restart();
 
     /**
      * Re-orders the population by cost.
@@ -86,15 +78,6 @@ public:
      * Returns the best feasible solution that was observed during iteration.
      */
     [[nodiscard]] Individual const &getBestFound() const { return bestSol; }
-
-    /**
-     * Returns the current best objective value in the feasible sub-population
-     * or ``INT_MAX`` if no feasible solution exists.
-     */
-    [[nodiscard]] size_t getCurrentBestFeasibleCost() const
-    {
-        return !feasible.empty() ? feasible[0].indiv->cost() : INT_MAX;
-    }
 
     Population(Params &params, XorShift128 &rng);
 };

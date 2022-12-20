@@ -50,8 +50,6 @@ public:
 
             if (std::string(argv[idx]) == "--seed")
                 stream >> config.seed;
-            else if (std::string(argv[idx]) == "--nbIter")
-                stream >> config.nbIter;
             else if (std::string(argv[idx]) == "--timeLimit")
                 stream >> config.timeLimit;
             else if (std::string(argv[idx]) == "--collectStatistics")
@@ -80,8 +78,6 @@ public:
                 stream >> config.nbClose;
             else if (std::string(argv[idx]) == "--targetFeasible")
                 stream >> config.targetFeasible;
-            else if (std::string(argv[idx]) == "--nbKeepOnRestart")
-                stream >> config.nbKeepOnRestart;
             else if (std::string(argv[idx]) == "--repairProbability")
                 stream >> config.repairProbability;
             else if (std::string(argv[idx]) == "--repairBooster")

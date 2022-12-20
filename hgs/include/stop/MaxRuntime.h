@@ -4,7 +4,11 @@
 #include "StoppingCriterion.h"
 
 #include <chrono>
+#include <stdexcept>
 
+/**
+ * Stopping criterion that stops after a given runtime (in seconds).
+ */
 class MaxRuntime : public StoppingCriterion
 {
     using clock = std::chrono::system_clock;
@@ -14,7 +18,7 @@ class MaxRuntime : public StoppingCriterion
     clock::time_point const start;
 
 public:
-    bool operator()() override
+    bool operator()(size_t const bestCost) override
     {
         return seconds(clock::now() - start).count() >= maxRuntime;
     }
@@ -27,7 +31,7 @@ public:
         : maxRuntime(maxRuntime), start(clock::now())
     {
         if (maxRuntime <= 0)
-            throw std::runtime_error("Run-time <= 0 is not understood.");
+            throw std::invalid_argument("Run-time <= 0 is not understood.");
     }
 };
 
