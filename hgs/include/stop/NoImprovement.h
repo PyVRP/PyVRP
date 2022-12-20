@@ -10,11 +10,11 @@ class NoImprovement : public StoppingCriterion
     size_t currIters = 0;
 
 public:
-    bool operator()(Individual const &best) override
+    bool operator()(size_t const bestCost) override
     {
-        if (best.cost() < target)
+        if (bestCost < target)
         {
-            target = best.cost();
+            target = bestCost;
             currIters = 0;
             return false;
         }

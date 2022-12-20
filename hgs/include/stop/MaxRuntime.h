@@ -14,7 +14,7 @@ class MaxRuntime : public StoppingCriterion
     clock::time_point const start;
 
 public:
-    bool operator()(Individual const &best) override
+    bool operator()(size_t const bestCost) override
     {
         return seconds(clock::now() - start).count() >= maxRuntime;
     }
