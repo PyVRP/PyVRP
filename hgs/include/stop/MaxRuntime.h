@@ -4,6 +4,7 @@
 #include "StoppingCriterion.h"
 
 #include <chrono>
+#include <stdexcept>
 
 class MaxRuntime : public StoppingCriterion
 {
@@ -27,7 +28,7 @@ public:
         : maxRuntime(maxRuntime), start(clock::now())
     {
         if (maxRuntime <= 0)
-            throw std::runtime_error("Run-time <= 0 is not understood.");
+            throw std::invalid_argument("Run-time <= 0 is not understood.");
     }
 };
 

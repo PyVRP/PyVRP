@@ -26,7 +26,7 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
         return {population.getBestFound(), stats, iter, 0.};
 
     auto start = clock::now();
-    while (not stop(population.getBestFound()))
+    while (not stop(population.getBestFound().cost()))
     {
         iter++;
 
