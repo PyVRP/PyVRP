@@ -10,7 +10,6 @@
 struct Config
 {
     int seed = 0;                    // Random seed
-    size_t nbIter = 10'000;          // iters without improvement
     int timeLimit = INT_MAX;         // time limit in seconds
     bool collectStatistics = false;  // collect runtime statistics?
 
@@ -28,7 +27,6 @@ struct Config
     double ubDiversity = 0.5;      // maximum pct difference in parent diversity
     size_t nbClose = 5;            // # individuals when calculating diversity
     double targetFeasible = 0.43;  // target feasible pop fraction
-    size_t nbKeepOnRestart = 0;    // # individuals to keep when restarting
 
     size_t repairProbability = 79;  // probability of repair if infeasible
     size_t repairBooster = 12;      // penalty booster when repairing
@@ -50,7 +48,6 @@ struct Config
     size_t postProcessPathLength = 7;
 
     explicit Config(int seed = 0,
-                    size_t nbIter = 10'000,
                     int timeLimit = INT_MAX,
                     bool collectStatistics = false,
                     size_t initialTimeWarpPenalty = 6,
@@ -65,7 +62,6 @@ struct Config
                     double ubDiversity = 0.5,
                     size_t nbClose = 5,
                     double targetFeasible = 0.43,
-                    size_t nbKeepOnRestart = 0,
                     size_t repairProbability = 79,
                     size_t repairBooster = 12,
                     size_t selectProbability = 90,
@@ -76,7 +72,6 @@ struct Config
                     bool shouldIntensify = true,
                     size_t postProcessPathLength = 7)
         : seed(seed),
-          nbIter(nbIter),
           timeLimit(timeLimit),
           collectStatistics(collectStatistics),
           initialTimeWarpPenalty(initialTimeWarpPenalty),
@@ -91,7 +86,6 @@ struct Config
           ubDiversity(ubDiversity),
           nbClose(nbClose),
           targetFeasible(targetFeasible),
-          nbKeepOnRestart(nbKeepOnRestart),
           repairProbability(repairProbability),
           repairBooster(repairBooster),
           selectProbability(selectProbability),

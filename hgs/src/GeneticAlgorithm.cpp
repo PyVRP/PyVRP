@@ -20,35 +20,18 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
                                  "crossover operators.");
 
     Statistics stats;
-
     size_t iter = 0;
-    size_t nbIterNoImprove = 1;
 
     if (params.nbClients <= 1)
         return {population.getBestFound(), stats, iter, 0.};
 
     auto start = clock::now();
-    while (not stop())
+    while (not stop(population.getBestFound().cost()))
     {
         iter++;
 
-        if (nbIterNoImprove == params.config.nbIter)  // restart population
-        {                                             // after this number of
-            population.restart();                     // non-improving iters
-            nbIterNoImprove = 1;
-        }
-
-        auto const currBest = population.getCurrentBestFeasibleCost();
-
         auto offspring = crossover();
         educate(offspring);
-
-        auto const newBest = population.getCurrentBestFeasibleCost();
-
-        if (newBest < currBest)  // has new best!
-            nbIterNoImprove = 1;
-        else
-            nbIterNoImprove++;
 
         // Diversification and penalty management
         if (iter % params.config.nbPenaltyManagement == 0)

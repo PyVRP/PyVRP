@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 include(GoogleTest)
 
+add_subdirectory(stop)
+
 add_executable(test_CommandLine test_CommandLine.cpp)
 target_link_libraries(test_CommandLine GTest::gtest_main)
 gtest_discover_tests(test_CommandLine)
