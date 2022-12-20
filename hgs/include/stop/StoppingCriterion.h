@@ -1,6 +1,12 @@
 #ifndef STOPPINGCRITERION_H
 #define STOPPINGCRITERION_H
 
+/**
+ * Base class for a stopping criterion.
+ *
+ * A stopping criterion has a callable member that returns a boolean that's
+ * true the first time the algorithm should stop. Otherwise false.
+ */
 class StoppingCriterion
 {
 public:

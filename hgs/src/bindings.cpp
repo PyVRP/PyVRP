@@ -15,6 +15,7 @@
 #include "Statistics.h"
 #include "StoppingCriterion.h"
 #include "SwapStar.h"
+#include "TimedNoImprovement.h"
 #include "TwoOpt.h"
 #include "XorShift128.h"
 #include "crossover.h"
@@ -221,7 +222,13 @@ PYBIND11_MODULE(hgspy, m)
         .def("__call__", &MaxRuntime::operator(), py::arg("best_cost"));
 
     py::class_<NoImprovement, StoppingCriterion>(stop, "NoImprovement")
-        .def(py::init<double>(), py::arg("max_iterations"))
+        .def(py::init<size_t>(), py::arg("max_iterations"))
+        .def("__call__", &NoImprovement::operator(), py::arg("best_cost"));
+
+    py::class_<TimedNoImprovement, StoppingCriterion>(stop,
+                                                      "TimedNoImprovement")
+        .def(py::init<size_t, double>(),
+             py::arg("max_iterations") py::arg("max_runtime"))
         .def("__call__", &NoImprovement::operator(), py::arg("best_cost"));
 
     // Crossover operators (as a submodule)

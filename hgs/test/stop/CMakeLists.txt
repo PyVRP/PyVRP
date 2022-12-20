@@ -13,3 +13,7 @@ gtest_discover_tests(test_MaxIterations)
 add_executable(test_NoImprovement test_NoImprovement.cpp)
 target_link_libraries(test_NoImprovement GTest::gtest_main)
 gtest_discover_tests(test_NoImprovement)
+
+add_executable(test_TimedNoImprovement test_TimedNoImprovement.cpp)
+target_link_libraries(test_TimedNoImprovement GTest::gtest_main)
+gtest_discover_tests(test_TimedNoImprovement)

@@ -6,6 +6,9 @@
 #include <chrono>
 #include <stdexcept>
 
+/**
+ * Stopping criterion that stops after a given runtime (in seconds).
+ */
 class MaxRuntime : public StoppingCriterion
 {
     using clock = std::chrono::system_clock;

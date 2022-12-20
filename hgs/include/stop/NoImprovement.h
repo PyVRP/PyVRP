@@ -6,6 +6,10 @@
 #include <climits>
 #include <stdexcept>
 
+/**
+ * Stopping criterion that stops after a given number of iterations without
+ * improvement.
+ */
 class NoImprovement : public StoppingCriterion
 {
     size_t const maxIters;

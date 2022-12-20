@@ -5,6 +5,9 @@
 
 #include <stdexcept>
 
+/**
+ * Stopping criterion that stops after a given number of iterations.
+ */
 class MaxIterations : public StoppingCriterion
 {
     size_t const maxIters;
