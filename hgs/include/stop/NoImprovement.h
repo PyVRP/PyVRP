@@ -3,6 +3,8 @@
 
 #include "StoppingCriterion.h"
 
+#include <climits>
+
 class NoImprovement : public StoppingCriterion
 {
     size_t const maxIters;
