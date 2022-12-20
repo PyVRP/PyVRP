@@ -84,8 +84,6 @@ public:
                 stream >> config.repairBooster;
             else if (std::string(argv[idx]) == "--selectProbability")
                 stream >> config.selectProbability;
-            else if (std::string(argv[idx]) == "--nbVeh")
-                stream >> config.nbVeh;
             else if (std::string(argv[idx]) == "--nbGranular")
                 stream >> config.nbGranular;
             else if (std::string(argv[idx]) == "--weightWaitTime")

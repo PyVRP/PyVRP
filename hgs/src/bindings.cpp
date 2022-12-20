@@ -81,7 +81,6 @@ PYBIND11_MODULE(hgspy, m)
                       size_t,
                       size_t,
                       size_t,
-                      int,
                       size_t,
                       int,
                       int,
@@ -105,7 +104,6 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("repairProbability") = 79,
              py::arg("repairBooster") = 12,
              py::arg("selectProbability") = 90,
-             py::arg("nbVeh") = INT_MAX,
              py::arg("nbGranular") = 34,
              py::arg("weightWaitTime") = 18,
              py::arg("weightTimeWarp") = 20,
@@ -129,7 +127,6 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("repairProbability", &Config::repairProbability)
         .def_readonly("repairBooster", &Config::repairBooster)
         .def_readonly("selectProbability", &Config::selectProbability)
-        .def_readonly("nbVeh", &Config::nbVeh)
         .def_readonly("nbGranular", &Config::nbGranular)
         .def_readonly("weightWaitTime", &Config::weightWaitTime)
         .def_readonly("weightTimeWarp", &Config::weightTimeWarp)
@@ -140,6 +137,7 @@ PYBIND11_MODULE(hgspy, m)
                       std::vector<std::pair<int, int>> const &,
                       std::vector<int> const &,
                       int,
+                      int,
                       std::vector<std::pair<int, int>> const &,
                       std::vector<int> const &,
                       std::vector<std::vector<int>> const &,
@@ -147,6 +145,7 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("config"),
              py::arg("coords"),
              py::arg("demands"),
+             py::arg("nb_vehicles"),
              py::arg("vehicle_cap"),
              py::arg("time_windows"),
              py::arg("service_durations"),
