@@ -9,7 +9,9 @@ class MaxIterations : public StoppingCriterion
     size_t currIters = 0;
 
 public:
-    bool operator()() override { return maxIters < ++currIters; }
+    bool operator()(Individual const &best) override {
+        return maxIters < ++currIters;
+    }
 
     explicit MaxIterations(size_t const maxIterations) : maxIters(maxIterations)
     {

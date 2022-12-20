@@ -1,10 +1,12 @@
 #ifndef STOPPINGCRITERION_H
 #define STOPPINGCRITERION_H
 
+#include "Individual.h"
+
 class StoppingCriterion
 {
 public:
-    virtual bool operator()() = 0;
+    virtual bool operator()(Individual const &best) = 0;
 
     virtual ~StoppingCriterion() = default;
 };

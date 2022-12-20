@@ -7,6 +7,7 @@
 #include "MaxIterations.h"
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
+#include "NoImprovement.h"
 #include "Params.h"
 #include "Population.h"
 #include "RelocateStar.h"
@@ -62,7 +63,6 @@ PYBIND11_MODULE(hgspy, m)
 
     py::class_<Config>(m, "Config")
         .def(py::init<int,
-                      size_t,
                       int,
                       bool,
                       size_t,
@@ -77,7 +77,6 @@ PYBIND11_MODULE(hgspy, m)
                       double,
                       size_t,
                       double,
-                      size_t,
                       size_t,
                       size_t,
                       size_t,
@@ -88,7 +87,6 @@ PYBIND11_MODULE(hgspy, m)
                       bool,
                       size_t>(),
              py::arg("seed") = 0,
-             py::arg("nbIter") = 10'000,
              py::arg("timeLimit") = INT_MAX,
              py::arg("collectStatistics") = false,
              py::arg("initialTimeWarpPenalty") = 6,
@@ -103,7 +101,6 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("ubDiversity") = 0.5,
              py::arg("nbClose") = 5,
              py::arg("targetFeasible") = 0.43,
-             py::arg("nbKeepOnRestart") = 0,
              py::arg("repairProbability") = 79,
              py::arg("repairBooster") = 12,
              py::arg("selectProbability") = 90,
@@ -114,7 +111,6 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("shouldIntensify") = true,
              py::arg("postProcessPathLength") = 7)
         .def_readonly("seed", &Config::seed)
-        .def_readonly("nbIter", &Config::nbIter)
         .def_readonly("timeLimit", &Config::timeLimit)
         .def_readonly("collectStatistics", &Config::collectStatistics)
         .def_readonly("initialTimeWarpPenalty", &Config::initialTimeWarpPenalty)
@@ -129,7 +125,6 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("ubDiversity", &Config::ubDiversity)
         .def_readonly("nbClose", &Config::nbClose)
         .def_readonly("targetFeasible", &Config::targetFeasible)
-        .def_readonly("nbKeepOnRestart", &Config::nbKeepOnRestart)
         .def_readonly("repairProbability", &Config::repairProbability)
         .def_readonly("repairBooster", &Config::repairBooster)
         .def_readonly("selectProbability", &Config::selectProbability)
@@ -219,11 +214,15 @@ PYBIND11_MODULE(hgspy, m)
 
     py::class_<MaxIterations, StoppingCriterion>(stop, "MaxIterations")
         .def(py::init<size_t>(), py::arg("max_iterations"))
-        .def("__call__", &MaxIterations::operator());
+        .def("__call__", &MaxIterations::operator(), py::arg("best"));
 
     py::class_<MaxRuntime, StoppingCriterion>(stop, "MaxRuntime")
         .def(py::init<double>(), py::arg("max_runtime"))
-        .def("__call__", &MaxRuntime::operator());
+        .def("__call__", &MaxRuntime::operator(), py::arg("best"));
+
+    py::class_<NoImprovement, StoppingCriterion>(stop, "NoImprovement")
+        .def(py::init<double>(), py::arg("max_iterations"))
+        .def("__call__", &NoImprovement::operator(), py::arg("best"));
 
     // Crossover operators (as a submodule)
     py::module xOps = m.def_submodule("crossover");
