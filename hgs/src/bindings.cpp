@@ -230,7 +230,7 @@ PYBIND11_MODULE(hgspy, m)
         .def(py::init<size_t, double>(),
              py::arg("max_iterations"),
              py::arg("max_runtime"))
-        .def("__call__", &NoImprovement::operator(), py::arg("best_cost"));
+        .def("__call__", &TimedNoImprovement::operator(), py::arg("best_cost"));
 
     // Crossover operators (as a submodule)
     py::module xOps = m.def_submodule("crossover");
