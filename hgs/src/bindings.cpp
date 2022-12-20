@@ -228,7 +228,8 @@ PYBIND11_MODULE(hgspy, m)
     py::class_<TimedNoImprovement, StoppingCriterion>(stop,
                                                       "TimedNoImprovement")
         .def(py::init<size_t, double>(),
-             py::arg("max_iterations") py::arg("max_runtime"))
+             py::arg("max_iterations"),
+             py::arg("max_runtime"))
         .def("__call__", &NoImprovement::operator(), py::arg("best_cost"));
 
     // Crossover operators (as a submodule)
