@@ -88,25 +88,18 @@ TEST(ParamsFromFileThrowsTest, InconsistentTimeWindows)
  * PROPERLY REJECTED.
  **/
 
-TEST(ParamsFromFileContentTest, DimensionsSmallInstance)
+TEST(ParamsFromFileContentTest, OkSmallInstance)
 {
-    // Tests if Params::fromFile correctly reads the dimensions (# clients,
-    // # vehicles, and vehicle capacity) for the small instance.
     auto const path = "data/OkSmall.txt";
     auto const params = Params::fromFile(Config{}, path);
 
+    // From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
     ASSERT_EQ(params.nbClients, 4);
     ASSERT_EQ(params.nbVehicles, 3);
     ASSERT_EQ(params.vehicleCapacity, 10);
-}
-
-TEST(ParamsFromFileContentTest, CoordinatesSmallInstance)
-{
-    auto const path = "data/OkSmall.txt";
-    auto const params = Params::fromFile(Config{}, path);
 
     // From the NODE_COORD_SECTION in the file
-    std::vector<std::pair<int, int>> expected = {
+    std::vector<std::pair<int, int>> expectedCoords = {
         {2334, 726},
         {226, 1297},
         {590, 530},
@@ -114,22 +107,16 @@ TEST(ParamsFromFileContentTest, CoordinatesSmallInstance)
         {1191, 639},
     };
 
-    ASSERT_EQ(params.nbClients + 1, expected.size());
+    ASSERT_EQ(params.nbClients + 1, expectedCoords.size());
 
     for (auto idx = 0; idx != 5; ++idx)
     {
-        ASSERT_EQ(params.clients[idx].x, expected[idx].first);
-        ASSERT_EQ(params.clients[idx].y, expected[idx].second);
+        ASSERT_EQ(params.clients[idx].x, expectedCoords[idx].first);
+        ASSERT_EQ(params.clients[idx].y, expectedCoords[idx].second);
     }
-}
-
-TEST(ParamsFromFileContentTest, EdgeWeightsSmallInstance)
-{
-    auto const path = "data/OkSmall.txt";
-    auto const params = Params::fromFile(Config{}, path);
 
     // From the EDGE_WEIGHT_SECTION in the file
-    std::vector<std::vector<int>> expected = {
+    std::vector<std::vector<int>> expectedDistances = {
         {0, 1544, 1944, 1931, 1476},
         {1726, 0, 1992, 1427, 1593},
         {1965, 1975, 0, 621, 1090},
@@ -137,33 +124,21 @@ TEST(ParamsFromFileContentTest, EdgeWeightsSmallInstance)
         {1475, 1594, 1090, 828, 0},
     };
 
-    ASSERT_EQ(params.nbClients + 1, expected.size());
+    ASSERT_EQ(params.nbClients + 1, expectedDistances.size());
 
     for (auto i = 0; i != 5; ++i)
         for (auto j = 0; j != 5; ++j)
-            ASSERT_EQ(params.dist(i, j), expected[i][j]);
-}
-
-TEST(ParamsFromFileContentTest, DemandsSmallInstance)
-{
-    auto const path = "data/OkSmall.txt";
-    auto const params = Params::fromFile(Config{}, path);
+            ASSERT_EQ(params.dist(i, j), expectedDistances[i][j]);
 
     // From the DEMAND_SECTION in the file
-    std::vector<int> expected = {0, 5, 5, 3, 5};
-    ASSERT_EQ(params.nbClients + 1, expected.size());
+    std::vector<int> expectedDemands = {0, 5, 5, 3, 5};
+    ASSERT_EQ(params.nbClients + 1, expectedDemands.size());
 
     for (auto idx = 0; idx != 5; ++idx)
-        ASSERT_EQ(params.clients[idx].demand, expected[idx]);
-}
-
-TEST(ParamsFromFileContentTest, TimeWindowsSmallInstance)
-{
-    auto const path = "data/OkSmall.txt";
-    auto const params = Params::fromFile(Config{}, path);
+        ASSERT_EQ(params.clients[idx].demand, expectedDemands[idx]);
 
     // From the TIME_WINDOW_SECTION in the file
-    std::vector<std::pair<int, int>> expected = {
+    std::vector<std::pair<int, int>> expectedTimeWindows = {
         {0, 45000},
         {15600, 22500},
         {12000, 19500},
@@ -171,31 +146,24 @@ TEST(ParamsFromFileContentTest, TimeWindowsSmallInstance)
         {12000, 19500},
     };
 
-    ASSERT_EQ(params.nbClients + 1, expected.size());
+    ASSERT_EQ(params.nbClients + 1, expectedTimeWindows.size());
 
     for (auto idx = 0; idx != 5; ++idx)
     {
-        ASSERT_EQ(params.clients[idx].twEarly, expected[idx].first);
-        ASSERT_EQ(params.clients[idx].twLate, expected[idx].second);
+        ASSERT_EQ(params.clients[idx].twEarly, expectedTimeWindows[idx].first);
+        ASSERT_EQ(params.clients[idx].twLate, expectedTimeWindows[idx].second);
     }
-}
-
-TEST(ParamsFromFileContentTest, ServiceTimesSmallInstance)
-{
-    auto const path = "data/OkSmall.txt";
-    auto const params = Params::fromFile(Config{}, path);
 
     // From the SERVICE_TIME_SECTION in the file
-    std::vector<int> expected = {0, 360, 360, 420, 360};
-    ASSERT_EQ(params.nbClients + 1, expected.size());
+    std::vector<int> expectedServiceTimes = {0, 360, 360, 420, 360};
+    ASSERT_EQ(params.nbClients + 1, expectedServiceTimes.size());
 
     for (auto idx = 0; idx != 5; ++idx)
-        ASSERT_EQ(params.clients[idx].servDur, expected[idx]);
+        ASSERT_EQ(params.clients[idx].servDur, expectedServiceTimes[idx]);
 }
 
-TEST(ParamsFromFileContentTest, CVRPLIBEn22k4)
+TEST(ParamsFromFileContentTest, CVRPLIBEn22k4)  // instance from CVRPLIB
 {
-    // Instance from CVRPLIB, unmodified.
     auto const path = "data/E-n22-k4.vrp.txt";
     auto const params = Params::fromFile(Config{}, path);
 
@@ -222,4 +190,14 @@ TEST(ParamsFromFileContentTest, CVRPLIBEn22k4)
     //      int(10 * dist) = 493
     ASSERT_EQ(params.dist(0, 1), 493);
     ASSERT_EQ(params.dist(1, 0), 493);
+
+    // These fields are all missing from the data file, and should thus retain
+    // their default values.
+    for (auto idx = 0; idx <= params.nbClients; ++idx)
+    {
+        ASSERT_EQ(params.clients[idx].servDur, 0);
+        ASSERT_EQ(params.clients[idx].twEarly, 0);
+        ASSERT_EQ(params.clients[idx].twLate, INT_MAX);
+        ASSERT_EQ(params.clients[idx].releaseTime, 0);
+    }
 }
