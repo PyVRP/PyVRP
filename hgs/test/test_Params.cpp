@@ -34,6 +34,13 @@ TEST(ParamsFromFileTest, throwsUnknownFile)
     ASSERT_THROW(Params::fromFile(config, path), std::invalid_argument);
 }
 
+TEST(ParamsFromFileTest, throwsUnknownSection)
+{
+    Config const config;
+    auto const path = "data/FileWithUnknownSection.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
+
 TEST(ParamsFromFileTest, throwsWrongIdDepot)
 {
     Config const config;

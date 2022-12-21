@@ -14,7 +14,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
     size_t nbClients = 0;
     size_t vehicleCapacity = INT_MAX;
 
-    // TODO test for k<number> in filename
+    // TODO test for k<number> in filename?
     size_t nbVehicles = 0;
 
     // Manner in which the edge weights are provided. Currently, we support
@@ -210,36 +210,6 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
     if (distMat.size() != nbClients + 1)
     {
         auto const msg = "Distance matrix does not match problem size.";
-        throw std::runtime_error(msg);
-    }
-
-    if (coords.size() != nbClients + 1)
-    {
-        auto const msg = "Coordinate size does not match problem size.";
-        throw std::runtime_error(msg);
-    }
-
-    if (demands.size() != nbClients + 1)
-    {
-        auto const msg = "Demand size does not match problem size.";
-        throw std::runtime_error(msg);
-    }
-
-    if (servDurs.size() != nbClients + 1)
-    {
-        auto const msg = "Service duration size does not match problem size.";
-        throw std::runtime_error(msg);
-    }
-
-    if (timeWindows.size() != nbClients + 1)
-    {
-        auto const msg = "Time window size does not match problem size.";
-        throw std::runtime_error(msg);
-    }
-
-    if (releases.size() != nbClients + 1)
-    {
-        auto const msg = "Release time size does not match problem size.";
         throw std::runtime_error(msg);
     }
 
