@@ -79,7 +79,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         else if (name.starts_with("CAPACITY"))
             inputFile >> ignore >> vehicleCapacity;
 
-        else if (name.starts_with("VEHICLES") || name.starts_with("SALESMAN"))
+        else if (name.starts_with("VEHICLES"))
             inputFile >> ignore >> nbVehicles;
 
         // Read the edge weights of an explicit distance matrix
