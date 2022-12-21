@@ -125,18 +125,6 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
                 throw std::runtime_error("Nonzero depot demand.");
         }
 
-        else if (name.starts_with("DEPOT_SECTION"))
-        {
-            int idDepot, endOfDepotSection;
-            inputFile >> idDepot >> endOfDepotSection;
-
-            if (idDepot != 1)
-                throw std::runtime_error("Depot ID is supposed to be 1.");
-
-            if (endOfDepotSection != -1)
-                throw std::runtime_error("Expected only one depot.");
-        }
-
         else if (name.starts_with("SERVICE_TIME_SECTION"))
         {
             for (size_t row = 0; row <= nbClients; row++)
@@ -172,10 +160,31 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
                 int client, twEarly, twLate;
                 inputFile >> client >> twEarly >> twLate;
                 timeWindows[client - 1] = {twEarly, twLate};
+
+                if (twEarly >= twLate)
+                {
+                    std::ostringstream msg;
+                    msg << "Client " << client << ": twEarly (=" << twEarly
+                        << ") >= twLate (=" << twLate << ").";
+
+                    throw std::runtime_error(msg.str());
+                }
             }
 
             if (timeWindows[0].first != 0)
                 throw std::runtime_error("Nonzero depot twEarly.");
+        }
+
+        else if (name.starts_with("DEPOT_SECTION"))
+        {
+            int idDepot, endOfDepotSection;
+            inputFile >> idDepot >> endOfDepotSection;
+
+            if (idDepot != 1)
+                throw std::runtime_error("Depot ID is supposed to be 1.");
+
+            if (endOfDepotSection != -1)
+                throw std::runtime_error("Expected only one depot.");
         }
 
         else
@@ -210,11 +219,6 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         throw std::runtime_error(msg);
     }
 
-    if (!nbVehicles)
-        // Not set, so assume unbounded, that is, we assume there's at least
-        // as many trucks as there are clients.
-        nbVehicles = nbClients;
-
     if (demands.size() != nbClients + 1)
     {
         auto const msg = "Demand size does not match problem size.";
@@ -238,6 +242,11 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         auto const msg = "Release time size does not match problem size.";
         throw std::runtime_error(msg);
     }
+
+    if (!nbVehicles)
+        // Not set, so assume unbounded, that is, we assume there's at least
+        // as many trucks as there are clients.
+        nbVehicles = nbClients;
 
     return {config,
             coords,
@@ -266,6 +275,8 @@ Params::Params(Config const &config,
       nbVehicles(nbVehicles),
       vehicleCapacity(vehicleCap)
 {
+    // TODO move data checks here
+
     // A reasonable scale for the initial values of the load penalty.
     int const maxDemand = *std::max_element(demands.begin(), demands.end());
     int const initCapPenalty = maxDist_ / std::max(maxDemand, 1);

@@ -54,3 +54,31 @@ TEST(ParamsFromFileTest, throwsMoreThanOneDepot)
     auto const path = "data/MoreThanOneDepot.txt";
     ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
 }
+
+TEST(ParamsFromFileTest, throwsNonZeroDepotServiceDuration)
+{
+    Config const config;
+    auto const path = "data/NonZeroDepotServiceDuration.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
+
+TEST(ParamsFromFileTest, throwsNonZeroDepotReleaseTime)
+{
+    Config const config;
+    auto const path = "data/NonZeroDepotReleaseTime.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
+
+TEST(ParamsFromFileTest, throwsNonZeroDepotOpenTimeWindow)
+{
+    Config const config;
+    auto const path = "data/NonZeroDepotOpenTimeWindow.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
+
+TEST(ParamsFromFileTest, throwsNonZeroDepotDemand)
+{
+    Config const config;
+    auto const path = "data/NonZeroDepotDemand.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
