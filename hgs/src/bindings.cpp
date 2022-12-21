@@ -70,7 +70,6 @@ PYBIND11_MODULE(hgspy, m)
                       size_t,
                       double,
                       double,
-                      double,
                       size_t,
                       size_t,
                       size_t,
@@ -91,7 +90,6 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("collectStatistics") = false,
              py::arg("initialTimeWarpPenalty") = 6,
              py::arg("nbPenaltyManagement") = 47,
-             py::arg("feasBooster") = 2.5,
              py::arg("penaltyIncrease") = 1.34,
              py::arg("penaltyDecrease") = 0.32,
              py::arg("minPopSize") = 25,
@@ -114,7 +112,6 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("collectStatistics", &Config::collectStatistics)
         .def_readonly("initialTimeWarpPenalty", &Config::initialTimeWarpPenalty)
         .def_readonly("nbPenaltyManagement", &Config::nbPenaltyManagement)
-        .def_readonly("feasBooster", &Config::feasBooster)
         .def_readonly("penaltyIncrease", &Config::penaltyIncrease)
         .def_readonly("penaltyDecrease", &Config::penaltyDecrease)
         .def_readonly("minPopSize", &Config::minPopSize)

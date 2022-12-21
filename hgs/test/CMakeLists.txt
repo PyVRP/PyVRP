@@ -14,7 +14,7 @@ gtest_discover_tests(test_Matrix)
 
 # Params tests have file dependencies that require fixing the working directory
 add_executable(test_Params test_Params.cpp)
-target_link_libraries(test_Params GTest::gtest_main libhgs)
+target_link_libraries(test_Params GTest::gtest_main params)
 gtest_discover_tests(test_Params WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)

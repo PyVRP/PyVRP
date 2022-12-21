@@ -16,7 +16,6 @@ struct Config
     size_t initialTimeWarpPenalty = 6;
 
     size_t nbPenaltyManagement = 47;  // manage penalties every # iterations
-    double feasBooster = 2.5;         // special increase penalty if no feas
     double penaltyIncrease = 1.34;    // regular increase if below target feas
     double penaltyDecrease = 0.32;    // regular decrease if above target feas
 
@@ -50,7 +49,6 @@ struct Config
                     bool collectStatistics = false,
                     size_t initialTimeWarpPenalty = 6,
                     size_t nbPenaltyManagement = 47,
-                    double feasBooster = 2.5,
                     double penaltyIncrease = 1.34,
                     double penaltyDecrease = 0.32,
                     size_t minPopSize = 25,
@@ -73,7 +71,6 @@ struct Config
           collectStatistics(collectStatistics),
           initialTimeWarpPenalty(initialTimeWarpPenalty),
           nbPenaltyManagement(nbPenaltyManagement),
-          feasBooster(feasBooster),
           penaltyIncrease(penaltyIncrease),
           penaltyDecrease(penaltyDecrease),
           minPopSize(minPopSize),

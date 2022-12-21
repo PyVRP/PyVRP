@@ -108,9 +108,7 @@ void GeneticAlgorithm::updatePenalties()
 {
     auto compute = [&](double currFeas, double currPenalty) {
         // +- 1 to ensure we do not get stuck at the same integer values.
-        if (currFeas < 0.01 && params.config.feasBooster > 0)
-            currPenalty = params.config.feasBooster * currPenalty + 1;
-        else if (currFeas < params.config.targetFeasible - 0.05)
+        if (currFeas < params.config.targetFeasible - 0.05)
             currPenalty = params.config.penaltyIncrease * currPenalty + 1;
         else if (currFeas > params.config.targetFeasible + 0.05)
             currPenalty = params.config.penaltyDecrease * currPenalty - 1;

@@ -24,25 +24,6 @@ class Params
                           // this time
     };
 
-    // Penalty booster that increases the penalty on capacity and time window
-    // violations during the object's lifetime.
-    struct PenaltyBooster
-    {
-        Params *d_params;
-
-        explicit PenaltyBooster(Params *params) : d_params(params)
-        {
-            d_params->penaltyCapacity *= d_params->config.repairBooster;
-            d_params->penaltyTimeWarp *= d_params->config.repairBooster;
-        }
-
-        ~PenaltyBooster()
-        {
-            d_params->penaltyCapacity /= d_params->config.repairBooster;
-            d_params->penaltyTimeWarp /= d_params->config.repairBooster;
-        }
-    };
-
 public:
     // TODO make members private
     Matrix<int> dist_;  // Distance matrix (+depot)
@@ -57,33 +38,6 @@ public:
     int vehicleCapacity;  // Capacity limit
 
     std::vector<Client> clients;  // Client (+depot) information
-
-    /**
-     * Computes the total excess capacity penalty for the given load.
-     */
-    [[nodiscard]] int loadPenalty(int load) const
-    {
-        return std::max(load - vehicleCapacity, 0) * penaltyCapacity;
-    }
-
-    /**
-     * Computes the total time warp penalty for the give time warp.
-     */
-    [[nodiscard]] int twPenalty(int timeWarp) const
-    {
-        return timeWarp * penaltyTimeWarp;
-    }
-
-    /**
-     * Returns a penalty booster that temporarily increases infeasibility
-     * penalties (while the booster lives).
-     */
-    [[nodiscard]] PenaltyBooster getPenaltyBooster()
-    {
-        return PenaltyBooster(this);
-    }
-
-    [[nodiscard]] int &dist(size_t row, size_t col) { return dist_(row, col); }
 
     [[nodiscard]] int dist(size_t row, size_t col) const
     {
