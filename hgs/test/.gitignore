@@ -1,0 +1,2 @@
+# Do not ignore testing data, because the test suite depends on it.
+!data/

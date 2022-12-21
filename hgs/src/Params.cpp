@@ -1,21 +1,24 @@
 #include "Params.h"
 
-#include "Matrix.h"
 #include "XorShift128.h"
 
-#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
 Params Params::fromFile(Config const &config, std::string const &instPath)
 {
-    std::string content, content2, content3;
     size_t nbClients = 0;
     size_t vehicleCapacity = INT_MAX;
     size_t nbVehicles = 0;
+
+    // Manner in which the edge weights are provided. Currently, we support
+    // EXPLICIT and FULL_MATRIX, and EUC_2D (in which case we compute them
+    // with one decimal precision).
+    std::string edgeWeightType, edgeWeightFmt;
 
     std::vector<std::pair<int, int>> coords;
     std::vector<int> demands;
@@ -29,47 +32,68 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
     if (!inputFile)
         throw std::invalid_argument("Cannot open " + instPath + ".");
 
-    getline(inputFile, content);  // NAME line
-    getline(inputFile, content);  // COMMENT line
-    getline(inputFile, content);  // TYPE line
-
-    for (inputFile >> content; content != "EOF"; inputFile >> content)
+    std::string name, ignore;  // section name and 'ignore' string
+    for (inputFile >> name; name != "EOF"; inputFile >> name)
     {
-        if (content == "DIMENSION")
+        // clang-format off
+        if (name.starts_with("NAME")  // ignore these lines
+            || name.starts_with("COMMENT")
+            || name.starts_with("TYPE"))
+        // clang-format on
         {
-            inputFile >> content2 >> nbClients;
+            std::getline(inputFile, ignore);
+            continue;
+        }
+
+        if (name.starts_with("DIMENSION"))
+        {
+            inputFile >> ignore >> nbClients;
             nbClients--;  // minus the depot
         }
 
-        else if (content == "EDGE_WEIGHT_TYPE")
-            inputFile >> content2 >> content3;
-
-        else if (content == "EDGE_WEIGHT_FORMAT")
+        else if (name.starts_with("EDGE_WEIGHT_TYPE"))
         {
-            inputFile >> content2 >> content3;
-            if (content3 != "FULL_MATRIX")
+            inputFile >> ignore >> edgeWeightType;
+            if (edgeWeightType != "EXPLICIT" && edgeWeightType != "EUC_2D")
             {
-                auto msg = "Only EDGE_WEIGHT_FORMAT = FULL_MATRIX understood.";
-                throw std::runtime_error(msg);
+                std::ostringstream msg;
+                msg << "Only EDGE_WEIGHT_TYPE = EXPLICIT or EDGE_WEIGHT_TYPE = "
+                    << "EUC_2D are understood.";
+
+                throw std::runtime_error(msg.str());
             }
         }
 
-        else if (content == "CAPACITY")
-            inputFile >> content2 >> vehicleCapacity;
+        else if (name.starts_with("EDGE_WEIGHT_FORMAT"))
+            inputFile >> ignore >> edgeWeightFmt;
 
-        else if (content == "VEHICLES" || content == "SALESMAN")
-            inputFile >> content2 >> nbVehicles;
+        else if (name.starts_with("CAPACITY"))
+            inputFile >> ignore >> vehicleCapacity;
+
+        else if (name == "VEHICLES" || name == "SALESMAN")
+            inputFile >> ignore >> nbVehicles;
 
         // Read the edge weights of an explicit distance matrix
-        else if (content == "EDGE_WEIGHT_SECTION")
+        else if (name.starts_with("EDGE_WEIGHT_SECTION"))
+        {
+            if (edgeWeightType != "EXPLICIT" || edgeWeightFmt != "FULL_MATRIX")
+            {
+                std::ostringstream msg;
+                msg << "Only EDGE_WEIGHT_FORMAT = FULL_MATRIX is understood "
+                    << "when EDGE_WEIGHT_TYPE = EXPLICIT.";
+
+                throw std::runtime_error(msg.str());
+            }
+
             for (size_t i = 0; i <= nbClients; i++)
             {
                 distMat.emplace_back(nbClients + 1);
                 for (size_t j = 0; j <= nbClients; j++)
                     inputFile >> distMat[i][j];
             }
+        }
 
-        else if (content == "NODE_COORD_SECTION")
+        else if (name.starts_with("NODE_COORD_SECTION"))
             for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
             {
                 size_t client;
@@ -83,7 +107,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 
         // Read the demand of each client (including the depot, which
         // should have demand 0)
-        else if (content == "DEMAND_SECTION")
+        else if (name.starts_with("DEMAND_SECTION"))
         {
             for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
             {
@@ -100,15 +124,16 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
                 throw std::runtime_error("Nonzero depot demand.");
         }
 
-        else if (content == "DEPOT_SECTION")
+        else if (name.starts_with("DEPOT_SECTION"))
         {
-            inputFile >> content2 >> content3;
+            int depotIdx, endDelim;
+            inputFile >> depotIdx >> endDelim;
 
-            if (content2 != "1")
-                throw std::runtime_error("Expected depot index 1.");
+            if (depotIdx != 1 || endDelim != -1)
+                throw std::runtime_error("Expected one depot at #1.");
         }
 
-        else if (content == "SERVICE_TIME_SECTION")
+        else if (name.starts_with("SERVICE_TIME_SECTION"))
         {
             for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
             {
@@ -128,7 +153,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
                 throw std::runtime_error("Nonzero depot service duration.");
         }
 
-        else if (content == "RELEASE_TIME_SECTION")
+        else if (name.starts_with("RELEASE_TIME_SECTION"))
         {
             for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
             {
@@ -150,7 +175,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 
         // Read the time windows of all the clients (the depot should
         // have a time window from 0 to max)
-        else if (content == "TIME_WINDOW_SECTION")
+        else if (name.starts_with("TIME_WINDOW_SECTION"))
         {
             for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
             {
@@ -171,7 +196,31 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         }
 
         else
-            throw std::runtime_error("Section " + content + " not understood.");
+            throw std::runtime_error("Section " + name + " not understood.");
+    }
+
+    if (edgeWeightType == "EUC_2D")
+    {
+        for (size_t i = 0; i <= nbClients; i++)
+        {
+            distMat.emplace_back(nbClients + 1);
+            for (size_t j = 0; j <= nbClients; j++)
+            {
+                auto const xDelta = coords[i].first - coords[j].first;
+                auto const yDelta = coords[i].second - coords[j].second;
+                auto const dist = std::hypot(xDelta, yDelta);
+
+                // Since this is not necessarily integral, we multiply the
+                // resulting number by ten to provide one decimal precision.
+                distMat[i][j] = static_cast<int>(10 * dist);
+            }
+        }
+    }
+
+    if (distMat.size() != nbClients + 1)
+    {
+        auto const msg = "Distance matrix does not match problem size.";
+        throw std::runtime_error(msg);
     }
 
     if (coords.size() != nbClients + 1)
@@ -179,6 +228,11 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         auto const msg = "Coordinate size does not match problem size.";
         throw std::runtime_error(msg);
     }
+
+    if (!nbVehicles)
+        // Not set, so assume unbounded, that is, we assume there's at least
+        // as many trucks as there are clients.
+        nbVehicles = nbClients;
 
     if (demands.empty())
         // If demands are not provided, we assume they're all zero.

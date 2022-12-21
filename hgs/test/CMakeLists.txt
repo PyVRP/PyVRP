@@ -12,6 +12,10 @@ add_executable(test_Matrix test_Matrix.cpp)
 target_link_libraries(test_Matrix GTest::gtest_main)
 gtest_discover_tests(test_Matrix)
 
+add_executable(test_Params test_Params.cpp)
+target_link_libraries(test_Params GTest::gtest_main libhgs)
+gtest_discover_tests(test_Params)
+
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
 target_link_libraries(test_TimeWindowSegment GTest::gtest_main)
 gtest_discover_tests(test_TimeWindowSegment)
