@@ -13,6 +13,8 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 {
     size_t nbClients = 0;
     size_t vehicleCapacity = INT_MAX;
+
+    // TODO test for k<number> in filename
     size_t nbVehicles = 0;
 
     // Manner in which the edge weights are provided. Currently, we support
@@ -33,7 +35,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         throw std::invalid_argument("Cannot open " + instPath + ".");
 
     std::string name, ignore;  // section name and 'ignore' string
-    for (inputFile >> name; name != "EOF"; inputFile >> name)
+    for (inputFile >> name; inputFile && name != "EOF"; inputFile >> name)
     {
         // clang-format off
         if (name.starts_with("NAME")  // ignore these lines
@@ -125,11 +127,14 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 
         else if (name.starts_with("DEPOT_SECTION"))
         {
-            int depotIdx, endDelim;
-            inputFile >> depotIdx >> endDelim;
+            int idDepot, endOfDepotSection;
+            inputFile >> idDepot >> endOfDepotSection;
 
-            if (depotIdx != 1 || endDelim != -1)
-                throw std::runtime_error("Expected one depot at #1.");
+            if (idDepot != 1)
+                throw std::runtime_error("Depot ID is supposed to be 1.");
+
+            if (endOfDepotSection != -1)
+                throw std::runtime_error("Expected only one depot.");
         }
 
         else if (name.starts_with("SERVICE_TIME_SECTION"))

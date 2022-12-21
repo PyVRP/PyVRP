@@ -33,3 +33,24 @@ TEST(ParamsFromFileTest, throwsUnknownFile)
     auto const path = "somewhere that does not exist";
     ASSERT_THROW(Params::fromFile(config, path), std::invalid_argument);
 }
+
+TEST(ParamsFromFileTest, throwsWrongIdDepot)
+{
+    Config const config;
+    auto const path = "data/DepotNotOne.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
+
+TEST(ParamsFromFileTest, throwsWrongDepotEndIdentifier)
+{
+    Config const config;
+    auto const path = "data/DepotSectionDoesNotEndInMinusOne.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
+
+TEST(ParamsFromFileTest, throwsMoreThanOneDepot)
+{
+    Config const config;
+    auto const path = "data/MoreThanOneDepot.txt";
+    ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
+}
