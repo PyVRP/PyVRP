@@ -25,7 +25,7 @@ try
     auto config = args.parse();
 
     XorShift128 rng(config.seed);
-    Params params(config, args.instPath());
+    Params params = Params::fromFile(config, args.instPath());
     Population pop(params, rng);
 
     LocalSearch ls(params, rng);

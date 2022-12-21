@@ -168,3 +168,6 @@ data/
 # Ignore Mac DS_Store files
 .DS_Store
 **/.DS_Store
+
+# Testing data
+!hgs/test/data/

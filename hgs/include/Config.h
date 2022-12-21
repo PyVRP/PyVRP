@@ -33,8 +33,6 @@ struct Config
 
     size_t selectProbability = 90;  // offspring selection probability
 
-    int nbVeh = INT_MAX;  // Number of vehicles
-
     // Granular search parameter, limits the number of moves in the RI local
     // search
     size_t nbGranular = 34;
@@ -65,7 +63,6 @@ struct Config
                     size_t repairProbability = 79,
                     size_t repairBooster = 12,
                     size_t selectProbability = 90,
-                    int nbVeh = INT_MAX,
                     size_t nbGranular = 34,
                     int weightWaitTime = 18,
                     int weightTimeWarp = 20,
@@ -89,7 +86,6 @@ struct Config
           repairProbability(repairProbability),
           repairBooster(repairBooster),
           selectProbability(selectProbability),
-          nbVeh(nbVeh),
           nbGranular(nbGranular),
           weightWaitTime(weightWaitTime),
           weightTimeWarp(weightTimeWarp),
