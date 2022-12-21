@@ -192,3 +192,34 @@ TEST(ParamsFromFileContentTest, ServiceTimesSmallInstance)
     for (auto idx = 0; idx != 5; ++idx)
         ASSERT_EQ(params.clients[idx].servDur, expected[idx]);
 }
+
+TEST(ParamsFromFileContentTest, CVRPLIBEn22k4)
+{
+    // Instance from CVRPLIB, unmodified.
+    auto const path = "data/E-n22-k4.vrp.txt";
+    auto const params = Params::fromFile(Config{}, path);
+
+    ASSERT_EQ(params.nbClients, 21);
+    ASSERT_EQ(params.vehicleCapacity, 6000);
+
+    // We have "k4" in the file name, but there's no VEHICLES field in the data
+    // file itself, so the number of vehicles should default to the number of
+    // clients, 21.
+    ASSERT_EQ(params.nbVehicles, 21);
+
+    ASSERT_EQ(params.clients[0].x, 145);  // depot location
+    ASSERT_EQ(params.clients[0].y, 215);
+
+    ASSERT_EQ(params.clients[1].x, 151);  // first customer
+    ASSERT_EQ(params.clients[1].y, 264);
+
+    // The data file specifies distances as 2D Euclidean. We take that and
+    // should compute integer equivalents with up to one decimal precision.
+    // For depot -> first customer:
+    //      dX = 151 - 145 = 6
+    //      dY = 264 - 215 = 49
+    //      dist = sqrt(dX^2 + dY^2) = 49.37
+    //      int(10 * dist) = 493
+    ASSERT_EQ(params.dist(0, 1), 493);
+    ASSERT_EQ(params.dist(1, 0), 493);
+}
