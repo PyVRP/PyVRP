@@ -82,3 +82,14 @@ TEST(ParamsFromFileTest, throwsNonZeroDepotDemand)
     auto const path = "data/NonZeroDepotDemand.txt";
     ASSERT_THROW(Params::fromFile(config, path), std::runtime_error);
 }
+
+TEST(ParamsFromFileTest, throwsInconsistentTimeWindows)
+{
+    Config const config;
+    auto const earlyEqLate = "data/TimeWindowOpenEqualToClose.txt";
+    auto const earlyGtLate = "data/TimeWindowOpenLargerThanClose.txt";
+
+    // Params::fromFile should throw when any twEarly >= twLate
+    ASSERT_THROW(Params::fromFile(config, earlyEqLate), std::runtime_error);
+    ASSERT_THROW(Params::fromFile(config, earlyGtLate), std::runtime_error);
+}
