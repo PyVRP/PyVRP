@@ -79,7 +79,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         else if (name.starts_with("CAPACITY"))
             inputFile >> ignore >> vehicleCapacity;
 
-        else if (name == "VEHICLES" || name == "SALESMAN")
+        else if (name.starts_with("VEHICLES") || name.starts_with("SALESMAN"))
             inputFile >> ignore >> nbVehicles;
 
         // Read the edge weights of an explicit distance matrix
@@ -245,7 +245,7 @@ Params::Params(Config const &config,
       nbVehicles(nbVehicles),
       vehicleCapacity(vehicleCap)
 {
-    // TODO move data checks here
+    // TODO data checks (partially from Params::fromFile)
 
     // A reasonable scale for the initial values of the load penalty.
     int const maxDemand = *std::max_element(demands.begin(), demands.end());
