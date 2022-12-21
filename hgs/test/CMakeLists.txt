@@ -12,9 +12,11 @@ add_executable(test_Matrix test_Matrix.cpp)
 target_link_libraries(test_Matrix GTest::gtest_main)
 gtest_discover_tests(test_Matrix)
 
+# Params tests depend on libhgs, and have file dependencies that require fixing
+# the working directory
 add_executable(test_Params test_Params.cpp)
 target_link_libraries(test_Params GTest::gtest_main libhgs)
-gtest_discover_tests(test_Params)
+gtest_discover_tests(test_Params WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
 target_link_libraries(test_TimeWindowSegment GTest::gtest_main)

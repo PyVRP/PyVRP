@@ -40,7 +40,9 @@ jobs:
           cmake -Brelease -Shgs
           make --directory=release
       - name: Test all
-        run: ctest --test-dir release
+        run: |
+          cd release
+          ctest
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
