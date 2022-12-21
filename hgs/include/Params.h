@@ -98,13 +98,14 @@ public:
     }
 
     /**
-     * Constructs a Params object with the given configuration, and data read
-     * from the given instance path.
+     * Constructs a Params object from the given configuration and data read
+     * (in VRPLIB format) from the given instance path.
      *
      * @param config   Configuration object.
      * @param instPath Path to the instance data.
+     * @returns        The constructed object.
      */
-    Params(Config const &config, std::string const &instPath);
+    static Params fromFile(Config const &config, std::string const &instPath);
 
     /**
      * Constructs a Params object with the given configuration, and passed-in
@@ -114,6 +115,7 @@ public:
      * @param config       Configuration object.
      * @param coords       Coordinates as pairs of [x, y].
      * @param demands      Client demands.
+     * @param nbVehicles   Number of vehicles.
      * @param vehicleCap   Vehicle capacity.
      * @param timeWindows  Time windows as pairs of [early, late].
      * @param servDurs     Service durations.
@@ -123,6 +125,7 @@ public:
     Params(Config const &config,
            std::vector<std::pair<int, int>> const &coords,
            std::vector<int> const &demands,
+           int nbVehicles,
            int vehicleCap,
            std::vector<std::pair<int, int>> const &timeWindows,
            std::vector<int> const &servDurs,
