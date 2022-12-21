@@ -22,8 +22,8 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 
     std::vector<std::pair<int, int>> coords;
     std::vector<int> demands;
-    std::vector<std::pair<int, int>> timeWindows;
     std::vector<int> servDurs;
+    std::vector<std::pair<int, int>> timeWindows;
     std::vector<std::vector<int>> distMat;
     std::vector<int> releases;
 
@@ -49,6 +49,13 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         {
             inputFile >> ignore >> nbClients;
             nbClients--;  // minus the depot
+
+            // Resize data to match number of clients with default values.
+            coords = {nbClients + 1, {0, 0}};
+            demands = std::vector<int>(nbClients + 1, 0);
+            servDurs = std::vector<int>(nbClients + 1, 0);
+            timeWindows = {nbClients + 1, {0, INT_MAX}};
+            releases = std::vector<int>(nbClients + 1, 0);
         }
 
         else if (name.starts_with("EDGE_WEIGHT_TYPE"))
@@ -94,30 +101,22 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         }
 
         else if (name.starts_with("NODE_COORD_SECTION"))
-            for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
+            for (size_t row = 0; row <= nbClients; row++)
             {
-                size_t client;
-                int x, y;
+                int client, x, y;
                 inputFile >> client >> x >> y;
-                coords.emplace_back(x, y);
-
-                if (client != clientIdx + 1)
-                    throw std::runtime_error("Coords not in client order.");
+                coords[client - 1] = {x, y};
             }
 
         // Read the demand of each client (including the depot, which
         // should have demand 0)
         else if (name.starts_with("DEMAND_SECTION"))
         {
-            for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
+            for (size_t row = 0; row <= nbClients; row++)
             {
-                size_t client;
-                int demand;
+                int client, demand;
                 inputFile >> client >> demand;
-                demands.emplace_back(demand);
-
-                if (client != clientIdx + 1)
-                    throw std::runtime_error("Demands not in client order.");
+                demands[client - 1] = demand;
             }
 
             if (demands[0] != 0)
@@ -135,18 +134,11 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 
         else if (name.starts_with("SERVICE_TIME_SECTION"))
         {
-            for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
+            for (size_t row = 0; row <= nbClients; row++)
             {
-                size_t client;
-                int serviceDuration;
+                int client, serviceDuration;
                 inputFile >> client >> serviceDuration;
-                servDurs.emplace_back(serviceDuration);
-
-                if (client != clientIdx + 1)
-                {
-                    auto const msg = "Service durations not in client order.";
-                    throw std::runtime_error(msg);
-                }
+                servDurs[client - 1] = serviceDuration;
             }
 
             if (servDurs[0] != 0)
@@ -155,18 +147,11 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
 
         else if (name.starts_with("RELEASE_TIME_SECTION"))
         {
-            for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
+            for (size_t row = 0; row <= nbClients; row++)
             {
-                size_t client;
-                int releaseTime;
-                inputFile >> client >> releaseTime;
-                releases.emplace_back(releaseTime);
-
-                if (client != clientIdx + 1)
-                {
-                    auto const msg = "Release times not in client order.";
-                    throw std::runtime_error(msg);
-                }
+                int client, release;
+                inputFile >> client >> release;
+                releases[client - 1] = release;
             }
 
             if (releases[0] != 0)
@@ -177,18 +162,11 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         // have a time window from 0 to max)
         else if (name.starts_with("TIME_WINDOW_SECTION"))
         {
-            for (size_t clientIdx = 0; clientIdx <= nbClients; clientIdx++)
+            for (size_t row = 0; row <= nbClients; row++)
             {
-                size_t client;
-                int twEarly, twLate;
+                int client, twEarly, twLate;
                 inputFile >> client >> twEarly >> twLate;
-                timeWindows.emplace_back(twEarly, twLate);
-
-                if (client != clientIdx + 1)
-                {
-                    auto const msg = "Time windows not in client order.";
-                    throw std::runtime_error(msg);
-                }
+                timeWindows[client - 1] = {twEarly, twLate};
             }
 
             if (timeWindows[0].first != 0)
@@ -200,7 +178,6 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
     }
 
     if (edgeWeightType == "EUC_2D")
-    {
         for (size_t i = 0; i <= nbClients; i++)
         {
             distMat.emplace_back(nbClients + 1);
@@ -215,7 +192,6 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
                 distMat[i][j] = static_cast<int>(10 * dist);
             }
         }
-    }
 
     if (distMat.size() != nbClients + 1)
     {
@@ -234,21 +210,15 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         // as many trucks as there are clients.
         nbVehicles = nbClients;
 
-    if (demands.empty())
-        // If demands are not provided, we assume they're all zero.
-        demands = std::vector<int>(nbClients + 1, 0);
-    else if (demands.size() != nbClients + 1)
+    if (demands.size() != nbClients + 1)
     {
         auto const msg = "Demand size does not match problem size.";
         throw std::runtime_error(msg);
     }
 
-    if (timeWindows.empty())
-        // If time windows are not provided, we assume they're all [0, +inf].
-        timeWindows = {nbClients + 1, {0, INT_MAX}};
-    else if (timeWindows.size() != nbClients + 1)
+    if (servDurs.size() != nbClients + 1)
     {
-        auto const msg = "Time window size does not match problem size.";
+        auto const msg = "Service duration size does not match problem size.";
         throw std::runtime_error(msg);
     }
 
@@ -258,19 +228,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
         throw std::runtime_error(msg);
     }
 
-    if (servDurs.empty())
-        // If service durations are not provided, we assume they're all zero.
-        servDurs = std::vector<int>(nbClients + 1, 0);
-    else if (servDurs.size() != nbClients + 1)
-    {
-        auto const msg = "Service duration size does not match problem size.";
-        throw std::runtime_error(msg);
-    }
-
-    if (releases.empty())
-        // If release times are not provided, we assume they're all zero.
-        releases = std::vector<int>(nbClients + 1, 0);
-    else if (releases.size() != nbClients + 1)
+    if (releases.size() != nbClients + 1)
     {
         auto const msg = "Release time size does not match problem size.";
         throw std::runtime_error(msg);
