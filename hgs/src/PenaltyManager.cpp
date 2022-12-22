@@ -34,12 +34,16 @@ PenaltyManager::PenaltyManager(unsigned int initCapacityPenalty,
 void PenaltyManager::updateCapacityPenalty(double currFeasPct)
 {
     auto penalty = static_cast<double>(capacityPenalty);
+    auto const diff = targetFeasible - currFeasPct;
+
+    if (-0.05 < diff && diff < 0.05)  // allow some margins on the difference
+        return;                       // between target and actual
 
     // +- 1 to ensure we do not get stuck at the same integer values,
     // bounded to [1, 1000] to avoid overflow in cost computations.
-    if (currFeasPct < targetFeasible - 0.05)
+    if (diff > 0)
         penalty = std::min(penaltyIncrease * penalty + 1, 1000.);
-    else if (currFeasPct > targetFeasible + 0.05)
+    else
         penalty = std::max(penaltyDecrease * penalty - 1, 1.);
 
     capacityPenalty = static_cast<int>(penalty);
@@ -48,12 +52,16 @@ void PenaltyManager::updateCapacityPenalty(double currFeasPct)
 void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
 {
     auto penalty = static_cast<double>(timeWarpPenalty);
+    auto const diff = targetFeasible - currFeasPct;
+
+    if (-0.05 < diff && diff < 0.05)  // allow some margins on the difference
+        return;                       // between target and actual
 
     // +- 1 to ensure we do not get stuck at the same integer values,
     // bounded to [1, 1000] to avoid overflow in cost computations.
-    if (currFeasPct < targetFeasible - 0.05)
+    if (diff > 0)
         penalty = std::min(penaltyIncrease * penalty + 1, 1000.);
-    else if (currFeasPct > targetFeasible + 0.05)
+    else
         penalty = std::max(penaltyDecrease * penalty - 1, 1.);
 
     timeWarpPenalty = static_cast<int>(penalty);

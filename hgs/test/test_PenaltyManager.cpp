@@ -102,4 +102,59 @@ TEST(PenaltyManagerTest, testRepairBooster)
     ASSERT_EQ(pm.loadPenalty(2), 1);  // 1 unit above capacity
 }
 
-// TODO test updating
+TEST(PenaltyManagerTest, testCapacityPenaltyUpdateIncrease)
+{
+    PenaltyManager pm(1, 1, 1.1, 0.9, 0.5, 1, 1);
+
+    ASSERT_EQ(pm.loadPenalty(2), 1);
+    pm.updateCapacityPenalty(0.5);
+    ASSERT_EQ(pm.loadPenalty(2), 1);
+
+    // Below targetFeasible, so should increase the capacityPenalty by +1
+    // (normally to 1.1 due to penaltyIncrease, but we should not end up at the
+    // same int).
+    pm.updateCapacityPenalty(0.4);
+    ASSERT_EQ(pm.loadPenalty(2), 2);
+
+    // Now we start from a much bigger initial capacityPenalty. Here we want
+    // the penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due
+    // to the bounds check.
+    PenaltyManager pm2(100, 1, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm2.loadPenalty(2), 100);
+    pm2.updateCapacityPenalty(0.4);
+    ASSERT_EQ(pm2.loadPenalty(2), 111);
+
+    // Test if the penalty cannot increase beyond 1000, its maximum value.
+    PenaltyManager pm3(1000, 1, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm3.loadPenalty(2), 1000);
+    pm3.updateCapacityPenalty(0.4);
+    ASSERT_EQ(pm3.loadPenalty(2), 1000);
+}
+
+TEST(PenaltyManagerTest, testCapacityPenaltyUpdateDecrease)
+{
+    PenaltyManager pm(4, 1, 1.1, 0.9, 0.5, 1, 1);
+
+    ASSERT_EQ(pm.loadPenalty(2), 4);
+    pm.updateCapacityPenalty(0.5);
+    ASSERT_EQ(pm.loadPenalty(2), 4);
+
+    // Above targetFeasible, so should decrease the capacityPenalty to 90%, and
+    // -1 from the bounds check. So 0.9 * 4 = 3.6, 3.6 - 1 = 2.6, (int) 2.6 = 2
+    pm.updateCapacityPenalty(0.6);
+    ASSERT_EQ(pm.loadPenalty(2), 2);
+
+    // Now we start from a much bigger initial capacityPenalty. Here we want
+    // the penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
+    // to the bounds check.
+    PenaltyManager pm2(100, 1, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm2.loadPenalty(2), 100);
+    pm2.updateCapacityPenalty(0.6);
+    ASSERT_EQ(pm2.loadPenalty(2), 89);
+
+    // Test if the penalty cannot decrease beyond 1, its minimum value.
+    PenaltyManager pm3(1, 1, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm3.loadPenalty(2), 1);
+    pm3.updateCapacityPenalty(0.6);
+    ASSERT_EQ(pm3.loadPenalty(2), 1);
+}
