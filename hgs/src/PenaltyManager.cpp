@@ -26,6 +26,9 @@ PenaltyManager::PenaltyManager(unsigned int initCapacityPenalty,
 
     if (targetFeasible < 0. || targetFeasible > 1.)
         throw std::invalid_argument("Expected targetFeasible in [0, 1].");
+
+    if (repairBooster < 1)
+        throw std::invalid_argument("Expected repairBooster >= 1.");
 }
 
 void PenaltyManager::updateCapacityPenalty(double currFeasPct)
@@ -56,12 +59,13 @@ void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
     timeWarpPenalty = static_cast<int>(penalty);
 }
 
-int PenaltyManager::loadPenalty(int load) const
+unsigned int PenaltyManager::loadPenalty(unsigned int load) const
 {
-    return std::max(load - vehicleCapacity, 0U) * capacityPenalty;
+    auto const excessLoad = std::max(load, vehicleCapacity) - vehicleCapacity;
+    return excessLoad * capacityPenalty;
 }
 
-int PenaltyManager::twPenalty(int timeWarp) const
+unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const
 {
     return timeWarp * timeWarpPenalty;
 }
