@@ -1,6 +1,32 @@
 #include "PenaltyManager.h"
 
 #include <algorithm>
+#include <stdexcept>
+
+PenaltyManager::PenaltyManager(unsigned int initCapacityPenalty,
+                               unsigned int initTimeWarpPenalty,
+                               double penaltyIncrease,
+                               double penaltyDecrease,
+                               double targetFeasible,
+                               unsigned int vehicleCapacity,
+                               unsigned int repairBooster)
+    : capacityPenalty(initCapacityPenalty),
+      timeWarpPenalty(initTimeWarpPenalty),
+      penaltyIncrease(penaltyIncrease),
+      penaltyDecrease(penaltyDecrease),
+      targetFeasible(targetFeasible),
+      vehicleCapacity(vehicleCapacity),
+      repairBooster(repairBooster)
+{
+    if (penaltyIncrease < 1.)
+        throw std::invalid_argument("Expected penaltyIncrease >= 1.");
+
+    if (penaltyDecrease < 0. || penaltyDecrease > 1.)
+        throw std::invalid_argument("Expected penaltyDecrease in [0, 1].");
+
+    if (targetFeasible < 0. || targetFeasible > 1.)
+        throw std::invalid_argument("Expected targetFeasible in [0, 1].");
+}
 
 void PenaltyManager::updateCapacityPenalty(double currFeasPct)
 {
@@ -32,7 +58,7 @@ void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
 
 int PenaltyManager::loadPenalty(int load) const
 {
-    return std::max(load - vehicleCapacity, 0) * capacityPenalty;
+    return std::max(load - vehicleCapacity, 0U) * capacityPenalty;
 }
 
 int PenaltyManager::twPenalty(int timeWarp) const

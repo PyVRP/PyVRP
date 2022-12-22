@@ -3,22 +3,22 @@
 
 class PenaltyManager
 {
-    int capacityPenalty;
-    int timeWarpPenalty;
+    unsigned int capacityPenalty;
+    unsigned int timeWarpPenalty;
 
     double const penaltyIncrease;
     double const penaltyDecrease;
     double const targetFeasible;
-    int const vehicleCapacity;
-    int const repairBooster;
+    unsigned int const vehicleCapacity;
+    unsigned int const repairBooster;
 
     // Penalty booster that increases the penalty on capacity and time window
     // violations during the object's lifetime.
     struct PenaltyBooster
     {
         PenaltyManager &mngr;
-        int const oldCapacityPenalty;
-        int const oldTimeWarpPenalty;
+        unsigned int const oldCapacityPenalty;
+        unsigned int const oldTimeWarpPenalty;
 
         explicit PenaltyBooster(PenaltyManager &mngr)
             : mngr(mngr),
@@ -37,22 +37,13 @@ class PenaltyManager
     };
 
 public:
-    PenaltyManager(int initCapacityPenalty,
-                   int initTimeWarpPenalty,
+    PenaltyManager(unsigned int initCapacityPenalty,
+                   unsigned int initTimeWarpPenalty,
                    double penaltyIncrease,
                    double penaltyDecrease,
                    double targetFeasible,
-                   int vehicleCapacity,
-                   int repairBooster)
-        : capacityPenalty(initCapacityPenalty),
-          timeWarpPenalty(initTimeWarpPenalty),
-          penaltyIncrease(penaltyIncrease),
-          penaltyDecrease(penaltyDecrease),
-          targetFeasible(targetFeasible),
-          vehicleCapacity(vehicleCapacity),
-          repairBooster(repairBooster)
-    {
-    }
+                   unsigned int vehicleCapacity,
+                   unsigned int repairBooster);
 
     /**
      * TODO

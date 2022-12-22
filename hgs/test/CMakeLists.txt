@@ -17,6 +17,10 @@ add_executable(test_Params test_Params.cpp)
 target_link_libraries(test_Params GTest::gtest_main params)
 gtest_discover_tests(test_Params WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
+add_executable(test_PenaltyManager test_PenaltyManager.cpp)
+target_link_libraries(test_PenaltyManager GTest::gtest_main penaltyManager)
+gtest_discover_tests(test_PenaltyManager)
+
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
 target_link_libraries(test_TimeWindowSegment GTest::gtest_main)
 gtest_discover_tests(test_TimeWindowSegment)
