@@ -36,6 +36,10 @@ class PenaltyManager
         }
     };
 
+    // Computes and returns the new penalty value, given the current value and
+    // the percentage of feasible solutions since the last update.
+    unsigned int compute(unsigned int penalty, double feasPct) const;
+
 public:
     PenaltyManager(unsigned int initCapacityPenalty,
                    unsigned int initTimeWarpPenalty,
@@ -46,16 +50,20 @@ public:
                    unsigned int repairBooster);
 
     /**
-     * TODO
+     * Updates the capacity penalty based on the percentage of load-feasible
+     * solutions since the last update.
      *
-     * @param currFeasPct
+     * @param currFeasPct Percentage of load feasible solutions. Should be a
+     *                    number in [0, 1].
      */
     void updateCapacityPenalty(double currFeasPct);
 
     /**
-     * TODO
+     * Updates the time warp penalty based on the percentage of time-feasible
+     * solutions since the last update.
      *
-     * @param currFeasPct
+     * @param currFeasPct Percentage of time feasible solutions. Should be a
+     *                    number in [0, 1].
      */
     void updateTimeWarpPenalty(double currFeasPct);
 

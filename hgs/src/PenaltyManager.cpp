@@ -31,40 +31,33 @@ PenaltyManager::PenaltyManager(unsigned int initCapacityPenalty,
         throw std::invalid_argument("Expected repairBooster >= 1.");
 }
 
-void PenaltyManager::updateCapacityPenalty(double currFeasPct)
+unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
 {
-    auto penalty = static_cast<double>(capacityPenalty);
-    auto const diff = targetFeasible - currFeasPct;
+    auto const diff = targetFeasible - feasPct;
 
     if (-0.05 < diff && diff < 0.05)  // allow some margins on the difference
-        return;                       // between target and actual
+        return penalty;               // between target and actual
 
-    // +- 1 to ensure we do not get stuck at the same integer values,
-    // bounded to [1, 1000] to avoid overflow in cost computations.
+    auto dPenalty = static_cast<double>(penalty);
+
+    // +- 1 to ensure we do not get stuck at the same integer values, bounded
+    // to [1, 1000] to avoid overflow in cost computations.
     if (diff > 0)
-        penalty = std::min(penaltyIncrease * penalty + 1, 1000.);
+        dPenalty = std::min(penaltyIncrease * dPenalty + 1, 1000.);
     else
-        penalty = std::max(penaltyDecrease * penalty - 1, 1.);
+        dPenalty = std::max(penaltyDecrease * dPenalty - 1, 1.);
 
-    capacityPenalty = static_cast<int>(penalty);
+    return static_cast<int>(dPenalty);
+}
+
+void PenaltyManager::updateCapacityPenalty(double currFeasPct)
+{
+    capacityPenalty = compute(capacityPenalty, currFeasPct);
 }
 
 void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
 {
-    auto penalty = static_cast<double>(timeWarpPenalty);
-    auto const diff = targetFeasible - currFeasPct;
-
-    if (-0.05 < diff && diff < 0.05)  // allow some margins on the difference
-        return;                       // between target and actual
-
-    // +- 1 to ensure we do not get stuck at the same integer values,
-    // bounded to [1, 1000] to avoid overflow in cost computations.
-    if (diff > 0)
-        penalty = std::min(penaltyIncrease * penalty + 1, 1000.);
-    else
-        penalty = std::max(penaltyDecrease * penalty - 1, 1.);
-
-    timeWarpPenalty = static_cast<int>(penalty);
+    timeWarpPenalty = compute(timeWarpPenalty, currFeasPct);
 }
 
 unsigned int PenaltyManager::loadPenalty(unsigned int load) const

@@ -106,6 +106,7 @@ TEST(PenaltyManagerTest, testCapacityPenaltyUpdateIncrease)
 {
     PenaltyManager pm(1, 1, 1.1, 0.9, 0.5, 1, 1);
 
+    // Within bandwidth, so penalty should not change.
     ASSERT_EQ(pm.loadPenalty(2), 1);
     pm.updateCapacityPenalty(0.5);
     ASSERT_EQ(pm.loadPenalty(2), 1);
@@ -118,7 +119,7 @@ TEST(PenaltyManagerTest, testCapacityPenaltyUpdateIncrease)
 
     // Now we start from a much bigger initial capacityPenalty. Here we want
     // the penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due
-    // to the bounds check.
+    // to double -> int.
     PenaltyManager pm2(100, 1, 1.1, 0.9, 0.5, 1, 1);
     ASSERT_EQ(pm2.loadPenalty(2), 100);
     pm2.updateCapacityPenalty(0.4);
@@ -135,6 +136,7 @@ TEST(PenaltyManagerTest, testCapacityPenaltyUpdateDecrease)
 {
     PenaltyManager pm(4, 1, 1.1, 0.9, 0.5, 1, 1);
 
+    // Within bandwidth, so penalty should not change.
     ASSERT_EQ(pm.loadPenalty(2), 4);
     pm.updateCapacityPenalty(0.5);
     ASSERT_EQ(pm.loadPenalty(2), 4);
@@ -146,7 +148,7 @@ TEST(PenaltyManagerTest, testCapacityPenaltyUpdateDecrease)
 
     // Now we start from a much bigger initial capacityPenalty. Here we want
     // the penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
-    // to the bounds check.
+    // to double -> int.
     PenaltyManager pm2(100, 1, 1.1, 0.9, 0.5, 1, 1);
     ASSERT_EQ(pm2.loadPenalty(2), 100);
     pm2.updateCapacityPenalty(0.6);
@@ -157,4 +159,63 @@ TEST(PenaltyManagerTest, testCapacityPenaltyUpdateDecrease)
     ASSERT_EQ(pm3.loadPenalty(2), 1);
     pm3.updateCapacityPenalty(0.6);
     ASSERT_EQ(pm3.loadPenalty(2), 1);
+}
+
+TEST(PenaltyManagerTest, testTimeWarpPenaltyUpdateIncrease)
+{
+    PenaltyManager pm(1, 1, 1.1, 0.9, 0.5, 1, 1);
+
+    // Within bandwidth, so penalty should not change.
+    ASSERT_EQ(pm.twPenalty(1), 1);
+    pm.updateCapacityPenalty(0.5);
+    ASSERT_EQ(pm.twPenalty(1), 1);
+
+    // Below targetFeasible, so should increase the timeWarpCapacity by +1
+    // (normally to 1.1 due to penaltyIncrease, but we should not end up at the
+    // same int).
+    pm.updateTimeWarpPenalty(0.4);
+    ASSERT_EQ(pm.twPenalty(1), 2);
+
+    // Now we start from a much bigger initial timeWarpCapacity. Here we want
+    // the penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due
+    // to double -> int.
+    PenaltyManager pm2(1, 100, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm2.twPenalty(1), 100);
+    pm2.updateTimeWarpPenalty(0.4);
+    ASSERT_EQ(pm2.twPenalty(1), 111);
+
+    // Test if the penalty cannot increase beyond 1000, its maximum value.
+    PenaltyManager pm3(1, 1000, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm3.twPenalty(1), 1000);
+    pm3.updateTimeWarpPenalty(0.4);
+    ASSERT_EQ(pm3.twPenalty(1), 1000);
+}
+
+TEST(PenaltyManagerTest, testTimeWarpPenaltyUpdateDecrease)
+{
+    PenaltyManager pm(1, 4, 1.1, 0.9, 0.5, 1, 1);
+
+    // Within bandwidth, so penalty should not change.
+    ASSERT_EQ(pm.twPenalty(1), 4);
+    pm.updateTimeWarpPenalty(0.5);
+    ASSERT_EQ(pm.twPenalty(1), 4);
+
+    // Above targetFeasible, so should decrease the timeWarPenalty to 90%, and
+    // -1 from the bounds check. So 0.9 * 4 = 3.6, 3.6 - 1 = 2.6, (int) 2.6 = 2
+    pm.updateTimeWarpPenalty(0.6);
+    ASSERT_EQ(pm.twPenalty(1), 2);
+
+    // Now we start from a much bigger initial timeWarpCapacity. Here we want
+    // the penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
+    // to double -> int.
+    PenaltyManager pm2(1, 100, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm2.twPenalty(1), 100);
+    pm2.updateTimeWarpPenalty(0.6);
+    ASSERT_EQ(pm2.twPenalty(1), 89);
+
+    // Test if the penalty cannot decrease beyond 1, its minimum value.
+    PenaltyManager pm3(1, 1, 1.1, 0.9, 0.5, 1, 1);
+    ASSERT_EQ(pm3.twPenalty(1), 1);
+    pm3.updateTimeWarpPenalty(0.6);
+    ASSERT_EQ(pm3.twPenalty(1), 1);
 }
