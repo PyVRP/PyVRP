@@ -236,21 +236,20 @@ Params::Params(Config const &config,
                std::vector<std::vector<int>> const &distMat,
                std::vector<int> const &releases)
     : dist_(distMat),
+      pManager(static_cast<int>(config.initialCapacityPenalty),
+               static_cast<int>(config.initialTimeWarpPenalty),
+               config.penaltyIncrease,
+               config.penaltyDecrease,
+               config.targetFeasible,
+               vehicleCap,
+               static_cast<int>(config.repairBooster)),
       config(config),
       nbClients(static_cast<int>(coords.size()) - 1),
       nbVehicles(nbVehicles),
-      vehicleCapacity(vehicleCap)
+      vehicleCapacity(vehicleCap),
+      clients(nbClients + 1)
 {
     // TODO data checks (partially from Params::fromFile)
-
-    // A reasonable scale for the initial values of the load penalty.
-    int const maxDemand = *std::max_element(demands.begin(), demands.end());
-    int const initCapPenalty = dist_.max() / std::max(maxDemand, 1);
-    penaltyCapacity = std::max(std::min(1000, initCapPenalty), 1);
-
-    penaltyTimeWarp = static_cast<int>(config.initialTimeWarpPenalty);
-
-    clients = std::vector<Client>(nbClients + 1);
 
     for (size_t idx = 0; idx <= static_cast<size_t>(nbClients); ++idx)
         clients[idx] = {coords[idx].first,

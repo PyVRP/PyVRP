@@ -68,6 +68,7 @@ PYBIND11_MODULE(hgspy, m)
                       bool,
                       size_t,
                       size_t,
+                      size_t,
                       double,
                       double,
                       size_t,
@@ -88,6 +89,7 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("seed") = 0,
              py::arg("timeLimit") = INT_MAX,
              py::arg("collectStatistics") = false,
+             py::arg("initialCapacityPenalty") = 20,
              py::arg("initialTimeWarpPenalty") = 6,
              py::arg("nbPenaltyManagement") = 47,
              py::arg("penaltyIncrease") = 1.34,
@@ -110,6 +112,7 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("seed", &Config::seed)
         .def_readonly("timeLimit", &Config::timeLimit)
         .def_readonly("collectStatistics", &Config::collectStatistics)
+        .def_readonly("initialCapacityPenalty", &Config::initialCapacityPenalty)
         .def_readonly("initialTimeWarpPenalty", &Config::initialTimeWarpPenalty)
         .def_readonly("nbPenaltyManagement", &Config::nbPenaltyManagement)
         .def_readonly("penaltyIncrease", &Config::penaltyIncrease)
@@ -171,8 +174,6 @@ PYBIND11_MODULE(hgspy, m)
         .def("infeas_best_cost", &Statistics::infeasBestCost)
         .def("infeas_avg_cost", &Statistics::infeasAvgCost)
         .def("infeas_avg_num_routes", &Statistics::infeasAvgNumRoutes)
-        .def("penalties_capacity", &Statistics::penaltiesCapacity)
-        .def("penalties_time_warp", &Statistics::penaltiesTimeWarp)
         .def("incumbents", &Statistics::incumbents)
         .def("to_csv",
              &Statistics::toCsv,

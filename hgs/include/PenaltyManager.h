@@ -6,6 +6,9 @@ class PenaltyManager
     int capacityPenalty;
     int timeWarpPenalty;
 
+    double const penaltyIncrease;
+    double const penaltyDecrease;
+    double const targetFeasible;
     int const vehicleCapacity;
     int const repairBooster;
 
@@ -13,11 +16,11 @@ class PenaltyManager
     // violations during the object's lifetime.
     struct PenaltyBooster
     {
-        PenaltyManager const &mngr;
+        PenaltyManager &mngr;
         int const oldCapacityPenalty;
         int const oldTimeWarpPenalty;
 
-        explicit PenaltyBooster(PenaltyManager const &mngr)
+        explicit PenaltyBooster(PenaltyManager &mngr)
             : mngr(mngr),
               oldCapacityPenalty(mngr.capacityPenalty),
               oldTimeWarpPenalty(mngr.timeWarpPenalty)
@@ -36,68 +39,50 @@ class PenaltyManager
 public:
     PenaltyManager(int initCapacityPenalty,
                    int initTimeWarpPenalty,
+                   double penaltyIncrease,
+                   double penaltyDecrease,
+                   double targetFeasible,
                    int vehicleCapacity,
                    int repairBooster)
         : capacityPenalty(initCapacityPenalty),
           timeWarpPenalty(initTimeWarpPenalty),
+          penaltyIncrease(penaltyIncrease),
+          penaltyDecrease(penaltyDecrease),
+          targetFeasible(targetFeasible),
           vehicleCapacity(vehicleCapacity),
           repairBooster(repairBooster)
     {
-        // TODO
-    }
-
-    void updateCapacityPenalty()
-    {
-        auto penalty = static_cast<double>(capacityPenalty);
-
-        // +- 1 to ensure we do not get stuck at the same integer values,
-        // bounded to [1, 1000] to avoid overflow in cost computations.
-        if (currFeas < targetFeasible - 0.05)
-            penalty = std::min(penaltyIncrease * penalty + 1, 1000);
-        else if (currFeas > targetFeasible + 0.05)
-            penalty = std::max(penaltyDecrease * penalty - 1, 1);
-
-        capacityPenalty = static_cast<int>(penalty);
-    }
-
-    void updateTimeWarpPenalty()
-    {
-        auto penalty = static_cast<double>(timeWarpPenalty);
-
-        // +- 1 to ensure we do not get stuck at the same integer values,
-        // bounded to [1, 1000] to avoid overflow in cost computations.
-        if (currFeas < targetFeasible - 0.05)
-            penalty = std::min(penaltyIncrease * penalty + 1, 1000);
-        else if (currFeas > targetFeasible + 0.05)
-            penalty = std::max(penaltyDecrease * penalty - 1, 1);
-
-        timeWarpPenalty = static_cast<int>(penalty);
     }
 
     /**
-     * Computes the total excess capacity penalty for the given load.
+     * TODO
+     *
+     * @param currFeasPct
      */
-    [[nodiscard]] int loadPenalty(int load) const
-    {
-        return std::max(load - vehicleCapacity, 0) * capacityPenalty;
-    }
+    void updateCapacityPenalty(double currFeasPct);
 
     /**
-     * Computes the total time warp penalty for the give time warp.
+     * TODO
+     *
+     * @param currFeasPct
      */
-    [[nodiscard]] int twPenalty(int timeWarp) const
-    {
-        return timeWarp * timeWarpPenalty;
-    }
+    void updateTimeWarpPenalty(double currFeasPct);
+
+    /**
+     * Computes the total excess capacity penalty for the given vehicle load.
+     */
+    [[nodiscard]] int loadPenalty(int load) const;
+
+    /**
+     * Computes the time warp penalty for the given time warp.
+     */
+    [[nodiscard]] int twPenalty(int timeWarp) const;
 
     /**
      * Returns a penalty booster that temporarily increases infeasibility
      * penalties (while the booster lives).
      */
-    [[nodiscard]] PenaltyBooster getPenaltyBooster()
-    {
-        return PenaltyBooster(*this);
-    }
+    [[nodiscard]] PenaltyBooster getPenaltyBooster();
 };
 
 #endif  // HGS_PENALTYMANAGER_H

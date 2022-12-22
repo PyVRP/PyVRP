@@ -34,9 +34,6 @@ private:
     SubPopStats feasStats;
     SubPopStats infeasStats;
 
-    std::vector<size_t> penaltiesCapacity_;
-    std::vector<size_t> penaltiesTimeWarp_;
-
     timedDatapoints incumbents_;
 
 public:
@@ -177,22 +174,6 @@ public:
     }
 
     /**
-     * Returns a vector of capacity penalties, one element per iteration.
-     */
-    [[nodiscard]] std::vector<size_t> const &penaltiesCapacity() const
-    {
-        return penaltiesCapacity_;
-    }
-
-    /**
-     * Returns a vector of time warp penalties, one element per iteration.
-     */
-    [[nodiscard]] std::vector<size_t> const &penaltiesTimeWarp() const
-    {
-        return penaltiesTimeWarp_;
-    }
-
-    /**
      * Returns a vector of (runtime, objective)-pairs, one for each time
      * a new, feasible best heuristic solution has been found.
      */
@@ -205,7 +186,7 @@ public:
      * Exports the collected statistics as CSV. Only statistics that have been
      * collected for each iteration are exported. Uses `,` as default separator.
      */
-    void toCsv(std::string const &path, char const sep = ',') const;
+    void toCsv(std::string const &path, char sep = ',') const;
 };
 
 #endif  // STATISTICS_H

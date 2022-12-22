@@ -87,7 +87,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
         && rng.randint(100) < params.config.repairProbability)
     {
         // Re-run, but penalise infeasibility more using a penalty booster.
-        auto const booster = params.getPenaltyBooster();
+        auto const booster = params.pManager.getPenaltyBooster();
         localSearch.search(indiv);
 
         if (indiv.isFeasible())
@@ -106,27 +106,16 @@ void GeneticAlgorithm::educate(Individual &indiv)
 
 void GeneticAlgorithm::updatePenalties()
 {
-    auto compute = [&](double currFeas, double currPenalty) {
-        // +- 1 to ensure we do not get stuck at the same integer values.
-        if (currFeas < params.config.targetFeasible - 0.05)
-            currPenalty = params.config.penaltyIncrease * currPenalty + 1;
-        else if (currFeas > params.config.targetFeasible + 0.05)
-            currPenalty = params.config.penaltyDecrease * currPenalty - 1;
+    double feasLoadPct = std::reduce(loadFeas.begin(), loadFeas.end());
+    feasLoadPct /= static_cast<double>(loadFeas.size());
 
-        // Bound the penalty term to avoid overflow in later cost computations.
-        return static_cast<int>(std::max(std::min(currPenalty, 1000.), 1.));
-    };
-
-    double fracFeasLoad = std::accumulate(loadFeas.begin(), loadFeas.end(), 0.);
-    fracFeasLoad /= static_cast<double>(loadFeas.size());
-
-    double fracFeasTime = std::accumulate(timeFeas.begin(), timeFeas.end(), 0.);
-    fracFeasTime /= static_cast<double>(timeFeas.size());
-
-    params.penaltyCapacity = compute(fracFeasLoad, params.penaltyCapacity);
-    params.penaltyTimeWarp = compute(fracFeasTime, params.penaltyTimeWarp);
-
+    params.pManager.updateCapacityPenalty(feasLoadPct);
     loadFeas.clear();
+
+    double feasTimePct = std::reduce(timeFeas.begin(), timeFeas.end());
+    feasTimePct /= static_cast<double>(timeFeas.size());
+
+    params.pManager.updateTimeWarpPenalty(feasTimePct);
     timeFeas.clear();
 }
 

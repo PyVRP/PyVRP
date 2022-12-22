@@ -16,6 +16,7 @@ set(localSearchSources
 set(individualSources Individual.cpp)
 set(nodeSources Node.cpp)
 set(paramsSources Params.cpp)
+set(penaltySources PenaltyManager.cpp)
 set(populationSources Population.cpp)
 set(resultSources Result.cpp)
 set(routeSources Route.cpp)
@@ -28,6 +29,7 @@ add_library(genetic ${geneticSources})
 add_library(ls ${localSearchSources})
 add_library(node ${nodeSources})
 add_library(params ${paramsSources})
+add_library(penaltyManager ${penaltySources})
 add_library(population ${populationSources})
 add_library(result ${resultSources})
 add_library(route ${routeSources})
@@ -40,6 +42,7 @@ set(hgs_libs
         ls
         node
         params
+        penaltyManager
         population
         result
         route
@@ -48,8 +51,8 @@ set(hgs_libs
 
 # Executable
 add_executable(hgs main.cpp)
-target_link_libraries(hgs PRIVATE hgs_libs)
+target_link_libraries(hgs PRIVATE ${hgs_libs})
 
 # Python bindings
 pybind11_add_module(hgspy bindings.cpp)
-target_link_libraries(hgspy PRIVATE hgs_libs)
+target_link_libraries(hgspy PRIVATE ${hgs_libs})

@@ -3,6 +3,7 @@
 
 #include "Config.h"
 #include "Matrix.h"
+#include "PenaltyManager.h"
 #include "XorShift128.h"
 
 #include <iosfwd>
@@ -26,16 +27,14 @@ class Params
 
 public:
     // TODO make members private
-    Matrix<int> dist_;  // Distance matrix (+depot)
+    Matrix<int> const dist_;  // Distance matrix (+depot)
+    PenaltyManager pManager;
 
     Config const config;  // Stores all the parameter values
 
-    int penaltyCapacity;  // Excess capacity penalty (per unit)
-    int penaltyTimeWarp;  // Time warp penalty (per unit)
-
-    int nbClients;        // Number of clients (excluding the depot)
-    int nbVehicles;       // Number of vehicles
-    int vehicleCapacity;  // Capacity limit
+    int const nbClients;        // Number of clients (excluding the depot)
+    int const nbVehicles;       // Number of vehicles
+    int const vehicleCapacity;  // Capacity limit
 
     std::vector<Client> clients;  // Client (+depot) information
 
@@ -49,6 +48,22 @@ public:
     dist(size_t first, size_t second, size_t third, Args... args) const
     {
         return dist_(first, second) + dist(second, third, args...);
+    }
+
+    /**
+     * Computes the total excess capacity penalty for the given load.
+     */
+    [[nodiscard]] int loadPenalty(int load) const
+    {
+        return pManager.loadPenalty(load);
+    }
+
+    /**
+     * Computes the total time warp penalty for the give time warp.
+     */
+    [[nodiscard]] int twPenalty(int timeWarp) const
+    {
+        return pManager.twPenalty(timeWarp);
     }
 
     /**
