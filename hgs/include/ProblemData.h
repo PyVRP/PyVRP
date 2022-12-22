@@ -64,15 +64,15 @@ public:
      * passed-in data. Assumes the data contains the depot, such that each
      * vector is one longer than the number of clients.
      *
-     * @param config       Configuration object.
-     * @param coords       Coordinates as pairs of [x, y].
-     * @param demands      Client demands.
-     * @param nbVehicles   Number of vehicles.
-     * @param vehicleCap   Vehicle capacity.
-     * @param timeWindows  Time windows as pairs of [early, late].
-     * @param servDurs     Service durations.
-     * @param distMat      Distance matrix.
-     * @param releases     Client release times.
+     * @param config      Configuration object.
+     * @param coords      Coordinates as pairs of [x, y].
+     * @param demands     Client demands.
+     * @param nbVehicles  Number of vehicles.
+     * @param vehicleCap  Vehicle capacity.
+     * @param timeWindows Time windows as pairs of [early, late].
+     * @param servDurs    Service durations.
+     * @param distMat     Distance matrix.
+     * @param releases    Client release times.
      */
     ProblemData(Config const &config,
                 std::vector<std::pair<int, int>> const &coords,

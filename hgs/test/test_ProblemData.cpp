@@ -23,6 +23,9 @@ TEST(ProblemDataFromFileThrowsTest, UnknownFile)
 {
     auto const path = "somewhere that does not exist";
     ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::invalid_argument);
+
+    // But the OkSmall instance exists and should parse OK
+    ASSERT_NO_THROW(ProblemData::fromFile(Config{}, "data/OkSmall.txt"));
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownSectionInFile)
@@ -82,6 +85,20 @@ TEST(ProblemDataFromFileThrowsTest, InconsistentTimeWindows)
     ASSERT_THROW(ProblemData::fromFile(Config{}, earlyEqLate),
                  std::runtime_error);
     ASSERT_THROW(ProblemData::fromFile(Config{}, earlyGtLate),
+                 std::runtime_error);
+}
+
+TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
+{
+    auto const noExplicit = "data/EdgeWeightsNoExplicit.txt";
+    auto const noFullMatrix = "data/EdgeWeightsNotFullMatrix.txt";
+
+    // ProblemData::fromFile should throw when there's an EDGE_WEIGHT_SECTION
+    // without EDGE_WEIGHT_TYPE = EXPLICIT, or when EDGE_WEIGHT_FORMAT !=
+    // FULL_MATRIX.
+    ASSERT_THROW(ProblemData::fromFile(Config{}, noExplicit),
+                 std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(Config{}, noFullMatrix),
                  std::runtime_error);
 }
 
