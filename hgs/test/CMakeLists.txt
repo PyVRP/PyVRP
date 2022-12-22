@@ -14,7 +14,7 @@ gtest_discover_tests(test_Matrix)
 
 # Params tests have file dependencies that require fixing the working directory
 add_executable(test_Params test_Params.cpp)
-target_link_libraries(test_Params GTest::gtest_main params)
+target_link_libraries(test_Params GTest::gtest_main params penaltyManager)
 gtest_discover_tests(test_Params WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_PenaltyManager test_PenaltyManager.cpp)
