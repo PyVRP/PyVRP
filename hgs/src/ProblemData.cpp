@@ -1,4 +1,4 @@
-#include "Params.h"
+#include "ProblemData.h"
 
 #include <cmath>
 #include <fstream>
@@ -6,7 +6,8 @@
 #include <string>
 #include <vector>
 
-Params Params::fromFile(Config const &config, std::string const &instPath)
+ProblemData ProblemData::fromFile(Config const &config,
+                                  std::string const &instPath)
 {
     size_t nbClients = 0;
     size_t vehicleCapacity = INT_MAX;
@@ -49,7 +50,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
             inputFile >> ignore >> nbClients;
             nbClients--;  // minus the depot
 
-            // Resize data to match number of clients with default values.
+            // Resize fields to match number of clients with default values.
             coords = {nbClients + 1, {0, 0}};
             demands = std::vector<int>(nbClients + 1, 0);
             servDurs = std::vector<int>(nbClients + 1, 0);
@@ -226,15 +227,15 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
             releases};
 }
 
-Params::Params(Config const &config,
-               std::vector<std::pair<int, int>> const &coords,
-               std::vector<int> const &demands,
-               int nbVehicles,
-               int vehicleCap,
-               std::vector<std::pair<int, int>> const &timeWindows,
-               std::vector<int> const &servDurs,
-               std::vector<std::vector<int>> const &distMat,
-               std::vector<int> const &releases)
+ProblemData::ProblemData(Config const &config,
+                         std::vector<std::pair<int, int>> const &coords,
+                         std::vector<int> const &demands,
+                         int nbVehicles,
+                         int vehicleCap,
+                         std::vector<std::pair<int, int>> const &timeWindows,
+                         std::vector<int> const &servDurs,
+                         std::vector<std::vector<int>> const &distMat,
+                         std::vector<int> const &releases)
     : dist_(distMat),
       pManager(static_cast<int>(config.initialCapacityPenalty),
                static_cast<int>(config.initialTimeWarpPenalty),
@@ -249,7 +250,7 @@ Params::Params(Config const &config,
       vehicleCapacity(vehicleCap),
       clients(nbClients + 1)
 {
-    // TODO data checks (partially from Params::fromFile)
+    // TODO argument checks (partially from ProblemData::fromFile)
 
     for (size_t idx = 0; idx <= static_cast<size_t>(nbClients); ++idx)
         clients[idx] = {coords[idx].first,

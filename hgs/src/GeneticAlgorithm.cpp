@@ -2,8 +2,8 @@
 
 #include "Individual.h"
 #include "LocalSearch.h"
-#include "Params.h"
 #include "Population.h"
+#include "ProblemData.h"
 #include "Result.h"
 #include "Statistics.h"
 
@@ -22,7 +22,7 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
     Statistics stats;
     size_t iter = 0;
 
-    if (params.nbClients <= 1)
+    if (data.nbClients <= 1)
         return {population.getBestFound(), stats, iter, 0.};
 
     auto start = clock::now();
@@ -34,13 +34,13 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
         educate(offspring);
 
         // Diversification and penalty management
-        if (iter % params.config.nbPenaltyManagement == 0)
+        if (iter % data.config.nbPenaltyManagement == 0)
         {
             updatePenalties();
             population.reorder();  // re-order since penalties have changed
         }
 
-        if (params.config.collectStatistics)
+        if (data.config.collectStatistics)
             stats.collectFrom(population);
     }
 
@@ -56,14 +56,14 @@ Individual GeneticAlgorithm::crossover() const
     offspring.reserve(operators.size());
 
     for (auto const &op : operators)
-        offspring.push_back(op(parents, params, rng));
+        offspring.push_back(op(parents, data, rng));
 
     // A simple geometric acceptance criterion: select the best with some
     // probability. If not accepted, test the second best, etc.
     std::sort(offspring.begin(), offspring.end());
 
     for (auto &indiv : offspring)
-        if (rng.randint(100) < params.config.selectProbability)
+        if (rng.randint(100) < data.config.selectProbability)
             return indiv;
 
     return offspring.back();  // fallback in case no offspring were selected
@@ -73,8 +73,8 @@ void GeneticAlgorithm::educate(Individual &indiv)
 {
     localSearch.search(indiv);
 
-    if (params.config.shouldIntensify  // only intensify feasible, new best
-        && indiv.isFeasible()          // solutions. Cf. also repair below.
+    if (data.config.shouldIntensify  // only intensify feasible, new best
+        && indiv.isFeasible()        // solutions. Cf. also repair below.
         && indiv < population.getBestFound())
         localSearch.intensify(indiv);
 
@@ -84,15 +84,15 @@ void GeneticAlgorithm::educate(Individual &indiv)
     timeFeas.push_back(!indiv.hasTimeWarp());
 
     if (!indiv.isFeasible()  // possibly repair if currently infeasible
-        && rng.randint(100) < params.config.repairProbability)
+        && rng.randint(100) < data.config.repairProbability)
     {
         // Re-run, but penalise infeasibility more using a penalty booster.
-        auto const booster = params.pManager.getPenaltyBooster();
+        auto const booster = data.pManager.getPenaltyBooster();
         localSearch.search(indiv);
 
         if (indiv.isFeasible())
         {
-            if (params.config.shouldIntensify
+            if (data.config.shouldIntensify
                 && indiv < population.getBestFound())
                 localSearch.intensify(indiv);
 
@@ -109,22 +109,22 @@ void GeneticAlgorithm::updatePenalties()
     double feasLoadPct = std::reduce(loadFeas.begin(), loadFeas.end());
     feasLoadPct /= static_cast<double>(loadFeas.size());
 
-    params.pManager.updateCapacityPenalty(feasLoadPct);
+    data.pManager.updateCapacityPenalty(feasLoadPct);
     loadFeas.clear();
 
     double feasTimePct = std::reduce(timeFeas.begin(), timeFeas.end());
     feasTimePct /= static_cast<double>(timeFeas.size());
 
-    params.pManager.updateTimeWarpPenalty(feasTimePct);
+    data.pManager.updateTimeWarpPenalty(feasTimePct);
     timeFeas.clear();
 }
 
-GeneticAlgorithm::GeneticAlgorithm(Params &params,
+GeneticAlgorithm::GeneticAlgorithm(ProblemData &data,
                                    XorShift128 &rng,
                                    Population &population,
                                    LocalSearch &localSearch)
-    : params(params), rng(rng), population(population), localSearch(localSearch)
+    : data(data), rng(rng), population(population), localSearch(localSearch)
 {
-    loadFeas.reserve(params.config.nbPenaltyManagement);
-    timeFeas.reserve(params.config.nbPenaltyManagement);
+    loadFeas.reserve(data.config.nbPenaltyManagement);
+    timeFeas.reserve(data.config.nbPenaltyManagement);
 }

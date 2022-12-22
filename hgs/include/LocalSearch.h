@@ -3,7 +3,7 @@
 
 #include "Individual.h"
 #include "Node.h"
-#include "Params.h"
+#include "ProblemData.h"
 #include "Route.h"
 #include "XorShift128.h"
 
@@ -17,8 +17,8 @@ class LocalSearch
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
 
-    Params &params;    // Problem parameters
-    XorShift128 &rng;  // Random number generator
+    ProblemData &data;  // Problem data
+    XorShift128 &rng;   // Random number generator
 
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
@@ -91,7 +91,7 @@ public:
      */
     void intensify(Individual &indiv);
 
-    LocalSearch(Params &params, XorShift128 &rng);
+    LocalSearch(ProblemData &data, XorShift128 &rng);
 };
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef PARAMS_H
-#define PARAMS_H
+#ifndef HGS_PROBLEMDATA_H
+#define HGS_PROBLEMDATA_H
 
 #include "Config.h"
 #include "Matrix.h"
@@ -9,9 +9,7 @@
 #include <iosfwd>
 #include <vector>
 
-// Class that stores all the parameters (from the command line) (in Config) and
-// data of the instance needed by the algorithm
-class Params
+class ProblemData
 {
     struct Client
     {
@@ -26,7 +24,7 @@ class Params
     };
 
 public:
-    // TODO make members private
+    // TODO make members private and rethink interface
     Matrix<int> const dist_;  // Distance matrix (+depot)
     PenaltyManager pManager;
 
@@ -51,19 +49,20 @@ public:
     }
 
     /**
-     * Constructs a Params object from the given configuration and data read
-     * (in VRPLIB format) from the given instance path.
+     * Constructs a ProblemData object from the given configuration and data
+     * read (in VRPLIB format) from the given instance path.
      *
      * @param config   Configuration object.
      * @param instPath Path to the instance data.
      * @returns        The constructed object.
      */
-    static Params fromFile(Config const &config, std::string const &instPath);
+    static ProblemData fromFile(Config const &config,
+                                std::string const &instPath);
 
     /**
-     * Constructs a Params object with the given configuration, and passed-in
-     * data. Assumes the data contains the depot, such that each vector is one
-     * longer than the number of clients.
+     * Constructs a ProblemData object with the given configuration, and
+     * passed-in data. Assumes the data contains the depot, such that each
+     * vector is one longer than the number of clients.
      *
      * @param config       Configuration object.
      * @param coords       Coordinates as pairs of [x, y].
@@ -75,15 +74,15 @@ public:
      * @param distMat      Distance matrix.
      * @param releases     Client release times.
      */
-    Params(Config const &config,
-           std::vector<std::pair<int, int>> const &coords,
-           std::vector<int> const &demands,
-           int nbVehicles,
-           int vehicleCap,
-           std::vector<std::pair<int, int>> const &timeWindows,
-           std::vector<int> const &servDurs,
-           std::vector<std::vector<int>> const &distMat,
-           std::vector<int> const &releases);
+    ProblemData(Config const &config,
+                std::vector<std::pair<int, int>> const &coords,
+                std::vector<int> const &demands,
+                int nbVehicles,
+                int vehicleCap,
+                std::vector<std::pair<int, int>> const &timeWindows,
+                std::vector<int> const &servDurs,
+                std::vector<std::vector<int>> const &distMat,
+                std::vector<int> const &releases);
 };
 
-#endif
+#endif  // HGS_PROBLEMDATA_H

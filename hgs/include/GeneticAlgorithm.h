@@ -3,8 +3,8 @@
 
 #include "Individual.h"
 #include "LocalSearch.h"
-#include "Params.h"
 #include "Population.h"
+#include "ProblemData.h"
 #include "Result.h"
 #include "StoppingCriterion.h"
 #include "XorShift128.h"
@@ -19,11 +19,11 @@ class GeneticAlgorithm
 {
     using xOp = std::function<Individual(
         std::pair<Individual const *, Individual const *> const &,
-        Params const &,
+        ProblemData const &,
         XorShift128 &)>;
 
-    Params &params;    // Problem parameters
-    XorShift128 &rng;  // Random number generator
+    ProblemData &data;  // Problem data
+    XorShift128 &rng;   // Random number generator
     Population &population;
     LocalSearch &localSearch;
 
@@ -67,7 +67,7 @@ public:
      */
     Result run(StoppingCriterion &stop);
 
-    GeneticAlgorithm(Params &params,
+    GeneticAlgorithm(ProblemData &data,
                      XorShift128 &rng,
                      Population &population,
                      LocalSearch &localSearch);

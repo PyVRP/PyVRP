@@ -7,7 +7,7 @@
 template <typename Arg> class LocalSearchOperator
 {
 protected:
-    Params const &d_params;
+    ProblemData const &data;
 
 public:
     /**
@@ -42,7 +42,7 @@ public:
      */
     virtual void update(Route *U){};
 
-    explicit LocalSearchOperator(Params const &params) : d_params(params) {}
+    explicit LocalSearchOperator(ProblemData const &data) : data(data) {}
 
     virtual ~LocalSearchOperator() = default;
 };

@@ -1,7 +1,7 @@
 #include "Population.h"
 
 #include "Individual.h"
-#include "Params.h"
+#include "ProblemData.h"
 
 #include <memory>
 #include <vector>
@@ -22,13 +22,13 @@ void Population::addIndividual(Individual const &indiv)
     updateBiasedFitness(subPop);
 
     // Trigger a survivor selection if the maximum population size is exceeded
-    if (subPop.size() > params.config.minPopSize + params.config.generationSize)
+    if (subPop.size() > data.config.minPopSize + data.config.generationSize)
     {
-        while (subPop.size() > params.config.minPopSize)  // remove duplicates,
-            if (!removeDuplicate(subPop))                 // if any exist
+        while (subPop.size() > data.config.minPopSize)  // remove duplicates,
+            if (!removeDuplicate(subPop))               // if any exist
                 break;
 
-        while (subPop.size() > params.config.minPopSize)
+        while (subPop.size() > data.config.minPopSize)
         {
             updateBiasedFitness(subPop);
             removeWorstBiasedFitness(subPop);
@@ -53,7 +53,7 @@ void Population::updateBiasedFitness(SubPopulation &subPop) const
     std::sort(diversity.begin(), diversity.end(), std::greater<>());
 
     auto const popSize = static_cast<double>(subPop.size());
-    auto const nbElite = std::min(params.config.nbElite, subPop.size());
+    auto const nbElite = std::min(data.config.nbElite, subPop.size());
 
     for (size_t divRank = 0; divRank != subPop.size(); divRank++)
     {
@@ -107,8 +107,8 @@ std::pair<Individual const *, Individual const *> Population::selectParents()
     auto const *par1 = getBinaryTournament();
     auto const *par2 = getBinaryTournament();
 
-    auto const lowerBound = params.config.lbDiversity * params.nbClients;
-    auto const upperBound = params.config.ubDiversity * params.nbClients;
+    auto const lowerBound = data.config.lbDiversity * data.nbClients;
+    auto const upperBound = data.config.ubDiversity * data.nbClients;
     auto diversity = par1->brokenPairsDistance(par2);
 
     size_t tries = 1;
@@ -121,15 +121,15 @@ std::pair<Individual const *, Individual const *> Population::selectParents()
     return std::make_pair(par1, par2);
 }
 
-Population::Population(Params &params, XorShift128 &rng)
-    : params(params),
+Population::Population(ProblemData &data, XorShift128 &rng)
+    : data(data),
       rng(rng),
-      bestSol(&params, &rng)  // random initial best solution
+      bestSol(&data, &rng)  // random initial best solution
 {
     // Generate minPopSize random individuals to seed the population.
-    for (size_t count = 0; count != params.config.minPopSize; ++count)
+    for (size_t count = 0; count != data.config.minPopSize; ++count)
     {
-        Individual randomIndiv(&params, &rng);
+        Individual randomIndiv(&data, &rng);
         addIndividual(randomIndiv);
     }
 }

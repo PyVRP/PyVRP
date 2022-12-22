@@ -12,10 +12,10 @@ add_executable(test_Matrix test_Matrix.cpp)
 target_link_libraries(test_Matrix GTest::gtest_main)
 gtest_discover_tests(test_Matrix)
 
-# Params tests have file dependencies that require fixing the working directory
-add_executable(test_Params test_Params.cpp)
-target_link_libraries(test_Params GTest::gtest_main params penaltyManager)
-gtest_discover_tests(test_Params WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+# ProblemData tests have file dependencies that require fixing the working directory
+add_executable(test_ProblemData test_ProblemData.cpp)
+target_link_libraries(test_ProblemData GTest::gtest_main problemData penaltyManager)
+gtest_discover_tests(test_ProblemData WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_PenaltyManager test_PenaltyManager.cpp)
 target_link_libraries(test_PenaltyManager GTest::gtest_main penaltyManager)

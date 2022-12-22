@@ -1,7 +1,7 @@
 #ifndef INDIVIDUAL_H
 #define INDIVIDUAL_H
 
-#include "Params.h"
+#include "ProblemData.h"
 #include "XorShift128.h"
 
 #include <string>
@@ -23,7 +23,7 @@ class Individual
     // by increasing proximity.
     std::vector<std::pair<int, Individual *>> indivsByProximity;
 
-    Params const *params;  // Problem parameters
+    ProblemData const *data;  // Problem data
 
     // For each vehicle, the associated sequence of deliveries (complete
     // solution). Size is nbVehicles, but quite a few routes are likely empty
@@ -45,9 +45,9 @@ public:
      */
     [[nodiscard]] size_t cost() const
     {
-        auto const load = params->vehicleCapacity + capacityExcess;
-        auto const loadPenalty = params->pManager.loadPenalty(load);
-        auto const twPenalty = params->pManager.twPenalty(timeWarp);
+        auto const load = data->vehicleCapacity + capacityExcess;
+        auto const loadPenalty = data->pManager.loadPenalty(load);
+        auto const twPenalty = data->pManager.twPenalty(timeWarp);
 
         return distance + loadPenalty + twPenalty;
     }
@@ -128,9 +128,9 @@ public:
 
     Individual &operator=(Individual const &other) = default;
 
-    Individual(Params const *params, XorShift128 *rng);  // random individual
+    Individual(ProblemData const *data, XorShift128 *rng);  // random individual
 
-    Individual(Params const *params, Routes routes);
+    Individual(ProblemData const *data, Routes routes);
 
     Individual(Individual const &other);  // copy from other
 

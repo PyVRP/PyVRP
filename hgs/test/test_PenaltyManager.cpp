@@ -98,6 +98,7 @@ TEST(PenaltyManagerTest, testRepairBooster)
         ASSERT_EQ(pm.loadPenalty(3), 10);  // 2 units above capacity
     }
 
+    // Booster no longer in scope, so penalties should return to normal.
     ASSERT_EQ(pm.twPenalty(1), 1);
     ASSERT_EQ(pm.loadPenalty(2), 1);  // 1 unit above capacity
 }

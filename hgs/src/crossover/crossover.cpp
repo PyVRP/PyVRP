@@ -14,39 +14,38 @@ struct InsertPos  // best insert position, used to plan unplanned clients
 };
 
 // Evaluates the cost change of inserting client between prev and next.
-int deltaCost(Client client, Client prev, Client next, Params const &params)
+int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    int prevClientRelease = std::max(params.clients[prev].releaseTime,
-                                     params.clients[client].releaseTime);
-    int prevEarliestArrival = std::max(prevClientRelease + params.dist(0, prev),
-                                       params.clients[prev].twEarly);
-    int prevEarliestFinish = prevEarliestArrival + params.clients[prev].servDur;
-    int distPrevClient = params.dist(prev, client);
-    int clientLate = params.clients[client].twLate;
+    int prevClientRelease = std::max(data.clients[prev].releaseTime,
+                                     data.clients[client].releaseTime);
+    int prevEarliestArrival = std::max(prevClientRelease + data.dist(0, prev),
+                                       data.clients[prev].twEarly);
+    int prevEarliestFinish = prevEarliestArrival + data.clients[prev].servDur;
+    int distPrevClient = data.dist(prev, client);
+    int clientLate = data.clients[client].twLate;
 
     if (prevEarliestFinish + distPrevClient >= clientLate)
         return INT_MAX;
 
-    int clientNextRelease = std::max(params.clients[client].releaseTime,
-                                     params.clients[next].releaseTime);
-    int clientEarliestArrival
-        = std::max(clientNextRelease + params.dist(0, client),
-                   params.clients[client].twEarly);
+    int clientNextRelease = std::max(data.clients[client].releaseTime,
+                                     data.clients[next].releaseTime);
+    int clientEarliestArrival = std::max(
+        clientNextRelease + data.dist(0, client), data.clients[client].twEarly);
     int clientEarliestFinish
-        = clientEarliestArrival + params.clients[client].servDur;
-    int distClientNext = params.dist(client, next);
-    int nextLate = params.clients[next].twLate;
+        = clientEarliestArrival + data.clients[client].servDur;
+    int distClientNext = data.dist(client, next);
+    int nextLate = data.clients[next].twLate;
 
     if (clientEarliestFinish + distClientNext >= nextLate)
         return INT_MAX;
 
-    return distPrevClient + distClientNext - params.dist(prev, next);
+    return distPrevClient + distClientNext - data.dist(prev, next);
 }
 }  // namespace
 
 void crossover::greedyRepair(Routes &routes,
                              std::vector<Client> const &unplanned,
-                             Params const &params)
+                             ProblemData const &data)
 {
     size_t numRoutes = 0;  // points just after the last non-empty route
     for (size_t rIdx = 0; rIdx != routes.size(); ++rIdx)
@@ -81,7 +80,7 @@ void crossover::greedyRepair(Routes &routes,
                     next = route[idx];
                 }
 
-                auto const cost = deltaCost(client, prev, next, params);
+                auto const cost = deltaCost(client, prev, next, data);
                 if (cost < best.deltaCost)
                     best = {cost, &route, idx};
             }

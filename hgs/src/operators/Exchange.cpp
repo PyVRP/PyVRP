@@ -44,12 +44,12 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
     auto const posV = V->position;
 
     int const current = U->route->distBetween(posU - 1, posU + N)
-                        + d_params.dist(V->client, n(V)->client);
+                        + data.dist(V->client, n(V)->client);
 
-    int const proposed = d_params.dist(V->client, U->client)
+    int const proposed = data.dist(V->client, U->client)
                          + U->route->distBetween(posU, posU + N - 1)
-                         + d_params.dist(endU->client, n(V)->client)
-                         + d_params.dist(p(U)->client, n(endU)->client);
+                         + data.dist(endU->client, n(V)->client)
+                         + data.dist(p(U)->client, n(endU)->client);
 
     int deltaCost = proposed - current;
 
@@ -60,26 +60,26 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
         auto uTWS = TWS::merge(p(U)->twBefore, n(endU)->twAfter);
 
-        deltaCost += d_params.pManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= d_params.pManager.twPenalty(U->route->timeWarp());
+        deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
 
-        deltaCost += d_params.pManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= d_params.pManager.loadPenalty(U->route->load());
+        deltaCost += data.pManager.loadPenalty(U->route->load() - loadDiff);
+        deltaCost -= data.pManager.loadPenalty(U->route->load());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += d_params.pManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= d_params.pManager.loadPenalty(V->route->load());
+        deltaCost += data.pManager.loadPenalty(V->route->load() + loadDiff);
+        deltaCost -= data.pManager.loadPenalty(V->route->load());
 
         auto vTWS = TWS::merge(V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
 
-        deltaCost += d_params.pManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= d_params.pManager.twPenalty(V->route->timeWarp());
+        deltaCost += data.pManager.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= data.pManager.twPenalty(V->route->timeWarp());
     }
     else  // within same route
     {
@@ -95,7 +95,7 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
                                         route->twBetween(posU, posU + N - 1),
                                         n(V)->twAfter);
 
-            deltaCost += d_params.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
         }
         else
         {
@@ -104,10 +104,10 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
                                         route->twBetween(posV + 1, posU - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += d_params.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
         }
 
-        deltaCost -= d_params.pManager.twPenalty(route->timeWarp());
+        deltaCost -= data.pManager.twPenalty(route->timeWarp());
     }
 
     return deltaCost;
@@ -128,12 +128,12 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     int const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
-        = d_params.dist(p(U)->client, V->client)
+        = data.dist(p(U)->client, V->client)
           + V->route->distBetween(posV, posV + M - 1)
-          + d_params.dist(endV->client, n(endU)->client)
-          + d_params.dist(p(V)->client, U->client)
+          + data.dist(endV->client, n(endU)->client)
+          + data.dist(p(V)->client, U->client)
           + U->route->distBetween(posU, posU + N - 1)
-          + d_params.dist(endU->client, n(endV)->client);
+          + data.dist(endU->client, n(endV)->client);
 
     int deltaCost = proposed - current;
 
@@ -146,25 +146,25 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
 
-        deltaCost += d_params.pManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= d_params.pManager.twPenalty(U->route->timeWarp());
+        deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
 
         auto vTWS = TWS::merge(p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
 
-        deltaCost += d_params.pManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= d_params.pManager.twPenalty(V->route->timeWarp());
+        deltaCost += data.pManager.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= data.pManager.twPenalty(V->route->timeWarp());
 
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
 
-        deltaCost += d_params.pManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= d_params.pManager.loadPenalty(U->route->load());
+        deltaCost += data.pManager.loadPenalty(U->route->load() - loadDiff);
+        deltaCost -= data.pManager.loadPenalty(U->route->load());
 
-        deltaCost += d_params.pManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= d_params.pManager.loadPenalty(V->route->load());
+        deltaCost += data.pManager.loadPenalty(V->route->load() + loadDiff);
+        deltaCost -= data.pManager.loadPenalty(V->route->load());
     }
     else  // within same route
     {
@@ -181,7 +181,7 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                         route->twBetween(posU, posU + N - 1),
                                         n(endV)->twAfter);
 
-            deltaCost += d_params.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
         }
         else
         {
@@ -191,10 +191,10 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                         route->twBetween(posV, posV + M - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += d_params.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
         }
 
-        deltaCost -= d_params.pManager.twPenalty(U->route->timeWarp());
+        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
     }
 
     return deltaCost;

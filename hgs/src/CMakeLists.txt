@@ -15,7 +15,7 @@ set(localSearchSources
 
 set(individualSources Individual.cpp)
 set(nodeSources Node.cpp)
-set(paramsSources Params.cpp)
+set(problemDataSources ProblemData.cpp)
 set(penaltySources PenaltyManager.cpp)
 set(populationSources Population.cpp)
 set(resultSources Result.cpp)
@@ -28,7 +28,7 @@ add_library(individual ${individualSources})
 add_library(genetic ${geneticSources})
 add_library(ls ${localSearchSources})
 add_library(node ${nodeSources})
-add_library(params ${paramsSources})
+add_library(problemData ${problemDataSources})
 add_library(penaltyManager ${penaltySources})
 add_library(population ${populationSources})
 add_library(result ${resultSources})
@@ -41,7 +41,7 @@ set(hgs_libs
         genetic
         ls
         node
-        params
+        problemData
         penaltyManager
         population
         result

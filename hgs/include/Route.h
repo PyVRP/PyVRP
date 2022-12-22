@@ -23,7 +23,7 @@ class Route
     void setupRouteTimeWindows();
 
 public:  // TODO make fields private
-    Params const *params;
+    ProblemData const *data;
 
     int idx;             // Route index
     Node *depot;         // Pointer to the associated depot
@@ -51,7 +51,7 @@ public:  // TODO make fields private
      */
     [[nodiscard]] bool hasExcessCapacity() const
     {
-        return load() > params->vehicleCapacity;
+        return load() > data->vehicleCapacity;
     }
 
     /**
@@ -107,12 +107,12 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
     assert(start <= end);
 
-    auto data = nodes[start - 1]->tw;
+    auto tws = nodes[start - 1]->tw;
 
     for (size_t step = start; step != end; ++step)
-        data = TimeWindowSegment::merge(data, nodes[step]->tw);
+        tws = TimeWindowSegment::merge(tws, nodes[step]->tw);
 
-    return data;
+    return tws;
 }
 
 int Route::distBetween(size_t start, size_t end) const
@@ -132,7 +132,7 @@ int Route::loadBetween(size_t start, size_t end) const
     assert(start <= end && end <= nodes.size());
 
     auto const *startNode = start == 0 ? depot : nodes[start - 1];
-    auto const atStart = params->clients[startNode->client].demand;
+    auto const atStart = data->clients[startNode->client].demand;
     auto const startLoad = startNode->cumulatedLoad;
     auto const endLoad = nodes[end - 1]->cumulatedLoad;
 
