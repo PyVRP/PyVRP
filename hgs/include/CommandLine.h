@@ -58,8 +58,6 @@ public:
                 stream >> config.initialTimeWarpPenalty;
             else if (std::string(argv[idx]) == "--nbPenaltyManagement")
                 stream >> config.nbPenaltyManagement;
-            else if (std::string(argv[idx]) == "--feasBooster")
-                stream >> config.feasBooster;
             else if (std::string(argv[idx]) == "--penaltyIncrease")
                 stream >> config.penaltyIncrease;
             else if (std::string(argv[idx]) == "--penaltyDecrease")

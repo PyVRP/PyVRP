@@ -10,7 +10,7 @@ using Routes = std::vector<Route>;
 
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
-    Params const &params,
+    ProblemData const &data,
     XorShift128 &rng)
 {
     size_t nRoutesA = parents.first->numRoutes();
@@ -128,8 +128,8 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    Routes routes1(params.nbVehicles);
-    Routes routes2(params.nbVehicles);
+    Routes routes1(data.nbVehicles);
+    Routes routes2(data.nbVehicles);
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < nMovedRoutes; r++)
@@ -167,11 +167,11 @@ Individual selectiveRouteExchange(
         if (!selectedB.contains(c))
             unplanned.push_back(c);
 
-    crossover::greedyRepair(routes1, unplanned, params);
-    crossover::greedyRepair(routes2, unplanned, params);
+    crossover::greedyRepair(routes1, unplanned, data);
+    crossover::greedyRepair(routes2, unplanned, data);
 
-    Individual indiv1{&params, routes1};
-    Individual indiv2{&params, routes2};
+    Individual indiv1{&data, routes1};
+    Individual indiv2{&data, routes2};
 
     return std::min(indiv1, indiv2);
 }

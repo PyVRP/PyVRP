@@ -1,5 +1,5 @@
 #include "Individual.h"
-#include "Params.h"
+#include "ProblemData.h"
 
 #include <fstream>
 #include <numeric>
@@ -22,60 +22,59 @@ void Individual::evaluateCompleteCost()
 
         int lastRelease = 0;
         for (auto const idx : route)
-            lastRelease
-                = std::max(lastRelease, params->clients[idx].releaseTime);
+            lastRelease = std::max(lastRelease, data->clients[idx].releaseTime);
 
-        int rDist = params->dist(0, route[0]);
+        int rDist = data->dist(0, route[0]);
         int rTimeWarp = 0;
 
-        int load = params->clients[route[0]].demand;
+        int load = data->clients[route[0]].demand;
         int time = lastRelease + rDist;
 
-        if (time < params->clients[route[0]].twEarly)
-            time = params->clients[route[0]].twEarly;
+        if (time < data->clients[route[0]].twEarly)
+            time = data->clients[route[0]].twEarly;
 
-        if (time > params->clients[route[0]].twLate)
+        if (time > data->clients[route[0]].twLate)
         {
-            rTimeWarp += time - params->clients[route[0]].twLate;
-            time = params->clients[route[0]].twLate;
+            rTimeWarp += time - data->clients[route[0]].twLate;
+            time = data->clients[route[0]].twLate;
         }
 
         for (size_t idx = 1; idx < route.size(); idx++)
         {
             // Sum the rDist, load, servDur and time associated with the vehicle
             // traveling from the depot to the next client
-            rDist += params->dist(route[idx - 1], route[idx]);
-            load += params->clients[route[idx]].demand;
+            rDist += data->dist(route[idx - 1], route[idx]);
+            load += data->clients[route[idx]].demand;
 
-            time += params->clients[route[idx - 1]].servDur
-                    + params->dist(route[idx - 1], route[idx]);
+            time += data->clients[route[idx - 1]].servDur
+                    + data->dist(route[idx - 1], route[idx]);
 
             // Add possible waiting time
-            if (time < params->clients[route[idx]].twEarly)
-                time = params->clients[route[idx]].twEarly;
+            if (time < data->clients[route[idx]].twEarly)
+                time = data->clients[route[idx]].twEarly;
 
             // Add possible time warp
-            if (time > params->clients[route[idx]].twLate)
+            if (time > data->clients[route[idx]].twLate)
             {
-                rTimeWarp += time - params->clients[route[idx]].twLate;
-                time = params->clients[route[idx]].twLate;
+                rTimeWarp += time - data->clients[route[idx]].twLate;
+                time = data->clients[route[idx]].twLate;
             }
         }
 
         // For the last client, the successors is the depot. Also update the
         // rDist and time
-        rDist += params->dist(route.back(), 0);
-        time += params->clients[route.back()].servDur
-                + params->dist(route.back(), 0);
+        rDist += data->dist(route.back(), 0);
+        time += data->clients[route.back()].servDur
+                + data->dist(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
-        rTimeWarp += std::max(time - params->clients[0].twLate, 0);
+        rTimeWarp += std::max(time - data->clients[0].twLate, 0);
 
         // Whole solution stats
         distance += rDist;
         timeWarp += rTimeWarp;
-        capacityExcess += std::max(load - params->vehicleCapacity, 0);
+        capacityExcess += std::max(load - data->vehicleCapacity, 0);
     }
 }
 
@@ -83,7 +82,7 @@ int Individual::brokenPairsDistance(Individual const *other) const
 {
     int dist = 0;
 
-    for (int j = 1; j <= params->nbClients; j++)
+    for (int j = 1; j <= data->nbClients; j++)
     {
         auto const [tPred, tSucc] = this->neighbours[j];
         auto const [oPred, oSucc] = other->neighbours[j];
@@ -119,7 +118,7 @@ double Individual::avgBrokenPairsDistanceClosest() const
     if (indivsByProximity.empty())
         return 0.;
 
-    auto maxSize = std::min(params->config.nbClose, indivsByProximity.size());
+    auto maxSize = std::min(data->config.nbClose, indivsByProximity.size());
     auto start = indivsByProximity.begin();
     int result = 0;
 
@@ -128,7 +127,7 @@ double Individual::avgBrokenPairsDistanceClosest() const
 
     // Normalise broken pairs distance by # of clients and close neighbours
     auto const numClose = static_cast<double>(maxSize);
-    return result / (params->nbClients * numClose);
+    return result / (data->nbClients * numClose);
 }
 
 void Individual::exportCVRPLibFormat(std::string const &path, double time) const
@@ -153,13 +152,11 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-Individual::Individual(Params const *params, XorShift128 *rng)
-    : params(params),
-      routes_(params->nbVehicles),
-      neighbours(params->nbClients + 1)
+Individual::Individual(ProblemData const *data, XorShift128 *rng)
+    : data(data), routes_(data->nbVehicles), neighbours(data->nbClients + 1)
 {
-    auto const nbClients = params->nbClients;
-    auto const nbVehicles = params->nbVehicles;
+    auto const nbClients = data->nbClients;
+    auto const nbVehicles = data->nbVehicles;
 
     // Sort clients randomly
     auto clients = std::vector<int>(nbClients);
@@ -170,7 +167,7 @@ Individual::Individual(Params const *params, XorShift128 *rng)
     auto const clientsPerRoute
         = std::max(nbClients / nbVehicles, 1) + (nbClients % nbVehicles != 0);
 
-    for (auto idx = 0; idx != params->nbClients; ++idx)
+    for (auto idx = 0; idx != data->nbClients; ++idx)
     {
         auto const client = clients[idx];
         routes_[idx / clientsPerRoute].push_back(client);
@@ -180,10 +177,8 @@ Individual::Individual(Params const *params, XorShift128 *rng)
     evaluateCompleteCost();
 }
 
-Individual::Individual(Params const *params, Routes routes)
-    : params(params),
-      routes_(std::move(routes)),
-      neighbours(params->nbClients + 1)
+Individual::Individual(ProblemData const *data, Routes routes)
+    : data(data), routes_(std::move(routes)), neighbours(data->nbClients + 1)
 {
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but
@@ -200,7 +195,7 @@ Individual::Individual(Individual const &other)  // copy relevant route and cost
       distance(other.distance),                  // - but *not* the proximity
       capacityExcess(other.capacityExcess),      // structure since the copy
       timeWarp(other.timeWarp),                  // is not yet part of the same
-      params(other.params),                      // population.
+      data(other.data),                          // population.
       routes_(other.routes_),
       neighbours(other.neighbours)
 {

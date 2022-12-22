@@ -8,8 +8,8 @@
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
 #include "NoImprovement.h"
-#include "Params.h"
 #include "Population.h"
+#include "ProblemData.h"
 #include "RelocateStar.h"
 #include "Result.h"
 #include "Statistics.h"
@@ -32,11 +32,11 @@ PYBIND11_MODULE(hgspy, m)
         .def(py::init<int>(), py::arg("seed"));
 
     py::class_<Individual>(m, "Individual")
-        .def(py::init<Params *, XorShift128 *>(),
-             py::arg("params"),
+        .def(py::init<ProblemData *, XorShift128 *>(),
+             py::arg("data"),
              py::arg("rng"))
-        .def(py::init<Params *, std::vector<std::vector<int>>>(),
-             py::arg("params"),
+        .def(py::init<ProblemData *, std::vector<std::vector<int>>>(),
+             py::arg("data"),
              py::arg("routes"))
         .def("cost", &Individual::cost)
         .def("get_routes", &Individual::getRoutes)
@@ -48,8 +48,8 @@ PYBIND11_MODULE(hgspy, m)
         .def("export_cvrplib_format", &Individual::exportCVRPLibFormat);
 
     py::class_<LocalSearch>(m, "LocalSearch")
-        .def(py::init<Params &, XorShift128 &>(),
-             py::arg("params"),
+        .def(py::init<ProblemData &, XorShift128 &>(),
+             py::arg("data"),
              py::arg("rng"))
         .def("add_node_operator",
              static_cast<void (LocalSearch::*)(LocalSearchOperator<Node> &)>(
@@ -68,7 +68,7 @@ PYBIND11_MODULE(hgspy, m)
                       bool,
                       size_t,
                       size_t,
-                      double,
+                      size_t,
                       double,
                       double,
                       size_t,
@@ -89,9 +89,9 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("seed") = 0,
              py::arg("timeLimit") = INT_MAX,
              py::arg("collectStatistics") = false,
+             py::arg("initialCapacityPenalty") = 20,
              py::arg("initialTimeWarpPenalty") = 6,
              py::arg("nbPenaltyManagement") = 47,
-             py::arg("feasBooster") = 2.5,
              py::arg("penaltyIncrease") = 1.34,
              py::arg("penaltyDecrease") = 0.32,
              py::arg("minPopSize") = 25,
@@ -112,9 +112,9 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("seed", &Config::seed)
         .def_readonly("timeLimit", &Config::timeLimit)
         .def_readonly("collectStatistics", &Config::collectStatistics)
+        .def_readonly("initialCapacityPenalty", &Config::initialCapacityPenalty)
         .def_readonly("initialTimeWarpPenalty", &Config::initialTimeWarpPenalty)
         .def_readonly("nbPenaltyManagement", &Config::nbPenaltyManagement)
-        .def_readonly("feasBooster", &Config::feasBooster)
         .def_readonly("penaltyIncrease", &Config::penaltyIncrease)
         .def_readonly("penaltyDecrease", &Config::penaltyDecrease)
         .def_readonly("minPopSize", &Config::minPopSize)
@@ -132,7 +132,7 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("weightTimeWarp", &Config::weightTimeWarp)
         .def_readonly("postProcessPathLength", &Config::postProcessPathLength);
 
-    py::class_<Params>(m, "Params")
+    py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<Config const &,
                       std::vector<std::pair<int, int>> const &,
                       std::vector<int> const &,
@@ -153,8 +153,8 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("release_times"));
 
     py::class_<Population>(m, "Population")
-        .def(py::init<Params &, XorShift128 &>(),
-             py::arg("params"),
+        .def(py::init<ProblemData &, XorShift128 &>(),
+             py::arg("data"),
              py::arg("rng"))
         .def("add_individual",
              &Population::addIndividual,
@@ -174,8 +174,6 @@ PYBIND11_MODULE(hgspy, m)
         .def("infeas_best_cost", &Statistics::infeasBestCost)
         .def("infeas_avg_cost", &Statistics::infeasAvgCost)
         .def("infeas_avg_num_routes", &Statistics::infeasAvgNumRoutes)
-        .def("penalties_capacity", &Statistics::penaltiesCapacity)
-        .def("penalties_time_warp", &Statistics::penaltiesTimeWarp)
         .def("incumbents", &Statistics::incumbents)
         .def("to_csv",
              &Statistics::toCsv,
@@ -197,8 +195,11 @@ PYBIND11_MODULE(hgspy, m)
              py::return_value_policy::reference);
 
     py::class_<GeneticAlgorithm>(m, "GeneticAlgorithm")
-        .def(py::init<Params &, XorShift128 &, Population &, LocalSearch &>(),
-             py::arg("params"),
+        .def(py::init<ProblemData &,
+                      XorShift128 &,
+                      Population &,
+                      LocalSearch &>(),
+             py::arg("data"),
              py::arg("rng"),
              py::arg("population"),
              py::arg("local_search"))
@@ -243,42 +244,42 @@ PYBIND11_MODULE(hgspy, m)
     py::class_<LocalSearchOperator<Route>>(lsOps, "RouteLocalSearchOperator");
 
     py::class_<Exchange<1, 0>, LocalSearchOperator<Node>>(lsOps, "Exchange10")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<2, 0>, LocalSearchOperator<Node>>(lsOps, "Exchange20")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<3, 0>, LocalSearchOperator<Node>>(lsOps, "Exchange30")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<1, 1>, LocalSearchOperator<Node>>(lsOps, "Exchange11")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<2, 1>, LocalSearchOperator<Node>>(lsOps, "Exchange21")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<3, 1>, LocalSearchOperator<Node>>(lsOps, "Exchange31")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<2, 2>, LocalSearchOperator<Node>>(lsOps, "Exchange22")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<3, 2>, LocalSearchOperator<Node>>(lsOps, "Exchange32")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<Exchange<3, 3>, LocalSearchOperator<Node>>(lsOps, "Exchange33")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<MoveTwoClientsReversed, LocalSearchOperator<Node>>(
         lsOps, "MoveTwoClientsReversed")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<TwoOpt, LocalSearchOperator<Node>>(lsOps, "TwoOpt")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<RelocateStar, LocalSearchOperator<Route>>(lsOps, "RelocateStar")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 
     py::class_<SwapStar, LocalSearchOperator<Route>>(lsOps, "SwapStar")
-        .def(py::init<Params const &>(), py::arg("params"));
+        .def(py::init<ProblemData const &>(), py::arg("data"));
 }

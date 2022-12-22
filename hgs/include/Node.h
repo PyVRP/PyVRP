@@ -1,7 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "Params.h"
+#include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
 class Route;
@@ -9,7 +9,7 @@ class Route;
 class Node
 {
 public:  // TODO make fields private
-    Params const *params;
+    ProblemData const *data;
 
     int client;       // Client represented with this node
     size_t position;  // Position in the route

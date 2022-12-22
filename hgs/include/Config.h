@@ -13,10 +13,10 @@ struct Config
     int timeLimit = INT_MAX;         // time limit in seconds
     bool collectStatistics = false;  // collect runtime statistics?
 
-    size_t initialTimeWarpPenalty = 6;
+    size_t initialCapacityPenalty = 20;  // initial load violation penalty
+    size_t initialTimeWarpPenalty = 6;   // initial time warp penalty
 
     size_t nbPenaltyManagement = 47;  // manage penalties every # iterations
-    double feasBooster = 2.5;         // special increase penalty if no feas
     double penaltyIncrease = 1.34;    // regular increase if below target feas
     double penaltyDecrease = 0.32;    // regular decrease if above target feas
 
@@ -48,9 +48,9 @@ struct Config
     explicit Config(int seed = 0,
                     int timeLimit = INT_MAX,
                     bool collectStatistics = false,
+                    size_t initialCapacityPenalty = 20,
                     size_t initialTimeWarpPenalty = 6,
                     size_t nbPenaltyManagement = 47,
-                    double feasBooster = 2.5,
                     double penaltyIncrease = 1.34,
                     double penaltyDecrease = 0.32,
                     size_t minPopSize = 25,
@@ -71,9 +71,9 @@ struct Config
         : seed(seed),
           timeLimit(timeLimit),
           collectStatistics(collectStatistics),
+          initialCapacityPenalty(initialCapacityPenalty),
           initialTimeWarpPenalty(initialTimeWarpPenalty),
           nbPenaltyManagement(nbPenaltyManagement),
-          feasBooster(feasBooster),
           penaltyIncrease(penaltyIncrease),
           penaltyDecrease(penaltyDecrease),
           minPopSize(minPopSize),

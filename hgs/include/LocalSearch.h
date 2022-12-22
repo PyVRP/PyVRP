@@ -3,7 +3,7 @@
 
 #include "Individual.h"
 #include "Node.h"
-#include "Params.h"
+#include "ProblemData.h"
 #include "Route.h"
 #include "XorShift128.h"
 
@@ -17,8 +17,12 @@ class LocalSearch
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
 
-    Params &params;    // Problem parameters
-    XorShift128 &rng;  // Random number generator
+    ProblemData &data;  // Problem data
+    XorShift128 &rng;   // Random number generator
+
+    // Neighborhood restrictions: For each client, list of nearby clients (size
+    // nbClients + 1, but nothing stored for the depot!)
+    std::vector<std::vector<int>> neighbours;
 
     std::vector<int> orderNodes;   // random node order used in RI operators
     std::vector<int> orderRoutes;  // random route order used in SWAP* operators
@@ -58,6 +62,12 @@ class LocalSearch
                                Node const *after,
                                Route const &route) const;
 
+    /**
+     * Calculate, for all vertices, the correlation ('nearness') of the
+     * nbGranular closest vertices.
+     */
+    void calculateNeighbours();
+
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
@@ -81,7 +91,7 @@ public:
      */
     void intensify(Individual &indiv);
 
-    LocalSearch(Params &params, XorShift128 &rng);
+    LocalSearch(ProblemData &data, XorShift128 &rng);
 };
 
 #endif

@@ -1,15 +1,13 @@
-#include "Params.h"
-
-#include "XorShift128.h"
+#include "ProblemData.h"
 
 #include <cmath>
 #include <fstream>
-#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 
-Params Params::fromFile(Config const &config, std::string const &instPath)
+ProblemData ProblemData::fromFile(Config const &config,
+                                  std::string const &instPath)
 {
     size_t nbClients = 0;
     size_t vehicleCapacity = INT_MAX;
@@ -52,7 +50,7 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
             inputFile >> ignore >> nbClients;
             nbClients--;  // minus the depot
 
-            // Resize data to match number of clients with default values.
+            // Resize fields to match number of clients with default values.
             coords = {nbClients + 1, {0, 0}};
             demands = std::vector<int>(nbClients + 1, 0);
             servDurs = std::vector<int>(nbClients + 1, 0);
@@ -229,32 +227,30 @@ Params Params::fromFile(Config const &config, std::string const &instPath)
             releases};
 }
 
-Params::Params(Config const &config,
-               std::vector<std::pair<int, int>> const &coords,
-               std::vector<int> const &demands,
-               int nbVehicles,
-               int vehicleCap,
-               std::vector<std::pair<int, int>> const &timeWindows,
-               std::vector<int> const &servDurs,
-               std::vector<std::vector<int>> const &distMat,
-               std::vector<int> const &releases)
+ProblemData::ProblemData(Config const &config,
+                         std::vector<std::pair<int, int>> const &coords,
+                         std::vector<int> const &demands,
+                         int nbVehicles,
+                         int vehicleCap,
+                         std::vector<std::pair<int, int>> const &timeWindows,
+                         std::vector<int> const &servDurs,
+                         std::vector<std::vector<int>> const &distMat,
+                         std::vector<int> const &releases)
     : dist_(distMat),
-      maxDist_(dist_.max()),
+      pManager(static_cast<int>(config.initialCapacityPenalty),
+               static_cast<int>(config.initialTimeWarpPenalty),
+               config.penaltyIncrease,
+               config.penaltyDecrease,
+               config.targetFeasible,
+               vehicleCap,
+               static_cast<int>(config.repairBooster)),
       config(config),
       nbClients(static_cast<int>(coords.size()) - 1),
       nbVehicles(nbVehicles),
-      vehicleCapacity(vehicleCap)
+      vehicleCapacity(vehicleCap),
+      clients(nbClients + 1)
 {
-    // TODO data checks (partially from Params::fromFile)
-
-    // A reasonable scale for the initial values of the load penalty.
-    int const maxDemand = *std::max_element(demands.begin(), demands.end());
-    int const initCapPenalty = maxDist_ / std::max(maxDemand, 1);
-    penaltyCapacity = std::max(std::min(1000, initCapPenalty), 1);
-
-    penaltyTimeWarp = static_cast<int>(config.initialTimeWarpPenalty);
-
-    clients = std::vector<Client>(nbClients + 1);
+    // TODO argument checks (partially from ProblemData::fromFile)
 
     for (size_t idx = 0; idx <= static_cast<size_t>(nbClients); ++idx)
         clients[idx] = {coords[idx].first,
@@ -264,75 +260,4 @@ Params::Params(Config const &config,
                         timeWindows[idx].first,
                         timeWindows[idx].second,
                         releases[idx]};
-
-    calculateNeighbours();
-}
-
-void Params::calculateNeighbours()
-{
-    auto proximities
-        = std::vector<std::vector<std::pair<int, int>>>(nbClients + 1);
-
-    for (int i = 1; i <= nbClients; i++)  // exclude depot
-    {
-        auto &proximity = proximities[i];
-
-        for (int j = 1; j <= nbClients; j++)  // exclude depot
-        {
-            if (i == j)  // exclude the current client
-                continue;
-
-            // Compute proximity using Eq. 4 in Vidal 2012. The proximity is
-            // computed by the distance, min. wait time and min. time warp
-            // going from either i -> j or j -> i, whichever is the least.
-            int const maxRelease
-                = std::max(clients[i].releaseTime, clients[j].releaseTime);
-
-            // Proximity from j to i
-            int const waitTime1 = clients[i].twEarly - dist(j, i)
-                                  - clients[j].servDur - clients[j].twLate;
-            int const earliestArrival1
-                = std::max(maxRelease + dist(0, j), clients[j].twEarly);
-            int const timeWarp1 = earliestArrival1 + clients[j].servDur
-                                  + dist(j, i) - clients[i].twLate;
-            int const prox1 = dist(j, i)
-                              + config.weightWaitTime * std::max(0, waitTime1)
-                              + config.weightTimeWarp * std::max(0, timeWarp1);
-
-            // Proximity from i to j
-            int const waitTime2 = clients[j].twEarly - dist(i, j)
-                                  - clients[i].servDur - clients[i].twLate;
-            int const earliestArrival2
-                = std::max(maxRelease + dist(0, i), clients[i].twEarly);
-            int const timeWarp2 = earliestArrival2 + clients[i].servDur
-                                  + dist(i, j) - clients[j].twLate;
-            int const prox2 = dist(i, j)
-                              + config.weightWaitTime * std::max(0, waitTime2)
-                              + config.weightTimeWarp * std::max(0, timeWarp2);
-
-            proximity.emplace_back(std::min(prox1, prox2), j);
-        }
-
-        std::sort(proximity.begin(), proximity.end());
-    }
-
-    neighbours = std::vector<std::vector<int>>(nbClients + 1);
-
-    // First create a set of correlated vertices for each vertex (where the
-    // depot is not taken into account)
-    std::vector<std::set<int>> set(nbClients + 1);
-    size_t const granularity
-        = std::min(config.nbGranular, static_cast<size_t>(nbClients) - 1);
-
-    for (int i = 1; i <= nbClients; i++)  // again exclude depot
-    {
-        auto const &orderProximity = proximities[i];
-
-        for (size_t j = 0; j != granularity; ++j)
-            set[i].insert(orderProximity[j].second);
-    }
-
-    for (int i = 1; i <= nbClients; i++)
-        for (int x : set[i])
-            neighbours[i].push_back(x);
 }

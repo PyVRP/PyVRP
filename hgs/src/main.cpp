@@ -4,8 +4,8 @@
 #include "LocalSearch.h"
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
-#include "Params.h"
 #include "Population.h"
+#include "ProblemData.h"
 #include "RelocateStar.h"
 #include "SwapStar.h"
 #include "TwoOpt.h"
@@ -25,39 +25,39 @@ try
     auto config = args.parse();
 
     XorShift128 rng(config.seed);
-    Params params = Params::fromFile(config, args.instPath());
-    Population pop(params, rng);
+    ProblemData data = ProblemData::fromFile(config, args.instPath());
+    Population pop(data, rng);
 
-    LocalSearch ls(params, rng);
+    LocalSearch ls(data, rng);
 
-    auto exchange10 = Exchange<1, 0>(params);
+    auto exchange10 = Exchange<1, 0>(data);
     ls.addNodeOperator(exchange10);
 
-    auto exchange20 = Exchange<2, 0>(params);
+    auto exchange20 = Exchange<2, 0>(data);
     ls.addNodeOperator(exchange20);
 
-    auto reverse20 = MoveTwoClientsReversed(params);
+    auto reverse20 = MoveTwoClientsReversed(data);
     ls.addNodeOperator(reverse20);
 
-    auto exchange22 = Exchange<2, 2>(params);
+    auto exchange22 = Exchange<2, 2>(data);
     ls.addNodeOperator(exchange22);
 
-    auto exchange21 = Exchange<2, 1>(params);
+    auto exchange21 = Exchange<2, 1>(data);
     ls.addNodeOperator(exchange21);
 
-    auto exchange11 = Exchange<1, 1>(params);
+    auto exchange11 = Exchange<1, 1>(data);
     ls.addNodeOperator(exchange11);
 
-    auto twoOpt = TwoOpt(params);
+    auto twoOpt = TwoOpt(data);
     ls.addNodeOperator(twoOpt);
 
-    auto relocateStar = RelocateStar(params);
+    auto relocateStar = RelocateStar(data);
     ls.addRouteOperator(relocateStar);
 
-    auto swapStar = SwapStar(params);
+    auto swapStar = SwapStar(data);
     ls.addRouteOperator(swapStar);
 
-    GeneticAlgorithm solver(params, rng, pop, ls);
+    GeneticAlgorithm solver(data, rng, pop, ls);
     solver.addCrossoverOperator(selectiveRouteExchange);
 
     MaxRuntime stop(config.timeLimit);

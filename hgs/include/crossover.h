@@ -2,7 +2,7 @@
 #define CROSSOVER_H
 
 #include "Individual.h"
-#include "Params.h"
+#include "ProblemData.h"
 #include "XorShift128.h"
 
 #include <vector>
@@ -14,7 +14,7 @@ namespace crossover
  */
 void greedyRepair(std::vector<std::vector<int>> &routes,
                   std::vector<int> const &unplanned,
-                  Params const &params);
+                  ProblemData const &data);
 }  // namespace crossover
 
 /**
@@ -28,7 +28,7 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
  */
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
-    Params const &params,
+    ProblemData const &data,
     XorShift128 &rng);
 
 #endif  // CROSSOVER_H

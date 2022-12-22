@@ -2,7 +2,7 @@
 #define POPULATION_H
 
 #include "Individual.h"
-#include "Params.h"
+#include "ProblemData.h"
 #include "Statistics.h"
 #include "XorShift128.h"
 
@@ -32,8 +32,8 @@ public:
 private:
     using Parents = std::pair<Individual const *, Individual const *>;
 
-    Params &params;    // Problem parameters
-    XorShift128 &rng;  // Random number generator
+    ProblemData &data;  // Problem data
+    XorShift128 &rng;   // Random number generator
 
     SubPopulation feasible;    // Sub-population ordered asc. by cost
     SubPopulation infeasible;  // Sub-population ordered asc. by cost
@@ -79,7 +79,7 @@ public:
      */
     [[nodiscard]] Individual const &getBestFound() const { return bestSol; }
 
-    Population(Params &params, XorShift128 &rng);
+    Population(ProblemData &data, XorShift128 &rng);
 };
 
 #endif

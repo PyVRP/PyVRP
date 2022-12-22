@@ -65,10 +65,6 @@ void Statistics::collectFrom(Population const &pop)
     collectSubPopStats(pop.feasible, feasStats);
     collectSubPopStats(pop.infeasible, infeasStats);
 
-    // Penalty statistics
-    penaltiesCapacity_.push_back(pop.params.penaltyCapacity);
-    penaltiesTimeWarp_.push_back(pop.params.penaltyTimeWarp);
-
     // Incumbents
     auto const &best = pop.bestSol;
 
@@ -101,9 +97,7 @@ void Statistics::toCsv(std::string const &path, char const sep) const
         << "infeasible avg. diversity" << sep
         << "infeasible best. objective" << sep
         << "infeasible avg. objective" << sep
-        << "infeasible avg. # routes" << sep
-        << "penalty capacity" << sep
-        << "penalty time warp" << '\n';
+        << "infeasible avg. # routes" << '\n';
 
     for (size_t it = 0; it != numIters_; it++)
     {
@@ -118,9 +112,7 @@ void Statistics::toCsv(std::string const &path, char const sep) const
             << infeasStats.avgDiversity_[it] << sep
             << infeasStats.bestCost_[it] << sep
             << infeasStats.avgCost_[it] << sep
-            << infeasStats.avgNumRoutes_[it] << sep
-            << penaltiesCapacity_[it] << sep
-            << penaltiesTimeWarp_[it] << '\n';
+            << infeasStats.avgNumRoutes_[it] << '\n';
     }
     // clang-format on
 }
