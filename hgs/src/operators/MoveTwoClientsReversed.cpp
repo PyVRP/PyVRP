@@ -28,24 +28,24 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
         auto uTWS = TWS::merge(p(U)->twBefore, nn(U)->twAfter);
 
-        deltaCost += d_params.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= d_params.twPenalty(U->route->timeWarp());
+        deltaCost += d_params.pManager.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= d_params.pManager.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + 1);
 
-        deltaCost += d_params.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= d_params.loadPenalty(U->route->load());
+        deltaCost += d_params.pManager.loadPenalty(U->route->load() - loadDiff);
+        deltaCost -= d_params.pManager.loadPenalty(U->route->load());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += d_params.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= d_params.loadPenalty(V->route->load());
+        deltaCost += d_params.pManager.loadPenalty(V->route->load() + loadDiff);
+        deltaCost -= d_params.pManager.loadPenalty(V->route->load());
 
         auto vTWS = TWS::merge(V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
 
-        deltaCost += d_params.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= d_params.twPenalty(V->route->timeWarp());
+        deltaCost += d_params.pManager.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= d_params.pManager.twPenalty(V->route->timeWarp());
     }
     else  // within same route
     {
@@ -62,7 +62,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
                                          U->tw,
                                          n(V)->twAfter);
 
-            deltaCost += d_params.twPenalty(uTWS.totalTimeWarp());
+            deltaCost += d_params.pManager.twPenalty(uTWS.totalTimeWarp());
         }
         else
         {
@@ -72,10 +72,10 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
                                          route->twBetween(posV + 1, posU - 1),
                                          nn(U)->twAfter);
 
-            deltaCost += d_params.twPenalty(uTWS.totalTimeWarp());
+            deltaCost += d_params.pManager.twPenalty(uTWS.totalTimeWarp());
         }
 
-        deltaCost -= d_params.twPenalty(route->timeWarp());
+        deltaCost -= d_params.pManager.twPenalty(route->timeWarp());
     }
 
     return deltaCost;

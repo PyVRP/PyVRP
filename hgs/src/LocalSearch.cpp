@@ -243,7 +243,7 @@ int LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
     totalDist += params.dist(from, after->client);
     tws = TimeWindowSegment::merge(tws, after->twAfter);
 
-    return totalDist + params.twPenalty(tws.totalTimeWarp());
+    return totalDist + params.pManager.twPenalty(tws.totalTimeWarp());
 }
 
 void LocalSearch::calculateNeighbours()

@@ -45,11 +45,11 @@ public:
      */
     [[nodiscard]] size_t cost() const
     {
-        // clang-format off
-        return distance
-             + params->loadPenalty(params->vehicleCapacity + capacityExcess)
-             + params->twPenalty(timeWarp);
-        // clang-format on
+        auto const load = params->vehicleCapacity + capacityExcess;
+        auto const loadPenalty = params->pManager.loadPenalty(load);
+        auto const twPenalty = params->pManager.twPenalty(timeWarp);
+
+        return distance + loadPenalty + twPenalty;
     }
 
     /**

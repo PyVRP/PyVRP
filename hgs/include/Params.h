@@ -51,22 +51,6 @@ public:
     }
 
     /**
-     * Computes the total excess capacity penalty for the given load.
-     */
-    [[nodiscard]] int loadPenalty(int load) const
-    {
-        return pManager.loadPenalty(load);
-    }
-
-    /**
-     * Computes the total time warp penalty for the give time warp.
-     */
-    [[nodiscard]] int twPenalty(int timeWarp) const
-    {
-        return pManager.twPenalty(timeWarp);
-    }
-
-    /**
      * Constructs a Params object from the given configuration and data read
      * (in VRPLIB format) from the given instance path.
      *
