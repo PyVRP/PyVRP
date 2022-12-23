@@ -8,9 +8,10 @@ add_executable(test_CommandLine test_CommandLine.cpp)
 target_link_libraries(test_CommandLine GTest::gtest_main)
 gtest_discover_tests(test_CommandLine)
 
+# Individual tests have file dependencies that require fixing the working directory
 add_executable(test_Individual test_Individual.cpp)
 target_link_libraries(test_Individual GTest::gtest_main individual)
-gtest_discover_tests(test_Individual)
+gtest_discover_tests(test_Individual WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_Matrix test_Matrix.cpp)
 target_link_libraries(test_Matrix GTest::gtest_main)
@@ -18,7 +19,7 @@ gtest_discover_tests(test_Matrix)
 
 # ProblemData tests have file dependencies that require fixing the working directory
 add_executable(test_ProblemData test_ProblemData.cpp)
-target_link_libraries(test_ProblemData GTest::gtest_main problemData penaltyManager)
+target_link_libraries(test_ProblemData GTest::gtest_main problemData)
 gtest_discover_tests(test_ProblemData WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_PenaltyManager test_PenaltyManager.cpp)

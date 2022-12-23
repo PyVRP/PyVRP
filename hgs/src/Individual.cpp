@@ -213,6 +213,12 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 Individual::Individual(ProblemData const &data, Routes routes)
     : data(&data), routes_(std::move(routes)), neighbours(data.nbClients + 1)
 {
+    if (routes_.size() != static_cast<size_t>(data.nbVehicles))
+    {
+        auto const msg = "Number of routes does not match number of vehicles.";
+        throw std::runtime_error(msg);
+    }
+
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but
     // also make sure all empty routes are at the end of routes_.
