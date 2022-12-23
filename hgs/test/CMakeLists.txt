@@ -8,6 +8,10 @@ add_executable(test_CommandLine test_CommandLine.cpp)
 target_link_libraries(test_CommandLine GTest::gtest_main)
 gtest_discover_tests(test_CommandLine)
 
+add_executable(test_Individual test_Individual.cpp)
+target_link_libraries(test_Individual GTest::gtest_main individual)
+gtest_discover_tests(test_Individual)
+
 add_executable(test_Matrix test_Matrix.cpp)
 target_link_libraries(test_Matrix GTest::gtest_main)
 gtest_discover_tests(test_Matrix)

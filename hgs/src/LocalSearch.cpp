@@ -413,7 +413,7 @@ Individual LocalSearch::exportIndividual()
         }
     }
 
-    return {&data, indivRoutes};
+    return {data, indivRoutes};
 }
 
 LocalSearch::LocalSearch(ProblemData &data, XorShift128 &rng)

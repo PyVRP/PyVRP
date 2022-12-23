@@ -35,7 +35,7 @@ void Population::addIndividual(Individual const &indiv)
         }
     }
 
-    if (indiv.isFeasible() && indiv < bestSol)
+    if (indiv.isFeasible() && indiv.cost() < bestSol.cost())
         bestSol = indiv;
 }
 
@@ -122,14 +122,12 @@ std::pair<Individual const *, Individual const *> Population::selectParents()
 }
 
 Population::Population(ProblemData &data, XorShift128 &rng)
-    : data(data),
-      rng(rng),
-      bestSol(&data, &rng)  // random initial best solution
+    : data(data), rng(rng), bestSol(data, rng)  // random initial best solution
 {
     // Generate minPopSize random individuals to seed the population.
     for (size_t count = 0; count != data.config.minPopSize; ++count)
     {
-        Individual randomIndiv(&data, &rng);
+        Individual randomIndiv(data, rng);
         addIndividual(randomIndiv);
     }
 }

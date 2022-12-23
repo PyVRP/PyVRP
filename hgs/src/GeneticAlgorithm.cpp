@@ -60,7 +60,11 @@ Individual GeneticAlgorithm::crossover() const
 
     // A simple geometric acceptance criterion: select the best with some
     // probability. If not accepted, test the second best, etc.
-    std::sort(offspring.begin(), offspring.end());
+    std::sort(offspring.begin(),
+              offspring.end(),
+              [](auto const &indiv1, auto const &indiv2) {
+                  return indiv1.cost() < indiv2.cost();
+              });
 
     for (auto &indiv : offspring)
         if (rng.randint(100) < data.config.selectProbability)
@@ -75,7 +79,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
 
     if (data.config.shouldIntensify  // only intensify feasible, new best
         && indiv.isFeasible()        // solutions. Cf. also repair below.
-        && indiv < population.getBestFound())
+        && indiv.cost() < population.getBestFound().cost())
         localSearch.intensify(indiv);
 
     population.addIndividual(indiv);
@@ -93,7 +97,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
         if (indiv.isFeasible())
         {
             if (data.config.shouldIntensify
-                && indiv < population.getBestFound())
+                && indiv.cost() < population.getBestFound().cost())
                 localSearch.intensify(indiv);
 
             population.addIndividual(indiv);
