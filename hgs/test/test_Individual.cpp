@@ -62,3 +62,46 @@ TEST(IndividualTest, getNeighbours)
     for (auto client = 0; client != 5; ++client)
         EXPECT_EQ(neighbours[client], expected[client]);
 }
+
+TEST(IndividualTest, feasibility)
+{
+    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+
+    // This solution is infeasible due to both load and time window violations.
+    std::vector<std::vector<int>> const routes = {{1, 2, 3, 4}, {}, {}};
+    Individual indiv{data, routes};
+    EXPECT_FALSE(indiv.isFeasible());
+
+    // First route has total load 18, but vehicle capacity is only 10.
+    EXPECT_TRUE(indiv.hasExcessCapacity());
+
+    // Client 4 has TW [8400, 15300], but client 2 cannot be visited before
+    // 15600, so there must be time warp on the single-route solution.
+    EXPECT_TRUE(indiv.hasTimeWarp());
+
+    // Let's try another solution that's actually feasible.
+    std::vector<std::vector<int>> const routes2 = {{1, 2}, {3}, {4}};
+    Individual indiv2{data, routes2};
+    EXPECT_TRUE(indiv2.isFeasible());
+    EXPECT_FALSE(indiv2.hasExcessCapacity());
+    EXPECT_FALSE(indiv2.hasTimeWarp());
+}
+
+TEST(IndividualTest, brokenPairsDistance)
+{
+    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+
+    std::vector<std::vector<int>> const routes1 = {{1, 2, 3, 4}, {}, {}};
+    Individual indiv1{data, routes1};
+
+    std::vector<std::vector<int>> const routes2 = {{1, 2}, {3}, {4}};
+    Individual indiv2{data, routes2};
+
+    // Due to clients 2 and 3: their successors differ between routes, and
+    // they're not at the ends of a route in indiv1.
+    EXPECT_EQ(indiv1.brokenPairsDistance(&indiv2), 2);
+
+    // TODO cover all cases
+}
+
+// TODO test cost computation
