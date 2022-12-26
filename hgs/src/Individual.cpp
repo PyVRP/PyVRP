@@ -122,12 +122,11 @@ int Individual::brokenPairsDistance(Individual const *other) const
         auto const [tPred, tSucc] = this->neighbours[j];
         auto const [oPred, oSucc] = other->neighbours[j];
 
-        // Increase the difference if the successor of j in this individual is
-        // not directly linked to j in other
+        // +1 if j's successor is different from the other's predecessor or
+        // successor. We also need to account for route splitting: if our
+        // predecessor is the depot, and j in the other solution is not
+        // adjacent to the depot, we also +1.
         dist += tSucc != oSucc && tSucc != oPred;
-
-        // Increase the difference if the predecessor of j in this individual is
-        // not directly linked to j in other
         dist += tPred == 0 && oPred != 0 && oSucc != 0;
     }
 
