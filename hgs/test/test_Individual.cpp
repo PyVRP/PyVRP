@@ -109,4 +109,17 @@ TEST(IndividualTest, brokenPairsDistance)
     EXPECT_EQ(indiv1.brokenPairsDistance(&indiv3), 3);
 }
 
-// TODO test cost computation
+TEST(IndividualCostTest, distance)
+{
+    // TODO
+}
+
+TEST(IndividualCostTest, capacity)
+{
+    // TODO
+}
+
+TEST(IndividualCostTest, timeWarp)
+{
+    // TODO
+}
