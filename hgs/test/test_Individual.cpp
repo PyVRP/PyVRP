@@ -101,7 +101,12 @@ TEST(IndividualTest, brokenPairsDistance)
     // they're not at the ends of a route in indiv1.
     EXPECT_EQ(indiv1.brokenPairsDistance(&indiv2), 2);
 
-    // TODO cover all cases
+    std::vector<std::vector<int>> const routes3 = {{3}, {4, 1, 2}, {}};
+    Individual indiv3{data, routes3};
+
+    // Due to 1 not being next to a depot in indiv3, and 2 and 3 having
+    // different successors between routes.
+    EXPECT_EQ(indiv1.brokenPairsDistance(&indiv3), 3);
 }
 
 // TODO test cost computation
