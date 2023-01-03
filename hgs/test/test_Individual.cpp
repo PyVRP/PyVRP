@@ -100,6 +100,7 @@ TEST(IndividualTest, brokenPairsDistance)
     // Due to clients 2 and 3: their successors differ between routes, and
     // they're not at the ends of a route in indiv1.
     EXPECT_EQ(indiv1.brokenPairsDistance(&indiv2), 2);
+    EXPECT_EQ(indiv2.brokenPairsDistance(&indiv1), 2);  // should be symmetric
 
     std::vector<std::vector<int>> const routes3 = {{3}, {4, 1, 2}, {}};
     Individual indiv3{data, routes3};
@@ -107,6 +108,7 @@ TEST(IndividualTest, brokenPairsDistance)
     // Due to 1 not being next to a depot in indiv3, and 2 and 3 having
     // different successors between routes.
     EXPECT_EQ(indiv1.brokenPairsDistance(&indiv3), 3);
+    EXPECT_EQ(indiv3.brokenPairsDistance(&indiv1), 3);  // should be symmetric
 }
 
 TEST(IndividualCostTest, distance)

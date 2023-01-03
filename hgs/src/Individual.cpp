@@ -126,8 +126,8 @@ int Individual::brokenPairsDistance(Individual const *other) const
         // successor. We also need to account for route splitting: if our
         // predecessor is the depot, and j in the other solution is not
         // adjacent to the depot, we also +1.
-        dist += tSucc != oSucc && tSucc != oPred;
-        dist += tPred == 0 && oPred != 0 && oSucc != 0;
+        dist += (tSucc != oSucc && tSucc != oPred)
+                || (tPred == 0 && oPred != 0 && oSucc != 0);
     }
 
     return dist;
