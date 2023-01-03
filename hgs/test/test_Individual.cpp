@@ -113,15 +113,67 @@ TEST(IndividualTest, brokenPairsDistance)
 
 TEST(IndividualCostTest, distance)
 {
-    // TODO
+    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    std::vector<std::vector<int>> const routes = {{1, 2}, {3}, {4}};
+    Individual indiv{data, routes};
+
+    ASSERT_TRUE(indiv.isFeasible());
+
+    // This individual is feasible, so cost should equal total distance
+    // travelled.
+    int dist = data.dist(0, 1, 2, 0) + data.dist(0, 3, 0) + data.dist(0, 4, 0);
+    EXPECT_EQ(dist, indiv.cost());
 }
 
 TEST(IndividualCostTest, capacity)
 {
-    // TODO
+    Config const config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    std::vector<std::vector<int>> const routes = {{4, 3, 1, 2}, {}, {}};
+    Individual indiv{data, routes};
+
+    ASSERT_TRUE(indiv.hasExcessCapacity());
+    ASSERT_FALSE(indiv.hasTimeWarp());
+
+    int load = 0;
+
+    for (auto &client : data.clients)  // all demand, since all clients are
+        load += client.demand;         // in a single route
+
+    int excessLoad = load - data.vehicleCapacity;
+    int loadPenalty = config.initialCapacityPenalty * excessLoad;
+    int dist = data.dist(0, 4, 3, 1, 2, 0);
+
+    // This individual is infeasible due to load violations, so the costs should
+    // be distance + loadPenalty * excessLoad.
+    EXPECT_EQ(dist + loadPenalty, indiv.cost());
 }
 
 TEST(IndividualCostTest, timeWarp)
 {
-    // TODO
+    Config const config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    std::vector<std::vector<int>> const routes = {{1, 3}, {2, 4}, {}};
+    Individual indiv{data, routes};
+
+    ASSERT_FALSE(indiv.hasExcessCapacity());
+    ASSERT_TRUE(indiv.hasTimeWarp());
+
+    // There's only time warp on the first route: dist(0, 1) = 1'544, so we
+    // arrive at 1 before its opening window of 15'600. Service (360) thus
+    // starts at 15'600, and completes at 15'600 + 360. Then we drive
+    // dist(1, 3) = 1'427, where we arrive after 15'300 (its closing time
+    // window). This is where we incur time warp: we need to 'warp back' to
+    // 15'300.
+    int twR1 = 15'600 + 360 + 1'427 - 15'300;
+    int twR2 = 0;
+    int timeWarp = twR1 + twR2;
+    int twPenalty = config.initialTimeWarpPenalty * timeWarp;
+    int dist = data.dist(0, 1, 3, 0) + data.dist(0, 2, 4, 0);
+
+    // This individual is infeasible due to time warp, so the costs should
+    // be distance + twPenalty * timeWarp.
+    EXPECT_EQ(dist + twPenalty, indiv.cost());
+
+    // TODO test all time warp cases
 }
