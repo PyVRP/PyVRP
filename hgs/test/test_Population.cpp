@@ -88,11 +88,39 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     EXPECT_TRUE(best2.isFeasible());
 }
 
-// TODO test more add()
+// TODO test more add() - fitness, duplicate, survivor selection
 
-TEST(PopulationTest, select)
+TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
 {
-    // TODO
+    Config config;
+    config.minPopSize = 0;
+
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    XorShift128 rng;
+    Population pop(data, rng);
+
+    ASSERT_EQ(pop.size(), 0);
+
+    Individual indiv1 = {data, {{3, 2}, {1, 4}, {}}};
+    pop.add(indiv1);
+
+    {
+        // We added a single individual, so we should now get the same parent
+        // twice.
+        auto const parents = pop.select();
+        EXPECT_EQ(parents.first, parents.second);
+    }
+
+    // Now we add another, different parent.
+    Individual indiv2 = {data, {{3, 2}, {1}, {4}}};
+    pop.add(indiv2);
+
+    {
+        // We should now not select the same parents again (it's not impossible,
+        // but unlikely), because two different parents are available.
+        auto const parents = pop.select();
+        EXPECT_NE(parents.first, parents.second);
+    }
 }
 
 // TODO test more select()
