@@ -2,7 +2,6 @@
 
 #include "Population.h"
 
-
 TEST(PopulationTest, add)
 {
     // TODO
