@@ -46,7 +46,7 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
 
 Individual GeneticAlgorithm::crossover() const
 {
-    auto const parents = population.selectParents();
+    auto const parents = population.select();
 
     std::vector<Individual> offspring;
     offspring.reserve(operators.size());

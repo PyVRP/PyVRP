@@ -64,7 +64,7 @@ public:
      *
      * @return A pair of individuals (parents).
      */
-    Parents selectParents();
+    Parents select();
 
     /**
      * @return The best observed feasible solution over all iterations.

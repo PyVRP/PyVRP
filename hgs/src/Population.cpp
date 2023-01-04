@@ -102,7 +102,7 @@ Individual const *Population::getBinaryTournament()
     return (wrap1.fitness < wrap2.fitness ? wrap1.indiv : wrap2.indiv).get();
 }
 
-std::pair<Individual const *, Individual const *> Population::selectParents()
+std::pair<Individual const *, Individual const *> Population::select()
 {
     auto const *par1 = getBinaryTournament();
     auto const *par2 = getBinaryTournament();
