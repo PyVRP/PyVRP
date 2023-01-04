@@ -65,7 +65,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     config.minPopSize = 0;
 
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    XorShift128 rng(INT_MAX);
+    XorShift128 rng(2'147'483'647);
     Population pop(data, rng);
 
     // Should not have added any individuals to the population pool. The 'best'
@@ -73,18 +73,18 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     // individual.
     ASSERT_EQ(pop.size(), config.minPopSize);
 
-    // This random individual is feasible and has cost 9240.
+    // This random individual is feasible and has cost 9'339.
     auto const &best1 = pop.getBestFound();
-    EXPECT_EQ(best1.cost(), 9240);
+    EXPECT_EQ(best1.cost(), 9'339);
     EXPECT_TRUE(best1.isFeasible());
 
     // We now add a new, better solution to the population.
     pop.add({data, {{3, 2}, {1, 4}, {}}});
 
-    // This new solution is feasible and has cost 9155, so adding it to the
+    // This new solution is feasible and has cost 9'155, so adding it to the
     // population should replace the best found solution.
     auto const &best2 = pop.getBestFound();
-    EXPECT_EQ(best2.cost(), 9155);
+    EXPECT_EQ(best2.cost(), 9'155);
     EXPECT_TRUE(best2.isFeasible());
 }
 
