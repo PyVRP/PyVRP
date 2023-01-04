@@ -39,7 +39,6 @@ add_library(tws ${timeWindowSegmentSources})
 add_library(genetic ${geneticSources})
 add_library(ls ${localSearchSources})
 add_library(node ${nodeSources})
-
 add_library(population ${populationSources})
 add_library(result ${resultSources})
 add_library(route ${routeSources})
