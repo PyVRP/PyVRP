@@ -170,8 +170,8 @@ Individual selectiveRouteExchange(
     crossover::greedyRepair(routes1, unplanned, data);
     crossover::greedyRepair(routes2, unplanned, data);
 
-    Individual indiv1{&data, routes1};
-    Individual indiv2{&data, routes2};
+    Individual indiv1{data, routes1};
+    Individual indiv2{data, routes2};
 
-    return std::min(indiv1, indiv2);
+    return indiv1.cost() < indiv2.cost() ? indiv1 : indiv2;
 }

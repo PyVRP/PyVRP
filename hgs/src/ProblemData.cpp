@@ -190,6 +190,7 @@ ProblemData ProblemData::fromFile(Config const &config,
     }
 
     if (edgeWeightType == "EUC_2D")
+        // TODO should probably also scale service times and time windows 10x
         for (size_t i = 0; i <= nbClients; i++)
         {
             distMat.emplace_back(nbClients + 1);

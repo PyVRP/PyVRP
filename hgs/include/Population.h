@@ -46,6 +46,7 @@ private:
     // Removes a duplicate individual from the sub-population if there exists
     // one. If there are multiple duplicate individuals, then the one with the
     // lowest index in the sub-population is removed first.
+    // TODO do we still need this?
     static bool removeDuplicate(SubPopulation &subPop);
 
     // Removes the worst individual in terms of biased fitness

@@ -5,9 +5,12 @@
 #include <numeric>
 #include <vector>
 
+using Client = int;
+using Route = std::vector<Client>;
+using Routes = std::vector<Route>;
+
 void Individual::evaluateCompleteCost()
 {
-    // Reset fields before evaluating them again below.
     nbRoutes = 0;
     distance = 0;
     capacityExcess = 0;
@@ -16,7 +19,7 @@ void Individual::evaluateCompleteCost()
     for (auto const &route : routes_)
     {
         if (route.empty())  // First empty route. All subsequent routes are
-            break;          // empty as well
+            break;          // empty as well.
 
         nbRoutes++;
 
@@ -78,6 +81,38 @@ void Individual::evaluateCompleteCost()
     }
 }
 
+size_t Individual::cost() const
+{
+    auto const load = data->vehicleCapacity + capacityExcess;
+    auto const loadPenalty = data->pManager.loadPenalty(load);
+    auto const twPenalty = data->pManager.twPenalty(timeWarp);
+
+    return distance + loadPenalty + twPenalty;
+}
+
+size_t Individual::numRoutes() const { return nbRoutes; }
+
+Routes const &Individual::getRoutes() const { return routes_; }
+
+std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
+{
+    return neighbours;
+}
+
+bool Individual::isFeasible() const
+{
+    return !hasExcessCapacity() && !hasTimeWarp();
+}
+
+bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
+
+bool Individual::hasTimeWarp() const { return timeWarp > 0; }
+
+bool Individual::hasClone() const
+{
+    return !indivsByProximity.empty() && indivsByProximity.begin()->first == 0;
+}
+
 int Individual::brokenPairsDistance(Individual const *other) const
 {
     int dist = 0;
@@ -87,13 +122,11 @@ int Individual::brokenPairsDistance(Individual const *other) const
         auto const [tPred, tSucc] = this->neighbours[j];
         auto const [oPred, oSucc] = other->neighbours[j];
 
-        // Increase the difference if the successor of j in this individual is
-        // not directly linked to j in other
-        dist += tSucc != oSucc && tSucc != oPred;
-
-        // Increase the difference if the predecessor of j in this individual is
-        // not directly linked to j in other
-        dist += tPred == 0 && oPred != 0 && oSucc != 0;
+        // The pair (j, tSucc) is broken when tSucc is not adjacent to j in the
+        // other solution, or when j starts a route in our solution, but is not
+        // adjacent to the depot in the other solution.
+        dist += (tSucc != oSucc && tSucc != oPred)
+                || (tPred == 0 && oPred != 0 && oSucc != 0);
     }
 
     return dist;
@@ -130,7 +163,7 @@ double Individual::avgBrokenPairsDistanceClosest() const
     return result / (data->nbClients * numClose);
 }
 
-void Individual::exportCVRPLibFormat(std::string const &path, double time) const
+void Individual::toFile(std::string const &path, double time) const
 {
     std::ofstream out(path);
 
@@ -152,34 +185,38 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-Individual::Individual(ProblemData const *data, XorShift128 *rng)
-    : data(data), routes_(data->nbVehicles), neighbours(data->nbClients + 1)
+Individual::Individual(ProblemData const &data, XorShift128 &rng)
+    : data(&data), routes_(data.nbVehicles), neighbours(data.nbClients + 1)
 {
-    auto const nbClients = data->nbClients;
-    auto const nbVehicles = data->nbVehicles;
+    auto const nbClients = data.nbClients;
+    auto const nbVehicles = data.nbVehicles;
 
-    // Sort clients randomly
+    // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(nbClients);
     std::iota(clients.begin(), clients.end(), 1);
-    std::shuffle(clients.begin(), clients.end(), *rng);
+    std::shuffle(clients.begin(), clients.end(), rng);
 
-    // Distribute clients evenly over the routes
-    auto const clientsPerRoute
-        = std::max(nbClients / nbVehicles, 1) + (nbClients % nbVehicles != 0);
+    // Distribute clients evenly over the routes: the total number of clients
+    // per vehicle, with an adjustment in case the division is not perfect.
+    auto const perVehicle = std::max(nbClients / nbVehicles, 1);
+    auto const perRoute = perVehicle + (nbClients % nbVehicles != 0);
 
-    for (auto idx = 0; idx != data->nbClients; ++idx)
-    {
-        auto const client = clients[idx];
-        routes_[idx / clientsPerRoute].push_back(client);
-    }
+    for (auto idx = 0; idx != nbClients; ++idx)
+        routes_[idx / perRoute].push_back(clients[idx]);
 
     makeNeighbours();
     evaluateCompleteCost();
 }
 
-Individual::Individual(ProblemData const *data, Routes routes)
-    : data(data), routes_(std::move(routes)), neighbours(data->nbClients + 1)
+Individual::Individual(ProblemData const &data, Routes routes)
+    : data(&data), routes_(std::move(routes)), neighbours(data.nbClients + 1)
 {
+    if (routes_.size() != static_cast<size_t>(data.nbVehicles))
+    {
+        auto const msg = "Number of routes does not match number of vehicles.";
+        throw std::runtime_error(msg);
+    }
+
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but
     // also make sure all empty routes are at the end of routes_.

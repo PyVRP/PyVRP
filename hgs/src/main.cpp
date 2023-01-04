@@ -65,7 +65,7 @@ try
 
     std::chrono::duration<double> const timeDelta = clock::now() - start;
     auto const &bestSol = res.getBestFound();
-    bestSol.exportCVRPLibFormat(args.solPath(), timeDelta.count());
+    bestSol.toFile(args.solPath(), timeDelta.count());
 }
 catch (std::exception const &e)
 {

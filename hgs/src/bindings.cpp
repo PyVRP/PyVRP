@@ -32,10 +32,10 @@ PYBIND11_MODULE(hgspy, m)
         .def(py::init<int>(), py::arg("seed"));
 
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData *, XorShift128 *>(),
+        .def(py::init<ProblemData &, XorShift128 &>(),
              py::arg("data"),
              py::arg("rng"))
-        .def(py::init<ProblemData *, std::vector<std::vector<int>>>(),
+        .def(py::init<ProblemData &, std::vector<std::vector<int>>>(),
              py::arg("data"),
              py::arg("routes"))
         .def("cost", &Individual::cost)
@@ -45,7 +45,7 @@ PYBIND11_MODULE(hgspy, m)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
         .def("broken_pairs_distance", &Individual::brokenPairsDistance)
-        .def("export_cvrplib_format", &Individual::exportCVRPLibFormat);
+        .def("to_file", &Individual::toFile);
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<ProblemData &, XorShift128 &>(),
@@ -150,7 +150,8 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("time_windows"),
              py::arg("service_durations"),
              py::arg("duration_matrix"),
-             py::arg("release_times"));
+             py::arg("release_times"))
+        .def("from_file", &ProblemData::fromFile);
 
     py::class_<Population>(m, "Population")
         .def(py::init<ProblemData &, XorShift128 &>(),

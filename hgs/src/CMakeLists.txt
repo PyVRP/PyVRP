@@ -24,17 +24,25 @@ set(statisticsSources Statistics.cpp)
 set(timeWindowSegmentSources TimeWindowSegment.cpp)
 
 # Internal libraries
+add_library(penaltyManager ${penaltySources})
+
+add_library(problemData ${problemDataSources})
+target_link_libraries(problemData penaltyManager)  # TODO remove penaltyManager
+
 add_library(individual ${individualSources})
+target_link_libraries(individual problemData penaltyManager)
+
+add_library(tws ${timeWindowSegmentSources})
+
+# TODO ok up to here
+
 add_library(genetic ${geneticSources})
 add_library(ls ${localSearchSources})
 add_library(node ${nodeSources})
-add_library(problemData ${problemDataSources})
-add_library(penaltyManager ${penaltySources})
 add_library(population ${populationSources})
 add_library(result ${resultSources})
 add_library(route ${routeSources})
 add_library(statistics ${statisticsSources})
-add_library(tws ${timeWindowSegmentSources})
 
 set(hgs_libs
         individual

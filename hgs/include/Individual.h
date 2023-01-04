@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-// Object to represent one individual of a population.
 class Individual
 {
     using Client = int;
@@ -19,21 +18,14 @@ class Individual
     size_t capacityExcess = 0;  // Total excess load over all routes
     size_t timeWarp = 0;        // All route time warp of late arrivals
 
-    // The other individuals in the population (cannot be the depot 0), ordered
-    // by increasing proximity.
+    // The other individuals in the population, ordered by increasing proximity
     std::vector<std::pair<int, Individual *>> indivsByProximity;
 
     ProblemData const *data;  // Problem data
+    Routes routes_;           // Routes - only the first nbRoutes are non-empty
+    std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
 
-    // For each vehicle, the associated sequence of deliveries (complete
-    // solution). Size is nbVehicles, but quite a few routes are likely empty
-    // - the numRoutes() member indicates the number of nonempty routes.
-    Routes routes_;
-
-    // Pairs of [predecessor, successor] for each client (index)
-    std::vector<std::pair<Client, Client>> neighbours;
-
-    // Determines (pred, succ) pairs for each client
+    // Determines the [pred, succ] pairs for each client.
     void makeNeighbours();
 
     // Evaluates this solution's objective value.
@@ -43,101 +35,110 @@ public:
     /**
      * Returns this individual's objective (penalized cost).
      */
-    [[nodiscard]] size_t cost() const
-    {
-        auto const load = data->vehicleCapacity + capacityExcess;
-        auto const loadPenalty = data->pManager.loadPenalty(load);
-        auto const twPenalty = data->pManager.twPenalty(timeWarp);
-
-        return distance + loadPenalty + twPenalty;
-    }
+    [[nodiscard]] size_t cost() const;
 
     /**
      * Returns the number of non-empty routes in this individual's solution.
      * Such non-empty routes are all in the lower indices (guarantee) of the
      * routes returned by ``getRoutes``.
      */
-    [[nodiscard]] size_t numRoutes() const { return nbRoutes; }
+    [[nodiscard]] size_t numRoutes() const;
 
     /**
      * Returns this individual's routing decisions.
      */
-    [[nodiscard]] Routes const &getRoutes() const { return routes_; }
+    [[nodiscard]] Routes const &getRoutes() const;
 
     /**
      * Returns a vector of [pred, succ] clients for each client (index) in this
      * individual's routes.
      */
     [[nodiscard]] std::vector<std::pair<Client, Client>> const &
-    getNeighbours() const
-    {
-        return neighbours;
-    }
+    getNeighbours() const;
 
     /**
-     * Returns true when this solution is feasible; false otherwise.
+     * @return True when this solution is feasible; false otherwise.
      */
-    [[nodiscard]] bool isFeasible() const
-    {
-        return !hasExcessCapacity() && !hasTimeWarp();
-    }
+    [[nodiscard]] bool isFeasible() const;
 
     /**
-     * If true, then the route exceeds vehicle capacity.
+     * @return True if the solution violates load constraints.
      */
-    [[nodiscard]] bool hasExcessCapacity() const { return capacityExcess > 0; }
+    [[nodiscard]] bool hasExcessCapacity() const;
 
     /**
-     * If true, then the route violates time window constraints.
+     * @return True if the solution violates time window constraints.
      */
-    [[nodiscard]] bool hasTimeWarp() const { return timeWarp > 0; }
+    [[nodiscard]] bool hasTimeWarp() const;
 
     /**
-     * Returns true when there exists another, identical individual.
+     * @return True if there exists another, identical individual in the
+     *         population this individual belongs to.
      */
-    [[nodiscard]] bool hasClone() const
-    {
-        return !indivsByProximity.empty()
-               && indivsByProximity.begin()->first == 0;
-    }
+    [[nodiscard]] bool hasClone() const;
 
-    // Computes and returns a distance measure with another individual, based
-    // on the number of arcs that differ between two solutions.
+    /**
+     * Computes a distance to the other individual, based on the number of arcs
+     * that differ between the two solutions.
+     *
+     * @param other Other individual.
+     * @return The (symmetric) broken pairs distance between this and the other
+     *         individual.
+     */
     int brokenPairsDistance(Individual const *other) const;
 
-    // Updates the proximity structures of this and the other individual.
-    void registerNearbyIndividual(Individual *other);
-
-    // Returns the average distance of this individual to the individuals
-    // nearest to it.
+    /**
+     * @return The average broken pairs distance of this individual to the
+     *         individuals nearest to it, normalised to [0, 1].
+     */
     [[nodiscard]] double avgBrokenPairsDistanceClosest() const;
 
-    // Exports a solution in CVRPLib format (adds a final line with the
-    // computational time).
-    void exportCVRPLibFormat(std::string const &path, double time) const;
+    /**
+     * Updates the proximity structure of this and the other individual.
+     *
+     * @param other Other individual.
+     */
+    void registerNearbyIndividual(Individual *other);
 
-    bool operator<(Individual const &other) const
-    {
-        return cost() < other.cost();
-    }
-
-    bool operator==(Individual const &other) const
-    {
-        return cost() == other.cost() && routes_ == other.routes_;
-    }
+    /**
+     * Writes this individual solution to the given file path. The solution is
+     * written in VRPLIB format, with a final line storing the passed-in compute
+     * time.
+     *
+     * @param path File path to write to.
+     * @param time Compute time (in seconds).
+     */
+    void toFile(std::string const &path, double time) const;
 
     Individual &operator=(Individual const &other) = default;
 
-    Individual(ProblemData const *data, XorShift128 *rng);  // random individual
+    /**
+     * Constructs a random individual using the given random number generator.
+     *
+     * @param data Data instance describing the problem that's being solved.
+     * @param rng  Random number generator.
+     */
+    Individual(ProblemData const &data, XorShift128 &rng);
 
-    Individual(ProblemData const *data, Routes routes);
+    /**
+     * Constructs an individual having the given routes as its solution.
+     *
+     * @param data   Data instance describing the problem that's being solved.
+     * @param routes Solution's routes; each route is a vector of clients.
+     */
+    Individual(ProblemData const &data, Routes routes);
 
-    Individual(Individual const &other);  // copy from other
+    /**
+     * Constructs a copy of the given other individual.
+     *
+     * @param other Other individual to copy.
+     */
+    Individual(Individual const &other);
 
     ~Individual();
 };
 
-// Outputs an individual into a given ostream in CVRPLib format
+// Outputs an individual into a given ostream in VRPLIB format
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
 
 #endif
