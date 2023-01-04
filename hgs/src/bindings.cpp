@@ -157,9 +157,7 @@ PYBIND11_MODULE(hgspy, m)
         .def(py::init<ProblemData &, XorShift128 &>(),
              py::arg("data"),
              py::arg("rng"))
-        .def("add_individual",
-             &Population::addIndividual,
-             py::arg("individual"));
+        .def("add", &Population::add, py::arg("individual"));
 
     py::class_<Statistics>(m, "Statistics")
         .def("num_iters", &Statistics::numIters)

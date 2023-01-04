@@ -82,7 +82,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
         && indiv.cost() < population.getBestFound().cost())
         localSearch.intensify(indiv);
 
-    population.addIndividual(indiv);
+    population.add(indiv);
 
     loadFeas.push_back(!indiv.hasExcessCapacity());
     timeFeas.push_back(!indiv.hasTimeWarp());
@@ -100,7 +100,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
                 && indiv.cost() < population.getBestFound().cost())
                 localSearch.intensify(indiv);
 
-            population.addIndividual(indiv);
+            population.add(indiv);
 
             loadFeas.push_back(!indiv.hasExcessCapacity());
             timeFeas.push_back(!indiv.hasTimeWarp());

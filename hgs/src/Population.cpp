@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-void Population::addIndividual(Individual const &indiv)
+void Population::add(Individual const &indiv)
 {
     auto &subPop = indiv.isFeasible() ? feasible : infeasible;
     auto indivPtr = std::make_unique<Individual>(indiv);
@@ -144,6 +144,6 @@ Population::Population(ProblemData &data, XorShift128 &rng)
     for (size_t count = 0; count != data.config.minPopSize; ++count)
     {
         Individual randomIndiv(data, rng);
-        addIndividual(randomIndiv);
+        add(randomIndiv);
     }
 }

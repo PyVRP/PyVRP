@@ -56,7 +56,7 @@ public:
      *
      * @param indiv Individual to add.
      */
-    void addIndividual(Individual const &indiv);
+    void add(Individual const &indiv);
 
     /**
      * Internally re-orders the population by cost. To be called whenever the
@@ -77,6 +77,13 @@ public:
      */
     [[nodiscard]] Individual const &getBestFound() const;
 
+    /**
+     * Constructs a population with ``minPopSize`` random individuals. This
+     * includes a random, possibly infeasible, initial best solution.
+     *
+     * @param data Data instance describing the problem that is being solved.
+     * @param rng  Random number generator.
+     */
     Population(ProblemData &data, XorShift128 &rng);
 };
 
