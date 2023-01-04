@@ -106,17 +106,34 @@ public:
      * time.
      *
      * @param path File path to write to.
-     * @param time Compute time.
+     * @param time Compute time (in seconds).
      */
     void toFile(std::string const &path, double time) const;
 
     Individual &operator=(Individual const &other) = default;
 
-    Individual(ProblemData const &data, XorShift128 &rng);  // random individual
+    /**
+     * Constructs a random individual using the given random number generator.
+     *
+     * @param data Data instance describing the problem that's being solved.
+     * @param rng  Random number generator.
+     */
+    Individual(ProblemData const &data, XorShift128 &rng);
 
+    /**
+     * Constructs an individual having the given routes as its solution.
+     *
+     * @param data   Data instance describing the problem that's being solved.
+     * @param routes Solution's routes; each route is a vector of clients.
+     */
     Individual(ProblemData const &data, Routes routes);
 
-    Individual(Individual const &other);  // copy from other
+    /**
+     * Constructs a copy of the given other individual.
+     *
+     * @param other Other individual to copy.
+     */
+    Individual(Individual const &other);
 
     ~Individual();
 };
