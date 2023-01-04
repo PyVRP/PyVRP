@@ -123,4 +123,4 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
     }
 }
 
-// TODO test more select()
+// TODO test more select() - diversity, feas/infeas pairs
