@@ -108,7 +108,7 @@ bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp > 0; }
 
-bool Individual::hasClone() const
+bool Individual::hasDuplicate() const
 {
     return !indivsByProximity.empty() && indivsByProximity.begin()->first == 0;
 }

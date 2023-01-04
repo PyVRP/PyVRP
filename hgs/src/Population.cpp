@@ -17,19 +17,8 @@ void Population::add(Individual const &indiv)
     subPop.push_back({std::move(indivPtr), 0});
     updateBiasedFitness(subPop);
 
-    // Trigger a survivor selection if the maximum population size is exceeded
     if (subPop.size() > data.config.minPopSize + data.config.generationSize)
-    {
-        while (subPop.size() > data.config.minPopSize)  // remove duplicates,
-            if (!removeDuplicate(subPop))               // if any exist
-                break;
-
-        while (subPop.size() > data.config.minPopSize)
-        {
-            updateBiasedFitness(subPop);
-            removeWorstBiasedFitness(subPop);
-        }
-    }
+        survivorSelection(subPop);
 
     if (indiv.isFeasible() && indiv.cost() < bestSol.cost())
         bestSol = indiv;
@@ -66,26 +55,32 @@ void Population::updateBiasedFitness(SubPopulation &subPop) const
     }
 }
 
-bool Population::removeDuplicate(SubPopulation &subPop)
+void Population::survivorSelection(SubPopulation &subPop)
 {
-    for (auto it = subPop.begin(); it != subPop.end(); ++it)
-        if (it->indiv->hasClone())
-        {
-            subPop.erase(it);
-            return true;
-        }
+    while (subPop.size() > data.config.minPopSize)
+    {
+        // Remove duplicates from the sub-population (if they exist)
+        auto const pred = [](auto &it) { return it.indiv->hasDuplicate(); };
+        auto const duplicate = std::find_if(subPop.begin(), subPop.end(), pred);
 
-    return false;
-}
+        if (duplicate == subPop.end())  // there are no more duplicates
+            break;
 
-void Population::removeWorstBiasedFitness(SubPopulation &subPop)
-{
-    auto const &worstFitness = std::max_element(
-        subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
-            return a.fitness < b.fitness;
-        });
+        subPop.erase(duplicate);
+    }
 
-    subPop.erase(worstFitness);
+    while (subPop.size() > data.config.minPopSize)
+    {
+        // Remove the worst individual (worst in terms of biased fitness)
+        updateBiasedFitness(subPop);
+
+        auto const &worstFitness = std::max_element(
+            subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
+                return a.fitness < b.fitness;
+            });
+
+        subPop.erase(worstFitness);
+    }
 }
 
 Individual const *Population::getBinaryTournament()

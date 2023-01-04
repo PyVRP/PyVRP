@@ -75,7 +75,7 @@ public:
      * @return True if there exists another, identical individual in the
      *         population this individual belongs to.
      */
-    [[nodiscard]] bool hasClone() const;
+    [[nodiscard]] bool hasDuplicate() const;
 
     /**
      * Computes a distance to the other individual, based on the number of arcs

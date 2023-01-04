@@ -38,13 +38,11 @@ private:
     // Evaluates the biased fitness of all individuals in the sub-population
     void updateBiasedFitness(SubPopulation &subPop) const;
 
-    // Removes a duplicate individual from the sub-population if there exists
-    // one. If there are multiple duplicate individuals, then the one with the
-    // lowest index in the sub-population is removed first.
-    static bool removeDuplicate(SubPopulation &subPop);
-
-    // Removes the worst individual in terms of biased fitness
-    static void removeWorstBiasedFitness(SubPopulation &subPop);
+    // Performs survivor selection: individuals in the given sub-population are
+    // purged until the population is reduced to the ``minPopSize``. Purging
+    // happens first to duplicate solutions, and then to solutions with high
+    // biased fitness.
+    void survivorSelection(SubPopulation &subPop);
 
     // Selects an individual by binary tournament
     Individual const *getBinaryTournament();
