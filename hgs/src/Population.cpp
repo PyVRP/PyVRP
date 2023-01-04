@@ -86,12 +86,11 @@ void Population::survivorSelection(SubPopulation &subPop)
 Individual const *Population::getBinaryTournament()
 {
     auto const fSize = feasible.size();
-    auto const popSize = fSize + infeasible.size();
 
-    auto const idx1 = rng.randint(popSize);
+    auto const idx1 = rng.randint(size());
     auto &wrap1 = idx1 < fSize ? feasible[idx1] : infeasible[idx1 - fSize];
 
-    auto const idx2 = rng.randint(popSize);
+    auto const idx2 = rng.randint(size());
     auto &wrap2 = idx2 < fSize ? feasible[idx2] : infeasible[idx2 - fSize];
 
     return (wrap1.fitness < wrap2.fitness ? wrap1.indiv : wrap2.indiv).get();
@@ -116,15 +115,14 @@ std::pair<Individual const *, Individual const *> Population::select()
     return std::make_pair(par1, par2);
 }
 
+size_t Population::size() const { return feasible.size() + infeasible.size(); }
+
 Individual const &Population::getBestFound() const { return bestSol; }
 
-Population::Population(ProblemData &data, XorShift128 &rng)
+Population::Population(ProblemData const &data, XorShift128 &rng)
     : data(data), rng(rng), bestSol(data, rng)  // random initial best solution
 {
     // Generate minPopSize random individuals to seed the population.
     for (size_t count = 0; count != data.config.minPopSize; ++count)
-    {
-        Individual randomIndiv(data, rng);
-        add(randomIndiv);
-    }
+        add({data, rng});
 }

@@ -27,8 +27,8 @@ public:
 private:
     using Parents = std::pair<Individual const *, Individual const *>;
 
-    ProblemData &data;  // Problem data
-    XorShift128 &rng;   // Random number generator
+    ProblemData const &data;  // Problem data
+    XorShift128 &rng;         // Random number generator
 
     SubPopulation feasible;    // Sub-population of feasible individuals
     SubPopulation infeasible;  // Sub-population of infeasible individuals
@@ -70,13 +70,18 @@ public:
     [[nodiscard]] Individual const &getBestFound() const;
 
     /**
+     * @return Total size of the current population.
+     */
+    size_t size() const;
+
+    /**
      * Constructs a population with ``minPopSize`` random individuals. This
      * includes a random, possibly infeasible, initial best solution.
      *
      * @param data Data instance describing the problem that is being solved.
      * @param rng  Random number generator.
      */
-    Population(ProblemData &data, XorShift128 &rng);
+    Population(ProblemData const &data, XorShift128 &rng);
 };
 
 #endif
