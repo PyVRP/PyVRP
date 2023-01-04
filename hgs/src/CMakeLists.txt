@@ -34,12 +34,14 @@ target_link_libraries(individual problemData penaltyManager)
 
 add_library(tws ${timeWindowSegmentSources})
 
+add_library(population ${populationSources})
+target_link_libraries(population individual problemData)
+
 # TODO ok up to here
 
 add_library(genetic ${geneticSources})
 add_library(ls ${localSearchSources})
 add_library(node ${nodeSources})
-add_library(population ${populationSources})
 add_library(result ${resultSources})
 add_library(route ${routeSources})
 add_library(statistics ${statisticsSources})
