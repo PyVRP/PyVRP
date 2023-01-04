@@ -14,16 +14,7 @@ void Population::add(Individual const &indiv)
     for (auto const &other : subPop)  // update distance to other individuals
         indivPtr->registerNearbyIndividual(other.indiv.get());
 
-    IndividualWrapper wrapper = {std::move(indivPtr), 0};
-
-    // Insert individual into the population, leaving the cost ordering intact
-    auto cmp = [](auto &wrap1, auto &wrap2) {
-        return wrap1.indiv->cost() < wrap2.indiv->cost();
-    };
-
-    auto const place
-        = std::lower_bound(subPop.begin(), subPop.end(), wrapper, cmp);
-    subPop.emplace(place, std::move(wrapper));
+    subPop.push_back({std::move(indivPtr), 0});
     updateBiasedFitness(subPop);
 
     // Trigger a survivor selection if the maximum population size is exceeded
@@ -44,24 +35,20 @@ void Population::add(Individual const &indiv)
         bestSol = indiv;
 }
 
-void Population::reorder()
-{
-    auto const op = [](auto const &wrapper1, auto const &wrapper2) {
-        return wrapper1.indiv->cost() < wrapper2.indiv->cost();
-    };
-    std::sort(feasible.begin(), feasible.end(), op);
-    std::sort(infeasible.begin(), infeasible.end(), op);
-}
-
 void Population::updateBiasedFitness(SubPopulation &subPop) const
 {
+    // Sort population by ascending cost
+    std::sort(subPop.begin(), subPop.end(), [](auto &a, auto &b) {
+        return a.indiv->cost() < b.indiv->cost();
+    });
+
     // Ranking the individuals based on their diversity contribution (decreasing
     // order of broken pairs distance)
     std::vector<std::pair<double, size_t>> diversity;
-    for (size_t idx = 0; idx != subPop.size(); idx++)
+    for (size_t rank = 0; rank != subPop.size(); rank++)
     {
-        auto const dist = subPop[idx].indiv->avgBrokenPairsDistanceClosest();
-        diversity.emplace_back(dist, idx);
+        auto const dist = subPop[rank].indiv->avgBrokenPairsDistanceClosest();
+        diversity.emplace_back(dist, rank);
     }
 
     std::sort(diversity.begin(), diversity.end(), std::greater<>());
@@ -98,8 +85,7 @@ void Population::removeWorstBiasedFitness(SubPopulation &subPop)
             return a.fitness < b.fitness;
         });
 
-    auto const worstIdx = std::distance(subPop.begin(), worstFitness);
-    subPop.erase(subPop.begin() + worstIdx);
+    subPop.erase(worstFitness);
 }
 
 Individual const *Population::getBinaryTournament()

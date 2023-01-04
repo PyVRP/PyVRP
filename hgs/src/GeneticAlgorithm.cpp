@@ -33,12 +33,8 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
         auto offspring = crossover();
         educate(offspring);
 
-        // Diversification and penalty management
         if (iter % data.config.nbPenaltyManagement == 0)
-        {
             updatePenalties();
-            population.reorder();  // re-order since penalties have changed
-        }
 
         if (data.config.collectStatistics)
             stats.collectFrom(population);

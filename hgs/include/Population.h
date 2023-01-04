@@ -30,8 +30,8 @@ private:
     ProblemData &data;  // Problem data
     XorShift128 &rng;   // Random number generator
 
-    SubPopulation feasible;    // Sub-population ordered asc. by cost
-    SubPopulation infeasible;  // Sub-population ordered asc. by cost
+    SubPopulation feasible;    // Sub-population of feasible individuals
+    SubPopulation infeasible;  // Sub-population of infeasible individuals
 
     Individual bestSol;
 
@@ -57,12 +57,6 @@ public:
      * @param indiv Individual to add.
      */
     void add(Individual const &indiv);
-
-    /**
-     * Internally re-orders the population by cost. To be called whenever the
-     * penalties are updated.
-     */
-    void reorder();
 
     /**
      * Selects two (if possible non-identical) parents by binary tournament,

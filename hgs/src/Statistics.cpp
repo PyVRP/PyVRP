@@ -39,9 +39,7 @@ void collectSubPopStats(Population::SubPopulation const &subPop,
 
     double numRoutes = 0.0;
     for (auto &wrapper : subPop)
-        for (auto &route : wrapper.indiv->getRoutes())
-            if (!route.empty())
-                numRoutes += 1;
+        numRoutes += wrapper.indiv->numRoutes();
 
     subStats.avgNumRoutes_.push_back(numRoutes / popSize);
 }
