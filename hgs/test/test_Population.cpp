@@ -61,7 +61,8 @@ TEST(PopulationTest, addTriggersSurvivorSelection)
 
 TEST(PopulationTest, addUpdatesBestFoundSolution)
 {
-    Config config = {.minPopSize = 0};
+    Config config = {};
+    config.minPopSize = 0;
 
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
     XorShift128 rng(INT_MAX);
