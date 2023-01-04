@@ -17,7 +17,12 @@ void Population::addIndividual(Individual const &indiv)
     IndividualWrapper wrapper = {std::move(indivPtr), 0};
 
     // Insert individual into the population, leaving the cost ordering intact
-    auto const place = std::lower_bound(subPop.begin(), subPop.end(), wrapper);
+    auto cmp = [](auto &wrap1, auto &wrap2) {
+        return wrap1.indiv->cost() < wrap2.indiv->cost();
+    };
+
+    auto const place
+        = std::lower_bound(subPop.begin(), subPop.end(), wrapper, cmp);
     subPop.emplace(place, std::move(wrapper));
     updateBiasedFitness(subPop);
 
@@ -37,6 +42,15 @@ void Population::addIndividual(Individual const &indiv)
 
     if (indiv.isFeasible() && indiv.cost() < bestSol.cost())
         bestSol = indiv;
+}
+
+void Population::reorder()
+{
+    auto const op = [](auto const &wrapper1, auto const &wrapper2) {
+        return wrapper1.indiv->cost() < wrapper2.indiv->cost();
+    };
+    std::sort(feasible.begin(), feasible.end(), op);
+    std::sort(infeasible.begin(), infeasible.end(), op);
 }
 
 void Population::updateBiasedFitness(SubPopulation &subPop) const
@@ -120,6 +134,8 @@ std::pair<Individual const *, Individual const *> Population::selectParents()
 
     return std::make_pair(par1, par2);
 }
+
+Individual const &Population::getBestFound() const { return bestSol; }
 
 Population::Population(ProblemData &data, XorShift128 &rng)
     : data(data), rng(rng), bestSol(data, rng)  // random initial best solution

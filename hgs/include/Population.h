@@ -19,11 +19,6 @@ class Population
     {
         std::unique_ptr<Individual> indiv;
         double fitness;
-
-        bool operator<(IndividualWrapper const &other) const
-        {
-            return indiv->cost() < other.indiv->cost();
-        }
     };
 
 public:
@@ -46,7 +41,6 @@ private:
     // Removes a duplicate individual from the sub-population if there exists
     // one. If there are multiple duplicate individuals, then the one with the
     // lowest index in the sub-population is removed first.
-    // TODO do we still need this?
     static bool removeDuplicate(SubPopulation &subPop);
 
     // Removes the worst individual in terms of biased fitness
@@ -56,29 +50,32 @@ private:
     Individual const *getBinaryTournament();
 
 public:
-    // Add an individual in the population. Survivor selection is automatically
-    // triggered whenever the population reaches its maximum size.
+    /**
+     * Adds the given individual to the population. Survivor selection is
+     * automatically triggered when the population reaches its maximum size.
+     *
+     * @param indiv Individual to add.
+     */
     void addIndividual(Individual const &indiv);
 
     /**
-     * Re-orders the population by cost.
+     * Internally re-orders the population by cost. To be called whenever the
+     * penalties are updated.
      */
-    void reorder()
-    {
-        auto const op = [](auto const &wrapper1, auto const &wrapper2) {
-            return wrapper1.indiv->cost() < wrapper2.indiv->cost();
-        };
-        std::sort(feasible.begin(), feasible.end(), op);
-        std::sort(infeasible.begin(), infeasible.end(), op);
-    }
+    void reorder();
 
-    // Selects two (if possible non-identical) parents by binary tournament
+    /**
+     * Selects two (if possible non-identical) parents by binary tournament,
+     * subject to a diversity restriction.
+     *
+     * @return A pair of individuals (parents).
+     */
     Parents selectParents();
 
     /**
-     * Returns the best feasible solution that was observed during iteration.
+     * @return The best observed feasible solution over all iterations.
      */
-    [[nodiscard]] Individual const &getBestFound() const { return bestSol; }
+    [[nodiscard]] Individual const &getBestFound() const;
 
     Population(ProblemData &data, XorShift128 &rng);
 };
