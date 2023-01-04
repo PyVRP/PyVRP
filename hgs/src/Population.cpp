@@ -85,7 +85,7 @@ void Population::survivorSelection(SubPopulation &subPop)
 
 Individual const *Population::getBinaryTournament()
 {
-    auto const fSize = feasible.size();
+    auto const fSize = numFeasible();
 
     auto const idx1 = rng.randint(size());
     auto &wrap1 = idx1 < fSize ? feasible[idx1] : infeasible[idx1 - fSize];
@@ -115,7 +115,11 @@ std::pair<Individual const *, Individual const *> Population::select()
     return std::make_pair(par1, par2);
 }
 
-size_t Population::size() const { return feasible.size() + infeasible.size(); }
+size_t Population::size() const { return numFeasible() + numInfeasible(); }
+
+size_t Population::numFeasible() const { return feasible.size(); }
+
+size_t Population::numInfeasible() const { return infeasible.size(); }
 
 Individual const &Population::getBestFound() const { return bestSol; }
 

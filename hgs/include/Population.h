@@ -75,6 +75,16 @@ public:
     size_t size() const;
 
     /**
+     * @return Total number of feasible individuals in the current population.
+     */
+    size_t numFeasible() const;
+
+    /**
+     * @return Total number of infeasible individuals in the current population.
+     */
+    size_t numInfeasible() const;
+
+    /**
      * Constructs a population with ``minPopSize`` random individuals. This
      * includes a random, possibly infeasible, initial best solution.
      *
