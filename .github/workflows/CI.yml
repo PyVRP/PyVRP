@@ -22,7 +22,7 @@ jobs:
           - compiler: gcc
             version: 12
           - compiler: clang
-            version: 10
+            version: 11
           - compiler: clang
             version: 15
     steps:
