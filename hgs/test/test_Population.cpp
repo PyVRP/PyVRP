@@ -2,8 +2,6 @@
 
 #include "Population.h"
 
-#include <iostream>
-
 TEST(PopulationTest, ctor)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
@@ -59,6 +57,34 @@ TEST(PopulationTest, addTriggersSurvivorSelection)
     ASSERT_TRUE(indiv.isFeasible());
     EXPECT_EQ(pop.numFeasible(), data.config.minPopSize);
     EXPECT_EQ(pop.size(), data.config.minPopSize + infeasPops);
+}
+
+TEST(PopulationTest, addUpdatesBestFoundSolution)
+{
+    Config config = {.minPopSize = 0};
+
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    XorShift128 rng(INT_MAX);
+    Population pop(data, rng);
+
+    // Should not have added any individuals to the population pool. The 'best'
+    // individual, however, has already been initialised, with a random
+    // individual.
+    ASSERT_EQ(pop.size(), config.minPopSize);
+
+    // This random individual is feasible and has cost 9240.
+    auto const &best1 = pop.getBestFound();
+    EXPECT_EQ(best1.cost(), 9240);
+    EXPECT_TRUE(best1.isFeasible());
+
+    // We now add a new, better solution to the population.
+    pop.add({data, {{3, 2}, {1, 4}, {}}});
+
+    // This new solution is feasible and has cost 9155, so adding it to the
+    // population should replace the best found solution.
+    auto const &best2 = pop.getBestFound();
+    EXPECT_EQ(best2.cost(), 9155);
+    EXPECT_TRUE(best2.isFeasible());
 }
 
 // TODO test more add()
