@@ -5,6 +5,7 @@
 #include "ProblemData.h"
 #include "Statistics.h"
 #include "XorShift128.h"
+#include "diversity.h"
 
 #include <memory>
 #include <vector>
@@ -30,6 +31,8 @@ private:
     ProblemData const &data;  // Problem data
     XorShift128 &rng;         // Random number generator
 
+    DiversityMeasure divOp;
+
     SubPopulation feasible;    // Sub-population of feasible individuals
     SubPopulation infeasible;  // Sub-population of infeasible individuals
 
@@ -42,7 +45,21 @@ private:
     // purged until the population is reduced to the ``minPopSize``. Purging
     // happens first to duplicate solutions, and then to solutions with high
     // biased fitness.
-    void survivorSelection(SubPopulation &subPop);
+    void purge(SubPopulation &subPop);
+
+    /**
+     * @return The average diversity distance of this individual to the
+     *         individuals nearest to it.
+     */
+    [[nodiscard]] double avgDistanceClosest(Individual const &indiv) const;
+
+    /**
+     * Adds the two given individuals to each other's proximity structure.
+     *
+     * @param first  First individual.
+     * @param second Second individual.
+     */
+    void registerNearbyIndividual(Individual *first, Individual *second) const;
 
     // Selects an individual by binary tournament
     Individual const *getBinaryTournament();
@@ -90,8 +107,9 @@ public:
      *
      * @param data Data instance describing the problem that is being solved.
      * @param rng  Random number generator.
+     * @param op   Diversity measure to use.
      */
-    Population(ProblemData const &data, XorShift128 &rng);
+    Population(ProblemData const &data, XorShift128 &rng, DiversityMeasure op);
 };
 
 #endif

@@ -9,6 +9,8 @@
 
 class Individual
 {
+    friend class Population;  // TODO remove this
+
     using Client = int;
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
@@ -39,7 +41,7 @@ public:
 
     /**
      * Returns the number of non-empty routes in this individual's solution.
-     * Such non-empty routes are all in the lower indices (guarantee) of the
+     * Such non-empty routes are guaranteed to be in the lower indices of the
      * routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
@@ -70,35 +72,6 @@ public:
      * @return True if the solution violates time window constraints.
      */
     [[nodiscard]] bool hasTimeWarp() const;
-
-    /**
-     * @return True if there exists another, identical individual in the
-     *         population this individual belongs to.
-     */
-    [[nodiscard]] bool hasDuplicate() const;
-
-    /**
-     * Computes a distance to the other individual, based on the number of arcs
-     * that differ between the two solutions.
-     *
-     * @param other Other individual.
-     * @return The (symmetric) broken pairs distance between this and the other
-     *         individual.
-     */
-    int brokenPairsDistance(Individual const *other) const;
-
-    /**
-     * @return The average broken pairs distance of this individual to the
-     *         individuals nearest to it, normalised to [0, 1].
-     */
-    [[nodiscard]] double avgBrokenPairsDistanceClosest() const;
-
-    /**
-     * Updates the proximity structure of this and the other individual.
-     *
-     * @param other Other individual.
-     */
-    void registerNearbyIndividual(Individual *other);
 
     /**
      * Writes this individual solution to the given file path. The solution is

@@ -19,12 +19,15 @@
 #include "TwoOpt.h"
 #include "XorShift128.h"
 #include "crossover.h"
+#include "diversity.h"
 
 #include <pybind11/chrono.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+
+// TODO split this file
 
 PYBIND11_MODULE(hgspy, m)
 {
@@ -154,9 +157,10 @@ PYBIND11_MODULE(hgspy, m)
         .def("from_file", &ProblemData::fromFile);
 
     py::class_<Population>(m, "Population")
-        .def(py::init<ProblemData &, XorShift128 &>(),
+        .def(py::init<ProblemData &, XorShift128 &, DiversityMeasure>(),
              py::arg("data"),
-             py::arg("rng"))
+             py::arg("rng"),
+             py::arg("op"))
         .def("add", &Population::add, py::arg("individual"));
 
     py::class_<Statistics>(m, "Statistics")
@@ -206,6 +210,11 @@ PYBIND11_MODULE(hgspy, m)
              &GeneticAlgorithm::addCrossoverOperator,
              py::arg("op"))
         .def("run", &GeneticAlgorithm::run, py::arg("stop"));
+
+    // Diversity measures (as a submodule)
+    py::module diversity = m.def_submodule("diversity");
+
+    m.def("broken_pairs_distance", &brokenPairsDistance);
 
     // Stopping criteria (as a submodule)
     py::module stop = m.def_submodule("stop");

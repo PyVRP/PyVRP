@@ -6,7 +6,7 @@ TEST(PopulationTest, ctor)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
     XorShift128 rng;
-    Population pop(data, rng);
+    Population pop(data, rng, brokenPairsDistance);
 
     // Test that after construction, the population indeed consists of
     // minPopSize individuals.
@@ -19,7 +19,7 @@ TEST(PopulationTest, addTriggersSurvivorSelection)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
     XorShift128 rng;
-    Population pop(data, rng);
+    Population pop(data, rng, brokenPairsDistance);
 
     // After construction, we should have minPopSize individuals.
     EXPECT_EQ(pop.size(), data.config.minPopSize);
@@ -66,7 +66,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
 
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
     XorShift128 rng(2'147'483'647);
-    Population pop(data, rng);
+    Population pop(data, rng, brokenPairsDistance);
 
     // Should not have added any individuals to the population pool. The 'best'
     // individual, however, has already been initialised, with a random
@@ -97,7 +97,7 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
 
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
     XorShift128 rng;
-    Population pop(data, rng);
+    Population pop(data, rng, brokenPairsDistance);
 
     ASSERT_EQ(pop.size(), 0);
 

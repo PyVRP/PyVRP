@@ -23,8 +23,8 @@ class Statistics
 public:
     struct SubPopStats
     {
+        // TODO avg diversity
         std::vector<size_t> popSize_;
-        std::vector<double> avgDiversity_;
         std::vector<size_t> bestCost_;
         std::vector<size_t> avgCost_;
         std::vector<double> avgNumRoutes_;
@@ -81,18 +81,6 @@ public:
     }
 
     /**
-     * Returns a vector of the average feasible sub-population diversity, one
-     * element per iteration. The average diversity is computed as the average
-     * broken pairs distance for each individual in the sub-population, compared
-     * to its neighbours (the neighbourhood size is controlled by the
-     * ``nbClose`` setting).
-     */
-    [[nodiscard]] std::vector<double> const &feasAvgDiversity() const
-    {
-        return feasStats.avgDiversity_;
-    }
-
-    /**
      * Returns a vector of the best objective value of feasible individuals,
      * one element per iteration. If there are no feasible individuals, then
      * ``INT_MAX`` is stored.
@@ -129,18 +117,6 @@ public:
     [[nodiscard]] std::vector<size_t> const &infeasPopSize() const
     {
         return infeasStats.popSize_;
-    }
-
-    /**
-     * Returns a vector of the average infeasible sub-population diversity, one
-     * element per iteration. The average diversity is computed as the average
-     * broken pairs distance for each individual in the sub-population, compared
-     * to its neighbours (the neighbourhood size is controlled by the
-     * ``nbClose`` setting).
-     */
-    [[nodiscard]] std::vector<double> const &infeasAvgDiversity() const
-    {
-        return infeasStats.avgDiversity_;
     }
 
     /**
