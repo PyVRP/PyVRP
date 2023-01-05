@@ -33,7 +33,7 @@ gtest_discover_tests(test_PenaltyManager)
 
 # Population tests have file dependencies that require fixing the working directory
 add_executable(test_Population test_Population.cpp)
-target_link_libraries(test_Population GTest::gtest_main population)
+target_link_libraries(test_Population GTest::gtest_main population diversityMeasures)
 gtest_discover_tests(test_Population WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
