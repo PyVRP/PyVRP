@@ -15,12 +15,13 @@ double brokenPairsDistance(ProblemData const &data,
         auto const [sPred, sSucc] = sNeighbours[j];
 
         // An edge pair (fPred, j) or (j, fSucc) from the first solution is
-        // broken if it is not in the second solution. Note that we double count
-        // in this loop: we count each edge twice, for both j and for j +- 1.
+        // broken if it is not in the second solution.
         numBrokenPairs += fSucc != sSucc;
         numBrokenPairs += fPred != sPred;
     }
 
-    // Average broken pairs distance, adjusted for double counting.
+    // numBrokenPairs is at most 2n: for each client, since we can count at
+    // most two broken edges in the loop above. Here, we normalise the distance
+    // to [0, 1].
     return numBrokenPairs / (2. * data.nbClients);
 }
