@@ -8,6 +8,7 @@
 #include "diversity.h"
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 // Class representing the population of a genetic algorithm with do binary
@@ -38,6 +39,12 @@ private:
 
     Individual bestSol;
 
+    // Proximity structure, from a given individual to other individuals
+    // TODO can we do this without a hash map?
+    using ProximityKey = Individual const *;
+    using ProximityValue = std::vector<std::pair<int, Individual const *>>;
+    std::unordered_map<ProximityKey, ProximityValue> proximity;
+
     // Evaluates the biased fitness of all individuals in the sub-population
     void updateBiasedFitness(SubPopulation &subPop) const;
 
@@ -45,7 +52,7 @@ private:
     // purged until the population is reduced to the ``minPopSize``. Purging
     // happens first to duplicate solutions, and then to solutions with high
     // biased fitness.
-    void purge(SubPopulation &subPop);
+    void purge(SubPopulation &subPop) const;
 
     /**
      * @return The average diversity distance of this individual to the
@@ -59,7 +66,7 @@ private:
      * @param first  First individual.
      * @param second Second individual.
      */
-    void registerNearbyIndividual(Individual *first, Individual *second) const;
+    void registerNearbyIndividual(Individual *first, Individual *second);
 
     // Selects an individual by binary tournament
     Individual const *getBinaryTournament();

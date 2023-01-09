@@ -183,19 +183,6 @@ Individual::Individual(Individual const &other)  // copy fields from other
 {
 }
 
-Individual::~Individual()
-{
-    for (auto [dist, other] : indivsByProximity)
-    {
-        auto place = std::find(other->indivsByProximity.begin(),
-                               other->indivsByProximity.end(),
-                               std::make_pair(dist, this));
-
-        if (place != other->indivsByProximity.end())
-            other->indivsByProximity.erase(place);
-    }
-}
-
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
     auto const &routes = indiv.getRoutes();

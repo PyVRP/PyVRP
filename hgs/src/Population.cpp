@@ -55,14 +55,15 @@ void Population::updateBiasedFitness(SubPopulation &subPop) const
     }
 }
 
-void Population::purge(std::vector<IndividualWrapper> &subPop)
+void Population::purge(std::vector<IndividualWrapper> &subPop) const
 {
     while (subPop.size() > data.config.minPopSize)
     {
         // Remove duplicates from the sub-population (if they exist)
-        auto const pred = [](auto &it) {
-            return !it.indiv->indivsByProximity.empty()
-                   && it.indiv->indivsByProximity.begin()->first == 0;
+        auto const pred = [&](auto &it) {
+            return proximity.contains(it.indiv.get())
+                   && !proximity.at(it.indiv.get()).empty()
+                   && proximity.at(it.indiv.get()).begin()->first == 0;
         };
 
         auto const duplicate = std::find_if(subPop.begin(), subPop.end(), pred);
@@ -70,6 +71,7 @@ void Population::purge(std::vector<IndividualWrapper> &subPop)
         if (duplicate == subPop.end())  // there are no more duplicates
             break;
 
+        // TODO remove from prox
         subPop.erase(duplicate);
     }
 
@@ -78,38 +80,38 @@ void Population::purge(std::vector<IndividualWrapper> &subPop)
         // Remove the worst individual (worst in terms of biased fitness)
         updateBiasedFitness(subPop);
 
-        auto const &worstFitness = std::max_element(
+        auto const worstFitness = std::max_element(
             subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
                 return a.fitness < b.fitness;
             });
 
+        // TODO remove from prox
         subPop.erase(worstFitness);
     }
 }
 
-void Population::registerNearbyIndividual(Individual *first,
-                                          Individual *second) const
+void Population::registerNearbyIndividual(Individual *first, Individual *second)
 {
     auto const dist = divOp(data, *first, *second);
     auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
 
-    auto &fProx = first->indivsByProximity;
+    auto &fProx = proximity[first];
     auto place = std::lower_bound(fProx.begin(), fProx.end(), dist, cmp);
     fProx.emplace(place, dist, second);
 
-    auto &sProx = second->indivsByProximity;
+    auto &sProx = proximity[second];
     place = std::lower_bound(sProx.begin(), sProx.end(), dist, cmp);
     sProx.emplace(place, dist, first);
 }
 
 double Population::avgDistanceClosest(Individual const &indiv) const
 {
-    if (indiv.indivsByProximity.empty())
+    if (!proximity.contains(&indiv) || proximity.at(&indiv).empty())
         return 0.;
 
-    auto maxSize
-        = std::min(data.config.nbClose, indiv.indivsByProximity.size());
-    auto start = indiv.indivsByProximity.begin();
+    auto const &prox = proximity.at(&indiv);
+    auto const maxSize = std::min(data.config.nbClose, prox.size());
+    auto start = prox.begin();
     int result = 0;
 
     for (auto it = start; it != start + maxSize; ++it)

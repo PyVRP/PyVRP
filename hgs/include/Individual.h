@@ -9,8 +9,6 @@
 
 class Individual
 {
-    friend class Population;  // TODO remove this
-
     using Client = int;
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
@@ -19,9 +17,6 @@ class Individual
     size_t distance = 0;        // Total distance
     size_t capacityExcess = 0;  // Total excess load over all routes
     size_t timeWarp = 0;        // All route time warp of late arrivals
-
-    // The other individuals in the population, ordered by increasing proximity
-    std::vector<std::pair<int, Individual *>> indivsByProximity;
 
     ProblemData const *data;  // Problem data
     Routes routes_;           // Routes - only the first nbRoutes are non-empty
@@ -107,8 +102,6 @@ public:
      * @param other Other individual to copy.
      */
     Individual(Individual const &other);
-
-    ~Individual();
 };
 
 // Outputs an individual into a given ostream in VRPLIB format
