@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
 
+#include "Config.h"
 #include "PenaltyManager.h"
 #include "diversity.h"
 
 TEST(DiversityTest, brokenPairsDistance)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,

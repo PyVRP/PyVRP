@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "Config.h"
 #include "Population.h"
 
 TEST(PopulationTest, ctor)
@@ -89,8 +90,8 @@ TEST(PopulationTest, addTriggersPurge)
     pop.add(indiv);
 
     ASSERT_TRUE(indiv.isFeasible());
-    EXPECT_EQ(pop.numFeasible(), data.config.minPopSize);
-    EXPECT_EQ(pop.size(), data.config.minPopSize + infeasPops);
+    EXPECT_EQ(pop.numFeasible(), config.minPopSize);
+    EXPECT_EQ(pop.size(), config.minPopSize + infeasPops);
 }
 
 TEST(PopulationTest, addUpdatesBestFoundSolution)
