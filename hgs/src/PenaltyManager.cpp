@@ -1,6 +1,5 @@
 #include "PenaltyManager.h"
 
-#include <algorithm>
 #include <stdexcept>
 
 PenaltyManager::PenaltyManager(unsigned int initCapacityPenalty,

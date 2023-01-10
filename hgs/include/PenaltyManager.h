@@ -38,7 +38,8 @@ class PenaltyManager
 
     // Computes and returns the new penalty value, given the current value and
     // the percentage of feasible solutions since the last update.
-    unsigned int compute(unsigned int penalty, double feasPct) const;
+    [[nodiscard]] unsigned int compute(unsigned int penalty,
+                                       double feasPct) const;
 
 public:
     PenaltyManager(unsigned int initCapacityPenalty,
