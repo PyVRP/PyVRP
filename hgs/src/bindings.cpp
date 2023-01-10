@@ -8,6 +8,7 @@
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
 #include "NoImprovement.h"
+#include "PenaltyManager.h"
 #include "Population.h"
 #include "ProblemData.h"
 #include "RelocateStar.h"
@@ -34,12 +35,32 @@ PYBIND11_MODULE(hgspy, m)
     py::class_<XorShift128>(m, "XorShift128")
         .def(py::init<int>(), py::arg("seed"));
 
+    py::class_<PenaltyManager>(m, "PenaltyManager")
+        .def(py::init<unsigned int,
+                      unsigned int,
+                      double,
+                      double,
+                      double,
+                      unsigned int,
+                      unsigned int>(),
+             py::arg("init_capacity_penalty"),
+             py::arg("init_time_warp_penalty"),
+             py::arg("penalty_increase"),
+             py::arg("penalty_decrease"),
+             py::arg("target_feasible"),
+             py::arg("vehicle_capacity"),
+             py::arg("repair_booster"));
+
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData &, XorShift128 &>(),
+        .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
              py::arg("data"),
+             py::arg("penalty_manager"),
              py::arg("rng"))
-        .def(py::init<ProblemData &, std::vector<std::vector<int>>>(),
+        .def(py::init<ProblemData &,
+                      PenaltyManager &,
+                      std::vector<std::vector<int>>>(),
              py::arg("data"),
+             py::arg("penalty_manager"),
              py::arg("routes"))
         .def("cost", &Individual::cost)
         .def("get_routes", &Individual::getRoutes)
@@ -50,8 +71,9 @@ PYBIND11_MODULE(hgspy, m)
         .def("to_file", &Individual::toFile);
 
     py::class_<LocalSearch>(m, "LocalSearch")
-        .def(py::init<ProblemData &, XorShift128 &>(),
+        .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
              py::arg("data"),
+             py::arg("penalty_manager"),
              py::arg("rng"))
         .def("add_node_operator",
              static_cast<void (LocalSearch::*)(LocalSearchOperator<Node> &)>(
@@ -153,8 +175,12 @@ PYBIND11_MODULE(hgspy, m)
         .def("from_file", &ProblemData::fromFile);
 
     py::class_<Population>(m, "Population")
-        .def(py::init<ProblemData &, XorShift128 &, DiversityMeasure>(),
+        .def(py::init<ProblemData &,
+                      PenaltyManager &,
+                      XorShift128 &,
+                      DiversityMeasure>(),
              py::arg("data"),
+             py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("op"))
         .def("add", &Population::add, py::arg("individual"));
@@ -193,22 +219,23 @@ PYBIND11_MODULE(hgspy, m)
 
     py::class_<GeneticAlgorithm>(m, "GeneticAlgorithm")
         .def(py::init<ProblemData &,
+                      PenaltyManager &,
                       XorShift128 &,
                       Population &,
-                      LocalSearch &>(),
+                      LocalSearch &,
+                      CrossoverOperator>(),
              py::arg("data"),
+             py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("population"),
-             py::arg("local_search"))
-        .def("add_crossover_operator",
-             &GeneticAlgorithm::addCrossoverOperator,
-             py::arg("op"))
+             py::arg("local_search"),
+             py::arg("crossover_operator"))
         .def("run", &GeneticAlgorithm::run, py::arg("stop"));
 
     // Diversity measures (as a submodule)
     py::module diversity = m.def_submodule("diversity");
 
-    m.def("broken_pairs_distance", &brokenPairsDistance);
+    diversity.def("broken_pairs_distance", &brokenPairsDistance);
 
     // Stopping criteria (as a submodule)
     py::module stop = m.def_submodule("stop");
@@ -246,42 +273,68 @@ PYBIND11_MODULE(hgspy, m)
     py::class_<LocalSearchOperator<Route>>(lsOps, "RouteLocalSearchOperator");
 
     py::class_<Exchange<1, 0>, LocalSearchOperator<Node>>(lsOps, "Exchange10")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<2, 0>, LocalSearchOperator<Node>>(lsOps, "Exchange20")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<3, 0>, LocalSearchOperator<Node>>(lsOps, "Exchange30")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<1, 1>, LocalSearchOperator<Node>>(lsOps, "Exchange11")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<2, 1>, LocalSearchOperator<Node>>(lsOps, "Exchange21")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<3, 1>, LocalSearchOperator<Node>>(lsOps, "Exchange31")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<2, 2>, LocalSearchOperator<Node>>(lsOps, "Exchange22")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<3, 2>, LocalSearchOperator<Node>>(lsOps, "Exchange32")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<Exchange<3, 3>, LocalSearchOperator<Node>>(lsOps, "Exchange33")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<MoveTwoClientsReversed, LocalSearchOperator<Node>>(
         lsOps, "MoveTwoClientsReversed")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<TwoOpt, LocalSearchOperator<Node>>(lsOps, "TwoOpt")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<RelocateStar, LocalSearchOperator<Route>>(lsOps, "RelocateStar")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 
     py::class_<SwapStar, LocalSearchOperator<Route>>(lsOps, "SwapStar")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 }
