@@ -22,8 +22,8 @@ void LocalSearch::search(Individual &indiv)
     // Caches the last time nodes were tested for modification (uses nbMoves to
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
-    std::vector<int> lastTestedNodes(data.nbClients + 1, -1);
-    lastModified = std::vector<int>(data.nbVehicles, 0);
+    std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
+    lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
     nbMoves = 0;
@@ -83,8 +83,8 @@ void LocalSearch::intensify(Individual &indiv)
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 
-    std::vector<int> lastTestedRoutes(data.nbVehicles, -1);
-    lastModified = std::vector<int>(data.nbVehicles, 0);
+    std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
+    lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
     nbMoves = 0;
@@ -250,13 +250,13 @@ void LocalSearch::calculateNeighbours()
 {
     // TODO clean up this method / rethink proximity determination
     auto proximities
-        = std::vector<std::vector<std::pair<int, int>>>(data.nbClients + 1);
+        = std::vector<std::vector<std::pair<int, int>>>(data.numClients() + 1);
 
-    for (int i = 1; i <= data.nbClients; i++)  // exclude depot
+    for (size_t i = 1; i <= data.numClients(); i++)  // exclude depot
     {
         auto &proximity = proximities[i];
 
-        for (int j = 1; j <= data.nbClients; j++)  // exclude depot
+        for (size_t j = 1; j <= data.numClients(); j++)  // exclude depot
         {
             if (i == j)  // exclude the current client
                 continue;
@@ -264,32 +264,32 @@ void LocalSearch::calculateNeighbours()
             // Compute proximity using Eq. 4 in Vidal 2012. The proximity is
             // computed by the distance, min. wait time and min. time warp
             // going from either i -> j or j -> i, whichever is the least.
-            int const maxRelease = std::max(data.clients[i].releaseTime,
-                                            data.clients[j].releaseTime);
+            int const maxRelease = std::max(data.client(i).releaseTime,
+                                            data.client(j).releaseTime);
 
             // Proximity from j to i
-            int const waitTime1 = data.clients[i].twEarly - data.dist(j, i)
-                                  - data.clients[j].servDur
-                                  - data.clients[j].twLate;
+            int const waitTime1 = data.client(i).twEarly - data.dist(j, i)
+                                  - data.client(j).servDur
+                                  - data.client(j).twLate;
 
             int const earliestArrival1 = std::max(maxRelease + data.dist(0, j),
-                                                  data.clients[j].twEarly);
+                                                  data.client(j).twEarly);
 
-            int const timeWarp1 = earliestArrival1 + data.clients[j].servDur
-                                  + data.dist(j, i) - data.clients[i].twLate;
+            int const timeWarp1 = earliestArrival1 + data.client(j).servDur
+                                  + data.dist(j, i) - data.client(i).twLate;
 
             int const prox1 = data.dist(j, i)
                               + weightWaitTime * std::max(0, waitTime1)
                               + weightTimeWarp * std::max(0, timeWarp1);
 
             // Proximity from i to j
-            int const waitTime2 = data.clients[j].twEarly - data.dist(i, j)
-                                  - data.clients[i].servDur
-                                  - data.clients[i].twLate;
+            int const waitTime2 = data.client(j).twEarly - data.dist(i, j)
+                                  - data.client(i).servDur
+                                  - data.client(i).twLate;
             int const earliestArrival2 = std::max(maxRelease + data.dist(0, i),
-                                                  data.clients[i].twEarly);
-            int const timeWarp2 = earliestArrival2 + data.clients[i].servDur
-                                  + data.dist(i, j) - data.clients[j].twLate;
+                                                  data.client(i).twEarly);
+            int const timeWarp2 = earliestArrival2 + data.client(i).servDur
+                                  + data.dist(i, j) - data.client(j).twLate;
             int const prox2 = data.dist(i, j)
                               + weightWaitTime * std::max(0, waitTime2)
                               + weightTimeWarp * std::max(0, timeWarp2);
@@ -302,11 +302,11 @@ void LocalSearch::calculateNeighbours()
 
     // First create a set of correlated vertices for each vertex (where the
     // depot is not taken into account)
-    std::vector<std::set<int>> set(data.nbClients + 1);
+    std::vector<std::set<int>> set(data.numClients() + 1);
     size_t const granularity
-        = std::min(nbGranular, static_cast<size_t>(data.nbClients) - 1);
+        = std::min(nbGranular, static_cast<size_t>(data.numClients()) - 1);
 
-    for (int i = 1; i <= data.nbClients; i++)  // again exclude depot
+    for (size_t i = 1; i <= data.numClients(); i++)  // again exclude depot
     {
         auto const &orderProximity = proximities[i];
 
@@ -314,26 +314,26 @@ void LocalSearch::calculateNeighbours()
             set[i].insert(orderProximity[j].second);
     }
 
-    for (int i = 1; i <= data.nbClients; i++)
+    for (size_t i = 1; i <= data.numClients(); i++)
         for (int x : set[i])
             neighbours[i].push_back(x);
 }
 
 void LocalSearch::loadIndividual(Individual const &indiv)
 {
-    for (int client = 0; client <= data.nbClients; client++)
+    for (size_t client = 0; client <= data.numClients(); client++)
         clients[client].tw = {&data.dist_,
-                              client,
-                              client,
-                              data.clients[client].servDur,
+                              static_cast<int>(client),  // TODO cast
+                              static_cast<int>(client),  // TODO cast
+                              data.client(client).servDur,
                               0,
-                              data.clients[client].twEarly,
-                              data.clients[client].twLate,
-                              data.clients[client].releaseTime};
+                              data.client(client).twEarly,
+                              data.client(client).twLate,
+                              data.client(client).releaseTime};
 
     auto const &routesIndiv = indiv.getRoutes();
 
-    for (int r = 0; r < data.nbVehicles; r++)
+    for (size_t r = 0; r < data.numVehicles(); r++)
     {
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -390,17 +390,17 @@ void LocalSearch::loadIndividual(Individual const &indiv)
 Individual LocalSearch::exportIndividual()
 {
     std::vector<std::pair<double, int>> routePolarAngles;
-    routePolarAngles.reserve(data.nbVehicles);
+    routePolarAngles.reserve(data.numVehicles());
 
-    for (int r = 0; r < data.nbVehicles; r++)
+    for (size_t r = 0; r < data.numVehicles(); r++)
         routePolarAngles.emplace_back(routes[r].angleCenter, r);
 
     // Empty routes have a large center angle, and thus always sort at the end
     std::sort(routePolarAngles.begin(), routePolarAngles.end());
 
-    std::vector<std::vector<int>> indivRoutes(data.nbVehicles);
+    std::vector<std::vector<int>> indivRoutes(data.numVehicles());
 
-    for (int r = 0; r < data.nbVehicles; r++)
+    for (size_t r = 0; r < data.numVehicles(); r++)
     {
         Node *node = startDepots[routePolarAngles[r].second].next;
 
@@ -428,28 +428,28 @@ LocalSearch::LocalSearch(ProblemData &data,
       weightTimeWarp(weightTimeWarp),
       nbGranular(nbGranular),
       postProcessPathLength(postProcessPathLength),
-      neighbours(data.nbClients + 1),
-      orderNodes(data.nbClients),
-      orderRoutes(data.nbVehicles),
-      lastModified(data.nbVehicles, -1)
+      neighbours(data.numClients() + 1),
+      orderNodes(data.numClients()),
+      orderRoutes(data.numVehicles()),
+      lastModified(data.numVehicles(), -1)
 {
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    clients = std::vector<Node>(data.nbClients + 1);
-    routes = std::vector<Route>(data.nbVehicles);
-    startDepots = std::vector<Node>(data.nbVehicles);
-    endDepots = std::vector<Node>(data.nbVehicles);
+    clients = std::vector<Node>(data.numClients() + 1);
+    routes = std::vector<Route>(data.numVehicles());
+    startDepots = std::vector<Node>(data.numVehicles());
+    endDepots = std::vector<Node>(data.numVehicles());
 
     calculateNeighbours();
 
-    for (int i = 0; i <= data.nbClients; i++)
+    for (size_t i = 0; i <= data.numClients(); i++)
     {
         clients[i].data = &data;
         clients[i].client = i;
     }
 
-    for (int i = 0; i < data.nbVehicles; i++)
+    for (size_t i = 0; i < data.numVehicles(); i++)
     {
         routes[i].data = &data;
         routes[i].idx = i;

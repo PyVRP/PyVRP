@@ -81,7 +81,7 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
         updateRemovalCosts(routeV);
         updated[routeV->idx] = false;
 
-        for (int idx = 1; idx != data.nbClients + 1; ++idx)
+        for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
             cache(routeV->idx, idx).shouldUpdate = true;
     }
 
@@ -90,7 +90,7 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
         updateRemovalCosts(routeU);
         updated[routeV->idx] = false;
 
-        for (int idx = 1; idx != data.nbClients + 1; ++idx)
+        for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
             cache(routeU->idx, idx).shouldUpdate = true;
     }
 
@@ -99,8 +99,8 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
         {
             int deltaCost = 0;
 
-            int const uDemand = data.clients[U->client].demand;
-            int const vDemand = data.clients[V->client].demand;
+            int const uDemand = data.client(U->client).demand;
+            int const vDemand = data.client(V->client).demand;
             int const loadDiff = uDemand - vDemand;
 
             deltaCost += penaltyManager.loadPenalty(routeU->load() - loadDiff);
@@ -240,8 +240,8 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
     deltaCost -= penaltyManager.twPenalty(routeU->timeWarp());
     deltaCost -= penaltyManager.twPenalty(routeV->timeWarp());
 
-    auto const uDemand = data.clients[best.U->client].demand;
-    auto const vDemand = data.clients[best.V->client].demand;
+    auto const uDemand = data.client(best.U->client).demand;
+    auto const vDemand = data.client(best.V->client).demand;
 
     deltaCost += penaltyManager.loadPenalty(routeU->load() - uDemand + vDemand);
     deltaCost -= penaltyManager.loadPenalty(routeU->load());

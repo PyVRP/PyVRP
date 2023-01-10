@@ -129,8 +129,8 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    Routes routes1(data.nbVehicles);
-    Routes routes2(data.nbVehicles);
+    Routes routes1(data.numVehicles());
+    Routes routes2(data.numVehicles());
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < nMovedRoutes; r++)

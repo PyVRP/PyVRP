@@ -107,9 +107,9 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
 
     // From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
-    ASSERT_EQ(data.nbClients, 4);
-    ASSERT_EQ(data.nbVehicles, 3);
-    ASSERT_EQ(data.vehicleCapacity, 10);
+    ASSERT_EQ(data.numClients(), 4);
+    ASSERT_EQ(data.numVehicles(), 3);
+    ASSERT_EQ(data.vehicleCapacity(), 10);
 
     // From the NODE_COORD_SECTION in the file
     std::vector<std::pair<int, int>> expectedCoords = {
@@ -120,12 +120,12 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
         {1191, 639},
     };
 
-    ASSERT_EQ(data.nbClients + 1, expectedCoords.size());
+    ASSERT_EQ(data.numClients() + 1, expectedCoords.size());
 
     for (auto idx = 0; idx != 5; ++idx)
     {
-        ASSERT_EQ(data.clients[idx].x, expectedCoords[idx].first);
-        ASSERT_EQ(data.clients[idx].y, expectedCoords[idx].second);
+        ASSERT_EQ(data.client(idx).x, expectedCoords[idx].first);
+        ASSERT_EQ(data.client(idx).y, expectedCoords[idx].second);
     }
 
     // From the EDGE_WEIGHT_SECTION in the file
@@ -137,7 +137,7 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
         {1475, 1594, 1090, 828, 0},
     };
 
-    ASSERT_EQ(data.nbClients + 1, expectedDistances.size());
+    ASSERT_EQ(data.numClients() + 1, expectedDistances.size());
 
     for (auto i = 0; i != 5; ++i)
         for (auto j = 0; j != 5; ++j)
@@ -145,10 +145,10 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
 
     // From the DEMAND_SECTION in the file
     std::vector<int> expectedDemands = {0, 5, 5, 3, 5};
-    ASSERT_EQ(data.nbClients + 1, expectedDemands.size());
+    ASSERT_EQ(data.numClients() + 1, expectedDemands.size());
 
     for (auto idx = 0; idx != 5; ++idx)
-        ASSERT_EQ(data.clients[idx].demand, expectedDemands[idx]);
+        ASSERT_EQ(data.client(idx).demand, expectedDemands[idx]);
 
     // From the TIME_WINDOW_SECTION in the file
     std::vector<std::pair<int, int>> expectedTimeWindows = {
@@ -159,39 +159,39 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
         {12000, 19500},
     };
 
-    ASSERT_EQ(data.nbClients + 1, expectedTimeWindows.size());
+    ASSERT_EQ(data.numClients() + 1, expectedTimeWindows.size());
 
     for (auto idx = 0; idx != 5; ++idx)
     {
-        ASSERT_EQ(data.clients[idx].twEarly, expectedTimeWindows[idx].first);
-        ASSERT_EQ(data.clients[idx].twLate, expectedTimeWindows[idx].second);
+        ASSERT_EQ(data.client(idx).twEarly, expectedTimeWindows[idx].first);
+        ASSERT_EQ(data.client(idx).twLate, expectedTimeWindows[idx].second);
     }
 
     // From the SERVICE_TIME_SECTION in the file
     std::vector<int> expectedServiceTimes = {0, 360, 360, 420, 360};
-    ASSERT_EQ(data.nbClients + 1, expectedServiceTimes.size());
+    ASSERT_EQ(data.numClients() + 1, expectedServiceTimes.size());
 
     for (auto idx = 0; idx != 5; ++idx)
-        ASSERT_EQ(data.clients[idx].servDur, expectedServiceTimes[idx]);
+        ASSERT_EQ(data.client(idx).servDur, expectedServiceTimes[idx]);
 }
 
 TEST(ProblemDataFromFileContentTest, CVRPLIBEn22k4)  // instance from CVRPLIB
 {
     auto const data = ProblemData::fromFile("data/E-n22-k4.vrp.txt");
 
-    ASSERT_EQ(data.nbClients, 21);
-    ASSERT_EQ(data.vehicleCapacity, 6000);
+    ASSERT_EQ(data.numClients(), 21);
+    ASSERT_EQ(data.vehicleCapacity(), 6000);
 
     // We have "k4" in the file name, but there's no VEHICLES field in the data
     // file itself, so the number of vehicles should default to the number of
     // clients, 21.
-    ASSERT_EQ(data.nbVehicles, 21);
+    ASSERT_EQ(data.numVehicles(), 21);
 
-    ASSERT_EQ(data.clients[0].x, 145);  // depot location
-    ASSERT_EQ(data.clients[0].y, 215);
+    ASSERT_EQ(data.depot().x, 145);  // depot location
+    ASSERT_EQ(data.depot().y, 215);
 
-    ASSERT_EQ(data.clients[1].x, 151);  // first customer
-    ASSERT_EQ(data.clients[1].y, 264);
+    ASSERT_EQ(data.client(1).x, 151);  // first customer
+    ASSERT_EQ(data.client(1).y, 264);
 
     // The data file specifies distances as 2D Euclidean. We take that and
     // should compute integer equivalents with up to one decimal precision.
@@ -205,11 +205,11 @@ TEST(ProblemDataFromFileContentTest, CVRPLIBEn22k4)  // instance from CVRPLIB
 
     // These fields are all missing from the data file, and should thus retain
     // their default values.
-    for (auto idx = 0; idx <= data.nbClients; ++idx)
+    for (size_t idx = 0; idx <= data.numClients(); ++idx)
     {
-        ASSERT_EQ(data.clients[idx].servDur, 0);
-        ASSERT_EQ(data.clients[idx].twEarly, 0);
-        ASSERT_EQ(data.clients[idx].twLate, INT_MAX);
-        ASSERT_EQ(data.clients[idx].releaseTime, 0);
+        ASSERT_EQ(data.client(idx).servDur, 0);
+        ASSERT_EQ(data.client(idx).twEarly, 0);
+        ASSERT_EQ(data.client(idx).twLate, INT_MAX);
+        ASSERT_EQ(data.client(idx).releaseTime, 0);
     }
 }

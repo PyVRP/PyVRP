@@ -51,7 +51,7 @@ public:  // TODO make fields private
      */
     [[nodiscard]] bool hasExcessCapacity() const
     {
-        return load() > data->vehicleCapacity;
+        return static_cast<size_t>(load()) > data->vehicleCapacity();
     }
 
     /**
@@ -132,7 +132,7 @@ int Route::loadBetween(size_t start, size_t end) const
     assert(start <= end && end <= nodes.size());
 
     auto const *startNode = start == 0 ? depot : nodes[start - 1];
-    auto const atStart = data->clients[startNode->client].demand;
+    auto const atStart = data->client(startNode->client).demand;
     auto const startLoad = startNode->cumulatedLoad;
     auto const endLoad = nodes[end - 1]->cumulatedLoad;
 

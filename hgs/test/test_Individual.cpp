@@ -13,7 +13,7 @@ TEST(IndividualTest, routeConstructorSortsByEmpty)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
@@ -40,10 +40,10 @@ TEST(IndividualTest, routeConstructorThrows)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
-    ASSERT_EQ(data.nbVehicles, 3);
+    ASSERT_EQ(data.numVehicles(), 3);
 
     // Two routes, three vehicles: should throw.
     ASSERT_THROW((Individual{data, pMngr, {{1, 2}, {4, 2}}}),
@@ -62,7 +62,7 @@ TEST(IndividualTest, getNeighbours)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
@@ -89,7 +89,7 @@ TEST(IndividualTest, feasibility)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     // This solution is infeasible due to both load and time window violations.
@@ -119,7 +119,7 @@ TEST(IndividualCostTest, distance)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Individual indiv{data, pMngr, {{1, 2}, {3}, {4}}};
@@ -141,7 +141,7 @@ TEST(IndividualCostTest, capacity)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Individual indiv{data, pMngr, {{4, 3, 1, 2}, {}, {}}};
@@ -149,13 +149,15 @@ TEST(IndividualCostTest, capacity)
     ASSERT_TRUE(indiv.hasExcessCapacity());
     ASSERT_FALSE(indiv.hasTimeWarp());
 
-    int load = 0;
+    size_t load = 0;
+    for (size_t idx = 0; idx <= data.numClients(); ++idx)
+        load += data.client(idx).demand;
 
-    for (auto &client : data.clients)  // all demand, since all clients are
-        load += client.demand;         // in a single route
+    auto const excessLoad = load - data.vehicleCapacity();
+    ASSERT_GT(load, data.vehicleCapacity());
+    EXPECT_EQ(excessLoad, 8);
 
-    int excessLoad = load - data.vehicleCapacity;
-    int loadPenalty = config.initialCapacityPenalty * excessLoad;
+    auto const loadPenalty = config.initialCapacityPenalty * excessLoad;
     int dist = data.dist(0, 4, 3, 1, 2, 0);
 
     // This individual is infeasible due to load violations, so the costs should
@@ -172,7 +174,7 @@ TEST(IndividualCostTest, timeWarp)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Individual indiv{data, pMngr, {{1, 3}, {2, 4}, {}}};

@@ -18,7 +18,7 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
     Statistics stats;
     size_t iter = 0;
 
-    if (data.nbClients <= 1)
+    if (data.numClients() <= 1)
         return {population.getBestFound(), stats, iter, 0.};
 
     auto start = clock::now();

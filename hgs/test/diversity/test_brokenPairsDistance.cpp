@@ -13,7 +13,7 @@ TEST(DiversityTest, brokenPairsDistance)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Individual indiv1{data, pMngr, {{1, 2, 3, 4}, {}, {}}};

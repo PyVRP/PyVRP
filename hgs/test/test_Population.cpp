@@ -12,7 +12,7 @@ TEST(PopulationTest, ctor)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
     XorShift128 rng;
     Population pop(data,
@@ -42,7 +42,7 @@ TEST(PopulationTest, addTriggersPurge)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
     XorShift128 rng;
     Population pop(data,
@@ -105,7 +105,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     XorShift128 rng(2'147'483'647);
@@ -153,7 +153,7 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
     XorShift128 rng;
     Population pop(data,

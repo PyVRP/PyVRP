@@ -97,9 +97,9 @@ public:
     explicit SwapStar(ProblemData const &data,
                       PenaltyManager const &penaltyManager)
         : LocalSearchOperator<Route>(data, penaltyManager),
-          cache(data.nbVehicles, data.nbClients + 1),
-          removalCosts(data.nbVehicles, data.nbClients + 1),
-          updated(data.nbVehicles, true)
+          cache(data.numVehicles(), data.numClients() + 1),
+          removalCosts(data.numVehicles(), data.numClients() + 1),
+          updated(data.numVehicles(), true)
     {
     }
 };

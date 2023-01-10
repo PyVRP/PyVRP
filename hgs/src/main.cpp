@@ -33,7 +33,7 @@ try
                          config.penaltyIncrease,
                          config.penaltyDecrease,
                          config.targetFeasible,
-                         data.vehicleCapacity,
+                         data.vehicleCapacity(),
                          static_cast<int>(config.repairBooster));
 
     Population pop(data,

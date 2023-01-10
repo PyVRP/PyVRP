@@ -21,27 +21,34 @@ class ProblemData
                           // this time
     };
 
+    std::vector<Client> clients_;  // Client (+depot) information
+
+    size_t const numClients_;
+    size_t const numVehicles_;
+    size_t const vehicleCapacity_;
+
 public:
-    // TODO make members private and rethink interface
-    Matrix<int> const dist_;  // Distance matrix (+depot)
+    Matrix<int> const dist_;  // Distance matrix (+depot) TODO make private
 
-    int const nbClients;        // Number of clients (excluding the depot)
-    int const nbVehicles;       // Number of vehicles
-    int const vehicleCapacity;  // Capacity limit
+    [[nodiscard]] Client client(size_t client) const;
 
-    std::vector<Client> clients;  // Client (+depot) information
+    [[nodiscard]] Client depot() const;
 
-    [[nodiscard]] int dist(size_t row, size_t col) const
-    {
-        return dist_(row, col);
-    }
+    [[nodiscard]] int dist(size_t row, size_t col) const;
 
+    // TODO remove this template?
     template <typename... Args>
     [[nodiscard]] int
     dist(size_t first, size_t second, size_t third, Args... args) const
     {
-        return dist_(first, second) + dist(second, third, args...);
+        return dist(first, second) + dist(second, third, args...);
     }
+
+    [[nodiscard]] size_t numClients() const;
+
+    [[nodiscard]] size_t numVehicles() const;
+
+    [[nodiscard]] size_t vehicleCapacity() const;
 
     /**
      * Constructs a ProblemData object from the data read (in VRPLIB format)
@@ -57,19 +64,19 @@ public:
      * contains the depot, such that each vector is one longer than the number
      * of clients.
      *
-     * @param coords      Coordinates as pairs of [x, y].
-     * @param demands     Client demands.
-     * @param nbVehicles  Number of vehicles.
-     * @param vehicleCap  Vehicle capacity.
-     * @param timeWindows Time windows as pairs of [early, late].
-     * @param servDurs    Service durations.
-     * @param distMat     Distance matrix.
-     * @param releases    Client release times.
+     * @param coords       Coordinates as pairs of [x, y].
+     * @param demands      Client demands.
+     * @param numVehicles  Number of vehicles.
+     * @param vehicleCap   Vehicle capacity.
+     * @param timeWindows  Time windows as pairs of [early, late].
+     * @param servDurs     Service durations.
+     * @param distMat      Distance matrix.
+     * @param releases     Client release times.
      */
     ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
-                int nbVehicles,
-                int vehicleCap,
+                size_t numVehicles,
+                size_t vehicleCap,
                 std::vector<std::pair<int, int>> const &timeWindows,
                 std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat,
