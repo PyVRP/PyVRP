@@ -1,6 +1,7 @@
 #ifndef INDIVIDUAL_H
 #define INDIVIDUAL_H
 
+#include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 
@@ -18,8 +19,10 @@ class Individual
     size_t capacityExcess = 0;  // Total excess load over all routes
     size_t timeWarp = 0;        // All route time warp of late arrivals
 
-    ProblemData const *data;  // Problem data
-    Routes routes_;           // Routes - only the first nbRoutes are non-empty
+    ProblemData const *data;
+    PenaltyManager const *penaltyManager;
+
+    Routes routes_;  // Routes - only the first nbRoutes are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
 
     // Determines the [pred, succ] pairs for each client.
@@ -83,18 +86,26 @@ public:
     /**
      * Constructs a random individual using the given random number generator.
      *
-     * @param data Data instance describing the problem that's being solved.
-     * @param rng  Random number generator.
+     * @param data           Data instance describing the problem that's being
+     *                       solved.
+     * @param penaltyManager Penalty manager, used to compute the objective.
+     * @param rng            Random number generator.
      */
-    Individual(ProblemData const &data, XorShift128 &rng);
+    Individual(ProblemData const &data,
+               PenaltyManager const &penaltyManager,
+               XorShift128 &rng);
 
     /**
      * Constructs an individual having the given routes as its solution.
      *
-     * @param data   Data instance describing the problem that's being solved.
-     * @param routes Solution's routes; each route is a vector of clients.
+     * @param data           Data instance describing the problem that's being
+     *                       solved.
+     * @param penaltyManager Penalty manager, used to compute the objective.
+     * @param routes         Solution's route list.
      */
-    Individual(ProblemData const &data, Routes routes);
+    Individual(ProblemData const &data,
+               PenaltyManager const &penaltyManager,
+               Routes routes);
 
     /**
      * Constructs a copy of the given other individual.

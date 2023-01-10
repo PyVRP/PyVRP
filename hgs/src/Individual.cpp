@@ -84,8 +84,8 @@ void Individual::evaluateCompleteCost()
 size_t Individual::cost() const
 {
     auto const load = data->vehicleCapacity + capacityExcess;
-    auto const loadPenalty = data->pManager.loadPenalty(load);
-    auto const twPenalty = data->pManager.twPenalty(timeWarp);
+    auto const loadPenalty = penaltyManager->loadPenalty(load);
+    auto const twPenalty = penaltyManager->twPenalty(timeWarp);
 
     return distance + loadPenalty + twPenalty;
 }
@@ -130,8 +130,13 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : data(&data), routes_(data.nbVehicles), neighbours(data.nbClients + 1)
+Individual::Individual(ProblemData const &data,
+                       PenaltyManager const &penaltyManager,
+                       XorShift128 &rng)
+    : data(&data),
+      penaltyManager(&penaltyManager),
+      routes_(data.nbVehicles),
+      neighbours(data.nbClients + 1)
 {
     auto const nbClients = data.nbClients;
     auto const nbVehicles = data.nbVehicles;
@@ -153,8 +158,13 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     evaluateCompleteCost();
 }
 
-Individual::Individual(ProblemData const &data, Routes routes)
-    : data(&data), routes_(std::move(routes)), neighbours(data.nbClients + 1)
+Individual::Individual(ProblemData const &data,
+                       PenaltyManager const &penaltyManager,
+                       Routes routes)
+    : data(&data),
+      penaltyManager(&penaltyManager),
+      routes_(std::move(routes)),
+      neighbours(data.nbClients + 1)
 {
     if (routes_.size() != static_cast<size_t>(data.nbVehicles))
     {
@@ -178,6 +188,7 @@ Individual::Individual(Individual const &other)  // copy fields from other
       capacityExcess(other.capacityExcess),
       timeWarp(other.timeWarp),
       data(other.data),
+      penaltyManager(other.penaltyManager),
       routes_(other.routes_),
       neighbours(other.neighbours)
 {

@@ -94,8 +94,9 @@ public:
 
     void update(Route *U) override { updated[U->idx] = true; }
 
-    explicit SwapStar(ProblemData const &data)
-        : LocalSearchOperator<Route>(data),
+    explicit SwapStar(ProblemData const &data,
+                      PenaltyManager const &penaltyManager)
+        : LocalSearchOperator<Route>(data, penaltyManager),
           cache(data.nbVehicles, data.nbClients + 1),
           removalCosts(data.nbVehicles, data.nbClients + 1),
           updated(data.nbVehicles, true)

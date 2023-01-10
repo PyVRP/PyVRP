@@ -2,12 +2,14 @@
 #define LOCALSEARCHOPERATOR_H
 
 #include "Individual.h"
+#include "PenaltyManager.h"
 #include "Route.h"
 
 template <typename Arg> class LocalSearchOperator
 {
 protected:
     ProblemData const &data;
+    PenaltyManager const &penaltyManager;
 
 public:
     /**
@@ -42,7 +44,11 @@ public:
      */
     virtual void update(Route *U){};
 
-    explicit LocalSearchOperator(ProblemData const &data) : data(data) {}
+    explicit LocalSearchOperator(ProblemData const &data,
+                                 PenaltyManager const &penaltyManager)
+        : data(data), penaltyManager(penaltyManager)
+    {
+    }
 
     virtual ~LocalSearchOperator() = default;
 };

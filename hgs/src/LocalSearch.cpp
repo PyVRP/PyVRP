@@ -243,7 +243,7 @@ int LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
     totalDist += data.dist(from, after->client);
     tws = TimeWindowSegment::merge(tws, after->twAfter);
 
-    return totalDist + data.pManager.twPenalty(tws.totalTimeWarp());
+    return totalDist + penaltyManager.twPenalty(tws.totalTimeWarp());
 }
 
 void LocalSearch::calculateNeighbours()
@@ -413,11 +413,14 @@ Individual LocalSearch::exportIndividual()
         }
     }
 
-    return {data, indivRoutes};
+    return {data, penaltyManager, indivRoutes};
 }
 
-LocalSearch::LocalSearch(ProblemData &data, XorShift128 &rng)
+LocalSearch::LocalSearch(ProblemData &data,
+                         PenaltyManager &penaltyManager,
+                         XorShift128 &rng)
     : data(data),
+      penaltyManager(penaltyManager),
       rng(rng),
       neighbours(data.nbClients + 1),
       orderNodes(data.nbClients),

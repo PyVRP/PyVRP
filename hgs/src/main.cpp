@@ -4,6 +4,7 @@
 #include "LocalSearch.h"
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
+#include "PenaltyManager.h"
 #include "Population.h"
 #include "ProblemData.h"
 #include "RelocateStar.h"
@@ -27,39 +28,45 @@ try
 
     XorShift128 rng(config.seed);
     ProblemData data = ProblemData::fromFile(config, args.instPath());
-    Population pop(data, rng, brokenPairsDistance);
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
 
-    LocalSearch ls(data, rng);
+    Population pop(data, pMngr, rng, brokenPairsDistance);
+    LocalSearch ls(data, pMngr, rng);
 
-    auto exchange10 = Exchange<1, 0>(data);
+    auto exchange10 = Exchange<1, 0>(data, pMngr);
     ls.addNodeOperator(exchange10);
 
-    auto exchange20 = Exchange<2, 0>(data);
+    auto exchange20 = Exchange<2, 0>(data, pMngr);
     ls.addNodeOperator(exchange20);
 
-    auto reverse20 = MoveTwoClientsReversed(data);
+    auto reverse20 = MoveTwoClientsReversed(data, pMngr);
     ls.addNodeOperator(reverse20);
 
-    auto exchange22 = Exchange<2, 2>(data);
+    auto exchange22 = Exchange<2, 2>(data, pMngr);
     ls.addNodeOperator(exchange22);
 
-    auto exchange21 = Exchange<2, 1>(data);
+    auto exchange21 = Exchange<2, 1>(data, pMngr);
     ls.addNodeOperator(exchange21);
 
-    auto exchange11 = Exchange<1, 1>(data);
+    auto exchange11 = Exchange<1, 1>(data, pMngr);
     ls.addNodeOperator(exchange11);
 
-    auto twoOpt = TwoOpt(data);
+    auto twoOpt = TwoOpt(data, pMngr);
     ls.addNodeOperator(twoOpt);
 
-    auto relocateStar = RelocateStar(data);
+    auto relocateStar = RelocateStar(data, pMngr);
     ls.addRouteOperator(relocateStar);
 
-    auto swapStar = SwapStar(data);
+    auto swapStar = SwapStar(data, pMngr);
     ls.addRouteOperator(swapStar);
 
-    GeneticAlgorithm solver(data, rng, pop, ls);
-    solver.addCrossoverOperator(selectiveRouteExchange);
+    GeneticAlgorithm solver(data, pMngr, rng, pop, ls, selectiveRouteExchange);
 
     MaxRuntime stop(config.timeLimit);
     auto const res = solver.run(stop);

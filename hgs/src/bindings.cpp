@@ -83,7 +83,6 @@ PYBIND11_MODULE(hgspy, m)
                       size_t,
                       size_t,
                       size_t,
-                      size_t,
                       int,
                       int,
                       bool,
@@ -105,7 +104,6 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("targetFeasible") = 0.43,
              py::arg("repairProbability") = 79,
              py::arg("repairBooster") = 12,
-             py::arg("selectProbability") = 90,
              py::arg("nbGranular") = 34,
              py::arg("weightWaitTime") = 18,
              py::arg("weightTimeWarp") = 20,
@@ -128,7 +126,6 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("targetFeasible", &Config::targetFeasible)
         .def_readonly("repairProbability", &Config::repairProbability)
         .def_readonly("repairBooster", &Config::repairBooster)
-        .def_readonly("selectProbability", &Config::selectProbability)
         .def_readonly("nbGranular", &Config::nbGranular)
         .def_readonly("weightWaitTime", &Config::weightWaitTime)
         .def_readonly("weightTimeWarp", &Config::weightTimeWarp)

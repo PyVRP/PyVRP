@@ -111,11 +111,16 @@ public:
      * Constructs a population with ``minPopSize`` random individuals. This
      * includes a random, possibly infeasible, initial best solution.
      *
-     * @param data Data instance describing the problem that is being solved.
-     * @param rng  Random number generator.
-     * @param op   Diversity measure to use.
+     * @param data           Data instance describing the problem that is being
+     *                       solved.
+     * @param penaltyManager Penalty manager, used to generate individuals.
+     * @param rng            Random number generator.
+     * @param op             Diversity measure to use.
      */
-    Population(ProblemData const &data, XorShift128 &rng, DiversityMeasure op);
+    Population(ProblemData const &data,
+               PenaltyManager const &penaltyManager,
+               XorShift128 &rng,
+               DiversityMeasure op);
 };
 
 #endif

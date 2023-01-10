@@ -60,26 +60,26 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
         auto uTWS = TWS::merge(p(U)->twBefore, n(endU)->twAfter);
 
-        deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
+        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
 
-        deltaCost += data.pManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= data.pManager.loadPenalty(U->route->load());
+        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
+        deltaCost -= penaltyManager.loadPenalty(U->route->load());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += data.pManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= data.pManager.loadPenalty(V->route->load());
+        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
+        deltaCost -= penaltyManager.loadPenalty(V->route->load());
 
         auto vTWS = TWS::merge(V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
 
-        deltaCost += data.pManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= data.pManager.twPenalty(V->route->timeWarp());
+        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
     }
     else  // within same route
     {
@@ -95,7 +95,7 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
                                         route->twBetween(posU, posU + N - 1),
                                         n(V)->twAfter);
 
-            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
         }
         else
         {
@@ -104,10 +104,10 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
                                         route->twBetween(posV + 1, posU - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
         }
 
-        deltaCost -= data.pManager.twPenalty(route->timeWarp());
+        deltaCost -= penaltyManager.twPenalty(route->timeWarp());
     }
 
     return deltaCost;
@@ -146,25 +146,25 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
 
-        deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
+        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
         auto vTWS = TWS::merge(p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
 
-        deltaCost += data.pManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= data.pManager.twPenalty(V->route->timeWarp());
+        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
 
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
 
-        deltaCost += data.pManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= data.pManager.loadPenalty(U->route->load());
+        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
+        deltaCost -= penaltyManager.loadPenalty(U->route->load());
 
-        deltaCost += data.pManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= data.pManager.loadPenalty(V->route->load());
+        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
+        deltaCost -= penaltyManager.loadPenalty(V->route->load());
     }
     else  // within same route
     {
@@ -181,7 +181,7 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                         route->twBetween(posU, posU + N - 1),
                                         n(endV)->twAfter);
 
-            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
         }
         else
         {
@@ -191,10 +191,10 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                         route->twBetween(posV, posV + M - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
         }
 
-        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
+        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
     }
 
     return deltaCost;

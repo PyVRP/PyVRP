@@ -31,8 +31,6 @@ struct Config
     size_t repairProbability = 79;  // probability of repair if infeasible
     size_t repairBooster = 12;      // penalty booster when repairing
 
-    size_t selectProbability = 90;  // offspring selection probability
-
     // Granular search parameter, limits the number of moves in the RI local
     // search
     size_t nbGranular = 34;
@@ -62,7 +60,6 @@ struct Config
                     double targetFeasible = 0.43,
                     size_t repairProbability = 79,
                     size_t repairBooster = 12,
-                    size_t selectProbability = 90,
                     size_t nbGranular = 34,
                     int weightWaitTime = 18,
                     int weightTimeWarp = 20,
@@ -85,7 +82,6 @@ struct Config
           targetFeasible(targetFeasible),
           repairProbability(repairProbability),
           repairBooster(repairBooster),
-          selectProbability(selectProbability),
           nbGranular(nbGranular),
           weightWaitTime(weightWaitTime),
           weightTimeWarp(weightTimeWarp),

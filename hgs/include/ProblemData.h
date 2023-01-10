@@ -3,7 +3,6 @@
 
 #include "Config.h"
 #include "Matrix.h"
-#include "PenaltyManager.h"
 #include "XorShift128.h"
 
 #include <iosfwd>
@@ -26,7 +25,6 @@ class ProblemData
 public:
     // TODO make members private and rethink interface
     Matrix<int> const dist_;  // Distance matrix (+depot)
-    PenaltyManager pManager;
 
     Config const config;  // Stores all the parameter values
 
