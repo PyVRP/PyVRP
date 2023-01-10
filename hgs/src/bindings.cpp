@@ -19,12 +19,15 @@
 #include "TwoOpt.h"
 #include "XorShift128.h"
 #include "crossover.h"
+#include "diversity.h"
 
 #include <pybind11/chrono.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+
+// TODO split this file
 
 PYBIND11_MODULE(hgspy, m)
 {
@@ -44,7 +47,6 @@ PYBIND11_MODULE(hgspy, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
-        .def("broken_pairs_distance", &Individual::brokenPairsDistance)
         .def("to_file", &Individual::toFile);
 
     py::class_<LocalSearch>(m, "LocalSearch")
@@ -154,24 +156,21 @@ PYBIND11_MODULE(hgspy, m)
         .def("from_file", &ProblemData::fromFile);
 
     py::class_<Population>(m, "Population")
-        .def(py::init<ProblemData &, XorShift128 &>(),
+        .def(py::init<ProblemData &, XorShift128 &, DiversityMeasure>(),
              py::arg("data"),
-             py::arg("rng"))
-        .def("add_individual",
-             &Population::addIndividual,
-             py::arg("individual"));
+             py::arg("rng"),
+             py::arg("op"))
+        .def("add", &Population::add, py::arg("individual"));
 
     py::class_<Statistics>(m, "Statistics")
         .def("num_iters", &Statistics::numIters)
         .def("run_times", &Statistics::runTimes)
         .def("iter_times", &Statistics::iterTimes)
         .def("feas_pop_size", &Statistics::feasPopSize)
-        .def("feas_avg_diversity", &Statistics::feasAvgDiversity)
         .def("feas_best_cost", &Statistics::feasBestCost)
         .def("feas_avg_cost", &Statistics::feasAvgCost)
         .def("feas_avg_num_routes", &Statistics::feasAvgNumRoutes)
         .def("infeas_pop_size", &Statistics::infeasPopSize)
-        .def("infeas_avg_diversity", &Statistics::infeasAvgDiversity)
         .def("infeas_best_cost", &Statistics::infeasBestCost)
         .def("infeas_avg_cost", &Statistics::infeasAvgCost)
         .def("infeas_avg_num_routes", &Statistics::infeasAvgNumRoutes)
@@ -208,6 +207,11 @@ PYBIND11_MODULE(hgspy, m)
              &GeneticAlgorithm::addCrossoverOperator,
              py::arg("op"))
         .def("run", &GeneticAlgorithm::run, py::arg("stop"));
+
+    // Diversity measures (as a submodule)
+    py::module diversity = m.def_submodule("diversity");
+
+    m.def("broken_pairs_distance", &brokenPairsDistance);
 
     // Stopping criteria (as a submodule)
     py::module stop = m.def_submodule("stop");

@@ -108,61 +108,6 @@ bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp > 0; }
 
-bool Individual::hasClone() const
-{
-    return !indivsByProximity.empty() && indivsByProximity.begin()->first == 0;
-}
-
-int Individual::brokenPairsDistance(Individual const *other) const
-{
-    int dist = 0;
-
-    for (int j = 1; j <= data->nbClients; j++)
-    {
-        auto const [tPred, tSucc] = this->neighbours[j];
-        auto const [oPred, oSucc] = other->neighbours[j];
-
-        // The pair (j, tSucc) is broken when tSucc is not adjacent to j in the
-        // other solution, or when j starts a route in our solution, but is not
-        // adjacent to the depot in the other solution.
-        dist += (tSucc != oSucc && tSucc != oPred)
-                || (tPred == 0 && oPred != 0 && oSucc != 0);
-    }
-
-    return dist;
-}
-
-void Individual::registerNearbyIndividual(Individual *other)
-{
-    auto const dist = brokenPairsDistance(other);
-    auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
-
-    auto &oProx = other->indivsByProximity;
-    auto place = std::lower_bound(oProx.begin(), oProx.end(), dist, cmp);
-    oProx.emplace(place, dist, this);
-
-    auto &tProx = this->indivsByProximity;
-    place = std::lower_bound(tProx.begin(), tProx.end(), dist, cmp);
-    tProx.emplace(place, dist, other);
-}
-
-double Individual::avgBrokenPairsDistanceClosest() const
-{
-    if (indivsByProximity.empty())
-        return 0.;
-
-    auto maxSize = std::min(data->config.nbClose, indivsByProximity.size());
-    auto start = indivsByProximity.begin();
-    int result = 0;
-
-    for (auto it = start; it != start + maxSize; ++it)
-        result += it->first;
-
-    // Normalise broken pairs distance by # of clients and close neighbours
-    auto const numClose = static_cast<double>(maxSize);
-    return result / (data->nbClients * numClose);
-}
-
 void Individual::toFile(std::string const &path, double time) const
 {
     std::ofstream out(path);
@@ -227,28 +172,15 @@ Individual::Individual(ProblemData const &data, Routes routes)
     evaluateCompleteCost();
 }
 
-Individual::Individual(Individual const &other)  // copy relevant route and cost
-    : nbRoutes(other.nbRoutes),                  // fields from other individual
-      distance(other.distance),                  // - but *not* the proximity
-      capacityExcess(other.capacityExcess),      // structure since the copy
-      timeWarp(other.timeWarp),                  // is not yet part of the same
-      data(other.data),                          // population.
+Individual::Individual(Individual const &other)  // copy fields from other
+    : nbRoutes(other.nbRoutes),                  // individual
+      distance(other.distance),
+      capacityExcess(other.capacityExcess),
+      timeWarp(other.timeWarp),
+      data(other.data),
       routes_(other.routes_),
       neighbours(other.neighbours)
 {
-}
-
-Individual::~Individual()
-{
-    for (auto [dist, other] : indivsByProximity)
-    {
-        auto place = std::find(other->indivsByProximity.begin(),
-                               other->indivsByProximity.end(),
-                               std::make_pair(dist, this));
-
-        if (place != other->indivsByProximity.end())
-            other->indivsByProximity.erase(place);
-    }
 }
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)

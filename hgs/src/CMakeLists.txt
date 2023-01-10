@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 
+set(diversitySources
+        diversity/brokenPairsDistance.cpp)
+
 set(geneticSources
         GeneticAlgorithm.cpp
         crossover/crossover.cpp
@@ -32,19 +35,25 @@ target_link_libraries(problemData penaltyManager)  # TODO remove penaltyManager
 add_library(individual ${individualSources})
 target_link_libraries(individual problemData penaltyManager)
 
+add_library(diversityMeasures ${diversitySources})
+target_link_libraries(diversityMeasures individual problemData)
+
 add_library(tws ${timeWindowSegmentSources})
+
+add_library(population ${populationSources})
+target_link_libraries(population individual problemData)
 
 # TODO ok up to here
 
 add_library(genetic ${geneticSources})
 add_library(ls ${localSearchSources})
 add_library(node ${nodeSources})
-add_library(population ${populationSources})
 add_library(result ${resultSources})
 add_library(route ${routeSources})
 add_library(statistics ${statisticsSources})
 
 set(hgs_libs
+        diversityMeasures
         individual
         genetic
         ls

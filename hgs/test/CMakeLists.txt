@@ -8,6 +8,11 @@ add_executable(test_CommandLine test_CommandLine.cpp)
 target_link_libraries(test_CommandLine GTest::gtest_main)
 gtest_discover_tests(test_CommandLine)
 
+# brokenPairsDistance tests have file dependencies that require fixing the working directory
+add_executable(test_brokenPairsDistance diversity/test_brokenPairsDistance.cpp)
+target_link_libraries(test_brokenPairsDistance GTest::gtest_main diversityMeasures)
+gtest_discover_tests(test_brokenPairsDistance WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+
 # Individual tests have file dependencies that require fixing the working directory
 add_executable(test_Individual test_Individual.cpp)
 target_link_libraries(test_Individual GTest::gtest_main individual)
@@ -25,6 +30,11 @@ gtest_discover_tests(test_ProblemData WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/te
 add_executable(test_PenaltyManager test_PenaltyManager.cpp)
 target_link_libraries(test_PenaltyManager GTest::gtest_main penaltyManager)
 gtest_discover_tests(test_PenaltyManager)
+
+# Population tests have file dependencies that require fixing the working directory
+add_executable(test_Population test_Population.cpp)
+target_link_libraries(test_Population GTest::gtest_main population diversityMeasures)
+gtest_discover_tests(test_Population WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
 target_link_libraries(test_TimeWindowSegment GTest::gtest_main)

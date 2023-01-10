@@ -33,12 +33,8 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
         auto offspring = crossover();
         educate(offspring);
 
-        // Diversification and penalty management
         if (iter % data.config.nbPenaltyManagement == 0)
-        {
             updatePenalties();
-            population.reorder();  // re-order since penalties have changed
-        }
 
         if (data.config.collectStatistics)
             stats.collectFrom(population);
@@ -50,7 +46,7 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
 
 Individual GeneticAlgorithm::crossover() const
 {
-    auto const parents = population.selectParents();
+    auto const parents = population.select();
 
     std::vector<Individual> offspring;
     offspring.reserve(operators.size());
@@ -82,7 +78,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
         && indiv.cost() < population.getBestFound().cost())
         localSearch.intensify(indiv);
 
-    population.addIndividual(indiv);
+    population.add(indiv);
 
     loadFeas.push_back(!indiv.hasExcessCapacity());
     timeFeas.push_back(!indiv.hasTimeWarp());
@@ -100,7 +96,7 @@ void GeneticAlgorithm::educate(Individual &indiv)
                 && indiv.cost() < population.getBestFound().cost())
                 localSearch.intensify(indiv);
 
-            population.addIndividual(indiv);
+            population.add(indiv);
 
             loadFeas.push_back(!indiv.hasExcessCapacity());
             timeFeas.push_back(!indiv.hasTimeWarp());

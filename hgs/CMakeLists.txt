@@ -16,7 +16,7 @@ if (CMAKE_BUILD_TYPE MATCHES RELEASE)
 else ()
     # For code coverage on the test builds
     add_definitions(-fprofile-arcs -ftest-coverage)
-    add_link_options(-lgcov --coverage)
+    add_link_options(--coverage)
 endif ()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

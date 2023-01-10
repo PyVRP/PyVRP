@@ -7,13 +7,7 @@
 TEST(IndividualTest, routeConstructorSortsByEmpty)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    std::vector<std::vector<int>> const routes = {
-        {3, 4},
-        {},
-        {1, 2},
-    };
-
-    Individual indiv{data, routes};
+    Individual indiv{data, {{3, 4}, {}, {1, 2}}};
     auto const &indivRoutes = indiv.getRoutes();
 
     // numRoutes() should show two non-empty routes. We passed-in three routes,
@@ -43,13 +37,8 @@ TEST(IndividualTest, routeConstructorThrows)
 TEST(IndividualTest, getNeighbours)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    std::vector<std::vector<int>> const routes = {
-        {3, 4},
-        {},
-        {1, 2},
-    };
+    Individual indiv{data, {{3, 4}, {}, {1, 2}}};
 
-    Individual indiv{data, routes};
     auto const &neighbours = indiv.getNeighbours();
     std::vector<std::pair<int, int>> expected = {
         {0, 0},  // 0: is depot
@@ -68,8 +57,7 @@ TEST(IndividualTest, feasibility)
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
 
     // This solution is infeasible due to both load and time window violations.
-    std::vector<std::vector<int>> const routes = {{1, 2, 3, 4}, {}, {}};
-    Individual indiv{data, routes};
+    Individual indiv{data, {{1, 2, 3, 4}, {}, {}}};
     EXPECT_FALSE(indiv.isFeasible());
 
     // First route has total load 18, but vehicle capacity is only 10.
@@ -80,45 +68,16 @@ TEST(IndividualTest, feasibility)
     EXPECT_TRUE(indiv.hasTimeWarp());
 
     // Let's try another solution that's actually feasible.
-    std::vector<std::vector<int>> const routes2 = {{1, 2}, {3}, {4}};
-    Individual indiv2{data, routes2};
+    Individual indiv2{data, {{1, 2}, {3}, {4}}};
     EXPECT_TRUE(indiv2.isFeasible());
     EXPECT_FALSE(indiv2.hasExcessCapacity());
     EXPECT_FALSE(indiv2.hasTimeWarp());
 }
 
-TEST(IndividualTest, brokenPairsDistance)
-{
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-
-    std::vector<std::vector<int>> const routes1 = {{1, 2, 3, 4}, {}, {}};
-    Individual indiv1{data, routes1};
-
-    std::vector<std::vector<int>> const routes2 = {{1, 2}, {3}, {4}};
-    Individual indiv2{data, routes2};
-
-    // Compare indiv1 and indiv2. The two broken pairs are (2, 3) and (3, 4).
-    EXPECT_EQ(indiv1.brokenPairsDistance(&indiv2), 2);
-    EXPECT_EQ(indiv2.brokenPairsDistance(&indiv1), 2);  // should be symmetric
-
-    std::vector<std::vector<int>> const routes3 = {{3}, {4, 1, 2}, {}};
-    Individual indiv3{data, routes3};
-
-    // Compare indiv1 and indiv3. The three broken pairs are (0, 1), (2, 3),
-    // and (3, 4).
-    EXPECT_EQ(indiv1.brokenPairsDistance(&indiv3), 3);
-    EXPECT_EQ(indiv3.brokenPairsDistance(&indiv1), 3);  // should be symmetric
-
-    // Compare indiv2 and indiv3. The broken pair is (0, 1).
-    EXPECT_EQ(indiv2.brokenPairsDistance(&indiv3), 1);
-    EXPECT_EQ(indiv3.brokenPairsDistance(&indiv2), 1);  // should be symmetric
-}
-
 TEST(IndividualCostTest, distance)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    std::vector<std::vector<int>> const routes = {{1, 2}, {3}, {4}};
-    Individual indiv{data, routes};
+    Individual indiv{data, {{1, 2}, {3}, {4}}};
 
     ASSERT_TRUE(indiv.isFeasible());
 
@@ -132,8 +91,7 @@ TEST(IndividualCostTest, capacity)
 {
     Config const config;
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    std::vector<std::vector<int>> const routes = {{4, 3, 1, 2}, {}, {}};
-    Individual indiv{data, routes};
+    Individual indiv{data, {{4, 3, 1, 2}, {}, {}}};
 
     ASSERT_TRUE(indiv.hasExcessCapacity());
     ASSERT_FALSE(indiv.hasTimeWarp());
@@ -156,8 +114,7 @@ TEST(IndividualCostTest, timeWarp)
 {
     Config const config;
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    std::vector<std::vector<int>> const routes = {{1, 3}, {2, 4}, {}};
-    Individual indiv{data, routes};
+    Individual indiv{data, {{1, 3}, {2, 4}, {}}};
 
     ASSERT_FALSE(indiv.hasExcessCapacity());
     ASSERT_TRUE(indiv.hasTimeWarp());

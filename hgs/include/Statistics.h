@@ -6,8 +6,6 @@
 #include <chrono>
 #include <vector>
 
-class Population;  // forward declaration
-
 class Statistics
 {
     using clock = std::chrono::system_clock;
@@ -20,7 +18,6 @@ class Statistics
     std::vector<double> runTimes_;
     std::vector<double> iterTimes_;
 
-public:
     struct SubPopStats
     {
         std::vector<size_t> popSize_;
@@ -30,7 +27,10 @@ public:
         std::vector<double> avgNumRoutes_;
     };
 
-private:
+    void collectSubPopStats(Population const &population,
+                            Population::SubPopulation const &subPop,
+                            Statistics::SubPopStats &subStats);
+
     SubPopStats feasStats;
     SubPopStats infeasStats;
 

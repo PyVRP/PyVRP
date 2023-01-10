@@ -3,8 +3,6 @@
 #include "CommandLine.h"
 
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 TEST(TestCommandLine, ctorThrows)
 {

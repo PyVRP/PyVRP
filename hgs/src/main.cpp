@@ -11,6 +11,7 @@
 #include "TwoOpt.h"
 #include "XorShift128.h"
 #include "crossover.h"
+#include "diversity.h"
 
 #include <chrono>
 #include <iostream>
@@ -26,7 +27,7 @@ try
 
     XorShift128 rng(config.seed);
     ProblemData data = ProblemData::fromFile(config, args.instPath());
-    Population pop(data, rng);
+    Population pop(data, rng, brokenPairsDistance);
 
     LocalSearch ls(data, rng);
 

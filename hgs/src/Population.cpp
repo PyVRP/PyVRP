@@ -6,34 +6,19 @@
 #include <memory>
 #include <vector>
 
-void Population::addIndividual(Individual const &indiv)
+void Population::add(Individual const &indiv)
 {
     auto &subPop = indiv.isFeasible() ? feasible : infeasible;
     auto indivPtr = std::make_unique<Individual>(indiv);
 
     for (auto const &other : subPop)  // update distance to other individuals
-        indivPtr->registerNearbyIndividual(other.indiv.get());
+        registerNearbyIndividual(indivPtr.get(), other.indiv.get());
 
-    IndividualWrapper wrapper = {std::move(indivPtr), 0};
-
-    // Insert individual into the population, leaving the cost ordering intact
-    auto const place = std::lower_bound(subPop.begin(), subPop.end(), wrapper);
-    subPop.emplace(place, std::move(wrapper));
+    subPop.push_back({std::move(indivPtr), 0});
     updateBiasedFitness(subPop);
 
-    // Trigger a survivor selection if the maximum population size is exceeded
     if (subPop.size() > data.config.minPopSize + data.config.generationSize)
-    {
-        while (subPop.size() > data.config.minPopSize)  // remove duplicates,
-            if (!removeDuplicate(subPop))               // if any exist
-                break;
-
-        while (subPop.size() > data.config.minPopSize)
-        {
-            updateBiasedFitness(subPop);
-            removeWorstBiasedFitness(subPop);
-        }
-    }
+        purge(subPop);  // survivor selection
 
     if (indiv.isFeasible() && indiv.cost() < bestSol.cost())
         bestSol = indiv;
@@ -41,13 +26,18 @@ void Population::addIndividual(Individual const &indiv)
 
 void Population::updateBiasedFitness(SubPopulation &subPop) const
 {
+    // Sort population by ascending cost
+    std::sort(subPop.begin(), subPop.end(), [](auto &a, auto &b) {
+        return a.indiv->cost() < b.indiv->cost();
+    });
+
     // Ranking the individuals based on their diversity contribution (decreasing
     // order of broken pairs distance)
     std::vector<std::pair<double, size_t>> diversity;
-    for (size_t idx = 0; idx != subPop.size(); idx++)
+    for (size_t rank = 0; rank != subPop.size(); rank++)
     {
-        auto const dist = subPop[idx].indiv->avgBrokenPairsDistanceClosest();
-        diversity.emplace_back(dist, idx);
+        auto dist = avgDistanceClosest(*subPop[rank].indiv.get());
+        diversity.emplace_back(dist, rank);
     }
 
     std::sort(diversity.begin(), diversity.end(), std::greater<>());
@@ -65,69 +55,133 @@ void Population::updateBiasedFitness(SubPopulation &subPop) const
     }
 }
 
-bool Population::removeDuplicate(SubPopulation &subPop)
+void Population::purge(std::vector<IndividualWrapper> &subPop)
 {
-    for (auto it = subPop.begin(); it != subPop.end(); ++it)
-        if (it->indiv->hasClone())
-        {
-            subPop.erase(it);
-            return true;
-        }
+    auto remove = [&](auto &iterator) {
+        auto const *indiv = iterator->indiv.get();
 
-    return false;
+        for (auto [_, individuals] : proximity)
+            for (size_t idx = 0; idx != individuals.size(); ++idx)
+                if (individuals[idx].second == indiv)
+                {
+                    individuals.erase(individuals.begin() + idx);
+                    break;
+                }
+
+        proximity.erase(indiv);
+        subPop.erase(iterator);
+    };
+
+    while (subPop.size() > data.config.minPopSize)
+    {
+        // Remove duplicates from the subpopulation (if they exist)
+        auto const pred = [&](auto &it) {
+            return proximity.contains(it.indiv.get())
+                   && !proximity.at(it.indiv.get()).empty()
+                   && proximity.at(it.indiv.get()).begin()->first == 0;
+        };
+
+        auto const duplicate = std::find_if(subPop.begin(), subPop.end(), pred);
+
+        if (duplicate == subPop.end())  // there are no more duplicates
+            break;
+
+        remove(duplicate);
+    }
+
+    while (subPop.size() > data.config.minPopSize)
+    {
+        // Remove the worst individual (worst in terms of biased fitness)
+        updateBiasedFitness(subPop);
+
+        auto const worstFitness = std::max_element(
+            subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
+                return a.fitness < b.fitness;
+            });
+
+        remove(worstFitness);
+    }
 }
 
-void Population::removeWorstBiasedFitness(SubPopulation &subPop)
+void Population::registerNearbyIndividual(Individual *first, Individual *second)
 {
-    auto const &worstFitness = std::max_element(
-        subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
-            return a.fitness < b.fitness;
-        });
+    auto const dist = divOp(data, *first, *second);
+    auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
 
-    auto const worstIdx = std::distance(subPop.begin(), worstFitness);
-    subPop.erase(subPop.begin() + worstIdx);
+    auto &fProx = proximity[first];
+    auto place = std::lower_bound(fProx.begin(), fProx.end(), dist, cmp);
+    fProx.emplace(place, dist, second);
+
+    auto &sProx = proximity[second];
+    place = std::lower_bound(sProx.begin(), sProx.end(), dist, cmp);
+    sProx.emplace(place, dist, first);
+}
+
+double Population::avgDistanceClosest(Individual const &indiv) const
+{
+    if (!proximity.contains(&indiv) || proximity.at(&indiv).empty())
+        return 0.;
+
+    auto const &prox = proximity.at(&indiv);
+    auto const maxSize = std::min(data.config.nbClose, prox.size());
+    auto start = prox.begin();
+    int result = 0;
+
+    for (auto it = start; it != start + maxSize; ++it)
+        result += it->first;
+
+    return result / static_cast<double>(maxSize);
 }
 
 Individual const *Population::getBinaryTournament()
 {
-    auto const fSize = feasible.size();
-    auto const popSize = fSize + infeasible.size();
+    auto const fSize = numFeasible();
 
-    auto const idx1 = rng.randint(popSize);
+    auto const idx1 = rng.randint(size());
     auto &wrap1 = idx1 < fSize ? feasible[idx1] : infeasible[idx1 - fSize];
 
-    auto const idx2 = rng.randint(popSize);
+    auto const idx2 = rng.randint(size());
     auto &wrap2 = idx2 < fSize ? feasible[idx2] : infeasible[idx2 - fSize];
 
     return (wrap1.fitness < wrap2.fitness ? wrap1.indiv : wrap2.indiv).get();
 }
 
-std::pair<Individual const *, Individual const *> Population::selectParents()
+std::pair<Individual const *, Individual const *> Population::select()
 {
     auto const *par1 = getBinaryTournament();
     auto const *par2 = getBinaryTournament();
 
-    auto const lowerBound = data.config.lbDiversity * data.nbClients;
-    auto const upperBound = data.config.ubDiversity * data.nbClients;
-    auto diversity = par1->brokenPairsDistance(par2);
+    auto const lowerBound = data.config.lbDiversity;
+    auto const upperBound = data.config.ubDiversity;
+    auto diversity = divOp(data, *par1, *par2);
 
     size_t tries = 1;
     while ((diversity < lowerBound || diversity > upperBound) && tries++ < 10)
     {
         par2 = getBinaryTournament();
-        diversity = par1->brokenPairsDistance(par2);
+        diversity = divOp(data, *par1, *par2);
     }
 
     return std::make_pair(par1, par2);
 }
 
-Population::Population(ProblemData &data, XorShift128 &rng)
-    : data(data), rng(rng), bestSol(data, rng)  // random initial best solution
+size_t Population::size() const { return numFeasible() + numInfeasible(); }
+
+size_t Population::numFeasible() const { return feasible.size(); }
+
+size_t Population::numInfeasible() const { return infeasible.size(); }
+
+Individual const &Population::getBestFound() const { return bestSol; }
+
+Population::Population(ProblemData const &data,
+                       XorShift128 &rng,
+                       DiversityMeasure op)
+    : data(data),
+      rng(rng),
+      divOp(std::move(op)),
+      bestSol(data, rng)  // random initial best solution
 {
     // Generate minPopSize random individuals to seed the population.
     for (size_t count = 0; count != data.config.minPopSize; ++count)
-    {
-        Individual randomIndiv(data, rng);
-        addIndividual(randomIndiv);
-    }
+        add({data, rng});
 }
