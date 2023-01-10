@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <numeric>
-#include <stdexcept>
 #include <utility>
 
 Result GeneticAlgorithm::run(StoppingCriterion &stop)
@@ -31,10 +30,10 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
         auto offspring = crossover(parents, data, penaltyManager, rng);
         educate(offspring);
 
-        if (iter % data.config.nbPenaltyManagement == 0)
+        if (iter % nbPenaltyManagement == 0)
             updatePenalties();
 
-        if (data.config.collectStatistics)
+        if (collectStatistics)
             stats.collectFrom(population);
     }
 
@@ -46,8 +45,8 @@ void GeneticAlgorithm::educate(Individual &indiv)
 {
     localSearch.search(indiv);
 
-    if (data.config.shouldIntensify  // only intensify feasible, new best
-        && indiv.isFeasible()        // solutions. Cf. also repair below.
+    if (shouldIntensify        // only intensify feasible, new best
+        && indiv.isFeasible()  // solutions. Cf. also repair below.
         && indiv.cost() < population.getBestFound().cost())
         localSearch.intensify(indiv);
 
@@ -56,16 +55,16 @@ void GeneticAlgorithm::educate(Individual &indiv)
     loadFeas.push_back(!indiv.hasExcessCapacity());
     timeFeas.push_back(!indiv.hasTimeWarp());
 
-    if (!indiv.isFeasible()  // possibly repair if currently infeasible
-        && rng.randint(100) < data.config.repairProbability)
+    // Possibly repair if current solution is infeasible. In that case, we
+    // penalise infeasibility more using a penalty booster.
+    if (!indiv.isFeasible() && rng.randint(100) < repairProbability)
     {
-        // Re-run, but penalise infeasibility more using a penalty booster.
         auto const booster = penaltyManager.getPenaltyBooster();
         localSearch.search(indiv);
 
         if (indiv.isFeasible())
         {
-            if (data.config.shouldIntensify
+            if (shouldIntensify
                 && indiv.cost() < population.getBestFound().cost())
                 localSearch.intensify(indiv);
 
@@ -97,14 +96,22 @@ GeneticAlgorithm::GeneticAlgorithm(ProblemData &data,
                                    XorShift128 &rng,
                                    Population &population,
                                    LocalSearch &localSearch,
-                                   CrossoverOperator op)
+                                   CrossoverOperator op,
+                                   size_t nbPenaltyManagement,
+                                   bool collectStatistics,
+                                   bool shouldIntensify,
+                                   size_t repairProbability)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
       population(population),
       localSearch(localSearch),
-      crossover(std::move(op))
+      crossover(std::move(op)),
+      nbPenaltyManagement(nbPenaltyManagement),
+      collectStatistics(collectStatistics),
+      shouldIntensify(shouldIntensify),
+      repairProbability(repairProbability)
 {
-    loadFeas.reserve(data.config.nbPenaltyManagement);
-    timeFeas.reserve(data.config.nbPenaltyManagement);
+    loadFeas.reserve(nbPenaltyManagement);
+    timeFeas.reserve(nbPenaltyManagement);
 }

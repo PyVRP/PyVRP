@@ -245,13 +245,21 @@ PYBIND11_MODULE(hgspy, m)
                       XorShift128 &,
                       Population &,
                       LocalSearch &,
-                      CrossoverOperator>(),
+                      CrossoverOperator,
+                      size_t,
+                      bool,
+                      bool,
+                      size_t>(),
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("population"),
              py::arg("local_search"),
-             py::arg("crossover_operator"))
+             py::arg("crossover_operator"),
+             py::arg("nb_penalty_management"),
+             py::arg("collect_statistics"),
+             py::arg("should_intensify"),
+             py::arg("repair_probability"))
         .def("run", &GeneticAlgorithm::run, py::arg("stop"));
 
     // Diversity measures (as a submodule)

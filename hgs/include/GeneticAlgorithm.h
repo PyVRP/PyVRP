@@ -25,6 +25,11 @@ class GeneticAlgorithm
     LocalSearch &localSearch;
     CrossoverOperator crossover;
 
+    size_t nbPenaltyManagement;
+    bool collectStatistics;
+    bool shouldIntensify;
+    size_t repairProbability;
+
     std::vector<bool> loadFeas;  // load feasibility of recent individuals
     std::vector<bool> timeFeas;  // time feasibility of recent individuals
 
@@ -56,7 +61,11 @@ public:
                      XorShift128 &rng,
                      Population &population,
                      LocalSearch &localSearch,
-                     CrossoverOperator op);
+                     CrossoverOperator op,
+                     size_t nbPenaltyManagement,
+                     bool collectStatistics,
+                     bool shouldIntensify,
+                     size_t repairProbability);
 };
 
 #endif
