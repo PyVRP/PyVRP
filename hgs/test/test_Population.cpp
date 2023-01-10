@@ -14,7 +14,16 @@ TEST(PopulationTest, ctor)
                          data.vehicleCapacity,
                          static_cast<int>(config.repairBooster));
     XorShift128 rng;
-    Population pop(data, pMngr, rng, brokenPairsDistance);
+    Population pop(data,
+                   pMngr,
+                   rng,
+                   brokenPairsDistance,
+                   config.minPopSize,
+                   config.generationSize,
+                   config.nbElite,
+                   config.nbClose,
+                   config.lbDiversity,
+                   config.ubDiversity);
 
     // Test that after construction, the population indeed consists of
     // minPopSize individuals.
@@ -35,7 +44,16 @@ TEST(PopulationTest, addTriggersPurge)
                          data.vehicleCapacity,
                          static_cast<int>(config.repairBooster));
     XorShift128 rng;
-    Population pop(data, pMngr, rng, brokenPairsDistance);
+    Population pop(data,
+                   pMngr,
+                   rng,
+                   brokenPairsDistance,
+                   config.minPopSize,
+                   config.generationSize,
+                   config.nbElite,
+                   config.nbClose,
+                   config.lbDiversity,
+                   config.ubDiversity);
 
     // After construction, we should have minPopSize individuals.
     EXPECT_EQ(pop.size(), data.config.minPopSize);
@@ -90,7 +108,16 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
                          static_cast<int>(config.repairBooster));
 
     XorShift128 rng(2'147'483'647);
-    Population pop(data, pMngr, rng, brokenPairsDistance);
+    Population pop(data,
+                   pMngr,
+                   rng,
+                   brokenPairsDistance,
+                   config.minPopSize,
+                   config.generationSize,
+                   config.nbElite,
+                   config.nbClose,
+                   config.lbDiversity,
+                   config.ubDiversity);
 
     // Should not have added any individuals to the population pool. The 'best'
     // individual, however, has already been initialised, with a random
@@ -128,7 +155,16 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
                          data.vehicleCapacity,
                          static_cast<int>(config.repairBooster));
     XorShift128 rng;
-    Population pop(data, pMngr, rng, brokenPairsDistance);
+    Population pop(data,
+                   pMngr,
+                   rng,
+                   brokenPairsDistance,
+                   config.minPopSize,
+                   config.generationSize,
+                   config.nbElite,
+                   config.nbClose,
+                   config.lbDiversity,
+                   config.ubDiversity);
 
     ASSERT_EQ(pop.size(), 0);
 

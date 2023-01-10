@@ -33,6 +33,13 @@ private:
 
     DiversityMeasure divOp;
 
+    size_t minPopSize;
+    size_t generationSize;
+    size_t nbElite;
+    size_t nbClose;
+    double lbDiversity;
+    double ubDiversity;
+
     SubPopulation feasible;    // Sub-population of feasible individuals
     SubPopulation infeasible;  // Sub-population of infeasible individuals
 
@@ -120,7 +127,13 @@ public:
     Population(ProblemData const &data,
                PenaltyManager const &penaltyManager,
                XorShift128 &rng,
-               DiversityMeasure op);
+               DiversityMeasure op,
+               size_t minPopSize,
+               size_t generationSize,
+               size_t nbElite,
+               size_t nbClose,
+               double lbDiversity,
+               double ubDiversity);
 };
 
 #endif

@@ -188,11 +188,23 @@ PYBIND11_MODULE(hgspy, m)
         .def(py::init<ProblemData &,
                       PenaltyManager &,
                       XorShift128 &,
-                      DiversityMeasure>(),
+                      DiversityMeasure,
+                      size_t,
+                      size_t,
+                      size_t,
+                      size_t,
+                      double,
+                      double>(),
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
-             py::arg("op"))
+             py::arg("op"),
+             py::arg("min_pop_size"),
+             py::arg("generation_size"),
+             py::arg("nb_elite"),
+             py::arg("nb_close"),
+             py::arg("lb_diversity"),
+             py::arg("ub_diversity"))
         .def("add", &Population::add, py::arg("individual"));
 
     py::class_<Statistics>(m, "Statistics")

@@ -36,7 +36,17 @@ try
                          data.vehicleCapacity,
                          static_cast<int>(config.repairBooster));
 
-    Population pop(data, pMngr, rng, brokenPairsDistance);
+    Population pop(data,
+                   pMngr,
+                   rng,
+                   brokenPairsDistance,
+                   config.minPopSize,
+                   config.generationSize,
+                   config.nbElite,
+                   config.nbClose,
+                   config.lbDiversity,
+                   config.ubDiversity);
+
     LocalSearch ls(data,
                    pMngr,
                    rng,
