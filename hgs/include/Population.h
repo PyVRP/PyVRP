@@ -3,7 +3,6 @@
 
 #include "Individual.h"
 #include "ProblemData.h"
-#include "Statistics.h"
 #include "XorShift128.h"
 #include "diversity.h"
 

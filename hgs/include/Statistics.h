@@ -6,8 +6,6 @@
 #include <chrono>
 #include <vector>
 
-class Population;  // forward declaration
-
 class Statistics
 {
     using clock = std::chrono::system_clock;
@@ -20,17 +18,19 @@ class Statistics
     std::vector<double> runTimes_;
     std::vector<double> iterTimes_;
 
-public:
     struct SubPopStats
     {
-        // TODO avg diversity
         std::vector<size_t> popSize_;
+        std::vector<double> avgDiversity_;
         std::vector<size_t> bestCost_;
         std::vector<size_t> avgCost_;
         std::vector<double> avgNumRoutes_;
     };
 
-private:
+    void collectSubPopStats(Population const &population,
+                            Population::SubPopulation const &subPop,
+                            Statistics::SubPopStats &subStats);
+
     SubPopStats feasStats;
     SubPopStats infeasStats;
 
@@ -81,6 +81,18 @@ public:
     }
 
     /**
+     * Returns a vector of the average feasible sub-population diversity, one
+     * element per iteration. The average diversity is computed as the average
+     * broken pairs distance for each individual in the sub-population, compared
+     * to its neighbours (the neighbourhood size is controlled by the
+     * ``nbClose`` setting).
+     */
+    [[nodiscard]] std::vector<double> const &feasAvgDiversity() const
+    {
+        return feasStats.avgDiversity_;
+    }
+
+    /**
      * Returns a vector of the best objective value of feasible individuals,
      * one element per iteration. If there are no feasible individuals, then
      * ``INT_MAX`` is stored.
@@ -117,6 +129,18 @@ public:
     [[nodiscard]] std::vector<size_t> const &infeasPopSize() const
     {
         return infeasStats.popSize_;
+    }
+
+    /**
+     * Returns a vector of the average infeasible sub-population diversity, one
+     * element per iteration. The average diversity is computed as the average
+     * broken pairs distance for each individual in the sub-population, compared
+     * to its neighbours (the neighbourhood size is controlled by the
+     * ``nbClose`` setting).
+     */
+    [[nodiscard]] std::vector<double> const &infeasAvgDiversity() const
+    {
+        return infeasStats.avgDiversity_;
     }
 
     /**
