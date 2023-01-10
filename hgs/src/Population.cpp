@@ -55,11 +55,26 @@ void Population::updateBiasedFitness(SubPopulation &subPop) const
     }
 }
 
-void Population::purge(std::vector<IndividualWrapper> &subPop) const
+void Population::purge(std::vector<IndividualWrapper> &subPop)
 {
+    auto remove = [&](auto &iterator) {
+        auto const *indiv = iterator->indiv.get();
+
+        for (auto [_, individuals] : proximity)
+            for (size_t idx = 0; idx != individuals.size(); ++idx)
+                if (individuals[idx].second == indiv)
+                {
+                    individuals.erase(individuals.begin() + idx);
+                    break;
+                }
+
+        proximity.erase(indiv);
+        subPop.erase(iterator);
+    };
+
     while (subPop.size() > data.config.minPopSize)
     {
-        // Remove duplicates from the sub-population (if they exist)
+        // Remove duplicates from the subpopulation (if they exist)
         auto const pred = [&](auto &it) {
             return proximity.contains(it.indiv.get())
                    && !proximity.at(it.indiv.get()).empty()
@@ -71,8 +86,7 @@ void Population::purge(std::vector<IndividualWrapper> &subPop) const
         if (duplicate == subPop.end())  // there are no more duplicates
             break;
 
-        // TODO remove from prox
-        subPop.erase(duplicate);
+        remove(duplicate);
     }
 
     while (subPop.size() > data.config.minPopSize)
@@ -85,8 +99,7 @@ void Population::purge(std::vector<IndividualWrapper> &subPop) const
                 return a.fitness < b.fitness;
             });
 
-        // TODO remove from prox
-        subPop.erase(worstFitness);
+        remove(worstFitness);
     }
 }
 

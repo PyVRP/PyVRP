@@ -52,7 +52,7 @@ private:
     // purged until the population is reduced to the ``minPopSize``. Purging
     // happens first to duplicate solutions, and then to solutions with high
     // biased fitness.
-    void purge(SubPopulation &subPop) const;
+    void purge(SubPopulation &subPop);
 
     /**
      * @return The average diversity distance of this individual to the
