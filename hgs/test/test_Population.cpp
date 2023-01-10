@@ -15,7 +15,7 @@ TEST(PopulationTest, ctor)
 
 // TODO additional property tests?
 
-TEST(PopulationTest, addTriggersSurvivorSelection)
+TEST(PopulationTest, addTriggersPurge)
 {
     auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
     XorShift128 rng;
@@ -88,7 +88,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     EXPECT_TRUE(best2.isFeasible());
 }
 
-// TODO test more add() - fitness, duplicate, survivor selection
+// TODO test more add() - fitness, duplicate, purge
 
 TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
 {
