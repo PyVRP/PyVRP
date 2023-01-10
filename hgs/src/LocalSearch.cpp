@@ -183,7 +183,7 @@ void LocalSearch::update(Route *U, Route *V)
 //  defined here.
 void LocalSearch::enumerateSubpaths(Route &U)
 {
-    auto const k = std::min(data.config.postProcessPathLength, U.size());
+    auto const k = std::min(postProcessPathLength, U.size());
 
     if (k <= 1)  // 0 or 1 means we are either not doing anything at all (0),
         return;  // or recombining a single node (1). Neither helps.
@@ -278,10 +278,9 @@ void LocalSearch::calculateNeighbours()
             int const timeWarp1 = earliestArrival1 + data.clients[j].servDur
                                   + data.dist(j, i) - data.clients[i].twLate;
 
-            int const prox1
-                = data.dist(j, i)
-                  + data.config.weightWaitTime * std::max(0, waitTime1)
-                  + data.config.weightTimeWarp * std::max(0, timeWarp1);
+            int const prox1 = data.dist(j, i)
+                              + weightWaitTime * std::max(0, waitTime1)
+                              + weightTimeWarp * std::max(0, timeWarp1);
 
             // Proximity from i to j
             int const waitTime2 = data.clients[j].twEarly - data.dist(i, j)
@@ -291,10 +290,9 @@ void LocalSearch::calculateNeighbours()
                                                   data.clients[i].twEarly);
             int const timeWarp2 = earliestArrival2 + data.clients[i].servDur
                                   + data.dist(i, j) - data.clients[j].twLate;
-            int const prox2
-                = data.dist(i, j)
-                  + data.config.weightWaitTime * std::max(0, waitTime2)
-                  + data.config.weightTimeWarp * std::max(0, timeWarp2);
+            int const prox2 = data.dist(i, j)
+                              + weightWaitTime * std::max(0, waitTime2)
+                              + weightTimeWarp * std::max(0, timeWarp2);
 
             proximity.emplace_back(std::min(prox1, prox2), j);
         }
@@ -305,8 +303,8 @@ void LocalSearch::calculateNeighbours()
     // First create a set of correlated vertices for each vertex (where the
     // depot is not taken into account)
     std::vector<std::set<int>> set(data.nbClients + 1);
-    size_t const granularity = std::min(
-        data.config.nbGranular, static_cast<size_t>(data.nbClients) - 1);
+    size_t const granularity
+        = std::min(nbGranular, static_cast<size_t>(data.nbClients) - 1);
 
     for (int i = 1; i <= data.nbClients; i++)  // again exclude depot
     {
@@ -418,10 +416,18 @@ Individual LocalSearch::exportIndividual()
 
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
-                         XorShift128 &rng)
+                         XorShift128 &rng,
+                         int weightWaitTime,
+                         int weightTimeWarp,
+                         size_t nbGranular,
+                         size_t postProcessPathLength)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
+      weightWaitTime(weightWaitTime),
+      weightTimeWarp(weightTimeWarp),
+      nbGranular(nbGranular),
+      postProcessPathLength(postProcessPathLength),
       neighbours(data.nbClients + 1),
       orderNodes(data.nbClients),
       orderRoutes(data.nbVehicles),

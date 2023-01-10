@@ -22,6 +22,11 @@ class LocalSearch
     PenaltyManager penaltyManager;
     XorShift128 &rng;
 
+    int weightWaitTime;
+    int weightTimeWarp;
+    size_t nbGranular;
+    size_t postProcessPathLength;
+
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
     std::vector<std::vector<int>> neighbours;
@@ -95,7 +100,11 @@ public:
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
-                XorShift128 &rng);
+                XorShift128 &rng,
+                int weightWaitTime,
+                int weightTimeWarp,
+                size_t nbGranular,
+                size_t postProcessPathLength);
 };
 
 #endif

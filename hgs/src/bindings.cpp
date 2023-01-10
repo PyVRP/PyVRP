@@ -71,10 +71,20 @@ PYBIND11_MODULE(hgspy, m)
         .def("to_file", &Individual::toFile);
 
     py::class_<LocalSearch>(m, "LocalSearch")
-        .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
+        .def(py::init<ProblemData &,
+                      PenaltyManager &,
+                      XorShift128 &,
+                      int,
+                      int,
+                      size_t,
+                      size_t>(),
              py::arg("data"),
              py::arg("penalty_manager"),
-             py::arg("rng"))
+             py::arg("rng"),
+             py::arg("weight_wait_time"),
+             py::arg("weight_time_warp"),
+             py::arg("nb_granular"),
+             py::arg("post_process_path_length"))
         .def("add_node_operator",
              static_cast<void (LocalSearch::*)(LocalSearchOperator<Node> &)>(
                  &LocalSearch::addNodeOperator),

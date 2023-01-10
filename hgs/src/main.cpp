@@ -37,7 +37,13 @@ try
                          static_cast<int>(config.repairBooster));
 
     Population pop(data, pMngr, rng, brokenPairsDistance);
-    LocalSearch ls(data, pMngr, rng);
+    LocalSearch ls(data,
+                   pMngr,
+                   rng,
+                   config.weightWaitTime,
+                   config.weightTimeWarp,
+                   config.nbGranular,
+                   config.postProcessPathLength);
 
     auto exchange10 = Exchange<1, 0>(data, pMngr);
     ls.addNodeOperator(exchange10);

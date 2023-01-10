@@ -6,8 +6,17 @@
 
 TEST(IndividualTest, routeConstructorSortsByEmpty)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    Individual indiv{data, {{3, 4}, {}, {1, 2}}};
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
+    Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
     auto const &indivRoutes = indiv.getRoutes();
 
     // numRoutes() should show two non-empty routes. We passed-in three routes,
@@ -24,20 +33,39 @@ TEST(IndividualTest, routeConstructorSortsByEmpty)
 
 TEST(IndividualTest, routeConstructorThrows)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
     ASSERT_EQ(data.nbVehicles, 3);
 
     // Two routes, three vehicles: should throw.
-    ASSERT_THROW((Individual{data, {{1, 2}, {4, 2}}}), std::runtime_error);
+    ASSERT_THROW((Individual{data, pMngr, {{1, 2}, {4, 2}}}),
+                 std::runtime_error);
 
     // Empty third route: should not throw.
-    ASSERT_NO_THROW((Individual{data, {{1, 2}, {4, 2}, {}}}));
+    ASSERT_NO_THROW((Individual{data, pMngr, {{1, 2}, {4, 2}, {}}}));
 }
 
 TEST(IndividualTest, getNeighbours)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    Individual indiv{data, {{3, 4}, {}, {1, 2}}};
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
+    Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
 
     auto const &neighbours = indiv.getNeighbours();
     std::vector<std::pair<int, int>> expected = {
@@ -54,10 +82,18 @@ TEST(IndividualTest, getNeighbours)
 
 TEST(IndividualTest, feasibility)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
 
     // This solution is infeasible due to both load and time window violations.
-    Individual indiv{data, {{1, 2, 3, 4}, {}, {}}};
+    Individual indiv{data, pMngr, {{1, 2, 3, 4}, {}, {}}};
     EXPECT_FALSE(indiv.isFeasible());
 
     // First route has total load 18, but vehicle capacity is only 10.
@@ -68,7 +104,7 @@ TEST(IndividualTest, feasibility)
     EXPECT_TRUE(indiv.hasTimeWarp());
 
     // Let's try another solution that's actually feasible.
-    Individual indiv2{data, {{1, 2}, {3}, {4}}};
+    Individual indiv2{data, pMngr, {{1, 2}, {3}, {4}}};
     EXPECT_TRUE(indiv2.isFeasible());
     EXPECT_FALSE(indiv2.hasExcessCapacity());
     EXPECT_FALSE(indiv2.hasTimeWarp());
@@ -76,8 +112,17 @@ TEST(IndividualTest, feasibility)
 
 TEST(IndividualCostTest, distance)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    Individual indiv{data, {{1, 2}, {3}, {4}}};
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
+    Individual indiv{data, pMngr, {{1, 2}, {3}, {4}}};
 
     ASSERT_TRUE(indiv.isFeasible());
 
@@ -89,9 +134,17 @@ TEST(IndividualCostTest, distance)
 
 TEST(IndividualCostTest, capacity)
 {
-    Config const config;
+    Config config;
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    Individual indiv{data, {{4, 3, 1, 2}, {}, {}}};
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
+    Individual indiv{data, pMngr, {{4, 3, 1, 2}, {}, {}}};
 
     ASSERT_TRUE(indiv.hasExcessCapacity());
     ASSERT_FALSE(indiv.hasTimeWarp());
@@ -112,9 +165,17 @@ TEST(IndividualCostTest, capacity)
 
 TEST(IndividualCostTest, timeWarp)
 {
-    Config const config;
+    Config config;
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    Individual indiv{data, {{1, 3}, {2, 4}, {}}};
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
+    Individual indiv{data, pMngr, {{1, 3}, {2, 4}, {}}};
 
     ASSERT_FALSE(indiv.hasExcessCapacity());
     ASSERT_TRUE(indiv.hasTimeWarp());

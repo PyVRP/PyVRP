@@ -30,7 +30,7 @@ set(timeWindowSegmentSources TimeWindowSegment.cpp)
 add_library(penaltyManager ${penaltySources})
 
 add_library(problemData ${problemDataSources})
-target_link_libraries(problemData penaltyManager)  # TODO remove penaltyManager
+target_link_libraries(problemData)
 
 add_library(individual ${individualSources})
 target_link_libraries(individual problemData penaltyManager)

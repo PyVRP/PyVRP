@@ -27,10 +27,9 @@ void Population::add(Individual const &indiv)
 void Population::updateBiasedFitness(SubPopulation &subPop) const
 {
     // Sort population by ascending cost
-    std::sort(subPop.begin(),
-              subPop.end(),
-              [](auto &a, auto &b)
-              { return a.indiv->cost() < b.indiv->cost(); });
+    std::sort(subPop.begin(), subPop.end(), [](auto &a, auto &b) {
+        return a.indiv->cost() < b.indiv->cost();
+    });
 
     // Ranking the individuals based on their diversity contribution (decreasing
     // order of broken pairs distance)
@@ -58,8 +57,7 @@ void Population::updateBiasedFitness(SubPopulation &subPop) const
 
 void Population::purge(std::vector<IndividualWrapper> &subPop)
 {
-    auto remove = [&](auto &iterator)
-    {
+    auto remove = [&](auto &iterator) {
         auto const *indiv = iterator->indiv.get();
 
         for (auto [_, individuals] : proximity)
@@ -77,8 +75,7 @@ void Population::purge(std::vector<IndividualWrapper> &subPop)
     while (subPop.size() > data.config.minPopSize)
     {
         // Remove duplicates from the subpopulation (if they exist)
-        auto const pred = [&](auto &it)
-        {
+        auto const pred = [&](auto &it) {
             return proximity.contains(it.indiv.get())
                    && !proximity.at(it.indiv.get()).empty()
                    && proximity.at(it.indiv.get()).begin()->first == 0;
@@ -98,9 +95,9 @@ void Population::purge(std::vector<IndividualWrapper> &subPop)
         updateBiasedFitness(subPop);
 
         auto const worstFitness = std::max_element(
-            subPop.begin(),
-            subPop.end(),
-            [](auto const &a, auto const &b) { return a.fitness < b.fitness; });
+            subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
+                return a.fitness < b.fitness;
+            });
 
         remove(worstFitness);
     }

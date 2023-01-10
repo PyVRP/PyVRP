@@ -4,9 +4,17 @@
 
 TEST(PopulationTest, ctor)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
     XorShift128 rng;
-    Population pop(data, rng, brokenPairsDistance);
+    Population pop(data, pMngr, rng, brokenPairsDistance);
 
     // Test that after construction, the population indeed consists of
     // minPopSize individuals.
@@ -17,9 +25,17 @@ TEST(PopulationTest, ctor)
 
 TEST(PopulationTest, addTriggersPurge)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    Config config;
+    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
     XorShift128 rng;
-    Population pop(data, rng, brokenPairsDistance);
+    Population pop(data, pMngr, rng, brokenPairsDistance);
 
     // After construction, we should have minPopSize individuals.
     EXPECT_EQ(pop.size(), data.config.minPopSize);
@@ -31,7 +47,7 @@ TEST(PopulationTest, addTriggersPurge)
 
     while (true)  // keep adding feasible individuals until we are about to do
     {             // survivor selection.
-        Individual indiv = {data, rng};
+        Individual indiv = {data, pMngr, rng};
 
         if (indiv.isFeasible())
         {
@@ -50,8 +66,8 @@ TEST(PopulationTest, addTriggersPurge)
     // feasible population size of minPopSize + generationSize, adding this new
     // individual should trigger survivor selection. Survivor selection reduces
     // the feasible sub-population to minPopSize, so the overall population is
-    // just infeasPops + minPopSize
-    Individual indiv = {data, rng};
+    // just infeasPops + minPopSize.
+    Individual indiv = {data, pMngr, rng};
     pop.add(indiv);
 
     ASSERT_TRUE(indiv.isFeasible());
@@ -65,8 +81,16 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     config.minPopSize = 0;
 
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
+
     XorShift128 rng(2'147'483'647);
-    Population pop(data, rng, brokenPairsDistance);
+    Population pop(data, pMngr, rng, brokenPairsDistance);
 
     // Should not have added any individuals to the population pool. The 'best'
     // individual, however, has already been initialised, with a random
@@ -79,7 +103,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     EXPECT_TRUE(best1.isFeasible());
 
     // We now add a new, better solution to the population.
-    pop.add({data, {{3, 2}, {1, 4}, {}}});
+    pop.add({data, pMngr, {{3, 2}, {1, 4}, {}}});
 
     // This new solution is feasible and has cost 9'155, so adding it to the
     // population should replace the best found solution.
@@ -96,12 +120,19 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
     config.minPopSize = 0;
 
     auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
+                         static_cast<int>(config.initialTimeWarpPenalty),
+                         config.penaltyIncrease,
+                         config.penaltyDecrease,
+                         config.targetFeasible,
+                         data.vehicleCapacity,
+                         static_cast<int>(config.repairBooster));
     XorShift128 rng;
-    Population pop(data, rng, brokenPairsDistance);
+    Population pop(data, pMngr, rng, brokenPairsDistance);
 
     ASSERT_EQ(pop.size(), 0);
 
-    Individual indiv1 = {data, {{3, 2}, {1, 4}, {}}};
+    Individual indiv1 = {data, pMngr, {{3, 2}, {1, 4}, {}}};
     pop.add(indiv1);
 
     {
@@ -112,7 +143,7 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
     }
 
     // Now we add another, different parent.
-    Individual indiv2 = {data, {{3, 2}, {1}, {4}}};
+    Individual indiv2 = {data, pMngr, {{3, 2}, {1}, {4}}};
     pop.add(indiv2);
 
     {
