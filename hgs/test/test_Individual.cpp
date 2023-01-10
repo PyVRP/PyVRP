@@ -7,7 +7,7 @@
 TEST(IndividualTest, routeConstructorSortsByEmpty)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -34,7 +34,7 @@ TEST(IndividualTest, routeConstructorSortsByEmpty)
 TEST(IndividualTest, routeConstructorThrows)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -56,7 +56,7 @@ TEST(IndividualTest, routeConstructorThrows)
 TEST(IndividualTest, getNeighbours)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -83,7 +83,7 @@ TEST(IndividualTest, getNeighbours)
 TEST(IndividualTest, feasibility)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -113,7 +113,7 @@ TEST(IndividualTest, feasibility)
 TEST(IndividualCostTest, distance)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -135,7 +135,7 @@ TEST(IndividualCostTest, distance)
 TEST(IndividualCostTest, capacity)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -166,7 +166,7 @@ TEST(IndividualCostTest, capacity)
 TEST(IndividualCostTest, timeWarp)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,

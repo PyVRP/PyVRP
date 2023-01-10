@@ -1,7 +1,6 @@
 #ifndef HGS_PROBLEMDATA_H
 #define HGS_PROBLEMDATA_H
 
-#include "Config.h"
 #include "Matrix.h"
 #include "XorShift128.h"
 
@@ -26,8 +25,6 @@ public:
     // TODO make members private and rethink interface
     Matrix<int> const dist_;  // Distance matrix (+depot)
 
-    Config const config;  // Stores all the parameter values
-
     int const nbClients;        // Number of clients (excluding the depot)
     int const nbVehicles;       // Number of vehicles
     int const vehicleCapacity;  // Capacity limit
@@ -47,22 +44,19 @@ public:
     }
 
     /**
-     * Constructs a ProblemData object from the given configuration and data
-     * read (in VRPLIB format) from the given instance path.
+     * Constructs a ProblemData object from the data read (in VRPLIB format)
+     * from the given instance path.
      *
-     * @param config   Configuration object.
      * @param instPath Path to the instance data.
      * @returns        The constructed object.
      */
-    static ProblemData fromFile(Config const &config,
-                                std::string const &instPath);
+    static ProblemData fromFile(std::string const &instPath);
 
     /**
-     * Constructs a ProblemData object with the given configuration, and
-     * passed-in data. Assumes the data contains the depot, such that each
-     * vector is one longer than the number of clients.
+     * Constructs a ProblemData object with the given data. Assumes the data
+     * contains the depot, such that each vector is one longer than the number
+     * of clients.
      *
-     * @param config      Configuration object.
      * @param coords      Coordinates as pairs of [x, y].
      * @param demands     Client demands.
      * @param nbVehicles  Number of vehicles.
@@ -72,8 +66,7 @@ public:
      * @param distMat     Distance matrix.
      * @param releases    Client release times.
      */
-    ProblemData(Config const &config,
-                std::vector<std::pair<int, int>> const &coords,
+    ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
                 int nbVehicles,
                 int vehicleCap,

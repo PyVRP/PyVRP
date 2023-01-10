@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-ProblemData ProblemData::fromFile(Config const &config,
-                                  std::string const &instPath)
+ProblemData ProblemData::fromFile(std::string const &instPath)
 {
     size_t nbClients = 0;
     size_t vehicleCapacity = INT_MAX;
@@ -217,8 +216,7 @@ ProblemData ProblemData::fromFile(Config const &config,
         // as many trucks as there are clients.
         nbVehicles = nbClients;
 
-    return {config,
-            coords,
+    return {coords,
             demands,
             static_cast<int>(nbVehicles),
             static_cast<int>(vehicleCapacity),
@@ -228,8 +226,7 @@ ProblemData ProblemData::fromFile(Config const &config,
             releases};
 }
 
-ProblemData::ProblemData(Config const &config,
-                         std::vector<std::pair<int, int>> const &coords,
+ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          std::vector<int> const &demands,
                          int nbVehicles,
                          int vehicleCap,
@@ -238,7 +235,6 @@ ProblemData::ProblemData(Config const &config,
                          std::vector<std::vector<int>> const &distMat,
                          std::vector<int> const &releases)
     : dist_(distMat),
-      config(config),
       nbClients(static_cast<int>(coords.size()) - 1),
       nbVehicles(nbVehicles),
       vehicleCapacity(vehicleCap),

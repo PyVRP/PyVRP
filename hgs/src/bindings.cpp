@@ -164,8 +164,7 @@ PYBIND11_MODULE(hgspy, m)
         .def_readonly("postProcessPathLength", &Config::postProcessPathLength);
 
     py::class_<ProblemData>(m, "ProblemData")
-        .def(py::init<Config const &,
-                      std::vector<std::pair<int, int>> const &,
+        .def(py::init<std::vector<std::pair<int, int>> const &,
                       std::vector<int> const &,
                       int,
                       int,
@@ -173,7 +172,6 @@ PYBIND11_MODULE(hgspy, m)
                       std::vector<int> const &,
                       std::vector<std::vector<int>> const &,
                       std::vector<int> const &>(),
-             py::arg("config"),
              py::arg("coords"),
              py::arg("demands"),
              py::arg("nb_vehicles"),

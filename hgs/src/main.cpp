@@ -27,7 +27,7 @@ try
     auto config = args.parse();
 
     XorShift128 rng(config.seed);
-    ProblemData data = ProblemData::fromFile(config, args.instPath());
+    ProblemData data = ProblemData::fromFile(args.instPath());
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,

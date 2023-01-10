@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "Config.h"
 #include "ProblemData.h"
 
 /**
@@ -10,70 +9,70 @@
 TEST(ProblemDataFromFileThrowsTest, UnknownEdgeWeightFmt)
 {
     auto const path = "data/UnknownEdgeWeightFmt.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownEdgeWeightType)
 {
     auto const path = "data/UnknownEdgeWeightType.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownFile)
 {
     auto const path = "somewhere that does not exist";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::invalid_argument);
+    ASSERT_THROW(ProblemData::fromFile(path), std::invalid_argument);
 
     // But the OkSmall instance exists and should parse OK
-    ASSERT_NO_THROW(ProblemData::fromFile(Config{}, "data/OkSmall.txt"));
+    ASSERT_NO_THROW(ProblemData::fromFile("data/OkSmall.txt"));
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownSectionInFile)
 {
     auto const path = "data/FileWithUnknownSection.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, WrongIdDepot)
 {
     auto const path = "data/DepotNotOne.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, WrongDepotEndIdentifier)
 {
     auto const path = "data/DepotSectionDoesNotEndInMinusOne.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, MoreThanOneDepot)
 {
     auto const path = "data/MoreThanOneDepot.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotServiceDuration)
 {
     auto const path = "data/NonZeroDepotServiceDuration.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotReleaseTime)
 {
     auto const path = "data/NonZeroDepotReleaseTime.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotOpenTimeWindow)
 {
     auto const path = "data/NonZeroDepotOpenTimeWindow.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotDemand)
 {
     auto const path = "data/NonZeroDepotDemand.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, InconsistentTimeWindows)
@@ -82,10 +81,8 @@ TEST(ProblemDataFromFileThrowsTest, InconsistentTimeWindows)
     auto const earlyGtLate = "data/TimeWindowOpenLargerThanClose.txt";
 
     // ProblemData::fromFile should throw when any twEarly >= twLate
-    ASSERT_THROW(ProblemData::fromFile(Config{}, earlyEqLate),
-                 std::runtime_error);
-    ASSERT_THROW(ProblemData::fromFile(Config{}, earlyGtLate),
-                 std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(earlyEqLate), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(earlyGtLate), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
@@ -96,10 +93,8 @@ TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
     // ProblemData::fromFile should throw when there's an EDGE_WEIGHT_SECTION
     // without EDGE_WEIGHT_TYPE = EXPLICIT, or when EDGE_WEIGHT_FORMAT !=
     // FULL_MATRIX.
-    ASSERT_THROW(ProblemData::fromFile(Config{}, noExplicit),
-                 std::runtime_error);
-    ASSERT_THROW(ProblemData::fromFile(Config{}, noFullMatrix),
-                 std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(noExplicit), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(noFullMatrix), std::runtime_error);
 }
 
 /**
@@ -109,8 +104,7 @@ TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
 
 TEST(ProblemDataFromFileContentTest, OkSmallInstance)
 {
-    auto const path = "data/OkSmall.txt";
-    auto const data = ProblemData::fromFile(Config{}, path);
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
 
     // From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
     ASSERT_EQ(data.nbClients, 4);
@@ -183,8 +177,7 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
 
 TEST(ProblemDataFromFileContentTest, CVRPLIBEn22k4)  // instance from CVRPLIB
 {
-    auto const path = "data/E-n22-k4.vrp.txt";
-    auto const data = ProblemData::fromFile(Config{}, path);
+    auto const data = ProblemData::fromFile("data/E-n22-k4.vrp.txt");
 
     ASSERT_EQ(data.nbClients, 21);
     ASSERT_EQ(data.vehicleCapacity, 6000);

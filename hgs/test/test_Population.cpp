@@ -5,7 +5,7 @@
 TEST(PopulationTest, ctor)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -27,7 +27,7 @@ TEST(PopulationTest, ctor)
 
     // Test that after construction, the population indeed consists of
     // minPopSize individuals.
-    EXPECT_EQ(pop.size(), data.config.minPopSize);
+    EXPECT_EQ(pop.size(), config.minPopSize);
 }
 
 // TODO additional property tests?
@@ -35,7 +35,7 @@ TEST(PopulationTest, ctor)
 TEST(PopulationTest, addTriggersPurge)
 {
     Config config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -56,7 +56,7 @@ TEST(PopulationTest, addTriggersPurge)
                    config.ubDiversity);
 
     // After construction, we should have minPopSize individuals.
-    EXPECT_EQ(pop.size(), data.config.minPopSize);
+    EXPECT_EQ(pop.size(), config.minPopSize);
 
     size_t infeasPops = pop.numInfeasible();
     size_t feasPops = pop.numFeasible();
@@ -76,7 +76,7 @@ TEST(PopulationTest, addTriggersPurge)
             EXPECT_EQ(pop.numFeasible(), feasPops);
         }
 
-        if (feasPops == data.config.minPopSize + data.config.generationSize)
+        if (feasPops == config.minPopSize + config.generationSize)
             break;
     }
 
@@ -98,7 +98,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     Config config;
     config.minPopSize = 0;
 
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
@@ -146,7 +146,7 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
     Config config;
     config.minPopSize = 0;
 
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
                          static_cast<int>(config.initialTimeWarpPenalty),
                          config.penaltyIncrease,
