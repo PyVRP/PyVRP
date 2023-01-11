@@ -1,4 +1,3 @@
-#include "Config.h"
 #include "Exchange.h"
 #include "GeneticAlgorithm.h"
 #include "Individual.h"
@@ -115,73 +114,6 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("op"))
         .def("search", &LocalSearch::search, py::arg("indiv"))
         .def("intensify", &LocalSearch::intensify, py::arg("indiv"));
-
-    py::class_<Config>(m, "Config")
-        .def(py::init<int,
-                      int,
-                      bool,
-                      size_t,
-                      size_t,
-                      size_t,
-                      double,
-                      double,
-                      size_t,
-                      size_t,
-                      size_t,
-                      double,
-                      double,
-                      size_t,
-                      double,
-                      size_t,
-                      size_t,
-                      size_t,
-                      int,
-                      int,
-                      bool,
-                      size_t>(),
-             py::arg("seed") = 0,
-             py::arg("timeLimit") = INT_MAX,
-             py::arg("collectStatistics") = false,
-             py::arg("initialCapacityPenalty") = 20,
-             py::arg("initialTimeWarpPenalty") = 6,
-             py::arg("nbPenaltyManagement") = 47,
-             py::arg("penaltyIncrease") = 1.34,
-             py::arg("penaltyDecrease") = 0.32,
-             py::arg("minPopSize") = 25,
-             py::arg("generationSize") = 40,
-             py::arg("nbElite") = 4,
-             py::arg("lbDiversity") = 0.1,
-             py::arg("ubDiversity") = 0.5,
-             py::arg("nbClose") = 5,
-             py::arg("targetFeasible") = 0.43,
-             py::arg("repairProbability") = 79,
-             py::arg("repairBooster") = 12,
-             py::arg("nbGranular") = 34,
-             py::arg("weightWaitTime") = 18,
-             py::arg("weightTimeWarp") = 20,
-             py::arg("shouldIntensify") = true,
-             py::arg("postProcessPathLength") = 7)
-        .def_readonly("seed", &Config::seed)
-        .def_readonly("timeLimit", &Config::timeLimit)
-        .def_readonly("collectStatistics", &Config::collectStatistics)
-        .def_readonly("initialCapacityPenalty", &Config::initialCapacityPenalty)
-        .def_readonly("initialTimeWarpPenalty", &Config::initialTimeWarpPenalty)
-        .def_readonly("nbPenaltyManagement", &Config::nbPenaltyManagement)
-        .def_readonly("penaltyIncrease", &Config::penaltyIncrease)
-        .def_readonly("penaltyDecrease", &Config::penaltyDecrease)
-        .def_readonly("minPopSize", &Config::minPopSize)
-        .def_readonly("generationSize", &Config::generationSize)
-        .def_readonly("nbElite", &Config::nbElite)
-        .def_readonly("lbDiversity", &Config::lbDiversity)
-        .def_readonly("ubDiversity", &Config::ubDiversity)
-        .def_readonly("nbClose", &Config::nbClose)
-        .def_readonly("targetFeasible", &Config::targetFeasible)
-        .def_readonly("repairProbability", &Config::repairProbability)
-        .def_readonly("repairBooster", &Config::repairBooster)
-        .def_readonly("nbGranular", &Config::nbGranular)
-        .def_readonly("weightWaitTime", &Config::weightWaitTime)
-        .def_readonly("weightTimeWarp", &Config::weightTimeWarp)
-        .def_readonly("postProcessPathLength", &Config::postProcessPathLength);
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<std::vector<std::pair<int, int>> const &,

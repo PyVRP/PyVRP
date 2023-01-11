@@ -1,12 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "Config.h"
 #include "Individual.h"
 #include "ProblemData.h"
 
 TEST(IndividualTest, routeConstructorSortsByEmpty)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
 
@@ -27,7 +25,6 @@ TEST(IndividualTest, routeConstructorSortsByEmpty)
 
 TEST(IndividualTest, routeConstructorThrows)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
 
@@ -43,7 +40,6 @@ TEST(IndividualTest, routeConstructorThrows)
 
 TEST(IndividualTest, getNeighbours)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
 
@@ -64,7 +60,6 @@ TEST(IndividualTest, getNeighbours)
 
 TEST(IndividualTest, feasibility)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
 
@@ -88,7 +83,6 @@ TEST(IndividualTest, feasibility)
 
 TEST(IndividualCostTest, distance)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
 
@@ -106,9 +100,10 @@ TEST(IndividualCostTest, distance)
 
 TEST(IndividualCostTest, capacity)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(data.vehicleCapacity());
+
+    PenaltyParams params;
+    PenaltyManager pMngr(data.vehicleCapacity(), params);
 
     Individual indiv{data, pMngr, {{4, 3, 1, 2}, {}, {}}};
 
@@ -123,7 +118,7 @@ TEST(IndividualCostTest, capacity)
     ASSERT_GT(load, data.vehicleCapacity());
     EXPECT_EQ(excessLoad, 8);
 
-    auto const loadPenalty = config.initialCapacityPenalty * excessLoad;
+    auto const loadPenalty = params.initCapacityPenalty * excessLoad;
     int dist = data.dist(0, 4) + data.dist(4, 3) + data.dist(3, 1)
                + data.dist(1, 2) + data.dist(2, 0);
 
@@ -134,9 +129,10 @@ TEST(IndividualCostTest, capacity)
 
 TEST(IndividualCostTest, timeWarp)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(data.vehicleCapacity());
+
+    PenaltyParams params;
+    PenaltyManager pMngr(data.vehicleCapacity(), params);
 
     Individual indiv{data, pMngr, {{1, 3}, {2, 4}, {}}};
 
@@ -152,7 +148,7 @@ TEST(IndividualCostTest, timeWarp)
     int twR1 = 15'600 + 360 + 1'427 - 15'300;
     int twR2 = 0;
     int timeWarp = twR1 + twR2;
-    int twPenalty = config.initialTimeWarpPenalty * timeWarp;
+    int twPenalty = params.initTimeWarpPenalty * timeWarp;
     int dist = data.dist(0, 1) + data.dist(1, 3) + data.dist(3, 0)
                + data.dist(0, 2) + data.dist(2, 4) + data.dist(4, 0);
 
