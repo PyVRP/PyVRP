@@ -15,6 +15,7 @@
 #include "ProblemData.h"
 #include "RelocateStar.h"
 #include "Result.h"
+#include "SolverParams.h"
 #include "Statistics.h"
 #include "StoppingCriterion.h"
 #include "SwapStar.h"
@@ -267,6 +268,18 @@ PYBIND11_MODULE(hgspy, m)
              &Result::getRunTime,
              py::return_value_policy::reference);
 
+    py::class_<SolverParams>(m, "SolverParams")
+        .def(py::init<size_t, size_t, bool, bool>(),
+             py::arg("nb_penalty_management") = 47,
+             py::arg("repair_probability") = 79,
+             py::arg("collect_statistics") = false,
+             py::arg("should_intensify") = true)
+        .def_readonly("nb_penalty_management",
+                      &SolverParams::nbPenaltyManagement)
+        .def_readonly("repair_probability", &SolverParams::repairProbability)
+        .def_readonly("collect_statistics", &SolverParams::collectStatistics)
+        .def_readonly("should_intensify", &SolverParams::shouldIntensify);
+
     py::class_<GeneticAlgorithm>(m, "GeneticAlgorithm")
         .def(py::init<ProblemData &,
                       PenaltyManager &,
@@ -274,20 +287,14 @@ PYBIND11_MODULE(hgspy, m)
                       Population &,
                       LocalSearch &,
                       CrossoverOperator,
-                      size_t,
-                      bool,
-                      bool,
-                      size_t>(),
+                      SolverParams>(),
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("population"),
              py::arg("local_search"),
              py::arg("crossover_operator"),
-             py::arg("nb_penalty_management"),
-             py::arg("collect_statistics"),
-             py::arg("should_intensify"),
-             py::arg("repair_probability"))
+             py::arg("params"))
         .def("run", &GeneticAlgorithm::run, py::arg("stop"));
 
     // Diversity measures (as a submodule)

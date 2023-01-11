@@ -5,6 +5,7 @@
 #include "LocalSearchParams.h"
 #include "PenaltyParams.h"
 #include "PopulationParams.h"
+#include "SolverParams.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -135,6 +136,14 @@ public:
                 config.nbClose,
                 config.lbDiversity,
                 config.ubDiversity};
+    }
+
+    [[nodiscard]] SolverParams solverParams() const
+    {
+        return {config.nbPenaltyManagement,
+                config.repairProbability,
+                config.collectStatistics,
+                config.shouldIntensify};
     }
 
     [[nodiscard]] char const *instPath() const { return argv[1]; }

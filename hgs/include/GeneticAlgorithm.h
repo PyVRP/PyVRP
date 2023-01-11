@@ -7,6 +7,7 @@
 #include "Population.h"
 #include "ProblemData.h"
 #include "Result.h"
+#include "SolverParams.h"
 #include "StoppingCriterion.h"
 #include "XorShift128.h"
 #include "crossover.h"
@@ -24,11 +25,7 @@ class GeneticAlgorithm
     Population &population;
     LocalSearch &localSearch;
     CrossoverOperator crossover;
-
-    size_t nbPenaltyManagement;
-    bool collectStatistics;
-    bool shouldIntensify;
-    size_t repairProbability;
+    SolverParams params;
 
     std::vector<bool> loadFeas;  // load feasibility of recent individuals
     std::vector<bool> timeFeas;  // time feasibility of recent individuals
@@ -62,10 +59,7 @@ public:
                      Population &population,
                      LocalSearch &localSearch,
                      CrossoverOperator op,
-                     size_t nbPenaltyManagement,
-                     bool collectStatistics,
-                     bool shouldIntensify,
-                     size_t repairProbability);
+                     SolverParams params = SolverParams());
 };
 
 #endif

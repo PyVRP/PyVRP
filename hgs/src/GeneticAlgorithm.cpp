@@ -30,10 +30,10 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
         auto offspring = crossover(parents, data, penaltyManager, rng);
         educate(offspring);
 
-        if (iter % nbPenaltyManagement == 0)
+        if (iter % params.nbPenaltyManagement == 0)
             updatePenalties();
 
-        if (collectStatistics)
+        if (params.collectStatistics)
             stats.collectFrom(population);
     }
 
@@ -45,8 +45,8 @@ void GeneticAlgorithm::educate(Individual &indiv)
 {
     localSearch.search(indiv);
 
-    if (shouldIntensify        // only intensify feasible, new best
-        && indiv.isFeasible()  // solutions. Cf. also repair below.
+    if (params.shouldIntensify  // only intensify feasible, new best
+        && indiv.isFeasible()   // solutions. Cf. also repair below.
         && indiv.cost() < population.getBestFound().cost())
         localSearch.intensify(indiv);
 
@@ -57,14 +57,14 @@ void GeneticAlgorithm::educate(Individual &indiv)
 
     // Possibly repair if current solution is infeasible. In that case, we
     // penalise infeasibility more using a penalty booster.
-    if (!indiv.isFeasible() && rng.randint(100) < repairProbability)
+    if (!indiv.isFeasible() && rng.randint(100) < params.repairProbability)
     {
         auto const booster = penaltyManager.getPenaltyBooster();
         localSearch.search(indiv);
 
         if (indiv.isFeasible())
         {
-            if (shouldIntensify
+            if (params.shouldIntensify
                 && indiv.cost() < population.getBestFound().cost())
                 localSearch.intensify(indiv);
 
@@ -97,21 +97,15 @@ GeneticAlgorithm::GeneticAlgorithm(ProblemData &data,
                                    Population &population,
                                    LocalSearch &localSearch,
                                    CrossoverOperator op,
-                                   size_t nbPenaltyManagement,
-                                   bool collectStatistics,
-                                   bool shouldIntensify,
-                                   size_t repairProbability)
+                                   SolverParams params)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
       population(population),
       localSearch(localSearch),
       crossover(std::move(op)),
-      nbPenaltyManagement(nbPenaltyManagement),
-      collectStatistics(collectStatistics),
-      shouldIntensify(shouldIntensify),
-      repairProbability(repairProbability)
+      params(params)
 {
-    loadFeas.reserve(nbPenaltyManagement);
-    timeFeas.reserve(nbPenaltyManagement);
+    loadFeas.reserve(params.nbPenaltyManagement);
+    timeFeas.reserve(params.nbPenaltyManagement);
 }

@@ -62,16 +62,8 @@ try
     auto swapStar = SwapStar(data, pMngr);
     ls.addRouteOperator(swapStar);
 
-    GeneticAlgorithm solver(data,
-                            pMngr,
-                            rng,
-                            pop,
-                            ls,
-                            selectiveRouteExchange,
-                            config.nbPenaltyManagement,
-                            config.collectStatistics,
-                            config.shouldIntensify,
-                            config.repairProbability);
+    GeneticAlgorithm solver(
+        data, pMngr, rng, pop, ls, selectiveRouteExchange, args.solverParams());
 
     MaxRuntime stop(config.timeLimit);
     auto const res = solver.run(stop);
