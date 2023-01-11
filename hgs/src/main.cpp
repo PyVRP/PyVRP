@@ -33,13 +33,7 @@ try
     Population pop(
         data, pMngr, rng, brokenPairsDistance, args.populationParams());
 
-    LocalSearch ls(data,
-                   pMngr,
-                   rng,
-                   config.weightWaitTime,
-                   config.weightTimeWarp,
-                   config.nbGranular,
-                   config.postProcessPathLength);
+    LocalSearch ls(data, pMngr, rng, args.localSearchParams());
 
     auto exchange10 = Exchange<1, 0>(data, pMngr);
     ls.addNodeOperator(exchange10);

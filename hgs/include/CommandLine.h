@@ -2,6 +2,7 @@
 #define COMMANDLINE_H
 
 #include "Config.h"
+#include "LocalSearchParams.h"
 #include "PenaltyParams.h"
 #include "PopulationParams.h"
 
@@ -107,6 +108,14 @@ public:
     }
 
     [[nodiscard]] Config const &getConfig() const { return config; }
+
+    [[nodiscard]] LocalSearchParams localSearchParams() const
+    {
+        return {static_cast<size_t>(config.weightWaitTime),
+                static_cast<size_t>(config.weightTimeWarp),
+                config.nbGranular,
+                config.postProcessPathLength};
+    }
 
     [[nodiscard]] PenaltyParams penaltyParams() const
     {

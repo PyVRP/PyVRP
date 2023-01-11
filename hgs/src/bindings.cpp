@@ -4,6 +4,7 @@
 #include "Individual.h"
 #include "LocalSearch.h"
 #include "LocalSearchOperator.h"
+#include "LocalSearchParams.h"
 #include "MaxIterations.h"
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
@@ -82,21 +83,27 @@ PYBIND11_MODULE(hgspy, m)
         .def("has_time_warp", &Individual::hasTimeWarp)
         .def("to_file", &Individual::toFile);
 
+    py::class_<LocalSearchParams>(m, "LocalSearchParams")
+        .def(py::init<size_t, size_t, size_t, size_t>(),
+             py::arg("weight_wait_time") = 18,
+             py::arg("weight_time_warp") = 20,
+             py::arg("nb_granular") = 34,
+             py::arg("post_process_path_length") = 7)
+        .def_readonly("weight_wait_time", &LocalSearchParams::weightWaitTime)
+        .def_readonly("weight_time_warp", &LocalSearchParams::weightTimeWarp)
+        .def_readonly("nb_granular", &LocalSearchParams::nbGranular)
+        .def_readonly("post_process_path_length",
+                      &LocalSearchParams::postProcessPathLength);
+
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<ProblemData &,
                       PenaltyManager &,
                       XorShift128 &,
-                      int,
-                      int,
-                      size_t,
-                      size_t>(),
+                      LocalSearchParams>(),
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
-             py::arg("weight_wait_time"),
-             py::arg("weight_time_warp"),
-             py::arg("nb_granular"),
-             py::arg("post_process_path_length"))
+             py::arg("params"))
         .def("add_node_operator",
              static_cast<void (LocalSearch::*)(LocalSearchOperator<Node> &)>(
                  &LocalSearch::addNodeOperator),

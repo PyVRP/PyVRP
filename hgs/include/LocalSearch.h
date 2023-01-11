@@ -2,13 +2,13 @@
 #define LOCALSEARCH_H
 
 #include "Individual.h"
+#include "LocalSearchOperator.h"
+#include "LocalSearchParams.h"
 #include "Node.h"
 #include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "Route.h"
 #include "XorShift128.h"
-
-#include "LocalSearchOperator.h"
 
 #include <functional>
 #include <vector>
@@ -21,11 +21,7 @@ class LocalSearch
     ProblemData &data;
     PenaltyManager penaltyManager;
     XorShift128 &rng;
-
-    int weightWaitTime;
-    int weightTimeWarp;
-    size_t nbGranular;
-    size_t postProcessPathLength;
+    LocalSearchParams params;
 
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
@@ -101,10 +97,7 @@ public:
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
                 XorShift128 &rng,
-                int weightWaitTime,
-                int weightTimeWarp,
-                size_t nbGranular,
-                size_t postProcessPathLength);
+                LocalSearchParams params = LocalSearchParams());
 };
 
 #endif
