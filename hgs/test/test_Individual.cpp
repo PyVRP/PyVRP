@@ -128,7 +128,9 @@ TEST(IndividualCostTest, distance)
 
     // This individual is feasible, so cost should equal total distance
     // travelled.
-    int dist = data.dist(0, 1, 2, 0) + data.dist(0, 3, 0) + data.dist(0, 4, 0);
+    int dist = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
+               + data.dist(0, 3) + data.dist(3, 0) + data.dist(0, 4)
+               + data.dist(4, 0);
     EXPECT_EQ(dist, indiv.cost());
 }
 
@@ -158,7 +160,8 @@ TEST(IndividualCostTest, capacity)
     EXPECT_EQ(excessLoad, 8);
 
     auto const loadPenalty = config.initialCapacityPenalty * excessLoad;
-    int dist = data.dist(0, 4, 3, 1, 2, 0);
+    int dist = data.dist(0, 4) + data.dist(4, 3) + data.dist(3, 1)
+               + data.dist(1, 2) + data.dist(2, 0);
 
     // This individual is infeasible due to load violations, so the costs should
     // be distance + loadPenalty * excessLoad.
@@ -192,7 +195,8 @@ TEST(IndividualCostTest, timeWarp)
     int twR2 = 0;
     int timeWarp = twR1 + twR2;
     int twPenalty = config.initialTimeWarpPenalty * timeWarp;
-    int dist = data.dist(0, 1, 3, 0) + data.dist(0, 2, 4, 0);
+    int dist = data.dist(0, 1) + data.dist(1, 3) + data.dist(3, 0)
+               + data.dist(0, 2) + data.dist(2, 4) + data.dist(4, 0);
 
     // This individual is infeasible due to time warp, so the costs should
     // be distance + twPenalty * timeWarp.

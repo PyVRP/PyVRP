@@ -13,7 +13,10 @@ ProblemData::Client ProblemData::client(size_t client) const
 
 ProblemData::Client ProblemData::depot() const { return client(0); }
 
-int ProblemData::dist(size_t row, size_t col) const { return dist_(row, col); }
+int ProblemData::dist(size_t first, size_t second) const
+{
+    return dist_(first, second);
+}
 
 size_t ProblemData::numClients() const { return numClients_; }
 

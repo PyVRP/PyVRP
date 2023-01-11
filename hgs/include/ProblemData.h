@@ -30,24 +30,39 @@ class ProblemData
 public:
     Matrix<int> const dist_;  // Distance matrix (+depot) TODO make private
 
+    /**
+     * @param client Client whose data to return.
+     * @return A struct containing the indicated client's information.
+     */
     [[nodiscard]] Client client(size_t client) const;
 
+    /**
+     * @return A struct containing the depot's information.
+     */
     [[nodiscard]] Client depot() const;
 
-    [[nodiscard]] int dist(size_t row, size_t col) const;
+    /**
+     * Returns the distance between the indicated two clients.
+     *
+     * @param first First client.
+     * @param second Second client.
+     * @return distance from the first to the second client.
+     */
+    [[nodiscard]] int dist(size_t first, size_t second) const;
 
-    // TODO remove this template?
-    template <typename... Args>
-    [[nodiscard]] int
-    dist(size_t first, size_t second, size_t third, Args... args) const
-    {
-        return dist(first, second) + dist(second, third, args...);
-    }
-
+    /**
+     * @return Total number of clients in this instance.
+     */
     [[nodiscard]] size_t numClients() const;
 
+    /**
+     * @return Total number of vehicles available in this instance.
+     */
     [[nodiscard]] size_t numVehicles() const;
 
+    /**
+     * @return Capacity of each vehicle in this instance.
+     */
     [[nodiscard]] size_t vehicleCapacity() const;
 
     /**

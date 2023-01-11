@@ -11,7 +11,8 @@ void SwapStar::updateRemovalCosts(Route *R1)
         auto twData = TWS::merge(p(U)->twBefore, n(U)->twAfter);
         removalCosts(R1->idx, U->client)
             = data.dist(p(U)->client, n(U)->client)
-              - data.dist(p(U)->client, U->client, n(U)->client)
+              - data.dist(p(U)->client, U->client)
+              - data.dist(U->client, n(U)->client)
               + penaltyManager.twPenalty(twData.totalTimeWarp()) - currTimeWarp;
     }
 }
@@ -25,7 +26,8 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
 
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData = TWS::merge(R->depot->twBefore, U->tw, n(R->depot)->twAfter);
-    int cost = data.dist(0, U->client, n(R->depot)->client)
+    int cost = data.dist(0, U->client)
+               + data.dist(U->client, n(R->depot)->client)
                - data.dist(0, n(R->depot)->client)
                + penaltyManager.twPenalty(twData.totalTimeWarp())
                - penaltyManager.twPenalty(R->timeWarp());
@@ -36,7 +38,8 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
     {
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(V->twBefore, U->tw, n(V)->twAfter);
-        int deltaCost = data.dist(V->client, U->client, n(V)->client)
+        int deltaCost = data.dist(V->client, U->client)
+                        + data.dist(U->client, n(V)->client)
                         - data.dist(V->client, n(V)->client)
                         + penaltyManager.twPenalty(twData.totalTimeWarp())
                         - penaltyManager.twPenalty(R->timeWarp());
@@ -58,7 +61,8 @@ std::pair<int, Node *> SwapStar::getBestInsertPoint(Node *U, Node *V)
 
     // As a fallback option, we consider inserting in the place of V
     auto const twData = TWS::merge(p(V)->twBefore, U->tw, n(V)->twAfter);
-    int deltaCost = data.dist(p(V)->client, U->client, n(V)->client)
+    int deltaCost = data.dist(p(V)->client, U->client)
+                    + data.dist(U->client, n(V)->client)
                     - data.dist(p(V)->client, n(V)->client)
                     + penaltyManager.twPenalty(twData.totalTimeWarp())
                     - penaltyManager.twPenalty(V->route->timeWarp());
@@ -144,9 +148,10 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
-    int const current
-        = data.dist(p(best.U)->client, best.U->client, n(best.U)->client)
-          + data.dist(p(best.V)->client, best.V->client, n(best.V)->client);
+    int const current = data.dist(p(best.U)->client, best.U->client)
+                        + data.dist(best.U->client, n(best.U)->client)
+                        + data.dist(p(best.V)->client, best.V->client)
+                        + data.dist(best.V->client, n(best.V)->client);
 
     int const proposed = data.dist(best.VAfter->client, best.V->client)
                          + data.dist(best.UAfter->client, best.U->client);
@@ -166,16 +171,12 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
     }
 
     if (best.UAfter == p(best.V))
-    {
         // Insert in place of V
         deltaCost += data.dist(best.U->client, n(best.V)->client);
-    }
     else
-    {
         deltaCost += data.dist(best.U->client, n(best.UAfter)->client)
                      + data.dist(p(best.V)->client, n(best.V)->client)
                      - data.dist(best.UAfter->client, n(best.UAfter)->client);
-    }
 
     // It is not possible to have UAfter == V or VAfter == U, so the positions
     // are always strictly different

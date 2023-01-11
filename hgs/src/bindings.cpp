@@ -180,7 +180,13 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("service_durations"),
              py::arg("duration_matrix"),
              py::arg("release_times"))
-        .def("from_file", &ProblemData::fromFile);
+        .def("client", &ProblemData::client)
+        .def("depot", &ProblemData::depot)
+        .def("dist", &ProblemData::dist)
+        .def("num_clients", &ProblemData::numClients)
+        .def("num_vehicles", &ProblemData::numVehicles)
+        .def("vehicle_capacity", &ProblemData::vehicleCapacity)
+        .def_static("from_file", &ProblemData::fromFile);
 
     py::class_<Population>(m, "Population")
         .def(py::init<ProblemData &,

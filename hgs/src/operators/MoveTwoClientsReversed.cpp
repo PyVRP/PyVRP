@@ -15,9 +15,10 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
     int const current = U->route->distBetween(posU - 1, posU + 2)
                         + data.dist(V->client, n(V)->client);
-    int const proposed
-        = data.dist(p(U)->client, nn(U)->client)
-          + data.dist(V->client, n(U)->client, U->client, n(V)->client);
+    int const proposed = data.dist(p(U)->client, nn(U)->client)
+                         + data.dist(V->client, n(U)->client)
+                         + data.dist(n(U)->client, U->client)
+                         + data.dist(U->client, n(V)->client);
 
     int deltaCost = proposed - current;
 
