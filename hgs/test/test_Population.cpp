@@ -7,13 +7,8 @@ TEST(PopulationTest, ctor)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
+
     XorShift128 rng;
     Population pop(data,
                    pMngr,
@@ -37,13 +32,7 @@ TEST(PopulationTest, addTriggersPurge)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
     XorShift128 rng;
     Population pop(data,
                    pMngr,
@@ -100,14 +89,7 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
     config.minPopSize = 0;
 
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
-
+    PenaltyManager pMngr(data.vehicleCapacity());
     XorShift128 rng(2'147'483'647);
     Population pop(data,
                    pMngr,
@@ -148,13 +130,7 @@ TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
     config.minPopSize = 0;
 
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
     XorShift128 rng;
     Population pop(data,
                    pMngr,

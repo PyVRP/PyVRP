@@ -2,37 +2,29 @@
 
 #include <stdexcept>
 
-PenaltyManager::PenaltyManager(unsigned int initCapacityPenalty,
-                               unsigned int initTimeWarpPenalty,
-                               double penaltyIncrease,
-                               double penaltyDecrease,
-                               double targetFeasible,
-                               unsigned int vehicleCapacity,
-                               unsigned int repairBooster)
-    : capacityPenalty(initCapacityPenalty),
-      timeWarpPenalty(initTimeWarpPenalty),
-      penaltyIncrease(penaltyIncrease),
-      penaltyDecrease(penaltyDecrease),
-      targetFeasible(targetFeasible),
+PenaltyManager::PenaltyManager(unsigned int vehicleCapacity,
+                               PenaltyParams params)
+    : params(params),
       vehicleCapacity(vehicleCapacity),
-      repairBooster(repairBooster)
+      capacityPenalty(params.initCapacityPenalty),
+      timeWarpPenalty(params.initTimeWarpPenalty)
 {
-    if (penaltyIncrease < 1.)
+    if (params.penaltyIncrease < 1.)
         throw std::invalid_argument("Expected penaltyIncrease >= 1.");
 
-    if (penaltyDecrease < 0. || penaltyDecrease > 1.)
+    if (params.penaltyDecrease < 0. || params.penaltyDecrease > 1.)
         throw std::invalid_argument("Expected penaltyDecrease in [0, 1].");
 
-    if (targetFeasible < 0. || targetFeasible > 1.)
+    if (params.targetFeasible < 0. || params.targetFeasible > 1.)
         throw std::invalid_argument("Expected targetFeasible in [0, 1].");
 
-    if (repairBooster < 1)
+    if (params.repairBooster < 1)
         throw std::invalid_argument("Expected repairBooster >= 1.");
 }
 
 unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
 {
-    auto const diff = targetFeasible - feasPct;
+    auto const diff = params.targetFeasible - feasPct;
 
     if (-0.05 < diff && diff < 0.05)  // allow some margins on the difference
         return penalty;               // between target and actual
@@ -42,9 +34,9 @@ unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
     // +- 1 to ensure we do not get stuck at the same integer values, bounded
     // to [1, 1000] to avoid overflow in cost computations.
     if (diff > 0)
-        dPenalty = std::min(penaltyIncrease * dPenalty + 1, 1000.);
+        dPenalty = std::min(params.penaltyIncrease * dPenalty + 1, 1000.);
     else
-        dPenalty = std::max(penaltyDecrease * dPenalty - 1, 1.);
+        dPenalty = std::max(params.penaltyDecrease * dPenalty - 1, 1.);
 
     return static_cast<int>(dPenalty);
 }

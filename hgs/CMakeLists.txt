@@ -25,6 +25,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(include)
 include_directories(include/operators)
+include_directories(include/params)
 include_directories(include/stop)
 
 add_subdirectory(extern)

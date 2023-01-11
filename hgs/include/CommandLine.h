@@ -2,6 +2,7 @@
 #define COMMANDLINE_H
 
 #include "Config.h"
+#include "PenaltyParams.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -14,36 +15,15 @@
  */
 class CommandLine
 {
+    Config config;
     int argc;
     char **argv;
-
-public:
-    // argc is the number of command line arguments
-    // argv are the command line arguments:
-    //		0) The path to the genvrp executable to run
-    //		1) The path to the instance to consider
-    //		2) The path to the file where the solution will be stored
-    //      .) Possibly combinations of command line argument descriptions with
-    //         their value (counted as 2 per argument in argc)
-    CommandLine(int argc, char **argv) : argc(argc), argv(argv)
-    {
-        // Check if the number of arguments is odd and at least three, since
-        // the two paths and program name should at least be given.
-        if (argc % 2 != 1 || argc < 3)
-            throw std::invalid_argument("Incorrect number of arguments");
-    }
-
-    [[nodiscard]] char const *instPath() const { return argv[1]; }
-
-    [[nodiscard]] char const *solPath() const { return argv[2]; }
 
     /**
      * Extracts algorithm configuration.
      */
-    Config parse()
+    void parse()
     {
-        Config config;
-
         for (auto idx = 3; idx != argc; idx += 2)
         {
             std::istringstream stream(argv[idx + 1]);
@@ -105,9 +85,41 @@ public:
                 throw std::invalid_argument(msg.str());
             }
         }
-
-        return config;
     }
+
+public:
+    // argc is the number of command line arguments
+    // argv are the command line arguments:
+    //		0) The path to the genvrp executable to run
+    //		1) The path to the instance to consider
+    //		2) The path to the file where the solution will be stored
+    //      .) Possibly combinations of command line argument descriptions with
+    //         their value (counted as 2 per argument in argc)
+    CommandLine(int argc, char **argv) : config(), argc(argc), argv(argv)
+    {
+        // Check if the number of arguments is odd and at least three, since
+        // the two paths and program name should at least be given.
+        if (argc % 2 != 1 || argc < 3)
+            throw std::invalid_argument("Incorrect number of arguments");
+
+        parse();
+    }
+
+    [[nodiscard]] Config const &getConfig() const { return config; }
+
+    [[nodiscard]] PenaltyParams penaltyParams() const
+    {
+        return {static_cast<unsigned int>(config.initialCapacityPenalty),
+                static_cast<unsigned int>(config.initialTimeWarpPenalty),
+                static_cast<unsigned int>(config.repairBooster),
+                config.penaltyIncrease,
+                config.penaltyDecrease,
+                config.targetFeasible};
+    }
+
+    [[nodiscard]] char const *instPath() const { return argv[1]; }
+
+    [[nodiscard]] char const *solPath() const { return argv[2]; }
 };
 
 #endif

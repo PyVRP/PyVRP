@@ -8,13 +8,7 @@ TEST(DiversityTest, brokenPairsDistance)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     Individual indiv1{data, pMngr, {{1, 2, 3, 4}, {}, {}}};
     Individual indiv2{data, pMngr, {{1, 2}, {3}, {4}}};

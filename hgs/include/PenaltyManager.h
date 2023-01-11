@@ -1,16 +1,15 @@
 #ifndef HGS_PENALTYMANAGER_H
 #define HGS_PENALTYMANAGER_H
 
+#include "PenaltyParams.h"
+
 class PenaltyManager
 {
+    PenaltyParams const params;
+    unsigned int const vehicleCapacity;
+
     unsigned int capacityPenalty;
     unsigned int timeWarpPenalty;
-
-    double const penaltyIncrease;
-    double const penaltyDecrease;
-    double const targetFeasible;
-    unsigned int const vehicleCapacity;
-    unsigned int const repairBooster;
 
     // Penalty booster that increases the penalty on capacity and time window
     // violations during the object's lifetime.
@@ -25,8 +24,8 @@ class PenaltyManager
               oldCapacityPenalty(mngr.capacityPenalty),
               oldTimeWarpPenalty(mngr.timeWarpPenalty)
         {
-            mngr.capacityPenalty *= mngr.repairBooster;
-            mngr.timeWarpPenalty *= mngr.repairBooster;
+            mngr.capacityPenalty *= mngr.params.repairBooster;
+            mngr.timeWarpPenalty *= mngr.params.repairBooster;
         }
 
         ~PenaltyBooster()
@@ -42,13 +41,8 @@ class PenaltyManager
                                        double feasPct) const;
 
 public:
-    PenaltyManager(unsigned int initCapacityPenalty,
-                   unsigned int initTimeWarpPenalty,
-                   double penaltyIncrease,
-                   double penaltyDecrease,
-                   double targetFeasible,
-                   unsigned int vehicleCapacity,
-                   unsigned int repairBooster);
+    explicit PenaltyManager(unsigned int vehicleCapacity,
+                            PenaltyParams params = PenaltyParams());
 
     /**
      * Updates the capacity penalty based on the percentage of load-feasible

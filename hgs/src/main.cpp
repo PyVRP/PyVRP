@@ -24,17 +24,11 @@ try
     auto start = clock::now();
 
     CommandLine args(argc, argv);
-    auto config = args.parse();
+    auto const &config = args.getConfig();
 
     XorShift128 rng(config.seed);
     ProblemData data = ProblemData::fromFile(args.instPath());
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity(), args.penaltyParams());
 
     Population pop(data,
                    pMngr,

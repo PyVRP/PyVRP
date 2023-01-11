@@ -8,13 +8,7 @@ TEST(IndividualTest, routeConstructorSortsByEmpty)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
     auto const &indivRoutes = indiv.getRoutes();
@@ -35,13 +29,7 @@ TEST(IndividualTest, routeConstructorThrows)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     ASSERT_EQ(data.numVehicles(), 3);
 
@@ -57,13 +45,7 @@ TEST(IndividualTest, getNeighbours)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
 
@@ -84,13 +66,7 @@ TEST(IndividualTest, feasibility)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     // This solution is infeasible due to both load and time window violations.
     Individual indiv{data, pMngr, {{1, 2, 3, 4}, {}, {}}};
@@ -114,13 +90,7 @@ TEST(IndividualCostTest, distance)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     Individual indiv{data, pMngr, {{1, 2}, {3}, {4}}};
 
@@ -138,13 +108,7 @@ TEST(IndividualCostTest, capacity)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     Individual indiv{data, pMngr, {{4, 3, 1, 2}, {}, {}}};
 
@@ -172,13 +136,7 @@ TEST(IndividualCostTest, timeWarp)
 {
     Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-    PenaltyManager pMngr(static_cast<int>(config.initialCapacityPenalty),
-                         static_cast<int>(config.initialTimeWarpPenalty),
-                         config.penaltyIncrease,
-                         config.penaltyDecrease,
-                         config.targetFeasible,
-                         data.vehicleCapacity(),
-                         static_cast<int>(config.repairBooster));
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     Individual indiv{data, pMngr, {{1, 3}, {2, 4}, {}}};
 

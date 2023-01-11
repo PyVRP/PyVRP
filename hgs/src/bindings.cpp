@@ -35,21 +35,32 @@ PYBIND11_MODULE(hgspy, m)
     py::class_<XorShift128>(m, "XorShift128")
         .def(py::init<int>(), py::arg("seed"));
 
-    py::class_<PenaltyManager>(m, "PenaltyManager")
+    py::class_<PenaltyParams>(m, "PenaltyParams")
         .def(py::init<unsigned int,
                       unsigned int,
-                      double,
-                      double,
-                      double,
                       unsigned int,
-                      unsigned int>(),
-             py::arg("init_capacity_penalty"),
-             py::arg("init_time_warp_penalty"),
-             py::arg("penalty_increase"),
-             py::arg("penalty_decrease"),
-             py::arg("target_feasible"),
+                      double,
+                      double,
+                      double>(),
+             py::arg("init_capacity_penalty") = 20,
+             py::arg("init_time_warp_penalty") = 6,
+             py::arg("repair_booster") = 12,
+             py::arg("penalty_increase") = 1.34,
+             py::arg("penalty_decrease") = 0.32,
+             py::arg("target_feasible") = 0.43)
+        .def_readonly("init_capacity_penalty",
+                      &PenaltyParams::initCapacityPenalty)
+        .def_readonly("init_time_warp_penalty",
+                      &PenaltyParams::initTimeWarpPenalty)
+        .def_readonly("repair_booster", &PenaltyParams::repairBooster)
+        .def_readonly("penalty_increase", &PenaltyParams::penaltyIncrease)
+        .def_readonly("penalty_decrease", &PenaltyParams::penaltyDecrease)
+        .def_readonly("target_feasible", &PenaltyParams::targetFeasible);
+
+    py::class_<PenaltyManager>(m, "PenaltyManager")
+        .def(py::init<unsigned int, PenaltyParams>(),
              py::arg("vehicle_capacity"),
-             py::arg("repair_booster"));
+             py::arg("params"));
 
     py::class_<Individual>(m, "Individual")
         .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
