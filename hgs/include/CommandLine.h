@@ -3,6 +3,7 @@
 
 #include "Config.h"
 #include "PenaltyParams.h"
+#include "PopulationParams.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -115,6 +116,16 @@ public:
                 config.penaltyIncrease,
                 config.penaltyDecrease,
                 config.targetFeasible};
+    }
+
+    [[nodiscard]] PopulationParams populationParams() const
+    {
+        return {config.minPopSize,
+                config.generationSize,
+                config.nbElite,
+                config.nbClose,
+                config.lbDiversity,
+                config.ubDiversity};
     }
 
     [[nodiscard]] char const *instPath() const { return argv[1]; }

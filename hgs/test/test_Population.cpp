@@ -1,52 +1,34 @@
 #include <gtest/gtest.h>
 
-#include "Config.h"
 #include "Population.h"
 
 TEST(PopulationTest, ctor)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
-
     XorShift128 rng;
-    Population pop(data,
-                   pMngr,
-                   rng,
-                   brokenPairsDistance,
-                   config.minPopSize,
-                   config.generationSize,
-                   config.nbElite,
-                   config.nbClose,
-                   config.lbDiversity,
-                   config.ubDiversity);
+
+    PopulationParams params;
+    Population pop(data, pMngr, rng, brokenPairsDistance, params);
 
     // Test that after construction, the population indeed consists of
     // minPopSize individuals.
-    EXPECT_EQ(pop.size(), config.minPopSize);
+    EXPECT_EQ(pop.size(), params.minPopSize);
 }
 
 // TODO additional property tests?
 
 TEST(PopulationTest, addTriggersPurge)
 {
-    Config config;
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
     XorShift128 rng;
-    Population pop(data,
-                   pMngr,
-                   rng,
-                   brokenPairsDistance,
-                   config.minPopSize,
-                   config.generationSize,
-                   config.nbElite,
-                   config.nbClose,
-                   config.lbDiversity,
-                   config.ubDiversity);
+
+    PopulationParams params;
+    Population pop(data, pMngr, rng, brokenPairsDistance, params);
 
     // After construction, we should have minPopSize individuals.
-    EXPECT_EQ(pop.size(), config.minPopSize);
+    EXPECT_EQ(pop.size(), params.minPopSize);
 
     size_t infeasPops = pop.numInfeasible();
     size_t feasPops = pop.numFeasible();
@@ -66,7 +48,7 @@ TEST(PopulationTest, addTriggersPurge)
             EXPECT_EQ(pop.numFeasible(), feasPops);
         }
 
-        if (feasPops == config.minPopSize + config.generationSize)
+        if (feasPops == params.minPopSize + params.generationSize)
             break;
     }
 
@@ -79,33 +61,23 @@ TEST(PopulationTest, addTriggersPurge)
     pop.add(indiv);
 
     ASSERT_TRUE(indiv.isFeasible());
-    EXPECT_EQ(pop.numFeasible(), config.minPopSize);
-    EXPECT_EQ(pop.size(), config.minPopSize + infeasPops);
+    EXPECT_EQ(pop.numFeasible(), params.minPopSize);
+    EXPECT_EQ(pop.size(), params.minPopSize + infeasPops);
 }
 
 TEST(PopulationTest, addUpdatesBestFoundSolution)
 {
-    Config config;
-    config.minPopSize = 0;
-
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
     XorShift128 rng(2'147'483'647);
-    Population pop(data,
-                   pMngr,
-                   rng,
-                   brokenPairsDistance,
-                   config.minPopSize,
-                   config.generationSize,
-                   config.nbElite,
-                   config.nbClose,
-                   config.lbDiversity,
-                   config.ubDiversity);
+
+    PopulationParams params = {0, 40, 4, 5, 0.1, 0.5};
+    Population pop(data, pMngr, rng, brokenPairsDistance, params);
 
     // Should not have added any individuals to the population pool. The 'best'
     // individual, however, has already been initialised, with a random
     // individual.
-    ASSERT_EQ(pop.size(), config.minPopSize);
+    ASSERT_EQ(pop.size(), params.minPopSize);
 
     // This random individual is feasible and has cost 9'339.
     auto const &best1 = pop.getBestFound();
@@ -126,22 +98,12 @@ TEST(PopulationTest, addUpdatesBestFoundSolution)
 
 TEST(PopulationTest, selectReturnsTheSameParentsIfNoOtherOption)
 {
-    Config config;
-    config.minPopSize = 0;
-
     auto const data = ProblemData::fromFile("data/OkSmall.txt");
     PenaltyManager pMngr(data.vehicleCapacity());
     XorShift128 rng;
-    Population pop(data,
-                   pMngr,
-                   rng,
-                   brokenPairsDistance,
-                   config.minPopSize,
-                   config.generationSize,
-                   config.nbElite,
-                   config.nbClose,
-                   config.lbDiversity,
-                   config.ubDiversity);
+
+    PopulationParams params = {0, 40, 4, 5, 0.1, 0.5};
+    Population pop(data, pMngr, rng, brokenPairsDistance, params);
 
     ASSERT_EQ(pop.size(), 0);
 

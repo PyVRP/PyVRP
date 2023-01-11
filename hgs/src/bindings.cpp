@@ -10,6 +10,7 @@
 #include "NoImprovement.h"
 #include "PenaltyManager.h"
 #include "Population.h"
+#include "PopulationParams.h"
 #include "ProblemData.h"
 #include "RelocateStar.h"
 #include "Result.h"
@@ -199,27 +200,32 @@ PYBIND11_MODULE(hgspy, m)
         .def("vehicle_capacity", &ProblemData::vehicleCapacity)
         .def_static("from_file", &ProblemData::fromFile);
 
+    py::class_<PopulationParams>(m, "PopulationParams")
+        .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
+             py::arg("min_pop_size") = 25,
+             py::arg("generation_size") = 40,
+             py::arg("nb_elite") = 4,
+             py::arg("nb_close") = 5,
+             py::arg("lb_diversity") = 0.1,
+             py::arg("ub_diversity") = 0.5)
+        .def_readonly("min_pop_size", &PopulationParams::minPopSize)
+        .def_readonly("generation_size", &PopulationParams::generationSize)
+        .def_readonly("nb_elite", &PopulationParams::nbElite)
+        .def_readonly("nb_close", &PopulationParams::nbClose)
+        .def_readonly("lb_diversity", &PopulationParams::lbDiversity)
+        .def_readonly("ub_diversity", &PopulationParams::ubDiversity);
+
     py::class_<Population>(m, "Population")
         .def(py::init<ProblemData &,
                       PenaltyManager &,
                       XorShift128 &,
                       DiversityMeasure,
-                      size_t,
-                      size_t,
-                      size_t,
-                      size_t,
-                      double,
-                      double>(),
+                      PopulationParams>(),
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("op"),
-             py::arg("min_pop_size"),
-             py::arg("generation_size"),
-             py::arg("nb_elite"),
-             py::arg("nb_close"),
-             py::arg("lb_diversity"),
-             py::arg("ub_diversity"))
+             py::arg("params"))
         .def("add", &Population::add, py::arg("individual"));
 
     py::class_<Statistics>(m, "Statistics")

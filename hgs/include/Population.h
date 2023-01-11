@@ -2,6 +2,7 @@
 #define POPULATION_H
 
 #include "Individual.h"
+#include "PopulationParams.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 #include "diversity.h"
@@ -30,15 +31,8 @@ private:
 
     ProblemData const &data;  // Problem data
     XorShift128 &rng;         // Random number generator
-
     DiversityMeasure divOp;
-
-    size_t minPopSize;
-    size_t generationSize;
-    size_t nbElite;
-    size_t nbClose;
-    double lbDiversity;
-    double ubDiversity;
+    PopulationParams params;
 
     SubPopulation feasible;    // Sub-population of feasible individuals
     SubPopulation infeasible;  // Sub-population of infeasible individuals
@@ -118,22 +112,17 @@ public:
      * Constructs a population with ``minPopSize`` random individuals. This
      * includes a random, possibly infeasible, initial best solution.
      *
-     * @param data           Data instance describing the problem that is being
-     *                       solved.
+     * @param data Data instance describing the problem that is being solved.
      * @param penaltyManager Penalty manager, used to generate individuals.
-     * @param rng            Random number generator.
-     * @param op             Diversity measure to use.
+     * @param rng Random number generator.
+     * @param op Diversity measure to use.
+     * @param params Population parameters to use.
      */
     Population(ProblemData const &data,
                PenaltyManager const &penaltyManager,
                XorShift128 &rng,
                DiversityMeasure op,
-               size_t minPopSize,
-               size_t generationSize,
-               size_t nbElite,
-               size_t nbClose,
-               double lbDiversity,
-               double ubDiversity);
+               PopulationParams params = PopulationParams());
 };
 
 #endif

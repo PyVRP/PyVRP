@@ -30,16 +30,8 @@ try
     ProblemData data = ProblemData::fromFile(args.instPath());
     PenaltyManager pMngr(data.vehicleCapacity(), args.penaltyParams());
 
-    Population pop(data,
-                   pMngr,
-                   rng,
-                   brokenPairsDistance,
-                   config.minPopSize,
-                   config.generationSize,
-                   config.nbElite,
-                   config.nbClose,
-                   config.lbDiversity,
-                   config.ubDiversity);
+    Population pop(
+        data, pMngr, rng, brokenPairsDistance, args.populationParams());
 
     LocalSearch ls(data,
                    pMngr,
