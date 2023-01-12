@@ -70,6 +70,6 @@ set(hgs_libs
 add_executable(hgs main.cpp)
 target_link_libraries(hgs PRIVATE ${hgs_libs})
 
-# Python bindings
+# Python library
 pybind11_add_module(hgspy bindings.cpp)
 target_link_libraries(hgspy PRIVATE ${hgs_libs})
