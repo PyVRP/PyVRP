@@ -1,3 +1,6 @@
 #include "TimeWindowSegment.h"
 
-// TODO
+[[nodiscard]] int TimeWindowSegment::segmentTimeWarp() const
+{
+    return timeWarp;
+}

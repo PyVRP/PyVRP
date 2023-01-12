@@ -73,6 +73,73 @@ void Statistics::collectFrom(Population const &pop)
     }
 }
 
+[[nodiscard]] size_t Statistics::numIters() const { return numIters_; }
+
+[[nodiscard]] std::vector<double> const &Statistics::runTimes() const
+{
+    return runTimes_;
+}
+
+[[nodiscard]] std::vector<double> const &Statistics::iterTimes() const
+{
+    return iterTimes_;
+}
+
+[[nodiscard]] std::vector<size_t> const &Statistics::feasPopSize() const
+{
+    return feasStats.popSize_;
+}
+
+[[nodiscard]] std::vector<double> const &Statistics::feasAvgDiversity() const
+{
+    return feasStats.avgDiversity_;
+}
+
+[[nodiscard]] std::vector<size_t> const &Statistics::feasBestCost() const
+{
+    return feasStats.bestCost_;
+}
+
+[[nodiscard]] std::vector<size_t> const &Statistics::feasAvgCost() const
+{
+    return feasStats.avgCost_;
+}
+
+[[nodiscard]] std::vector<double> const &Statistics::feasAvgNumRoutes() const
+{
+    return feasStats.avgNumRoutes_;
+}
+
+[[nodiscard]] std::vector<size_t> const &Statistics::infeasPopSize() const
+{
+    return infeasStats.popSize_;
+}
+
+[[nodiscard]] std::vector<double> const &Statistics::infeasAvgDiversity() const
+{
+    return infeasStats.avgDiversity_;
+}
+
+[[nodiscard]] std::vector<size_t> const &Statistics::infeasBestCost() const
+{
+    return infeasStats.bestCost_;
+}
+
+[[nodiscard]] std::vector<size_t> const &Statistics::infeasAvgCost() const
+{
+    return infeasStats.avgCost_;
+}
+
+[[nodiscard]] std::vector<double> const &Statistics::infeasAvgNumRoutes() const
+{
+    return infeasStats.avgNumRoutes_;
+}
+
+[[nodiscard]] Statistics::timedDatapoints const &Statistics::incumbents() const
+{
+    return incumbents_;
+}
+
 void Statistics::toCsv(std::string const &path, char const sep) const
 {
     std::ofstream out(path);

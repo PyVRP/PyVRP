@@ -1,5 +1,11 @@
 #include "RelocateStar.h"
 
+void RelocateStar::init(Individual const &indiv)
+{
+    LocalSearchOperator<Route>::init(indiv);
+    relocate.init(indiv);
+}
+
 int RelocateStar::evaluate(Route *U, Route *V)
 {
     move = {};
@@ -26,4 +32,9 @@ int RelocateStar::evaluate(Route *U, Route *V)
     }
 
     return move.deltaCost;
+}
+
+void RelocateStar::apply(Route *U, Route *V)
+{
+    move.from->insertAfter(move.to);
 }
