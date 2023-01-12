@@ -322,7 +322,7 @@ void LocalSearch::calculateNeighbours()
 void LocalSearch::loadIndividual(Individual const &indiv)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
-        clients[client].tw = {&data.dist_,
+        clients[client].tw = {&data.distanceMatrix(),
                               static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).servDur,

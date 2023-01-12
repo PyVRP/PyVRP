@@ -21,6 +21,7 @@ class ProblemData
                           // this time
     };
 
+    Matrix<int> const dist_;       // Distance matrix (+depot)
     std::vector<Client> clients_;  // Client (+depot) information
 
     size_t const numClients_;
@@ -28,8 +29,6 @@ class ProblemData
     size_t const vehicleCapacity_;
 
 public:
-    Matrix<int> const dist_;  // Distance matrix (+depot) TODO make private
-
     /**
      * @param client Client whose data to return.
      * @return A struct containing the indicated client's information.
@@ -49,6 +48,11 @@ public:
      * @return distance from the first to the second client.
      */
     [[nodiscard]] int dist(size_t first, size_t second) const;
+
+    /**
+     * @return The full distance matrix.
+     */
+    [[nodiscard]] Matrix<int> const &distanceMatrix() const;
 
     /**
      * @return Total number of clients in this instance.

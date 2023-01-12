@@ -140,6 +140,9 @@ PYBIND11_MODULE(hgspy, m)
         .def("client", &ProblemData::client)
         .def("depot", &ProblemData::depot)
         .def("dist", &ProblemData::dist)
+        .def("distance_matrix",
+             &ProblemData::distanceMatrix,
+             py::return_value_policy::reference)
         .def("num_clients", &ProblemData::numClients)
         .def("num_vehicles", &ProblemData::numVehicles)
         .def("vehicle_capacity", &ProblemData::vehicleCapacity)
