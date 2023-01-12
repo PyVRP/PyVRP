@@ -62,7 +62,8 @@ PYBIND11_MODULE(hgspy, m)
     py::class_<PenaltyManager>(m, "PenaltyManager")
         .def(py::init<unsigned int, PenaltyParams>(),
              py::arg("vehicle_capacity"),
-             py::arg("params"));
+             py::arg("params"))
+        .def(py::init<unsigned int>(), py::arg("vehicle_capacity"));
 
     py::class_<Individual>(m, "Individual")
         .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
@@ -104,6 +105,10 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("params"))
+        .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"),
+             py::arg("rng"))
         .def("add_node_operator",
              static_cast<void (LocalSearch::*)(LocalSearchOperator<Node> &)>(
                  &LocalSearch::addNodeOperator),
@@ -166,6 +171,14 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("rng"),
              py::arg("op"),
              py::arg("params"))
+        .def(py::init<ProblemData &,
+                      PenaltyManager &,
+                      XorShift128 &,
+                      DiversityMeasure>(),
+             py::arg("data"),
+             py::arg("penalty_manager"),
+             py::arg("rng"),
+             py::arg("op"))
         .def("add", &Population::add, py::arg("individual"));
 
     py::class_<Statistics>(m, "Statistics")
@@ -227,6 +240,18 @@ PYBIND11_MODULE(hgspy, m)
              py::arg("local_search"),
              py::arg("crossover_operator"),
              py::arg("params"))
+        .def(py::init<ProblemData &,
+                      PenaltyManager &,
+                      XorShift128 &,
+                      Population &,
+                      LocalSearch &,
+                      CrossoverOperator>(),
+             py::arg("data"),
+             py::arg("penalty_manager"),
+             py::arg("rng"),
+             py::arg("population"),
+             py::arg("local_search"),
+             py::arg("crossover_operator"))
         .def("run", &GeneticAlgorithm::run, py::arg("stop"));
 
     // Diversity measures (as a submodule)
