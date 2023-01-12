@@ -2,12 +2,13 @@
 #define LOCALSEARCH_H
 
 #include "Individual.h"
+#include "LocalSearchOperator.h"
+#include "LocalSearchParams.h"
 #include "Node.h"
+#include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "Route.h"
 #include "XorShift128.h"
-
-#include "LocalSearchOperator.h"
 
 #include <functional>
 #include <vector>
@@ -17,8 +18,10 @@ class LocalSearch
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
 
-    ProblemData &data;  // Problem data
-    XorShift128 &rng;   // Random number generator
+    ProblemData &data;
+    PenaltyManager penaltyManager;
+    XorShift128 &rng;
+    LocalSearchParams params;
 
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
@@ -91,7 +94,10 @@ public:
      */
     void intensify(Individual &indiv);
 
-    LocalSearch(ProblemData &data, XorShift128 &rng);
+    LocalSearch(ProblemData &data,
+                PenaltyManager &penaltyManager,
+                XorShift128 &rng,
+                LocalSearchParams params = LocalSearchParams());
 };
 
 #endif

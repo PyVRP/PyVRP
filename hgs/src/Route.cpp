@@ -32,7 +32,7 @@ void Route::update()
         if (!foundChange)
             continue;
 
-        load += data->clients[node->client].demand;
+        load += data->client(node->client).demand;
         distance += data->dist(p(node)->client, node->client);
 
         reverseDistance += data->dist(node->client, p(node)->client);
@@ -89,16 +89,16 @@ void Route::setupAngle()
         auto const *node = *it;
         assert(!node->isDepot());
 
-        cumulatedX += data->clients[node->client].x;
-        cumulatedY += data->clients[node->client].y;
+        cumulatedX += data->client(node->client).x;
+        cumulatedY += data->client(node->client).y;
     }
 
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
     auto const routeSize = static_cast<double>(size());
-    auto const dy = cumulatedY / routeSize - data->clients[0].y;
-    auto const dx = cumulatedX / routeSize - data->clients[0].x;
+    auto const dy = cumulatedY / routeSize - data->depot().y;
+    auto const dx = cumulatedX / routeSize - data->depot().x;
     angleCenter = std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 

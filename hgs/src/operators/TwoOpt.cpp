@@ -30,8 +30,8 @@ int TwoOpt::evalWithinRoute(Node *U, Node *V)
 
     tws = TWS::merge(tws, n(V)->twAfter);
 
-    deltaCost += data.pManager.twPenalty(tws.totalTimeWarp());
-    deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
+    deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
+    deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
     return deltaCost;
 }
@@ -50,21 +50,21 @@ int TwoOpt::evalBetweenRoutes(Node *U, Node *V)
 
     auto const uTWS = TWS::merge(U->twBefore, n(V)->twAfter);
 
-    deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
+    deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
+    deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
     auto const vTWS = TWS::merge(V->twBefore, n(U)->twAfter);
 
-    deltaCost += data.pManager.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= data.pManager.twPenalty(V->route->timeWarp());
+    deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
+    deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
 
     int const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
 
-    deltaCost += data.pManager.loadPenalty(U->route->load() - deltaLoad);
-    deltaCost -= data.pManager.loadPenalty(U->route->load());
+    deltaCost += penaltyManager.loadPenalty(U->route->load() - deltaLoad);
+    deltaCost -= penaltyManager.loadPenalty(U->route->load());
 
-    deltaCost += data.pManager.loadPenalty(V->route->load() + deltaLoad);
-    deltaCost -= data.pManager.loadPenalty(V->route->load());
+    deltaCost += penaltyManager.loadPenalty(V->route->load() + deltaLoad);
+    deltaCost -= penaltyManager.loadPenalty(V->route->load());
 
     return deltaCost;
 }

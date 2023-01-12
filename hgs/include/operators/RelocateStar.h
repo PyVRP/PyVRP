@@ -33,8 +33,10 @@ public:
 
     void apply(Route *U, Route *V) override { move.from->insertAfter(move.to); }
 
-    explicit RelocateStar(ProblemData const &data)
-        : LocalSearchOperator<Route>(data), relocate(data)
+    explicit RelocateStar(ProblemData const &data,
+                          PenaltyManager const &penaltyManager)
+        : LocalSearchOperator<Route>(data, penaltyManager),
+          relocate(data, penaltyManager)
     {
     }
 };

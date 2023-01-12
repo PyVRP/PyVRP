@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "Config.h"
 #include "ProblemData.h"
 
 /**
@@ -10,70 +9,70 @@
 TEST(ProblemDataFromFileThrowsTest, UnknownEdgeWeightFmt)
 {
     auto const path = "data/UnknownEdgeWeightFmt.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownEdgeWeightType)
 {
     auto const path = "data/UnknownEdgeWeightType.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownFile)
 {
     auto const path = "somewhere that does not exist";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::invalid_argument);
+    ASSERT_THROW(ProblemData::fromFile(path), std::invalid_argument);
 
     // But the OkSmall instance exists and should parse OK
-    ASSERT_NO_THROW(ProblemData::fromFile(Config{}, "data/OkSmall.txt"));
+    ASSERT_NO_THROW(ProblemData::fromFile("data/OkSmall.txt"));
 }
 
 TEST(ProblemDataFromFileThrowsTest, UnknownSectionInFile)
 {
     auto const path = "data/FileWithUnknownSection.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, WrongIdDepot)
 {
     auto const path = "data/DepotNotOne.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, WrongDepotEndIdentifier)
 {
     auto const path = "data/DepotSectionDoesNotEndInMinusOne.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, MoreThanOneDepot)
 {
     auto const path = "data/MoreThanOneDepot.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotServiceDuration)
 {
     auto const path = "data/NonZeroDepotServiceDuration.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotReleaseTime)
 {
     auto const path = "data/NonZeroDepotReleaseTime.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotOpenTimeWindow)
 {
     auto const path = "data/NonZeroDepotOpenTimeWindow.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, NonZeroDepotDemand)
 {
     auto const path = "data/NonZeroDepotDemand.txt";
-    ASSERT_THROW(ProblemData::fromFile(Config{}, path), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(path), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, InconsistentTimeWindows)
@@ -82,10 +81,8 @@ TEST(ProblemDataFromFileThrowsTest, InconsistentTimeWindows)
     auto const earlyGtLate = "data/TimeWindowOpenLargerThanClose.txt";
 
     // ProblemData::fromFile should throw when any twEarly >= twLate
-    ASSERT_THROW(ProblemData::fromFile(Config{}, earlyEqLate),
-                 std::runtime_error);
-    ASSERT_THROW(ProblemData::fromFile(Config{}, earlyGtLate),
-                 std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(earlyEqLate), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(earlyGtLate), std::runtime_error);
 }
 
 TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
@@ -96,10 +93,8 @@ TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
     // ProblemData::fromFile should throw when there's an EDGE_WEIGHT_SECTION
     // without EDGE_WEIGHT_TYPE = EXPLICIT, or when EDGE_WEIGHT_FORMAT !=
     // FULL_MATRIX.
-    ASSERT_THROW(ProblemData::fromFile(Config{}, noExplicit),
-                 std::runtime_error);
-    ASSERT_THROW(ProblemData::fromFile(Config{}, noFullMatrix),
-                 std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(noExplicit), std::runtime_error);
+    ASSERT_THROW(ProblemData::fromFile(noFullMatrix), std::runtime_error);
 }
 
 /**
@@ -109,13 +104,12 @@ TEST(ProblemDataFromFileThrowsTest, EdgeWeightsWithoutExplicitFullMatrix)
 
 TEST(ProblemDataFromFileContentTest, OkSmallInstance)
 {
-    auto const path = "data/OkSmall.txt";
-    auto const data = ProblemData::fromFile(Config{}, path);
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
 
     // From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
-    ASSERT_EQ(data.nbClients, 4);
-    ASSERT_EQ(data.nbVehicles, 3);
-    ASSERT_EQ(data.vehicleCapacity, 10);
+    ASSERT_EQ(data.numClients(), 4);
+    ASSERT_EQ(data.numVehicles(), 3);
+    ASSERT_EQ(data.vehicleCapacity(), 10);
 
     // From the NODE_COORD_SECTION in the file
     std::vector<std::pair<int, int>> expectedCoords = {
@@ -126,12 +120,12 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
         {1191, 639},
     };
 
-    ASSERT_EQ(data.nbClients + 1, expectedCoords.size());
+    ASSERT_EQ(data.numClients() + 1, expectedCoords.size());
 
     for (auto idx = 0; idx != 5; ++idx)
     {
-        ASSERT_EQ(data.clients[idx].x, expectedCoords[idx].first);
-        ASSERT_EQ(data.clients[idx].y, expectedCoords[idx].second);
+        ASSERT_EQ(data.client(idx).x, expectedCoords[idx].first);
+        ASSERT_EQ(data.client(idx).y, expectedCoords[idx].second);
     }
 
     // From the EDGE_WEIGHT_SECTION in the file
@@ -143,7 +137,7 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
         {1475, 1594, 1090, 828, 0},
     };
 
-    ASSERT_EQ(data.nbClients + 1, expectedDistances.size());
+    ASSERT_EQ(data.numClients() + 1, expectedDistances.size());
 
     for (auto i = 0; i != 5; ++i)
         for (auto j = 0; j != 5; ++j)
@@ -151,10 +145,10 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
 
     // From the DEMAND_SECTION in the file
     std::vector<int> expectedDemands = {0, 5, 5, 3, 5};
-    ASSERT_EQ(data.nbClients + 1, expectedDemands.size());
+    ASSERT_EQ(data.numClients() + 1, expectedDemands.size());
 
     for (auto idx = 0; idx != 5; ++idx)
-        ASSERT_EQ(data.clients[idx].demand, expectedDemands[idx]);
+        ASSERT_EQ(data.client(idx).demand, expectedDemands[idx]);
 
     // From the TIME_WINDOW_SECTION in the file
     std::vector<std::pair<int, int>> expectedTimeWindows = {
@@ -165,40 +159,39 @@ TEST(ProblemDataFromFileContentTest, OkSmallInstance)
         {12000, 19500},
     };
 
-    ASSERT_EQ(data.nbClients + 1, expectedTimeWindows.size());
+    ASSERT_EQ(data.numClients() + 1, expectedTimeWindows.size());
 
     for (auto idx = 0; idx != 5; ++idx)
     {
-        ASSERT_EQ(data.clients[idx].twEarly, expectedTimeWindows[idx].first);
-        ASSERT_EQ(data.clients[idx].twLate, expectedTimeWindows[idx].second);
+        ASSERT_EQ(data.client(idx).twEarly, expectedTimeWindows[idx].first);
+        ASSERT_EQ(data.client(idx).twLate, expectedTimeWindows[idx].second);
     }
 
     // From the SERVICE_TIME_SECTION in the file
     std::vector<int> expectedServiceTimes = {0, 360, 360, 420, 360};
-    ASSERT_EQ(data.nbClients + 1, expectedServiceTimes.size());
+    ASSERT_EQ(data.numClients() + 1, expectedServiceTimes.size());
 
     for (auto idx = 0; idx != 5; ++idx)
-        ASSERT_EQ(data.clients[idx].servDur, expectedServiceTimes[idx]);
+        ASSERT_EQ(data.client(idx).servDur, expectedServiceTimes[idx]);
 }
 
 TEST(ProblemDataFromFileContentTest, CVRPLIBEn22k4)  // instance from CVRPLIB
 {
-    auto const path = "data/E-n22-k4.vrp.txt";
-    auto const data = ProblemData::fromFile(Config{}, path);
+    auto const data = ProblemData::fromFile("data/E-n22-k4.vrp.txt");
 
-    ASSERT_EQ(data.nbClients, 21);
-    ASSERT_EQ(data.vehicleCapacity, 6000);
+    ASSERT_EQ(data.numClients(), 21);
+    ASSERT_EQ(data.vehicleCapacity(), 6000);
 
     // We have "k4" in the file name, but there's no VEHICLES field in the data
     // file itself, so the number of vehicles should default to the number of
     // clients, 21.
-    ASSERT_EQ(data.nbVehicles, 21);
+    ASSERT_EQ(data.numVehicles(), 21);
 
-    ASSERT_EQ(data.clients[0].x, 145);  // depot location
-    ASSERT_EQ(data.clients[0].y, 215);
+    ASSERT_EQ(data.depot().x, 145);  // depot location
+    ASSERT_EQ(data.depot().y, 215);
 
-    ASSERT_EQ(data.clients[1].x, 151);  // first customer
-    ASSERT_EQ(data.clients[1].y, 264);
+    ASSERT_EQ(data.client(1).x, 151);  // first customer
+    ASSERT_EQ(data.client(1).y, 264);
 
     // The data file specifies distances as 2D Euclidean. We take that and
     // should compute integer equivalents with up to one decimal precision.
@@ -212,11 +205,11 @@ TEST(ProblemDataFromFileContentTest, CVRPLIBEn22k4)  // instance from CVRPLIB
 
     // These fields are all missing from the data file, and should thus retain
     // their default values.
-    for (auto idx = 0; idx <= data.nbClients; ++idx)
+    for (size_t idx = 0; idx <= data.numClients(); ++idx)
     {
-        ASSERT_EQ(data.clients[idx].servDur, 0);
-        ASSERT_EQ(data.clients[idx].twEarly, 0);
-        ASSERT_EQ(data.clients[idx].twLate, INT_MAX);
-        ASSERT_EQ(data.clients[idx].releaseTime, 0);
+        ASSERT_EQ(data.client(idx).servDur, 0);
+        ASSERT_EQ(data.client(idx).twEarly, 0);
+        ASSERT_EQ(data.client(idx).twLate, INT_MAX);
+        ASSERT_EQ(data.client(idx).releaseTime, 0);
     }
 }

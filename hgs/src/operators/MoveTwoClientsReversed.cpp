@@ -15,9 +15,10 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
     int const current = U->route->distBetween(posU - 1, posU + 2)
                         + data.dist(V->client, n(V)->client);
-    int const proposed
-        = data.dist(p(U)->client, nn(U)->client)
-          + data.dist(V->client, n(U)->client, U->client, n(V)->client);
+    int const proposed = data.dist(p(U)->client, nn(U)->client)
+                         + data.dist(V->client, n(U)->client)
+                         + data.dist(n(U)->client, U->client)
+                         + data.dist(U->client, n(V)->client);
 
     int deltaCost = proposed - current;
 
@@ -28,24 +29,24 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
         auto uTWS = TWS::merge(p(U)->twBefore, nn(U)->twAfter);
 
-        deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= data.pManager.twPenalty(U->route->timeWarp());
+        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + 1);
 
-        deltaCost += data.pManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= data.pManager.loadPenalty(U->route->load());
+        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
+        deltaCost -= penaltyManager.loadPenalty(U->route->load());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += data.pManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= data.pManager.loadPenalty(V->route->load());
+        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
+        deltaCost -= penaltyManager.loadPenalty(V->route->load());
 
         auto vTWS = TWS::merge(V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
 
-        deltaCost += data.pManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= data.pManager.twPenalty(V->route->timeWarp());
+        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
     }
     else  // within same route
     {
@@ -62,7 +63,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
                                          U->tw,
                                          n(V)->twAfter);
 
-            deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
+            deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         }
         else
         {
@@ -72,10 +73,10 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
                                          route->twBetween(posV + 1, posU - 1),
                                          nn(U)->twAfter);
 
-            deltaCost += data.pManager.twPenalty(uTWS.totalTimeWarp());
+            deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         }
 
-        deltaCost -= data.pManager.twPenalty(route->timeWarp());
+        deltaCost -= penaltyManager.twPenalty(route->timeWarp());
     }
 
     return deltaCost;

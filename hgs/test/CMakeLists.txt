@@ -2,16 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 include(GoogleTest)
 
+add_subdirectory(diversity)
 add_subdirectory(stop)
-
-add_executable(test_CommandLine test_CommandLine.cpp)
-target_link_libraries(test_CommandLine GTest::gtest_main)
-gtest_discover_tests(test_CommandLine)
-
-# brokenPairsDistance tests have file dependencies that require fixing the working directory
-add_executable(test_brokenPairsDistance diversity/test_brokenPairsDistance.cpp)
-target_link_libraries(test_brokenPairsDistance GTest::gtest_main diversityMeasures)
-gtest_discover_tests(test_brokenPairsDistance WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 # Individual tests have file dependencies that require fixing the working directory
 add_executable(test_Individual test_Individual.cpp)

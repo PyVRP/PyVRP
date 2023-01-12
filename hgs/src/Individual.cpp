@@ -11,6 +11,7 @@ using Routes = std::vector<Route>;
 
 void Individual::evaluateCompleteCost()
 {
+    // TODO simplify implementation
     nbRoutes = 0;
     distance = 0;
     capacityExcess = 0;
@@ -25,21 +26,21 @@ void Individual::evaluateCompleteCost()
 
         int lastRelease = 0;
         for (auto const idx : route)
-            lastRelease = std::max(lastRelease, data->clients[idx].releaseTime);
+            lastRelease = std::max(lastRelease, data->client(idx).releaseTime);
 
         int rDist = data->dist(0, route[0]);
         int rTimeWarp = 0;
 
-        int load = data->clients[route[0]].demand;
+        int load = data->client(route[0]).demand;
         int time = lastRelease + rDist;
 
-        if (time < data->clients[route[0]].twEarly)
-            time = data->clients[route[0]].twEarly;
+        if (time < data->client(route[0]).twEarly)
+            time = data->client(route[0]).twEarly;
 
-        if (time > data->clients[route[0]].twLate)
+        if (time > data->client(route[0]).twLate)
         {
-            rTimeWarp += time - data->clients[route[0]].twLate;
-            time = data->clients[route[0]].twLate;
+            rTimeWarp += time - data->client(route[0]).twLate;
+            time = data->client(route[0]).twLate;
         }
 
         for (size_t idx = 1; idx < route.size(); idx++)
@@ -47,45 +48,47 @@ void Individual::evaluateCompleteCost()
             // Sum the rDist, load, servDur and time associated with the vehicle
             // traveling from the depot to the next client
             rDist += data->dist(route[idx - 1], route[idx]);
-            load += data->clients[route[idx]].demand;
+            load += data->client(route[idx]).demand;
 
-            time += data->clients[route[idx - 1]].servDur
+            time += data->client(route[idx - 1]).servDur
                     + data->dist(route[idx - 1], route[idx]);
 
             // Add possible waiting time
-            if (time < data->clients[route[idx]].twEarly)
-                time = data->clients[route[idx]].twEarly;
+            if (time < data->client(route[idx]).twEarly)
+                time = data->client(route[idx]).twEarly;
 
             // Add possible time warp
-            if (time > data->clients[route[idx]].twLate)
+            if (time > data->client(route[idx]).twLate)
             {
-                rTimeWarp += time - data->clients[route[idx]].twLate;
-                time = data->clients[route[idx]].twLate;
+                rTimeWarp += time - data->client(route[idx]).twLate;
+                time = data->client(route[idx]).twLate;
             }
         }
 
         // For the last client, the successors is the depot. Also update the
         // rDist and time
         rDist += data->dist(route.back(), 0);
-        time += data->clients[route.back()].servDur
-                + data->dist(route.back(), 0);
+        time
+            += data->client(route.back()).servDur + data->dist(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
-        rTimeWarp += std::max(time - data->clients[0].twLate, 0);
+        rTimeWarp += std::max(time - data->depot().twLate, 0);
 
         // Whole solution stats
         distance += rDist;
         timeWarp += rTimeWarp;
-        capacityExcess += std::max(load - data->vehicleCapacity, 0);
+
+        if (static_cast<size_t>(load) > data->vehicleCapacity())
+            capacityExcess += load - data->vehicleCapacity();
     }
 }
 
 size_t Individual::cost() const
 {
-    auto const load = data->vehicleCapacity + capacityExcess;
-    auto const loadPenalty = data->pManager.loadPenalty(load);
-    auto const twPenalty = data->pManager.twPenalty(timeWarp);
+    auto const load = data->vehicleCapacity() + capacityExcess;
+    auto const loadPenalty = penaltyManager->loadPenalty(load);
+    auto const twPenalty = penaltyManager->twPenalty(timeWarp);
 
     return distance + loadPenalty + twPenalty;
 }
@@ -130,33 +133,41 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : data(&data), routes_(data.nbVehicles), neighbours(data.nbClients + 1)
+Individual::Individual(ProblemData const &data,
+                       PenaltyManager const &penaltyManager,
+                       XorShift128 &rng)
+    : data(&data),
+      penaltyManager(&penaltyManager),
+      routes_(data.numVehicles()),
+      neighbours(data.numClients() + 1)
 {
-    auto const nbClients = data.nbClients;
-    auto const nbVehicles = data.nbVehicles;
-
     // Shuffle clients (to create random routes)
-    auto clients = std::vector<int>(nbClients);
+    auto clients = std::vector<int>(data.numClients());
     std::iota(clients.begin(), clients.end(), 1);
     std::shuffle(clients.begin(), clients.end(), rng);
 
     // Distribute clients evenly over the routes: the total number of clients
     // per vehicle, with an adjustment in case the division is not perfect.
-    auto const perVehicle = std::max(nbClients / nbVehicles, 1);
-    auto const perRoute = perVehicle + (nbClients % nbVehicles != 0);
+    auto const numVehicles = data.numVehicles();
+    auto const perVehicle = std::max(data.numClients() / numVehicles, 1UL);
+    auto const perRoute = perVehicle + (data.numClients() % numVehicles != 0);
 
-    for (auto idx = 0; idx != nbClients; ++idx)
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
         routes_[idx / perRoute].push_back(clients[idx]);
 
     makeNeighbours();
     evaluateCompleteCost();
 }
 
-Individual::Individual(ProblemData const &data, Routes routes)
-    : data(&data), routes_(std::move(routes)), neighbours(data.nbClients + 1)
+Individual::Individual(ProblemData const &data,
+                       PenaltyManager const &penaltyManager,
+                       Routes routes)
+    : data(&data),
+      penaltyManager(&penaltyManager),
+      routes_(std::move(routes)),
+      neighbours(data.numClients() + 1)
 {
-    if (routes_.size() != static_cast<size_t>(data.nbVehicles))
+    if (routes_.size() != static_cast<size_t>(data.numVehicles()))
     {
         auto const msg = "Number of routes does not match number of vehicles.";
         throw std::runtime_error(msg);
@@ -178,6 +189,7 @@ Individual::Individual(Individual const &other)  // copy fields from other
       capacityExcess(other.capacityExcess),
       timeWarp(other.timeWarp),
       data(other.data),
+      penaltyManager(other.penaltyManager),
       routes_(other.routes_),
       neighbours(other.neighbours)
 {

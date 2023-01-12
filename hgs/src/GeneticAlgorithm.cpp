@@ -9,20 +9,16 @@
 
 #include <chrono>
 #include <numeric>
-#include <stdexcept>
+#include <utility>
 
 Result GeneticAlgorithm::run(StoppingCriterion &stop)
 {
     using clock = std::chrono::system_clock;
 
-    if (operators.empty())
-        throw std::runtime_error("Cannot run genetic algorithm without "
-                                 "crossover operators.");
-
     Statistics stats;
     size_t iter = 0;
 
-    if (data.nbClients <= 1)
+    if (data.numClients() <= 1)
         return {population.getBestFound(), stats, iter, 0.};
 
     auto start = clock::now();
@@ -30,13 +26,14 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
     {
         iter++;
 
-        auto offspring = crossover();
+        auto const parents = population.select();
+        auto offspring = crossover(parents, data, penaltyManager, rng);
         educate(offspring);
 
-        if (iter % data.config.nbPenaltyManagement == 0)
+        if (iter % params.nbPenaltyManagement == 0)
             updatePenalties();
 
-        if (data.config.collectStatistics)
+        if (params.collectStatistics)
             stats.collectFrom(population);
     }
 
@@ -44,37 +41,12 @@ Result GeneticAlgorithm::run(StoppingCriterion &stop)
     return {population.getBestFound(), stats, iter, runTime.count()};
 }
 
-Individual GeneticAlgorithm::crossover() const
-{
-    auto const parents = population.select();
-
-    std::vector<Individual> offspring;
-    offspring.reserve(operators.size());
-
-    for (auto const &op : operators)
-        offspring.push_back(op(parents, data, rng));
-
-    // A simple geometric acceptance criterion: select the best with some
-    // probability. If not accepted, test the second best, etc.
-    std::sort(offspring.begin(),
-              offspring.end(),
-              [](auto const &indiv1, auto const &indiv2) {
-                  return indiv1.cost() < indiv2.cost();
-              });
-
-    for (auto &indiv : offspring)
-        if (rng.randint(100) < data.config.selectProbability)
-            return indiv;
-
-    return offspring.back();  // fallback in case no offspring were selected
-}
-
 void GeneticAlgorithm::educate(Individual &indiv)
 {
     localSearch.search(indiv);
 
-    if (data.config.shouldIntensify  // only intensify feasible, new best
-        && indiv.isFeasible()        // solutions. Cf. also repair below.
+    if (params.shouldIntensify  // only intensify feasible, new best
+        && indiv.isFeasible()   // solutions. Cf. also repair below.
         && indiv.cost() < population.getBestFound().cost())
         localSearch.intensify(indiv);
 
@@ -83,16 +55,16 @@ void GeneticAlgorithm::educate(Individual &indiv)
     loadFeas.push_back(!indiv.hasExcessCapacity());
     timeFeas.push_back(!indiv.hasTimeWarp());
 
-    if (!indiv.isFeasible()  // possibly repair if currently infeasible
-        && rng.randint(100) < data.config.repairProbability)
+    // Possibly repair if current solution is infeasible. In that case, we
+    // penalise infeasibility more using a penalty booster.
+    if (!indiv.isFeasible() && rng.randint(100) < params.repairProbability)
     {
-        // Re-run, but penalise infeasibility more using a penalty booster.
-        auto const booster = data.pManager.getPenaltyBooster();
+        auto const booster = penaltyManager.getPenaltyBooster();
         localSearch.search(indiv);
 
         if (indiv.isFeasible())
         {
-            if (data.config.shouldIntensify
+            if (params.shouldIntensify
                 && indiv.cost() < population.getBestFound().cost())
                 localSearch.intensify(indiv);
 
@@ -109,22 +81,31 @@ void GeneticAlgorithm::updatePenalties()
     double feasLoadPct = std::reduce(loadFeas.begin(), loadFeas.end());
     feasLoadPct /= static_cast<double>(loadFeas.size());
 
-    data.pManager.updateCapacityPenalty(feasLoadPct);
+    penaltyManager.updateCapacityPenalty(feasLoadPct);
     loadFeas.clear();
 
     double feasTimePct = std::reduce(timeFeas.begin(), timeFeas.end());
     feasTimePct /= static_cast<double>(timeFeas.size());
 
-    data.pManager.updateTimeWarpPenalty(feasTimePct);
+    penaltyManager.updateTimeWarpPenalty(feasTimePct);
     timeFeas.clear();
 }
 
 GeneticAlgorithm::GeneticAlgorithm(ProblemData &data,
+                                   PenaltyManager &penaltyManager,
                                    XorShift128 &rng,
                                    Population &population,
-                                   LocalSearch &localSearch)
-    : data(data), rng(rng), population(population), localSearch(localSearch)
+                                   LocalSearch &localSearch,
+                                   CrossoverOperator op,
+                                   SolverParams params)
+    : data(data),
+      penaltyManager(penaltyManager),
+      rng(rng),
+      population(population),
+      localSearch(localSearch),
+      crossover(std::move(op)),
+      params(params)
 {
-    loadFeas.reserve(data.config.nbPenaltyManagement);
-    timeFeas.reserve(data.config.nbPenaltyManagement);
+    loadFeas.reserve(params.nbPenaltyManagement);
+    timeFeas.reserve(params.nbPenaltyManagement);
 }

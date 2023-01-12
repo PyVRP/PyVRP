@@ -1,9 +1,9 @@
-#include "CommandLine.h"
 #include "Exchange.h"
 #include "GeneticAlgorithm.h"
 #include "LocalSearch.h"
 #include "MaxRuntime.h"
 #include "MoveTwoClientsReversed.h"
+#include "PenaltyManager.h"
 #include "Population.h"
 #include "ProblemData.h"
 #include "RelocateStar.h"
@@ -22,51 +22,51 @@ try
     using clock = std::chrono::system_clock;
     auto start = clock::now();
 
-    CommandLine args(argc, argv);
-    auto config = args.parse();
+    if (argc < 3)
+        throw std::runtime_error("Expected at least two arguments");
 
-    XorShift128 rng(config.seed);
-    ProblemData data = ProblemData::fromFile(config, args.instPath());
-    Population pop(data, rng, brokenPairsDistance);
+    // Hardcoded since we're only using this for profiling.
+    XorShift128 rng(4);
+    MaxRuntime stop(30);
 
-    LocalSearch ls(data, rng);
+    ProblemData data = ProblemData::fromFile(argv[1]);
+    PenaltyManager pMngr(data.vehicleCapacity());
+    Population pop(data, pMngr, rng, brokenPairsDistance);
+    LocalSearch ls(data, pMngr, rng);
 
-    auto exchange10 = Exchange<1, 0>(data);
+    auto exchange10 = Exchange<1, 0>(data, pMngr);
     ls.addNodeOperator(exchange10);
 
-    auto exchange20 = Exchange<2, 0>(data);
+    auto exchange20 = Exchange<2, 0>(data, pMngr);
     ls.addNodeOperator(exchange20);
 
-    auto reverse20 = MoveTwoClientsReversed(data);
+    auto reverse20 = MoveTwoClientsReversed(data, pMngr);
     ls.addNodeOperator(reverse20);
 
-    auto exchange22 = Exchange<2, 2>(data);
+    auto exchange22 = Exchange<2, 2>(data, pMngr);
     ls.addNodeOperator(exchange22);
 
-    auto exchange21 = Exchange<2, 1>(data);
+    auto exchange21 = Exchange<2, 1>(data, pMngr);
     ls.addNodeOperator(exchange21);
 
-    auto exchange11 = Exchange<1, 1>(data);
+    auto exchange11 = Exchange<1, 1>(data, pMngr);
     ls.addNodeOperator(exchange11);
 
-    auto twoOpt = TwoOpt(data);
+    auto twoOpt = TwoOpt(data, pMngr);
     ls.addNodeOperator(twoOpt);
 
-    auto relocateStar = RelocateStar(data);
+    auto relocateStar = RelocateStar(data, pMngr);
     ls.addRouteOperator(relocateStar);
 
-    auto swapStar = SwapStar(data);
+    auto swapStar = SwapStar(data, pMngr);
     ls.addRouteOperator(swapStar);
 
-    GeneticAlgorithm solver(data, rng, pop, ls);
-    solver.addCrossoverOperator(selectiveRouteExchange);
-
-    MaxRuntime stop(config.timeLimit);
+    GeneticAlgorithm solver(data, pMngr, rng, pop, ls, selectiveRouteExchange);
     auto const res = solver.run(stop);
 
     std::chrono::duration<double> const timeDelta = clock::now() - start;
     auto const &bestSol = res.getBestFound();
-    bestSol.toFile(args.solPath(), timeDelta.count());
+    bestSol.toFile(argv[2], timeDelta.count());
 }
 catch (std::exception const &e)
 {

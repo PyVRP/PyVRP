@@ -6,14 +6,33 @@
 #include <string>
 #include <vector>
 
-ProblemData ProblemData::fromFile(Config const &config,
-                                  std::string const &instPath)
+ProblemData::Client ProblemData::client(size_t client) const
 {
-    size_t nbClients = 0;
+    return clients_[client];
+}
+
+ProblemData::Client ProblemData::depot() const { return client(0); }
+
+int ProblemData::dist(size_t first, size_t second) const
+{
+    return dist_(first, second);
+}
+
+Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
+
+size_t ProblemData::numClients() const { return numClients_; }
+
+size_t ProblemData::numVehicles() const { return numVehicles_; }
+
+size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+
+ProblemData ProblemData::fromFile(std::string const &instPath)
+{
+    size_t numClients = 0;
     size_t vehicleCapacity = INT_MAX;
 
     // TODO test for k<number> in filename?
-    size_t nbVehicles = 0;
+    size_t numVehicles = 0;
 
     // Manner in which the edge weights are provided. Currently, we support
     // EXPLICIT and FULL_MATRIX, and EUC_2D (in which case we compute them
@@ -47,15 +66,15 @@ ProblemData ProblemData::fromFile(Config const &config,
 
         if (name.starts_with("DIMENSION"))
         {
-            inputFile >> ignore >> nbClients;
-            nbClients--;  // minus the depot
+            inputFile >> ignore >> numClients;
+            numClients--;  // minus the depot
 
             // Resize fields to match number of clients with default values.
-            coords = {nbClients + 1, {0, 0}};
-            demands = std::vector<int>(nbClients + 1, 0);
-            servDurs = std::vector<int>(nbClients + 1, 0);
-            timeWindows = {nbClients + 1, {0, INT_MAX}};
-            releases = std::vector<int>(nbClients + 1, 0);
+            coords = {numClients + 1, {0, 0}};
+            demands = std::vector<int>(numClients + 1, 0);
+            servDurs = std::vector<int>(numClients + 1, 0);
+            timeWindows = {numClients + 1, {0, INT_MAX}};
+            releases = std::vector<int>(numClients + 1, 0);
         }
 
         else if (name.starts_with("EDGE_WEIGHT_TYPE"))
@@ -78,7 +97,7 @@ ProblemData ProblemData::fromFile(Config const &config,
             inputFile >> ignore >> vehicleCapacity;
 
         else if (name.starts_with("VEHICLES"))
-            inputFile >> ignore >> nbVehicles;
+            inputFile >> ignore >> numVehicles;
 
         // Read the edge weights of an explicit distance matrix
         else if (name.starts_with("EDGE_WEIGHT_SECTION"))
@@ -92,16 +111,16 @@ ProblemData ProblemData::fromFile(Config const &config,
                 throw std::runtime_error(msg.str());
             }
 
-            for (size_t i = 0; i <= nbClients; i++)
+            for (size_t i = 0; i <= numClients; i++)
             {
-                distMat.emplace_back(nbClients + 1);
-                for (size_t j = 0; j <= nbClients; j++)
+                distMat.emplace_back(numClients + 1);
+                for (size_t j = 0; j <= numClients; j++)
                     inputFile >> distMat[i][j];
             }
         }
 
         else if (name.starts_with("NODE_COORD_SECTION"))
-            for (size_t row = 0; row <= nbClients; row++)
+            for (size_t row = 0; row <= numClients; row++)
             {
                 int client, x, y;
                 inputFile >> client >> x >> y;
@@ -112,7 +131,7 @@ ProblemData ProblemData::fromFile(Config const &config,
         // should have demand 0)
         else if (name.starts_with("DEMAND_SECTION"))
         {
-            for (size_t row = 0; row <= nbClients; row++)
+            for (size_t row = 0; row <= numClients; row++)
             {
                 int client, demand;
                 inputFile >> client >> demand;
@@ -125,7 +144,7 @@ ProblemData ProblemData::fromFile(Config const &config,
 
         else if (name.starts_with("SERVICE_TIME_SECTION"))
         {
-            for (size_t row = 0; row <= nbClients; row++)
+            for (size_t row = 0; row <= numClients; row++)
             {
                 int client, serviceDuration;
                 inputFile >> client >> serviceDuration;
@@ -138,7 +157,7 @@ ProblemData ProblemData::fromFile(Config const &config,
 
         else if (name.starts_with("RELEASE_TIME_SECTION"))
         {
-            for (size_t row = 0; row <= nbClients; row++)
+            for (size_t row = 0; row <= numClients; row++)
             {
                 int client, release;
                 inputFile >> client >> release;
@@ -153,7 +172,7 @@ ProblemData ProblemData::fromFile(Config const &config,
         // have a time window from 0 to max)
         else if (name.starts_with("TIME_WINDOW_SECTION"))
         {
-            for (size_t row = 0; row <= nbClients; row++)
+            for (size_t row = 0; row <= numClients; row++)
             {
                 int client, twEarly, twLate;
                 inputFile >> client >> twEarly >> twLate;
@@ -191,10 +210,10 @@ ProblemData ProblemData::fromFile(Config const &config,
 
     if (edgeWeightType == "EUC_2D")
         // TODO should probably also scale service times and time windows 10x
-        for (size_t i = 0; i <= nbClients; i++)
+        for (size_t i = 0; i <= numClients; i++)
         {
-            distMat.emplace_back(nbClients + 1);
-            for (size_t j = 0; j <= nbClients; j++)
+            distMat.emplace_back(numClients + 1);
+            for (size_t j = 0; j <= numClients; j++)
             {
                 auto const xDelta = coords[i].first - coords[j].first;
                 auto const yDelta = coords[i].second - coords[j].second;
@@ -206,59 +225,49 @@ ProblemData ProblemData::fromFile(Config const &config,
             }
         }
 
-    if (distMat.size() != nbClients + 1)
+    if (distMat.size() != numClients + 1)
     {
         auto const msg = "Distance matrix does not match problem size.";
         throw std::runtime_error(msg);
     }
 
-    if (!nbVehicles)
+    if (!numVehicles)
         // Not set, so assume unbounded, that is, we assume there's at least
         // as many trucks as there are clients.
-        nbVehicles = nbClients;
+        numVehicles = numClients;
 
-    return {config,
-            coords,
+    return {coords,
             demands,
-            static_cast<int>(nbVehicles),
-            static_cast<int>(vehicleCapacity),
+            numVehicles,
+            vehicleCapacity,
             timeWindows,
             servDurs,
             distMat,
             releases};
 }
 
-ProblemData::ProblemData(Config const &config,
-                         std::vector<std::pair<int, int>> const &coords,
+ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          std::vector<int> const &demands,
-                         int nbVehicles,
-                         int vehicleCap,
+                         size_t numVehicles,
+                         size_t vehicleCap,
                          std::vector<std::pair<int, int>> const &timeWindows,
                          std::vector<int> const &servDurs,
                          std::vector<std::vector<int>> const &distMat,
                          std::vector<int> const &releases)
     : dist_(distMat),
-      pManager(static_cast<int>(config.initialCapacityPenalty),
-               static_cast<int>(config.initialTimeWarpPenalty),
-               config.penaltyIncrease,
-               config.penaltyDecrease,
-               config.targetFeasible,
-               vehicleCap,
-               static_cast<int>(config.repairBooster)),
-      config(config),
-      nbClients(static_cast<int>(coords.size()) - 1),
-      nbVehicles(nbVehicles),
-      vehicleCapacity(vehicleCap),
-      clients(nbClients + 1)
+      clients_(coords.size()),
+      numClients_(static_cast<int>(coords.size()) - 1),
+      numVehicles_(numVehicles),
+      vehicleCapacity_(vehicleCap)
 {
     // TODO argument checks (partially from ProblemData::fromFile)
 
-    for (size_t idx = 0; idx <= static_cast<size_t>(nbClients); ++idx)
-        clients[idx] = {coords[idx].first,
-                        coords[idx].second,
-                        servDurs[idx],
-                        demands[idx],
-                        timeWindows[idx].first,
-                        timeWindows[idx].second,
-                        releases[idx]};
+    for (size_t idx = 0; idx <= static_cast<size_t>(numClients_); ++idx)
+        clients_[idx] = {coords[idx].first,
+                         coords[idx].second,
+                         servDurs[idx],
+                         demands[idx],
+                         timeWindows[idx].first,
+                         timeWindows[idx].second,
+                         releases[idx]};
 }

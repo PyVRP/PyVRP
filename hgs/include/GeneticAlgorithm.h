@@ -3,13 +3,15 @@
 
 #include "Individual.h"
 #include "LocalSearch.h"
+#include "PenaltyManager.h"
 #include "Population.h"
 #include "ProblemData.h"
 #include "Result.h"
+#include "SolverParams.h"
 #include "StoppingCriterion.h"
 #include "XorShift128.h"
+#include "crossover.h"
 
-#include <functional>
 #include <unordered_set>
 #include <vector>
 
@@ -17,27 +19,16 @@
 // population management, doing crossovers and updating parameters.
 class GeneticAlgorithm
 {
-    using xOp = std::function<Individual(
-        std::pair<Individual const *, Individual const *> const &,
-        ProblemData const &,
-        XorShift128 &)>;
-
-    ProblemData &data;  // Problem data
-    XorShift128 &rng;   // Random number generator
+    ProblemData &data;
+    PenaltyManager &penaltyManager;
+    XorShift128 &rng;
     Population &population;
     LocalSearch &localSearch;
+    CrossoverOperator crossover;
+    SolverParams params;
 
     std::vector<bool> loadFeas;  // load feasibility of recent individuals
     std::vector<bool> timeFeas;  // time feasibility of recent individuals
-
-    std::vector<xOp> operators;  // crossover operators
-
-    /**
-     * Runs the crossover algorithm: each given crossover operator is applied
-     * once, its resulting offspring inspected, and a geometric acceptance
-     * criterion is applied to select the offspring to return.
-     */
-    [[nodiscard]] Individual crossover() const;
 
     /**
      * Performs local search and adds the individual to the population. If the
@@ -54,11 +45,6 @@ class GeneticAlgorithm
 
 public:
     /**
-     * Add a crossover operator to the genetic search algorithm.
-     */
-    void addCrossoverOperator(xOp const &op) { operators.push_back(op); }
-
-    /**
      * Runs the genetic algorithm with the given stopping criterion.
      *
      * @param stop The stopping criterion to use.
@@ -68,9 +54,12 @@ public:
     Result run(StoppingCriterion &stop);
 
     GeneticAlgorithm(ProblemData &data,
+                     PenaltyManager &penaltyManager,
                      XorShift128 &rng,
                      Population &population,
-                     LocalSearch &localSearch);
+                     LocalSearch &localSearch,
+                     CrossoverOperator op,
+                     SolverParams params = SolverParams());
 };
 
 #endif

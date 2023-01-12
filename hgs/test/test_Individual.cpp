@@ -1,13 +1,14 @@
 #include <gtest/gtest.h>
 
-#include "Config.h"
 #include "Individual.h"
 #include "ProblemData.h"
 
 TEST(IndividualTest, routeConstructorSortsByEmpty)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    Individual indiv{data, {{3, 4}, {}, {1, 2}}};
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+    PenaltyManager pMngr(data.vehicleCapacity());
+
+    Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
     auto const &indivRoutes = indiv.getRoutes();
 
     // numRoutes() should show two non-empty routes. We passed-in three routes,
@@ -24,20 +25,25 @@ TEST(IndividualTest, routeConstructorSortsByEmpty)
 
 TEST(IndividualTest, routeConstructorThrows)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    ASSERT_EQ(data.nbVehicles, 3);
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+    PenaltyManager pMngr(data.vehicleCapacity());
+
+    ASSERT_EQ(data.numVehicles(), 3);
 
     // Two routes, three vehicles: should throw.
-    ASSERT_THROW((Individual{data, {{1, 2}, {4, 2}}}), std::runtime_error);
+    ASSERT_THROW((Individual{data, pMngr, {{1, 2}, {4, 2}}}),
+                 std::runtime_error);
 
     // Empty third route: should not throw.
-    ASSERT_NO_THROW((Individual{data, {{1, 2}, {4, 2}, {}}}));
+    ASSERT_NO_THROW((Individual{data, pMngr, {{1, 2}, {4, 2}, {}}}));
 }
 
 TEST(IndividualTest, getNeighbours)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    Individual indiv{data, {{3, 4}, {}, {1, 2}}};
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+    PenaltyManager pMngr(data.vehicleCapacity());
+
+    Individual indiv{data, pMngr, {{3, 4}, {}, {1, 2}}};
 
     auto const &neighbours = indiv.getNeighbours();
     std::vector<std::pair<int, int>> expected = {
@@ -54,10 +60,11 @@ TEST(IndividualTest, getNeighbours)
 
 TEST(IndividualTest, feasibility)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+    PenaltyManager pMngr(data.vehicleCapacity());
 
     // This solution is infeasible due to both load and time window violations.
-    Individual indiv{data, {{1, 2, 3, 4}, {}, {}}};
+    Individual indiv{data, pMngr, {{1, 2, 3, 4}, {}, {}}};
     EXPECT_FALSE(indiv.isFeasible());
 
     // First route has total load 18, but vehicle capacity is only 10.
@@ -68,7 +75,7 @@ TEST(IndividualTest, feasibility)
     EXPECT_TRUE(indiv.hasTimeWarp());
 
     // Let's try another solution that's actually feasible.
-    Individual indiv2{data, {{1, 2}, {3}, {4}}};
+    Individual indiv2{data, pMngr, {{1, 2}, {3}, {4}}};
     EXPECT_TRUE(indiv2.isFeasible());
     EXPECT_FALSE(indiv2.hasExcessCapacity());
     EXPECT_FALSE(indiv2.hasTimeWarp());
@@ -76,34 +83,44 @@ TEST(IndividualTest, feasibility)
 
 TEST(IndividualCostTest, distance)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
-    Individual indiv{data, {{1, 2}, {3}, {4}}};
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+    PenaltyManager pMngr(data.vehicleCapacity());
+
+    Individual indiv{data, pMngr, {{1, 2}, {3}, {4}}};
 
     ASSERT_TRUE(indiv.isFeasible());
 
     // This individual is feasible, so cost should equal total distance
     // travelled.
-    int dist = data.dist(0, 1, 2, 0) + data.dist(0, 3, 0) + data.dist(0, 4, 0);
+    int dist = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
+               + data.dist(0, 3) + data.dist(3, 0) + data.dist(0, 4)
+               + data.dist(4, 0);
     EXPECT_EQ(dist, indiv.cost());
 }
 
 TEST(IndividualCostTest, capacity)
 {
-    Config const config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    Individual indiv{data, {{4, 3, 1, 2}, {}, {}}};
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+
+    PenaltyParams params;
+    PenaltyManager pMngr(data.vehicleCapacity(), params);
+
+    Individual indiv{data, pMngr, {{4, 3, 1, 2}, {}, {}}};
 
     ASSERT_TRUE(indiv.hasExcessCapacity());
     ASSERT_FALSE(indiv.hasTimeWarp());
 
-    int load = 0;
+    size_t load = 0;
+    for (size_t idx = 0; idx <= data.numClients(); ++idx)
+        load += data.client(idx).demand;
 
-    for (auto &client : data.clients)  // all demand, since all clients are
-        load += client.demand;         // in a single route
+    auto const excessLoad = load - data.vehicleCapacity();
+    ASSERT_GT(load, data.vehicleCapacity());
+    EXPECT_EQ(excessLoad, 8);
 
-    int excessLoad = load - data.vehicleCapacity;
-    int loadPenalty = config.initialCapacityPenalty * excessLoad;
-    int dist = data.dist(0, 4, 3, 1, 2, 0);
+    auto const loadPenalty = params.initCapacityPenalty * excessLoad;
+    int dist = data.dist(0, 4) + data.dist(4, 3) + data.dist(3, 1)
+               + data.dist(1, 2) + data.dist(2, 0);
 
     // This individual is infeasible due to load violations, so the costs should
     // be distance + loadPenalty * excessLoad.
@@ -112,9 +129,12 @@ TEST(IndividualCostTest, capacity)
 
 TEST(IndividualCostTest, timeWarp)
 {
-    Config const config;
-    auto const data = ProblemData::fromFile(config, "data/OkSmall.txt");
-    Individual indiv{data, {{1, 3}, {2, 4}, {}}};
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+
+    PenaltyParams params;
+    PenaltyManager pMngr(data.vehicleCapacity(), params);
+
+    Individual indiv{data, pMngr, {{1, 3}, {2, 4}, {}}};
 
     ASSERT_FALSE(indiv.hasExcessCapacity());
     ASSERT_TRUE(indiv.hasTimeWarp());
@@ -128,8 +148,9 @@ TEST(IndividualCostTest, timeWarp)
     int twR1 = 15'600 + 360 + 1'427 - 15'300;
     int twR2 = 0;
     int timeWarp = twR1 + twR2;
-    int twPenalty = config.initialTimeWarpPenalty * timeWarp;
-    int dist = data.dist(0, 1, 3, 0) + data.dist(0, 2, 4, 0);
+    int twPenalty = params.initTimeWarpPenalty * timeWarp;
+    int dist = data.dist(0, 1) + data.dist(1, 3) + data.dist(3, 0)
+               + data.dist(0, 2) + data.dist(2, 4) + data.dist(4, 0);
 
     // This individual is infeasible due to time warp, so the costs should
     // be distance + twPenalty * timeWarp.

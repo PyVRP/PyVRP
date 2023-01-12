@@ -2,9 +2,11 @@
 #define CROSSOVER_H
 
 #include "Individual.h"
+#include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 
+#include <functional>
 #include <vector>
 
 namespace crossover
@@ -16,6 +18,13 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
                   std::vector<int> const &unplanned,
                   ProblemData const &data);
 }  // namespace crossover
+
+typedef std::function<Individual(
+    std::pair<Individual const *, Individual const *> const &,
+    ProblemData const &,
+    PenaltyManager &,
+    XorShift128 &)>
+    CrossoverOperator;
 
 /**
  * Performs two SREX crossovers of the given parents (binary tournament). This
@@ -29,6 +38,7 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
+    PenaltyManager const &penaltyManager,
     XorShift128 &rng);
 
 #endif  // CROSSOVER_H

@@ -1,9 +1,7 @@
 #ifndef HGS_PROBLEMDATA_H
 #define HGS_PROBLEMDATA_H
 
-#include "Config.h"
 #include "Matrix.h"
-#include "PenaltyManager.h"
 #include "XorShift128.h"
 
 #include <iosfwd>
@@ -23,62 +21,81 @@ class ProblemData
                           // this time
     };
 
+    Matrix<int> const dist_;       // Distance matrix (+depot)
+    std::vector<Client> clients_;  // Client (+depot) information
+
+    size_t const numClients_;
+    size_t const numVehicles_;
+    size_t const vehicleCapacity_;
+
 public:
-    // TODO make members private and rethink interface
-    Matrix<int> const dist_;  // Distance matrix (+depot)
-    PenaltyManager pManager;
-
-    Config const config;  // Stores all the parameter values
-
-    int const nbClients;        // Number of clients (excluding the depot)
-    int const nbVehicles;       // Number of vehicles
-    int const vehicleCapacity;  // Capacity limit
-
-    std::vector<Client> clients;  // Client (+depot) information
-
-    [[nodiscard]] int dist(size_t row, size_t col) const
-    {
-        return dist_(row, col);
-    }
-
-    template <typename... Args>
-    [[nodiscard]] int
-    dist(size_t first, size_t second, size_t third, Args... args) const
-    {
-        return dist_(first, second) + dist(second, third, args...);
-    }
+    /**
+     * @param client Client whose data to return.
+     * @return A struct containing the indicated client's information.
+     */
+    [[nodiscard]] Client client(size_t client) const;
 
     /**
-     * Constructs a ProblemData object from the given configuration and data
-     * read (in VRPLIB format) from the given instance path.
+     * @return A struct containing the depot's information.
+     */
+    [[nodiscard]] Client depot() const;
+
+    /**
+     * Returns the distance between the indicated two clients.
      *
-     * @param config   Configuration object.
+     * @param first First client.
+     * @param second Second client.
+     * @return distance from the first to the second client.
+     */
+    [[nodiscard]] int dist(size_t first, size_t second) const;
+
+    /**
+     * @return The full distance matrix.
+     */
+    [[nodiscard]] Matrix<int> const &distanceMatrix() const;
+
+    /**
+     * @return Total number of clients in this instance.
+     */
+    [[nodiscard]] size_t numClients() const;
+
+    /**
+     * @return Total number of vehicles available in this instance.
+     */
+    [[nodiscard]] size_t numVehicles() const;
+
+    /**
+     * @return Capacity of each vehicle in this instance.
+     */
+    [[nodiscard]] size_t vehicleCapacity() const;
+
+    /**
+     * Constructs a ProblemData object from the data read (in VRPLIB format)
+     * from the given instance path.
+     *
      * @param instPath Path to the instance data.
      * @returns        The constructed object.
      */
-    static ProblemData fromFile(Config const &config,
-                                std::string const &instPath);
+    static ProblemData fromFile(std::string const &instPath);
 
     /**
-     * Constructs a ProblemData object with the given configuration, and
-     * passed-in data. Assumes the data contains the depot, such that each
-     * vector is one longer than the number of clients.
+     * Constructs a ProblemData object with the given data. Assumes the data
+     * contains the depot, such that each vector is one longer than the number
+     * of clients.
      *
-     * @param config      Configuration object.
-     * @param coords      Coordinates as pairs of [x, y].
-     * @param demands     Client demands.
-     * @param nbVehicles  Number of vehicles.
-     * @param vehicleCap  Vehicle capacity.
-     * @param timeWindows Time windows as pairs of [early, late].
-     * @param servDurs    Service durations.
-     * @param distMat     Distance matrix.
-     * @param releases    Client release times.
+     * @param coords       Coordinates as pairs of [x, y].
+     * @param demands      Client demands.
+     * @param numVehicles  Number of vehicles.
+     * @param vehicleCap   Vehicle capacity.
+     * @param timeWindows  Time windows as pairs of [early, late].
+     * @param servDurs     Service durations.
+     * @param distMat      Distance matrix.
+     * @param releases     Client release times.
      */
-    ProblemData(Config const &config,
-                std::vector<std::pair<int, int>> const &coords,
+    ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
-                int nbVehicles,
-                int vehicleCap,
+                size_t numVehicles,
+                size_t vehicleCap,
                 std::vector<std::pair<int, int>> const &timeWindows,
                 std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat,

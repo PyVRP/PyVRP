@@ -1,15 +1,17 @@
 #include <gtest/gtest.h>
 
+#include "PenaltyManager.h"
 #include "diversity.h"
 
 TEST(DiversityTest, brokenPairsDistance)
 {
-    auto const data = ProblemData::fromFile(Config{}, "data/OkSmall.txt");
+    auto const data = ProblemData::fromFile("data/OkSmall.txt");
+    PenaltyManager pMngr(data.vehicleCapacity());
 
-    Individual indiv1{data, {{1, 2, 3, 4}, {}, {}}};
-    Individual indiv2{data, {{1, 2}, {3}, {4}}};
-    Individual indiv3{data, {{3}, {4, 1, 2}, {}}};
-    Individual indiv4{data, {{4, 3, 2, 1}, {}, {}}};
+    Individual indiv1{data, pMngr, {{1, 2, 3, 4}, {}, {}}};
+    Individual indiv2{data, pMngr, {{1, 2}, {3}, {4}}};
+    Individual indiv3{data, pMngr, {{3}, {4, 1, 2}, {}}};
+    Individual indiv4{data, pMngr, {{4, 3, 2, 1}, {}, {}}};
 
     // BPD of indiv1 and itself should be zero.
     EXPECT_DOUBLE_EQ(brokenPairsDistance(data, indiv1, indiv1), 0);
