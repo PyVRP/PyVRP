@@ -66,9 +66,9 @@ set(hgs_libs
         statistics
         tws)
 
-# Executable
-add_executable(hgs main.cpp)
-target_link_libraries(hgs PRIVATE ${hgs_libs})
+# Profiling executable
+add_executable(profiling main.cpp)
+target_link_libraries(profiling PRIVATE ${hgs_libs})
 
 # Python library
 pybind11_add_module(hgspy bindings.cpp)

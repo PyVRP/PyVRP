@@ -1,4 +1,3 @@
-#include "CommandLine.h"
 #include "Exchange.h"
 #include "GeneticAlgorithm.h"
 #include "LocalSearch.h"
@@ -23,17 +22,17 @@ try
     using clock = std::chrono::system_clock;
     auto start = clock::now();
 
-    CommandLine args(argc, argv);
-    auto const &config = args.getConfig();
+    if (argc < 3)
+        throw std::runtime_error("Expected at least two arguments");
 
-    XorShift128 rng(config.seed);
-    ProblemData data = ProblemData::fromFile(args.instPath());
-    PenaltyManager pMngr(data.vehicleCapacity(), args.penaltyParams());
+    // Hardcoded since we're only using this for profiling.
+    XorShift128 rng(4);
+    MaxRuntime stop(30);
 
-    Population pop(
-        data, pMngr, rng, brokenPairsDistance, args.populationParams());
-
-    LocalSearch ls(data, pMngr, rng, args.localSearchParams());
+    ProblemData data = ProblemData::fromFile(argv[1]);
+    PenaltyManager pMngr(data.vehicleCapacity());
+    Population pop(data, pMngr, rng, brokenPairsDistance);
+    LocalSearch ls(data, pMngr, rng);
 
     auto exchange10 = Exchange<1, 0>(data, pMngr);
     ls.addNodeOperator(exchange10);
@@ -62,15 +61,12 @@ try
     auto swapStar = SwapStar(data, pMngr);
     ls.addRouteOperator(swapStar);
 
-    GeneticAlgorithm solver(
-        data, pMngr, rng, pop, ls, selectiveRouteExchange, args.solverParams());
-
-    MaxRuntime stop(config.timeLimit);
+    GeneticAlgorithm solver(data, pMngr, rng, pop, ls, selectiveRouteExchange);
     auto const res = solver.run(stop);
 
     std::chrono::duration<double> const timeDelta = clock::now() - start;
     auto const &bestSol = res.getBestFound();
-    bestSol.toFile(args.solPath(), timeDelta.count());
+    bestSol.toFile(argv[2], timeDelta.count());
 }
 catch (std::exception const &e)
 {
