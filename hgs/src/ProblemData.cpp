@@ -6,12 +6,12 @@
 #include <string>
 #include <vector>
 
-ProblemData::Client ProblemData::client(size_t client) const
+ProblemData::Client const &ProblemData::client(size_t client) const
 {
     return clients_[client];
 }
 
-ProblemData::Client ProblemData::depot() const { return client(0); }
+ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
 int ProblemData::dist(size_t first, size_t second) const
 {

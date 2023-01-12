@@ -33,12 +33,12 @@ public:
      * @param client Client whose data to return.
      * @return A struct containing the indicated client's information.
      */
-    [[nodiscard]] Client client(size_t client) const;
+    [[nodiscard]] Client const &client(size_t client) const;
 
     /**
      * @return A struct containing the depot's information.
      */
-    [[nodiscard]] Client depot() const;
+    [[nodiscard]] Client const &depot() const;
 
     /**
      * Returns the distance between the indicated two clients.
