@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 
 import argparse
+import glob
+import importlib.machinery
+import importlib.util
 from time import perf_counter
 
-from test.tools import get_hgspy
+
+def get_hgspy(where: str):
+    lib_path = next(glob.iglob(where))
+    loader = importlib.machinery.ExtensionFileLoader("hgspy", lib_path)
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    hgspy = importlib.util.module_from_spec(spec)
+    loader.exec_module(hgspy)
+
+    return hgspy
 
 
 def parse_args():

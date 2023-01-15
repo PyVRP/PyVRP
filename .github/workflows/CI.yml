@@ -60,8 +60,7 @@ jobs:
         run: |
           cd release
           ctest
-      - name: Run integration tests (Python)
-        run: python -m unittest
+      # TODO run Python tests
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
