@@ -12,9 +12,9 @@ struct GeneticAlgorithmParams
     bool const shouldIntensify;
 
     GeneticAlgorithmParams(size_t nbPenaltyManagement = 47,
-                 size_t repairProbability = 79,
-                 bool collectStatistics = false,
-                 bool shouldIntensify = true)
+                           size_t repairProbability = 79,
+                           bool collectStatistics = false,
+                           bool shouldIntensify = true)
         : nbPenaltyManagement(nbPenaltyManagement),
           repairProbability(repairProbability),
           collectStatistics(collectStatistics),
