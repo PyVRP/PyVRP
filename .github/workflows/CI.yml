@@ -18,17 +18,17 @@ jobs:
       matrix:
         include:
           - compiler: gcc
-            version: 9  # minimum gcc version
-            python-version: 3.7  # minimum Python version
+            compiler-version: '9'  # minimum gcc version
+            python-version: '3.7'  # minimum Python version
           - compiler: gcc
-            version: latest
-            python-version: 3.10
+            compiler-version: latest
+            python-version: '3.10'
           - compiler: clang
-            version: 11  # minimum clang version
-            python-version: 3.7  # minimum Python version
+            compiler-version: '11'  # minimum clang version
+            python-version: '3.7'  # minimum Python version
           - compiler: clang
-            version: latest
-            python-version: 3.10
+            compiler-version: latest
+            python-version: '3.10'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -41,12 +41,12 @@ jobs:
         name: Set up clang
         uses: egor-tensin/setup-clang@v1
         with:
-          version: ${{ matrix.version }}
+          version: ${{ matrix.compiler-version }}
       - if: matrix.compiler == 'gcc'
         name: Set up GCC
         uses: egor-tensin/setup-gcc@v1
         with:
-          version: ${{ matrix.version }}
+          version: ${{ matrix.compiler-version }}
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
           source: hgs/src hgs/include hgs/test
