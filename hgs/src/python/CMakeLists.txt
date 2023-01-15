@@ -8,6 +8,7 @@ set(bindingSources
         bind_GeneticAlgorithm.cpp
         bind_GeneticAlgorithmParams.cpp
         bind_Individual.cpp
+        bind_LocalSearch.cpp
         bind_LocalSearchOperator.cpp
         bind_LocalSearchParams.cpp
         bind_MaxIterations.cpp

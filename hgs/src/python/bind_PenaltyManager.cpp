@@ -1,6 +1,5 @@
 #include "PenaltyManager.h"
-
-#include <pybind11/pybind11.h>
+#include "bindings.h"
 
 namespace py = pybind11;
 

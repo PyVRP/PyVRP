@@ -1,7 +1,9 @@
 #ifndef HGS_BINDINGS_H
 #define HGS_BINDINGS_H
 
+#include <pybind11/functional.h>  // needed for modular function operators
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>  // needed for automatic conversions
 
 // General classes
 void bind_GeneticAlgorithm(pybind11::module_ &m);
