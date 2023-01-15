@@ -1,9 +1,9 @@
-#ifndef HGS_SOLVERPARAMS_H
-#define HGS_SOLVERPARAMS_H
+#ifndef HGS_GENETICALGORITHMPARAMS_H
+#define HGS_GENETICALGORITHMPARAMS_H
 
 #include <iosfwd>
 
-struct SolverParams
+struct GeneticAlgorithmParams
 {
     size_t const nbPenaltyManagement;
     size_t const repairProbability;
@@ -11,7 +11,7 @@ struct SolverParams
     bool const collectStatistics;
     bool const shouldIntensify;
 
-    SolverParams(size_t nbPenaltyManagement = 47,
+    GeneticAlgorithmParams(size_t nbPenaltyManagement = 47,
                  size_t repairProbability = 79,
                  bool collectStatistics = false,
                  bool shouldIntensify = true)
@@ -21,4 +21,4 @@ struct SolverParams
           shouldIntensify(shouldIntensify){};
 };
 
-#endif  // HGS_SOLVERPARAMS_H
+#endif  // HGS_GENETICALGORITHMPARAMS_H

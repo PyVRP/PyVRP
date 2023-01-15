@@ -30,7 +30,6 @@ set(timeWindowSegmentSources TimeWindowSegment.cpp)
 add_library(penaltyManager ${penaltySources})
 
 add_library(problemData ${problemDataSources})
-target_link_libraries(problemData)
 
 add_library(individual ${individualSources})
 target_link_libraries(individual problemData penaltyManager)
@@ -70,6 +69,5 @@ set(hgs_libs
 add_executable(profiling main.cpp)
 target_link_libraries(profiling PRIVATE ${hgs_libs})
 
-# Python library
-pybind11_add_module(hgspy bindings.cpp)
-target_link_libraries(hgspy PRIVATE ${hgs_libs})
+# Python bindings
+add_subdirectory(python)

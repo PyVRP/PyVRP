@@ -1,13 +1,13 @@
 #ifndef GENETIC_H
 #define GENETIC_H
 
+#include "GeneticAlgorithmParams.h"
 #include "Individual.h"
 #include "LocalSearch.h"
 #include "PenaltyManager.h"
 #include "Population.h"
 #include "ProblemData.h"
 #include "Result.h"
-#include "SolverParams.h"
 #include "StoppingCriterion.h"
 #include "XorShift128.h"
 #include "crossover.h"
@@ -25,7 +25,7 @@ class GeneticAlgorithm
     Population &population;
     LocalSearch &localSearch;
     CrossoverOperator crossover;
-    SolverParams params;
+    GeneticAlgorithmParams params;
 
     std::vector<bool> loadFeas;  // load feasibility of recent individuals
     std::vector<bool> timeFeas;  // time feasibility of recent individuals
@@ -59,7 +59,7 @@ public:
                      Population &population,
                      LocalSearch &localSearch,
                      CrossoverOperator op,
-                     SolverParams params = SolverParams());
+                     GeneticAlgorithmParams params = GeneticAlgorithmParams());
 };
 
 #endif

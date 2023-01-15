@@ -252,6 +252,7 @@ template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V)
 }
 
 // Explicit instantiations of the few moves we *might* want to have
+// TODO get rid of this
 template class Exchange<1, 0>;
 template class Exchange<2, 0>;
 template class Exchange<3, 0>;

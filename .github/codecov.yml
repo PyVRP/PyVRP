@@ -1,4 +1,4 @@
 ignore:
   - "hgs/extern"
   - "hgs/test"
-  - "hgs/src/bindings.cpp"
+  - "hgs/src/python"
