@@ -49,16 +49,13 @@ public:
     /**
      * Returns the time warp along the segment, assuming we can depart in time.
      */
-    [[nodiscard]] int segmentTimeWarp() const { return timeWarp; }
+    [[nodiscard]] int segmentTimeWarp() const;
 
     /**
      * Total time warp, that is, the time warp along the the segment, and
      * potential time warp due to too late a release time.
      */
-    [[nodiscard]] int totalTimeWarp() const
-    {
-        return segmentTimeWarp() + std::max(release - twLate, 0);
-    }
+    [[nodiscard]] int totalTimeWarp() const;
 
     TimeWindowSegment() = default;  // TODO get rid of this constructor
 

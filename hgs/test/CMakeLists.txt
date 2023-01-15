@@ -29,7 +29,7 @@ target_link_libraries(test_Population GTest::gtest_main population diversityMeas
 gtest_discover_tests(test_Population WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(test_TimeWindowSegment test_TimeWindowSegment.cpp)
-target_link_libraries(test_TimeWindowSegment GTest::gtest_main)
+target_link_libraries(test_TimeWindowSegment GTest::gtest_main tws)
 gtest_discover_tests(test_TimeWindowSegment)
 
 add_executable(test_XorShift128 test_XorShift128.cpp)
