@@ -14,13 +14,7 @@ class MoveTwoClientsReversed : public LocalSearchOperator<Node>
 public:
     int evaluate(Node *U, Node *V) override;
 
-    void apply(Node *U, Node *V) override
-    {
-        auto *X = n(U);  // copy since the insert below changes n(U)
-
-        U->insertAfter(V);
-        X->insertAfter(V);
-    }
+    void apply(Node *U, Node *V) override;
 };
 
 #endif  // MOVETWOCLIENTSREVERSED_H

@@ -29,22 +29,22 @@ public:
     /**
      * Returns the best observed solution.
      */
-    [[nodiscard]] Individual const &getBestFound() const { return bestFound; }
+    [[nodiscard]] Individual const &getBestFound() const;
 
     /**
      * Returns statistics collected by the genetic algorithm.
      */
-    [[nodiscard]] Statistics const &getStatistics() const { return stats; }
+    [[nodiscard]] Statistics const &getStatistics() const;
 
     /**
      * Returns the total number of iterations.
      */
-    [[nodiscard]] size_t getIterations() const { return numIters; }
+    [[nodiscard]] size_t getIterations() const;
 
     /**
      * Returns the total elapsed runtime in seconds.
      */
-    [[nodiscard]] double getRunTime() const { return runTime; }
+    [[nodiscard]] double getRunTime() const;
 };
 
 #endif  // RESULT_H

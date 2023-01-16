@@ -81,3 +81,11 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
     return deltaCost;
 }
+
+void MoveTwoClientsReversed::apply(Node *U, Node *V)
+{
+    auto *X = n(U);  // copy since the insert below changes n(U)
+
+    U->insertAfter(V);
+    X->insertAfter(V);
+}

@@ -261,3 +261,5 @@ void SwapStar::apply(Route *U, Route *V)
         best.V->insertAfter(best.VAfter);
     }
 }
+
+void SwapStar::update(Route *U) { updated[U->idx] = true; }
