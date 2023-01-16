@@ -56,35 +56,35 @@ void Route::setupRouteTimeWindows()
     } while (!node->isDepot());
 }
 
-[[nodiscard]] Node *Route::operator[](size_t position) const
+Node *Route::operator[](size_t position) const
 {
     assert(position > 0);
     return nodes[position - 1];
 }
 
-[[nodiscard]] bool Route::isFeasible() const
+bool Route::isFeasible() const
 {
     return !hasExcessCapacity() && !hasTimeWarp();
 }
 
-[[nodiscard]] bool Route::hasExcessCapacity() const
+bool Route::hasExcessCapacity() const
 {
     return static_cast<size_t>(load()) > data->vehicleCapacity();
 }
 
-[[nodiscard]] bool Route::hasTimeWarp() const { return timeWarp() > 0; }
+bool Route::hasTimeWarp() const { return timeWarp() > 0; }
 
-[[nodiscard]] int Route::load() const { return nodes.back()->cumulatedLoad; }
+int Route::load() const { return nodes.back()->cumulatedLoad; }
 
-[[nodiscard]] int Route::timeWarp() const
+int Route::timeWarp() const
 {
     auto const &tw = nodes.back()->twBefore;
     return tw.totalTimeWarp();
 }
 
-[[nodiscard]] bool Route::empty() const { return size() == 0; }
+bool Route::empty() const { return size() == 0; }
 
-[[nodiscard]] size_t Route::size() const
+size_t Route::size() const
 {
     return nodes.size() - 1;  // exclude end depot
 }
