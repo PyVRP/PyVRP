@@ -97,7 +97,7 @@ GeneticAlgorithm::GeneticAlgorithm(ProblemData &data,
                                    Population &population,
                                    LocalSearch &localSearch,
                                    CrossoverOperator op,
-                                   SolverParams params)
+                                   GeneticAlgorithmParams params)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),

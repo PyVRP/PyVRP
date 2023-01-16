@@ -1,6 +1,8 @@
 #ifndef STOPPINGCRITERION_H
 #define STOPPINGCRITERION_H
 
+#include <iosfwd>
+
 /**
  * Base class for a stopping criterion.
  *

@@ -25,15 +25,17 @@ set(resultSources Result.cpp)
 set(routeSources Route.cpp)
 set(statisticsSources Statistics.cpp)
 set(timeWindowSegmentSources TimeWindowSegment.cpp)
+set(xorShift128Sources XorShift128.cpp)
 
 # Internal libraries
+add_library(xorShift128 ${xorShift128Sources})
+
 add_library(penaltyManager ${penaltySources})
 
 add_library(problemData ${problemDataSources})
-target_link_libraries(problemData)
 
 add_library(individual ${individualSources})
-target_link_libraries(individual problemData penaltyManager)
+target_link_libraries(individual problemData penaltyManager xorShift128)
 
 add_library(diversityMeasures ${diversitySources})
 target_link_libraries(diversityMeasures individual problemData)
@@ -41,12 +43,17 @@ target_link_libraries(diversityMeasures individual problemData)
 add_library(tws ${timeWindowSegmentSources})
 
 add_library(population ${populationSources})
-target_link_libraries(population individual problemData)
+target_link_libraries(population individual problemData xorShift128)
+
 
 # TODO ok up to here
 
 add_library(genetic ${geneticSources})
+target_link_libraries(genetic xorShift128)
+
 add_library(ls ${localSearchSources})
+target_link_libraries(ls xorShift128)
+
 add_library(node ${nodeSources})
 add_library(result ${resultSources})
 add_library(route ${routeSources})
@@ -64,12 +71,12 @@ set(hgs_libs
         result
         route
         statistics
-        tws)
+        tws
+        xorShift128)
 
 # Profiling executable
 add_executable(profiling main.cpp)
 target_link_libraries(profiling PRIVATE ${hgs_libs})
 
-# Python library
-pybind11_add_module(hgspy bindings.cpp)
-target_link_libraries(hgspy PRIVATE ${hgs_libs})
+# Python bindings
+add_subdirectory(python)
