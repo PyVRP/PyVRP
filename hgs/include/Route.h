@@ -32,53 +32,36 @@ public:  // TODO make fields private
     /**
      * Returns the client or depot node at the given position.
      */
-    [[nodiscard]] Node *operator[](size_t position) const
-    {
-        assert(position > 0);
-        return nodes[position - 1];
-    }
+    [[nodiscard]] Node *operator[](size_t position) const;
 
     /**
      * Tests if this route is feasible.
      */
-    [[nodiscard]] bool isFeasible() const
-    {
-        return !hasExcessCapacity() && !hasTimeWarp();
-    }
+    [[nodiscard]] bool isFeasible() const;
 
     /**
      * Determines whether this route is load-feasible.
      */
-    [[nodiscard]] bool hasExcessCapacity() const
-    {
-        return static_cast<size_t>(load()) > data->vehicleCapacity();
-    }
+    [[nodiscard]] bool hasExcessCapacity() const;
 
     /**
      * Determines whether this route is time-feasible.
      */
-    [[nodiscard]] bool hasTimeWarp() const { return timeWarp() > 0; }
+    [[nodiscard]] bool hasTimeWarp() const;
 
     /**
      * Returns total load on this route.
      */
-    [[nodiscard]] int load() const { return nodes.back()->cumulatedLoad; }
+    [[nodiscard]] int load() const;
 
     /**
      * Returns total time warp on this route.
      */
-    [[nodiscard]] int timeWarp() const
-    {
-        auto const &tw = nodes.back()->twBefore;
-        return tw.totalTimeWarp();
-    }
+    [[nodiscard]] int timeWarp() const;
 
-    [[nodiscard]] bool empty() const { return size() == 0; }
+    [[nodiscard]] bool empty() const;
 
-    [[nodiscard]] size_t size() const
-    {
-        return nodes.size() - 1;  // exclude end depot
-    }
+    [[nodiscard]] size_t size() const;
 
     /**
      * Calculates time window data for segment [start, end].

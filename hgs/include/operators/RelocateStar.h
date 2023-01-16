@@ -23,15 +23,11 @@ class RelocateStar : public LocalSearchOperator<Route>
     Move move;
 
 public:
-    void init(Individual const &indiv) override
-    {
-        LocalSearchOperator<Route>::init(indiv);
-        relocate.init(indiv);
-    }
+    void init(Individual const &indiv) override;
 
     int evaluate(Route *U, Route *V) override;
 
-    void apply(Route *U, Route *V) override { move.from->insertAfter(move.to); }
+    void apply(Route *U, Route *V) override;
 
     explicit RelocateStar(ProblemData const &data,
                           PenaltyManager const &penaltyManager)

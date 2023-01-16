@@ -75,13 +75,13 @@ public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
      */
-    void addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
+    void addNodeOperator(NodeOp &op);
 
     /**
      * Adds a local search operator that works on route pairs U and V. These
      * operators are executed for route pairs whose circle sectors overlap.
      */
-    void addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
+    void addRouteOperator(RouteOp &op);
 
     /**
      * Performs regular (node-based) local search around the given individual.

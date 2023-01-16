@@ -414,6 +414,10 @@ Individual LocalSearch::exportIndividual()
     return {data, penaltyManager, indivRoutes};
 }
 
+void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
+
+void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
+
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
                          XorShift128 &rng,

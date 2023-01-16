@@ -92,7 +92,7 @@ public:
 
     void apply(Route *U, Route *V) override;
 
-    void update(Route *U) override { updated[U->idx] = true; }
+    void update(Route *U) override;
 
     explicit SwapStar(ProblemData const &data,
                       PenaltyManager const &penaltyManager)
