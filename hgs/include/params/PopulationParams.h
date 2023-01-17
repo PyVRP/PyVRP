@@ -24,7 +24,10 @@ struct PopulationParams
           nbElite(nbElite),
           nbClose(nbClose),
           lbDiversity(lbDiversity),
-          ubDiversity(ubDiversity){};
+          ubDiversity(ubDiversity)
+    {
+        // TODO parameter validation
+    }
 };
 
 #endif  // HGS_POPULATIONPARAMS_H

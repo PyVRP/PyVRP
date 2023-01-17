@@ -22,7 +22,10 @@ struct PenaltyParams
           repairBooster(repairBooster),
           penaltyIncrease(penaltyIncrease),
           penaltyDecrease(penaltyDecrease),
-          targetFeasible(targetFeasible){};
+          targetFeasible(targetFeasible)
+    {
+        // TODO parameter validation
+    }
 };
 
 #endif  // HGS_PENALTYPARAMS_H
