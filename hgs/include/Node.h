@@ -25,7 +25,7 @@ public:  // TODO make fields private
     TimeWindowSegment twBefore;  // TWS for (0...client) including self
     TimeWindowSegment twAfter;   // TWS for (client...0) including self
 
-    [[nodiscard]] bool isDepot() const { return client == 0; }
+    [[nodiscard]] bool isDepot() const;
 
     /**
      * Inserts this node after the other and updates the solution.
