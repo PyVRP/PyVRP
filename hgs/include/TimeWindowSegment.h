@@ -43,17 +43,7 @@ public:
                       int timeWarp,
                       int twEarly,
                       int twLate,
-                      int release)
-        : dist(dist),
-          idxFirst(idxFirst),
-          idxLast(idxLast),
-          duration(duration),
-          timeWarp(timeWarp),
-          twEarly(twEarly),
-          twLate(twLate),
-          release(release)
-    {
-    }
+                      int release);
 };
 
 template <typename... Args>

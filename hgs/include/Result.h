@@ -18,13 +18,7 @@ public:
     Result(Individual const &bestFound,
            Statistics stats,
            size_t numIters,
-           double runTime)
-        : bestFound(bestFound),
-          stats(std::move(stats)),
-          numIters(numIters),
-          runTime(runTime)
-    {
-    }
+           double runTime);
 
     /**
      * Returns the best observed solution.
