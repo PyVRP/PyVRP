@@ -17,7 +17,10 @@ struct LocalSearchParams
         : weightWaitTime(weightWaitTime),
           weightTimeWarp(weightTimeWarp),
           nbGranular(nbGranular),
-          postProcessPathLength(postProcessPathLength){};
+          postProcessPathLength(postProcessPathLength)
+    {
+        // TODO parameter validation
+    }
 };
 
 #endif  // HGS_LOCALSEARCHPARAMS_H
