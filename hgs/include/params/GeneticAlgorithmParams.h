@@ -18,7 +18,10 @@ struct GeneticAlgorithmParams
         : nbPenaltyManagement(nbPenaltyManagement),
           repairProbability(repairProbability),
           collectStatistics(collectStatistics),
-          shouldIntensify(shouldIntensify){};
+          shouldIntensify(shouldIntensify)
+    {
+        // TODO parameter validation
+    }
 };
 
 #endif  // HGS_GENETICALGORITHMPARAMS_H
