@@ -13,8 +13,6 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
-    static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
-
     // Tests if the segment starting at node of given length contains the depot
     inline bool containsDepot(Node *node, size_t segLength) const;
 

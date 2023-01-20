@@ -6,6 +6,7 @@
 using TWS = TimeWindowSegment;
 
 template <size_t N, size_t M>
+    requires (N >= M && N > 0)
 bool Exchange<N, M>::containsDepot(Node *node, size_t segLength) const
 {
     if (node->isDepot())
@@ -243,7 +244,7 @@ template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V)
     }
 
     // ...and swap the overlapping nodes!
-    for (size_t count = 0; count != std::min(N, M); ++count)
+    for (size_t count = 0; count != M; ++count)
     {
         U->swapWith(V);
         U = n(U);
