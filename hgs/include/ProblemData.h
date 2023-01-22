@@ -32,6 +32,8 @@ public:
     /**
      * @param client Client whose data to return.
      * @return A struct containing the indicated client's information.
+     *
+     * TODO maybe inline
      */
     [[nodiscard]] Client const &client(size_t client) const;
 
