@@ -56,39 +56,6 @@ void Route::setupRouteTimeWindows()
     } while (!node->isDepot());
 }
 
-Node *Route::operator[](size_t position) const
-{
-    assert(position > 0);
-    return nodes[position - 1];
-}
-
-bool Route::isFeasible() const
-{
-    return !hasExcessCapacity() && !hasTimeWarp();
-}
-
-bool Route::hasExcessCapacity() const
-{
-    return static_cast<size_t>(load()) > data->vehicleCapacity();
-}
-
-bool Route::hasTimeWarp() const { return timeWarp() > 0; }
-
-int Route::load() const { return nodes.back()->cumulatedLoad; }
-
-int Route::timeWarp() const
-{
-    auto const &tw = nodes.back()->twBefore;
-    return tw.totalTimeWarp();
-}
-
-bool Route::empty() const { return size() == 0; }
-
-size_t Route::size() const
-{
-    return nodes.size() - 1;  // exclude end depot
-}
-
 void Route::update()
 {
     auto const oldNodes = nodes;
@@ -133,6 +100,9 @@ void Route::update()
 
     setupAngle();
     setupRouteTimeWindows();
+
+    load_ = nodes.back()->cumulatedLoad;
+    timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

@@ -1,7 +1,5 @@
 #include "Node.h"
 
-bool Node::isDepot() const { return client == 0; }
-
 void Node::insertAfter(Node *other)
 {
     prev->next = next;

@@ -67,6 +67,10 @@ try
     std::chrono::duration<double> const timeDelta = clock::now() - start;
     auto const &bestSol = res.getBestFound();
     bestSol.toFile(argv[2], timeDelta.count());
+
+    std::cout << "Cost:       " << bestSol.cost() << '\n';
+    std::cout << "Time:       " << timeDelta.count() << " seconds.\n";
+    std::cout << "Iterations: " << res.getIterations() << '\n';
 }
 catch (std::exception const &e)
 {

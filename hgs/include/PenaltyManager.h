@@ -64,11 +64,15 @@ public:
 
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
+     *
+     * TODO maybe inline
      */
     [[nodiscard]] unsigned int loadPenalty(unsigned int load) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
+     *
+     * TODO maybe inline
      */
     [[nodiscard]] unsigned int twPenalty(unsigned int timeWarp) const;
 

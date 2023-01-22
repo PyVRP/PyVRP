@@ -16,11 +16,11 @@ class TimeWindowSegment
     int twLate = 0;    // Latest visit moment of last client
     int release = 0;   // Release time; cannot leave depot earlier
 
-    [[nodiscard]] TWS merge(TWS const &other) const;
+    [[nodiscard]] inline TWS merge(TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] static TWS
+    [[nodiscard]] inline static TWS
     merge(TWS const &first, TWS const &second, Args... args);
 
     /**
@@ -57,6 +57,23 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &first,
         return res;
     else
         return merge(res, args...);
+}
+
+TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
+{
+    int const distance = (*dist)(idxLast, other.idxFirst);
+    int const delta = duration - timeWarp + distance;
+    int const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
+    int const deltaTimeWarp = std::max(twEarly + delta - other.twLate, 0);
+
+    return {dist,
+            idxFirst,
+            other.idxLast,
+            duration + other.duration + distance + deltaWaitTime,
+            timeWarp + other.timeWarp + deltaTimeWarp,
+            std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
+            std::min(other.twLate - delta, twLate) + deltaTimeWarp,
+            std::max(release, other.release)};
 }
 
 #endif  // TIMEWINDOWDATA_H
