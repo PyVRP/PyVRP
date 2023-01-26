@@ -109,10 +109,7 @@ bool Route::isFeasible() const
     return !hasExcessCapacity() && !hasTimeWarp();
 }
 
-bool Route::hasExcessCapacity() const
-{
-    return !isLoadFeasible_;
-}
+bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
 
 bool Route::hasTimeWarp() const { return timeWarp_ > 0; }
 
