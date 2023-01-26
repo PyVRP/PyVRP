@@ -102,7 +102,10 @@ void Route::update()
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;
+    isLoadFeasible_ = static_cast<size_t>(load_) <= data->vehicleCapacity();
+
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
+    isTimeWarpFeasible_ = timeWarp_ == 0;
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

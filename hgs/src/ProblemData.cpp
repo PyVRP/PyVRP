@@ -6,11 +6,6 @@
 #include <string>
 #include <vector>
 
-ProblemData::Client const &ProblemData::client(size_t client) const
-{
-    return clients_[client];
-}
-
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
 Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }

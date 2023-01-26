@@ -12,8 +12,12 @@
 class Route
 {
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
-    int load_;
-    int timeWarp_;
+
+    int load_;             // Current route load.
+    bool isLoadFeasible_;  // Whether current load is feasible.
+
+    int timeWarp_;             // Current route time warp.
+    bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
     void setupNodes();
@@ -107,7 +111,7 @@ bool Route::isFeasible() const
 
 bool Route::hasExcessCapacity() const
 {
-    return static_cast<size_t>(load_) > data->vehicleCapacity();
+    return !isLoadFeasible_;
 }
 
 bool Route::hasTimeWarp() const { return timeWarp_ > 0; }
