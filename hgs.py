@@ -17,7 +17,9 @@ from tqdm.contrib.concurrent import process_map
 def get_hgspy(where: str):
     lib_path = next(glob.iglob(where))
     loader = importlib.machinery.ExtensionFileLoader("hgspy", lib_path)
-    spec = importlib.util.spec_from_loader(loader.name, loader)
+    spec = importlib.util.spec_from_loader(loader.name, loader)  # type: ignore
+    assert spec, "Could not load hgspy"
+
     hgspy = importlib.util.module_from_spec(spec)
     loader.exec_module(hgspy)
 
@@ -28,7 +30,12 @@ def name2size(name: str) -> int:
     """
     Extracts the instance size (i.e., num clients) from the instance name.
     """
-    return int(re.search(r'-n(\d{1,3})-', name).group(1))
+    match = re.search(r"-n(\d{1,3})-", name)
+
+    if not match:
+        raise ValueError(f"Could not get size from {name}.")
+
+    return int(match.group(1))
 
 
 def static_time_limit(n_clients: int, phase: str) -> int:
@@ -60,13 +67,14 @@ def tabulate(headers, rows) -> str:
             lengths[idx] = max(lengths[idx], len(str(cell)))
 
     header = [
-        "  ".join(f"{h:<{l}s}" for l, h in zip(lengths, headers)),
-        "  ".join("-" * l for l in lengths),
+        "  ".join(f"{hdr:<{ln}s}" for ln, hdr in zip(lengths, headers)),
+        "  ".join("-" * ln for ln in lengths),
     ]
 
-    content = ["  ".join(f"{str(c):>{l}s}"
-                         for l, c in zip(lengths, row))
-               for row in rows]
+    content = [
+        "  ".join(f"{str(c):>{ln}s}" for ln, c in zip(lengths, row))
+        for row in rows
+    ]
 
     return "\n".join(header + content)
 
@@ -90,13 +98,13 @@ def parse_args():
 
 
 def solve(
-        data_loc: str,
-        seed: int,
-        debug: bool,
-        phase: Optional[str],
-        max_runtime: Optional[float],
-        max_iterations: Optional[int],
-        **kwargs,
+    data_loc: str,
+    seed: int,
+    debug: bool,
+    phase: Optional[str],
+    max_runtime: Optional[float],
+    max_iterations: Optional[int],
+    **kwargs,
 ):
     where = pathlib.Path(data_loc)
 
@@ -125,7 +133,7 @@ def solve(
     for op in node_ops:
         ls.add_node_operator(op)
 
-    route_ops = [
+    route_ops: list = [
         # hgspy.operators.RelocateStar(data, pen_manager),
         # hgspy.operators.SwapStar(data, pen_manager),
     ]
