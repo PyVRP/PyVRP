@@ -111,7 +111,7 @@ bool Route::isFeasible() const
 
 bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
 
-bool Route::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Route::hasTimeWarp() const { return isTimeWarpFeasible_; }
 
 Node *Route::operator[](size_t position) const
 {
