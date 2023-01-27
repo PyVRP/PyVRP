@@ -56,29 +56,54 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
     if (U->route != V->route)
     {
+        // If the route is feasible then deltaCost is a lower bound
+        // on the overall deltaCost after accounting for penalties
+        // TODO: is this check worth it? If the penalty computations
+        // until the next precheck are fast enough we can better skip it
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(p(U)->twBefore, n(endU)->twAfter);
-
-        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
-
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
 
+        // <= 0
         deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
         deltaCost -= penaltyManager.loadPenalty(U->route->load());
 
-        if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good
-
+        // >= 0
         deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
         deltaCost -= penaltyManager.loadPenalty(V->route->load());
+
+        // In the best case, the timeWarp in route U is completely resolved
+        // and the timeWarp in route V does not increase, so check that first
+        // important: this relies on the assumption that timewarp will never
+        // decrease by inserting a customer (this requires the triangle
+        // inequality to hold)
+        // <= 0
+        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+
+        // Now the deltaCost accounts for distance, load penalties and
+        // assumes we completely resolve the timewarp in U. It does not
+        // count the remaining timewarp in U and increase in timewarp in
+        // V and therefore is a lower bound.
+        if (deltaCost >= 0)
+            return deltaCost;
+
+        // Find the actual reduction in timeWarp penalty
+        auto uTWS = TWS::merge(p(U)->twBefore, n(endU)->twAfter);
+        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
+
+        // Now the deltaCost accounts for everything except the increase
+        // in timeWarp in route V which is >= 0, so this is a lower bound.
+        if (deltaCost >= 0)
+            return deltaCost;
 
         auto vTWS = TWS::merge(V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
 
+        // Since we insert into route V, total timeWarp should not decrease
+        // (assuming travel times satisfy triangle inequality)
+        // so deltaCost changes by >= 0
         deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
     }
@@ -86,7 +111,16 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
     {
         auto const *route = U->route;
 
+        // TODO: is this check worth it? If penaltyManager.twPenalty
+        // is fast enough we can skip it
         if (!route->hasTimeWarp() && deltaCost >= 0)
+            return deltaCost;
+
+        deltaCost -= penaltyManager.twPenalty(route->timeWarp());
+
+        // Now the deltaCost assumes we completely resolve timeWarp so this
+        // is a lower bound
+        if (deltaCost >= 0)
             return deltaCost;
 
         if (posU < posV)
@@ -107,8 +141,6 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
             deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
         }
-
-        deltaCost -= penaltyManager.twPenalty(route->timeWarp());
     }
 
     return deltaCost;
@@ -140,23 +172,11 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
     if (U->route != V->route)
     {
+        // TODO is this precheck still worth it?
         if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(p(U)->twBefore,
-                               V->route->twBetween(posV, posV + M - 1),
-                               n(endU)->twAfter);
-
-        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
-
-        auto vTWS = TWS::merge(p(V)->twBefore,
-                               U->route->twBetween(posU, posU + N - 1),
-                               n(endV)->twAfter);
-
-        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
-
+        // Compute deltaCost for load penalties
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
@@ -166,6 +186,40 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
         deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
         deltaCost -= penaltyManager.loadPenalty(V->route->load());
+
+        // Compute deltaCost assuming all time warp will disappear
+        // so we can use it to compute a bound
+        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
+
+        // Now deltaCost is a lowerBound
+        if (deltaCost >= 0)
+            return deltaCost;
+
+        // Since N >= M, the number of nodes in route V will increase
+        // so route V is more likely to have a (large) timewarp
+        // so compute this first
+        // (on the other hand it is also more expensive to compute... TODO)
+        auto vTWS = TWS::merge(p(V)->twBefore,
+                               U->route->twBetween(posU, posU + N - 1),
+                               n(endV)->twAfter);
+
+        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
+
+        // Now we included the new timewarp penalty for V but by disregarding
+        // U we still have a lower bound and we may skip checking U
+        if (deltaCost >= 0)
+            return deltaCost;
+
+        // Now add back the actual timewarp for U to get final delta cost
+
+        auto uTWS = TWS::merge(p(U)->twBefore,
+                               V->route->twBetween(posV, posV + M - 1),
+                               n(endU)->twAfter);
+
+        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
+        
+        
     }
     else  // within same route
     {
