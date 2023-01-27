@@ -25,3 +25,8 @@ repos:
     rev: v0.982
     hooks:
     -   id: mypy
+
+-   repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v11.1.0
+    hooks:
+    -   id: clang-format

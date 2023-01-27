@@ -71,11 +71,6 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           version: ${{ matrix.compiler-version }}
-      - uses: DoozyX/clang-format-lint-action@v0.13
-        with:
-          source: hgs/src hgs/include hgs/test
-          extensions: h, cpp
-          clangFormatVersion: 11
       - name: Make all
         run: |
           cmake -Brelease -Shgs

@@ -1,5 +1,5 @@
-#include "crossover.h"
 #include "bindings.h"
+#include "crossover.h"
 
 namespace py = pybind11;
 

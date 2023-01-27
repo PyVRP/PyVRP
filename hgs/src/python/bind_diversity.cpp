@@ -1,5 +1,5 @@
-#include "diversity.h"
 #include "bindings.h"
+#include "diversity.h"
 
 namespace py = pybind11;
 

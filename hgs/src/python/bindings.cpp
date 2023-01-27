@@ -38,7 +38,7 @@ PYBIND11_MODULE(hgspy, m)
 
     // Submodule for local search operators
     pybind11::module lsOps = m.def_submodule("operators");
-    bind_LocalSearchOperator(lsOps);   // abstract base types first
+    bind_LocalSearchOperator(lsOps);  // abstract base types first
     bind_Exchange(lsOps);
     bind_MoveTwoClientsReversed(lsOps);
     bind_RelocateStar(lsOps);
