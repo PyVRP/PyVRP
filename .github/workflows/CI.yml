@@ -71,8 +71,8 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           version: ${{ matrix.compiler-version }}
-      - name: Build and install Python package
-        run: poetry install --only-root
+      - name: Build pyvrp
+        run: poetry build
       - name: Run Python tests
         run: poetry run pytest
       - uses: codecov/codecov-action@v3
