@@ -5,6 +5,7 @@ repos:
     rev: v3.2.0
     hooks:
       - id: debug-statements
+      - id: end-of-file-fixer
 
   - repo: https://github.com/psf/black
     rev: 22.3.0
