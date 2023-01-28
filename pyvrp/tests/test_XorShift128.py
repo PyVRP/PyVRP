@@ -1,10 +1,15 @@
+import ctypes
+
 from numpy.testing import assert_equal
 
 from pyvrp._lib.hgspy import XorShift128
 
 
-def test_bound():
+def test_bounds():
     assert_equal(XorShift128.min(), 0)
+
+    bits = 8 * ctypes.sizeof(ctypes.c_uint)
+    assert_equal(XorShift128.max(), 2**bits - 1)
 
 
 def test_call():

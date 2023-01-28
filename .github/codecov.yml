@@ -1,4 +1,2 @@
 ignore:
-  - "hgs/extern"
-  - "hgs/test"
-  - "hgs/src/python"
+  - "pyvrp/cpp/src/python"
