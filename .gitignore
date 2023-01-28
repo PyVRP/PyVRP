@@ -161,6 +161,7 @@ dmypy.json
 .idea/
 debug/
 release/
+_skbuild/
 
 # Data files
 data/

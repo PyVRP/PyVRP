@@ -30,6 +30,9 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
+[tool.poetry.build]
+script = "build.py"
+
 [tool.poetry.urls]
 "Tracker" = "https://github.com/N-Wouda/pyvrp/issues"
 
@@ -71,9 +74,9 @@ exclude_lines = [
     # This excludes all abstract methods from code coverage checks,
     # as they are never instantiated directly anyway
     "pragma: no cover",
-    "@abstract"
+    "@abstract",
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "scikit-build", "cmake"]
 build-backend = "poetry.core.masonry.api"
