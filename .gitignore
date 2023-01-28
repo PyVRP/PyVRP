@@ -157,11 +157,15 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# IDE and compiled assets
+# IDEs
 .idea/
+
+# Compiled or generated assets
 debug/
 release/
 _skbuild/
+setup.py
+*.lock
 
 # Data files
 data/
@@ -172,8 +176,3 @@ data/
 
 # Testing data
 !hgs/test/data/
-
-
-# Lock files
-# TODO revisit this?
-*.lock

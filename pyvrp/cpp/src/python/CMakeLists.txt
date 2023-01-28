@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.15)
 
 set(bindingSources
         bindings.cpp
@@ -31,3 +31,5 @@ set(bindingSources
 
 pybind11_add_module(hgspy ${bindingSources})
 target_link_libraries(hgspy PRIVATE ${hgs_libs})
+
+install(TARGETS hgspy DESTINATION ${CMAKE_INSTALL_PREFIX})

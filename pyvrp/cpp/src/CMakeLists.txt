@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.15)
 
 set(diversitySources
         diversity/brokenPairsDistance.cpp)
@@ -74,9 +74,4 @@ set(hgs_libs
         tws
         xorShift128)
 
-# Profiling executable
-add_executable(profiling main.cpp)
-target_link_libraries(profiling PRIVATE ${hgs_libs})
-
-# Python bindings
 add_subdirectory(python)

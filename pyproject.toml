@@ -13,8 +13,11 @@ repository = "https://github.com/N-Wouda/pyvrp"
 include = [
     "LICENSE.md",
 ]
+exclude = [
+    "pyvrp/cpp/**/*",  # TODO do include in source dist?
+]
 packages = [
-    {include = "pyvrp"},
+    { include = "pyvrp" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -29,9 +32,6 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Scientific/Engineering",
 ]
-
-[tool.poetry.build]
-script = "build.py"
 
 [tool.poetry.urls]
 "Tracker" = "https://github.com/N-Wouda/pyvrp/issues"
@@ -76,6 +76,9 @@ exclude_lines = [
     "pragma: no cover",
     "@abstract",
 ]
+
+[tool.poetry.build]
+script = "build.py"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "scikit-build", "cmake"]
