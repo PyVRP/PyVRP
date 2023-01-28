@@ -122,7 +122,8 @@ ipython_config.py
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
-#Pipfile.lock
+Pipfile.lock
+poetry.lock
 
 # celery beat schedule file
 celerybeat-schedule
@@ -165,7 +166,7 @@ debug/
 release/
 _skbuild/
 setup.py
-*.lock
+pyvrp/_lib/
 
 # Data files
 data/

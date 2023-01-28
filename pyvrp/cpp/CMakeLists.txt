@@ -31,7 +31,6 @@ add_definitions(-Werror -Wall -Wextra -Wpedantic -fPIC -Wno-unused-parameter)
 if (CMAKE_BUILD_TYPE MATCHES RELEASE)
     add_definitions(-O3 -flto)
 else ()
-    # TODO switch to kcov for code coverage? https://github.com/SimonKagstrom/kcov
     # For code coverage on the test builds
     add_definitions(-fprofile-arcs -ftest-coverage)
     add_link_options(--coverage)

@@ -23,7 +23,7 @@ public:
      *
      * @param seed Used to seed the pseudo-RNG state.
      */
-    explicit XorShift128(int seed = 42);
+    explicit XorShift128(int seed);
 
     /**
      * @return The minimum value this pRNG can generate.
