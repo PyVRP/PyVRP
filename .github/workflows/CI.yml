@@ -58,9 +58,9 @@ jobs:
           key: pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Install pre-commit
         if: steps.cache-pre-commit.outputs.cache-hit != 'true'
-        run: poetry run pre-commit install
+        run: pre-commit install --install-hooks
       - name: Run pre-commit
-        run: poetry run pre-commit run --all-files
+        run: pre-commit run --all-files
       - if: matrix.compiler == 'clang'
         name: Set up clang
         uses: egor-tensin/setup-clang@v1
