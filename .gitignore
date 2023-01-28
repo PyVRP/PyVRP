@@ -172,3 +172,8 @@ data/
 
 # Testing data
 !hgs/test/data/
+
+
+# Lock files
+# TODO revisit this?
+*.lock
