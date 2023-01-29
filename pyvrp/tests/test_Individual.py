@@ -118,57 +118,52 @@ def test_capacity_cost_calculation():
     assert_(indiv.has_excess_capacity())
     assert_(not indiv.has_time_warp())
 
+    # All clients are visited on the same route/by the same vehicle. The total
+    # demand is 18, but the vehicle capacity is only 10. This has a non-zero
+    # load penalty
+    load_penalty = pm.load_penalty(18)
+    assert_(load_penalty > 0)
 
-#     size_t load = 0;
-#     for (size_t idx = 0; idx <= data.numClients(); ++idx)
-#         load += data.client(idx).demand;
-#
-#     auto const excessLoad = load - data.vehicleCapacity();
-#     ASSERT_GT(load, data.vehicleCapacity());
-#     EXPECT_EQ(excessLoad, 8);
-#
-#     auto const loadPenalty = params.initCapacityPenalty * excessLoad;
-#     int dist = data.dist(0, 4) + data.dist(4, 3) + data.dist(3, 1)
-#                + data.dist(1, 2) + data.dist(2, 0);
-#
-#     // This individual is infeasible due to load violations, so the costs
-#     // should be distance + loadPenalty * excessLoad.
-#     EXPECT_EQ(dist + loadPenalty, indiv.cost());
-# }
+    # The total costs are now load_penalty + dist
+    dist = (
+        data.dist(0, 4)
+        + data.dist(4, 3)
+        + data.dist(3, 1)
+        + data.dist(1, 2)
+        + data.dist(2, 0)
+    )
+
+    assert_equal(indiv.cost(), dist + load_penalty)
 
 
 def test_time_warp_cost_calculation():
-    pass
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity())
 
+    indiv = Individual(data, pm, [[1, 3], [2, 4], []])
+    assert_(not indiv.has_excess_capacity())
+    assert_(indiv.has_time_warp())
 
-# TEST(IndividualCostTest, timeWarp)
-# {
-#     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-#
-#     PenaltyParams params;
-#     PenaltyManager pMngr(data.vehicleCapacity(), params);
-#
-#     Individual indiv{data, pMngr, {{1, 3}, {2, 4}, {}}};
-#
-#     ASSERT_FALSE(indiv.hasExcessCapacity());
-#     ASSERT_TRUE(indiv.hasTimeWarp());
-#
-#     // There's only time warp on the first route: dist(0, 1) = 1'544, so we
-#     // arrive at 1 before its opening window of 15'600. Service (360) thus
-#     // starts at 15'600, and completes at 15'600 + 360. Then we drive
-#     // dist(1, 3) = 1'427, where we arrive after 15'300 (its closing time
-#     // window). This is where we incur time warp: we need to 'warp back' to
-#     // 15'300.
-#     int twR1 = 15'600 + 360 + 1'427 - 15'300;
-#     int twR2 = 0;
-#     int timeWarp = twR1 + twR2;
-#     int twPenalty = params.initTimeWarpPenalty * timeWarp;
-#     int dist = data.dist(0, 1) + data.dist(1, 3) + data.dist(3, 0)
-#                + data.dist(0, 2) + data.dist(2, 4) + data.dist(4, 0);
-#
-#     // This individual is infeasible due to time warp, so the costs should
-#     // be distance + twPenalty * timeWarp.
-#     EXPECT_EQ(dist + twPenalty, indiv.cost());
-# }
+    # There's only time warp on the first route: dist(0, 1) = 1'544, so we
+    # arrive at 1 before its opening window of 15'600. Service (360) thus
+    # starts at 15'600, and completes at 15'600 + 360. Then we drive dist(1, 3)
+    # = 1'427, where we arrive after 15'300 (its closing time window). This is
+    # where we incur time warp: we need to 'warp back' to 15'300.
+    tw_first_route = 15_600 + 360 + 1_427 - 15_300
+    tw_second_route = 0
+    tw_penalty = pm.tw_penalty(tw_first_route + tw_second_route)
+
+    # The total costs are now tw_penalty + dist
+    dist = (
+        data.dist(0, 1)
+        + data.dist(1, 3)
+        + data.dist(3, 0)
+        + data.dist(0, 2)
+        + data.dist(2, 4)
+        + data.dist(4, 0)
+    )
+
+    assert_equal(indiv.cost(), dist + tw_penalty)
+
 
 # TODO test all time warp cases
