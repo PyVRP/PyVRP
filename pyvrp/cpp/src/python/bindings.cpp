@@ -6,6 +6,7 @@ PYBIND11_MODULE(hgspy, m)
     // functions called bind_<header name>.
 
     // General, top-level definitions
+    bind_Matrix(m);
     bind_GeneticAlgorithm(m);
     bind_GeneticAlgorithmParams(m);
     bind_Individual(m);
@@ -18,6 +19,7 @@ PYBIND11_MODULE(hgspy, m)
     bind_ProblemData(m);
     bind_Result(m);
     bind_Statistics(m);
+    bind_TimeWindowSegment(m);
     bind_XorShift128(m);
 
     // Submodule for crossover operators

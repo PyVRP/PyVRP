@@ -11,6 +11,7 @@ set(bindingSources
         bind_LocalSearch.cpp
         bind_LocalSearchOperator.cpp
         bind_LocalSearchParams.cpp
+        bind_Matrix.cpp
         bind_MaxIterations.cpp
         bind_MaxRuntime.cpp
         bind_MoveTwoClientsReversed.cpp
@@ -26,6 +27,7 @@ set(bindingSources
         bind_StoppingCriterion.cpp
         bind_SwapStar.cpp
         bind_TimedNoImprovement.cpp
+        bind_TimeWindowSegment.cpp
         bind_TwoOpt.cpp
         bind_XorShift128.cpp)
 

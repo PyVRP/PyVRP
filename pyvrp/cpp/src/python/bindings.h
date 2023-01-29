@@ -11,6 +11,7 @@ void bind_GeneticAlgorithmParams(pybind11::module_ &m);
 void bind_Individual(pybind11::module_ &m);
 void bind_LocalSearch(pybind11::module_ &m);
 void bind_LocalSearchParams(pybind11::module_ &m);
+void bind_Matrix(pybind11::module_ &m);
 void bind_PenaltyManager(pybind11::module_ &m);
 void bind_PenaltyParams(pybind11::module_ &m);
 void bind_Population(pybind11::module_ &m);
@@ -18,6 +19,7 @@ void bind_PopulationParams(pybind11::module_ &m);
 void bind_ProblemData(pybind11::module_ &m);
 void bind_Result(pybind11::module_ &m);
 void bind_Statistics(pybind11::module_ &m);
+void bind_TimeWindowSegment(pybind11::module_ &m);
 void bind_XorShift128(pybind11::module_ &m);
 
 // Crossover operators

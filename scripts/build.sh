@@ -7,7 +7,7 @@ echo "1) Writing build scripts"
 poetry run cmake -Spyvrp/cpp -B"$BUILD_DIR" -DCMAKE_BUILD_TYPE="${1-Release}"
 
 echo "2) Compiling libraries"
-poetry run cmake --build "$BUILD_DIR"
+poetry run cmake --build "$BUILD_DIR" -j 4
 
 echo "3) Moving libraries"
 mkdir -p "$PKG_LIB_DIR";
