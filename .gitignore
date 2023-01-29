@@ -164,9 +164,6 @@ dmypy.json
 # Compiled or generated assets
 debug/
 release/
-_skbuild/
-setup.py
-pyvrp/_lib/
 
 # Data files
 data/
@@ -174,6 +171,3 @@ data/
 # Ignore Mac DS_Store files
 .DS_Store
 **/.DS_Store
-
-# Testing data
-!hgs/test/data/
