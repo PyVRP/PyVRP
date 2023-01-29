@@ -17,6 +17,7 @@ void bind_Individual(py::module_ &m)
              py::arg("penalty_manager"),
              py::arg("routes"))
         .def("cost", &Individual::cost)
+        .def("num_routes", &Individual::numRoutes)
         .def("get_routes", &Individual::getRoutes)
         .def("get_neighbours", &Individual::getNeighbours)
         .def("is_feasible", &Individual::isFeasible)
