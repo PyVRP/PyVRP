@@ -12,17 +12,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
     cmake_policy(SET CMP0135 NEW)
 endif ()
 
-# Define CMAKE_INSTALL_xxx: LIBDIR, INCLUDEDIR
-include(GNUInstallDirs)
-include(FetchContent)
-
-# Include pybind11
-FetchContent_Declare(
-        pybind11
-        URL https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-        URL_HASH SHA256=6bd528c4dbe2276635dc787b6b1f2e5316cf6b49ee3e150264e455a0d68d19c1
-)
-FetchContent_MakeAvailable(pybind11)
+find_package(pybind11 REQUIRED)
 
 # Ignore unused parameters, because the LS operators depend on this (sometimes
 # the parameters are used, but not by every operator)

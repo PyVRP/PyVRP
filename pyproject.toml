@@ -47,6 +47,12 @@ pytest = ">=6.0.0"
 pytest-cov = ">=2.6.1"
 codecov = "*"
 
+# These are used in the build script: for compiling the library (cmake/pybind11)
+# and for generating type stubs (mypy).
+cmake = "^3.25.0"
+pybind11 = {extras = ["global"], version = "^2.10.3"}
+mypy = "^0.991"
+
 [tool.black]
 line-length = 79
 

@@ -4,16 +4,22 @@ BUILD_DIR=build
 PKG_LIB_DIR=pyvrp/_lib
 
 echo "1) Writing build scripts"
-cmake -Spyvrp/cpp -B"$BUILD_DIR" -DCMAKE_BUILD_TYPE="${1-Release}"
+poetry run cmake -Spyvrp/cpp -B"$BUILD_DIR" -DCMAKE_BUILD_TYPE="${1-Release}"
 
 echo "2) Compiling libraries"
-cmake --build "$BUILD_DIR"
+poetry run cmake --build "$BUILD_DIR"
 
 echo "3) Moving libraries"
 mkdir -p "$PKG_LIB_DIR";
 
-for f in "$BUILD_DIR"/lib/*.so;
+for f in "$BUILD_DIR"/lib/*.so;  # TODO is it always *.so?
 do
-  echo "-- Copying compiled library $f into $PKG_LIB_DIR";
-  cp "$f" "$PKG_LIB_DIR"/"$(basename "$f")";
+  file=$(basename "$f");
+  libname=${file%%.*}
+
+  echo "-- Copying compiled library $libname into $PKG_LIB_DIR";
+  cp "$f" "$PKG_LIB_DIR"/"$file";
+
+  echo "-- Generating type stubs for $libname";
+  (cd $PKG_LIB_DIR && poetry run stubgen --parse-only -o . -m "$libname")
 done
