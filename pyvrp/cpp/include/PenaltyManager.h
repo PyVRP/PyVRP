@@ -11,6 +11,12 @@ class PenaltyManager
     unsigned int capacityPenalty;
     unsigned int timeWarpPenalty;
 
+    // Computes and returns the new penalty value, given the current value and
+    // the percentage of feasible solutions since the last update.
+    [[nodiscard]] unsigned int compute(unsigned int penalty,
+                                       double feasPct) const;
+
+public:
     // Penalty booster that increases the penalty on capacity and time window
     // violations during the object's lifetime.
     struct PenaltyBooster
@@ -35,12 +41,6 @@ class PenaltyManager
         }
     };
 
-    // Computes and returns the new penalty value, given the current value and
-    // the percentage of feasible solutions since the last update.
-    [[nodiscard]] unsigned int compute(unsigned int penalty,
-                                       double feasPct) const;
-
-public:
     explicit PenaltyManager(unsigned int vehicleCapacity,
                             PenaltyParams params = PenaltyParams());
 
