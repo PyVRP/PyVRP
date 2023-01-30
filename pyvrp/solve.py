@@ -1,11 +1,10 @@
 import argparse
 from typing import Optional
 
-from pyvrp import GeneticAlgorithm
+from pyvrp import GeneticAlgorithm, Population
 from pyvrp._lib.hgspy import (
     LocalSearch,
     PenaltyManager,
-    Population,
     ProblemData,
     XorShift128,
     crossover,
@@ -56,8 +55,8 @@ def solve(
         ls.add_node_operator(op)
 
     route_ops: list = [
-        # hgspy.operators.RelocateStar(data, pen_manager),
-        # hgspy.operators.SwapStar(data, pen_manager),
+        operators.RelocateStar(data, pen_manager),
+        operators.SwapStar(data, pen_manager),
     ]
 
     for op in route_ops:

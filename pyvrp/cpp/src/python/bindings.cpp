@@ -12,11 +12,7 @@ PYBIND11_MODULE(hgspy, m)
     bind_LocalSearchParams(m);
     bind_PenaltyManager(m);
     bind_PenaltyParams(m);
-    bind_Population(m);
-    bind_PopulationParams(m);
     bind_ProblemData(m);
-    bind_Result(m);
-    bind_Statistics(m);
     bind_TimeWindowSegment(m);
     bind_XorShift128(m);
 

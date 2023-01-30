@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Tuple, overload
+from typing import Any, List, Tuple, overload
 
 class Client:
     def __init__(self, *args, **kwargs) -> None: ...
@@ -28,63 +28,6 @@ class DoubleMatrix:
     def size(self) -> int: ...
     def __getitem__(self, idx: Tuple[int, int]) -> float: ...
     def __setitem__(self, idx: Tuple[int, int], value: float) -> None: ...
-
-class GeneticAlgorithm:
-    @overload
-    def __init__(
-        self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
-        population: Population,
-        local_search: LocalSearch,
-        crossover_operator: Callable[
-            [
-                Tuple[Individual, Individual],
-                ProblemData,
-                PenaltyManager,
-                XorShift128,
-            ],
-            Individual,
-        ],
-        params: GeneticAlgorithmParams,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
-        population: Population,
-        local_search: LocalSearch,
-        crossover_operator: Callable[
-            [
-                Tuple[Individual, Individual],
-                ProblemData,
-                PenaltyManager,
-                XorShift128,
-            ],
-            Individual,
-        ],
-    ) -> None: ...
-    def run(self, stop: StoppingCriterion) -> Result: ...  # type: ignore
-
-class GeneticAlgorithmParams:
-    def __init__(
-        self,
-        nb_penalty_management: int = ...,
-        repair_probability: int = ...,
-        collect_statistics: bool = ...,
-        should_intensify: bool = ...,
-    ) -> None: ...
-    @property
-    def collect_statistics(self) -> bool: ...
-    @property
-    def nb_penalty_management(self) -> int: ...
-    @property
-    def repair_probability(self) -> int: ...
-    @property
-    def should_intensify(self) -> bool: ...
 
 class Individual:
     @overload
@@ -199,49 +142,6 @@ class PenaltyParams:
     @property
     def target_feasible(self) -> float: ...
 
-class Population:
-    @overload
-    def __init__(
-        self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
-        op: Callable[[ProblemData, Individual, Individual], float],
-        params: PopulationParams,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
-        op: Callable[[ProblemData, Individual, Individual], float],
-    ) -> None: ...
-    def add(self, individual: Individual) -> None: ...
-
-class PopulationParams:
-    def __init__(
-        self,
-        min_pop_size: int = ...,
-        generation_size: int = ...,
-        nb_elite: int = ...,
-        nb_close: int = ...,
-        lb_diversity: float = ...,
-        ub_diversity: float = ...,
-    ) -> None: ...
-    @property
-    def generation_size(self) -> int: ...
-    @property
-    def lb_diversity(self) -> float: ...
-    @property
-    def min_pop_size(self) -> int: ...
-    @property
-    def nb_close(self) -> int: ...
-    @property
-    def nb_elite(self) -> int: ...
-    @property
-    def ub_diversity(self) -> float: ...
-
 class ProblemData:
     def __init__(
         self,
@@ -262,29 +162,6 @@ class ProblemData:
     def num_clients(self) -> int: ...
     def num_vehicles(self) -> int: ...
     def vehicle_capacity(self) -> int: ...
-
-class Result:
-    def __init__(self, *args, **kwargs) -> None: ...
-    def get_best_found(self) -> Individual: ...
-    def get_iterations(self) -> int: ...
-    def get_run_time(self) -> float: ...
-    def get_statistics(self) -> Statistics: ...
-
-class Statistics:
-    def __init__(self, *args, **kwargs) -> None: ...
-    def feas_avg_cost(self) -> List[int]: ...
-    def feas_avg_num_routes(self) -> List[float]: ...
-    def feas_best_cost(self) -> List[int]: ...
-    def feas_pop_size(self) -> List[int]: ...
-    def incumbents(self) -> List[Tuple[float, int]]: ...
-    def infeas_avg_cost(self) -> List[int]: ...
-    def infeas_avg_num_routes(self) -> List[float]: ...
-    def infeas_best_cost(self) -> List[int]: ...
-    def infeas_pop_size(self) -> List[int]: ...
-    def iter_times(self) -> List[float]: ...
-    def num_iters(self) -> int: ...
-    def run_times(self) -> List[float]: ...
-    def to_csv(self, path: str, sep: str = ...) -> None: ...
 
 class TimeWindowSegment:
     def __init__(

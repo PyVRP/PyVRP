@@ -13,12 +13,8 @@ set(bindingSources
         bind_MoveTwoClientsReversed.cpp
         bind_PenaltyManager.cpp
         bind_PenaltyParams.cpp
-        bind_Population.cpp
-        bind_PopulationParams.cpp
         bind_ProblemData.cpp
         bind_RelocateStar.cpp
-        bind_Result.cpp
-        bind_Statistics.cpp
         bind_SwapStar.cpp
         bind_TimeWindowSegment.cpp
         bind_TwoOpt.cpp

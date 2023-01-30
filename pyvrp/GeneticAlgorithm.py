@@ -1,17 +1,18 @@
 import time
 from typing import List
 
-from pyvrp.Result import Result
 from pyvrp._lib.hgspy import (
     Individual,
     LocalSearch,
     PenaltyManager,
-    Population,
     ProblemData,
-    Statistics,
     XorShift128,
 )
 from pyvrp.stop import StoppingCriterion
+
+from .Population import Population
+from .Result import Result
+from .Statistics import Statistics
 
 
 class GeneticAlgorithm:
@@ -20,6 +21,8 @@ class GeneticAlgorithm:
         repair_probability = 79
         collect_statistics = False
         should_intensify = True
+
+        # TODO parameter validation
 
     def __init__(
         self,

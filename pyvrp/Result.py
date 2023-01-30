@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
-from pyvrp._lib.hgspy import Individual, Statistics
+from pyvrp._lib.hgspy import Individual
+
+from .Statistics import Statistics
 
 
 @dataclass

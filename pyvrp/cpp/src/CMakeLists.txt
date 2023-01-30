@@ -19,10 +19,7 @@ set(individualSources Individual.cpp)
 set(nodeSources Node.cpp)
 set(problemDataSources ProblemData.cpp)
 set(penaltySources PenaltyManager.cpp)
-set(populationSources Population.cpp)
-set(resultSources Result.cpp)
 set(routeSources Route.cpp)
-set(statisticsSources Statistics.cpp)
 set(timeWindowSegmentSources TimeWindowSegment.cpp)
 set(xorShift128Sources XorShift128.cpp)
 
@@ -41,10 +38,6 @@ target_link_libraries(diversityMeasures individual problemData)
 
 add_library(tws ${timeWindowSegmentSources})
 
-add_library(population ${populationSources})
-target_link_libraries(population individual problemData xorShift128)
-
-
 # TODO ok up to here
 
 add_library(genetic ${geneticSources})
@@ -54,9 +47,7 @@ add_library(ls ${localSearchSources})
 target_link_libraries(ls xorShift128)
 
 add_library(node ${nodeSources})
-add_library(result ${resultSources})
 add_library(route ${routeSources})
-add_library(statistics ${statisticsSources})
 
 set(hgs_libs
         diversityMeasures
@@ -66,10 +57,7 @@ set(hgs_libs
         node
         problemData
         penaltyManager
-        population
-        result
         route
-        statistics
         tws
         xorShift128)
 
