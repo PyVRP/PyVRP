@@ -224,8 +224,18 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     {
         auto const *route = U->route;
 
+        // TODO: is this check worth it? If penaltyManager.twPenalty
+        // is fast enough we can skip it
         if (!route->hasTimeWarp() && deltaCost >= 0)
             return deltaCost;
+
+        deltaCost -= penaltyManager.twPenalty(route->timeWarp());
+
+        // Now the deltaCost assumes we completely resolve timeWarp so this
+        // is a lower bound
+        if (deltaCost >= 0)
+            return deltaCost;
+
 
         if (posU < posV)
         {
@@ -247,8 +257,6 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
             deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
         }
-
-        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
     }
 
     return deltaCost;
