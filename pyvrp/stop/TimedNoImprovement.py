@@ -1,0 +1,18 @@
+from pyvrp.OptimisationTarget import OptimisationTarget
+
+from .MaxRuntime import MaxRuntime
+from .NoImprovement import NoImprovement
+
+
+class TimedNoImprovement:
+    """
+    Stopping criterion that stops after a given number of iterations without
+    improvement, or after a fixed runtime (whichever happens first).
+    """
+
+    def __init__(self, max_iterations: int, max_runtime: float):
+        self._no_improvement = NoImprovement(max_iterations)
+        self._max_runtime = MaxRuntime(max_runtime)
+
+    def __call__(self, best: OptimisationTarget) -> bool:
+        return self._no_improvement(best) or self._max_runtime(best)
