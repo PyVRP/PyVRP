@@ -5,8 +5,6 @@ set(bindingSources
         bind_crossover.cpp
         bind_diversity.cpp
         bind_Exchange.cpp
-        bind_GeneticAlgorithm.cpp
-        bind_GeneticAlgorithmParams.cpp
         bind_Individual.cpp
         bind_LocalSearch.cpp
         bind_LocalSearchOperator.cpp
@@ -21,7 +19,6 @@ set(bindingSources
         bind_RelocateStar.cpp
         bind_Result.cpp
         bind_Statistics.cpp
-        bind_StoppingCriterion.cpp
         bind_SwapStar.cpp
         bind_TimeWindowSegment.cpp
         bind_TwoOpt.cpp

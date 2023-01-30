@@ -4,7 +4,6 @@ set(diversitySources
         diversity/brokenPairsDistance.cpp)
 
 set(geneticSources
-        GeneticAlgorithm.cpp
         crossover/crossover.cpp
         crossover/selectiveRouteExchange.cpp)
 

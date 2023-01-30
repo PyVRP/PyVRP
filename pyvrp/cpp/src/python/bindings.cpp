@@ -7,8 +7,6 @@ PYBIND11_MODULE(hgspy, m)
 
     // General, top-level definitions
     bind_Matrix(m);
-    bind_GeneticAlgorithm(m);
-    bind_GeneticAlgorithmParams(m);
     bind_Individual(m);
     bind_LocalSearch(m);
     bind_LocalSearchParams(m);
@@ -29,10 +27,6 @@ PYBIND11_MODULE(hgspy, m)
     // Submodule for diversity measures
     pybind11::module diversity = m.def_submodule("diversity");
     bind_diversity(diversity);
-
-    // Submodule for stopping criteria
-    pybind11::module stop = m.def_submodule("stop");
-    bind_StoppingCriterion(stop);  // abstract base type first
 
     // Submodule for local search operators
     pybind11::module lsOps = m.def_submodule("operators");

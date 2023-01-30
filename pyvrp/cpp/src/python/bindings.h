@@ -6,8 +6,6 @@
 #include <pybind11/stl.h>  // needed for automatic conversions
 
 // General classes
-void bind_GeneticAlgorithm(pybind11::module_ &m);
-void bind_GeneticAlgorithmParams(pybind11::module_ &m);
 void bind_Individual(pybind11::module_ &m);
 void bind_LocalSearch(pybind11::module_ &m);
 void bind_LocalSearchParams(pybind11::module_ &m);
@@ -27,9 +25,6 @@ void bind_crossover(pybind11::module_ &m);
 
 // Diversity measures
 void bind_diversity(pybind11::module_ &m);
-
-// Stopping criteria
-void bind_StoppingCriterion(pybind11::module_ &m);
 
 // Local search operators
 void bind_Exchange(pybind11::module_ &m);

@@ -3,7 +3,6 @@ from typing import List
 
 from pyvrp.Result import Result
 from pyvrp._lib.hgspy import (
-    GeneticAlgorithmParams,
     Individual,
     LocalSearch,
     PenaltyManager,
@@ -16,6 +15,12 @@ from pyvrp.stop import StoppingCriterion
 
 
 class GeneticAlgorithm:
+    class Params:
+        nb_penalty_management = 47
+        repair_probability = 79
+        collect_statistics = False
+        should_intensify = True
+
     def __init__(
         self,
         data: ProblemData,
@@ -24,7 +29,7 @@ class GeneticAlgorithm:
         population: Population,
         local_search: LocalSearch,
         crossover_op,
-        params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
+        params: Params = Params(),
     ):
         self._data = data
         self._pm = penalty_manager
@@ -34,8 +39,6 @@ class GeneticAlgorithm:
         self._op = crossover_op
         self._params = params
 
-        self._best = Individual(data, penalty_manager, rng)  # init rand sol
-
         self._load_feas: List[bool] = []
         self._tw_feas: List[bool] = []
 
@@ -44,7 +47,7 @@ class GeneticAlgorithm:
         stats = Statistics()
         iters = 0
 
-        while not stop(self._best):
+        while not stop(self._pop.get_best_found()):
             iters += 1
 
             parents = self._pop.select()
@@ -58,23 +61,19 @@ class GeneticAlgorithm:
                 stats.collect_from(self._pop)
 
         end = time.perf_counter() - start
-        return Result(self._best, stats, iters, end)
+        return Result(self._pop.get_best_found(), stats, iters, end)
 
     def _educate(self, individual: Individual):
         self._ls.search(individual)
-        is_new_best = individual.cost() < self._best.cost()
 
         # Only intensify feasible, new best solutions. See also the repair
         # step below.
         if (
             self._params.should_intensify
             and individual.is_feasible()
-            and is_new_best
+            and individual.cost() < self._pop.get_best_found().cost()
         ):
             self._ls.intensify(individual)
-
-        if is_new_best:
-            self._best = individual
 
         self._pop.add(individual)
         self._load_feas.append(not individual.has_excess_capacity())
@@ -87,14 +86,13 @@ class GeneticAlgorithm:
             # TODO booster
 
             self._ls.search(individual)
-            is_new_best = individual.cost() < self._best.cost()
 
             if individual.is_feasible():
-                if self._params.should_intensify and is_new_best:
+                if (
+                    self._params.should_intensify
+                    and individual.cost() < self._pop.get_best_found().cost()
+                ):
                     self._ls.intensify(individual)
-
-                if is_new_best:
-                    self._best = individual
 
                 self._pop.add(individual)
                 self._load_feas.append(not individual.has_excess_capacity())
@@ -108,3 +106,116 @@ class GeneticAlgorithm:
         feas_tw_pct = sum(self._tw_feas) / len(self._tw_feas)
         self._pm.update_time_warp_penalty(feas_tw_pct)
         self._tw_feas = []
+
+
+# #include "GeneticAlgorithm.h"
+#
+# #include "Individual.h"
+# #include "LocalSearch.h"
+# #include "Population.h"
+# #include "ProblemData.h"
+# #include "Result.h"
+# #include "Statistics.h"
+#
+# #include <chrono>
+# #include <numeric>
+# #include <utility>
+#
+# Result GeneticAlgorithm::run(StoppingCriterion &stop)
+# {
+#     using clock = std::chrono::system_clock;
+#
+#     Statistics stats;
+#     size_t iter = 0;
+#
+#     if (data.numClients() <= 1)
+#         return {population.getBestFound(), stats, iter, 0.};
+#
+#     auto start = clock::now();
+#     while (not stop(population.getBestFound().cost()))
+#     {
+#         iter++;
+#
+#         auto const parents = population.select();
+#         auto offspring = crossover(parents, data, penaltyManager, rng);
+#         educate(offspring);
+#
+#         if (iter % params.nbPenaltyManagement == 0)
+#             updatePenalties();
+#
+#         if (params.collectStatistics)
+#             stats.collectFrom(population);
+#     }
+#
+#     std::chrono::duration<double> runTime = clock::now() - start;
+#     return {population.getBestFound(), stats, iter, runTime.count()};
+# }
+#
+# void GeneticAlgorithm::educate(Individual &indiv)
+# {
+#     localSearch.search(indiv);
+#
+#     if (params.shouldIntensify  // only intensify feasible, new best
+#         && indiv.isFeasible()   // solutions. Cf. also repair below.
+#         && indiv.cost() < population.getBestFound().cost())
+#         localSearch.intensify(indiv);
+#
+#     population.add(indiv);
+#
+#     loadFeas.push_back(!indiv.hasExcessCapacity());
+#     timeFeas.push_back(!indiv.hasTimeWarp());
+#
+#     // Possibly repair if current solution is infeasible. In that case, we
+#     // penalise infeasibility more using a penalty booster.
+#     if (!indiv.isFeasible() && rng.randint(100) < params.repairProbability)
+#     {
+#         auto const booster = penaltyManager.getPenaltyBooster();
+#         localSearch.search(indiv);
+#
+#         if (indiv.isFeasible())
+#         {
+#             if (params.shouldIntensify
+#                 && indiv.cost() < population.getBestFound().cost())
+#                 localSearch.intensify(indiv);
+#
+#             population.add(indiv);
+#
+#             loadFeas.push_back(!indiv.hasExcessCapacity());
+#             timeFeas.push_back(!indiv.hasTimeWarp());
+#         }
+#     }
+# }
+#
+# void GeneticAlgorithm::updatePenalties()
+# {
+#     double feasLoadPct = std::reduce(loadFeas.begin(), loadFeas.end());
+#     feasLoadPct /= static_cast<double>(loadFeas.size());
+#
+#     penaltyManager.updateCapacityPenalty(feasLoadPct);
+#     loadFeas.clear();
+#
+#     double feasTimePct = std::reduce(timeFeas.begin(), timeFeas.end());
+#     feasTimePct /= static_cast<double>(timeFeas.size());
+#
+#     penaltyManager.updateTimeWarpPenalty(feasTimePct);
+#     timeFeas.clear();
+# }
+#
+# GeneticAlgorithm::GeneticAlgorithm(ProblemData &data,
+#                                    PenaltyManager &penaltyManager,
+#                                    XorShift128 &rng,
+#                                    Population &population,
+#                                    LocalSearch &localSearch,
+#                                    CrossoverOperator op,
+#                                    GeneticAlgorithmParams params)
+#     : data(data),
+#       penaltyManager(penaltyManager),
+#       rng(rng),
+#       population(population),
+#       localSearch(localSearch),
+#       crossover(std::move(op)),
+#       params(params)
+# {
+#     loadFeas.reserve(params.nbPenaltyManagement);
+#     timeFeas.reserve(params.nbPenaltyManagement);
+# }

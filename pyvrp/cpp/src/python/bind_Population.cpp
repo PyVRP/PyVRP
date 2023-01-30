@@ -25,5 +25,6 @@ void bind_Population(py::module_ &m)
              py::arg("rng"),
              py::arg("op"))
         .def("add", &Population::add, py::arg("individual"))
+        .def("get_best_found", &Population::getBestFound)
         .def("select", &Population::select);
 }
