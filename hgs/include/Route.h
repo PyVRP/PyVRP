@@ -13,6 +13,12 @@ class Route
 {
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
 
+    int load_;             // Current route load.
+    bool isLoadFeasible_;  // Whether current load is feasible.
+
+    int timeWarp_;             // Current route time warp.
+    bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
+
     // Populates the nodes vector.
     void setupNodes();
 
@@ -30,38 +36,50 @@ public:  // TODO make fields private
     double angleCenter;  // Angle of the barycenter of the route
 
     /**
-     * Returns the client or depot node at the given position.
+     * @return The client or depot node at the given position.
      */
-    [[nodiscard]] Node *operator[](size_t position) const;
+    [[nodiscard]] inline Node *operator[](size_t position) const;
 
     /**
      * Tests if this route is feasible.
+     *
+     * @return true if the route is feasible, false otherwise.
      */
-    [[nodiscard]] bool isFeasible() const;
+    [[nodiscard]] inline bool isFeasible() const;
 
     /**
      * Determines whether this route is load-feasible.
+     *
+     * @return true if the route exceeds the vehicle capacity, false otherwise.
      */
-    [[nodiscard]] bool hasExcessCapacity() const;
+    [[nodiscard]] inline bool hasExcessCapacity() const;
 
     /**
      * Determines whether this route is time-feasible.
+     *
+     * @return true if the route has time warp, false otherwise.
      */
-    [[nodiscard]] bool hasTimeWarp() const;
+    [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
-     * Returns total load on this route.
+     * @return Total load on this route.
      */
-    [[nodiscard]] int load() const;
+    [[nodiscard]] inline int load() const;
 
     /**
-     * Returns total time warp on this route.
+     * @return Total time warp on this route.
      */
-    [[nodiscard]] int timeWarp() const;
+    [[nodiscard]] inline int timeWarp() const;
 
-    [[nodiscard]] bool empty() const;
+    /**
+     * @return true if this route is empty, false otherwise.
+     */
+    [[nodiscard]] inline bool empty() const;
 
-    [[nodiscard]] size_t size() const;
+    /**
+     * @return Number of clients in this route.
+     */
+    [[nodiscard]] inline size_t size() const;
 
     /**
      * Calculates time window data for segment [start, end].
@@ -85,6 +103,32 @@ public:  // TODO make fields private
      */
     void update();
 };
+
+bool Route::isFeasible() const
+{
+    return !hasExcessCapacity() && !hasTimeWarp();
+}
+
+bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
+
+bool Route::hasTimeWarp() const { return isTimeWarpFeasible_; }
+
+Node *Route::operator[](size_t position) const
+{
+    assert(position > 0);
+    return nodes[position - 1];
+}
+
+int Route::load() const { return load_; }
+
+int Route::timeWarp() const { return timeWarp_; }
+
+bool Route::empty() const { return size() == 0; }
+
+size_t Route::size() const
+{
+    return nodes.size() - 1;  // exclude end depot
+}
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {

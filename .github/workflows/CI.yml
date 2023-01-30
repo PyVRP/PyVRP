@@ -55,7 +55,7 @@ jobs:
       - name: Make all
         run: |
           cmake -Brelease -Shgs
-          make --directory=release
+          cmake --build release
       - name: Run unit tests (C++)
         run: |
           cd release

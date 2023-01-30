@@ -25,7 +25,7 @@ public:  // TODO make fields private
     TimeWindowSegment twBefore;  // TWS for (0...client) including self
     TimeWindowSegment twAfter;   // TWS for (client...0) including self
 
-    [[nodiscard]] bool isDepot() const;
+    [[nodiscard]] inline bool isDepot() const;
 
     /**
      * Inserts this node after the other and updates the solution.
@@ -37,6 +37,8 @@ public:  // TODO make fields private
      */
     void swapWith(Node *other);
 };
+
+bool Node::isDepot() const { return client == 0; }
 
 /**
  * Convenience method accessing the node directly before the argument.

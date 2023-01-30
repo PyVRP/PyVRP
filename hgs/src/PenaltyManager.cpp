@@ -54,8 +54,10 @@ void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
 
 unsigned int PenaltyManager::loadPenalty(unsigned int load) const
 {
-    auto const excessLoad = std::max(load, vehicleCapacity) - vehicleCapacity;
-    return excessLoad * capacityPenalty;
+    if (load > vehicleCapacity)
+        return (load - vehicleCapacity) * capacityPenalty;
+
+    return 0;
 }
 
 unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const

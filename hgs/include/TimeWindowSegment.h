@@ -16,34 +16,34 @@ class TimeWindowSegment
     int twLate = 0;    // Latest visit moment of last client
     int release = 0;   // Release time; cannot leave depot earlier
 
-    [[nodiscard]] TWS merge(TWS const &other) const;
+    [[nodiscard]] inline TWS merge(TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] static TWS
+    [[nodiscard]] inline static TWS
     merge(TWS const &first, TWS const &second, Args... args);
 
     /**
      * Returns the time warp along the segment, assuming we can depart in time.
      */
-    [[nodiscard]] int segmentTimeWarp() const;
+    [[nodiscard]] inline int segmentTimeWarp() const;
 
     /**
      * Total time warp, that is, the time warp along the the segment, and
      * potential time warp due to too late a release time.
      */
-    [[nodiscard]] int totalTimeWarp() const;
+    [[nodiscard]] inline int totalTimeWarp() const;
 
     TimeWindowSegment() = default;  // TODO get rid of this constructor
 
-    TimeWindowSegment(Matrix<int> const *dist,
-                      int idxFirst,
-                      int idxLast,
-                      int duration,
-                      int timeWarp,
-                      int twEarly,
-                      int twLate,
-                      int release);
+    inline TimeWindowSegment(Matrix<int> const *dist,
+                             int idxFirst,
+                             int idxLast,
+                             int duration,
+                             int timeWarp,
+                             int twEarly,
+                             int twLate,
+                             int release);
 };
 
 template <typename... Args>
@@ -57,6 +57,49 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &first,
         return res;
     else
         return merge(res, args...);
+}
+
+TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
+{
+    int const distance = (*dist)(idxLast, other.idxFirst);
+    int const delta = duration - timeWarp + distance;
+    int const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
+    int const deltaTimeWarp = std::max(twEarly + delta - other.twLate, 0);
+
+    return {dist,
+            idxFirst,
+            other.idxLast,
+            duration + other.duration + distance + deltaWaitTime,
+            timeWarp + other.timeWarp + deltaTimeWarp,
+            std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
+            std::min(other.twLate - delta, twLate) + deltaTimeWarp,
+            std::max(release, other.release)};
+}
+
+int TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
+
+int TimeWindowSegment::totalTimeWarp() const
+{
+    return segmentTimeWarp() + std::max(release - twLate, 0);
+}
+
+TimeWindowSegment::TimeWindowSegment(Matrix<int> const *dist,
+                                     int idxFirst,
+                                     int idxLast,
+                                     int duration,
+                                     int timeWarp,
+                                     int twEarly,
+                                     int twLate,
+                                     int release)
+    : dist(dist),
+      idxFirst(idxFirst),
+      idxLast(idxLast),
+      duration(duration),
+      timeWarp(timeWarp),
+      twEarly(twEarly),
+      twLate(twLate),
+      release(release)
+{
 }
 
 #endif  // TIMEWINDOWDATA_H

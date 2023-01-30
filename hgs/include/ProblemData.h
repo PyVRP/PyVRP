@@ -33,7 +33,7 @@ public:
      * @param client Client whose data to return.
      * @return A struct containing the indicated client's information.
      */
-    [[nodiscard]] Client const &client(size_t client) const;
+    [[nodiscard]] inline Client const &client(size_t client) const;
 
     /**
      * @return A struct containing the depot's information.
@@ -47,7 +47,7 @@ public:
      * @param second Second client.
      * @return distance from the first to the second client.
      */
-    [[nodiscard]] int dist(size_t first, size_t second) const;
+    [[nodiscard]] inline int dist(size_t first, size_t second) const;
 
     /**
      * @return The full distance matrix.
@@ -101,5 +101,15 @@ public:
                 std::vector<std::vector<int>> const &distMat,
                 std::vector<int> const &releases);
 };
+
+ProblemData::Client const &ProblemData::client(size_t client) const
+{
+    return clients_[client];
+}
+
+int ProblemData::dist(size_t first, size_t second) const
+{
+    return dist_(first, second);
+}
 
 #endif  // HGS_PROBLEMDATA_H
