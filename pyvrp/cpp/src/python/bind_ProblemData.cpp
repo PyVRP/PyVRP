@@ -31,7 +31,10 @@ void bind_ProblemData(py::module_ &m)
              py::arg("service_durations"),
              py::arg("duration_matrix"),
              py::arg("release_times"))
-        .def("client", &ProblemData::client, py::return_value_policy::reference)
+        .def("client",
+             &ProblemData::client,
+             py::arg("client"),
+             py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
         .def("dist", &ProblemData::dist)
         .def("distance_matrix",
