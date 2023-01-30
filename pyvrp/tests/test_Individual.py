@@ -1,16 +1,7 @@
-import pathlib
-from functools import lru_cache
-
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp._lib.hgspy import Individual, PenaltyManager
-from pyvrp.read import read as _read
-
-
-@lru_cache
-def read(where: str):
-    this_dir = pathlib.Path(__file__).parent
-    return _read(this_dir / where)
+from pyvrp.tests.helpers import read
 
 
 def test_route_constructor_sorts_by_empty():
