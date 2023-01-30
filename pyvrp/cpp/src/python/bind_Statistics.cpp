@@ -6,6 +6,8 @@ namespace py = pybind11;
 void bind_Statistics(py::module_ &m)
 {
     py::class_<Statistics>(m, "Statistics")
+        .def(py::init<>())
+        .def("collect_from", &Statistics::collectFrom, py::arg("population"))
         .def("num_iters", &Statistics::numIters)
         .def("run_times", &Statistics::runTimes)
         .def("iter_times", &Statistics::iterTimes)

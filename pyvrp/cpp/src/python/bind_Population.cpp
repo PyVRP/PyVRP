@@ -24,5 +24,6 @@ void bind_Population(py::module_ &m)
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("op"))
-        .def("add", &Population::add, py::arg("individual"));
+        .def("add", &Population::add, py::arg("individual"))
+        .def("select", &Population::select);
 }
