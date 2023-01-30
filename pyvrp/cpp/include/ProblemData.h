@@ -9,6 +9,7 @@
 
 class ProblemData
 {
+public:
     struct Client
     {
         int x;            // Coordinate X
@@ -21,6 +22,7 @@ class ProblemData
                           // this time
     };
 
+private:
     Matrix<int> const dist_;       // Distance matrix (+depot)
     std::vector<Client> clients_;  // Client (+depot) information
 
