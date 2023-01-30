@@ -6,7 +6,6 @@
 using TWS = TimeWindowSegment;
 
 template <size_t N, size_t M>
-    requires (N >= M && N > 0)
 bool Exchange<N, M>::containsDepot(Node *node, size_t segLength) const
 {
     if (node->isDepot())
