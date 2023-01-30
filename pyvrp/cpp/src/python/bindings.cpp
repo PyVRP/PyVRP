@@ -33,10 +33,6 @@ PYBIND11_MODULE(hgspy, m)
     // Submodule for stopping criteria
     pybind11::module stop = m.def_submodule("stop");
     bind_StoppingCriterion(stop);  // abstract base type first
-    bind_MaxIterations(stop);
-    bind_MaxRuntime(stop);
-    bind_NoImprovement(stop);
-    bind_TimedNoImprovement(stop);
 
     // Submodule for local search operators
     pybind11::module lsOps = m.def_submodule("operators");

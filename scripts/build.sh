@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Exit immediately if any of the commands in this script fail.
+set -e
+
 BUILD_DIR=build
 PKG_LIB_DIR=pyvrp/_lib
 

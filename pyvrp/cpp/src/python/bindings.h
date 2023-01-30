@@ -29,11 +29,7 @@ void bind_crossover(pybind11::module_ &m);
 void bind_diversity(pybind11::module_ &m);
 
 // Stopping criteria
-void bind_MaxIterations(pybind11::module_ &m);
-void bind_MaxRuntime(pybind11::module_ &m);
-void bind_NoImprovement(pybind11::module_ &m);
 void bind_StoppingCriterion(pybind11::module_ &m);
-void bind_TimedNoImprovement(pybind11::module_ &m);
 
 // Local search operators
 void bind_Exchange(pybind11::module_ &m);
