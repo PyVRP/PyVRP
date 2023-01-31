@@ -132,10 +132,11 @@ class GeneticAlgorithm:
                         self._ls.intensify(individual)
 
                     self._pop.add(individual)
-                    self._load_feas.append(
-                        not individual.has_excess_capacity()
-                    )
-                    self._tw_feas.append(not individual.has_time_warp())
+
+                    # We already know the individual is feasible, so load and
+                    # time constraints are both satisfied.
+                    self._load_feas.append(True)
+                    self._tw_feas.append(True)
 
     def _update_penalties(self):
         feas_load_pct = sum(self._load_feas) / len(self._load_feas)
