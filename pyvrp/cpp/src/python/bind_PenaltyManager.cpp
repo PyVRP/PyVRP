@@ -11,14 +11,15 @@ void bind_PenaltyManager(py::module_ &m)
                  booster.enter();
                  return booster;
              })
-        .def("__exit__",
-             [](PenaltyManager::PenaltyBooster &booster,
-                py::object type,
-                py::object value,
-                py::object traceback) { booster.exit(); },
-                py::arg("type"),
-                py::arg("value"),
-                py::arg("traceback"));
+        .def(
+            "__exit__",
+            [](PenaltyManager::PenaltyBooster &booster,
+               py::object type,
+               py::object value,
+               py::object traceback) { booster.exit(); },
+            py::arg("type"),
+            py::arg("value"),
+            py::arg("traceback"));
 
     py::class_<PenaltyManager>(m, "PenaltyManager")
         .def(py::init<unsigned int, PenaltyParams>(),
