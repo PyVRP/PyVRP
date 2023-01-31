@@ -15,7 +15,10 @@ void bind_PenaltyManager(py::module_ &m)
              [](PenaltyManager::PenaltyBooster &booster,
                 py::object type,
                 py::object value,
-                py::object traceback) { booster.exit(); });
+                py::object traceback) { booster.exit(); },
+                py::arg("type"),
+                py::arg("value"),
+                py::arg("traceback"));
 
     py::class_<PenaltyManager>(m, "PenaltyManager")
         .def(py::init<unsigned int, PenaltyParams>(),
