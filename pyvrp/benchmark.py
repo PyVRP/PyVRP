@@ -5,7 +5,11 @@ import pathlib
 from functools import partial
 
 import numpy as np
-from tqdm.contrib.concurrent import process_map
+
+try:
+    from tqdm.contrib.concurrent import process_map
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("Install tqdm to use benchmark script.")
 
 from pyvrp.solve import solve
 
