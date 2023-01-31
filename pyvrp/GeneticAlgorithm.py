@@ -115,6 +115,8 @@ class GeneticAlgorithm:
         self._load_feas.append(not individual.has_excess_capacity())
         self._tw_feas.append(not individual.has_time_warp())
 
+        # Possibly repair if current solution is infeasible. In that case, we
+        # penalise infeasibility more using a penalty booster.
         if (
             not individual.is_feasible()
             and self._rng.randint(100) < self._params.repair_probability
