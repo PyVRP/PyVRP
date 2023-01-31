@@ -26,8 +26,7 @@ class Result:
     Raises
     ------
     ValueError
-        When the best solution is infeasible, or the number of iterations or
-        runtime are negative.
+        When the number of iterations or runtime are negative.
     """
 
     best: Individual
@@ -36,13 +35,16 @@ class Result:
     runtime: float
 
     def __post_init__(self):
-        if not self.best.is_feasible():
-            raise ValueError("Cannot construct an infeasible Result.")
-
         if self.num_iterations < 0:
             raise ValueError("Negative number of iterations not understood.")
 
         if self.runtime < 0:
             raise ValueError("Negative runtime not understood.")
 
-    # TODO plotting?
+    def cost(self):
+        return self.best.cost()
+
+    def is_feasible(self) -> bool:
+        return self.best.is_feasible()
+
+    # TODO plotting, __str__, __repr__?

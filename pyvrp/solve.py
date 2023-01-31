@@ -31,6 +31,7 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
+    **kwargs,
 ):
     data = read(data_loc)
     rng = XorShift128(seed=seed)
@@ -70,13 +71,17 @@ def solve(
         assert max_iterations is not None
         stop = MaxIterations(max_iterations)
 
-    res = algo.run(stop)
+    return algo.run(stop)
 
-    print(f"   Objective: {res.best.cost()}")
+
+def main():
+    args = parse_args()
+    res = solve(**vars(args))
+
+    print(f"   Objective: {res.cost()}")
     print(f"  Iterations: {res.num_iterations}")
     print(f"    Run-time: {res.runtime:.2f} seconds")
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    solve(**vars(args))
+    main()

@@ -51,6 +51,14 @@ codecov = "*"
 cmake = "^3.25.0"
 pybind11 = {extras = ["global"], version = "^2.10.3"}
 mypy = "^0.991"
+black = "^22.12.0"
+
+[tool.poetry.group.benchmark.dependencies]
+tqdm = "^4.64.1"
+
+[tool.poetry.scripts]
+benchmark = { callable = "pyvrp.benchmark:main", extras = ["benchmark"] }
+solve = "pyvrp.solve:main"
 
 [tool.black]
 line-length = 79
