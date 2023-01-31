@@ -1,4 +1,5 @@
 import time
+from dataclasses import dataclass
 from typing import List
 
 from pyvrp._lib.hgspy import (
@@ -16,13 +17,19 @@ from .Statistics import Statistics
 
 
 class GeneticAlgorithm:
+    @dataclass
     class Params:
-        nb_penalty_management = 47
-        repair_probability = 79
-        collect_statistics = False
-        should_intensify = True
+        nb_penalty_management: int = 47
+        repair_probability: float = 0.80
+        collect_statistics: bool = False
+        should_intensify: bool = True
 
-        # TODO parameter validation
+        def __post_init__(self):
+            if self.nb_penalty_management < 0:
+                raise ValueError("nb_penalty_management < 0 not understood.")
+
+            if not 0 <= self.repair_probability <= 1:
+                raise ValueError("repair_probability must be in [0, 1].")
 
     def __init__(
         self,
@@ -119,7 +126,7 @@ class GeneticAlgorithm:
         # penalise infeasibility more using a penalty booster.
         if (
             not individual.is_feasible()
-            and self._rng.randint(100) < self._params.repair_probability
+            and self._rng.rand() < self._params.repair_probability
         ):
             best_found = self._pop.get_best_found()
 

@@ -44,15 +44,40 @@ _ProxType = DefaultDict[_Wrapper, List[Tuple[float, _Wrapper]]]
 
 
 class Population:
+    @dataclass
     class Params:
-        min_pop_size = 25
-        generation_size = 40
-        nb_elite = 4
-        nb_close = 5
-        lb_diversity = 0.1
-        ub_diversity = 0.5
+        min_pop_size: int = 25
+        generation_size: int = 40
+        nb_elite: int = 4
+        nb_close: int = 5
+        lb_diversity: float = 0.1
+        ub_diversity: float = 0.5
 
-        # TODO parameter validation
+        def __post_init__(self):
+            if not 0 <= self.lb_diversity <= 1.0:
+                raise ValueError("lb_diversity must be in [0, 1].")
+
+            if not 0 <= self.ub_diversity <= 1.0:
+                raise ValueError("ub_diversity must be in [0, 1].")
+
+            if self.ub_diversity <= self.lb_diversity:
+                raise ValueError(
+                    "ub_diversity <= lb_diversity not understood."
+                )
+
+            if self.nb_elite < 0:
+                raise ValueError("nb_elite < 0 not understood.")
+
+            if self.nb_close < 0:
+                raise ValueError("nb_close < 0 not understood.")
+
+            if self.min_pop_size <= 0:
+                # Must be strictly positive, because we need individuals for
+                # crossover!
+                raise ValueError("min_pop_size <= 0 not understood")
+
+            if self.generation_size < 0:
+                raise ValueError("generation_size < 0 not understood.")
 
         @property
         def max_pop_size(self) -> int:
