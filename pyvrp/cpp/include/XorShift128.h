@@ -45,7 +45,7 @@ public:
 
     /**
      * Generators one pseudo-random double uniformly in the range [0, 1].
-     * 
+     *
      * @return A pseudo-random number in the range [0, 1].
      */
     template <typename T> T rand();
