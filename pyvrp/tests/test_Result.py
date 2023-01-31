@@ -1,18 +1,15 @@
+from numpy.testing import assert_almost_equal, assert_equal, assert_raises
+from pytest import mark
+
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp._lib.hgspy import Individual, PenaltyManager
 from pyvrp.tests.helpers import read
 
-from numpy.testing import assert_, assert_equal, assert_almost_equal, assert_raises
-from pytest import mark
-
 
 @mark.parametrize(
     "routes, num_iterations, runtime",
-    [
-        ([[1, 2], [3], [4]], 1, 1.5),
-        ([[1, 2, 3, 4], [], []], 100, 54.2)
-    ]
+    [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4], [], []], 100, 54.2)],
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
     data = read("data/OkSmall.txt")
@@ -21,7 +18,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
     res = Result(indiv, Statistics(), num_iterations, runtime)
 
-    assert_(res.is_feasible(), indiv.is_feasible())
+    assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
     assert_almost_equal(res.cost(), indiv.cost())
     assert_almost_equal(res.runtime, runtime)
@@ -30,9 +27,9 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 @mark.parametrize(
     "num_iterations, runtime",
     [
-        (-1, 0.),  # num_iterations < 0
-        (0, -1.),  # runtime < 0
-    ]
+        (-1, 0.0),  # num_iterations < 0
+        (0, -1.0),  # runtime < 0
+    ],
 )
 def test_init_raises_invalid_arguments(num_iterations, runtime):
     data = read("data/OkSmall.txt")
