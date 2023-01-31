@@ -2,9 +2,21 @@ from .Population import Population
 
 
 class Statistics:
-    # TODO
+    """
+    The Statistics object tracks various (population-level) statistics of
+    genetic algorithm runs. This can be helpful in analysing the algorithm's
+    performance.
+    """
 
     def collect_from(self, population: Population):
+        """
+        Collects statistics from the given population object.
+
+        Parameters
+        ----------
+        population
+            Population instance to collect statistics from.
+        """
         pass
 
 

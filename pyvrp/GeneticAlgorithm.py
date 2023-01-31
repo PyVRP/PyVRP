@@ -34,6 +34,25 @@ class GeneticAlgorithm:
         crossover_op,
         params: Params = Params(),
     ):
+        """
+        Creates a GeneticAlgorithm instance.
+
+        Parameters
+        ----------
+        data
+            Data object describing the problem to be solved.
+        penalty_manager
+            Penalty manager to use.
+        rng
+            Random number generator.
+        local_search
+            Local search instance to use.
+        crossover_op
+            Crossover operator to use for generating offspring.
+        params, optional
+            Genetic algorithm parameters. If not provided, a default will be
+            used.
+        """
         self._data = data
         self._pm = penalty_manager
         self._rng = rng
@@ -46,6 +65,20 @@ class GeneticAlgorithm:
         self._tw_feas: List[bool] = []
 
     def run(self, stop: StoppingCriterion):
+        """
+        Runs the genetic algorithm with the provided stopping criterion.
+
+        Parameters
+        ----------
+        stop
+            Stopping criterion to use. The algorithm runs until the first time
+            the stopping criterion returns ``True``.
+
+        Returns
+        -------
+        Result
+            A Result object, containing statistics and the best found solution.
+        """
         start = time.perf_counter()
         stats = Statistics()
         iters = 0

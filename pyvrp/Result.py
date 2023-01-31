@@ -7,6 +7,29 @@ from .Statistics import Statistics
 
 @dataclass
 class Result:
+    """
+    Stores the outcomes of a single run. An instance of this class is returned
+    once the GeneticAlgorithm completes.
+
+    Parameters
+    ----------
+    best
+        The best observed solution.
+    stats
+        A Statistics object containing runtime statistics. These are only
+        collected and available if statistics were collected for the given run.
+    num_iterations
+        Number of iterations performed by the genetic algorithm.
+    runtime
+        Total runtime of the main genetic algorithm loop.
+
+    Raises
+    ------
+    ValueError
+        When the best solution is infeasible, or the number of iterations or
+        runtime are negative.
+    """
+
     best: Individual
     stats: Statistics
     num_iterations: int
@@ -21,3 +44,5 @@ class Result:
 
         if self.runtime < 0:
             raise ValueError("Negative runtime not understood.")
+
+    # TODO plotting?

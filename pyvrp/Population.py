@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 from pyvrp._lib.hgspy import (
     Individual,
@@ -9,6 +9,7 @@ from pyvrp._lib.hgspy import (
 
 _Fitness = float
 _SubPop = List[Tuple[Individual, _Fitness]]
+_DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
 
 
 class Population:
@@ -31,9 +32,25 @@ class Population:
         data: ProblemData,
         penalty_manager: PenaltyManager,
         rng: XorShift128,
-        diversity_op,
+        diversity_op: _DiversityMeasure,
         params: Params = Params(),
     ):
+        """
+        Creates a Population instance.
+
+        Parameters
+        ----------
+        data
+            Data object describing the problem to be solved.
+        penalty_manager
+            Penalty manager to use.
+        rng
+            Random number generator.
+        diversity_op
+            Operator to use to determine pairwise diversity between solutions.
+        params, optional
+            Population parameters. If not provided, a default will be used.
+        """
         self._data = data
         self._pm = penalty_manager
         self._rng = rng
@@ -49,6 +66,15 @@ class Population:
             self.add(Individual(data, penalty_manager, rng))
 
     def add(self, individual: Individual):
+        """
+        Adds the given individual to the population. Survivor selection is
+        automatically triggered when the population reaches its maximum size.
+
+        Parameters
+        ----------
+        individual
+            Individual to add to the population.
+        """
         is_feasible = individual.is_feasible()
         cost = individual.cost()
 
@@ -67,6 +93,15 @@ class Population:
             self._best = individual
 
     def select(self) -> Tuple[Individual, Individual]:
+        """
+        Selects two (if possible non-identical) parents by binary tournament,
+        subject to a diversity restriction.
+
+        Returns
+        -------
+        tuple
+            A pair of individuals (parents).
+        """
         first = self.get_binary_tournament()
         second = self.get_binary_tournament()
 
@@ -83,6 +118,17 @@ class Population:
         return first, second
 
     def purge(self, pop: _SubPop):
+        """
+        Performs survivor selection: individuals in the given sub-population
+        are purged until the population is reduced to the ``minPopSize``.
+        Purging happens first to duplicate solutions, and then to solutions
+        with high biased fitness.
+
+        Parameters
+        ----------
+        pop
+            Sub-population to purge.
+        """
         # TODO remove duplicates and bad fitness
         del pop[self._params.min_pop_size :]
 
@@ -90,6 +136,15 @@ class Population:
         pass
 
     def get_binary_tournament(self) -> Individual:
+        """
+        Select an individual from this population by binary tournament.
+
+        Returns
+        -------
+        Individual
+            The selected individual.
+        """
+
         def select():
             num_feas = len(self._feas)
             num_infeas = len(self._infeas)
@@ -106,6 +161,15 @@ class Population:
         return indiv1 if fitness1 < fitness2 else indiv2
 
     def get_best_found(self) -> Individual:
+        """
+        Returns the best found solution so far. In early iterations, this
+        solution might not be feasible yet.
+
+        Returns
+        -------
+        Individual
+            The best solution found so far.
+        """
         return self._best
 
 

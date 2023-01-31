@@ -1,11 +1,10 @@
 import argparse
 from typing import Optional
 
-from pyvrp import GeneticAlgorithm, Population
+from pyvrp import GeneticAlgorithm, Population, read
 from pyvrp._lib.hgspy import (
     LocalSearch,
     PenaltyManager,
-    ProblemData,
     XorShift128,
     crossover,
     diversity,
@@ -33,7 +32,7 @@ def solve(
     max_runtime: Optional[float],
     max_iterations: Optional[int],
 ):
-    data = ProblemData.from_file(data_loc)
+    data = read(data_loc)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity())
 
@@ -78,10 +77,6 @@ def solve(
     print(f"    Run-time: {res.runtime:.2f} seconds")
 
 
-def main():
+if __name__ == "__main__":
     args = parse_args()
     solve(**vars(args))
-
-
-if __name__ == "__main__":
-    main()
