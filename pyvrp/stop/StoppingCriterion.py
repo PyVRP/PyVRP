@@ -3,7 +3,7 @@ from typing import Protocol
 from pyvrp.OptimisationTarget import OptimisationTarget
 
 
-class StoppingCriterion(Protocol):
+class StoppingCriterion(Protocol):  # pragma: no cover
     """
     Protocol that stopping criteria must implement.
     """
