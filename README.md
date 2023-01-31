@@ -1,6 +1,4 @@
-[![CI](https://github.com/N-Wouda/VRP-Solver-IJOC/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/N-Wouda/VRP-Solver-IJOC/actions/workflows/CI.yml)
-[![codecov](https://codecov.io/gh/N-Wouda/VRP-Solver-IJOC/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/N-Wouda/VRP-Solver-IJOC)
+[![CI](https://github.com/N-Wouda/pyvrp/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/N-Wouda/pyvrp/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/N-Wouda/pyvrp/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/N-Wouda/pyvrp)
 
-# VRP-Solver-IJOC
-
-Open-source, state-of-the-art rich VRP solver.
+The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem solver.

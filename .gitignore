@@ -122,7 +122,8 @@ ipython_config.py
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
-#Pipfile.lock
+Pipfile.lock
+poetry.lock
 
 # celery beat schedule file
 celerybeat-schedule
@@ -157,17 +158,17 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# IDE and compiled assets
+# IDEs
 .idea/
+
+# Compiled or generated assets
 debug/
 release/
 
 # Data files
 data/
+!pyvrp/tests/data/
 
 # Ignore Mac DS_Store files
 .DS_Store
 **/.DS_Store
-
-# Testing data
-!hgs/test/data/

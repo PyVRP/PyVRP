@@ -1,0 +1,34 @@
+fail_fast: true
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: debug-statements
+      - id: end-of-file-fixer
+
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.982
+    hooks:
+      - id: mypy
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v11.1.0
+    hooks:
+      - id: clang-format
+        args: [ "-style=file", "--dry-run", "-Werror" ]

@@ -19,13 +19,13 @@ jobs:
         include:
           - compiler: gcc
             compiler-version: '9'  # minimum gcc version
-            python-version: '3.7'  # minimum Python version
+            python-version: '3.8'  # minimum Python version
           - compiler: gcc
             compiler-version: latest
             python-version: '3.10'
           - compiler: clang
             compiler-version: '11'  # minimum clang version
-            python-version: '3.7'  # minimum Python version
+            python-version: '3.8'  # minimum Python version
           - compiler: clang
             compiler-version: latest
             python-version: '3.10'
@@ -37,6 +37,30 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        id: cache-python
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+      - name: Install Python dependencies
+        if: steps.cache-python.outputs.cache-hit != 'true'
+        run: poetry install --no-root
+      - name: Cache pre-commit
+        uses: actions/cache@v3
+        id: cache-pre-commit
+        with:
+          path: ~/.cache/pre-commit/
+          key: pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Install pre-commit
+        if: steps.cache-pre-commit.outputs.cache-hit != 'true'
+        run: poetry run pre-commit install --install-hooks
+      - name: Run pre-commit
+        run: poetry run pre-commit run --all-files
       - if: matrix.compiler == 'clang'
         name: Set up clang
         uses: egor-tensin/setup-clang@v1
@@ -47,20 +71,10 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           version: ${{ matrix.compiler-version }}
-      - uses: DoozyX/clang-format-lint-action@v0.13
-        with:
-          source: hgs/src hgs/include hgs/test
-          extensions: h, cpp
-          clangFormatVersion: 11
-      - name: Make all
-        run: |
-          cmake -Brelease -Shgs
-          cmake --build release
-      - name: Run unit tests (C++)
-        run: |
-          cd release
-          ctest
-      # TODO run Python tests
+      - name: Build pyvrp
+        run: scripts/build.sh Debug
+      - name: Run tests
+        run: poetry run python -m pytest
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

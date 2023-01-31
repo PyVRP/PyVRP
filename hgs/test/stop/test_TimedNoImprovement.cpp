@@ -34,7 +34,7 @@ TEST(TimedNoImprovementTest, timeLimit)
 {
     using namespace std::chrono_literals;
 
-    TimedNoImprovement stop(10000,.100);
+    TimedNoImprovement stop(10000, .100);
     ASSERT_FALSE(stop(0));
 
     std::this_thread::sleep_for(100ms);
