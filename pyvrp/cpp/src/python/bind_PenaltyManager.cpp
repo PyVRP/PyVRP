@@ -5,7 +5,17 @@ namespace py = pybind11;
 
 void bind_PenaltyManager(py::module_ &m)
 {
-    py::class_<PenaltyManager::PenaltyBooster>(m, "PenaltyBooster");
+    py::class_<PenaltyManager::PenaltyBooster>(m, "PenaltyBooster")
+        .def("__enter__",
+             [](PenaltyManager::PenaltyBooster &booster) {
+                 booster.enter();
+                 return booster;
+             })
+        .def("__exit__",
+             [](PenaltyManager::PenaltyBooster &booster,
+                py::object type,
+                py::object value,
+                py::object traceback) { booster.exit(); });
 
     py::class_<PenaltyManager>(m, "PenaltyManager")
         .def(py::init<unsigned int, PenaltyParams>(),

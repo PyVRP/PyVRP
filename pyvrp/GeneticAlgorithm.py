@@ -119,20 +119,23 @@ class GeneticAlgorithm:
             not individual.is_feasible()
             and self._rng.randint(100) < self._params.repair_probability
         ):
-            # TODO booster
+            best_found = self._pop.get_best_found()
 
-            self._ls.search(individual)
+            with self._pm.get_penalty_booster() as booster:  # noqa
+                self._ls.search(individual)
 
-            if individual.is_feasible():
-                if (
-                    self._params.should_intensify
-                    and individual.cost() < self._pop.get_best_found().cost()
-                ):
-                    self._ls.intensify(individual)
+                if individual.is_feasible():
+                    if (
+                        self._params.should_intensify
+                        and individual.cost() < best_found.cost()
+                    ):
+                        self._ls.intensify(individual)
 
-                self._pop.add(individual)
-                self._load_feas.append(not individual.has_excess_capacity())
-                self._tw_feas.append(not individual.has_time_warp())
+                    self._pop.add(individual)
+                    self._load_feas.append(
+                        not individual.has_excess_capacity()
+                    )
+                    self._tw_feas.append(not individual.has_time_warp())
 
     def _update_penalties(self):
         feas_load_pct = sum(self._load_feas) / len(self._load_feas)

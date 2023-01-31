@@ -30,14 +30,19 @@ public:
               oldCapacityPenalty(mngr.capacityPenalty),
               oldTimeWarpPenalty(mngr.timeWarpPenalty)
         {
+        }
+
+        void enter()
+        {
             mngr.capacityPenalty *= mngr.params.repairBooster;
             mngr.timeWarpPenalty *= mngr.params.repairBooster;
         }
 
-        ~PenaltyBooster()
+        void exit()
         {
             mngr.capacityPenalty = oldCapacityPenalty;
             mngr.timeWarpPenalty = oldTimeWarpPenalty;
+
         }
     };
 

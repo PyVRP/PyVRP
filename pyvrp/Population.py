@@ -1,4 +1,11 @@
-from typing import Callable, List, Tuple
+from __future__ import annotations
+
+import bisect
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Callable, DefaultDict, List, Tuple
+
+import numpy as np
 
 from pyvrp._lib.hgspy import (
     Individual,
@@ -7,9 +14,33 @@ from pyvrp._lib.hgspy import (
     XorShift128,
 )
 
-_Fitness = float
-_SubPop = List[Tuple[Individual, _Fitness]]
+
+@dataclass
+class _Wrapper:
+    individual: Individual
+    fitness: float
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, _Wrapper) and self.individual == other.individual
+        )
+
+    def __hash__(self) -> int:
+        return hash(self.individual)
+
+    def __iter__(self):
+        return iter((self.individual, self.fitness))
+
+    def __lt__(self, other: _Wrapper):
+        return self.fitness < other.fitness
+
+    def cost(self) -> float:
+        return self.individual.cost()
+
+
+_SubPop = List[_Wrapper]
 _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
+_ProxType = DefaultDict[_Wrapper, List[Tuple[float, _Wrapper]]]
 
 
 class Population:
@@ -60,6 +91,8 @@ class Population:
         self._feas: _SubPop = []
         self._infeas: _SubPop = []
 
+        self._prox: _ProxType = defaultdict(list)
+
         self._best = Individual(data, penalty_manager, rng)
 
         for _ in range(params.min_pop_size):
@@ -79,11 +112,14 @@ class Population:
         cost = individual.cost()
 
         pop = self._feas if is_feasible else self._infeas
+        wrapper = _Wrapper(individual, 0.0)
 
-        for other, _ in pop:
-            pass  # TODO register
+        for other in pop:
+            dist = self._op(self._data, individual, other.individual)
+            bisect.insort_left(self._prox[wrapper], (dist, other))
+            bisect.insort_left(self._prox[other], (dist, wrapper))
 
-        pop.append((individual, 0.0))
+        pop.append(wrapper)
         self.update_fitness(pop)
 
         if len(pop) > self._params.max_pop_size:
@@ -121,19 +157,51 @@ class Population:
         """
         Performs survivor selection: individuals in the given sub-population
         are purged until the population is reduced to the ``minPopSize``.
-        Purging happens first to duplicate solutions, and then to solutions
-        with high biased fitness.
+        Purging happens to solutions with high biased fitness.
 
         Parameters
         ----------
         pop
             Sub-population to purge.
         """
-        # TODO remove duplicates and bad fitness
-        del pop[self._params.min_pop_size :]
+
+        def remove(individual: _Wrapper):
+            for _, others in self._prox.items():
+                for idx, (_, other) in enumerate(others):
+                    if other == individual:
+                        del others[idx]
+                        break
+
+            del self._prox[individual]
+            pop.remove(individual)
+
+        # TODO remove duplicates?
+
+        while len(pop) > self._params.min_pop_size:
+            self.update_fitness(pop)
+            remove(max(pop))
 
     def update_fitness(self, pop: _SubPop):
-        pass
+        by_cost = np.argsort([wrapper.cost() for wrapper in pop])
+        diversity = []
+
+        for rank in range(len(pop)):
+            individual = pop[by_cost[rank]]
+            closest = self._prox[individual][: self._params.nb_close]
+
+            if closest:
+                dist = np.mean([div for div, _ in closest])
+                diversity.append((dist, rank))
+            else:
+                diversity.append((0, rank))
+
+        diversity.sort(reverse=True)
+        nb_elite = min(self._params.nb_elite, len(pop))
+
+        for div_rank, (_, cost_rank) in enumerate(diversity):
+            div_weight = 1 - nb_elite / len(pop)
+            fitness = (cost_rank + div_weight * div_rank) / len(pop)
+            pop[cost_rank].fitness = fitness
 
     def get_binary_tournament(self) -> Individual:
         """
@@ -171,199 +239,3 @@ class Population:
             The best solution found so far.
         """
         return self._best
-
-
-# #include "Population.h"
-#
-# #include "Individual.h"
-# #include "ProblemData.h"
-#
-# #include <memory>
-# #include <vector>
-#
-# void Population::add(Individual const &indiv)
-# {
-#     auto &subPop = indiv.isFeasible() ? feasible : infeasible;
-#     auto indivPtr = std::make_unique<Individual>(indiv);
-#
-#     for (auto const &other : subPop)  // update distance to other individuals
-#         registerNearbyIndividual(indivPtr.get(), other.indiv.get());
-#
-#     subPop.push_back({std::move(indivPtr), 0});
-#     updateBiasedFitness(subPop);
-#
-#     if (subPop.size() > params.minPopSize + params.generationSize)
-#         purge(subPop);  // survivor selection
-#
-#     if (indiv.isFeasible() && indiv.cost() < bestSol.cost())
-#         bestSol = indiv;
-# }
-#
-# void Population::updateBiasedFitness(SubPopulation &subPop) const
-# {
-#     // Sort population by ascending cost
-#     std::sort(subPop.begin(), subPop.end(), [](auto &a, auto &b) {
-#         return a.indiv->cost() < b.indiv->cost();
-#     });
-#
-#     // Ranking the individuals based on their diversity contribution (
-#     decreasing
-#     // order of broken pairs distance)
-#     std::vector<std::pair<double, size_t>> diversity;
-#     for (size_t rank = 0; rank != subPop.size(); rank++)
-#     {
-#         auto dist = avgDistanceClosest(*subPop[rank].indiv.get());
-#         diversity.emplace_back(dist, rank);
-#     }
-#
-#     std::sort(diversity.begin(), diversity.end(), std::greater<>());
-#
-#     auto const numElite = std::min(params.nbElite, subPop.size());
-#
-#     for (size_t divRank = 0; divRank != subPop.size(); divRank++)
-#     {
-#         auto const popSize = static_cast<double>(subPop.size());
-#
-#         // Ranking the individuals based on the cost and diversity rank
-#         auto const costRank = diversity[divRank].second;
-#         auto const divWeight = 1 - numElite / popSize;
-#
-#         subPop[costRank].fitness = (costRank + divWeight * divRank) /
-#         popSize;
-#     }
-# }
-#
-# void Population::purge(std::vector<IndividualWrapper> &subPop)
-# {
-#     auto remove = [&](auto &iterator) {
-#         auto const *indiv = iterator->indiv.get();
-#
-#         for (auto [_, individuals] : proximity)
-#             for (size_t idx = 0; idx != individuals.size(); ++idx)
-#                 if (individuals[idx].second == indiv)
-#                 {
-#                     individuals.erase(individuals.begin() + idx);
-#                     break;
-#                 }
-#
-#         proximity.erase(indiv);
-#         subPop.erase(iterator);
-#     };
-#
-#     while (subPop.size() > params.minPopSize)
-#     {
-#         // Remove duplicates from the subpopulation (if they exist)
-#         auto const pred = [&](auto &it) {
-#             return proximity.contains(it.indiv.get())
-#                    && !proximity.at(it.indiv.get()).empty()
-#                    && proximity.at(it.indiv.get()).begin()->first == 0;
-#         };
-#
-#         auto const duplicate = std::find_if(subPop.begin(), subPop.end(),
-#         pred);
-#
-#         if (duplicate == subPop.end())  // there are no more duplicates
-#             break;
-#
-#         remove(duplicate);
-#     }
-#
-#     while (subPop.size() > params.minPopSize)
-#     {
-#         // Remove the worst individual (worst in terms of biased fitness)
-#         updateBiasedFitness(subPop);
-#
-#         auto const worstFitness = std::max_element(
-#             subPop.begin(), subPop.end(), [](auto const &a, auto const &b) {
-#                 return a.fitness < b.fitness;
-#             });
-#
-#         remove(worstFitness);
-#     }
-# }
-#
-# void Population::registerNearbyIndividual(Individual *first, Individual
-# *second)
-# {
-#     auto const dist = divOp(data, *first, *second);
-#     auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
-#
-#     auto &fProx = proximity[first];
-#     auto place = std::lower_bound(fProx.begin(), fProx.end(), dist, cmp);
-#     fProx.emplace(place, dist, second);
-#
-#     auto &sProx = proximity[second];
-#     place = std::lower_bound(sProx.begin(), sProx.end(), dist, cmp);
-#     sProx.emplace(place, dist, first);
-# }
-#
-# double Population::avgDistanceClosest(Individual const &indiv) const
-# {
-#     if (!proximity.contains(&indiv) || proximity.at(&indiv).empty())
-#         return 0.;
-#
-#     auto const &prox = proximity.at(&indiv);
-#     auto const maxSize = std::min(params.nbClose, prox.size());
-#     auto start = prox.begin();
-#     int result = 0;
-#
-#     for (auto it = start; it != start + maxSize; ++it)
-#         result += it->first;
-#
-#     return result / static_cast<double>(maxSize);
-# }
-#
-# Individual const *Population::getBinaryTournament()
-# {
-#     auto const fSize = numFeasible();
-#
-#     auto const idx1 = rng.randint(size());
-#     auto &wrap1 = idx1 < fSize ? feasible[idx1] : infeasible[idx1 - fSize];
-#
-#     auto const idx2 = rng.randint(size());
-#     auto &wrap2 = idx2 < fSize ? feasible[idx2] : infeasible[idx2 - fSize];
-#
-#     return (wrap1.fitness < wrap2.fitness ? wrap1.indiv : wrap2.indiv).get();
-# }
-#
-# std::pair<Individual const *, Individual const *> Population::select()
-# {
-#     auto const *par1 = getBinaryTournament();
-#     auto const *par2 = getBinaryTournament();
-#
-#     auto diversity = divOp(data, *par1, *par2);
-#
-#     size_t tries = 1;
-#     while ((diversity < params.lbDiversity || diversity > params.ubDiversity)
-#            && tries++ < 10)
-#     {
-#         par2 = getBinaryTournament();
-#         diversity = divOp(data, *par1, *par2);
-#     }
-#
-#     return std::make_pair(par1, par2);
-# }
-#
-# size_t Population::size() const { return numFeasible() + numInfeasible(); }
-#
-# size_t Population::numFeasible() const { return feasible.size(); }
-#
-# size_t Population::numInfeasible() const { return infeasible.size(); }
-#
-# Individual const &Population::getBestFound() const { return bestSol; }
-#
-# Population::Population(ProblemData const &data,
-#                        PenaltyManager const &penaltyManager,
-#                        XorShift128 &rng,
-#                        DiversityMeasure op,
-#                        PopulationParams params)
-#     : data(data),
-#       rng(rng),
-#       divOp(std::move(op)),
-#       params(params),
-#       bestSol(data, penaltyManager, rng)  // random initial best solution
-# {
-#     // Generate minPopSize random individuals to seed the population.
-#     for (size_t count = 0; count != params.minPopSize; ++count)
-#         add({data, penaltyManager, rng});
-# }
