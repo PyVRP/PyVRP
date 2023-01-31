@@ -42,7 +42,6 @@ public:
         {
             mngr.capacityPenalty = oldCapacityPenalty;
             mngr.timeWarpPenalty = oldTimeWarpPenalty;
-
         }
     };
 
