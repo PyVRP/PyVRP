@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import bisect
-from collections import defaultdict
 from dataclasses import dataclass
-from typing import Callable, DefaultDict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 
@@ -38,9 +37,9 @@ class _Wrapper:
         return self.individual.cost()
 
 
-_SubPop = List[_Wrapper]
+SubPop = List[_Wrapper]
 _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
-_ProxType = DefaultDict[_Wrapper, List[Tuple[float, _Wrapper]]]
+_ProxType = Dict[_Wrapper, List[Tuple[float, _Wrapper]]]
 
 
 class Population:
@@ -113,10 +112,10 @@ class Population:
         self._op = diversity_op
         self._params = params
 
-        self._feas: _SubPop = []
-        self._infeas: _SubPop = []
+        self._feas: SubPop = []
+        self._infeas: SubPop = []
 
-        self._prox: _ProxType = defaultdict(list)
+        self._prox: _ProxType = {}
 
         self._best = Individual(data, penalty_manager, rng)
 
@@ -139,18 +138,20 @@ class Population:
         pop = self._feas if is_feasible else self._infeas
         wrapper = _Wrapper(individual, 0.0)
 
+        pop.append(wrapper)
+        self._prox[wrapper] = []
+
         for other in pop:
             dist = self._op(self._data, individual, other.individual)
             bisect.insort_left(self._prox[wrapper], (dist, other))
             bisect.insort_left(self._prox[other], (dist, wrapper))
 
-        pop.append(wrapper)
         self.update_fitness(pop)
 
         if len(pop) > self._params.max_pop_size:
             self.purge(pop)
 
-        if is_feasible and cost < self.get_best_found().cost():
+        if is_feasible and cost < self._best.cost():
             self._best = individual
 
     def select(self) -> Tuple[Individual, Individual]:
@@ -178,7 +179,7 @@ class Population:
 
         return first, second
 
-    def purge(self, pop: _SubPop):
+    def purge(self, pop: SubPop):
         """
         Performs survivor selection: individuals in the given sub-population
         are purged until the population is reduced to the ``minPopSize``.
@@ -200,25 +201,20 @@ class Population:
             del self._prox[individual]
             pop.remove(individual)
 
-        # TODO remove duplicates?
+        # TODO remove duplicates
 
         while len(pop) > self._params.min_pop_size:
             self.update_fitness(pop)
             remove(max(pop))
 
-    def update_fitness(self, pop: _SubPop):
+    def update_fitness(self, pop: SubPop):
         by_cost = np.argsort([wrapper.cost() for wrapper in pop])
         diversity = []
 
         for rank in range(len(pop)):
             individual = pop[by_cost[rank]]
-            closest = self._prox[individual][: self._params.nb_close]
-
-            if closest:
-                dist = np.mean([div for div, _ in closest])
-                diversity.append((dist, rank))
-            else:
-                diversity.append((0, rank))
+            avg_diversity = self.avg_distance_closest(individual)
+            diversity.append((avg_diversity, rank))
 
         diversity.sort(reverse=True)
         nb_elite = min(self._params.nb_elite, len(pop))
@@ -227,6 +223,39 @@ class Population:
             div_weight = 1 - nb_elite / len(pop)
             fitness = (cost_rank + div_weight * div_rank) / len(pop)
             pop[cost_rank].fitness = fitness
+
+    def avg_distance_closest(self, individual: Individual) -> float:
+        """
+        Determines the average distance of the given individual to its nearest
+        individuals. This provides a measure of the relative 'diversity' of
+        this individual.
+
+        Parameters
+        ----------
+        individual
+            Individual whose average distance/diversity to calculate.
+
+        Returns
+        -------
+        float
+            The average distance/diversity of the given individual relative to
+            the total population.
+
+        Raises
+        ------
+        KeyError
+            When the given individual is not known to this population instance.
+        """
+        if individual not in self._prox:
+            raise KeyError("Individual not in proximity structure!")
+
+        # TODO do we need nb_close? Why not all?
+        closest = self._prox[individual][: self._params.nb_close]
+
+        if closest:
+            return np.mean([div for div, _ in closest])
+
+        return 0.0
 
     def get_binary_tournament(self) -> Individual:
         """
