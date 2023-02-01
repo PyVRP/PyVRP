@@ -39,6 +39,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 numpy = ">=1.15.2"
+matplotlib = "^3.6.3"
 
 [tool.poetry.group.benchmark.dependencies]
 tqdm = "^4.64.1"
@@ -55,6 +56,7 @@ cmake = "^3.25.0"
 pybind11 = {extras = ["global"], version = "^2.10.3"}
 mypy = "^0.991"
 black = "^22.12.0"
+jupyter = "^1.0.0"
 
 [tool.poetry.scripts]
 benchmark = "pyvrp.benchmark:main"

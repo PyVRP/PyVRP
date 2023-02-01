@@ -1,3 +1,8 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import collections as matcoll
+
+
 def discrete_cmap(N, base_cmap=None):
     """
     Create an N-bin discrete colormap from the specified input map
@@ -18,12 +23,12 @@ def plot_vrptw(ax1, instance, solution=None,
     """
     Plot the route(s) on matplotlib axis ax1.
     """
-    coords = np.array(instance['coords'])
-    demand = np.array(instance['demands'])
+    coords = np.array(instance['node_coord'])
+    demand = np.array(instance['demand'])
     capacity = instance['capacity']
-    timew = np.array(instance['time_windows'])
-    service_t = instance['service_times']
-    dist = instance['duration_matrix']
+    timew = np.array(instance['time_window'])
+    service_t = instance['service_time']
+    dist = instance['distance']
     min_routes = demand.sum() / capacity
     
     visualize_nodes = True
@@ -165,12 +170,12 @@ def plot_schedule(ax, instance, solution=None, markersize=5, title="VRP", tw_lin
     - shading: cumulative demand/load (y-axis normalized to vehicle capacity)
     """
     
-    coords = instance['coords']
-    demand = instance['demands']
+    coords = instance['node_coord']
+    demand = instance['demand']
     capacity = instance['capacity']
-    timew = instance['time_windows']
-    service_t = instance['service_times']
-    dist = instance['duration_matrix']
+    timew = instance['time_window']
+    service_t = instance['service_time']
+    dist = instance['distance']
     min_routes = demand.sum() / capacity
     routes = solution
         
