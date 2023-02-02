@@ -80,6 +80,7 @@ class Result:
             "Solution results",
             "================",
             f"   objective: {self.cost():.2f}",
+            f"    feasible? {self.is_feasible()}",
             f"# iterations: {self.num_iterations}",
             f"    run-time: {self.runtime:.2f} seconds\n",
         ]
