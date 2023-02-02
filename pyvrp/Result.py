@@ -184,7 +184,7 @@ class Result:
             "======",
         ]
 
-        for idx, route in enumerate(self.best.get_routes()):
+        for idx, route in enumerate(self.best.get_routes(), 1):
             if route:
                 routes.append(f"Route {idx:>2}: {route}")
 
