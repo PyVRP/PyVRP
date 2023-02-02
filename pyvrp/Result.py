@@ -236,18 +236,15 @@ class Result:
             for client in range(data.num_clients())
         ]
 
-        # Plot coordinates
-        ax.scatter(*coords, c="tab:blue", label="Customers", s=100)
+        kwargs = dict(zorder=3, s=100)
+        ax.scatter(*coords, c="tab:blue", label="Customers", **kwargs)
 
-        # Plot big depot
-        kwargs = dict(marker="*", zorder=3, s=750)
+        kwargs = dict(marker="*", zorder=3, s=750)  # type: ignore
         ax.scatter(*coords[0], c="tab:red", label="Depot", **kwargs)
 
-        # Add routes to plot
         for route in self.best.get_routes():
             ax.plot(*coords[[0] + route + [0]].T)
 
-        # Gridlines help with understanding proportions
         ax.grid(color="grey", linestyle="--", linewidth=0.25)
 
         ax.set_title("Solution")
@@ -278,7 +275,7 @@ class Result:
         x = 1 + np.arange(self.num_iterations)
         ax.plot(x, self.stats.runtimes)
 
-        if self.num_iterations > 1:
+        if self.num_iterations > 1:  # need data to plot a trendline
             b, c = np.polyfit(x, self.stats.runtimes, 1)  # noqa
             ax.plot(b * x + c)
 
