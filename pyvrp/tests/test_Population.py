@@ -221,9 +221,20 @@ def test_select_returns_same_parents_if_no_other_option():
     pop.add(Individual(data, pm, [[3, 2], [1], [4]]))
     assert_equal(len(pop), 2)
 
-    # We should now get two different individuals as parents.
-    parents = pop.select()
-    assert_(parents[0] != parents[1])
+    # We should now get two different individuals as parents, at least most of
+    # the time. The actual probability of getting the same parents is very
+    # small, but not zero. So let's do an experiment where we do 1000 selects,
+    # and collect the number of times the parents are different.
+    different_parents = 0
+    for _ in range(1_000):
+        parents = pop.select()
+        different_parents += parents[0] != parents[1]
+
+    # The probability of selecting different parents is very close to 100%, so
+    # we would expect to observe different parents much more than 90% of the
+    # time. At the same time, it is very unlikely each one of the 1000 selects
+    # returns a different parent pair.
+    assert_(900 < different_parents < 1_000)
 
 
 # // TODO test more select() - diversity, feas/infeas pairs
@@ -246,7 +257,7 @@ def test_pop_and_proximity_are_in_sync(min_pop_size: int):
     infeas = pop.infeasible_subpopulation
     prox = pop.proximity_structure
 
-    # We run a few time sthe maximum pop size, to make sure that we get one or
+    # We run a few times the maximum pop size, to make sure that we get one or
     # more purge cycles in.
     for _ in range(5 * params.max_pop_size):
         indiv = Individual(data, pm, rng)

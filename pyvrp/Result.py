@@ -115,7 +115,7 @@ class Result:
             fig = plt.figure(figsize=(20, 12))
 
         # Uses a GridSpec instance to lay-out all subplots nicely. There are
-        # two columns: left and right. Left has three rows, each containg a
+        # two columns: left and right. Left has three rows, each containing a
         # plot with statistics: the first plots population diversity, the
         # second subpopulation objective information, and the third iteration
         # runtimes. The right column plots the solution on top of the instance

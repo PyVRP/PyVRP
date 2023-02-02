@@ -16,6 +16,7 @@ from pyvrp._lib.hgspy import (
 
 @dataclass
 class _Wrapper:
+    # TODO can we do without this wrapper class?
     individual: Individual
     fitness: float
 
@@ -190,21 +191,21 @@ class Population:
         is_feasible = individual.is_feasible()
         cost = individual.cost()
 
-        pop = self._feas if is_feasible else self._infeas
+        subpop = self._feas if is_feasible else self._infeas
         wrapper = _Wrapper(individual, 0.0)
 
         self._prox[wrapper] = []
 
-        for other in pop:
+        for other in subpop:
             dist = self._op(self._data, individual, other.individual)
             bisect.insort_left(self._prox[wrapper], (dist, other))
             bisect.insort_left(self._prox[other], (dist, wrapper))
 
-        pop.append(wrapper)
-        self.update_fitness(pop)
+        subpop.append(wrapper)
+        self.update_fitness(subpop)
 
-        if len(pop) > self._params.max_pop_size:
-            self.purge(pop)
+        if len(subpop) > self._params.max_pop_size:
+            self.purge(subpop)
 
         if is_feasible and cost < self._best.cost():
             self._best = individual
@@ -234,7 +235,7 @@ class Population:
 
         return first, second
 
-    def purge(self, pop: SubPop):
+    def purge(self, subpop: SubPop):
         """
         Performs survivor selection: individuals in the given sub-population
         are purged until the population is reduced to the ``minPopSize``.
@@ -242,7 +243,7 @@ class Population:
 
         Parameters
         ----------
-        pop
+        subpop
             Sub-population to purge.
         """
 
@@ -254,10 +255,10 @@ class Population:
                         break
 
             del self._prox[individual]
-            pop.remove(individual)
+            subpop.remove(individual)
 
-        while len(pop) > self._params.min_pop_size:
-            for wrapper in pop:
+        while len(subpop) > self._params.min_pop_size:
+            for wrapper in subpop:
                 prox = self.proximity_structure[wrapper]
 
                 if prox and np.isclose(prox[0][0], 0.0):  # is a duplicate?
@@ -266,26 +267,37 @@ class Population:
             else:  # we did not find any duplicates, so break loop
                 break
 
-        while len(pop) > self._params.min_pop_size:
-            self.update_fitness(pop)
-            remove(max(pop))
+        while len(subpop) > self._params.min_pop_size:
+            self.update_fitness(subpop)
+            remove(max(subpop))
 
-    def update_fitness(self, pop: SubPop):
-        by_cost = np.argsort([wrapper.cost() for wrapper in pop])
+    def update_fitness(self, subpop: SubPop):
+        """
+        Updates the biased fitness scores of all individuals in the given
+        subpopulation. This fitness depends on the quality of the solution
+        (based on its cost) and the diversity w.r.t. to other individuals in
+        the subpopulation.
+
+        Parameters
+        ----------
+        subpop
+            Subpopulation to update.
+        """
+        by_cost = np.argsort([wrapper.cost() for wrapper in subpop])
         diversity = []
 
-        for rank in range(len(pop)):
-            wrapper = pop[by_cost[rank]]
+        for rank in range(len(subpop)):
+            wrapper = subpop[by_cost[rank]]
             avg_diversity = self.avg_distance_closest(wrapper)
             diversity.append((avg_diversity, rank))
 
         diversity.sort(reverse=True)
-        nb_elite = min(self._params.nb_elite, len(pop))
+        nb_elite = min(self._params.nb_elite, len(subpop))
 
         for div_rank, (_, cost_rank) in enumerate(diversity):
-            div_weight = 1 - nb_elite / len(pop)
-            fitness = (cost_rank + div_weight * div_rank) / len(pop)
-            pop[by_cost[cost_rank]].fitness = fitness
+            div_weight = 1 - nb_elite / len(subpop)
+            fitness = (cost_rank + div_weight * div_rank) / len(subpop)
+            subpop[by_cost[cost_rank]].fitness = fitness
 
     def avg_distance_closest(self, wrapper: _Wrapper) -> float:
         """
@@ -304,13 +316,12 @@ class Population:
             The average distance/diversity of the given individual relative to
             the total population.
         """
-        # TODO do we need nb_close? Why not all?
         closest = self._prox[wrapper][: self._params.nb_close]
         return np.mean([div for div, _ in closest]) if closest else 0.0
 
     def get_binary_tournament(self) -> Individual:
         """
-        Select an individual from this population by binary tournament.
+        Selects an individual from this population by binary tournament.
 
         Returns
         -------
