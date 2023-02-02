@@ -67,10 +67,11 @@ class PopulationParams:
         if self.nb_close < 0:
             raise ValueError("nb_close < 0 not understood.")
 
-        if self.min_pop_size <= 0:
-            # Must be strictly positive, because we need individuals for
-            # crossover!
-            raise ValueError("min_pop_size <= 0 not understood")
+        if self.min_pop_size < 0:
+            # It'll be pretty difficult to do crossover without individuals,
+            # but that should not matter much to the Population. Perhaps the
+            # user wants to add the pops by themselves somehow.
+            raise ValueError("min_pop_size < 0 not understood")
 
         if self.generation_size < 0:
             raise ValueError("generation_size < 0 not understood.")
@@ -268,10 +269,9 @@ class Population:
 
         def select():
             num_feas = len(self._feas)
-            num_infeas = len(self._infeas)
-            idx = self._rng.randint(num_feas + num_infeas)
+            idx = self._rng.randint(self.size())
 
-            if idx < len(self._feas):
+            if idx < num_feas:
                 return self._feas[idx]
 
             return self._infeas[idx - num_feas]
@@ -292,3 +292,15 @@ class Population:
             The best solution found so far.
         """
         return self._best
+
+    def size(self) -> int:
+        """
+        Returns the current population size, that is, the size of its feasible
+        and infeasible subpopulations.
+
+        Returns
+        -------
+        int
+            Population size.
+        """
+        return len(self._feas) + len(self._infeas)
