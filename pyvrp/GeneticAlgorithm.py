@@ -16,21 +16,22 @@ from .Result import Result
 from .Statistics import Statistics
 
 
+@dataclass
+class GeneticAlgorithmParams:
+    nb_penalty_management: int = 47
+    repair_probability: float = 0.80
+    collect_statistics: bool = False
+    should_intensify: bool = True
+
+    def __post_init__(self):
+        if self.nb_penalty_management < 0:
+            raise ValueError("nb_penalty_management < 0 not understood.")
+
+        if not 0 <= self.repair_probability <= 1:
+            raise ValueError("repair_probability must be in [0, 1].")
+
+
 class GeneticAlgorithm:
-    @dataclass
-    class Params:
-        nb_penalty_management: int = 47
-        repair_probability: float = 0.80
-        collect_statistics: bool = False
-        should_intensify: bool = True
-
-        def __post_init__(self):
-            if self.nb_penalty_management < 0:
-                raise ValueError("nb_penalty_management < 0 not understood.")
-
-            if not 0 <= self.repair_probability <= 1:
-                raise ValueError("repair_probability must be in [0, 1].")
-
     def __init__(
         self,
         data: ProblemData,
@@ -39,7 +40,7 @@ class GeneticAlgorithm:
         population: Population,
         local_search: LocalSearch,
         crossover_op,
-        params: Params = Params(),
+        params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
         """
         Creates a GeneticAlgorithm instance.

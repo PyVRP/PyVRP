@@ -1,3 +1,3 @@
-from .GeneticAlgorithm import GeneticAlgorithm
-from .Population import Population
+from .GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from .Population import Population, PopulationParams
 from .read import read

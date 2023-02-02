@@ -1,7 +1,7 @@
-from numpy.testing import assert_raises
+from numpy.testing import assert_almost_equal, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import GeneticAlgorithm
+from pyvrp import GeneticAlgorithmParams
 
 
 @mark.parametrize(
@@ -25,7 +25,7 @@ def test_params_constructor_throws_when_arguments_invalid(
     Tests that invalid configurations are not accepted.
     """
     with assert_raises(ValueError):
-        GeneticAlgorithm.Params(
+        GeneticAlgorithmParams(
             nb_penalty_management,
             repair_probability,
             collect_statistics,
@@ -56,12 +56,17 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     """
     Tests valid boundary cases.
     """
-    GeneticAlgorithm.Params(
+    params = GeneticAlgorithmParams(
         nb_penalty_management,
         repair_probability,
         collect_statistics,
         should_intensify,
     )
+
+    assert_equal(params.nb_penalty_management, nb_penalty_management)
+    assert_almost_equal(params.repair_probability, repair_probability)
+    assert_equal(params.collect_statistics, collect_statistics)
+    assert_equal(params.should_intensify, should_intensify)
 
 
 # TODO functional tests

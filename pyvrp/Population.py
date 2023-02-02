@@ -42,53 +42,52 @@ _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
 _ProxType = Dict[_Wrapper, List[Tuple[float, _Wrapper]]]
 
 
+@dataclass
+class PopulationParams:
+    min_pop_size: int = 25
+    generation_size: int = 40
+    nb_elite: int = 4
+    nb_close: int = 5
+    lb_diversity: float = 0.1
+    ub_diversity: float = 0.5
+
+    def __post_init__(self):
+        if not 0 <= self.lb_diversity <= 1.0:
+            raise ValueError("lb_diversity must be in [0, 1].")
+
+        if not 0 <= self.ub_diversity <= 1.0:
+            raise ValueError("ub_diversity must be in [0, 1].")
+
+        if self.ub_diversity <= self.lb_diversity:
+            raise ValueError("ub_diversity <= lb_diversity not understood.")
+
+        if self.nb_elite < 0:
+            raise ValueError("nb_elite < 0 not understood.")
+
+        if self.nb_close < 0:
+            raise ValueError("nb_close < 0 not understood.")
+
+        if self.min_pop_size <= 0:
+            # Must be strictly positive, because we need individuals for
+            # crossover!
+            raise ValueError("min_pop_size <= 0 not understood")
+
+        if self.generation_size < 0:
+            raise ValueError("generation_size < 0 not understood.")
+
+    @property
+    def max_pop_size(self) -> int:
+        return self.min_pop_size + self.generation_size
+
+
 class Population:
-    @dataclass
-    class Params:
-        min_pop_size: int = 25
-        generation_size: int = 40
-        nb_elite: int = 4
-        nb_close: int = 5
-        lb_diversity: float = 0.1
-        ub_diversity: float = 0.5
-
-        def __post_init__(self):
-            if not 0 <= self.lb_diversity <= 1.0:
-                raise ValueError("lb_diversity must be in [0, 1].")
-
-            if not 0 <= self.ub_diversity <= 1.0:
-                raise ValueError("ub_diversity must be in [0, 1].")
-
-            if self.ub_diversity <= self.lb_diversity:
-                raise ValueError(
-                    "ub_diversity <= lb_diversity not understood."
-                )
-
-            if self.nb_elite < 0:
-                raise ValueError("nb_elite < 0 not understood.")
-
-            if self.nb_close < 0:
-                raise ValueError("nb_close < 0 not understood.")
-
-            if self.min_pop_size <= 0:
-                # Must be strictly positive, because we need individuals for
-                # crossover!
-                raise ValueError("min_pop_size <= 0 not understood")
-
-            if self.generation_size < 0:
-                raise ValueError("generation_size < 0 not understood.")
-
-        @property
-        def max_pop_size(self) -> int:
-            return self.min_pop_size + self.generation_size
-
     def __init__(
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
         rng: XorShift128,
         diversity_op: _DiversityMeasure,
-        params: Params = Params(),
+        params: PopulationParams = PopulationParams(),
     ):
         """
         Creates a Population instance.
