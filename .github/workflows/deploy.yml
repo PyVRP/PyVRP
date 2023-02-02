@@ -1,0 +1,15 @@
+name: deploy
+
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  build-test:
+    uses: ./.github/workflows/build.yml
+
+  build-binaries:
+    needs: build-test
+
+  deploy:
+    needs: build-binaries
