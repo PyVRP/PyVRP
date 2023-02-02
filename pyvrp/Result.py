@@ -86,7 +86,10 @@ class Result:
         bool
             True when detailed statistics are available, False otherwise.
         """
-        return self.num_iterations == self.stats.num_iterations
+        return (
+            self.num_iterations > 0
+            and self.num_iterations == self.stats.num_iterations
+        )
 
     def plot(self, data: ProblemData, fig: Optional[plt.Figure] = None):
         """
@@ -225,15 +228,7 @@ class Result:
         ax, optional
             Axes object to draw the plot on. One will be created if not
             provided.
-
-        Raises
-        ------
-        NotCollectedError
-            Raised when statistics have not been collected.
         """
-        if not self.has_statistics():
-            raise NotCollectedError("Statistics have not been collected.")
-
         if not ax:
             _, ax = plt.subplots()
 
