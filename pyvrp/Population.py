@@ -277,7 +277,7 @@ class Population:
         for div_rank, (_, cost_rank) in enumerate(diversity):
             div_weight = 1 - nb_elite / len(pop)
             fitness = (cost_rank + div_weight * div_rank) / len(pop)
-            pop[cost_rank].fitness = fitness
+            pop[by_cost[cost_rank]].fitness = fitness
 
     def avg_distance_closest(self, wrapper: _Wrapper) -> float:
         """
