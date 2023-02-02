@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import List
+from typing import Callable, List, Tuple
 
 from pyvrp._lib.hgspy import (
     Individual,
@@ -14,6 +14,11 @@ from pyvrp.stop import StoppingCriterion
 from .Population import Population
 from .Result import Result
 from .Statistics import Statistics
+
+_Parents = Tuple[Individual, Individual]
+_CrossoverOperator = Callable[
+    [_Parents, ProblemData, PenaltyManager, XorShift128], Individual
+]
 
 
 @dataclass
@@ -39,7 +44,7 @@ class GeneticAlgorithm:
         rng: XorShift128,
         population: Population,
         local_search: LocalSearch,
-        crossover_op,
+        crossover_op: _CrossoverOperator,
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
         """

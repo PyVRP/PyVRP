@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from time import perf_counter
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 
@@ -30,8 +30,8 @@ class Statistics:
 
     runtimes: List[float] = field(default_factory=list)
     num_iterations: int = 0
-    feas_stats: List[Optional[_Datum]] = field(default_factory=list)
-    infeas_stats: List[Optional[_Datum]] = field(default_factory=list)
+    feas_stats: List[_Datum] = field(default_factory=list)
+    infeas_stats: List[_Datum] = field(default_factory=list)
 
     def __post_init__(self):
         self._clock = perf_counter()
@@ -59,9 +59,15 @@ class Statistics:
 
     def _collect_from_subpop(
         self, population: Population, subpop: SubPop
-    ) -> Optional[_Datum]:
+    ) -> _Datum:
         if not subpop:
-            return None
+            return _Datum(
+                size=0,
+                avg_diversity=np.nan,
+                best_cost=np.nan,
+                avg_cost=np.nan,
+                avg_num_routes=np.nan,
+            )
 
         costs = [item.cost() for item in subpop]
         num_routes = [item.individual.num_routes() for item in subpop]

@@ -70,3 +70,5 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 
 # TODO functional tests
+
+# TODO test statistics collection on Result.has_statistics
