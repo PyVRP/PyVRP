@@ -74,7 +74,7 @@ class Statistics:
         costs = [item.cost() for item in subpop]
         num_routes = [item.individual.num_routes() for item in subpop]
         diversities = [
-            population.avg_distance_closest(item.individual) for item in subpop
+            population.avg_distance_closest(item) for item in subpop
         ]
 
         return _Datum(

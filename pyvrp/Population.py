@@ -25,7 +25,10 @@ class _Wrapper:
         )
 
     def __hash__(self) -> int:
-        return hash(self.individual)
+        # Wrapper wraps the *individual*, the fitness score is just metadata.
+        # There is one wrapper for each individual (identified by a unique
+        # memory location).
+        return hash(id(self.individual))
 
     def __iter__(self):
         return iter((self.individual, self.fitness))
@@ -182,6 +185,8 @@ class Population:
         individual
             Individual to add to the population.
         """
+        # Copy-construct another individual so we can take ownership.
+        individual = Individual(individual)
         is_feasible = individual.is_feasible()
         cost = individual.cost()
 
@@ -262,8 +267,8 @@ class Population:
         diversity = []
 
         for rank in range(len(pop)):
-            individual = pop[by_cost[rank]]
-            avg_diversity = self.avg_distance_closest(individual)
+            wrapper = pop[by_cost[rank]]
+            avg_diversity = self.avg_distance_closest(wrapper)
             diversity.append((avg_diversity, rank))
 
         diversity.sort(reverse=True)
@@ -274,38 +279,26 @@ class Population:
             fitness = (cost_rank + div_weight * div_rank) / len(pop)
             pop[cost_rank].fitness = fitness
 
-    def avg_distance_closest(self, individual: Individual) -> float:
+    def avg_distance_closest(self, wrapper: _Wrapper) -> float:
         """
-        Determines the average distance of the given individual to its nearest
-        individuals. This provides a measure of the relative 'diversity' of
-        this individual.
+        Determines the average distance of the given (wrapped) individual to
+        a number of individuals that are most similar to it. This provides a
+        measure of the relative 'diversity' of this individual.
 
         Parameters
         ----------
-        individual
-            Individual whose average distance/diversity to calculate.
+        wrapper
+            Wrapped individual whose average distance/diversity to calculate.
 
         Returns
         -------
         float
             The average distance/diversity of the given individual relative to
             the total population.
-
-        Raises
-        ------
-        KeyError
-            When the given individual is not known to this population instance.
         """
-        if individual not in self._prox:
-            raise KeyError("Individual not in proximity structure!")
-
         # TODO do we need nb_close? Why not all?
-        closest = self._prox[individual][: self._params.nb_close]
-
-        if closest:
-            return np.mean([div for div, _ in closest])
-
-        return 0.0
+        closest = self._prox[wrapper][: self._params.nb_close]
+        return np.mean([div for div, _ in closest]) if closest else 0.0
 
     def get_binary_tournament(self) -> Individual:
         """

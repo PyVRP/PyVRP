@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 
-from pyvrp._lib.hgspy import Individual
+from pyvrp._lib.hgspy import Individual, ProblemData
 
 from .Statistics import Statistics
 
@@ -87,16 +88,17 @@ class Result:
         """
         return self.num_iterations == self.stats.num_iterations
 
-    def plot(self, fig: Optional[plt.Figure] = None):
+    def plot(self, data: ProblemData, fig: Optional[plt.Figure] = None):
         """
         Plots the resulting instance, and detailed statistics about the
         algorithm's performance.
 
         Parameters
         ----------
+        data
+            Data instance underlying this result's solution.
         fig, optional
-            Optional matplotlib Figure to draw on. One will be created if not
-            provided.
+            Optional Figure to draw on. One will be created if not provided.
 
         Raises
         ------
@@ -114,12 +116,25 @@ class Result:
         self.plot_population(fig.add_subplot(gs[0, 0]))
         self.plot_objectives(fig.add_subplot(gs[1, 0]))
         self.plot_runtimes(fig.add_subplot(gs[2, 0]))
-        self.plot_instance(fig.add_subplot(gs[:, 1]))
+        self.plot_solution(data, fig.add_subplot(gs[:, 1]))
 
         plt.tight_layout()
-        plt.draw_if_interactive()
 
     def plot_population(self, ax: Optional[plt.Axes] = None):
+        """
+        Plots population diversity statistics.
+
+        Parameters
+        ----------
+        ax, optional
+            Axes object to draw the plot on. One will be created if not
+            provided.
+
+        Raises
+        ------
+        NotCollectedError
+            Raised when statistics have not been collected.
+        """
         if not self.has_statistics():
             raise NotCollectedError("Statistics have not been collected.")
 
@@ -130,44 +145,148 @@ class Result:
         ax.set_xlabel("Iteration (#)")
         ax.set_ylabel("Avg. diversity")
 
-        avg_feas_div = [d.avg_diversity for d in self.stats.feas_stats]
-        ax.plot(
-            range(self.num_iterations),
-            avg_feas_div,
-            label="Feas. diversity",
-            c="tab:green",
-        )
+        x = 1 + np.arange(self.num_iterations)
+        y = [d.avg_diversity for d in self.stats.feas_stats]
+        ax.plot(x, y, label="Feas. diversity", c="tab:green")
 
-        avg_infeas_div = [d.avg_diversity for d in self.stats.feas_stats]
-        ax.plot(
-            range(self.num_iterations),
-            avg_infeas_div,
-            label="Infeas. diversity",
-            c="tab:red",
-        )
+        y = [d.avg_diversity for d in self.stats.feas_stats]
+        ax.plot(x, y, label="Infeas. diversity", c="tab:red")
 
         ax.legend(frameon=False)
 
-    def plot_objectives(self, ax: Optional[plt.Axes] = None):
+    def plot_objectives(
+        self,
+        ylim_adjust: Tuple[float, float] = (0.995, 1.03),
+        ax: Optional[plt.Axes] = None,
+    ):
+        """
+        Plots population objective values.
+
+        Parameters
+        ----------
+        ylim_adjust, optional
+            A tuple of ylim adjustment fractions. The two values are multiplied
+            by the best solution cost to provide ylim bounds. These bounds are
+            passed to ax.ylim().
+        ax, optional
+            Axes object to draw the plot on. One will be created if not
+            provided.
+
+        Raises
+        ------
+        NotCollectedError
+            Raised when statistics have not been collected.
+        """
         if not self.has_statistics():
             raise NotCollectedError("Statistics have not been collected.")
 
         if not ax:
             _, ax = plt.subplots()
 
-    def plot_instance(self, ax: Optional[plt.Axes] = None):
+        x = 1 + np.arange(self.num_iterations)
+        y = np.minimum.accumulate([d.best_cost for d in self.stats.feas_stats])
+        ax.plot(x, y, label="Global feas best", c="tab:blue")
+
+        y = [d.best_cost for d in self.stats.feas_stats]
+        ax.plot(x, y, label="Feas best", c="tab:green")
+
+        y = [d.avg_cost for d in self.stats.feas_stats]
+        ax.plot(x, y, label="Feas avg.", c="tab:green", alpha=0.3, ls="dashed")
+
+        y = [d.best_cost for d in self.stats.infeas_stats]
+        ax.plot(x, y, label="Infeas best", c="tab:red")
+
+        y = [d.avg_cost for d in self.stats.infeas_stats]
+        ax.plot(x, y, label="Infeas avg.", c="tab:red", alpha=0.3, ls="dashed")
+
+        ax.set_title("Population objectives")
+        ax.set_xlabel("Iteration (#)")
+        ax.set_ylabel("Objective")
+
+        # We're really only interested in the algorithm's performance 'near'
+        # the eventual best solution.
+        ax.set_ylim(ylim_adjust[0] * self.cost(), ylim_adjust[1] * self.cost())
+        ax.legend(frameon=False)
+
+    def plot_solution(self, data: ProblemData, ax: Optional[plt.Axes] = None):
+        """
+        Plots best solution.
+
+        Parameters
+        ----------
+        data
+            Data instance underlying this result's solution.
+        ax, optional
+            Axes object to draw the plot on. One will be created if not
+            provided.
+
+        Raises
+        ------
+        NotCollectedError
+            Raised when statistics have not been collected.
+        """
         if not self.has_statistics():
             raise NotCollectedError("Statistics have not been collected.")
 
         if not ax:
             _, ax = plt.subplots()
+
+        coords = [
+            (data.client(client).x, data.client(client).y)
+            for client in range(data.num_clients())
+        ]
+
+        # Plot coordinates
+        ax.scatter(*coords, c="tab:blue", label="Customers", s=100)
+
+        # Plot big depot
+        kwargs = dict(marker="*", zorder=3, s=750)
+        ax.scatter(*coords[0], c="tab:red", label="Depot", **kwargs)
+
+        # Add routes to plot
+        for route in self.best.get_routes():
+            ax.plot(*coords[[0] + route + [0]].T)
+
+        # Gridlines help with understanding proportions
+        ax.grid(color="grey", linestyle="--", linewidth=0.25)
+
+        ax.set_title("Solution")
+        ax.set_aspect("equal", "datalim")
+        ax.legend(frameon=False, ncol=2)
 
     def plot_runtimes(self, ax: Optional[plt.Axes] = None):
+        """
+        Plots iteration runtimes.
+
+        Parameters
+        ----------
+        ax, optional
+            Axes object to draw the plot on. One will be created if not
+            provided.
+
+        Raises
+        ------
+        NotCollectedError
+            Raised when statistics have not been collected.
+        """
         if not self.has_statistics():
             raise NotCollectedError("Statistics have not been collected.")
 
         if not ax:
             _, ax = plt.subplots()
+
+        x = 1 + np.arange(self.num_iterations)
+        ax.plot(x, self.stats.runtimes)
+
+        if self.num_iterations > 1:
+            b, c = np.polyfit(x, self.stats.runtimes, 1)  # noqa
+            ax.plot(b * x + c)
+
+        ax.set_xlim(left=0)
+
+        ax.set_xlabel("Iteration (#)")
+        ax.set_ylabel("Run-time (s)")
+        ax.set_title("Run-time per iteration")
 
     def __str__(self) -> str:
         summary = [
