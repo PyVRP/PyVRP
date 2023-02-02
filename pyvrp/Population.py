@@ -256,7 +256,15 @@ class Population:
             del self._prox[individual]
             pop.remove(individual)
 
-        # TODO remove duplicates
+        while len(pop) > self._params.min_pop_size:
+            for wrapper in pop:
+                prox = self.proximity_structure[wrapper]
+
+                if prox and np.isclose(prox[0][0], 0.0):  # is a duplicate?
+                    remove(wrapper)
+                    break
+            else:  # we did not find any duplicates, so break loop
+                break
 
         while len(pop) > self._params.min_pop_size:
             self.update_fitness(pop)
