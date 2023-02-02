@@ -38,8 +38,8 @@ class _Wrapper:
 
 
 SubPop = List[_Wrapper]
-_DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
-_ProxType = Dict[_Wrapper, List[Tuple[float, _Wrapper]]]
+DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
+ProxType = Dict[_Wrapper, List[Tuple[float, _Wrapper]]]
 
 
 @dataclass
@@ -87,7 +87,7 @@ class Population:
         data: ProblemData,
         penalty_manager: PenaltyManager,
         rng: XorShift128,
-        diversity_op: _DiversityMeasure,
+        diversity_op: DiversityMeasure,
         params: PopulationParams = PopulationParams(),
     ):
         """
@@ -115,12 +115,62 @@ class Population:
         self._feas: SubPop = []
         self._infeas: SubPop = []
 
-        self._prox: _ProxType = {}
-
+        self._prox: ProxType = {}
         self._best = Individual(data, penalty_manager, rng)
 
         for _ in range(params.min_pop_size):
             self.add(Individual(data, penalty_manager, rng))
+
+    @property
+    def feasible_subpopulation(self) -> SubPop:
+        """
+        Returns the feasible subpopulation maintained by this population
+        instance.
+
+        Returns
+        -------
+        SubPop
+            Feasible subpopulation.
+        """
+        return self._feas
+
+    @property
+    def infeasible_subpopulation(self) -> SubPop:
+        """
+        Returns the infeasible subpopulation maintained by this population
+        instance.
+
+        Returns
+        -------
+        SubPop
+            Infeasible subpopulation.
+        """
+        return self._infeas
+
+    @property
+    def proximity_structure(self) -> ProxType:
+        """
+        Returns the proximity structure maintained by this population instance.
+        The proximity structure is used for diversity and fitness calculations.
+
+        Returns
+        -------
+        ProxType
+            Proximity structure.
+        """
+        return self._prox
+
+    def __len__(self) -> int:
+        """
+        Returns the current population size, that is, the size of its feasible
+        and infeasible subpopulations.
+
+        Returns
+        -------
+        int
+            Population size.
+        """
+        return len(self._feas) + len(self._infeas)
 
     def add(self, individual: Individual):
         """
@@ -138,7 +188,6 @@ class Population:
         pop = self._feas if is_feasible else self._infeas
         wrapper = _Wrapper(individual, 0.0)
 
-        pop.append(wrapper)
         self._prox[wrapper] = []
 
         for other in pop:
@@ -146,6 +195,7 @@ class Population:
             bisect.insort_left(self._prox[wrapper], (dist, other))
             bisect.insort_left(self._prox[other], (dist, wrapper))
 
+        pop.append(wrapper)
         self.update_fitness(pop)
 
         if len(pop) > self._params.max_pop_size:
@@ -269,7 +319,7 @@ class Population:
 
         def select():
             num_feas = len(self._feas)
-            idx = self._rng.randint(self.size())
+            idx = self._rng.randint(len(self))
 
             if idx < num_feas:
                 return self._feas[idx]
@@ -292,15 +342,3 @@ class Population:
             The best solution found so far.
         """
         return self._best
-
-    def size(self) -> int:
-        """
-        Returns the current population size, that is, the size of its feasible
-        and infeasible subpopulations.
-
-        Returns
-        -------
-        int
-            Population size.
-        """
-        return len(self._feas) + len(self._infeas)

@@ -51,11 +51,13 @@ class Statistics:
         self.runtimes.append(self._clock - start)
         self.num_iterations += 1
 
-        feas = self._collect_from_subpop(population, population._feas)
-        self.feas_stats.append(feas)
+        feas_subpop = population.feasible_subpopulation
+        feas_datum = self._collect_from_subpop(population, feas_subpop)
+        self.feas_stats.append(feas_datum)
 
-        infeas = self._collect_from_subpop(population, population._infeas)
-        self.infeas_stats.append(infeas)
+        infeas_subpop = population.infeasible_subpopulation
+        infeas_datum = self._collect_from_subpop(population, infeas_subpop)
+        self.infeas_stats.append(infeas_datum)
 
     def _collect_from_subpop(
         self, population: Population, subpop: SubPop

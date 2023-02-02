@@ -16,7 +16,7 @@ from .Result import Result
 from .Statistics import Statistics
 
 _Parents = Tuple[Individual, Individual]
-_CrossoverOperator = Callable[
+CrossoverOperator = Callable[
     [_Parents, ProblemData, PenaltyManager, XorShift128], Individual
 ]
 
@@ -44,7 +44,7 @@ class GeneticAlgorithm:
         rng: XorShift128,
         population: Population,
         local_search: LocalSearch,
-        crossover_op: _CrossoverOperator,
+        crossover_op: CrossoverOperator,
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
         """

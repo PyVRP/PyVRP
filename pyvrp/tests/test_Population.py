@@ -110,7 +110,7 @@ def test_initialises_at_least_min_pop_size_individuals():
     params = PopulationParams()
     pop = Population(data, pm, rng, broken_pairs_distance)
 
-    assert_(pop.size() >= params.min_pop_size)
+    assert_(len(pop) >= params.min_pop_size)
 
 
 def test_add_triggers_purge():
@@ -181,7 +181,7 @@ def test_add_updates_best_found_solution():
     # Should not have added any individuals to the population pool. The 'best'
     # individual, however, has already been initialised, with a random
     # individual.
-    assert_equal(pop.size(), 0)
+    assert_equal(len(pop), 0)
 
     # This random individual is feasible and has cost 9'339.
     best = pop.get_best_found()
@@ -190,6 +190,7 @@ def test_add_updates_best_found_solution():
 
     # We now add a better solution to the population.
     pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
+    assert_equal(len(pop), 1)
 
     best = pop.get_best_found()
     assert_almost_equal(best.cost(), 9_155)
@@ -207,10 +208,10 @@ def test_select_returns_same_parents_if_no_other_option():
     params = PopulationParams(0, 40, 4, 5, 0.1, 0.5)
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
-    assert_equal(pop.size(), 0)
+    assert_equal(len(pop), 0)
 
     pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
-    assert_equal(pop.size(), 1)
+    assert_equal(len(pop), 1)
 
     # We added a single individual, so we should now get the same parent twice.
     parents = pop.select()
@@ -218,7 +219,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
     # Now we add another, different individual.
     pop.add(Individual(data, pm, [[3, 2], [1], [4]]))
-    assert_equal(pop.size(), 2)
+    assert_equal(len(pop), 2)
 
     # We should now get two different individuals as parents.
     parents = pop.select()
@@ -226,3 +227,43 @@ def test_select_returns_same_parents_if_no_other_option():
 
 
 # // TODO test more select() - diversity, feas/infeas pairs
+
+
+@mark.parametrize("min_pop_size", [0, 2, 5, 10])
+def test_pop_and_proximity_are_in_sync(min_pop_size: int):
+    """
+    This test checks that the population's feasible and infeasible individuals
+    are in sync with the population's proximity structure.
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity())
+    rng = XorShift128(seed=42)
+
+    params = PopulationParams(min_pop_size=min_pop_size)
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
+
+    feas = pop.feasible_subpopulation
+    infeas = pop.infeasible_subpopulation
+    prox = pop.proximity_structure
+
+    # We run a few time sthe maximum pop size, to make sure that we get one or
+    # more purge cycles in.
+    for _ in range(5 * params.max_pop_size):
+        indiv = Individual(data, pm, rng)
+        pop.add(indiv)
+
+        # The proximity structure should have the same size as the current
+        # total population.
+        assert_equal(len(pop), len(prox))
+
+        for indiv in feas:
+            # Each individual should be in the proximity structure, and have a
+            # proximity value for every other individual in the same
+            # subpopulation (so there should be n - 1 such values).
+            assert_(indiv in prox)
+            assert_equal(len(prox[indiv]), len(feas) - 1)
+
+        for indiv in infeas:
+            # The same must hold for the infeasible subpopulation, of course!
+            assert_(indiv in prox)
+            assert_equal(len(prox[indiv]), len(infeas) - 1)
