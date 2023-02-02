@@ -39,6 +39,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 numpy = ">=1.15.2"
+matplotlib = ">=2.2.0"
 
 [tool.poetry.group.benchmark.dependencies]
 tqdm = "^4.64.1"

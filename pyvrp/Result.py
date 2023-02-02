@@ -41,10 +41,56 @@ class Result:
         if self.runtime < 0:
             raise ValueError("Negative runtime not understood.")
 
-    def cost(self):
+    def cost(self) -> float:
+        """
+        Returns the cost (objective) value of the best solution.
+
+        Returns
+        -------
+        float
+            Objective value.
+        """
         return self.best.cost()
 
     def is_feasible(self) -> bool:
+        """
+        Returns whether the best solution is feasible.
+
+        Returns
+        -------
+        bool
+            True when the solution is feasible, False otherwise.
+        """
         return self.best.is_feasible()
 
-    # TODO plotting, __str__, __repr__?
+    def plot(self):
+        pass
+
+    def plot_population(self):
+        pass
+
+    def plot_objectives(self):
+        pass
+
+    def plot_instance(self):
+        pass
+
+    def __str__(self) -> str:
+        summary = [
+            "Solution results",
+            "================",
+            f"   objective: {self.cost():.2f}",
+            f"# iterations: {self.num_iterations}",
+            f"    run-time: {self.runtime:.2f} seconds\n",
+        ]
+
+        routes = [
+            "Routes",
+            "======",
+        ]
+
+        for idx, route in enumerate(self.best.get_routes()):
+            if route:
+                routes.append(f"Route {idx:>2}: {route}")
+
+        return "\n".join(summary + routes)

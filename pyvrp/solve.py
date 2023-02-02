@@ -78,9 +78,7 @@ def main():
     args = parse_args()
     res = solve(**vars(args))
 
-    print(f"   Objective: {res.cost()}")
-    print(f"  Iterations: {res.num_iterations}")
-    print(f"    Run-time: {res.runtime:.2f} seconds")
+    print(res)
 
 
 if __name__ == "__main__":
