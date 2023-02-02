@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from random import shuffle
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,16 +112,31 @@ class Result:
         if not fig:
             fig = plt.figure(figsize=(20, 12))
 
-        gs = fig.add_gridspec(3, 2, width_ratios=(2 / 5, 3 / 5))
+        # Uses a GridSpec instance to lay-out all subplots nicely. There are
+        # two columns: left and right. Left has four rows, each containg a
+        # plot with statistics: the first plots population diversity, the
+        # second feasible subpopulation objective information, the third
+        # infeasible subpopulation objective information, and the fourth
+        # iteration runtimes. The right column plots the solution on top of the
+        # instance data.
+        gs = fig.add_gridspec(4, 2, width_ratios=(2 / 5, 3 / 5))
 
-        self.plot_population(fig.add_subplot(gs[0, 0]))
-        self.plot_objectives(fig.add_subplot(gs[1, 0]))
-        self.plot_runtimes(fig.add_subplot(gs[2, 0]))
-        self.plot_solution(data, fig.add_subplot(gs[:, 1]))
+        ax_diversity = fig.add_subplot(gs[0, 0])
+        self.plot_diversity(ax=ax_diversity)
+
+        ax_feas = fig.add_subplot(gs[1, 0], sharex=ax_diversity)
+        self.plot_feasible_objectives(ax=ax_feas)
+
+        ax_infeas = fig.add_subplot(gs[2, 0], sharex=ax_diversity)
+        self.plot_infeasible_objectives(ax=ax_infeas)
+
+        self.plot_runtimes(ax=fig.add_subplot(gs[3, 0], sharex=ax_diversity))
+
+        self.plot_solution(data, ax=fig.add_subplot(gs[:, 1]))
 
         plt.tight_layout()
 
-    def plot_population(self, ax: Optional[plt.Axes] = None):
+    def plot_diversity(self, ax: Optional[plt.Axes] = None):
         """
         Plots population diversity statistics.
 
@@ -141,7 +157,7 @@ class Result:
         if not ax:
             _, ax = plt.subplots()
 
-        ax.set_title("Population diversity")
+        ax.set_title("Diversity")
         ax.set_xlabel("Iteration (#)")
         ax.set_ylabel("Avg. diversity")
 
@@ -149,25 +165,17 @@ class Result:
         y = [d.avg_diversity for d in self.stats.feas_stats]
         ax.plot(x, y, label="Feas. diversity", c="tab:green")
 
-        y = [d.avg_diversity for d in self.stats.feas_stats]
+        y = [d.avg_diversity for d in self.stats.infeas_stats]
         ax.plot(x, y, label="Infeas. diversity", c="tab:red")
 
         ax.legend(frameon=False)
 
-    def plot_objectives(
-        self,
-        ylim_adjust: Tuple[float, float] = (0.995, 1.03),
-        ax: Optional[plt.Axes] = None,
-    ):
+    def plot_feasible_objectives(self, ax: Optional[plt.Axes] = None):
         """
-        Plots population objective values.
+        Plots feasible subpopulation objective values.
 
         Parameters
         ----------
-        ylim_adjust, optional
-            A tuple of ylim adjustment fractions. The two values are multiplied
-            by the best solution cost to provide ylim bounds. These bounds are
-            passed to ax.ylim().
         ax, optional
             Axes object to draw the plot on. One will be created if not
             provided.
@@ -184,33 +192,55 @@ class Result:
             _, ax = plt.subplots()
 
         x = 1 + np.arange(self.num_iterations)
-        y = np.minimum.accumulate([d.best_cost for d in self.stats.feas_stats])
-        ax.plot(x, y, label="Global feas best", c="tab:blue")
-
         y = [d.best_cost for d in self.stats.feas_stats]
-        ax.plot(x, y, label="Feas best", c="tab:green")
+        ax.plot(x, y, label="Feas. best", c="tab:green")
 
         y = [d.avg_cost for d in self.stats.feas_stats]
-        ax.plot(x, y, label="Feas avg.", c="tab:green", alpha=0.3, ls="dashed")
+        ax.plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
 
-        y = [d.best_cost for d in self.stats.infeas_stats]
-        ax.plot(x, y, label="Infeas best", c="tab:red")
-
-        y = [d.avg_cost for d in self.stats.infeas_stats]
-        ax.plot(x, y, label="Infeas avg.", c="tab:red", alpha=0.3, ls="dashed")
-
-        ax.set_title("Population objectives")
+        ax.set_title("Feasible objectives")
         ax.set_xlabel("Iteration (#)")
         ax.set_ylabel("Objective")
 
-        # We're really only interested in the algorithm's performance 'near'
-        # the eventual best solution.
-        ax.set_ylim(ylim_adjust[0] * self.cost(), ylim_adjust[1] * self.cost())
+        ax.legend(frameon=False)
+
+    def plot_infeasible_objectives(self, ax: Optional[plt.Axes] = None):
+        """
+        Plots feasible subpopulation objective values.
+
+        Parameters
+        ----------
+        ax, optional
+            Axes object to draw the plot on. One will be created if not
+            provided.
+
+        Raises
+        ------
+        NotCollectedError
+            Raised when statistics have not been collected.
+        """
+        if not self.has_statistics():
+            raise NotCollectedError("Statistics have not been collected.")
+
+        if not ax:
+            _, ax = plt.subplots()
+
+        x = 1 + np.arange(self.num_iterations)
+        y = [d.best_cost for d in self.stats.infeas_stats]
+        ax.plot(x, y, label="Infeas. best", c="tab:red")
+
+        y = [d.avg_cost for d in self.stats.infeas_stats]
+        ax.plot(x, y, label="Infeas. avg.", c="tab:red", alpha=0.3, ls="--")
+
+        ax.set_title("Infeasible objectives")
+        ax.set_xlabel("Iteration (#)")
+        ax.set_ylabel("Objective")
+
         ax.legend(frameon=False)
 
     def plot_solution(self, data: ProblemData, ax: Optional[plt.Axes] = None):
         """
-        Plots best solution.
+        Plots the best solution.
 
         Parameters
         ----------
@@ -231,19 +261,36 @@ class Result:
         if not ax:
             _, ax = plt.subplots()
 
-        coords = [
-            (data.client(client).x, data.client(client).y)
-            for client in range(data.num_clients())
-        ]
+        dim = data.num_clients() + 1
+        x_coords = np.array([data.client(client).x for client in range(dim)])
+        y_coords = np.array([data.client(client).y for client in range(dim)])
 
-        kwargs = dict(zorder=3, s=100)
-        ax.scatter(*coords, c="tab:blue", label="Customers", **kwargs)
+        # This is the depot
+        kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
+        ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
 
-        kwargs = dict(marker="*", zorder=3, s=750)  # type: ignore
-        ax.scatter(*coords[0], c="tab:red", label="Depot", **kwargs)
+        routes = self.best.get_routes()
+        num_routes = self.best.num_routes()
 
-        for route in self.best.get_routes():
-            ax.plot(*coords[[0] + route + [0]].T)
+        # Since we're using ax.quiver, we need to provide colours explicitly.
+        cmap = plt.cm.get_cmap("tab20c")
+        colours = [cmap(c) for c in np.linspace(0.0, 1.0, num=num_routes)]
+        shuffle(colours)  # so close routes will likely get dissimilar colours
+
+        for colour, (idx, route) in zip(colours, enumerate(routes, 1)):
+            if route:
+                x = x_coords[route]
+                x_dir = -np.diff(x, prepend=x[0])
+
+                y = y_coords[route]
+                y_dir = -np.diff(y, prepend=y[0])
+
+                # Coordinates of customers served by this route.
+                kwargs = dict(zorder=3, s=50)
+                ax.scatter(x, y, color=colour, label=f"Route {idx}")
+
+                kwargs = dict(scale=1, scale_units="xy", units="dots", width=4)
+                ax.quiver(x, y, x_dir, y_dir, color=colour, **kwargs)
 
         ax.grid(color="grey", linestyle="--", linewidth=0.25)
 
@@ -282,8 +329,8 @@ class Result:
         ax.set_xlim(left=0)
 
         ax.set_xlabel("Iteration (#)")
-        ax.set_ylabel("Run-time (s)")
-        ax.set_title("Run-time per iteration")
+        ax.set_ylabel("Runtime (s)")
+        ax.set_title("Iteration runtimes")
 
     def __str__(self) -> str:
         summary = [
