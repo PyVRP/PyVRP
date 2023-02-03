@@ -1,8 +1,6 @@
-name: build
+name: CI
 
 on:
-  workflow_call:
-    secrets: inherit
   push:
     branches: [ main ]
   pull_request:
@@ -13,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
+  regular-build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -33,8 +31,6 @@ jobs:
             python-version: '3.10'
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

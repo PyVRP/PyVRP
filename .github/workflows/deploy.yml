@@ -3,13 +3,25 @@ name: deploy
 on:
   release:
     types: [ created ]
+  pull_request:  # for now, to test
+    branches: [ main ]
 
 jobs:
-  build-test:
-    uses: ./.github/workflows/build.yml
-
   build-binaries:
-    needs: build-test
+    name: Build ${{ matrix.build }}${{ matrix.arch }} wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        arch: [ "x86_64" ]  # TODO more?
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.12.0
+        env:
+          CIBW_ARCHS: "${{ matrix.arch }}"
+          CIBW_BUILD: "cp39-${{ matrix.build }}*"
 
   deploy:
     needs: build-binaries
