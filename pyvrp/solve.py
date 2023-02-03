@@ -35,7 +35,7 @@ def solve(
 ):
     data = read(data_loc)
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity())
+    pen_manager = PenaltyManager(data.vehicle_capacity)
 
     div_op = diversity.broken_pairs_distance
     pop = Population(data, pen_manager, rng, div_op)
@@ -78,9 +78,7 @@ def main():
     args = parse_args()
     res = solve(**vars(args))
 
-    print(f"   Objective: {res.cost()}")
-    print(f"  Iterations: {res.num_iterations}")
-    print(f"    Run-time: {res.runtime:.2f} seconds")
+    print(res)
 
 
 if __name__ == "__main__":
