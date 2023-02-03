@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 
-from .Population import Population, SubPop
+from .Population import Population, SubPopulation
 
 
 @dataclass
@@ -52,17 +52,15 @@ class Statistics:
         self.num_iterations += 1
 
         feas_subpop = population.feasible_subpopulation
-        feas_datum = self._collect_from_subpop(population, feas_subpop)
+        feas_datum = self._collect_from_subpop(feas_subpop)
         self.feas_stats.append(feas_datum)
 
         infeas_subpop = population.infeasible_subpopulation
-        infeas_datum = self._collect_from_subpop(population, infeas_subpop)
+        infeas_datum = self._collect_from_subpop(infeas_subpop)
         self.infeas_stats.append(infeas_datum)
 
-    def _collect_from_subpop(
-        self, population: Population, subpop: SubPop
-    ) -> _Datum:
-        if not subpop:
+    def _collect_from_subpop(self, subpop: SubPopulation) -> _Datum:
+        if not subpop:  # empty, so many statistics cannot be collected
             return _Datum(
                 size=0,
                 avg_diversity=np.nan,
@@ -71,11 +69,11 @@ class Statistics:
                 avg_num_routes=np.nan,
             )
 
-        costs = [item.cost() for item in subpop]
-        num_routes = [item.individual.num_routes() for item in subpop]
-        diversities = [
-            population.avg_distance_closest(item) for item in subpop
-        ]
+        costs = [individual.cost() for individual, _ in subpop]
+        num_routes = [individual.num_routes() for individual, _ in subpop]
+
+        func = subpop.avg_distance_closest
+        diversities = [func(individual) for individual, _ in subpop]
 
         return _Datum(
             size=len(subpop),

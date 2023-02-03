@@ -215,7 +215,7 @@ def test_select_returns_same_parents_if_no_other_option():
 def test_pop_and_proximity_are_in_sync(min_pop_size: int):
     """
     This test checks that the population's feasible and infeasible individuals
-    are in sync with the population's proximity structure.
+    are in sync with their respective subpopulation's proximity structures.
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -225,8 +225,10 @@ def test_pop_and_proximity_are_in_sync(min_pop_size: int):
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
     feas = pop.feasible_subpopulation
+    feas_prox = feas.proximity_structure
+
     infeas = pop.infeasible_subpopulation
-    prox = pop.proximity_structure
+    infeas_prox = infeas.proximity_structure
 
     # We run a few times the maximum pop size, to make sure that we get one or
     # more purge cycles in.
@@ -236,16 +238,16 @@ def test_pop_and_proximity_are_in_sync(min_pop_size: int):
 
         # The proximity structure should have the same size as the current
         # total population.
-        assert_equal(len(pop), len(prox))
+        assert_equal(len(pop), len(feas_prox) + len(infeas_prox))
 
-        for indiv in feas:
+        for indiv, _ in feas:
             # Each individual should be in the proximity structure, and have a
             # proximity value for every other individual in the same
             # subpopulation (so there should be n - 1 such values).
-            assert_(indiv in prox)
-            assert_equal(len(prox[indiv]), len(feas) - 1)
+            assert_(indiv in feas_prox)
+            assert_equal(len(feas_prox[indiv]), len(feas) - 1)
 
-        for indiv in infeas:
+        for indiv, _ in infeas:
             # The same must hold for the infeasible subpopulation, of course!
-            assert_(indiv in prox)
-            assert_equal(len(prox[indiv]), len(infeas) - 1)
+            assert_(indiv in infeas_prox)
+            assert_equal(len(infeas_prox[indiv]), len(infeas) - 1)

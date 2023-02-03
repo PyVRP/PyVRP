@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import bisect
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, Iterator, List, Tuple
 
 import numpy as np
 
@@ -15,35 +15,198 @@ from pyvrp._lib.hgspy import (
 
 
 @dataclass
-class _Wrapper:
-    # TODO can we do without this wrapper class?
+class _DiversityWrapper:
     individual: Individual
-    fitness: float
+    diversity: float
 
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, _Wrapper) and self.individual == other.individual
+    def __lt__(self, other: _DiversityWrapper) -> bool:
+        if not isinstance(other, _DiversityWrapper):
+            return False
+
+        return self.diversity < other.diversity or (
+            self.diversity == other.diversity
+            and self.individual.cost() < other.individual.cost()
         )
 
-    def __hash__(self) -> int:
-        # Wrapper wraps the *individual*, the fitness score is just metadata.
-        # There is one wrapper for each individual (identified by a unique
-        # memory location).
-        return hash(id(self.individual))
-
-    def __iter__(self):
-        return iter((self.individual, self.fitness))
-
-    def __lt__(self, other: _Wrapper):
-        return self.fitness < other.fitness
-
-    def cost(self) -> float:
-        return self.individual.cost()
+    def __iter__(self):  # for unpacking
+        return iter((self.individual, self.diversity))
 
 
-SubPop = List[_Wrapper]
-DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
-ProxType = Dict[_Wrapper, List[Tuple[float, _Wrapper]]]
+_DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
+_ProxType = Dict[Individual, List[_DiversityWrapper]]
+_Item = Tuple[Individual, float]  # (individual, fitness score)
+
+
+class SubPopulation:
+    def __init__(
+        self,
+        data: ProblemData,
+        diversity_op: _DiversityMeasure,
+        params: PopulationParams,
+    ):
+        """
+        Creates a SubPopulation instances. This subpopulation manages a number
+        individuals, tracking their diversities, and initiating survivor
+        selection (purging) when their number grows large.
+
+        Parameters
+        ----------
+        data
+            Data object describing the problem to be solved.
+        diversity_op
+            Operator to use to determine pairwise diversity between solutions.
+        params, optional
+            Population parameters. If not provided, a default will be used.
+        """
+        self._data = data
+        self._op = diversity_op
+        self._params = params
+
+        self._items: List[_Item] = []
+        self._prox: _ProxType = {}
+
+    @property
+    def proximity_structure(self) -> _ProxType:
+        """
+        Returns the proximity structure maintained by this subpopulation. The
+        proximity structure is used for diversity and fitness calculations.
+
+        Returns
+        -------
+        _ProxType
+            Proximity structure.
+        """
+        return self._prox
+
+    def __getitem__(self, idx: int) -> _Item:
+        return self._items[idx]
+
+    def __setitem__(self, idx: int, value: _Item):
+        self._items[idx] = value
+
+    def __iter__(self) -> Iterator[_Item]:
+        return iter(self._items)
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+    def add(self, individual: Individual):
+        """
+        Adds the given individual to the subpopulation. Survivor selection is
+        automatically triggered when the population reaches its maximum size.
+
+        Parameters
+        ----------
+        individual
+            Individual to add to the subpopulation.
+        """
+        self._prox[individual] = []
+
+        for other, _ in self:
+            dist = self._op(self._data, individual, other)
+
+            other_wrapper = _DiversityWrapper(other, dist)
+            bisect.insort_left(self._prox[individual], other_wrapper)
+
+            indiv_wrapper = _DiversityWrapper(individual, dist)
+            bisect.insort_left(self._prox[other], indiv_wrapper)
+
+        self._items.append((individual, 0.0))  # fitness is updated next.
+        self.update_fitness()
+
+        if len(self) > self._params.max_pop_size:
+            self.purge()
+
+    def remove(self, individual: Individual):
+        # TODO some of these equality comparisons could probably also be done
+        #  via id(), that is, the memory locations the objects occupy.
+        for _, others in self._prox.items():
+            for idx, (other, _) in enumerate(others):
+                if other == individual:
+                    del others[idx]
+                    break
+
+        del self._prox[individual]
+
+        for other in self:
+            if other[0] == individual:
+                self._items.remove(other)
+                break
+        else:
+            # This else should never happen, because the proximity and items
+            # structure should be synched, and then the ``del`` statement above
+            # would have raised before.
+            raise ValueError(f"Individual {individual} not in subpopulation!")
+
+    def purge(self):
+        """
+        Performs survivor selection: individuals in the subpopulation are
+        purged until the population is reduced to the ``min_pop_size``.
+        Purging happens to duplicate solutions first, and then to solutions
+        with high biased fitness.
+        """
+
+        while len(self) > self._params.min_pop_size:
+            for individual, _ in self:
+                prox = self._prox[individual]
+
+                if prox and np.isclose(prox[0].diversity, 0.0):
+                    self.remove(individual)  # individual has a duplicate
+                    break
+            else:  # no duplicates, so break loop
+                break
+
+        while len(self) > self._params.min_pop_size:
+            self.update_fitness()
+
+            # Find the individual with worst (highest) biased fitness, and
+            # remove it from the subpopulation.
+            worst_individual, _ = max(self, key=lambda item: item[1])
+            self.remove(worst_individual)
+
+    def update_fitness(self):
+        """
+        Updates the biased fitness scores of individuals in the subpopulation.
+        This fitness depends on the quality of the solution (based on its cost)
+        and the diversity w.r.t. to other individuals in the subpopulation.
+        """
+        by_cost = np.argsort([indiv.cost() for indiv, _ in self])
+        diversity = []
+
+        for rank in range(len(self)):
+            individual, _ = self[by_cost[rank]]
+            avg_diversity = self.avg_distance_closest(individual)
+            diversity.append((avg_diversity, rank))
+
+        diversity.sort(reverse=True)
+        nb_elite = min(self._params.nb_elite, len(self))
+
+        for div_rank, (_, cost_rank) in enumerate(diversity):
+            div_weight = 1 - nb_elite / len(self)
+            new_fitness = (cost_rank + div_weight * div_rank) / len(self)
+
+            individual, _ = self[by_cost[cost_rank]]
+            self[by_cost[cost_rank]] = individual, new_fitness
+
+    def avg_distance_closest(self, individual: Individual) -> float:
+        """
+        Determines the average distance of the given individual to a number of
+        individuals that are most similar to it. This provides a measure of the
+        relative 'diversity' of this individual.
+
+        Parameters
+        ----------
+        individual
+            Individual whose average distance/diversity to calculate.
+
+        Returns
+        -------
+        float
+            The average distance/diversity of the given individual relative to
+            the total subpopulation.
+        """
+        closest = self._prox[individual][: self._params.nb_close]
+        return np.mean([div for _, div in closest]) if closest else 0.0
 
 
 @dataclass
@@ -91,7 +254,7 @@ class Population:
         data: ProblemData,
         penalty_manager: PenaltyManager,
         rng: XorShift128,
-        diversity_op: DiversityMeasure,
+        diversity_op: _DiversityMeasure,
         params: PopulationParams = PopulationParams(),
     ):
         """
@@ -116,53 +279,39 @@ class Population:
         self._op = diversity_op
         self._params = params
 
-        self._feas: SubPop = []
-        self._infeas: SubPop = []
+        self._feas = SubPopulation(data, diversity_op, params)
+        self._infeas = SubPopulation(data, diversity_op, params)
 
-        self._prox: ProxType = {}
         self._best = Individual(data, penalty_manager, rng)
 
         for _ in range(params.min_pop_size):
             self.add(Individual(data, penalty_manager, rng))
 
     @property
-    def feasible_subpopulation(self) -> SubPop:
+    def feasible_subpopulation(self) -> SubPopulation:
         """
         Returns the feasible subpopulation maintained by this population
         instance.
 
         Returns
         -------
-        SubPop
+        SubPopulation
             Feasible subpopulation.
         """
         return self._feas
 
     @property
-    def infeasible_subpopulation(self) -> SubPop:
+    def infeasible_subpopulation(self) -> SubPopulation:
         """
         Returns the infeasible subpopulation maintained by this population
         instance.
 
         Returns
         -------
-        SubPop
+        SubPopulation
             Infeasible subpopulation.
         """
         return self._infeas
-
-    @property
-    def proximity_structure(self) -> ProxType:
-        """
-        Returns the proximity structure maintained by this population instance.
-        The proximity structure is used for diversity and fitness calculations.
-
-        Returns
-        -------
-        ProxType
-            Proximity structure.
-        """
-        return self._prox
 
     def __len__(self) -> int:
         """
@@ -186,29 +335,14 @@ class Population:
         individual
             Individual to add to the population.
         """
-        # Copy-construct another individual so we can take ownership.
-        individual = Individual(individual)
-        is_feasible = individual.is_feasible()
-        cost = individual.cost()
 
-        subpop = self._feas if is_feasible else self._infeas
-        wrapper = _Wrapper(individual, 0.0)
+        if individual.is_feasible():
+            self._feas.add(individual)
 
-        self._prox[wrapper] = []
-
-        for other in subpop:
-            dist = self._op(self._data, individual, other.individual)
-            bisect.insort_left(self._prox[wrapper], (dist, other))
-            bisect.insort_left(self._prox[other], (dist, wrapper))
-
-        subpop.append(wrapper)
-        self.update_fitness(subpop)
-
-        if len(subpop) > self._params.max_pop_size:
-            self.purge(subpop)
-
-        if is_feasible and cost < self._best.cost():
-            self._best = individual
+            if individual.cost() < self._best.cost():
+                self._best = individual
+        else:
+            self._infeas.add(individual)
 
     def select(self) -> Tuple[Individual, Individual]:
         """
@@ -234,90 +368,6 @@ class Population:
             diversity = self._op(self._data, first, second)
 
         return first, second
-
-    def purge(self, subpop: SubPop):
-        """
-        Performs survivor selection: individuals in the given sub-population
-        are purged until the population is reduced to the ``minPopSize``.
-        Purging happens to solutions with high biased fitness.
-
-        Parameters
-        ----------
-        subpop
-            Sub-population to purge.
-        """
-
-        def remove(individual: _Wrapper):
-            for _, others in self._prox.items():
-                for idx, (_, other) in enumerate(others):
-                    if other == individual:
-                        del others[idx]
-                        break
-
-            del self._prox[individual]
-            subpop.remove(individual)
-
-        while len(subpop) > self._params.min_pop_size:
-            for wrapper in subpop:
-                prox = self.proximity_structure[wrapper]
-
-                if prox and np.isclose(prox[0][0], 0.0):  # is a duplicate?
-                    remove(wrapper)
-                    break
-            else:  # we did not find any duplicates, so break loop
-                break
-
-        while len(subpop) > self._params.min_pop_size:
-            self.update_fitness(subpop)
-            remove(max(subpop))
-
-    def update_fitness(self, subpop: SubPop):
-        """
-        Updates the biased fitness scores of all individuals in the given
-        subpopulation. This fitness depends on the quality of the solution
-        (based on its cost) and the diversity w.r.t. to other individuals in
-        the subpopulation.
-
-        Parameters
-        ----------
-        subpop
-            Subpopulation to update.
-        """
-        by_cost = np.argsort([wrapper.cost() for wrapper in subpop])
-        diversity = []
-
-        for rank in range(len(subpop)):
-            wrapper = subpop[by_cost[rank]]
-            avg_diversity = self.avg_distance_closest(wrapper)
-            diversity.append((avg_diversity, rank))
-
-        diversity.sort(reverse=True)
-        nb_elite = min(self._params.nb_elite, len(subpop))
-
-        for div_rank, (_, cost_rank) in enumerate(diversity):
-            div_weight = 1 - nb_elite / len(subpop)
-            fitness = (cost_rank + div_weight * div_rank) / len(subpop)
-            subpop[by_cost[cost_rank]].fitness = fitness
-
-    def avg_distance_closest(self, wrapper: _Wrapper) -> float:
-        """
-        Determines the average distance of the given (wrapped) individual to
-        a number of individuals that are most similar to it. This provides a
-        measure of the relative 'diversity' of this individual.
-
-        Parameters
-        ----------
-        wrapper
-            Wrapped individual whose average distance/diversity to calculate.
-
-        Returns
-        -------
-        float
-            The average distance/diversity of the given individual relative to
-            the total population.
-        """
-        closest = self._prox[wrapper][: self._params.nb_close]
-        return np.mean([div for div, _ in closest]) if closest else 0.0
 
     def get_binary_tournament(self) -> Individual:
         """
@@ -353,4 +403,5 @@ class Population:
         Individual
             The best solution found so far.
         """
+        # TODO move this best solution stuff to GeneticAlgorithm
         return self._best
