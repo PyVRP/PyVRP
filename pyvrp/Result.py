@@ -305,7 +305,7 @@ class Result:
 
         routes = [
             "Routes",
-            "======",
+            "------",
         ]
 
         for idx, route in enumerate(self.best.get_routes(), 1):
