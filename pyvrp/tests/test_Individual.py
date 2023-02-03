@@ -6,7 +6,7 @@ from pyvrp.tests.helpers import read
 
 def test_route_constructor_sorts_by_empty():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
     indiv = Individual(data, pm, [[3, 4], [], [1, 2]])
     routes = indiv.get_routes()
@@ -25,9 +25,9 @@ def test_route_constructor_sorts_by_empty():
 
 def test_route_constructor_raises():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
-    assert_equal(data.num_vehicles(), 3)
+    assert_equal(data.num_vehicles, 3)
 
     with assert_raises(RuntimeError):
         # Two routes, but three vehicles: should raise.
@@ -39,7 +39,7 @@ def test_route_constructor_raises():
 
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
     indiv = Individual(data, pm, [[3, 4], [], [1, 2]])
     neighbours = indiv.get_neighbours()
@@ -52,15 +52,15 @@ def test_get_neighbours():
         (3, 0),  # 4: between 3 and depot (0)
     ]
 
-    assert_equal(data.num_clients(), 4)
+    assert_equal(data.num_clients, 4)
 
-    for client in range(data.num_clients() + 1):  # incl. depot
+    for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(neighbours[client], expected[client])
 
 
 def test_feasibility():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
     # This solution is infeasible due to both load and time window violations.
     indiv = Individual(data, pm, [[1, 2, 3, 4], [], []])
@@ -82,7 +82,7 @@ def test_feasibility():
 
 def test_distance_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
     indiv = Individual(data, pm, [[1, 2], [3], [4]])
     assert_(indiv.is_feasible())
@@ -103,7 +103,7 @@ def test_distance_cost_calculation():
 
 def test_capacity_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
     indiv = Individual(data, pm, [[4, 3, 1, 2], [], []])
     assert_(indiv.has_excess_capacity())
@@ -129,7 +129,7 @@ def test_capacity_cost_calculation():
 
 def test_time_warp_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
 
     indiv = Individual(data, pm, [[1, 3], [2, 4], []])
     assert_(not indiv.has_excess_capacity())

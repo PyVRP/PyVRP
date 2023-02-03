@@ -35,9 +35,9 @@ def test_reading_OkSmall_instance():
     data = read("data/OkSmall.txt")
 
     # From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
-    assert_equal(data.num_clients(), 4)
-    assert_equal(data.num_vehicles(), 3)
-    assert_equal(data.vehicle_capacity(), 10)
+    assert_equal(data.num_clients, 4)
+    assert_equal(data.num_vehicles, 3)
+    assert_equal(data.vehicle_capacity, 10)
 
     # From the NODE_COORD_SECTION in the file
     expected = [
@@ -48,7 +48,7 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    for client in range(data.num_clients() + 1):  # incl. depot
+    for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).x, expected[client][0])
         assert_equal(data.client(client).y, expected[client][1])
 
@@ -63,15 +63,15 @@ def test_reading_OkSmall_instance():
 
     dist_mat = data.distance_matrix()
 
-    for frm in range(data.num_clients() + 1):  # incl. depot
-        for to in range(data.num_clients() + 1):  # incl. depot
+    for frm in range(data.num_clients + 1):  # incl. depot
+        for to in range(data.num_clients + 1):  # incl. depot
             assert_equal(data.dist(frm, to), expected[frm][to])
             assert_equal(dist_mat[frm, to], expected[frm][to])
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
 
-    for client in range(data.num_clients() + 1):  # incl. depot
+    for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).demand, expected[client])
 
     # From the TIME_WINDOW_SECTION in the file
@@ -83,22 +83,22 @@ def test_reading_OkSmall_instance():
         (12000, 19500),
     ]
 
-    for client in range(data.num_clients() + 1):  # incl. depot
+    for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).tw_early, expected[client][0])
         assert_equal(data.client(client).tw_late, expected[client][1])
 
     # From the SERVICE_TIME_SECTION in the file
     expected = [0, 360, 360, 420, 360]
 
-    for client in range(data.num_clients() + 1):  # incl. depot
+    for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).serv_dur, expected[client])
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB
     data = read("data/E-n22-k4.vrp.txt")
 
-    assert_equal(data.num_clients(), 21)
-    assert_equal(data.vehicle_capacity(), 6_000)
+    assert_equal(data.num_clients, 21)
+    assert_equal(data.vehicle_capacity, 6_000)
 
     assert_equal(data.depot().x, 145)  # depot [x, y] location
     assert_equal(data.depot().y, 215)
@@ -121,7 +121,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     # their default values.
     max_int = 2 ** (8 * ctypes.sizeof(ctypes.c_int) - 1) - 1
 
-    for client in range(data.num_clients() + 1):  # incl. depot
+    for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).serv_dur, 0)
         assert_equal(data.client(client).tw_early, 0)
         assert_equal(data.client(client).tw_late, max_int)
