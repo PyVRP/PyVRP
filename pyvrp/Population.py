@@ -25,9 +25,14 @@ class SubPopulation:
         params: PopulationParams,
     ):
         """
-        Creates a SubPopulation instances. This subpopulation manages a number
-        individuals, tracking their diversities, and initiating survivor
-        selection (purging) when their number grows large.
+        Creates a SubPopulation instance.
+
+        This subpopulation manages a number individuals, and initiates survivor
+        selection (purging) when their number grows large. A subpopulation's
+        individuals (and metadata) can be accessed via indexing and iteration.
+        Each individual is stored as a tuple of type ``_Item``, which stores
+        the individual itself, a fitness score (higher is worse), and a list
+        of proximity values to the other individuals in the subpopulation.
 
         Parameters
         ----------
@@ -46,9 +51,6 @@ class SubPopulation:
 
     def __getitem__(self, idx: int) -> _Item:
         return self._items[idx]
-
-    def __setitem__(self, idx: int, value: _Item):
-        self._items[idx] = value
 
     def __iter__(self) -> Iterator[_Item]:
         return iter(self._items)
@@ -148,7 +150,7 @@ class SubPopulation:
             new_fitness = (cost_rank + div_weight * div_rank) / len(self)
 
             individual, _, prox = self[by_cost[cost_rank]]
-            self[by_cost[cost_rank]] = individual, new_fitness, prox
+            self._items[by_cost[cost_rank]] = individual, new_fitness, prox
 
     def avg_distance_closest(self, individual_idx: int) -> float:
         """
