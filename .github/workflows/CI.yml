@@ -1,10 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  release:
+    types: [ created ]  # temp don't run
 
 concurrency:
   group: ${{ github.ref }}
