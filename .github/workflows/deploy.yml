@@ -22,6 +22,29 @@ jobs:
         env:
           CIBW_ARCHS: "${{ matrix.arch }}"
           CIBW_BUILD: "cp39-${{ matrix.build }}*"
+      - uses: actions/upload-artifact@v3  # upload all wheels
+        with:
+          path: ./wheelhouse/*.whl
 
   deploy:
+    name: Deploy to PyPI
     needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - uses: actions/download-artifact@v3  # download previously built wheels
+        with:
+          name: artifact
+          path: dist
+      - name: Deploy to PyPI
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish
