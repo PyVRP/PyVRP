@@ -232,7 +232,7 @@ class Result:
         if not ax:
             _, ax = plt.subplots()
 
-        dim = data.num_clients() + 1
+        dim = data.num_clients + 1
         x_coords = np.array([data.client(client).x for client in range(dim)])
         y_coords = np.array([data.client(client).y for client in range(dim)])
 

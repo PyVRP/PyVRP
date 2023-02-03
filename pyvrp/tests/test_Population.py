@@ -104,7 +104,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 def test_initialises_at_least_min_pop_size_individuals():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
@@ -172,7 +172,7 @@ def test_add_triggers_purge():
 
 def test_add_updates_best_found_solution():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(0, 40, 4, 5, 0.1, 0.5)
@@ -202,7 +202,7 @@ def test_add_updates_best_found_solution():
 
 def test_select_returns_same_parents_if_no_other_option():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(0, 40, 4, 5, 0.1, 0.5)
@@ -247,7 +247,7 @@ def test_pop_and_proximity_are_in_sync(min_pop_size: int):
     are in sync with the population's proximity structure.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity())
+    pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
     params = PopulationParams(min_pop_size=min_pop_size)

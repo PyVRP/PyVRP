@@ -35,7 +35,7 @@ def solve(
 ):
     data = read(data_loc)
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity())
+    pen_manager = PenaltyManager(data.vehicle_capacity)
 
     div_op = diversity.broken_pairs_distance
     pop = Population(data, pen_manager, rng, div_op)
