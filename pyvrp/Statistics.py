@@ -69,14 +69,13 @@ class Statistics:
                 avg_num_routes=np.nan,
             )
 
-        costs = [individual.cost() for individual, _ in subpop]
-        num_routes = [individual.num_routes() for individual, _ in subpop]
-
-        func = subpop.avg_distance_closest
-        diversities = [func(individual) for individual, _ in subpop]
+        size = len(subpop)
+        costs = [individual.cost() for individual, *_ in subpop]
+        num_routes = [individual.num_routes() for individual, *_ in subpop]
+        diversities = [subpop.avg_distance_closest(idx) for idx in range(size)]
 
         return _Datum(
-            size=len(subpop),
+            size=size,
             avg_diversity=np.mean(diversities),
             best_cost=np.min(costs),
             avg_cost=np.mean(costs),

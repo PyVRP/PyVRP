@@ -212,11 +212,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
 
 @mark.parametrize("min_pop_size", [0, 2, 5, 10])
-def test_pop_and_proximity_are_in_sync(min_pop_size: int):
-    """
-    This test checks that the population's feasible and infeasible individuals
-    are in sync with their respective subpopulation's proximity structures.
-    """
+def test_proximity_structures_are_kept_up_to_date(min_pop_size: int):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
@@ -225,10 +221,7 @@ def test_pop_and_proximity_are_in_sync(min_pop_size: int):
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
     feas = pop.feasible_subpopulation
-    feas_prox = feas.proximity_structure
-
     infeas = pop.infeasible_subpopulation
-    infeas_prox = infeas.proximity_structure
 
     # We run a few times the maximum pop size, to make sure that we get one or
     # more purge cycles in.
@@ -236,18 +229,13 @@ def test_pop_and_proximity_are_in_sync(min_pop_size: int):
         indiv = Individual(data, pm, rng)
         pop.add(indiv)
 
-        # The proximity structure should have the same size as the current
-        # total population.
-        assert_equal(len(pop), len(feas_prox) + len(infeas_prox))
+        for indiv, _, prox in feas:
+            # Each individual should have a proximity value for every other
+            # individual in the same subpopulation (so there should be n - 1
+            # such values).
+            print(prox)
+            assert_equal(len(prox), len(feas) - 1)
 
-        for indiv, _ in feas:
-            # Each individual should be in the proximity structure, and have a
-            # proximity value for every other individual in the same
-            # subpopulation (so there should be n - 1 such values).
-            assert_(indiv in feas_prox)
-            assert_equal(len(feas_prox[indiv]), len(feas) - 1)
-
-        for indiv, _ in infeas:
+        for indiv, _, prox in infeas:
             # The same must hold for the infeasible subpopulation, of course!
-            assert_(indiv in infeas_prox)
-            assert_equal(len(infeas_prox[indiv]), len(infeas) - 1)
+            assert_equal(len(prox), len(infeas) - 1)
