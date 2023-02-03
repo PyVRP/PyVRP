@@ -199,17 +199,17 @@ class Result:
             ax.plot(x[num_to_skip:], y[num_to_skip:], *args, **kwargs)
 
         x = 1 + np.arange(self.num_iterations)
-        y = [d.best_cost for d in self.stats.feas_stats]
-        _plot(x, y, label="Feas. best", c="tab:green")
-
-        y = [d.avg_cost for d in self.stats.feas_stats]
-        _plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
-
         y = [d.best_cost for d in self.stats.infeas_stats]
         _plot(x, y, label="Infeas. best", c="tab:red")
 
         y = [d.avg_cost for d in self.stats.infeas_stats]
         _plot(x, y, label="Infeas. avg.", c="tab:red", alpha=0.3, ls="--")
+
+        y = [d.best_cost for d in self.stats.feas_stats]
+        _plot(x, y, label="Feas. best", c="tab:green")
+
+        y = [d.avg_cost for d in self.stats.feas_stats]
+        _plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
 
         ax.set_title("Feasible objectives")
         ax.set_xlabel("Iteration (#)")
@@ -217,7 +217,7 @@ class Result:
 
         ax.legend(frameon=False)
 
-    def plot_solution(self, data: ProblemData, ax: Optional[plt.Axes] = None):
+    def plot_solution(self, data: ProblemData, plot_customers: bool = False, ax: Optional[plt.Axes] = None):
         """
         Plots the best solution.
 
@@ -225,6 +225,8 @@ class Result:
         ----------
         data
             Data instance underlying this result's solution.
+        plot_customers
+            Whether to plot customers as dots (default plots only routes)
         ax, optional
             Axes object to draw the plot on. One will be created if not
             provided.
@@ -246,7 +248,8 @@ class Result:
                 y = y_coords[route]
 
                 # Coordinates of customers served by this route.
-                ax.scatter(x, y, label=f"Route {idx}", zorder=3, s=75)
+                if len(route) == 1 or plot_customers:
+                    ax.scatter(x, y, label=f"Route {idx}", zorder=3, s=75)
                 ax.plot(x, y)
 
                 # Edges from and to the depot, very thinly dashed.
