@@ -80,28 +80,24 @@ def test_tw_penalty():
 
 
 def test_repair_booster():
-    # params = PenaltyParams(1, 1, 5, 1, 1, 1)
-    # pm = PenaltyManager(1, params)
-    #
-    # assert_equal(pm.tw_penalty(1), 1)
-    # assert_equal(pm.load_penalty(2), 1)  # 1 unit above capacity
-    #
-    # # While the booster lives, the penalty values are multiplied by the
-    # # repairBooster term (x5 in this case).
-    # booster = pm.get_penalty_booster()
-    #
-    # assert_equal(pm.tw_penalty(1), 5)
-    # assert_equal(pm.tw_penalty(2), 10)
-    #
-    # assert_equal(pm.load_penalty(2), 5)  # 1 unit above capacity
-    # assert_equal(pm.load_penalty(3), 10)  # 2 units above capacity
-    #
-    # del booster
-    #
-    # # Booster no longer in scope, so penalties should return to normal.
-    # assert_equal(pm.tw_penalty(1), 1)
-    # assert_equal(pm.load_penalty(2), 1)  # 1 unit above capacity
-    pass  # TODO when we figure out what to do with the repair booster
+    params = PenaltyParams(1, 1, 5, 1, 1, 1)
+    pm = PenaltyManager(1, params)
+
+    assert_equal(pm.tw_penalty(1), 1)
+    assert_equal(pm.load_penalty(2), 1)  # 1 unit above capacity
+
+    # While the booster lives, the penalty values are multiplied by the
+    # repairBooster term (x5 in this case).
+    with pm.get_penalty_booster() as booster:  # noqa
+        assert_equal(pm.tw_penalty(1), 5)
+        assert_equal(pm.tw_penalty(2), 10)
+
+        assert_equal(pm.load_penalty(2), 5)  # 1 unit above capacity
+        assert_equal(pm.load_penalty(3), 10)  # 2 units above capacity
+
+    # Booster no longer in scope, so penalties should return to normal.
+    assert_equal(pm.tw_penalty(1), 1)
+    assert_equal(pm.load_penalty(2), 1)  # 1 unit above capacity
 
 
 def test_capacity_penalty_update_increase():

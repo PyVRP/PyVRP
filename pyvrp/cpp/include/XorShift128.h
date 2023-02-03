@@ -44,6 +44,13 @@ public:
     result_type operator()();
 
     /**
+     * Generators one pseudo-random double uniformly in the range [0, 1].
+     *
+     * @return A pseudo-random number in the range [0, 1].
+     */
+    template <typename T> T rand();
+
+    /**
      * Generates one pseudo-random integer in the range <code>[0, high]</code>.
      *
      * @param high Upper bound on the integer to generate.
@@ -55,6 +62,12 @@ public:
 constexpr size_t XorShift128::min() { return 0; }
 
 constexpr size_t XorShift128::max() { return UINT_MAX; }
+
+template <typename T> T XorShift128::rand()
+{
+    static_assert(std::is_floating_point<T>::value);
+    return operator()() / static_cast<T>(max());
+}
 
 template <typename T> XorShift128::result_type XorShift128::randint(T high)
 {

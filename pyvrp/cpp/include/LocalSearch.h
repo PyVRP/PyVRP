@@ -19,7 +19,7 @@ class LocalSearch
     using RouteOp = LocalSearchOperator<Route>;
 
     ProblemData &data;
-    PenaltyManager penaltyManager;
+    PenaltyManager &penaltyManager;
     XorShift128 &rng;
     LocalSearchParams params;
 

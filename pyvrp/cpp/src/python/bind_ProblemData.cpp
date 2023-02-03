@@ -31,6 +31,10 @@ void bind_ProblemData(py::module_ &m)
              py::arg("service_durations"),
              py::arg("duration_matrix"),
              py::arg("release_times"))
+        .def_property_readonly("num_clients", &ProblemData::numClients)
+        .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
+        .def_property_readonly("vehicle_capacity",
+                               &ProblemData::vehicleCapacity)
         .def("client",
              &ProblemData::client,
              py::arg("client"),
@@ -40,8 +44,5 @@ void bind_ProblemData(py::module_ &m)
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
              py::return_value_policy::reference)
-        .def("num_clients", &ProblemData::numClients)
-        .def("num_vehicles", &ProblemData::numVehicles)
-        .def("vehicle_capacity", &ProblemData::vehicleCapacity)
         .def_static("from_file", &ProblemData::fromFile);
 }
