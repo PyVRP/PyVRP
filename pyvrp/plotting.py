@@ -1,315 +1,502 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import collections as matcoll
+from matplotlib.collections import LineCollection
+from typing import List, Optional
+
+from pyvrp import Result
+from pyvrp.exceptions import StatisticsNotCollectedError
+from pyvrp._lib.hgspy import (
+    Individual,
+    ProblemData,
+)
 
 
-def discrete_cmap(N, base_cmap=None):
+def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
     """
-    Create an N-bin discrete colormap from the specified input map
+    Plots coordinates, time windows and demands for an instance.
+
+    Parameters
+    ----------
+    data
+        Data instance for which to plot coordinates, time windows and demands.
+    fig, optional
+        Optional Figure to draw on. One will be created if not provided.
     """
-    # Note that if base_cmap is a string or None, you can simply do
-    #    return plt.cm.get_cmap(base_cmap, N)
-    # The following works for string, None, or a colormap instance:
+    if not fig:
+        fig = plt.figure(figsize=(20, 12))
 
-    base = plt.cm.get_cmap(base_cmap)
-    color_list = base(np.linspace(0, 1, N))
-    cmap_name = base.name + str(N)
-    return base.from_list(cmap_name, color_list, N)
+    # Uses a GridSpec instance to lay-out all subplots nicely. There are
+    # two columns: left and right. Left has three rows, each containing a
+    # plot with statistics: the first plots population diversity, the
+    # second subpopulation objective information, and the third iteration
+    # runtimes. The right column plots the solution on top of the instance
+    # data.
+    gs = fig.add_gridspec(2, 2, width_ratios=(2 / 5, 3 / 5))
 
-# Code inspired by Google OR Tools plot:
-# https://github.com/google/or-tools/blob/fb12c5ded7423d524fc6c95656a9bdc290a81d4d/examples/python/cvrptw_plot.py
-def plot_vrptw(ax1, instance, solution=None,
-         dist=None, markersize=5, title="VRP", no_legend=False):
+    plot_timewindows(data, ax=fig.add_subplot(gs[0, 0]))
+    plot_demands(data, ax=fig.add_subplot(gs[1, 0]))
+    plot_coordinates(data, ax=fig.add_subplot(gs[:, 1]))
+
+    plt.tight_layout()
+    
+
+def plot_coordinates(data: ProblemData, title: str = "Coordinates", ax: Optional[plt.Axes] = None):
     """
-    Plot the route(s) on matplotlib axis ax1.
+    Plots coordinates for clients and depot.
+
+    Parameters
+    ----------
+    data
+        Data instance
+    title
+        Title to add to the plot
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
     """
-    coords = np.array(instance['node_coord'])
-    demand = np.array(instance['demand'])
-    capacity = instance['capacity']
-    timew = np.array(instance['time_window'])
-    service_t = instance['service_time']
-    dist = instance['distance']
-    min_routes = demand.sum() / capacity
-    
-    visualize_nodes = True
-    
-    x_dep, y_dep = coords[0,:]
-    ax1.plot(x_dep, y_dep, 'sk', markersize=markersize * 4)
-    
-    total_dist = 0
+    if not ax:
+        _, ax = plt.subplots()
 
-    if solution is None:
-        if visualize_nodes:
-            xs, ys = coords.transpose()
-            # color=cmap(0)
-            ax1.plot(xs, ys, 'o', mfc='black', markersize=markersize, markeredgewidth=0.0)
-        ax1.set_title("{}, min {:.2f} routes".format(title, min_routes) if demand is not None else title)
-    else:
-        routes = solution
+    dim = data.num_clients + 1
+    x_coords = np.array([data.client(client).x for client in range(dim)])
+    y_coords = np.array([data.client(client).y for client in range(dim)])
 
-        cmap = discrete_cmap(len(routes) + 2, 'nipy_spectral')
-        qvs = []
-        total_timewarp = 0
-        for veh_number, r in enumerate(routes):
-            color = cmap(len(routes) - veh_number)  # Invert to have in rainbow order
-            
-            route_coords = coords[r, :]
-            xs, ys = route_coords.transpose()
+    # This is the depot
+    kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
+    ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
 
-            if demand is not None:
-                route_demands = demand[r]
-                total_route_demand = sum(route_demands)
-                assert total_route_demand <= capacity
-            if visualize_nodes:
-                # Use color of route such that for nodes in an individual route it is clear to which route they belong
-                ax1.plot(xs, ys, 'o', mfc=color if len(routes) > 1 else 'black', markersize=markersize, markeredgewidth=0.0)
+    ax.scatter(x_coords[1:], y_coords[1:], s=75, label="Clients")
 
-            r_with_depot = np.concatenate(([0], r))
-            route_dist = dist[r_with_depot, np.roll(r_with_depot, -1, 0)].sum()
-            total_dist += route_dist
+    ax.grid(color="grey", linestyle="solid", linewidth=0.2)
 
-            # Check timewindows 
-            prev = 0
-            t = timew[0][0]
-            timewarp = 0
-            for (x, y), n in zip(route_coords, r):
-                l, u = timew[n]
-                arr = t + service_t[prev] + dist[prev, n]
-                t = max(arr, l)
-                if t > u:
-                    timewarp += t - u
-                    t = u
-                assert t <= u, f"Time window violated for node {n}: {t} is not in ({l, u})"
-
-                prev = n
-            t = t + service_t[prev] + dist[prev, 0]  # Return to depot
-            _, u = timew[0]
-            if t > u:
-                timewarp += t - u
-                t = u
-            assert t <= u
-            
-            total_timewarp += timewarp
-
-            # Assume VRP
-            label = 'R{}, # {}, c {} / {}, d {:d}{}{}'.format(
-                veh_number,
-                len(r),
-                total_route_demand,
-                capacity,
-                route_dist,
-                ", t {:d}".format(t),
-                ", TW {:d}".format(timewarp) if timewarp > 0 else "",
-            )
-
-            qv = ax1.quiver(
-                xs[:-1],
-                ys[:-1],
-                xs[1:] - xs[:-1],
-                ys[1:] - ys[:-1],
-                scale_units='xy',
-                angles='xy',
-                scale=1,
-                color=color,
-                label=label,
-                width=0.001,
-                headlength=20,
-                headwidth=12,
-            )
-
-            qvs.append(qv)
-        title_timewarp = ", TIMEWARP {:d}".format(total_timewarp) if total_timewarp > 0 else ""
-        title = '{}, {} routes (min {:.2f}), total distance {:d}{}'.format(title, len(routes), min_routes, total_dist, title_timewarp)
-        ax1.set_title(title)
-        if label is not None and not no_legend:
-            ax1.legend(handles=qvs)
-
-    return total_dist
+    ax.set_title(title)
+    ax.set_aspect("equal", "datalim")
+    ax.legend(frameon=False, ncol=2)
     
 
-def plot_timew(ax, timewi):
-    """Plot number of locations/customers that can be delivered at any time during the day"""
-    timewi = np.array(timewi)
-    horizon = timewi[0, 1] - timewi[0, 0]
-    frm, to = timewi[1:].T
-
-    times = np.concatenate((timewi[0], frm, to))
-    deltas = np.concatenate((np.zeros_like(timewi[0]), np.ones_like(frm), -np.ones_like(to)))
-    order = np.argsort(times)
-    times[order]
-
-    ax.step(times[order], np.cumsum(deltas[order]), where='post')
-    ax.set_xlim(timewi[0])
-
-    avg = ((timewi[1:, 1] - timewi[1:, 0]).sum() / horizon).round(1)
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Num locations')
-    ax.set_title(f'Time windows over horizon (avg {avg})')
-
-
-def plot_demands(ax, demand, capacity):
-    """Plot demands CDF by sorting them"""
-    ax.plot(sorted(demand))
-    avg = np.mean(demand)
-    stops_per_route = capacity / avg
-    ax.set_title(f'Demands (avg {avg.round(1)}/{capacity} so {stops_per_route.round(1)} stops/route)')
-    ax.set_xlabel('Nodes')
-    ax.set_ylabel('Demand')
-    ax.set_ylim([0, max(demand) + 1])
-
-
-def plot_schedule(ax, instance, solution=None, markersize=5, title="VRP", tw_linewidth=2, no_legend=False):
+def plot_timewindows(data: ProblemData, title: str = "Time windows", ax: Optional[plt.Axes] = None):
     """
-    Plot the route(s) schedule on matplotlib axis ax.
-    On the x-axis, plot the cumulative distance
-    On the y-axis, plot five lines:
-    - dotted: cumulative cost/distance/driving time in route
-    - dashed: cumulative driving time + service time in route
-    - dense: current time: cumulative driving, waiting and service time, resetted by 'time warps'
-    - small dash: latest possible time when doing time calculations in reverse starting at the end (possible forward time warps)
-    - shading: cumulative demand/load (y-axis normalized to vehicle capacity)
+    Plots time windows for clients, as vertical bars sorted by time window start.
+
+    Parameters
+    ----------
+    data
+        Data instance
+    title
+        Title to add to the plot
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
     """
-    
-    coords = instance['node_coord']
-    demand = instance['demand']
-    capacity = instance['capacity']
-    timew = instance['time_window']
-    service_t = instance['service_time']
-    dist = instance['distance']
-    min_routes = demand.sum() / capacity
-    routes = solution
-        
-    visualize_nodes = True
-    
-    node_plot_data = []
+    if not ax:
+        _, ax = plt.subplots()
 
-    cmap = discrete_cmap(len(routes) + 2, 'nipy_spectral')
-    qvs = []
-    total_dist = 0
-    cum_cost = 0
-    total_timewarp = 0
-    for veh_number, r in enumerate(routes):
-        color = cmap(len(routes) - veh_number)  # Invert to have in rainbow order
-        
-        route_coords = coords[r, :]
-        xs, ys = route_coords.transpose()
+    dim = data.num_clients + 1
+    tw = np.array([
+        [data.client(client).tw_early, data.client(client).tw_late]
+        for client in range(dim)
+    ])
+    # Lexicographic sort so for equal start we get shorter TW first
+    tw = tw[np.lexsort((tw[:, 1], tw[:, 0]))]
+    
+    lines = [((i, early), (i, late)) for i, (early, late) in enumerate(tw)]
+    ax.add_collection(LineCollection(lines, linewidths=1))
+    ax.set_xlim([0, dim])
+    ax.set_ylim([tw.min(), tw.max()])
 
-        route_demands = demand[r]
-        total_route_demand = sum(route_demands)
-        assert total_route_demand <= capacity
+    ax.set_title(title)
+    ax.set_xlabel("Client (sorted by TW)")
+    ax.set_ylabel("Time window")
+    
 
-        r_with_depot = np.concatenate(([0], r))
-        route_dist = dist[r_with_depot, np.roll(r_with_depot, -1, 0)].sum()
-        
-        prev = 0
-        assert service_t[0] == 0
-        horizon = timew[0][1] - timew[0][0]
-        t = timew[0][0]
-        cum_demand = 0
-        route_cost = 0
-        cum_service = 0
-        timewarp = 0
-        route_plot_data = [(cum_cost, t, route_cost + cum_service, cum_demand)]
-        for (x, y), n, d in zip(route_coords, r, route_demands):
-            l, u = timew[n]
-            arr = t + service_t[prev] + dist[prev, n]
-            t = max(arr, l)
-            cum_cost += dist[prev, n]
-            route_cost += dist[prev, n]
-            cum_demand += d
-            cum_service += service_t[n]
-            
-            if t > u:
-                timewarp += t - u
-                print('node', n, 'timewarp', timewarp)
-                t = u
-            
-            assert t <= u, f"Time window violated for node {n}: {t} is not in ({l, u})"
-            assert cum_demand <= capacity
-            
-            # Add timewindow line
-            node_plot_data.append((
-                [(cum_cost, l), (cum_cost, u)],  # Timewindow
-                'k' if (u - l) < horizon / 2 else 'gray', # Timewindow color
-                [(cum_cost, t), (cum_cost, t + service_t[n])],  # Service window
-                color, # Service window color
-                [(cum_cost, arr), (cum_cost, t)] if arr > t else None
-            ))
-            
-            route_plot_data.append((cum_cost, arr, route_cost + cum_service - service_t[n], cum_demand - d))
-            route_plot_data.append((cum_cost, t + service_t[n], route_cost + cum_service, cum_demand))
-            
-            prev = n
-        
-        t = t + service_t[prev] + dist[prev, 0]  # Return to depot
-        cum_cost += dist[prev, 0]
-        route_cost += dist[prev, 0]
-        _, u = timew[0]
-        if t > u:
-            timewarp += t - u
-            t = u
-        assert t <= u
-        total_timewarp += timewarp
-        
-        route_plot_data.append((cum_cost, t, route_cost + cum_service - service_t[0], cum_demand))
-        
-        xs, ys, ys_exclwait, ys_demand = zip(*route_plot_data)
-        ax.plot(xs, ys, color=color)
-        ax.plot([cum_cost - route_cost, cum_cost], [0, route_cost], color=color, linestyle=':') # Cumulative cost only (excl service & waiting)
-        ax.plot(xs, ys_exclwait, color=color, linestyle='-.')  # Cumulative cost + service time (excl waiting)
-        # Scale demand to plot between 0 and 100 %
-        ys_demand = np.array(ys_demand) / capacity * horizon
-        ax.fill_between(xs, ys_demand, color=color, alpha=0.1)
-        
-        # Do the same thing in reverse to find last possibility
-        t = timew[0][1]
-        nxt = 0
-        cum_cost_rev = cum_cost
-        reverse_timewarp = 0
-        route_plot_data = [(cum_cost_rev, t)]
-        for (x, y), n, d in reversed(list(zip(route_coords, r, route_demands))):
-            l, u = timew[n]
-            dep = t - dist[n, nxt] # latest departure
-            t = min(dep - service_t[n], u) # latest time to start service = latest arrival
-            cum_cost_rev -= dist[n, nxt]
-            if t < l:
-                reverse_timewarp += l - t
-                t = l
-            assert t >= l, f"Time window violated for node {n}: {t} is not in ({l, u})"
-            
-            route_plot_data.append((cum_cost_rev, dep))
-            route_plot_data.append((cum_cost_rev, t))
-            
-            nxt = n
-        
-        t = t - dist[0, nxt]
-        l, _ = timew[0]
-        if t < l:
-            reverse_timewarp += l - t
-            t = l
-        assert t >= l
-        assert timewarp == reverse_timewarp
-        cum_cost_rev -= dist[0, nxt]
-        route_plot_data.append((cum_cost_rev, t + service_t[0]))
+def plot_demands(data: ProblemData, title: Optional[str] = None, ax: Optional[plt.Axes] = None):
+    """
+    Plots demands for clients, as vertical bars sorted by demand.
+
+    Parameters
+    ----------
+    data
+        Data instance
+    title, optional
+        Title to add to the plot
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
+    """
+    if not ax:
+        _, ax = plt.subplots()
+
+    dim = data.num_clients + 1
+    # Exclude depot
+    demand = np.array([data.client(client).demand for client in range(1, dim)])
+    demand = np.sort(demand)
     
-        xs, ys = zip(*route_plot_data)
-        ax.plot(xs, ys, color=color, linestyle='--')
+    ax.bar(np.arange(1, dim), demand)
+    
+    if title is None:
+        title = f"Demands (cap = {data.vehicle_capacity}, {data.vehicle_capacity / demand.mean():.2f} stops/route)"
+    ax.set_title(title)
+    ax.set_xlabel("Client (sorted by demand)")
+    ax.set_ylabel(f"Demand")
+
+
+def plot_result(result: Result, data: ProblemData, fig: Optional[plt.Figure] = None):
+    """
+    Plots the results of a run: the best solution, and detailed
+    statistics about the algorithm's performance.
+
+    Parameters
+    ----------
+    result
+        Result to be plotted.
+    data
+        Data instance underlying the result's solution.
+    fig, optional
+        Optional Figure to draw on. One will be created if not provided.
+
+    Raises
+    ------
+    StatisticsNotCollectedError
+        Raised when statistics have not been collected.
+    """
+    if not result.has_statistics():
+        raise StatisticsNotCollectedError("Statistics have not been collected.")
+
+    if not fig:
+        fig = plt.figure(figsize=(20, 12))
+
+    # Uses a GridSpec instance to lay-out all subplots nicely. There are
+    # two columns: left and right. Left has three rows, each containing a
+    # plot with statistics: the first plots population diversity, the
+    # second subpopulation objective information, and the third iteration
+    # runtimes. The right column plots the solution on top of the instance
+    # data.
+    gs = fig.add_gridspec(3, 2, width_ratios=(2 / 5, 3 / 5))
+
+    ax_diversity = fig.add_subplot(gs[0, 0])
+    plot_diversity(result, ax=ax_diversity)
+    plot_objectives(result, ax=fig.add_subplot(gs[1, 0], sharex=ax_diversity))
+    plot_runtimes(result, ax=fig.add_subplot(gs[2, 0], sharex=ax_diversity))
+    plot_solution(result.best, data, ax=fig.add_subplot(gs[:, 1]))
+
+    plt.tight_layout()
+
+
+def plot_diversity(result: Result, ax: Optional[plt.Axes] = None):
+    """
+    Plots population diversity statistics.
+
+    Parameters
+    ----------
+    result
+        Result for which to plot diversity.
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
+
+    Raises
+    ------
+    StatisticsNotCollectedError
+        Raised when statistics have not been collected.
+    """
+    if not result.has_statistics():
+        raise StatisticsNotCollectedError("Statistics have not been collected.")
+
+    if not ax:
+        _, ax = plt.subplots()
+
+    ax.set_title("Diversity")
+    ax.set_xlabel("Iteration (#)")
+    ax.set_ylabel("Avg. diversity")
+
+    x = 1 + np.arange(result.num_iterations)
+    y = [d.avg_diversity for d in result.stats.feas_stats]
+    ax.plot(x, y, label="Feas. diversity", c="tab:green")
+
+    y = [d.avg_diversity for d in result.stats.infeas_stats]
+    ax.plot(x, y, label="Infeas. diversity", c="tab:red")
+
+    ax.legend(frameon=False)
+
+
+def plot_objectives(
+    result: Result, num_to_skip: Optional[int] = None, ax: Optional[plt.Axes] = None
+):
+    """
+    Plots each subpopulation's objective values.
+
+    Parameters
+    ----------
+    result
+        Result for which to plot objectives.
+    num_to_skip, optional
+        Number of initial iterations to skip in the plot. These early
+        iterations typically have very high objective values, and obscure
+        what's going on later in the search. The default skips the first 5%
+        of iterations.
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
+
+    Raises
+    ------
+    StatisticsNotCollectedError
+        Raised when statistics have not been collected.
+    """
+    if not result.has_statistics():
+        raise StatisticsNotCollectedError("Statistics have not been collected.")
+
+    if not ax:
+        _, ax = plt.subplots()
+
+    if num_to_skip is None:
+        num_to_skip = int(0.05 * result.num_iterations)
+
+    def _plot(x, y, *args, **kwargs):
+        ax.plot(x[num_to_skip:], y[num_to_skip:], *args, **kwargs)
+
+    x = 1 + np.arange(result.num_iterations)
+    y = [d.best_cost for d in result.stats.infeas_stats]
+    _plot(x, y, label="Infeas. best", c="tab:red")
+
+    y = [d.avg_cost for d in result.stats.infeas_stats]
+    _plot(x, y, label="Infeas. avg.", c="tab:red", alpha=0.3, ls="--")
+
+    y = [d.best_cost for d in result.stats.feas_stats]
+    _plot(x, y, label="Feas. best", c="tab:green")
+
+    y = [d.avg_cost for d in result.stats.feas_stats]
+    _plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
+
+    ax.set_title("Feasible objectives")
+    ax.set_xlabel("Iteration (#)")
+    ax.set_ylabel("Objective")
+
+    ax.legend(frameon=False)
+
+
+def plot_solution(solution: Individual, data: ProblemData, plot_customers: bool = False, ax: Optional[plt.Axes] = None):
+    """
+    Plots the best solution.
+
+    Parameters
+    ----------
+    solution
+        Solution to plot.
+    data
+        Data instance underlying the solution.
+    plot_customers
+        Whether to plot customers as dots (default plots only routes)
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
+    """
+    if not ax:
+        _, ax = plt.subplots()
+
+    dim = data.num_clients + 1
+    x_coords = np.array([data.client(client).x for client in range(dim)])
+    y_coords = np.array([data.client(client).y for client in range(dim)])
+
+    # This is the depot
+    kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
+    ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
+
+    for idx, route in enumerate(solution.get_routes(), 1):
+        if route:
+            x = x_coords[route]
+            y = y_coords[route]
+
+            # Coordinates of customers served by this route.
+            if len(route) == 1 or plot_customers:
+                ax.scatter(x, y, label=f"Route {idx}", zorder=3, s=75)
+            ax.plot(x, y)
+
+            # Edges from and to the depot, very thinly dashed.
+            kwargs = dict(ls=(0, (5, 15)), linewidth=0.25, color="grey")
+            ax.plot([x_coords[0], x[0]], [y_coords[0], y[1]], **kwargs)
+            ax.plot([x[-1], x_coords[0]], [y[-1], y_coords[0]], **kwargs)
+
+    ax.grid(color="grey", linestyle="solid", linewidth=0.2)
+
+    ax.set_title("Solution")
+    ax.set_aspect("equal", "datalim")
+    ax.legend(frameon=False, ncol=2)
+
+
+def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
+    """
+    Plots iteration runtimes.
+
+    Parameters
+    ----------
+    result
+        Result for which to plot runtimes.
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
+
+    Raises
+    ------
+    StatisticsNotCollectedError
+        Raised when statistics have not been collected.
+    """
+    if not result.has_statistics():
+        raise StatisticsNotCollectedError("Statistics have not been collected.")
+
+    if not ax:
+        _, ax = plt.subplots()
+
+    x = 1 + np.arange(result.num_iterations)
+    ax.plot(x, result.stats.runtimes)
+
+    if result.num_iterations > 1:  # need data to plot a trendline
+        b, c = np.polyfit(x, result.stats.runtimes, 1)  # noqa
+        ax.plot(b * x + c)
+
+    ax.set_xlim(left=0)
+
+    ax.set_xlabel("Iteration (#)")
+    ax.set_ylabel("Runtime (s)")
+    ax.set_title("Iteration runtimes")
+
+
+def plot_route_schedule(data: ProblemData, 
+                        route: List[int],
+                        legend: bool = True,
+                        title: Optional[str] = None,
+                        ax: Optional[plt.Axes] = None):
+    """
+    Plots a route schedule. This function plots multiple time statistics
+    as a function of distance traveled:
+    
+    Solid: earliest possible trajectory / time (using timewarp if infeasible)
+    Shaded: slack up to latest possible trajectory / time (only if no timewarp)
+    Dash-dotted: driving + service time, excluding wait time and timewarp
+    Dotted: driving time only
+    Grey shaded background area: remaining load in vehicle (on secondary y-axis)
+    
+    Parameters
+    ----------
+    data
+        Data instance for which to plot the route schedule.
+    route
+        Route (list of indices) to plot schedule for.
+    legend
+        Whether or not to show the legends
+    title, optional
+        Title to add to the plot
+    ax, optional
+        Axes object to draw the plot on. One will be created if not
+        provided.
+    """
+    if not ax:
+        _, ax = plt.subplots()
+    
+    depot = data.client(0)  # For readability, define variable
+    horizon = depot.tw_late - depot.tw_early
+    start_time = max([depot.tw_early] + [data.client(idx).release_time for idx in route])
+    # Interpret depot.serv_dur as loading duration, typically 0
+    
+    # Initialize tracking variables
+    t = start_time
+    wait_time = 0
+    time_warp = 0
+    drive_time = 0
+    serv_time = 0
+    dist = 0
+    load = sum([data.client(idx).demand for idx in route])
+    slack = horizon
+    
+    # Traces and objects used for plotting
+    trace_time = []
+    trace_drive = []
+    trace_drive_serv = []
+    trace_load = []
+    timewindow_lines = []
+    timewindow_colors = []
+    timewarp_lines = []
+    
+    def add_traces(dist, t, drive_time, serv_time, load):
+        trace_time.append((dist, t))
+        trace_drive.append((dist, drive_time))
+        trace_drive_serv.append((dist, drive_time + serv_time))
+        trace_load.append((dist, load))
+    
+    add_traces(dist, t, drive_time, serv_time, load)
+    
+    t += depot.serv_dur
+    serv_time += depot.serv_dur
+    
+    add_traces(dist, t, drive_time, serv_time, load)
+    
+    prev_idx = 0  # depot
+    for idx in list(route) + [0]:
+        stop = data.client(idx)
+        # Currently time = distance (i.e. assume speed of 1)
+        delta_time = delta_dist = data.dist(prev_idx, idx)
+        t += delta_time
+        drive_time += delta_time
+        dist += delta_dist
         
-        total_dist += route_dist
+        add_traces(dist, t, drive_time, serv_time, load)
+
+        if t < stop.tw_early:
+            wait_time += stop.tw_early - t
+            t = stop.tw_early
+
+        slack = min(slack, stop.tw_late - t)
+        if t > stop.tw_late:
+            time_warp += t - stop.tw_late
+            timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
+            t = stop.tw_late
+            
+        load -= stop.demand
+            
+        add_traces(dist, t, drive_time, serv_time, load)
+
+        if idx != 0:  # Don't plot service and timewindow for return to depot
+            t += stop.serv_dur
+            serv_time += stop.serv_dur
+            
+            add_traces(dist, t, drive_time, serv_time, load)
+            
+            timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
+            timewindow_colors.append('black' if (stop.tw_late - stop.tw_early) <= horizon / 2 else 'gray')
+        
+        prev_idx = idx
     
-    timew = np.array(timew)
     
-    timew_lines, timew_colors, node_service_lines, node_service_colors, timewarps = zip(*node_plot_data)
-    timewarps = [tw for tw in timewarps if tw is not None]
+    # Plot primary traces
+    xs, ys = zip(*trace_time)
+    ax.plot(xs, ys, label='Time (earliest)')
+    if slack > 0:
+        ax.fill_between(xs, ys, np.array(ys) + slack, alpha=0.3, label='Time (slack)')
+        
+    ax.plot(*zip(*trace_drive_serv), linestyle='-.', label='Drive + service time')
+    ax.plot(*zip(*trace_drive), linestyle=':', label='Drive time')
+
+    # Plot time windows & time warps
+    lc_time_windows = LineCollection(timewindow_lines, colors=timewindow_colors, linewidths=2, label='Time window')
+    ax.add_collection(lc_time_windows)
+    lc_timewarps = LineCollection(timewarp_lines, colors='red', linewidths=2, alpha=0.7, label='Time warp') 
+    ax.add_collection(lc_timewarps)
+    ax.set_ylim([depot.tw_early, max(depot.tw_late, max(t for d, t in trace_time))])
     
-    linecoll_tw = matcoll.LineCollection(timew_lines, colors=timew_colors, linewidths=tw_linewidth)
-    linecoll_timewarps = matcoll.LineCollection(timewarps, colors='red', linewidths=tw_linewidth / 2, alpha=0.7) 
+    # Plot remaining load on second axis
+    twin1 = ax.twinx()
+    twin1.fill_between(*zip(*trace_load), color='black', alpha=0.1, label='Load in vehicle')
+    twin1.set_ylim([0, data.vehicle_capacity])
     
-    ax.add_collection(linecoll_tw)
-    ax.add_collection(linecoll_timewarps)
     
-    ax.set_xlim([0, total_dist])
-    ax.set_ylim(timew[0])
+    # Set labels, legends and title
     ax.set_xlabel('Distance')
     ax.set_ylabel('Time')
-    ax.set_title(title)
+    twin1.set_ylabel(f'Load (capacity = {data.vehicle_capacity})')
+    
+    if legend:
+        twin1.legend(loc='upper right')
+        ax.legend(loc='upper left')
+        
+    if title:
+        ax.set_title(title)
