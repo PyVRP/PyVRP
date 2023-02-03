@@ -4,8 +4,8 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp._lib.hgspy import Individual, ProblemData
-
+from .Individual import Individual
+from .ProblemData import ProblemData
 from .Statistics import Statistics
 
 

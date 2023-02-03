@@ -1,6 +1,6 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp._lib.hgspy import Individual, PenaltyManager
+from pyvrp import Individual, PenaltyManager
 from pyvrp.tests.helpers import read
 
 

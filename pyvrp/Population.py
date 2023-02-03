@@ -5,12 +5,10 @@ from typing import Callable, Iterator, List, Tuple
 
 import numpy as np
 
-from pyvrp._lib.hgspy import (
-    Individual,
-    PenaltyManager,
-    ProblemData,
-    XorShift128,
-)
+from .Individual import Individual
+from .PenaltyManager import PenaltyManager
+from .ProblemData import ProblemData
+from .XorShift128 import XorShift128
 
 _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
 _DiversityItem = Tuple[Individual, float]

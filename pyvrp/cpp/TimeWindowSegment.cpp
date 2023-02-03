@@ -1,10 +1,11 @@
 #include "TimeWindowSegment.h"
-#include "bindings.h"
+
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 using TWS = TimeWindowSegment;
 
-void bind_TimeWindowSegment(py::module_ &m)
+PYBIND11_MODULE(TimeWindowSegment, m)
 {
     py::class_<TWS>(m, "TimeWindowSegment")
         .def(py::init<Matrix<int> const *, int, int, int, int, int, int, int>(),

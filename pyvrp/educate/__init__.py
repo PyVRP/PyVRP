@@ -1,5 +1,4 @@
-from pyvrp._lib.hgspy import LocalSearch, LocalSearchParams
-from pyvrp._lib.hgspy.operators import (
+from .Exchange import (
     Exchange10,
     Exchange11,
     Exchange20,
@@ -7,11 +6,12 @@ from pyvrp._lib.hgspy.operators import (
     Exchange22,
     Exchange32,
     Exchange33,
-    MoveTwoClientsReversed,
-    RelocateStar,
-    SwapStar,
-    TwoOpt,
 )
+from .LocalSearch import LocalSearch, LocalSearchParams
+from .MoveTwoClientsReversed import MoveTwoClientsReversed
+from .RelocateStar import RelocateStar
+from .SwapStar import SwapStar
+from .TwoOpt import TwoOpt
 
 NODE_OPERATORS = [
     Exchange20,

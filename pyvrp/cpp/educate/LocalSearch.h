@@ -3,7 +3,6 @@
 
 #include "Individual.h"
 #include "LocalSearchOperator.h"
-#include "LocalSearchParams.h"
 #include "Node.h"
 #include "PenaltyManager.h"
 #include "ProblemData.h"
@@ -12,6 +11,26 @@
 
 #include <functional>
 #include <vector>
+
+struct LocalSearchParams
+{
+    size_t const weightWaitTime;
+    size_t const weightTimeWarp;
+    size_t const nbGranular;
+    size_t const postProcessPathLength;
+
+    LocalSearchParams(size_t weightWaitTime = 18,
+                      size_t weightTimeWarp = 20,
+                      size_t nbGranular = 34,
+                      size_t postProcessPathLength = 7)
+        : weightWaitTime(weightWaitTime),
+          weightTimeWarp(weightTimeWarp),
+          nbGranular(nbGranular),
+          postProcessPathLength(postProcessPathLength)
+    {
+        // TODO parameter validation
+    }
+};
 
 class LocalSearch
 {

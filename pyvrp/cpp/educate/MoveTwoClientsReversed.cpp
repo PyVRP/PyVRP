@@ -1,7 +1,11 @@
 #include "MoveTwoClientsReversed.h"
 
+#include <pybind11/pybind11.h>
+
 #include "Route.h"
 #include "TimeWindowSegment.h"
+
+namespace py = pybind11;
 
 using TWS = TimeWindowSegment;
 
@@ -88,4 +92,16 @@ void MoveTwoClientsReversed::apply(Node *U, Node *V)
 
     U->insertAfter(V);
     X->insertAfter(V);
+}
+
+PYBIND11_MODULE(MoveTwoClientsReversed, m)
+{
+    py::class_<LocalSearchOperator<Node>>(
+        m, "NodeOperator", py::module_local());
+
+    py::class_<MoveTwoClientsReversed, LocalSearchOperator<Node>>(
+        m, "MoveTwoClientsReversed")
+        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+             py::arg("data"),
+             py::arg("penalty_manager"));
 }

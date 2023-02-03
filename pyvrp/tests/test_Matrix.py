@@ -1,6 +1,6 @@
 from numpy.testing import assert_equal, assert_raises
 
-from pyvrp._lib.hgspy import IntMatrix
+from pyvrp.Matrix import IntMatrix
 
 
 def test_dimension_constructor():
