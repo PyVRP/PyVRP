@@ -297,19 +297,18 @@ class Result:
         summary = [
             "Solution results",
             "================",
+            f"    # routes: {self.best.num_routes()}",
             f"   objective: {self.cost():.2f}",
             f"    feasible? {self.is_feasible()}",
             f"# iterations: {self.num_iterations}",
-            f"    run-time: {self.runtime:.2f} seconds\n",
-        ]
-
-        routes = [
+            f"    run-time: {self.runtime:.2f} seconds",
+            "",
             "Routes",
             "------",
         ]
 
         for idx, route in enumerate(self.best.get_routes(), 1):
             if route:
-                routes.append(f"Route {idx:>2}: {route}")
+                summary.append(f"Route {idx:>2}: {route}")
 
-        return "\n".join(summary + routes)
+        return "\n".join(summary)
