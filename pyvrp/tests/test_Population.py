@@ -99,75 +99,46 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.max_pop_size, min_pop_size + generation_size)
 
 
-# TODO functional tests
-
-
-def test_initialises_at_least_min_pop_size_individuals():
+def test_add_triggers_purge():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    pop = Population(data, pm, rng, broken_pairs_distance)
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
 
+    # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
 
+    num_feas = len(pop.feasible_subpopulation)
+    num_infeas = len(pop.infeasible_subpopulation)
 
-def test_add_triggers_purge():
-    pass  # TODO
+    assert_equal(len(pop), num_feas + num_infeas)
 
+    while True:  # keep adding feasible individuals until we are about to purge
+        individual = Individual(data, pm, rng)
 
-# TEST(PopulationTest, addTriggersPurge)
-# {
-#     auto const data = ProblemData::fromFile("data/OkSmall.txt");
-#     PenaltyManager pMngr(data.vehicleCapacity());
-#     XorShift128 rng;
+        if individual.is_feasible():
+            pop.add(individual)
+            num_feas += 1
 
-#     PopulationParams params;
-#     Population pop(data, pMngr, rng, brokenPairsDistance, params);
+            assert_equal(len(pop), num_feas + num_infeas)
+            assert_equal(len(pop.feasible_subpopulation), num_feas)
 
-#     // After construction, we should have minPopSize individuals.
-#     EXPECT_EQ(pop.size(), params.minPopSize);
+        if num_feas == params.max_pop_size:  # next add() triggers purge
+            break
 
-#     size_t infeasPops = pop.numInfeasible();
-#     size_t feasPops = pop.numFeasible();
+    # RNG is fixed, and this next individual is feasible. Since we now have a
+    # feasible population that is of maximal size, adding this individual
+    # should trigger survivor selection (purge). Survivor selection reduces the
+    # feasible subpopulation to min_pop_size, so the overal population is then
+    # just num_infeas + min_pop_size.
+    individual = Individual(data, pm, rng)
+    assert_(individual.is_feasible())
 
-#     EXPECT_EQ(pop.size(), infeasPops + feasPops);
-
-#     while (true)  // keep adding feasible individuals until we are about to
-#  do
-#     {             // survivor selection.
-#         Individual indiv = {data, pMngr, rng};
-
-#         if (indiv.isFeasible())
-#         {
-#             pop.add(indiv);
-#             feasPops++;
-
-#             EXPECT_EQ(pop.size(), infeasPops + feasPops);
-#             EXPECT_EQ(pop.numFeasible(), feasPops);
-#         }
-
-#         if (feasPops == params.minPopSize + params.generationSize)
-#             break;
-#     }
-
-#     // RNG is fixed, and this next individual is feasible. Since we now have
-#  a
-#     // feasible population size of minPopSize + generationSize, adding this
-#  new
-#     // individual should trigger survivor selection. Survivor selection
-#  reduces
-#     // the feasible sub-population to minPopSize, so the overall population
-# is
-#     // just infeasPops + minPopSize.
-#     Individual indiv = {data, pMngr, rng};
-#     pop.add(indiv);
-
-#     ASSERT_TRUE(indiv.isFeasible());
-#     EXPECT_EQ(pop.numFeasible(), params.minPopSize);
-#     EXPECT_EQ(pop.size(), params.minPopSize + infeasPops);
-# }
+    pop.add(individual)
+    assert_equal(len(pop.feasible_subpopulation), params.min_pop_size)
+    assert_equal(len(pop), num_infeas + params.min_pop_size)
 
 
 def test_add_updates_best_found_solution():
