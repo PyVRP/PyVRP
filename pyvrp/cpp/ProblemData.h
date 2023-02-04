@@ -75,10 +75,10 @@ public:
      * Constructs a ProblemData object from the data read (in VRPLIB format)
      * from the given instance path.
      *
-     * @param instPath Path to the instance data.
-     * @returns        The constructed object.
+     * @param where Path to the instance data.
+     * @returns     The constructed object.
      */
-    static ProblemData fromFile(std::string const &instPath);
+    static ProblemData fromFile(std::string const &where);
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the data

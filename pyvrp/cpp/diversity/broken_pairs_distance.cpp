@@ -32,5 +32,9 @@ double brokenPairsDistance(ProblemData const &data,
 
 PYBIND11_MODULE(broken_pairs_distance, m)
 {
-    m.def("broken_pairs_distance", &brokenPairsDistance);
+    m.def("broken_pairs_distance",
+          &brokenPairsDistance,
+          py::arg("data"),
+          py::arg("first"),
+          py::arg("second"));
 }

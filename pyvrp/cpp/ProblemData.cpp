@@ -21,7 +21,7 @@ size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
-ProblemData ProblemData::fromFile(std::string const &instPath)
+ProblemData ProblemData::fromFile(std::string const &where)
 {
     size_t numClients = 0;
     size_t vehicleCapacity = INT_MAX;
@@ -41,10 +41,10 @@ ProblemData ProblemData::fromFile(std::string const &instPath)
     std::vector<std::vector<int>> distMat;
     std::vector<int> releases;
 
-    std::ifstream inputFile(instPath);
+    std::ifstream inputFile(where);
 
     if (!inputFile)
-        throw std::invalid_argument("Cannot open " + instPath + ".");
+        throw std::invalid_argument("Cannot open " + where + ".");
 
     std::string name, ignore;  // section name and 'ignore' string
     for (inputFile >> name; inputFile && name != "EOF"; inputFile >> name)
@@ -304,9 +304,9 @@ PYBIND11_MODULE(ProblemData, m)
              py::arg("client"),
              py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
-        .def("dist", &ProblemData::dist)
+        .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
              py::return_value_policy::reference)
-        .def_static("from_file", &ProblemData::fromFile);
+        .def_static("from_file", &ProblemData::fromFile, py::arg("where"));
 }

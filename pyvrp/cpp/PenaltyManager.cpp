@@ -120,9 +120,13 @@ PYBIND11_MODULE(PenaltyManager, m)
              py::arg("vehicle_capacity"),
              py::arg("params"))
         .def(py::init<unsigned int>(), py::arg("vehicle_capacity"))
-        .def("update_capacity_penalty", &PenaltyManager::updateCapacityPenalty)
-        .def("update_time_warp_penalty", &PenaltyManager::updateTimeWarpPenalty)
-        .def("load_penalty", &PenaltyManager::loadPenalty)
-        .def("tw_penalty", &PenaltyManager::twPenalty)
+        .def("update_capacity_penalty",
+             &PenaltyManager::updateCapacityPenalty,
+             py::arg("curr_feas_pct"))
+        .def("update_time_warp_penalty",
+             &PenaltyManager::updateTimeWarpPenalty,
+             py::arg("curr_feas_pct"))
+        .def("load_penalty", &PenaltyManager::loadPenalty, py::arg("load"))
+        .def("tw_penalty", &PenaltyManager::twPenalty, py::arg("time_warp"))
         .def("get_penalty_booster", &PenaltyManager::getPenaltyBooster);
 }

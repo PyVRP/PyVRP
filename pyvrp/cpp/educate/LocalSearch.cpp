@@ -497,6 +497,6 @@ PYBIND11_MODULE(LocalSearch, m)
         .def("add_node_operator", &LocalSearch::addNodeOperator, py::arg("op"))
         .def(
             "add_route_operator", &LocalSearch::addRouteOperator, py::arg("op"))
-        .def("search", &LocalSearch::search, py::arg("indiv"))
-        .def("intensify", &LocalSearch::intensify, py::arg("indiv"));
+        .def("search", &LocalSearch::search, py::arg("individual"))
+        .def("intensify", &LocalSearch::intensify, py::arg("individual"));
 }

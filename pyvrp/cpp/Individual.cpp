@@ -116,15 +116,15 @@ bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp > 0; }
 
-void Individual::toFile(std::string const &path, double time) const
+void Individual::toFile(std::string const &where, double runtime) const
 {
-    std::ofstream out(path);
+    std::ofstream out(where);
 
     if (!out)
-        throw std::runtime_error("Could not open " + path);
+        throw std::runtime_error("Could not open " + where);
 
     out << *this;
-    out << "Time " << time << '\n';
+    out << "Time " << runtime << '\n';
 }
 
 void Individual::makeNeighbours()
@@ -237,5 +237,8 @@ PYBIND11_MODULE(Individual, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
-        .def("to_file", &Individual::toFile);
+        .def("to_file",
+             &Individual::toFile,
+             py::arg("where"),
+             py::arg("runtime"));
 }

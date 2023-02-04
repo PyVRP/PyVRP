@@ -93,9 +93,9 @@ class SubPopulation:
                     del prox[idx]
                     break
 
-        for other in self:  # remove individual from subpopulation.
-            if other[0] == individual:
-                self._items.remove(other)
+        for item in self:  # remove individual from subpopulation.
+            if item[0] == individual:
+                self._items.remove(item)
                 break
         else:
             # This else should never happen, because the proximity and items

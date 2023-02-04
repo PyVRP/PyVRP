@@ -76,10 +76,10 @@ public:
      * written in VRPLIB format, with a final line storing the passed-in compute
      * time.
      *
-     * @param path File path to write to.
-     * @param time Compute time (in seconds).
+     * @param where File path to write to.
+     * @param runtime Compute time (in seconds).
      */
-    void toFile(std::string const &path, double time) const;
+    void toFile(std::string const &where, double runtime) const;
 
     Individual &operator=(Individual const &other) = default;
 
