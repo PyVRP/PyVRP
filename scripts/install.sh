@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
 
 # This script builds and installs the pyvrp project in the local poetry 
-# environment.
+# environment. Any arguments are passed to the compilation step.
 
 set -e;  # exit immediately if any command fails
 
-# if --clean is passed, remove the current build directory and previously 
-# installed binaries, and perform a clean install.
-if [[ $* == *--clean* ]]
-then
-    rm -rf build;
-    rm pyvrp/**/*.so;
-fi
+BUILD_DIR="build";
 
-poetry run meson setup build;       # set-up build/ directory
-poetry run meson compile -C build;  # compile everything
-poetry run meson install -C build;  # install into pyvrp
+# Command line argument for buildtype. Supports a few options, including 
+# 'debug' and 'release'. If not provided, a debug build is generated.
+poetry run meson setup "$BUILD_DIR" --reconfigure --buildtype ${1:-debug};
+poetry run meson compile -C "$BUILD_DIR";
+poetry run meson install -C "$BUILD_DIR";

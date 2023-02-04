@@ -1,5 +1,15 @@
 project('pyvrp', 'cpp', default_options : ['cpp_std=c++20'])
 
+if get_option('buildtype') == 'release'
+    add_project_arguments('-O3', language: 'cpp')
+    add_project_link_arguments('-flto', language: 'cpp')
+endif
+
+if get_option('buildtype') == 'debug'
+    add_project_arguments('-fprofile-arcs', '-ftest-coverage', language: 'cpp')
+    add_project_link_arguments('--coverage', language: 'cpp')
+endif
+
 py_mod = import('python')
 py = py_mod.find_installation()
 
@@ -125,6 +135,15 @@ foreach extension : extensions
         install_dir: extension[2],
         include_directories: [
             include_directories(SRC_DIR),
+        ],
+        cpp_args: [
+            '-Werror',
+            '-Wall',
+            '-Wextra',
+            '-Wpedantic',
+            # Ignore unused parameters, because not all LS operators use every
+            # argument they are given.
+            '-Wno-unused-parameter'
         ],
     )
 endforeach
