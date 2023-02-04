@@ -7,28 +7,50 @@ on:
     branches: [ main ]
 
 jobs:
-  build-binaries:
-    name: Build wheels on ${{ matrix.os }}
+  linux:
+    name: Build Linux wheels for Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-latest ]  # , macos-latest, windows-latest ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
     steps:
       - uses: actions/checkout@v3
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.0
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          package-dir: .
-          output-dir: dist
+          python-version: ${{ matrix.python-version }}
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        id: cache-python
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+      - name: Install Python dependencies
+        if: steps.cache-python.outputs.cache-hit != 'true'
+        run: poetry install --no-root
+      - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
+      - name: Build pyvrp
+        run: poetry run scripts/install.sh
       - uses: actions/upload-artifact@v3  # upload all wheels
         with:
           name: dist
           path: ./dist/*
 
+  # windows:
+  #   name: Build Windows wheels for Python ${{ matrix.python-version }}
+  
+  # macos:
+  #   name: Build OS X wheels for Python ${{ matrix.python-version }}
+
   deploy:
     name: Deploy to PyPI
-    needs: build-binaries
+    needs: [ linux ]  # , windows, macos ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -48,7 +70,7 @@ jobs:
         run: poetry build --format sdist
       - name: Check packaged distributions
         run: ls -la dist
-      - name: Deploy to PyPI
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-          poetry publish
+      # - name: Deploy to PyPI
+      #   run: |
+      #     poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+      #     poetry publish
