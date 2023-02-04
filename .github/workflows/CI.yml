@@ -11,7 +11,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  regular-build:
+  build:
+    name: >
+      Build and test pyvrp using ${{ matrix.compiler }} 
+      ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
