@@ -100,8 +100,7 @@ PYBIND11_MODULE(PenaltyManager, m)
 
     py::class_<PenaltyManager::PenaltyBooster>(m, "PenaltyBooster")
         .def("__enter__",
-             [](PenaltyManager::PenaltyBooster &booster)
-             {
+             [](PenaltyManager::PenaltyBooster &booster) {
                  booster.enter();
                  return booster;
              })
