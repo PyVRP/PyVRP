@@ -9,7 +9,7 @@ on:
 jobs:
   linux:
     name: Build Linux wheels for Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:

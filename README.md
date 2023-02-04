@@ -6,3 +6,22 @@
 ⚠️⚠️⚠️ **This package is under very heavy development!** ⚠️⚠️⚠️ 
 
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem solver.
+
+## Local installation
+
+If you do not have poetry, get it via
+```shell
+pip install poetry
+```
+Now install all dependencies into the local environment:
+```shell
+poetry install
+```
+Then, run the `install.sh` script to build the C++ extensions:
+```shell
+poetry run scripts/install.sh
+```
+You can now verify everything went correctly by running
+```shell
+poetry run pytest
+```
