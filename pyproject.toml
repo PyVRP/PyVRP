@@ -12,6 +12,9 @@ readme = "README.md"
 repository = "https://github.com/N-Wouda/pyvrp"
 include = [
     "LICENSE.md",
+    { path = "meson.build", format = "sdist" },
+    { path = "pyvrp/**/*.so", format = "wheel" },
+    { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
 packages = [
     { include = "pyvrp" },
@@ -71,10 +74,12 @@ profile = "black"
 ignore_missing_imports = true
 
 [tool.cibuildwheel]
-skip = "cp36-* cp37-* cp38-* cp310-* cp311-* pp*"
+before-build = "scripts/install.sh"
 build-verbosity = "3"
 test-requires = "pytest"
 test-command = "poetry run pytest"
+
+skip = "cp36-* cp37-* cp38-* cp310-* cp311-* pp*"
 
 [tool.pytest.ini_options]
 addopts = "--cov=. --cov-report=xml --cov-report=term"
