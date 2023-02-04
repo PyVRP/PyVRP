@@ -81,4 +81,9 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-          # TODO gcov include/ignore
+          gcov_include: [ 
+            pyvrp/cpp/*.cpp, 
+            pyvrp/cpp/**/*.cpp, 
+            pyvrp/cpp/*.h, 
+            pyvrp/cpp/**/*.h
+          ]

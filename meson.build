@@ -6,7 +6,12 @@ if get_option('buildtype') == 'release'
 endif
 
 if get_option('buildtype') == 'debug'
-    add_project_arguments('-fprofile-arcs', '-ftest-coverage', language: 'cpp')
+    add_project_arguments(
+        '-fprofile-arcs',
+        '-fprofile-abs-path', 
+        '-ftest-coverage', 
+        language: 'cpp'
+    )
     add_project_link_arguments('--coverage', language: 'cpp')
 endif
 
