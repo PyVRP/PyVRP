@@ -81,8 +81,3 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-          gcov_include:
-            - "pyvrp/cpp/*.cpp"
-            - "pyvrp/cpp/**/*.cpp"
-            - "pyvrp/cpp/*.h"
-            - "pyvrp/cpp/**/*.h"
