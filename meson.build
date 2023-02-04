@@ -135,6 +135,8 @@ extensions = [
 ]
 
 foreach extension : extensions
+    message('Going to build ' + extension[0])
+
     py.extension_module(
         extension[0],
         extension[1],
