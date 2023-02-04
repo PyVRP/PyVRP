@@ -3,4 +3,6 @@
 
 # PyVRP
 
+⚠️⚠️⚠️ **This package is under very heavy development!** ⚠️⚠️⚠️ 
+
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem solver.
