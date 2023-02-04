@@ -76,7 +76,10 @@ jobs:
         run: poetry run scripts/install.sh
       - name: Run tests
         run: poetry run python -m pytest
-      - uses: codecov/codecov-action@v3
+      - if: matrix.compiler == 'gcc'
+        # Clang does not generate accurate coverage reports, so there is no
+        # point in uploading those.
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
