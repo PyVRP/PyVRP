@@ -25,5 +25,5 @@ do
   libname=${file%%.*}
 
   echo "-- Generating type stubs for $libname";
-  (cd $dir && poetry run stubgen --parse-only -o . -m "$libname")
+  (cd $dir && stubgen --parse-only -o . -m "$libname")
 done

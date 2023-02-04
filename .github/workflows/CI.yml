@@ -73,9 +73,9 @@ jobs:
         with:
           version: ${{ matrix.compiler-version }}
       - name: Build pyvrp
-        run: scripts/install.sh
+        run: poetry run scripts/install.sh
       - name: Run tests
-        run: poetry run python -m pytest
+        run: poetry run pytest
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
