@@ -33,13 +33,15 @@ class ExtensionModule:
 
         return Pybind11Extension(
             self.package + "." + name,
-            include_dirs=includes,
-            sources=self.sources,
+            # Sort headers and sources to ensure everything's compiled in the
+            # same order, every time.
+            include_dirs=sorted(includes),
+            sources=sorted(self.sources),
             cxx_std=20,
         )
 
 
-# TODO make this use an actual build system
+# TODO make this use an actual build system?
 modules = [
     ExtensionModule("pyvrp", [f"{CPP_DIR}/Matrix.cpp"]),
     ExtensionModule("pyvrp", [f"{CPP_DIR}/PenaltyManager.cpp"]),

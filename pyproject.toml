@@ -75,6 +75,7 @@ ignore_missing_imports = true
 [tool.cibuildwheel]
 skip = "cp36-* cp37-* cp38-* cp310-* cp311-* pp*"
 build-verbosity = "3"
+before-build = "poetry install"
 test-requires = "pytest"
 test-command = "poetry run pytest"
 
@@ -98,6 +99,7 @@ exclude_lines = [
 ]
 
 [tool.poetry.build]
+generate-setup-file = false
 script = "build.py"
 
 [build-system]
