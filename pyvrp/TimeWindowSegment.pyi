@@ -15,17 +15,24 @@ class TimeWindowSegment:
         release: int,
     ) -> None: ...
     @overload
-    def merge(self, arg0: TimeWindowSegment) -> TimeWindowSegment: ...
-    @overload
+    @staticmethod
     def merge(
-        self, arg0: TimeWindowSegment, arg1: TimeWindowSegment
+        arg0: TimeWindowSegment, arg1: TimeWindowSegment
     ) -> TimeWindowSegment: ...
     @overload
+    @staticmethod
     def merge(
-        self,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,
+    ) -> TimeWindowSegment: ...
+    @overload
+    @staticmethod
+    def merge(
+        arg0: TimeWindowSegment,
+        arg1: TimeWindowSegment,
+        arg2: TimeWindowSegment,
+        arg3: TimeWindowSegment,
     ) -> TimeWindowSegment: ...
     def segment_time_warp(self) -> int: ...
     def total_time_warp(self) -> int: ...
