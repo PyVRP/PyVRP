@@ -19,7 +19,7 @@ PYBIND11_MODULE(TimeWindowSegment, m)
              py::arg("release"))
         .def("segment_time_warp", &TWS::segmentTimeWarp)
         .def("total_time_warp", &TWS::totalTimeWarp)
-        .def("merge", &TWS::merge<>)
-        .def("merge", &TWS::merge<TWS>)
-        .def("merge", &TWS::merge<TWS, TWS>);
+        .def_static("merge", &TWS::merge<>)
+        .def_static("merge", &TWS::merge<TWS>)
+        .def_static("merge", &TWS::merge<TWS, TWS>);
 }
