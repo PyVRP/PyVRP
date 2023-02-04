@@ -75,7 +75,7 @@ jobs:
       - name: Build pyvrp
         run: poetry run scripts/install.sh
       - name: Run tests
-        run: poetry run pytest
+        run: poetry run python -m pytest
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
