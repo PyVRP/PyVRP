@@ -13,9 +13,6 @@ repository = "https://github.com/N-Wouda/pyvrp"
 include = [
     "LICENSE.md",
 ]
-exclude = [
-    "pyvrp/cpp/**/*",  # TODO do include in source dist?
-]
 packages = [
     { include = "pyvrp" },
 ]
@@ -50,9 +47,10 @@ pytest = ">=6.0.0"
 pytest-cov = ">=2.6.1"
 codecov = "*"
 
-# These are used in the build script: for compiling the library (cmake/pybind11)
-# and for generating type stubs (mypy).
-cmake = "^3.25.0"
+# These are used in the build script: for compiling the library (meson, ninja,
+# and pybind11) and for generating type stubs (mypy).
+meson = "^1.0.0"
+ninja = "^1.11.1"
 pybind11 = {extras = ["global"], version = "^2.10.3"}
 mypy = "^0.991"
 black = "^22.12.0"
@@ -98,10 +96,6 @@ exclude_lines = [
     "@abstract",
 ]
 
-[tool.poetry.build]
-generate-setup-file = false
-script = "build.py"
-
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools", "pybind11", "cmake"]
+requires = ["poetry-core>=1.1.0", "setuptools", "pybind11", "meson", "ninja"]
 build-backend = "poetry.core.masonry.api"

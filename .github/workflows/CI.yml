@@ -1,8 +1,10 @@
 name: CI
 
 on:
-  release:
-    types: [ created ]  # temp don't run
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.ref }}
@@ -68,7 +70,7 @@ jobs:
         with:
           version: ${{ matrix.compiler-version }}
       - name: Build pyvrp
-        run: poetry install
+        run: scripts/install.sh
       - name: Run tests
         run: poetry run python -m pytest
       - uses: codecov/codecov-action@v3

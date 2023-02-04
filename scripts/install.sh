@@ -13,4 +13,6 @@ then
     rm pyvrp/**/*.so;
 fi
 
-poetry install;
+poetry run meson setup build;       # set-up build/ directory
+poetry run meson compile -C build;  # compile everything
+poetry run meson install -C build;  # install into pyvrp
