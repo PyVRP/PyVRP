@@ -6,7 +6,7 @@ if get_option('buildtype') == 'release'
 endif
 
 if get_option('buildtype') == 'debug'
-    add_project_arguments('--coverage', language: 'cpp')
+    add_project_arguments('-fprofile-abs-path', '--coverage', language: 'cpp')
     add_project_link_arguments('--coverage', language: 'cpp')
 endif
 
