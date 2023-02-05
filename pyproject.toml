@@ -94,6 +94,7 @@ exclude_lines = [
 ]
 
 [tool.poetry.build]
+generate-setup-file = false
 script = "build_extension.py"
 
 [build-system]
