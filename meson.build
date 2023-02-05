@@ -22,7 +22,7 @@ py_mod = import('python')
 py = py_mod.find_installation()
 
 python = py.dependency()
-pybind11 = dependency('pybind11')
+pybind11 = dependency('pybind11', required: true)
 
 INSTALL_DIR = meson.source_root() / 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'

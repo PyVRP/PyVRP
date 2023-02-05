@@ -3,76 +3,54 @@ name: CD
 on:
   release:
     types: [ created ]
-  # pull_request:  # for now, to test
-  #   branches: [ main ]
+  pull_request:  # for now, to test
+    branches: [ main ]
 
 jobs:
   linux:
-    name: Build Linux wheels for Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
       matrix:
-        python-version: [ '3.8' ]  #, '3.9', '3.10', '3.11' ]
+        os: [ubuntu-20.04]  # , windows-2019, macos-10.15]
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v2
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.12.0
+        env:
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.10"
+          CIBW_BUILD_FRONTEND: "build"
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Update pip and poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
-        id: cache-python
-        with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-      - name: Install Python dependencies
-        if: steps.cache-python.outputs.cache-hit != 'true'
-        run: poetry install --no-root
-      - name: Set up GCC
-        uses: egor-tensin/setup-gcc@v1
-      - name: Build pyvrp
-        run: poetry run scripts/install.sh
-      - name: Build wheel
-        run: poetry build --format wheel
+          package-dir: .
+          output-dir: dist
       - uses: actions/upload-artifact@v3  # upload all wheels
         with:
           name: dist
           path: ./dist/*
 
-  # windows:
-  #   name: Build Windows wheels for Python ${{ matrix.python-version }}
-  
-  # macos:
-  #   name: Build OS X wheels for Python ${{ matrix.python-version }}
-
-  deploy:
-    name: Deploy to PyPI
-    needs: [ linux ]  # , windows, macos ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - name: Update pip and poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-      - uses: actions/download-artifact@v3  # download previously built wheels
-        with:
-          name: dist
-          path: dist
-      - name: Build sdist
-        run: poetry build --format sdist
-      - name: Check packaged distributions
-        run: ls -la dist
-      # - name: Deploy to PyPI
-      #   run: |
-      #     poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-      #     poetry publish
+  # deploy:
+  #   name: Deploy to PyPI
+  #   needs: [ linux ]  # , windows, macos ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.9
+  #     - name: Update pip and poetry
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install poetry
+  #     - uses: actions/download-artifact@v3  # download previously built wheels
+  #       with:
+  #         name: dist
+  #         path: dist
+  #     - name: Build sdist
+  #       run: poetry build --format sdist
+  #     - name: Check packaged distributions
+  #       run: ls -la dist
+  #     - name: Deploy to PyPI
+  #       run: |
+  #         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+  #         poetry publish
