@@ -32,12 +32,12 @@ poetry run pytest
 ```
 If all tests pass without errors, you have a working installation of the codebase.
 
-## Details
+### Details
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the `meson.build` file in the repository root. 
 You should not have to touch this file often: all installation is handled via the `scripts/install.sh` script.
-For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend (and later, `poetry publish`).
-The first  uses the `build_extension.py` file to call into `scripts/install.sh`.
+For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend.
+The first uses (via `poetry-core`, as defined in `[build-system]` in the `pyproject.toml` file) the `build_extension.py` file to call into `scripts/install.sh`.
 
 In short: (for now) everything runs via `scripts/install.sh`.
