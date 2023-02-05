@@ -20,6 +20,7 @@ jobs:
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.10"
           CIBW_BUILD_FRONTEND: "build"
+          CIBW_CONFIG_SETTINGS: "-Cbuilddir=build"
         with:
           package-dir: .
           output-dir: dist
