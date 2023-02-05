@@ -1,7 +1,7 @@
 [![CI](https://github.com/N-Wouda/pyvrp/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/N-Wouda/pyvrp/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/N-Wouda/pyvrp/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/N-Wouda/pyvrp)
 
-⚠️⚠️⚠️ **This package is under very heavy development - expect things to break!** ⚠️⚠️⚠️ 
+⚠️⚠️⚠️ **This package is under heavy development - expect things to break!** ⚠️⚠️⚠️ 
 
 # PyVRP
 
@@ -16,21 +16,25 @@ If you do not have poetry, you can get it via
 ```shell
 pip install poetry
 ```
-Now we need to install all dependencies into the local environment.
-We use poetry for this, but some care must be taken: by default, `poetry install` will also build and install the `pyvrp` package.
-That is something we do slightly differently using our own install script, so we must pass `--no-root` to poetry to avoid it installing `pyvrp`:
+Now we need to install all dependencies into the local environment:
 ```shell
-poetry install --no-root
+poetry install
 ```
-Then, run the `install.sh` script to build the C++ extensions:
-```shell
-poetry run scripts/install.sh
-```
-You can now verify everything went correctly by running
+This command does two things: first, it installs all dependencies that are required for developing `pyvrp`.
+Second, it installs the `pyvrp` package in editable mode in the poetry environment.
+Setting up the poetry environment and installing the `pyvrp` package takes a little while, but most of it only needs to be done once.
+When the command finishes, you can verify everything went correctly by running
 ```shell
 poetry run pytest
 ```
 If all tests pass without errors, you have a working installation of the codebase.
+
+From this point onwards, recompilation of the C++ extensions can best be done using the `scripts/install.sh` script.
+It can be called as
+```shell
+poetry run scripts/install.sh <buildtype>
+``` 
+It also takes an optional build type argument: valid options include `debug` (default), and `release`.
 
 ### Details
 
@@ -38,6 +42,6 @@ We use the Meson build system to compile the C++ extensions.
 Meson is configured using the `meson.build` file in the repository root. 
 You should not have to touch this file often: all installation is handled via the `scripts/install.sh` script.
 For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend.
-The first uses (via `poetry-core`, as defined in `[build-system]` in the `pyproject.toml` file) the `build_extension.py` file to call into `scripts/install.sh`.
+The first uses (via `poetry-core`, as defined under `[build-system]` in the `pyproject.toml` file) the `build_extension.py` file to call into `scripts/install.sh`.
 
 In short: (for now) everything runs via `scripts/install.sh`.
