@@ -18,12 +18,6 @@ if get_option('buildtype') == 'debug'
     add_project_link_arguments('--coverage', language: 'cpp')
 endif
 
-py_mod = import('python')
-py = py_mod.find_installation()
-
-python = py.dependency()
-pybind11 = dependency('pybind11', required: true)
-
 INSTALL_DIR = meson.source_root() / 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'
 
@@ -134,13 +128,28 @@ extensions = [
     ]
 ]
 
+py_mod = import('python')
+py = py_mod.find_installation()
+
+# A bit of a hack: this gets the pybind11 header files, and declares those as
+# the dependency. Finding pybind11 in the Python installation's install dir 
+# turns out to be a bit less robust than this.
+pybind11 = find_program('pybind11-config')
+pybind11 = run_command(pybind11, ['--includes'], check: true)
+pybind11 = pybind11.stdout().split('-I')[-1].strip()
+
+dependencies = [
+    py.dependency(),
+    declare_dependency(include_directories: [pybind11])
+]
+
 foreach extension : extensions
     message('Going to build ' + extension[0])
 
     py.extension_module(
         extension[0],
         extension[1],
-        dependencies : [pybind11, python],
+        dependencies : dependencies,
         install : true,
         install_dir: extension[2],
         include_directories: [
