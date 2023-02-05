@@ -25,3 +25,9 @@ You can now verify everything went correctly by running
 ```shell
 poetry run pytest
 ```
+
+TODO:
+- build.py / meson.build
+- python -m build
+- poetry build
+- poetry publish

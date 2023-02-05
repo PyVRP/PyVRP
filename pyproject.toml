@@ -11,7 +11,7 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/N-Wouda/pyvrp"
 include = [
-    "LICENSE.md",
+    { path = "LICENSE.md" },
     { path = "meson.build", format = "sdist" },
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
@@ -87,23 +87,16 @@ omit = [
 
 [tool.coverage.report]
 exclude_lines = [
-    # This excludes all abstract methods from code coverage checks,
-    # as they are never instantiated directly anyway
+    # This excludes all abstract methods from code coverage checks as they are
+    # never instantiated directly anyway
     "pragma: no cover",
     "@abstract",
 ]
 
 [tool.poetry.build]
-script = "build.py"
+script = "build_extension.py"
 
 [build-system]
-requires = [
-    # First two are needed for regular poetry and packaging stuff, the rest
-    # (pybind, meson, ninja) for building the C++ extensions.
-    "poetry-core >= 1.1.0",
-    "setuptools",
-    "pybind11 >= 2.10.0",
-    "meson",
-    "ninja"
-]
+# pybind11, meson, and ninja are needed to build the C++ extensions.
+requires = ["poetry-core", "pybind11", "meson", "ninja"]
 build-backend = "poetry.core.masonry.api"

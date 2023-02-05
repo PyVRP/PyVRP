@@ -1,22 +1,11 @@
 project('pyvrp', 'cpp', default_options : ['cpp_std=c++20'])
 
-if get_option('buildtype') == 'release'
-    add_project_arguments('-O3', language: 'cpp')
-    add_project_link_arguments('-flto', language: 'cpp')
-endif
-
-if get_option('buildtype') == 'debug'
-    compiler = meson.get_compiler('cpp')
-
-    if compiler.get_id() == 'gcc'
-        # clang does not have this particular flag, so we only add it when
-        # compiling with gcc. It's helpful in determining code coverage.
-        add_project_arguments('-fprofile-abs-path', language: 'cpp')
-    endif
-
-    add_project_arguments('--coverage', language: 'cpp')
-    add_project_link_arguments('--coverage', language: 'cpp')
-endif
+# This file defines all extensions to be built by Meson. We first list the 
+# extensions. These are given as tuples: 
+#   (extension name, source files, install dir),
+# where 'extension name' is the eventual module name, the source files name
+# cpp source files (embedded in pyvrp/cpp), and 'install dir' gives the 
+# directory where the compiled extension should be placed.
 
 INSTALL_DIR = meson.source_root() / 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'
@@ -127,6 +116,28 @@ extensions = [
         INSTALL_DIR / 'educate'
     ]
 ]
+
+# The following lines define compiler and linker options and dependencies. The
+# options are set per buildtype: for example, debug builds are also given a few
+# coverage settings, whereas release builds optimise for speed.
+
+if get_option('buildtype') == 'release'
+    add_project_arguments('-O3', language: 'cpp')
+    add_project_link_arguments('-flto', language: 'cpp')
+endif
+
+if get_option('buildtype') == 'debug'
+    compiler = meson.get_compiler('cpp')
+
+    if compiler.get_id() == 'gcc'
+        # clang does not have this particular flag, so we only add it when
+        # compiling with gcc. It's helpful in determining code coverage.
+        add_project_arguments('-fprofile-abs-path', language: 'cpp')
+    endif
+
+    add_project_arguments('--coverage', language: 'cpp')
+    add_project_link_arguments('--coverage', language: 'cpp')
+endif
 
 py_mod = import('python')
 py = py_mod.find_installation()
