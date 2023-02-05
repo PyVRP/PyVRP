@@ -139,20 +139,20 @@ if get_option('buildtype') == 'debug'
     add_project_link_arguments('--coverage', language: 'cpp')
 endif
 
-py_mod = import('python')
-py = py_mod.find_installation()
+py = import('python').find_installation()
+pybind11 = dependency('pybind11')
 
-# A bit of a hack: this gets the pybind11 header files, and declares those as
-# the dependency. Finding pybind11 in the Python installation's install dir 
-# turns out to be a bit less robust than this.
-pybind11 = find_program('pybind11-config')
-pybind11 = run_command(pybind11, ['--includes'], check: true)
-pybind11 = pybind11.stdout().split('-I')[-1].strip()
+if not pybind11.found()
+    # A bit of a hack: this gets the pybind11 header files, and declares those as
+    # the dependency. Finding pybind11 using Meson's dependency mechanism is much
+    # nicer, but sometimes not as robust.
+    pybind11 = find_program('pybind11-config')
+    pybind11 = run_command(pybind11, ['--includes'], check: true)
+    pybind11 = pybind11.stdout().split('-I')[-1].strip()
+    pybind11 = declare_dependency(include_directories: [pybind11])
+endif
 
-dependencies = [
-    py.dependency(),
-    declare_dependency(include_directories: [pybind11])
-]
+assert(pybind11.found(), 'Could not find pybind11!')
 
 foreach extension : extensions
     message('Going to build ' + extension[0])
@@ -160,7 +160,7 @@ foreach extension : extensions
     py.extension_module(
         extension[0],
         extension[1],
-        dependencies : dependencies,
+        dependencies : [py.dependency(), pybind11],
         install : true,
         install_dir: extension[2],
         include_directories: [
