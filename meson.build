@@ -1,11 +1,48 @@
 project('pyvrp', 'cpp', default_options : ['cpp_std=c++20'])
 
-# This file defines all extensions to be built by Meson. We first list the 
-# extensions. These are given as tuples: 
-#   (extension name, source files, install dir),
-# where 'extension name' is the eventual module name, the source files name
-# cpp source files (embedded in pyvrp/cpp), and 'install dir' gives the 
-# directory where the compiled extension should be placed.
+# The following lines define compiler and linker options. The options are set
+# per buildtype: for example, debug builds are also given a few coverage 
+# settings, whereas release builds optimise for speed.
+if get_option('buildtype') == 'release'
+    add_project_arguments('-O3', language: 'cpp')
+    add_project_link_arguments('-flto', language: 'cpp')
+endif
+
+if get_option('buildtype') == 'debug'
+    compiler = meson.get_compiler('cpp')
+
+    if compiler.get_id() == 'gcc'
+        # clang does not have this particular flag, so we only add it when
+        # compiling with gcc. It's helpful in determining code coverage.
+        add_project_arguments('-fprofile-abs-path', language: 'cpp')
+    endif
+
+    add_project_arguments('--coverage', language: 'cpp')
+    add_project_link_arguments('--coverage', language: 'cpp')
+endif
+
+# Next we get the extension dependencies. These are pretty simple: we only
+# depend on Python (duh!) and pybind11.
+py = import('python').find_installation()
+pybind11 = dependency('pybind11')
+
+if not pybind11.found()
+    # A bit of a hack: this gets the pybind11 header files, and declares those as
+    # the dependency. Finding pybind11 using Meson's dependency mechanism is much
+    # nicer, but sometimes not as robust.
+    pybind11 = find_program('pybind11-config')
+    pybind11 = run_command(pybind11, ['--includes'], check: true)
+    pybind11 = pybind11.stdout().split('-I')[-1].strip()
+    pybind11 = declare_dependency(include_directories: [pybind11])
+endif
+
+assert(pybind11.found(), 'Could not find pybind11!')
+
+# Now that everything is in place, let's defines the extensions to be built by
+# Meson. These are given as tuples on the following lines. The tuples look like
+# (extension name, source files, install dir), where 'extension name' is the
+# eventual module name, the source files name cpp source files (in pyvrp/cpp), 
+# and 'install dir' gives the directory where the extension should be placed.
 
 INSTALL_DIR = meson.source_root() / 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'
@@ -116,43 +153,6 @@ extensions = [
         INSTALL_DIR / 'educate'
     ]
 ]
-
-# The following lines define compiler and linker options and dependencies. The
-# options are set per buildtype: for example, debug builds are also given a few
-# coverage settings, whereas release builds optimise for speed.
-
-if get_option('buildtype') == 'release'
-    add_project_arguments('-O3', language: 'cpp')
-    add_project_link_arguments('-flto', language: 'cpp')
-endif
-
-if get_option('buildtype') == 'debug'
-    compiler = meson.get_compiler('cpp')
-
-    if compiler.get_id() == 'gcc'
-        # clang does not have this particular flag, so we only add it when
-        # compiling with gcc. It's helpful in determining code coverage.
-        add_project_arguments('-fprofile-abs-path', language: 'cpp')
-    endif
-
-    add_project_arguments('--coverage', language: 'cpp')
-    add_project_link_arguments('--coverage', language: 'cpp')
-endif
-
-py = import('python').find_installation()
-pybind11 = dependency('pybind11')
-
-if not pybind11.found()
-    # A bit of a hack: this gets the pybind11 header files, and declares those as
-    # the dependency. Finding pybind11 using Meson's dependency mechanism is much
-    # nicer, but sometimes not as robust.
-    pybind11 = find_program('pybind11-config')
-    pybind11 = run_command(pybind11, ['--includes'], check: true)
-    pybind11 = pybind11.stdout().split('-I')[-1].strip()
-    pybind11 = declare_dependency(include_directories: [pybind11])
-endif
-
-assert(pybind11.found(), 'Could not find pybind11!')
 
 foreach extension : extensions
     message('Going to build ' + extension[0])
