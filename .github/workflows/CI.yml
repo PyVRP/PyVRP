@@ -21,17 +21,17 @@ jobs:
       matrix:
         include:
           - compiler: gcc
-            compiler-version: '9'  # minimum gcc version
-            python-version: '3.8'  # minimum Python version
+            compiler-version: '10'  # minimum gcc version
+            python-version: '3.8'   # minimum Python version
           - compiler: gcc
             compiler-version: latest
-            python-version: '3.10'
+            python-version: '3.11'
           - compiler: clang
-            compiler-version: '11'  # minimum clang version
-            python-version: '3.8'  # minimum Python version
+            compiler-version: '12'  # minimum clang version
+            python-version: '3.8'   # minimum Python version
           - compiler: clang
             compiler-version: latest
-            python-version: '3.10'
+            python-version: '3.11'
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python

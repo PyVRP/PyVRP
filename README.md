@@ -45,3 +45,11 @@ For deployment, we use the [`pypa/build`](https://github.com/pypa/build) fronten
 The first uses (via `poetry-core`, as defined under `[build-system]` in the `pyproject.toml` file) the `build_extension.py` file to call into `scripts/install.sh`.
 
 In short: (for now) everything runs via `scripts/install.sh`.
+
+### Build system
+
+Any recent compiler should do.
+We test using clang 12 and up, and gcc 10 and up.
+
+Any recent Python version should do.
+We test using Python 3.8 and up (currently 3.8 - 3.11).
