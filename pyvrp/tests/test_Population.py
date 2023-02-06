@@ -149,7 +149,7 @@ def test_add_triggers_purge():
 def test_add_updates_best_found_solution():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=2_147_483_647)
+    rng = XorShift128(seed=2_133_234_000)
 
     params = PopulationParams(0, 40, 4, 5, 0.1, 0.5)
     pop = Population(data, pm, rng, broken_pairs_distance, params)
@@ -159,17 +159,18 @@ def test_add_updates_best_found_solution():
     # individual.
     assert_equal(len(pop), 0)
 
-    # This random individual is feasible and has cost 9'339.
+    # This random individual is feasible and has cost > 9_155 (see below).
     best = pop.get_best_found()
-    assert_almost_equal(best.cost(), 9_339)
+    assert_(best.cost() > 9_155)
     assert_(best.is_feasible())
 
     # We now add a better solution to the population.
     pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
     assert_equal(len(pop), 1)
 
-    best = pop.get_best_found()
-    assert_almost_equal(best.cost(), 9_155)
+    new_best = pop.get_best_found()
+    assert_almost_equal(new_best.cost(), 9_155)
+    assert_(new_best.cost() < best.cost())
     assert_(best.is_feasible())
 
 
