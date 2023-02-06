@@ -111,17 +111,6 @@ bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp > 0; }
 
-void Individual::toFile(std::string const &where, double runtime) const
-{
-    std::ofstream out(where);
-
-    if (!out)
-        throw std::runtime_error("Could not open " + where);
-
-    out << *this;
-    out << "Time " << runtime << '\n';
-}
-
 void Individual::makeNeighbours()
 {
     neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
@@ -207,6 +196,6 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
         out << '\n';
     }
 
-    out << "Cost " << indiv.cost() << '\n';
+    out << "Cost: " << indiv.cost() << '\n';
     return out;
 }

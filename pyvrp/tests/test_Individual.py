@@ -1,6 +1,6 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Individual, PenaltyManager
+from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp.tests.helpers import read
 
 
@@ -158,3 +158,30 @@ def test_time_warp_cost_calculation():
 
 
 # TODO test all time warp cases
+
+
+def test_str_contains_essential_information():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=2)
+
+    for _ in range(5):  # let's do this a few times to really make sure
+        individual = Individual(data, pm, rng)
+        str_representation = str(individual).splitlines()
+
+        routes = individual.get_routes()
+        num_routes = individual.num_routes()
+
+        # There should be no more than num_routes lines (each detailing a
+        # single route), and a final line containing the cost.
+        assert_equal(len(str_representation), num_routes + 1)
+
+        # The first num_routes lines should each contain a route, where each
+        # route should contain every client that is in the route as returned
+        # by get_routes().
+        for route, str_route in zip(routes[:num_routes], str_representation):
+            for client in route:
+                assert_(str(client) in str_route)
+
+        # Last line should contain the cost
+        assert_(str(individual.cost()) in str_representation[-1])

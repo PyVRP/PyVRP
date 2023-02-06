@@ -71,16 +71,6 @@ public:
      */
     [[nodiscard]] bool hasTimeWarp() const;
 
-    /**
-     * Writes this individual solution to the given file path. The solution is
-     * written in VRPLIB format, with a final line storing the passed-in compute
-     * time.
-     *
-     * @param where File path to write to.
-     * @param runtime Compute time (in seconds).
-     */
-    void toFile(std::string const &where, double runtime) const;
-
     Individual &operator=(Individual const &other) = default;
 
     /**

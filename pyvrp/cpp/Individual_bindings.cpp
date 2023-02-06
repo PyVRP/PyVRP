@@ -3,6 +3,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <sstream>
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(Individual, m)
@@ -26,8 +28,9 @@ PYBIND11_MODULE(Individual, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
-        .def("to_file",
-             &Individual::toFile,
-             py::arg("where"),
-             py::arg("runtime"));
+        .def("__str__", [](Individual const &individual) {
+            std::stringstream stream;
+            stream << individual;
+            return stream.str();
+        });
 }
