@@ -1,9 +1,5 @@
 #include "diversity.h"
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
 double brokenPairsDistance(ProblemData const &data,
                            Individual const &first,
                            Individual const &second)
@@ -28,13 +24,4 @@ double brokenPairsDistance(ProblemData const &data,
     // most two broken edges in the loop above. Here, we normalise the distance
     // to [0, 1].
     return numBrokenPairs / (2. * data.numClients());
-}
-
-PYBIND11_MODULE(broken_pairs_distance, m)
-{
-    m.def("broken_pairs_distance",
-          &brokenPairsDistance,
-          py::arg("data"),
-          py::arg("first"),
-          py::arg("second"));
 }

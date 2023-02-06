@@ -1,10 +1,6 @@
 #include "crossover.h"
 
-#include <pybind11/pybind11.h>
-
 #include <unordered_set>
-
-namespace py = pybind11;
 
 using Client = int;
 using Clients = std::vector<Client>;
@@ -179,14 +175,4 @@ Individual selectiveRouteExchange(
     Individual indiv2{data, penaltyManager, routes2};
 
     return indiv1.cost() < indiv2.cost() ? indiv1 : indiv2;
-}
-
-PYBIND11_MODULE(selective_route_exchange, m)
-{
-    m.def("selective_route_exchange",
-          &selectiveRouteExchange,
-          py::arg("parents"),
-          py::arg("data"),
-          py::arg("penalty_manager"),
-          py::arg("rng"));
 }

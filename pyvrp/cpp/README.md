@@ -7,5 +7,5 @@ whereas for example everything in `cpp/educate` will be present in
 `pyvrp.educate` after installation (and so on for the other folders).
 
 We use `pybind11` to generate the Python bindings for the C++ codebase. These
-bindings are generated in the source files of each object that we want to 
-expose to Python. 
+bindings are generated in the `X_bindings.cpp` source files of each object `X`
+that we want to expose to Python. 

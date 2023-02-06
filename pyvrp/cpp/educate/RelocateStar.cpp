@@ -1,9 +1,5 @@
 #include "RelocateStar.h"
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
 void RelocateStar::init(Individual const &indiv)
 {
     LocalSearchOperator<Route>::init(indiv);
@@ -41,15 +37,4 @@ int RelocateStar::evaluate(Route *U, Route *V)
 void RelocateStar::apply(Route *U, Route *V)
 {
     move.from->insertAfter(move.to);
-}
-
-PYBIND11_MODULE(RelocateStar, m)
-{
-    py::class_<LocalSearchOperator<Route>>(
-        m, "RouteOperator", py::module_local());
-
-    py::class_<RelocateStar, LocalSearchOperator<Route>>(m, "RelocateStar")
-        .def(py::init<ProblemData const &, PenaltyManager const &>(),
-             py::arg("data"),
-             py::arg("penalty_manager"));
 }
