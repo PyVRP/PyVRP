@@ -41,6 +41,9 @@ python = "^3.8"
 numpy = ">=1.15.2"
 matplotlib = ">=2.2.0"
 
+[tool.poetry.group.benchmark]
+optional = true
+
 [tool.poetry.group.benchmark.dependencies]
 tqdm = "^4.64.1"
 
@@ -49,8 +52,6 @@ pre-commit = "^2.20.0"
 pytest = ">=6.0.0"
 pytest-cov = ">=2.6.1"
 codecov = "*"
-
-black = "^22.12.0"
 
 # These are used in the build script: for compiling the library (meson, ninja,
 # and pybind11) and for generating type stubs (mypy).
