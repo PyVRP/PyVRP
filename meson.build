@@ -26,7 +26,7 @@ endif
 
 if compiler.has_argument('-Wno-unused-parameter')
     # Ignore unused parameters, because not all operator implementations use 
-    # every argument they are given.
+    # every argument they are given (and that's OK).
     add_project_arguments('-Wno-unused-parameter', language: 'cpp')
 endif
 
@@ -46,7 +46,6 @@ if not pybind11.found()
 endif
 
 assert(pybind11.found(), 'Could not find pybind11!')
-
 
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
@@ -76,11 +75,9 @@ libcommon = static_library(
     include_directories: [include_directories(SRC_DIR)],
 )
 
-# Now that everything is in place, let's defines the extensions to be built by
-# Meson. These are given as tuples on the following lines. The tuples look like
-# (extension name, subdirectory), where 'extension name' is both the eventual
-# module name and bindings source file name, and 'subdirectory' gives the source
-# and installation directories, relative to SRC_DIR and INST_DIR, respectively.
+# Extension as [extension name, subdirectory]. Here 'extension name' names the
+# eventual module name and the bindings source file, and 'subdirectory' gives 
+# the source and installation directories (relative to SRC_DIR and INST_DIR).
 extensions = [
     ['Matrix', ''],
     ['PenaltyManager', ''],
@@ -98,7 +95,7 @@ extensions = [
     ['SwapStar', 'educate'],
 ]
 
-foreach extension : extensions
+foreach extension : extensions  # extension[0] = name, extension[1] = subdir
     message('Going to build ' + extension[0])
 
     source_dir = '/'.join([SRC_DIR, extension[1]])
