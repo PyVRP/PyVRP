@@ -47,13 +47,11 @@ endif
 
 assert(pybind11.found(), 'Could not find pybind11!')
 
-# Now that everything is in place, let's defines the extensions to be built by
-# Meson. These are given as tuples on the following lines. The tuples look like
-# (extension name, source files, install dir), where 'extension name' is the
-# eventual module name, the source files name cpp source files (in pyvrp/cpp), 
-# and 'install dir' gives the directory where the extension should be placed.
 
-INSTALL_DIR = meson.source_root() / 'pyvrp'
+# We first compile a common library that contains all regular, C++ code. This
+# is then linked against by the extension modules. We also define source and
+# installation directories here, as a shorthand.
+INST_DIR = 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'
 
 libcommon = static_library(
@@ -78,35 +76,41 @@ libcommon = static_library(
     include_directories: [include_directories(SRC_DIR)],
 )
 
+# Now that everything is in place, let's defines the extensions to be built by
+# Meson. These are given as tuples on the following lines. The tuples look like
+# (extension name, subdirectory), where 'extension name' is both the eventual
+# module name and bindings source file name, and 'subdirectory' gives the source
+# and installation directories, relative to SRC_DIR and INST_DIR, respectively.
 extensions = [
-    ['Matrix', SRC_DIR / 'Matrix_bindings.cpp', INSTALL_DIR],
-    ['PenaltyManager', SRC_DIR / 'PenaltyManager_bindings.cpp', INSTALL_DIR],
-    ['ProblemData', SRC_DIR / 'ProblemData_bindings.cpp', INSTALL_DIR],
-    ['TimeWindowSegment', SRC_DIR / 'TimeWindowSegment_bindings.cpp', INSTALL_DIR],
-    ['XorShift128', SRC_DIR / 'XorShift128_bindings.cpp', INSTALL_DIR],
-    ['Individual', SRC_DIR / 'Individual_bindings.cpp', INSTALL_DIR],
-    ['selective_route_exchange', SRC_DIR / 'crossover' / 'selective_route_exchange_bindings.cpp', INSTALL_DIR / 'crossover'],
-    ['broken_pairs_distance', SRC_DIR / 'diversity' / 'broken_pairs_distance_bindings.cpp', INSTALL_DIR / 'diversity'],
-    ['LocalSearch', SRC_DIR / 'educate' / 'LocalSearch_bindings.cpp', INSTALL_DIR / 'educate'],
-    ['Exchange', SRC_DIR / 'educate' / 'Exchange_bindings.cpp', INSTALL_DIR / 'educate'],
-    ['MoveTwoClientsReversed', SRC_DIR / 'educate' / 'MoveTwoClientsReversed_bindings.cpp', INSTALL_DIR / 'educate'],
-    ['TwoOpt', SRC_DIR / 'educate' / 'TwoOpt_bindings.cpp', INSTALL_DIR / 'educate'],
-    ['RelocateStar', SRC_DIR / 'educate' / 'RelocateStar_bindings.cpp', INSTALL_DIR / 'educate'],
-    ['SwapStar', SRC_DIR / 'educate' / 'SwapStar_bindings.cpp', INSTALL_DIR / 'educate'],
+    ['Matrix', ''],
+    ['PenaltyManager', ''],
+    ['ProblemData', ''],
+    ['TimeWindowSegment', ''],
+    ['XorShift128', ''],
+    ['Individual', ''],
+    ['selective_route_exchange', 'crossover'],
+    ['broken_pairs_distance', 'diversity'],
+    ['LocalSearch', 'educate'],
+    ['Exchange', 'educate'],
+    ['MoveTwoClientsReversed', 'educate'],
+    ['TwoOpt', 'educate'],
+    ['RelocateStar', 'educate'],
+    ['SwapStar', 'educate'],
 ]
 
 foreach extension : extensions
     message('Going to build ' + extension[0])
 
+    source_dir = '/'.join([SRC_DIR, extension[1]])
+    install_dir = '/'.join([INST_DIR, extension[1]])
+
     py.extension_module(
         extension[0],
-        extension[1],
-        dependencies : [py.dependency(), pybind11],
+        source_dir / extension[0] + '_bindings.cpp',
+        dependencies: [py.dependency(), pybind11],
         link_with: libcommon,
-        install : true,
-        install_dir: extension[2],
-        include_directories: [
-            include_directories(SRC_DIR),
-        ],
+        install: true,
+        subdir: install_dir,
+        include_directories: [include_directories(SRC_DIR)],
     )
 endforeach

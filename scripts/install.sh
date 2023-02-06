@@ -11,11 +11,16 @@ BUILD_DIR="build";
 # 'debug' and 'release'. If not provided, a debug build is generated.
 BUILD_TYPE=${1:-debug};
 
+params=(
+    --buildtype "$BUILD_TYPE"
+    -Dpython.platlibdir="$PWD"
+)
+
 if [ ! -d "build" ];  # does a build directory already exist?
 then
-    meson setup "$BUILD_DIR" --buildtype "$BUILD_TYPE";
+    meson setup "$BUILD_DIR" "${params[@]}";
 else
-    meson setup "$BUILD_DIR" --reconfigure --buildtype "$BUILD_TYPE";
+    meson setup "$BUILD_DIR" --reconfigure "${params[@]}";
 fi
 
 meson compile -C "$BUILD_DIR";
