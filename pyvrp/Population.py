@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterator, List, Tuple
+from typing import Callable, Iterator, List, NamedTuple, Tuple
 
 import numpy as np
 
@@ -11,8 +11,17 @@ from .ProblemData import ProblemData
 from .XorShift128 import XorShift128
 
 _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
-_DiversityItem = Tuple[Individual, float]
-_Item = Tuple[Individual, float, List[_DiversityItem]]
+
+
+class _DiversityItem(NamedTuple):
+    individual: Individual
+    diversity: float
+
+
+class _Item(NamedTuple):
+    individual: Individual
+    fitness: float
+    proximity: List[_DiversityItem]
 
 
 class SubPopulation:
@@ -73,14 +82,14 @@ class SubPopulation:
 
             # TODO this is not very fast, so we might want to go for something
             #  different if this turns out to be problematic.
-            indiv_prox.append((other, diversity))
-            indiv_prox.sort(key=lambda a: (a[1], a[0].cost()))
+            indiv_prox.append(_DiversityItem(other, diversity))
+            indiv_prox.sort(key=lambda a: (a.diversity, a.individual.cost()))
 
-            other_prox.append((individual, diversity))
-            other_prox.sort(key=lambda a: (a[1], a[0].cost()))
+            other_prox.append(_DiversityItem(individual, diversity))
+            other_prox.sort(key=lambda a: (a.diversity, a.individual.cost()))
 
         # Insert new individual and update everyone's biased fitness score.
-        self._items.append((individual, 0.0, indiv_prox))
+        self._items.append(_Item(individual, 0.0, indiv_prox))
         self.update_fitness()
 
         if len(self) > self._params.max_pop_size:
@@ -103,12 +112,12 @@ class SubPopulation:
         """
         for _, _, prox in self:  # remove individual from other proximities
             for idx, (other, _) in enumerate(prox):
-                if id(other) == id(individual):
+                if other is individual:
                     del prox[idx]
                     break
 
         for item in self:  # remove individual from subpopulation.
-            if id(item[0]) == id(individual):
+            if item.individual is individual:
                 self._items.remove(item)
                 break
         else:
@@ -133,10 +142,9 @@ class SubPopulation:
         while len(self) > self._params.min_pop_size:
             self.update_fitness()
 
-            # Find the individual with worst (highest) biased fitness, and
-            # remove it from the subpopulation.
-            worst_individual, _, _ = max(self, key=lambda item: item[1])
-            self.remove(worst_individual)
+            # Find the worst individual (in terms of biased fitness) in the
+            # population, and remove it.
+            self.remove(max(self, key=lambda item: item.fitness).individual)
 
     def update_fitness(self):
         """
@@ -158,8 +166,9 @@ class SubPopulation:
             div_weight = 1 - nb_elite / len(self)
             new_fitness = (cost_rank + div_weight * div_rank) / len(self)
 
-            individual, _, prox = self[by_cost[cost_rank]]
-            self._items[by_cost[cost_rank]] = individual, new_fitness, prox
+            idx = by_cost[cost_rank]
+            individual, _, prox = self[idx]
+            self._items[idx] = _Item(individual, new_fitness, prox)
 
     def avg_distance_closest(self, individual_idx: int) -> float:
         """
@@ -361,10 +370,13 @@ class Population:
 
             return self._infeas[idx - num_feas]
 
-        indiv1, fitness1, *_ = select()
-        indiv2, fitness2, *_ = select()
+        item1 = select()
+        item2 = select()
 
-        return indiv1 if fitness1 < fitness2 else indiv2
+        if item1.fitness < item2.fitness:
+            return item1.individual
+
+        return item2.individual
 
     def get_best_found(self) -> Individual:
         """
