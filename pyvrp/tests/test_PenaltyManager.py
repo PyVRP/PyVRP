@@ -1,7 +1,7 @@
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp._lib.hgspy import PenaltyManager, PenaltyParams
+from pyvrp import PenaltyManager, PenaltyParams
 
 
 @mark.parametrize(

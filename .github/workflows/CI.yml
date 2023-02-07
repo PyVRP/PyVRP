@@ -12,27 +12,28 @@ concurrency:
 
 jobs:
   build:
+    name: >
+      Build and test pyvrp using ${{ matrix.compiler }} 
+      ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         include:
           - compiler: gcc
-            compiler-version: '9'  # minimum gcc version
-            python-version: '3.8'  # minimum Python version
+            compiler-version: '10'  # minimum gcc version
+            python-version: '3.8'   # minimum Python version
           - compiler: gcc
             compiler-version: latest
-            python-version: '3.10'
+            python-version: '3.11'
           - compiler: clang
-            compiler-version: '11'  # minimum clang version
-            python-version: '3.8'  # minimum Python version
+            compiler-version: '12'  # minimum clang version
+            python-version: '3.8'   # minimum Python version
           - compiler: clang
             compiler-version: latest
-            python-version: '3.10'
+            python-version: '3.11'
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -72,11 +73,13 @@ jobs:
         with:
           version: ${{ matrix.compiler-version }}
       - name: Build pyvrp
-        run: scripts/build.sh Debug
+        run: poetry run scripts/install.sh
       - name: Run tests
         run: poetry run python -m pytest
-      - uses: codecov/codecov-action@v3
+      - if: matrix.compiler == 'gcc'
+        # Clang does not generate accurate coverage reports, so there is no
+        # point in uploading those.
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-          # TODO gcov include/ignore

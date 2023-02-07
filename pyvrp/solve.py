@@ -1,15 +1,16 @@
 import argparse
 from typing import Optional
 
-from pyvrp import GeneticAlgorithm, Population, read
-from pyvrp._lib.hgspy import (
-    LocalSearch,
+from pyvrp import (
+    GeneticAlgorithm,
     PenaltyManager,
+    Population,
     XorShift128,
-    crossover,
-    diversity,
-    operators,
+    read,
 )
+from pyvrp.crossover import selective_route_exchange
+from pyvrp.diversity import broken_pairs_distance
+from pyvrp.educate import NODE_OPERATORS, ROUTE_OPERATORS, LocalSearch
 from pyvrp.stop import MaxIterations, MaxRuntime, StoppingCriterion
 
 
@@ -36,33 +37,20 @@ def solve(
     data = read(data_loc)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity)
-
-    div_op = diversity.broken_pairs_distance
-    pop = Population(data, pen_manager, rng, div_op)
+    pop = Population(data, pen_manager, rng, broken_pairs_distance)
     ls = LocalSearch(data, pen_manager, rng)
 
-    node_ops = [
-        operators.Exchange10(data, pen_manager),
-        operators.Exchange20(data, pen_manager),
-        operators.MoveTwoClientsReversed(data, pen_manager),
-        operators.Exchange22(data, pen_manager),
-        operators.Exchange21(data, pen_manager),
-        operators.Exchange11(data, pen_manager),
-        operators.TwoOpt(data, pen_manager),
-    ]
+    node_ops = [node_op(data, pen_manager) for node_op in NODE_OPERATORS]
 
     for op in node_ops:
         ls.add_node_operator(op)
 
-    route_ops: list = [
-        operators.RelocateStar(data, pen_manager),
-        operators.SwapStar(data, pen_manager),
-    ]
+    route_ops = [route_op(data, pen_manager) for route_op in ROUTE_OPERATORS]
 
     for op in route_ops:
         ls.add_route_operator(op)
 
-    crossover_op = crossover.selective_route_exchange
+    crossover_op = selective_route_exchange
     algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, crossover_op)
 
     if max_runtime is not None:

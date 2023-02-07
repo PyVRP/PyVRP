@@ -6,10 +6,9 @@ from numpy.testing import (
 )
 from pytest import mark
 
-from pyvrp.Population import Population
+from pyvrp import Individual, PenaltyManager, Population, XorShift128
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
-from pyvrp._lib.hgspy import Individual, PenaltyManager, XorShift128
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.tests.helpers import read
 

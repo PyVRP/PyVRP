@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 
+from pyvrp import Individual, ProblemData
 from pyvrp.Result import Result
-from pyvrp._lib.hgspy import Individual, ProblemData
 from pyvrp.exceptions import StatisticsNotCollectedError
 
 

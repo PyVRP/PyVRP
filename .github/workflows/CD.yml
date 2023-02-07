@@ -1,0 +1,57 @@
+name: CD
+
+on:
+  release:
+    types: [ created ]
+  # pull_request:  # uncomment these lines to test CD build
+  #   branches: [ main ]
+
+jobs:
+  linux:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]  # , windows-2019, macos-10.15]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.12.0
+        env:
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.10"
+          CIBW_BUILD_FRONTEND: "build"
+          CIBW_BUILD_VERBOSITY: 3
+        with:
+          package-dir: .
+          output-dir: dist
+      - uses: actions/upload-artifact@v3  # upload all wheels
+        with:
+          name: dist
+          path: ./dist/*
+
+  # deploy:
+  #   name: Deploy to PyPI
+  #   needs: [ linux ]  # , windows, macos ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.9
+  #     - name: Update pip and poetry
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install poetry
+  #     - uses: actions/download-artifact@v3  # download previously built wheels
+  #       with:
+  #         name: dist
+  #         path: dist
+  #     - name: Build sdist
+  #       run: poetry build --format sdist
+  #     - name: Check packaged distributions
+  #       run: ls -la dist
+  #     - name: Deploy to PyPI
+  #       run: |
+  #         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+  #         poetry publish

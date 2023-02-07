@@ -1,7 +1,7 @@
 import pathlib
 from typing import Union
 
-from pyvrp._lib.hgspy import ProblemData
+from .ProblemData import ProblemData
 
 
 def read(where: Union[str, pathlib.Path]) -> ProblemData:

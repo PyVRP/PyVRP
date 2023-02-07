@@ -5,12 +5,10 @@ from typing import Callable, Iterator, List, Tuple
 
 import numpy as np
 
-from pyvrp._lib.hgspy import (
-    Individual,
-    PenaltyManager,
-    ProblemData,
-    XorShift128,
-)
+from .Individual import Individual
+from .PenaltyManager import PenaltyManager
+from .ProblemData import ProblemData
+from .XorShift128 import XorShift128
 
 _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
 _DiversityItem = Tuple[Individual, float]
@@ -95,9 +93,9 @@ class SubPopulation:
                     del prox[idx]
                     break
 
-        for other in self:  # remove individual from subpopulation.
-            if other[0] == individual:
-                self._items.remove(other)
+        for item in self:  # remove individual from subpopulation.
+            if item[0] == individual:
+                self._items.remove(item)
                 break
         else:
             # This else should never happen, because the proximity and items

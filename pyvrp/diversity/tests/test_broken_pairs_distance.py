@@ -1,6 +1,6 @@
 from numpy.testing import assert_almost_equal
 
-from pyvrp._lib.hgspy import Individual, PenaltyManager
+from pyvrp import Individual, PenaltyManager
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
 

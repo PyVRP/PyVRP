@@ -1,9 +1,8 @@
 from numpy.testing import assert_, assert_raises
 
-from pyvrp import plotting
+from pyvrp import Individual, PenaltyManager, plotting
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
-from pyvrp._lib.hgspy import Individual, PenaltyManager
 from pyvrp.exceptions import StatisticsNotCollectedError
 from pyvrp.tests.helpers import read
 
