@@ -15,7 +15,7 @@ now = datetime.date.today()
 
 project = "PyVRP"
 author = "PyVRP contributors"
-copyright = f"2019 - {now.year}, {author}"
+copyright = f"2022 - {now.year}, {author}"
 
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
