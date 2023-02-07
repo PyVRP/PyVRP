@@ -40,7 +40,7 @@ def get_route_statistics(
     """
     assert 0 not in route, "Route should not contain depot"
 
-    depot = data.client(0)  # For readability, define variable
+    depot = data.depot()  # For readability, define variable
     start_time = max(
         [depot.tw_early] + [data.client(idx).release_time for idx in route]
     )
