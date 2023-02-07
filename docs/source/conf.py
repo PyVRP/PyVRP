@@ -27,13 +27,19 @@ for file in glob.iglob("../../examples/*.ipynb"):
     print(f"Copy {path.name} into docs/source/examples/")
     shutil.copy2(path, f"examples/{path.name}")
 
-# -- Autodoc
+# -- Autoapi
 
-autoclass_content = "class"
+autoapi_type = "python"
+autoapi_dirs = ["../../pyvrp"]
+autoapi_options = ["members", "undoc-members", "special-members"]
+autoapi_ignore = ["*test*"]
 
-autodoc_member_order = "bysource"
+autoapi_generate_api_docs = False
+autoapi_add_toctree_entry = False
+autoapi_add_objects_to_toctree = False
 
-autodoc_default_flags = ["members"]
+autoapi_python_class_content = "class"
+autoapi_member_order = "bysource"
 
 # -- Numpydoc
 
@@ -50,7 +56,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    # "sphinx.ext.autosummary",
+    "autoapi.extension",
     "sphinx.ext.intersphinx",
     "sphinx_rtd_theme",
     "nbsphinx",

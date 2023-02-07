@@ -9,60 +9,63 @@ The top-level :mod:`pyvrp` module exposes several core classes needed to run the
 
 TODO
 
-.. automodule:: pyvrp.GeneticAlgorithm
+.. autoapimodule:: pyvrp.GeneticAlgorithm
 
-   .. autoclass:: GeneticAlgorithmParams
+   .. autoapiclass:: GeneticAlgorithmParams
       :members:
 
-   .. autoclass:: GeneticAlgorithm
+   .. autoapiclass:: GeneticAlgorithm
       :members:
 
-.. automodule:: pyvrp.Individual
+.. autoapimodule:: pyvrp.Individual
    
-   .. autoclass:: Individual
+   .. autoapiclass:: Individual
+      :members:
+      :special-members:
+
+.. autoapimodule:: pyvrp.PenaltyManager
+
+   .. autoapiclass:: PenaltyBooster
       :members:
 
-.. automodule:: pyvrp.PenaltyManager
-
-   .. autoclass:: PenaltyBooster
+   .. autoapiclass:: PenaltyParams
       :members:
 
-   .. autoclass:: PenaltyParams
-      :members:
-
-   .. autoclass:: PenaltyManager
+   .. autoapiclass:: PenaltyManager
       :members: 
 
-.. automodule:: pyvrp.Population
+.. autoapimodule:: pyvrp.Population
 
-   .. autoclass:: PopulationParams
+   .. autoapiclass:: PopulationParams
       :members:
 
-   .. autoclass:: Population
+   .. autoapiclass:: Population
       :members:  
  
-.. automodule:: pyvrp.ProblemData
+.. autoapimodule:: pyvrp.ProblemData
 
-   .. autoclass:: ProblemData
+   .. autoapiclass:: ProblemData
       :members:
 
-.. automodule:: pyvrp.read
+.. autoapimodule:: pyvrp.read
 
-   .. autofunction:: read
+   .. autoapifunction:: read
 
-.. automodule:: pyvrp.Result
+.. autoapimodule:: pyvrp.Result
 
-   .. autoclass:: Result
+   .. autoapiclass:: Result
       :members:
 
-.. automodule:: pyvrp.Statistics
+.. autoapimodule:: pyvrp.Statistics
 
-   .. autoclass:: Statistics
+   .. autoapiclass:: Statistics
       :members:
+      :special-members:
 
-.. automodule:: pyvrp.XorShift128
+.. autoapimodule:: pyvrp.XorShift128
 
-   .. autoclass:: XorShift128
+   .. autoapiclass:: XorShift128
       :members:
+      :special-members:
 
 .. TODO add pyvrp CLI, and think about missing files (Matrix, TWS?)
