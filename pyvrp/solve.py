@@ -5,6 +5,7 @@ from pyvrp import (
     GeneticAlgorithm,
     PenaltyManager,
     Population,
+    ProblemData,
     XorShift128,
     read,
 )
@@ -18,6 +19,9 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="pyvrp.solve")
 
     parser.add_argument("data_loc")
+    parser.add_argument("--instance_format", type=str, default="vrplib")
+    parser.add_argument("--round_func", type=str, default="none")
+
     parser.add_argument("--seed", required=True, type=int)
 
     stop = parser.add_mutually_exclusive_group(required=True)
@@ -28,13 +32,12 @@ def parse_args():
 
 
 def solve(
-    data_loc: str,
+    data: ProblemData,
     seed: int,
-    max_runtime: Optional[float],
-    max_iterations: Optional[int],
+    max_runtime: Optional[float] = None,
+    max_iterations: Optional[int] = None,
     **kwargs,
 ):
-    data = read(data_loc)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity)
     pop = Population(data, pen_manager, rng, broken_pairs_distance)
@@ -64,7 +67,12 @@ def solve(
 
 def main():
     args = parse_args()
-    res = solve(**vars(args))
+    data = read(
+        args.data_loc,
+        instance_format=args.instance_format,
+        round_func=args.round_func,
+    )
+    res = solve(data, **vars(args))
 
     print(res)
 
