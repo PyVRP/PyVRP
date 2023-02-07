@@ -160,6 +160,18 @@ def test_time_warp_cost_calculation():
 # TODO test all time warp cases
 
 
+def test_eq():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    indiv1 = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
+
+    assert_(indiv1 == indiv1)  # individuals should be equal to themselves
+    assert_(indiv2 == indiv2)
+    assert_(indiv1 != indiv2)  # different routes, so should not be equal
+
+
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)

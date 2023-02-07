@@ -28,6 +28,7 @@ PYBIND11_MODULE(Individual, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
+        .def("__eq__", &Individual::operator==)
         .def("__str__", [](Individual const &individual) {
             std::stringstream stream;
             stream << individual;
