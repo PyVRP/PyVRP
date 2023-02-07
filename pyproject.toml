@@ -40,6 +40,7 @@ classifiers = [
 python = "^3.8"
 numpy = ">=1.15.2"
 matplotlib = ">=2.2.0"
+vrplib = "^1.0.0"
 
 [tool.poetry.group.benchmark]
 optional = true
@@ -52,6 +53,9 @@ pre-commit = "^2.20.0"
 pytest = ">=6.0.0"
 pytest-cov = ">=2.6.1"
 codecov = "*"
+
+[tool.poetry.group.examples]
+optional = true
 
 [tool.poetry.group.examples.dependencies]
 jupyter = ">=1.0.0"
