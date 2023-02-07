@@ -133,7 +133,7 @@ class SubPopulation:
 
         while len(self) > self._params.min_pop_size:
             for individual, _, prox in self:
-                if prox and np.isclose(prox[0][1], 0.0):  # has a duplicate?
+                if prox and prox[0].individual == individual:  # has duplicate?
                     self.remove(individual)
                     break
             else:  # no duplicates, so break loop
