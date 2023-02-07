@@ -1,1 +1,1 @@
-from pyvrp._lib.hgspy.diversity import broken_pairs_distance
+from .broken_pairs_distance import broken_pairs_distance

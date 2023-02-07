@@ -1,2 +1,2 @@
 ignore:
-  - "pyvrp/cpp/src/python"
+  - "**/*_bindings.cpp"  # ignore pybind11 bindings

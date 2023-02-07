@@ -2,18 +2,16 @@ import time
 from dataclasses import dataclass
 from typing import Callable, List, Tuple
 
-from pyvrp._lib.hgspy import (
-    Individual,
-    LocalSearch,
-    PenaltyManager,
-    ProblemData,
-    XorShift128,
-)
+from pyvrp.educate import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
+from .Individual import Individual
+from .PenaltyManager import PenaltyManager
 from .Population import Population
+from .ProblemData import ProblemData
 from .Result import Result
 from .Statistics import Statistics
+from .XorShift128 import XorShift128
 
 _Parents = Tuple[Individual, Individual]
 CrossoverOperator = Callable[

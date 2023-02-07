@@ -1,5 +1,4 @@
-from numbers import Real
-from typing import Protocol
+from typing import Protocol, Union
 
 
 class OptimisationTarget(Protocol):  # pragma: no cover
@@ -7,5 +6,5 @@ class OptimisationTarget(Protocol):  # pragma: no cover
     Defines an optimisation target protocol.
     """
 
-    def cost(self) -> Real:
+    def cost(self) -> Union[int, float]:
         pass

@@ -1,6 +1,7 @@
 from numpy.testing import assert_equal
 
-from pyvrp._lib.hgspy import IntMatrix, TimeWindowSegment
+from pyvrp.Matrix import IntMatrix
+from pyvrp.TimeWindowSegment import TimeWindowSegment
 
 
 def test_segment_time_warp():
