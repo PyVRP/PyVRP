@@ -24,11 +24,9 @@ def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
         fig = plt.figure(figsize=(20, 12))
 
     # Uses a GridSpec instance to lay-out all subplots nicely. There are
-    # two columns: left and right. Left has three rows, each containing a
-    # plot with statistics: the first plots population diversity, the
-    # second subpopulation objective information, and the third iteration
-    # runtimes. The right column plots the solution on top of the instance
-    # data.
+    # two columns: left and right. Left has two rows: the first plots time
+    # windows and the second plots demands. The right column plots the
+    # client and depot locations on a grid.
     gs = fig.add_gridspec(2, 2, width_ratios=(2 / 5, 3 / 5))
 
     plot_timewindows(data, ax=fig.add_subplot(gs[0, 0]))
