@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from pyvrp._lib.hgspy import Individual, ProblemData
+from pyvrp import Individual, ProblemData
 
 
 @dataclass
