@@ -166,10 +166,12 @@ def test_eq():
 
     indiv1 = Individual(data, pm, [[1, 2, 3, 4], [], []])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
+    indiv3 = Individual(data, pm, [[1, 2, 3, 4], [], []])
 
     assert_(indiv1 == indiv1)  # individuals should be equal to themselves
     assert_(indiv2 == indiv2)
     assert_(indiv1 != indiv2)  # different routes, so should not be equal
+    assert_(indiv1 == indiv3)  # same solution, different individual
 
 
 def test_str_contains_essential_information():
