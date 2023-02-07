@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.abspath("../../"))
 now = datetime.date.today()
 
 project = "PyVRP"
-author = "PyVRP contributors"
-copyright = f"2022 - {now.year}, {author}"
+authors = "PyVRP contributors"
+copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
