@@ -87,20 +87,31 @@ class SubPopulation:
             self.purge()
 
     def remove(self, individual: Individual):
+        """
+        Removes the given individual from the subpopulation. Note that
+        individuals are compared by identity, not by equality.
+
+        Parameters
+        ----------
+        individual
+            The individual to remove.
+
+        Raises
+        ------
+        ValueError
+            When the given individual could not be found in the subpopulation.
+        """
         for _, _, prox in self:  # remove individual from other proximities
             for idx, (other, _) in enumerate(prox):
-                if other == individual:
+                if id(other) == id(individual):
                     del prox[idx]
                     break
 
         for item in self:  # remove individual from subpopulation.
-            if item[0] == individual:
+            if id(item[0]) == id(individual):
                 self._items.remove(item)
                 break
         else:
-            # This else should never happen, because the proximity and items
-            # structure should be synched, and then the ``del`` statement above
-            # would have raised before.
             raise ValueError(f"Individual {individual} not in subpopulation!")
 
     def purge(self):
