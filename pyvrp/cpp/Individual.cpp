@@ -122,6 +122,13 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
+bool Individual::operator==(Individual const &other) const
+{
+    // First compare costs, since that's a quick and cheap check. Only when 
+    // the costs are the same do we compare the routes.  
+    return cost() == other.cost() && routes_ == other.routes_;
+}
+
 Individual::Individual(ProblemData const &data,
                        PenaltyManager const &penaltyManager,
                        XorShift128 &rng)

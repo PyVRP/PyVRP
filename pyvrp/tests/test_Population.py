@@ -151,7 +151,7 @@ def test_add_updates_best_found_solution():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_133_234_000)
 
-    params = PopulationParams(0, 40, 4, 5, 0.1, 0.5)
+    params = PopulationParams(min_pop_size=0)
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
     # Should not have added any individuals to the population pool. The 'best'
@@ -182,7 +182,7 @@ def test_select_returns_same_parents_if_no_other_option():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_147_483_647)
 
-    params = PopulationParams(0, 40, 4, 5, 0.1, 0.5)
+    params = PopulationParams(min_pop_size=0)
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
     assert_equal(len(pop), 0)
