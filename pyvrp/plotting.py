@@ -50,7 +50,7 @@ def plot_coordinates(
     ----------
     data
         Data instance
-    title
+    title, optional
         Title to add to the plot
     ax, optional
         Axes object to draw the plot on. One will be created if not
@@ -88,7 +88,7 @@ def plot_timewindows(
     ----------
     data
         Data instance
-    title
+    title, optional
         Title to add to the plot
     ax, optional
         Axes object to draw the plot on. One will be created if not
