@@ -1,14 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
 from typing import List, Optional
 
-from pyvrp import Result
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import LineCollection
+
+from pyvrp.Result import Result
+from pyvrp._lib.hgspy import Individual, ProblemData
 from pyvrp.exceptions import StatisticsNotCollectedError
-from pyvrp._lib.hgspy import (
-    Individual,
-    ProblemData,
-)
 
 
 def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
@@ -38,9 +36,13 @@ def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
     plot_coordinates(data, ax=fig.add_subplot(gs[:, 1]))
 
     plt.tight_layout()
-    
 
-def plot_coordinates(data: ProblemData, title: str = "Coordinates", ax: Optional[plt.Axes] = None):
+
+def plot_coordinates(
+    data: ProblemData,
+    title: str = "Coordinates",
+    ax: Optional[plt.Axes] = None,
+):
     """
     Plots coordinates for clients and depot.
 
@@ -72,11 +74,15 @@ def plot_coordinates(data: ProblemData, title: str = "Coordinates", ax: Optional
     ax.set_title(title)
     ax.set_aspect("equal", "datalim")
     ax.legend(frameon=False, ncol=2)
-    
 
-def plot_timewindows(data: ProblemData, title: str = "Time windows", ax: Optional[plt.Axes] = None):
+
+def plot_timewindows(
+    data: ProblemData,
+    title: str = "Time windows",
+    ax: Optional[plt.Axes] = None,
+):
     """
-    Plots time windows for clients, as vertical bars sorted by time window start.
+    Plots time windows for clients, as vertical bars sorted by time window.
 
     Parameters
     ----------
@@ -92,13 +98,15 @@ def plot_timewindows(data: ProblemData, title: str = "Time windows", ax: Optiona
         _, ax = plt.subplots()
 
     dim = data.num_clients + 1
-    tw = np.array([
-        [data.client(client).tw_early, data.client(client).tw_late]
-        for client in range(dim)
-    ])
+    tw = np.array(
+        [
+            [data.client(client).tw_early, data.client(client).tw_late]
+            for client in range(dim)
+        ]
+    )
     # Lexicographic sort so for equal start we get shorter TW first
     tw = tw[np.lexsort((tw[:, 1], tw[:, 0]))]
-    
+
     lines = [((i, early), (i, late)) for i, (early, late) in enumerate(tw)]
     ax.add_collection(LineCollection(lines, linewidths=1))
     ax.set_xlim([0, dim])
@@ -107,9 +115,13 @@ def plot_timewindows(data: ProblemData, title: str = "Time windows", ax: Optiona
     ax.set_title(title)
     ax.set_xlabel("Client (sorted by TW)")
     ax.set_ylabel("Time window")
-    
 
-def plot_demands(data: ProblemData, title: Optional[str] = None, ax: Optional[plt.Axes] = None):
+
+def plot_demands(
+    data: ProblemData,
+    title: Optional[str] = None,
+    ax: Optional[plt.Axes] = None,
+):
     """
     Plots demands for clients, as vertical bars sorted by demand.
 
@@ -130,17 +142,22 @@ def plot_demands(data: ProblemData, title: Optional[str] = None, ax: Optional[pl
     # Exclude depot
     demand = np.array([data.client(client).demand for client in range(1, dim)])
     demand = np.sort(demand)
-    
+
     ax.bar(np.arange(1, dim), demand)
-    
+
     if title is None:
-        title = f"Demands (cap = {data.vehicle_capacity}, {data.vehicle_capacity / demand.mean():.2f} stops/route)"
+        title = (
+            f"Demands (cap = {data.vehicle_capacity}, "
+            + "{data.vehicle_capacity / demand.mean():.2f} stops/route)"
+        )
     ax.set_title(title)
     ax.set_xlabel("Client (sorted by demand)")
-    ax.set_ylabel(f"Demand")
+    ax.set_ylabel("Demand")
 
 
-def plot_result(result: Result, data: ProblemData, fig: Optional[plt.Figure] = None):
+def plot_result(
+    result: Result, data: ProblemData, fig: Optional[plt.Figure] = None
+):
     """
     Plots the results of a run: the best solution, and detailed
     statistics about the algorithm's performance.
@@ -160,7 +177,9 @@ def plot_result(result: Result, data: ProblemData, fig: Optional[plt.Figure] = N
         Raised when statistics have not been collected.
     """
     if not result.has_statistics():
-        raise StatisticsNotCollectedError("Statistics have not been collected.")
+        raise StatisticsNotCollectedError(
+            "Statistics have not been collected."
+        )
 
     if not fig:
         fig = plt.figure(figsize=(20, 12))
@@ -200,7 +219,9 @@ def plot_diversity(result: Result, ax: Optional[plt.Axes] = None):
         Raised when statistics have not been collected.
     """
     if not result.has_statistics():
-        raise StatisticsNotCollectedError("Statistics have not been collected.")
+        raise StatisticsNotCollectedError(
+            "Statistics have not been collected."
+        )
 
     if not ax:
         _, ax = plt.subplots()
@@ -220,7 +241,9 @@ def plot_diversity(result: Result, ax: Optional[plt.Axes] = None):
 
 
 def plot_objectives(
-    result: Result, num_to_skip: Optional[int] = None, ax: Optional[plt.Axes] = None
+    result: Result,
+    num_to_skip: Optional[int] = None,
+    ax: Optional[plt.Axes] = None,
 ):
     """
     Plots each subpopulation's objective values.
@@ -244,7 +267,9 @@ def plot_objectives(
         Raised when statistics have not been collected.
     """
     if not result.has_statistics():
-        raise StatisticsNotCollectedError("Statistics have not been collected.")
+        raise StatisticsNotCollectedError(
+            "Statistics have not been collected."
+        )
 
     if not ax:
         _, ax = plt.subplots()
@@ -275,7 +300,12 @@ def plot_objectives(
     ax.legend(frameon=False)
 
 
-def plot_solution(solution: Individual, data: ProblemData, plot_customers: bool = False, ax: Optional[plt.Axes] = None):
+def plot_solution(
+    solution: Individual,
+    data: ProblemData,
+    plot_customers: bool = False,
+    ax: Optional[plt.Axes] = None,
+):
     """
     Plots the best solution.
 
@@ -342,7 +372,9 @@ def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
         Raised when statistics have not been collected.
     """
     if not result.has_statistics():
-        raise StatisticsNotCollectedError("Statistics have not been collected.")
+        raise StatisticsNotCollectedError(
+            "Statistics have not been collected."
+        )
 
     if not ax:
         _, ax = plt.subplots()
@@ -361,21 +393,23 @@ def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
     ax.set_title("Iteration runtimes")
 
 
-def plot_route_schedule(data: ProblemData, 
-                        route: List[int],
-                        legend: bool = True,
-                        title: Optional[str] = None,
-                        ax: Optional[plt.Axes] = None):
+def plot_route_schedule(
+    data: ProblemData,
+    route: List[int],
+    legend: bool = True,
+    title: Optional[str] = None,
+    ax: Optional[plt.Axes] = None,
+):
     """
     Plots a route schedule. This function plots multiple time statistics
     as a function of distance traveled:
-    
+
     Solid: earliest possible trajectory / time (using timewarp if infeasible)
     Shaded: slack up to latest possible trajectory / time (only if no timewarp)
     Dash-dotted: driving + service time, excluding wait time and timewarp
     Dotted: driving time only
-    Grey shaded background area: remaining load in vehicle (on secondary y-axis)
-    
+    Grey shaded background: remaining load in vehicle (on secondary y-axis)
+
     Parameters
     ----------
     data
@@ -392,12 +426,14 @@ def plot_route_schedule(data: ProblemData,
     """
     if not ax:
         _, ax = plt.subplots()
-    
+
     depot = data.client(0)  # For readability, define variable
     horizon = depot.tw_late - depot.tw_early
-    start_time = max([depot.tw_early] + [data.client(idx).release_time for idx in route])
+    start_time = max(
+        [depot.tw_early] + [data.client(idx).release_time for idx in route]
+    )
     # Interpret depot.serv_dur as loading duration, typically 0
-    
+
     # Initialize tracking variables
     t = start_time
     wait_time = 0
@@ -407,7 +443,7 @@ def plot_route_schedule(data: ProblemData,
     dist = 0
     load = sum([data.client(idx).demand for idx in route])
     slack = horizon
-    
+
     # Traces and objects used for plotting
     trace_time = []
     trace_drive = []
@@ -416,20 +452,20 @@ def plot_route_schedule(data: ProblemData,
     timewindow_lines = []
     timewindow_colors = []
     timewarp_lines = []
-    
+
     def add_traces(dist, t, drive_time, serv_time, load):
         trace_time.append((dist, t))
         trace_drive.append((dist, drive_time))
         trace_drive_serv.append((dist, drive_time + serv_time))
         trace_load.append((dist, load))
-    
+
     add_traces(dist, t, drive_time, serv_time, load)
-    
+
     t += depot.serv_dur
     serv_time += depot.serv_dur
-    
+
     add_traces(dist, t, drive_time, serv_time, load)
-    
+
     prev_idx = 0  # depot
     for idx in list(route) + [0]:
         stop = data.client(idx)
@@ -438,7 +474,7 @@ def plot_route_schedule(data: ProblemData,
         t += delta_time
         drive_time += delta_time
         dist += delta_dist
-        
+
         add_traces(dist, t, drive_time, serv_time, load)
 
         if t < stop.tw_early:
@@ -450,53 +486,76 @@ def plot_route_schedule(data: ProblemData,
             time_warp += t - stop.tw_late
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
-            
+
         load -= stop.demand
-            
+
         add_traces(dist, t, drive_time, serv_time, load)
 
         if idx != 0:  # Don't plot service and timewindow for return to depot
             t += stop.serv_dur
             serv_time += stop.serv_dur
-            
+
             add_traces(dist, t, drive_time, serv_time, load)
-            
-            timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
-            timewindow_colors.append('black' if (stop.tw_late - stop.tw_early) <= horizon / 2 else 'gray')
-        
+
+            timewindow_lines.append(
+                ((dist, stop.tw_early), (dist, stop.tw_late))
+            )
+            timewindow_colors.append(
+                "black"
+                if (stop.tw_late - stop.tw_early) <= horizon / 2
+                else "gray"
+            )
+
         prev_idx = idx
-    
-    
+
     # Plot primary traces
     xs, ys = zip(*trace_time)
-    ax.plot(xs, ys, label='Time (earliest)')
+    ax.plot(xs, ys, label="Time (earliest)")
     if slack > 0:
-        ax.fill_between(xs, ys, np.array(ys) + slack, alpha=0.3, label='Time (slack)')
-        
-    ax.plot(*zip(*trace_drive_serv), linestyle='-.', label='Drive + service time')
-    ax.plot(*zip(*trace_drive), linestyle=':', label='Drive time')
+        ax.fill_between(
+            xs, ys, np.array(ys) + slack, alpha=0.3, label="Time (slack)"
+        )
+
+    ax.plot(
+        *zip(*trace_drive_serv), linestyle="-.", label="Drive + service time"
+    )
+    ax.plot(*zip(*trace_drive), linestyle=":", label="Drive time")
 
     # Plot time windows & time warps
-    lc_time_windows = LineCollection(timewindow_lines, colors=timewindow_colors, linewidths=2, label='Time window')
+    lc_time_windows = LineCollection(
+        timewindow_lines,
+        colors=timewindow_colors,
+        linewidths=2,
+        label="Time window",
+    )
     ax.add_collection(lc_time_windows)
-    lc_timewarps = LineCollection(timewarp_lines, colors='red', linewidths=2, alpha=0.7, label='Time warp') 
+    lc_timewarps = LineCollection(
+        timewarp_lines,
+        colors="red",
+        linewidths=2,
+        alpha=0.7,
+        label="Time warp",
+    )
     ax.add_collection(lc_timewarps)
-    ax.set_ylim([depot.tw_early, max(depot.tw_late, max(t for d, t in trace_time))])
-    
+    ax.set_ylim(
+        [depot.tw_early, max(depot.tw_late, max(t for d, t in trace_time))]
+    )
+
     # Plot remaining load on second axis
     twin1 = ax.twinx()
-    twin1.fill_between(*zip(*trace_load), color='black', alpha=0.1, label='Load in vehicle')
+    twin1.fill_between(
+        *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
+    )
     twin1.set_ylim([0, data.vehicle_capacity])
-    
-    
+
     # Set labels, legends and title
-    ax.set_xlabel('Distance')
-    ax.set_ylabel('Time')
-    twin1.set_ylabel(f'Load (capacity = {data.vehicle_capacity})')
-    
+    ax.set_xlabel("Distance")
+    ax.set_ylabel("Time")
+    twin1.set_ylabel(f"Load (capacity = {data.vehicle_capacity})")
+
     if legend:
-        twin1.legend(loc='upper right')
-        ax.legend(loc='upper left')
-        
+        twin1.legend(loc="upper right")
+        ax.legend(loc="upper left")
+
     if title:
         ax.set_title(title)

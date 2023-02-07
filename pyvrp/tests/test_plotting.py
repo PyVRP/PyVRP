@@ -1,18 +1,10 @@
-from numpy.testing import (
-    assert_,
-    assert_almost_equal,
-    assert_equal,
-    assert_raises,
-)
-from pytest import mark
+from numpy.testing import assert_, assert_raises
 
-from pyvrp.Population import Population
+from pyvrp import plotting
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
-from pyvrp._lib.hgspy import Individual, PenaltyManager, XorShift128
-from pyvrp.diversity import broken_pairs_distance
+from pyvrp._lib.hgspy import Individual, PenaltyManager
 from pyvrp.exceptions import StatisticsNotCollectedError
-from pyvrp import plotting
 from pyvrp.tests.helpers import read
 
 

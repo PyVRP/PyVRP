@@ -1,10 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from pyvrp._lib.hgspy import (
-    Individual,
-    ProblemData,
-)
+from pyvrp._lib.hgspy import Individual, ProblemData
 
 
 @dataclass
@@ -22,8 +19,10 @@ class RouteStatistics:
     is_feasible: bool
     is_empty: bool
 
-        
-def get_route_statistics(data: ProblemData, route: List[int]) -> RouteStatistics:
+
+def get_route_statistics(
+    data: ProblemData, route: List[int]
+) -> RouteStatistics:
     """
     Returns statistics for a route
 
@@ -42,7 +41,9 @@ def get_route_statistics(data: ProblemData, route: List[int]) -> RouteStatistics
     assert 0 not in route, "Route should not contain depot"
 
     depot = data.client(0)  # For readability, define variable
-    start_time = max([depot.tw_early] + [data.client(idx).release_time for idx in route])
+    start_time = max(
+        [depot.tw_early] + [data.client(idx).release_time for idx in route]
+    )
     # Interpret depot.serv_dur as loading duration, typically 0
     current_time = start_time + depot.serv_dur
     wait_time = 0
@@ -76,15 +77,19 @@ def get_route_statistics(data: ProblemData, route: List[int]) -> RouteStatistics
         duration=current_time - start_time,
         timewarp=time_warp,
         wait_time=wait_time,
-        service_time=depot.serv_dur + sum([data.client(idx).serv_dur for idx in route]),
+        service_time=depot.serv_dur
+        + sum([data.client(idx).serv_dur for idx in route]),
         num_stops=len(route),
         total_demand=demand,
         fillrate=demand / data.vehicle_capacity,
         is_feasible=time_warp == 0 and demand <= data.vehicle_capacity,
-        is_empty=len(route) == 0
+        is_empty=len(route) == 0,
     )
 
-def get_all_route_statistics(solution: Individual, data: ProblemData) -> List[RouteStatistics]:
+
+def get_all_route_statistics(
+    solution: Individual, data: ProblemData
+) -> List[RouteStatistics]:
     """
     Returns route statistics for a set of routes.
 
@@ -101,6 +106,5 @@ def get_all_route_statistics(solution: Individual, data: ProblemData) -> List[Ro
         List of RouteStatistic objects with statistics for each route.
     """
     return [
-        get_route_statistics(data, route) 
-        for route in solution.get_routes()
+        get_route_statistics(data, route) for route in solution.get_routes()
     ]

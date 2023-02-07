@@ -4,6 +4,7 @@ from pyvrp._lib.hgspy import Individual
 
 from .Statistics import Statistics
 
+
 @dataclass
 class Result:
     """
