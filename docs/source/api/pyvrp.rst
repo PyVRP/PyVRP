@@ -27,6 +27,7 @@ TODO
 
    .. autoapiclass:: PenaltyBooster
       :members:
+      :special-members:
 
    .. autoapiclass:: PenaltyParams
       :members:
@@ -41,8 +42,12 @@ TODO
 
    .. autoapiclass:: Population
       :members:  
+      :special-members:
  
 .. autoapimodule:: pyvrp.ProblemData
+
+   .. autoapiclass:: Client
+      :members:
 
    .. autoapiclass:: ProblemData
       :members:

@@ -45,6 +45,7 @@ autoapi_member_order = "bysource"
 
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
+napoleon_include_special_with_doc = True
 
 # -- nbsphinx
 
@@ -74,6 +75,8 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
+
+add_module_names = False
 
 # -- Options for HTML output
 
