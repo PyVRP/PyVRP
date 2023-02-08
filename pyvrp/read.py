@@ -57,13 +57,14 @@ def read(
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
     # A priori checks
-    if len(instance["depot"]) != 1 or instance["depot"][0] != 0:
-        raise ValueError(
-            "Source file should contain single depot with id 1 "
-            + "(depot index should be 0 after subtracting offset 1)"
-        )
+    if "dimension" in instance:
+        num_clients = instance["dimension"]
+    else:
+        if "demand" not in instance:
+            raise ValueError("File should either contain dimension or demands")
+        num_clients = len(instance["demand"])
 
-    num_clients = instance["dimension"]
+    depots = instance.get("depot", np.array([0]))
     num_vehicles = instance.get("vehicles", num_clients - 1)
     capacity = instance.get("capacity", INT_MAX)
     edge_weight = round_func(instance["edge_weight"])
@@ -93,7 +94,12 @@ def read(
     else:
         release_times = np.zeros(num_clients, dtype=int)
 
-    # Checks after reading/processing data
+    # Checks
+    if len(depots) != 1 or depots[0] != 0:
+        raise ValueError(
+            "Source file should contain single depot with index 1 "
+            + "(depot index should be 0 after subtracting offset 1)"
+        )
     if demands[0] != 0:
         raise ValueError("Demand of depot must be 0")
     if time_windows[0, 0] != 0:
