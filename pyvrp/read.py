@@ -1,11 +1,13 @@
 import functools
 import pathlib
-from typing import Callable, Optional, Union
+from typing import Callable, Dict, Union
 
 import numpy as np
 import vrplib
 
 from .ProblemData import ProblemData
+
+_RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 INT_MAX = np.iinfo(np.int32).max
 
@@ -25,7 +27,7 @@ def no_rounding(vals):
 def read(
     where: Union[str, pathlib.Path],
     instance_format: str = "vrplib",
-    round_func: Optional[Union[str, Callable]] = None,
+    round_func: Union[str, _RoundingFunc] = no_rounding,
 ) -> ProblemData:
     """
     Reads the (C)VRPLIB file at the given location, and returns a ProblemData
@@ -49,13 +51,8 @@ def read(
     ProblemData
         Data instance constructed from the read data.
     """
-    _round_func = no_rounding
     if isinstance(round_func, str):
-        _round_func = ROUND_FUNCS[round_func]
-    elif isinstance(round_func, Callable):
-        _round_func = round_func
-    else:
-        assert round_func is None
+        round_func = ROUND_FUNCS[round_func]
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
@@ -69,7 +66,7 @@ def read(
     num_clients = instance["dimension"]
     num_vehicles = instance.get("vehicles", num_clients - 1)
     capacity = instance.get("capacity", INT_MAX)
-    edge_weight = _round_func(instance["edge_weight"])
+    edge_weight = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands = instance["demand"]
@@ -77,22 +74,22 @@ def read(
         demands = np.zeros(num_clients, dtype=int)
 
     if "node_coord" in instance:
-        coords = _round_func(instance["node_coord"])
+        coords = round_func(instance["node_coord"])
     else:
         coords = np.zeros((num_clients, 2), dtype=int)
 
     if "time_window" in instance:
-        time_windows = _round_func(instance["time_window"])
+        time_windows = round_func(instance["time_window"])
     else:
         time_windows = np.repeat([[0, INT_MAX]], num_clients, axis=0)
 
     if "service_time" in instance:
-        service_times = _round_func(instance["service_time"])
+        service_times = round_func(instance["service_time"])
     else:
         service_times = np.zeros(num_clients, dtype=int)
 
     if "release_times" in instance:
-        release_times = _round_func(instance["release_times"])
+        release_times = round_func(instance["release_times"])
     else:
         release_times = np.zeros(num_clients, dtype=int)
 
@@ -120,7 +117,7 @@ def read(
     )
 
 
-ROUND_FUNCS = {
+ROUND_FUNCS: Dict[str, _RoundingFunc] = {
     "trunc": convert_to_int,
     "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
     "dimacs": functools.partial(scale_and_truncate_to_decimals, decimals=1),
