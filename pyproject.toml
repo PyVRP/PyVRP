@@ -48,18 +48,18 @@ optional = true
 [tool.poetry.group.benchmark.dependencies]
 tqdm = "^4.64.1"
 
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^2.20.0"
-pytest = ">=6.0.0"
-pytest-cov = ">=2.6.1"
-codecov = "*"
-
 [tool.poetry.group.examples]
 optional = true
 
 [tool.poetry.group.examples.dependencies]
 jupyter = ">=1.0.0"
 pandas = ">=1.5.0"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^2.20.0"
+pytest = ">=6.0.0"
+pytest-cov = ">=2.6.1"
+codecov = "*"
 
 # These are used in the build script: for compiling the library (meson, ninja,
 # and pybind11) and for generating type stubs (mypy).
