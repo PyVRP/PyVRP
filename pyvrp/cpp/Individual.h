@@ -71,6 +71,8 @@ public:
      */
     [[nodiscard]] bool hasTimeWarp() const;
 
+    bool operator==(Individual const &other) const;
+
     Individual &operator=(Individual const &other) = default;
 
     /**
