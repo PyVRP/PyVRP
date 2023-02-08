@@ -132,7 +132,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
         assert_equal(data.client(client).release_time, 0)
 
 
-def test_reading_RC208_instance():  # instance from CVRPLIB
+def test_reading_RC208_instance():  # Solomon style instance
     data = read(
         "data/RC208.txt", instance_format="solomon", round_func="trunc1"
     )
