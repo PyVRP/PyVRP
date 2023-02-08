@@ -6,13 +6,13 @@ from pyvrp.read import read as _read
 
 
 @lru_cache
-def read(where: str):
+def read(where: str, *args, **kwargs):
     """
     Lightweight wrapper around ``pyvrp.read()``, reading files relative to the
     current directory.
     """
     this_dir = pathlib.Path(__file__).parent
-    return _read(this_dir / where)
+    return _read(this_dir / where, *args, **kwargs)
 
 
 def sleep(duration, get_now=time.perf_counter):

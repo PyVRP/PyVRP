@@ -7,6 +7,8 @@ import vrplib
 
 from .ProblemData import ProblemData
 
+INT_MAX = np.iinfo(np.int32).max
+
 
 def convert_to_int(vals: np.ndarray):
     return vals.astype(int)
@@ -57,16 +59,63 @@ def read(
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
-    # The formats supported so far don't have release times
-    release_times = np.zeros_like(instance["demand"])
+    # A priori checks
+    if len(instance["depot"]) != 1 or instance["depot"][0] != 0:
+        raise ValueError(
+            "Source file should contain single depot with id 1 "
+            + "(depot index should be 0 after subtracting offset 1)"
+        )
+
+    num_clients = instance["dimension"]
+    num_vehicles = instance.get("vehicles", num_clients - 1)
+    capacity = instance.get("capacity", INT_MAX)
+    edge_weight = _round_func(instance["edge_weight"])
+
+    if "demand" in instance:
+        demands = instance["demand"]
+    else:
+        demands = np.zeros(num_clients, dtype=int)
+
+    if "node_coord" in instance:
+        coords = _round_func(instance["node_coord"])
+    else:
+        coords = np.zeros((num_clients, 2), dtype=int)
+
+    if "time_window" in instance:
+        time_windows = _round_func(instance["time_window"])
+    else:
+        time_windows = np.repeat([[0, INT_MAX]], num_clients, axis=0)
+
+    if "service_time" in instance:
+        service_times = _round_func(instance["service_time"])
+    else:
+        service_times = np.zeros(num_clients, dtype=int)
+
+    if "release_times" in instance:
+        release_times = _round_func(instance["release_times"])
+    else:
+        release_times = np.zeros(num_clients, dtype=int)
+
+    # Checks after reading/processing data
+    if demands[0] != 0:
+        raise ValueError("Demand of depot must be 0")
+    if time_windows[0, 0] != 0:
+        raise ValueError("Depot start of time window must be 0")
+    if release_times[0] != 0:
+        raise ValueError("Depot release time must be 0")
+    if service_times[0] != 0:
+        raise ValueError("Depot service duration must be 0")
+    if (time_windows[:, 0] > time_windows[:, 1]).any():
+        raise ValueError("Time window cannot start after end")
+
     return ProblemData(
-        _round_func(instance["node_coord"]),
-        instance["demand"],
-        instance["vehicles"],
-        instance["capacity"],
-        _round_func(instance["time_window"]),
-        _round_func(instance["service_time"]),
-        _round_func(instance["edge_weight"]),
+        coords,
+        demands,
+        num_vehicles,
+        capacity,
+        time_windows,
+        service_times,
+        edge_weight,
         release_times,
     )
 
