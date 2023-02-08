@@ -8,8 +8,8 @@ using TWS = TimeWindowSegment;
 PYBIND11_MODULE(TimeWindowSegment, m)
 {
     py::class_<TWS>(m, "TimeWindowSegment")
-        .def(py::init<Matrix<int> const *, int, int, int, int, int, int, int>(),
-             py::arg("dist"),
+        .def(py::init<Matrix<TTime> const *, int, int, TTime, TTime, TTime, TTime, TTime>(),
+             py::arg("durationMatrix"),
              py::arg("idx_first"),
              py::arg("idx_last"),
              py::arg("duration"),

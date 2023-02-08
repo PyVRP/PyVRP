@@ -6,13 +6,13 @@ void RelocateStar::init(Individual const &indiv)
     relocate.init(indiv);
 }
 
-int RelocateStar::evaluate(Route *U, Route *V)
+TCost RelocateStar::evaluate(Route *U, Route *V)
 {
     move = {};
 
     for (auto *nodeU = n(U->depot); !nodeU->isDepot(); nodeU = n(nodeU))
     {
-        int deltaCost = relocate.evaluate(nodeU, V->depot);  // test after depot
+        TCost deltaCost = relocate.evaluate(nodeU, V->depot);  // test after depot
 
         if (deltaCost < move.deltaCost)
             move = {deltaCost, nodeU, V->depot};

@@ -1,6 +1,15 @@
 #ifndef HGS_PENALTYMANAGER_H
 #define HGS_PENALTYMANAGER_H
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
 struct PenaltyParams
 {
     unsigned int const initCapacityPenalty;
@@ -103,7 +112,7 @@ public:
      *
      * TODO maybe inline
      */
-    [[nodiscard]] unsigned int twPenalty(unsigned int timeWarp) const;
+    [[nodiscard]] TTime twPenalty(TTime timeWarp) const;
 
     /**
      * Returns a penalty booster that temporarily increases infeasibility

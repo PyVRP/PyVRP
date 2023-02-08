@@ -4,6 +4,16 @@
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 class Route;
 
 class Node
@@ -18,8 +28,8 @@ public:  // TODO make fields private
     Route *route;     // Pointer towards the associated route
 
     int cumulatedLoad;              // Load from depot to client (inclusive)
-    int cumulatedDistance;          // Distance from depot to client (inclusive)
-    int cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
+    TDist cumulatedDistance;          // Distance from depot to client (inclusive)
+    TDist cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
 
     TimeWindowSegment tw;        // TWS for individual node (client)
     TimeWindowSegment twBefore;  // TWS for (0...client) including self

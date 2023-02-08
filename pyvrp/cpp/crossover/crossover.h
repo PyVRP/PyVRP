@@ -9,6 +9,16 @@
 #include <functional>
 #include <vector>
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 namespace crossover
 {
 /**

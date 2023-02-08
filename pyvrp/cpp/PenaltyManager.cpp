@@ -61,7 +61,7 @@ unsigned int PenaltyManager::loadPenalty(unsigned int load) const
     return 0;
 }
 
-unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const
+TTime PenaltyManager::twPenalty(TTime timeWarp) const
 {
     return timeWarp * timeWarpPenalty;
 }

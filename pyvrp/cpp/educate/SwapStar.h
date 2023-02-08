@@ -9,6 +9,16 @@
 #include <array>
 #include <vector>
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 /**
  * Explores the SWAP* neighbourhood of [1]. The SWAP* neighbourhood explores
  * free form re-insertions of nodes U and V in the given routes (so the nodes
@@ -25,10 +35,14 @@ class SwapStar : public LocalSearchOperator<Route>
     struct ThreeBest  // stores three best SWAP* insertion points
     {
         bool shouldUpdate = true;
-        std::array<int, 3> costs = {INT_MAX, INT_MAX, INT_MAX};
+        std::array<TCost, 3> costs = {
+            static_cast<TCost>(INT_MAX),
+            static_cast<TCost>(INT_MAX),
+            static_cast<TCost>(INT_MAX)
+        };
         std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
 
-        void maybeAdd(int costInsert, Node *placeInsert)
+        void maybeAdd(TCost costInsert, Node *placeInsert)
         {
             if (costInsert >= costs[2])
                 return;
@@ -59,7 +73,7 @@ class SwapStar : public LocalSearchOperator<Route>
 
     struct BestMove  // tracks the best SWAP* move
     {
-        int cost = 0;
+        TCost cost = 0;
 
         Node *U = nullptr;
         Node *UAfter = nullptr;
@@ -77,10 +91,10 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
-    inline std::pair<int, Node *> getBestInsertPoint(Node *U, Node *V);
+    inline std::pair<TCost, Node *> getBestInsertPoint(Node *U, Node *V);
 
     Matrix<ThreeBest> cache;
-    Matrix<int> removalCosts;
+    Matrix<TCost> removalCosts;
     std::vector<bool> updated;
 
     BestMove best;
@@ -88,7 +102,7 @@ class SwapStar : public LocalSearchOperator<Route>
 public:
     void init(Individual const &indiv) override;
 
-    int evaluate(Route *U, Route *V) override;
+    TCost evaluate(Route *U, Route *V) override;
 
     void apply(Route *U, Route *V) override;
 

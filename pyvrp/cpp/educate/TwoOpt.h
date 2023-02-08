@@ -4,6 +4,16 @@
 #include "LocalSearchOperator.h"
 #include "Node.h"
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 /**
  * 2-OPT moves.
  *
@@ -15,16 +25,16 @@ class TwoOpt : public LocalSearchOperator<Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
-    int evalWithinRoute(Node *U, Node *V);
+    TCost evalWithinRoute(Node *U, Node *V);
 
-    int evalBetweenRoutes(Node *U, Node *V);
+    TCost evalBetweenRoutes(Node *U, Node *V);
 
     void applyWithinRoute(Node *U, Node *V);
 
     void applyBetweenRoutes(Node *U, Node *V);
 
 public:
-    int evaluate(Node *U, Node *V) override;
+    TCost evaluate(Node *U, Node *V) override;
 
     void apply(Node *U, Node *V) override;
 };

@@ -8,7 +8,9 @@
 
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
-Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
+Matrix<TDist> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<TTime> const &ProblemData::durationMatrix() const { return dist_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
@@ -29,12 +31,12 @@ ProblemData ProblemData::fromFile(std::string const &where)
     // with one decimal precision).
     std::string edgeWeightType, edgeWeightFmt;
 
-    std::vector<std::pair<int, int>> coords;
+    std::vector<std::pair<TDist, TDist>> coords;
     std::vector<int> demands;
-    std::vector<int> servDurs;
-    std::vector<std::pair<int, int>> timeWindows;
-    std::vector<std::vector<int>> distMat;
-    std::vector<int> releases;
+    std::vector<TTime> servDurs;
+    std::vector<std::pair<TTime, TTime>> timeWindows;
+    std::vector<std::vector<TDist>> distMat;
+    std::vector<TTime> releases;
 
     std::ifstream inputFile(where);
 
@@ -62,9 +64,9 @@ ProblemData ProblemData::fromFile(std::string const &where)
             // Resize fields to match number of clients with default values.
             coords = {numClients + 1, {0, 0}};
             demands = std::vector<int>(numClients + 1, 0);
-            servDurs = std::vector<int>(numClients + 1, 0);
-            timeWindows = {numClients + 1, {0, INT_MAX}};
-            releases = std::vector<int>(numClients + 1, 0);
+            servDurs = std::vector<TTime>(numClients + 1, 0);
+            timeWindows = {numClients + 1, {0, static_cast<TTime>(INT_MAX)}};
+            releases = std::vector<TTime>(numClients + 1, 0);
         }
 
         else if (name.starts_with("EDGE_WEIGHT_TYPE"))
@@ -112,7 +114,8 @@ ProblemData ProblemData::fromFile(std::string const &where)
         else if (name.starts_with("NODE_COORD_SECTION"))
             for (size_t row = 0; row <= numClients; row++)
             {
-                int client, x, y;
+                int client;
+                TDist x, y;
                 inputFile >> client >> x >> y;
                 coords[client - 1] = {x, y};
             }
@@ -136,7 +139,8 @@ ProblemData ProblemData::fromFile(std::string const &where)
         {
             for (size_t row = 0; row <= numClients; row++)
             {
-                int client, serviceDuration;
+                int client;
+                TTime serviceDuration;
                 inputFile >> client >> serviceDuration;
                 servDurs[client - 1] = serviceDuration;
             }
@@ -149,7 +153,8 @@ ProblemData ProblemData::fromFile(std::string const &where)
         {
             for (size_t row = 0; row <= numClients; row++)
             {
-                int client, release;
+                int client;
+                TTime release;
                 inputFile >> client >> release;
                 releases[client - 1] = release;
             }
@@ -164,7 +169,8 @@ ProblemData ProblemData::fromFile(std::string const &where)
         {
             for (size_t row = 0; row <= numClients; row++)
             {
-                int client, twEarly, twLate;
+                int client;
+                TTime twEarly, twLate;
                 inputFile >> client >> twEarly >> twLate;
                 timeWindows[client - 1] = {twEarly, twLate};
 
@@ -211,7 +217,7 @@ ProblemData ProblemData::fromFile(std::string const &where)
 
                 // Since this is not necessarily integral, we multiply the
                 // resulting number by ten to provide one decimal precision.
-                distMat[i][j] = static_cast<int>(10 * dist);
+                distMat[i][j] = static_cast<TDist>(10 * dist);
             }
         }
 
@@ -236,14 +242,14 @@ ProblemData ProblemData::fromFile(std::string const &where)
             releases};
 }
 
-ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
+ProblemData::ProblemData(std::vector<std::pair<TDist, TDist>> const &coords,
                          std::vector<int> const &demands,
                          size_t numVehicles,
                          size_t vehicleCap,
-                         std::vector<std::pair<int, int>> const &timeWindows,
-                         std::vector<int> const &servDurs,
-                         std::vector<std::vector<int>> const &distMat,
-                         std::vector<int> const &releases)
+                         std::vector<std::pair<TTime, TTime>> const &timeWindows,
+                         std::vector<TTime> const &servDurs,
+                         std::vector<std::vector<TDist>> const &distMat,
+                         std::vector<TTime> const &releases)
     : dist_(distMat),
       clients_(coords.size()),
       numClients_(static_cast<int>(coords.size()) - 1),

@@ -4,7 +4,7 @@ using TWS = TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1)
 {
-    auto const currTimeWarp = penaltyManager.twPenalty(R1->timeWarp());
+    auto const currTimeWarpPenalty = penaltyManager.twPenalty(R1->timeWarp());
 
     for (Node *U = n(R1->depot); !U->isDepot(); U = n(U))
     {
@@ -13,7 +13,7 @@ void SwapStar::updateRemovalCosts(Route *R1)
             = data.dist(p(U)->client, n(U)->client)
               - data.dist(p(U)->client, U->client)
               - data.dist(U->client, n(U)->client)
-              + penaltyManager.twPenalty(twData.totalTimeWarp()) - currTimeWarp;
+              + penaltyManager.twPenalty(twData.totalTimeWarp()) - currTimeWarpPenalty;
     }
 }
 
@@ -26,7 +26,7 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
 
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData = TWS::merge(R->depot->twBefore, U->tw, n(R->depot)->twAfter);
-    int cost = data.dist(0, U->client)
+    TCost cost = data.dist(0, U->client)
                + data.dist(U->client, n(R->depot)->client)
                - data.dist(0, n(R->depot)->client)
                + penaltyManager.twPenalty(twData.totalTimeWarp())
@@ -38,7 +38,7 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
     {
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(V->twBefore, U->tw, n(V)->twAfter);
-        int deltaCost = data.dist(V->client, U->client)
+        TCost deltaCost = data.dist(V->client, U->client)
                         + data.dist(U->client, n(V)->client)
                         - data.dist(V->client, n(V)->client)
                         + penaltyManager.twPenalty(twData.totalTimeWarp())
@@ -48,7 +48,7 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
     }
 }
 
-std::pair<int, Node *> SwapStar::getBestInsertPoint(Node *U, Node *V)
+std::pair<TCost, Node *> SwapStar::getBestInsertPoint(Node *U, Node *V)
 {
     auto &best_ = cache(V->route->idx, U->client);
 
@@ -61,7 +61,7 @@ std::pair<int, Node *> SwapStar::getBestInsertPoint(Node *U, Node *V)
 
     // As a fallback option, we consider inserting in the place of V
     auto const twData = TWS::merge(p(V)->twBefore, U->tw, n(V)->twAfter);
-    int deltaCost = data.dist(p(V)->client, U->client)
+    TCost deltaCost = data.dist(p(V)->client, U->client)
                     + data.dist(U->client, n(V)->client)
                     - data.dist(p(V)->client, n(V)->client)
                     + penaltyManager.twPenalty(twData.totalTimeWarp())
@@ -76,7 +76,7 @@ void SwapStar::init(Individual const &indiv)
     std::fill(updated.begin(), updated.end(), true);
 }
 
-int SwapStar::evaluate(Route *routeU, Route *routeV)
+TCost SwapStar::evaluate(Route *routeU, Route *routeV)
 {
     best = {};
 
@@ -101,7 +101,7 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
     for (Node *U = n(routeU->depot); !U->isDepot(); U = n(U))
         for (Node *V = n(routeV->depot); !V->isDepot(); V = n(V))
         {
-            int deltaCost = 0;
+            TCost deltaCost = 0;
 
             int const uDemand = data.client(U->client).demand;
             int const vDemand = data.client(V->client).demand;
@@ -148,15 +148,15 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
-    int const current = data.dist(p(best.U)->client, best.U->client)
+    TDist const current = data.dist(p(best.U)->client, best.U->client)
                         + data.dist(best.U->client, n(best.U)->client)
                         + data.dist(p(best.V)->client, best.V->client)
                         + data.dist(best.V->client, n(best.V)->client);
 
-    int const proposed = data.dist(best.VAfter->client, best.V->client)
+    TDist const proposed = data.dist(best.VAfter->client, best.V->client)
                          + data.dist(best.UAfter->client, best.U->client);
 
-    int deltaCost = proposed - current;
+    TCost deltaCost = proposed - current;
 
     if (best.VAfter == p(best.U))
     {

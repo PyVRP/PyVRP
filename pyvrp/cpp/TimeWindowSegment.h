@@ -3,18 +3,28 @@
 
 #include "Matrix.h"
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    Matrix<int> const *dist = nullptr;  // Distance matrix
+    Matrix<TTime> const *durationMatrix = nullptr;  // Duration matrix
     int idxFirst = 0;  // Index of the first client in the segment
     int idxLast = 0;   // Index of the last client in the segment
-    int duration = 0;  // Total duration, incl. waiting and servicing
-    int timeWarp = 0;  // Cumulative time warp
-    int twEarly = 0;   // Earliest visit moment of first client
-    int twLate = 0;    // Latest visit moment of last client
-    int release = 0;   // Release time; cannot leave depot earlier
+    TTime duration = 0;  // Total duration, incl. waiting and servicing
+    TTime timeWarp = 0;  // Cumulative time warp
+    TTime twEarly = 0;   // Earliest visit moment of first client
+    TTime twLate = 0;    // Latest visit moment of last client
+    TTime release = 0;   // Release time; cannot leave depot earlier
 
     [[nodiscard]] inline TWS merge(TWS const &other) const;
 
@@ -26,24 +36,24 @@ public:
     /**
      * Returns the time warp along the segment, assuming we can depart in time.
      */
-    [[nodiscard]] inline int segmentTimeWarp() const;
+    [[nodiscard]] inline TTime segmentTimeWarp() const;
 
     /**
      * Total time warp, that is, the time warp along the the segment, and
      * potential time warp due to too late a release time.
      */
-    [[nodiscard]] inline int totalTimeWarp() const;
+    [[nodiscard]] inline TTime totalTimeWarp() const;
 
     TimeWindowSegment() = default;  // TODO get rid of this constructor
 
-    inline TimeWindowSegment(Matrix<int> const *dist,
+    inline TimeWindowSegment(Matrix<TTime> const *durationMatrix,
                              int idxFirst,
                              int idxLast,
-                             int duration,
-                             int timeWarp,
-                             int twEarly,
-                             int twLate,
-                             int release);
+                             TTime duration,
+                             TTime timeWarp,
+                             TTime twEarly,
+                             TTime twLate,
+                             TTime release);
 };
 
 template <typename... Args>
@@ -61,12 +71,12 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &first,
 
 TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
 {
-    int const distance = (*dist)(idxLast, other.idxFirst);
-    int const delta = duration - timeWarp + distance;
-    int const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
-    int const deltaTimeWarp = std::max(twEarly + delta - other.twLate, 0);
+    int const distance = (*durationMatrix)(idxLast, other.idxFirst);
+    TTime const delta = duration - timeWarp + distance;
+    TTime const deltaWaitTime = std::max(other.twEarly - delta - twLate, static_cast<TTime>(0));
+    TTime const deltaTimeWarp = std::max(twEarly + delta - other.twLate, static_cast<TTime>(0));
 
-    return {dist,
+    return {durationMatrix,
             idxFirst,
             other.idxLast,
             duration + other.duration + distance + deltaWaitTime,
@@ -76,22 +86,22 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
             std::max(release, other.release)};
 }
 
-int TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
+TTime TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
 
-int TimeWindowSegment::totalTimeWarp() const
+TTime TimeWindowSegment::totalTimeWarp() const
 {
-    return segmentTimeWarp() + std::max(release - twLate, 0);
+    return segmentTimeWarp() + std::max(release - twLate, static_cast<TTime>(0));
 }
 
-TimeWindowSegment::TimeWindowSegment(Matrix<int> const *dist,
+TimeWindowSegment::TimeWindowSegment(Matrix<TTime> const *durationMatrix,
                                      int idxFirst,
                                      int idxLast,
-                                     int duration,
-                                     int timeWarp,
-                                     int twEarly,
-                                     int twLate,
-                                     int release)
-    : dist(dist),
+                                     TTime duration,
+                                     TTime timeWarp,
+                                     TTime twEarly,
+                                     TTime twLate,
+                                     TTime release)
+    : durationMatrix(durationMatrix),
       idxFirst(idxFirst),
       idxLast(idxLast),
       duration(duration),

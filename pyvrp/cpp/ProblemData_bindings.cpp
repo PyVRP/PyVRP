@@ -17,21 +17,21 @@ PYBIND11_MODULE(ProblemData, m)
         .def_readonly("release_time", &ProblemData::Client::releaseTime);
 
     py::class_<ProblemData>(m, "ProblemData")
-        .def(py::init<std::vector<std::pair<int, int>> const &,
+        .def(py::init<std::vector<std::pair<TDist, TDist>> const &,
                       std::vector<int> const &,
                       int,
                       int,
-                      std::vector<std::pair<int, int>> const &,
-                      std::vector<int> const &,
-                      std::vector<std::vector<int>> const &,
-                      std::vector<int> const &>(),
+                      std::vector<std::pair<TTime, TTime>> const &,
+                      std::vector<TTime> const &,
+                      std::vector<std::vector<TDist>> const &,
+                      std::vector<TTime> const &>(),
              py::arg("coords"),
              py::arg("demands"),
              py::arg("nb_vehicles"),
              py::arg("vehicle_cap"),
              py::arg("time_windows"),
              py::arg("service_durations"),
-             py::arg("duration_matrix"),
+             py::arg("distance_matrix"),
              py::arg("release_times"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
@@ -43,8 +43,12 @@ PYBIND11_MODULE(ProblemData, m)
              py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
+        .def("duration", &ProblemData::duration, py::arg("first"), py::arg("second"))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
+             py::return_value_policy::reference)
+        .def("duration_matrix",
+             &ProblemData::durationMatrix,
              py::return_value_policy::reference)
         .def_static("from_file", &ProblemData::fromFile, py::arg("where"));
 }

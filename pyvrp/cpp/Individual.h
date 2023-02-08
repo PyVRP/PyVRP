@@ -8,6 +8,15 @@
 #include <string>
 #include <vector>
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
 class Individual
 {
     using Client = int;
@@ -15,9 +24,9 @@ class Individual
     using Routes = std::vector<Route>;
 
     size_t nbRoutes = 0;        // Number of routes
-    size_t distance = 0;        // Total distance
+    TDist distance = 0;        // Total distance
     size_t capacityExcess = 0;  // Total excess load over all routes
-    size_t timeWarp = 0;        // All route time warp of late arrivals
+    TTime timeWarp = 0;        // All route time warp of late arrivals
 
     ProblemData const *data;
     PenaltyManager const *penaltyManager;
@@ -35,7 +44,7 @@ public:
     /**
      * Returns this individual's objective (penalized cost).
      */
-    [[nodiscard]] size_t cost() const;
+    [[nodiscard]] TCost cost() const;
 
     /**
      * Returns the number of non-empty routes in this individual's solution.

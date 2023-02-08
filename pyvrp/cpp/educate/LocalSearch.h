@@ -12,6 +12,16 @@
 #include <functional>
 #include <vector>
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 struct LocalSearchParams
 {
     size_t const weightWaitTime;
@@ -79,7 +89,7 @@ class LocalSearch
     void enumerateSubpaths(Route &U);
 
     // Evaluates the path before -> <nodes in sub path> -> after
-    inline int evaluateSubpath(std::vector<size_t> const &subpath,
+    inline TCost evaluateSubpath(std::vector<size_t> const &subpath,
                                Node const *before,
                                Node const *after,
                                Route const &route) const;

@@ -8,38 +8,36 @@ namespace
 {
 struct InsertPos  // best insert position, used to plan unplanned clients
 {
-    int deltaCost;
+    TCost deltaCost;
     Route *route;
     size_t offset;
 };
 
 // Evaluates the cost change of inserting client between prev and next.
-int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
+TCost deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    int prevClientRelease = std::max(data.client(prev).releaseTime,
+    TTime prevClientRelease = std::max(data.client(prev).releaseTime,
                                      data.client(client).releaseTime);
-    int prevEarliestArrival = std::max(prevClientRelease + data.dist(0, prev),
+    TTime prevEarliestArrival = std::max(prevClientRelease + data.duration(0, prev),
                                        data.client(prev).twEarly);
-    int prevEarliestFinish = prevEarliestArrival + data.client(prev).servDur;
-    int distPrevClient = data.dist(prev, client);
-    int clientLate = data.client(client).twLate;
+    TTime prevEarliestFinish = prevEarliestArrival + data.client(prev).servDur;
+    TTime clientLate = data.client(client).twLate;
 
-    if (prevEarliestFinish + distPrevClient >= clientLate)
-        return INT_MAX;
+    if (prevEarliestFinish + data.duration(prev, client) >= clientLate)
+        return static_cast<TCost>(INT_MAX);
 
-    int clientNextRelease = std::max(data.client(client).releaseTime,
+    TTime clientNextRelease = std::max(data.client(client).releaseTime,
                                      data.client(next).releaseTime);
-    int clientEarliestArrival = std::max(
-        clientNextRelease + data.dist(0, client), data.client(client).twEarly);
-    int clientEarliestFinish
+    TTime clientEarliestArrival = std::max(
+        clientNextRelease + data.duration(0, client), data.client(client).twEarly);
+    TTime clientEarliestFinish
         = clientEarliestArrival + data.client(client).servDur;
-    int distClientNext = data.dist(client, next);
     int nextLate = data.client(next).twLate;
 
-    if (clientEarliestFinish + distClientNext >= nextLate)
+    if (clientEarliestFinish + data.duration(client, next) >= nextLate)
         return INT_MAX;
 
-    return distPrevClient + distClientNext - data.dist(prev, next);
+    return data.dist(prev, client) + data.dist(client, next) - data.dist(prev, next);
 }
 }  // namespace
 
@@ -54,7 +52,7 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
-        InsertPos best = {INT_MAX, &routes.front(), 0};
+        InsertPos best = {static_cast<TCost>(INT_MAX), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {

@@ -222,12 +222,12 @@ void LocalSearch::enumerateSubpaths(Route &U)
     }
 }
 
-int LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
+TCost LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
                                  Node const *before,
                                  Node const *after,
                                  Route const &route) const
 {
-    auto totalDist = 0;
+    TDist totalDist = 0;
     auto tws = before->twBefore;
     auto from = before->client;
 
@@ -265,35 +265,35 @@ void LocalSearch::calculateNeighbours()
             // Compute proximity using Eq. 4 in Vidal 2012. The proximity is
             // computed by the distance, min. wait time and min. time warp
             // going from either i -> j or j -> i, whichever is the least.
-            int const maxRelease = std::max(data.client(i).releaseTime,
+            TTime const maxRelease = std::max(data.client(i).releaseTime,
                                             data.client(j).releaseTime);
 
             // Proximity from j to i
-            int const waitTime1 = data.client(i).twEarly - data.dist(j, i)
+            TTime const waitTime1 = data.client(i).twEarly - data.duration(j, i)
                                   - data.client(j).servDur
                                   - data.client(j).twLate;
 
-            int const earliestArrival1 = std::max(maxRelease + data.dist(0, j),
+            TTime const earliestArrival1 = std::max(maxRelease + data.duration(0, j),
                                                   data.client(j).twEarly);
 
-            int const timeWarp1 = earliestArrival1 + data.client(j).servDur
-                                  + data.dist(j, i) - data.client(i).twLate;
+            TTime const timeWarp1 = earliestArrival1 + data.client(j).servDur
+                                  + data.duration(j, i) - data.client(i).twLate;
 
-            int const prox1 = data.dist(j, i)
-                              + params.weightWaitTime * std::max(0, waitTime1)
-                              + params.weightTimeWarp * std::max(0, timeWarp1);
+            TTime const prox1 = data.duration(j, i)
+                              + params.weightWaitTime * std::max(static_cast<TTime>(0), waitTime1)
+                              + params.weightTimeWarp * std::max(static_cast<TTime>(0), timeWarp1);
 
             // Proximity from i to j
-            int const waitTime2 = data.client(j).twEarly - data.dist(i, j)
+            TTime const waitTime2 = data.client(j).twEarly - data.duration(i, j)
                                   - data.client(i).servDur
                                   - data.client(i).twLate;
-            int const earliestArrival2 = std::max(maxRelease + data.dist(0, i),
+            TTime const earliestArrival2 = std::max(maxRelease + data.duration(0, i),
                                                   data.client(i).twEarly);
-            int const timeWarp2 = earliestArrival2 + data.client(i).servDur
-                                  + data.dist(i, j) - data.client(j).twLate;
-            int const prox2 = data.dist(i, j)
-                              + params.weightWaitTime * std::max(0, waitTime2)
-                              + params.weightTimeWarp * std::max(0, timeWarp2);
+            TTime const timeWarp2 = earliestArrival2 + data.client(i).servDur
+                                  + data.duration(i, j) - data.client(j).twLate;
+            TTime const prox2 = data.duration(i, j)
+                              + params.weightWaitTime * std::max(static_cast<TTime>(0), waitTime2)
+                              + params.weightTimeWarp * std::max(static_cast<TTime>(0), timeWarp2);
 
             proximity.emplace_back(std::min(prox1, prox2), j);
         }
@@ -323,7 +323,7 @@ void LocalSearch::calculateNeighbours()
 void LocalSearch::loadIndividual(Individual const &indiv)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
-        clients[client].tw = {&data.distanceMatrix(),
+        clients[client].tw = {&data.durationMatrix(),
                               static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).servDur,

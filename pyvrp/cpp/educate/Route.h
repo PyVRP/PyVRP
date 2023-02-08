@@ -9,6 +9,16 @@
 #include <cassert>
 #include <iosfwd>
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 class Route
 {
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
@@ -16,7 +26,7 @@ class Route
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
-    int timeWarp_;             // Current route time warp.
+    TTime timeWarp_;             // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
@@ -69,7 +79,7 @@ public:  // TODO make fields private
     /**
      * @return Total time warp on this route.
      */
-    [[nodiscard]] inline int timeWarp() const;
+    [[nodiscard]] inline TTime timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -90,7 +100,7 @@ public:  // TODO make fields private
     /**
      * Calculates the distance for segment [start, end].
      */
-    [[nodiscard]] inline int distBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline TDist distBetween(size_t start, size_t end) const;
 
     /**
      * Calculates the load for segment [start, end].
@@ -121,7 +131,7 @@ Node *Route::operator[](size_t position) const
 
 int Route::load() const { return load_; }
 
-int Route::timeWarp() const { return timeWarp_; }
+TTime Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 
@@ -142,11 +152,11 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     return tws;
 }
 
-int Route::distBetween(size_t start, size_t end) const
+TDist Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
-    auto const startDist = start == 0 ? 0 : nodes[start - 1]->cumulatedDistance;
+    auto const startDist = start == 0 ? static_cast<TDist>(0) : nodes[start - 1]->cumulatedDistance;
     auto const endDist = nodes[end - 1]->cumulatedDistance;
 
     assert(startDist <= endDist);

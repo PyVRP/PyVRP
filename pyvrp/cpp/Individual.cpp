@@ -24,15 +24,15 @@ void Individual::evaluateCompleteCost()
 
         nbRoutes++;
 
-        int lastRelease = 0;
+        TTime lastRelease = 0;
         for (auto const idx : route)
             lastRelease = std::max(lastRelease, data->client(idx).releaseTime);
 
-        int rDist = data->dist(0, route[0]);
-        int rTimeWarp = 0;
+        TDist rDist = data->dist(0, route[0]);
+        TTime rTimeWarp = 0;
 
         int load = data->client(route[0]).demand;
-        int time = lastRelease + rDist;
+        TTime time = lastRelease + data->duration(0, route[0]);
 
         if (time < data->client(route[0]).twEarly)
             time = data->client(route[0]).twEarly;
@@ -51,7 +51,7 @@ void Individual::evaluateCompleteCost()
             load += data->client(route[idx]).demand;
 
             time += data->client(route[idx - 1]).servDur
-                    + data->dist(route[idx - 1], route[idx]);
+                    + data->duration(route[idx - 1], route[idx]);
 
             // Add possible waiting time
             if (time < data->client(route[idx]).twEarly)
@@ -68,12 +68,11 @@ void Individual::evaluateCompleteCost()
         // For the last client, the successors is the depot. Also update the
         // rDist and time
         rDist += data->dist(route.back(), 0);
-        time
-            += data->client(route.back()).servDur + data->dist(route.back(), 0);
+        time += data->client(route.back()).servDur + data->duration(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
-        rTimeWarp += std::max(time - data->depot().twLate, 0);
+        rTimeWarp += std::max(time - data->depot().twLate, static_cast<TTime>(0));
 
         // Whole solution stats
         distance += rDist;
@@ -84,7 +83,7 @@ void Individual::evaluateCompleteCost()
     }
 }
 
-size_t Individual::cost() const
+TCost Individual::cost() const
 {
     auto const load = data->vehicleCapacity() + capacityExcess;
     auto const loadPenalty = penaltyManager->loadPenalty(load);

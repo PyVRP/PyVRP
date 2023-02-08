@@ -5,6 +5,16 @@
 #include "PenaltyManager.h"
 #include "Route.h"
 
+#ifdef INT_PRECISION
+using TCost = int;
+using TDist = int;
+using TTime = int;
+#else
+using TCost = double;
+using TDist = double;
+using TTime = double;
+#endif
+
 template <typename Arg> class LocalSearchOperator
 {
 protected:
@@ -29,7 +39,7 @@ public:
      * cannot become negative at all. In that case, the returned (non-negative)
      * cost delta does not constitute a full evaluation.
      */
-    virtual int evaluate(Arg *U, Arg *V) { return false; }
+    virtual TCost evaluate(Arg *U, Arg *V) { return false; }
 
     /**
      * Applies this operator to the given arguments. For improvements, should
