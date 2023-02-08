@@ -251,7 +251,7 @@ void LocalSearch::calculateNeighbours()
 {
     // TODO clean up this method / rethink proximity determination
     auto proximities
-        = std::vector<std::vector<std::pair<int, int>>>(data.numClients() + 1);
+        = std::vector<std::vector<std::pair<TCost, int>>>(data.numClients() + 1);
 
     for (size_t i = 1; i <= data.numClients(); i++)  // exclude depot
     {
@@ -279,7 +279,7 @@ void LocalSearch::calculateNeighbours()
             TTime const timeWarp1 = earliestArrival1 + data.client(j).servDur
                                   + data.duration(j, i) - data.client(i).twLate;
 
-            TTime const prox1 = data.duration(j, i)
+            TCost const prox1 = data.dist(j, i)
                               + params.weightWaitTime * std::max(static_cast<TTime>(0), waitTime1)
                               + params.weightTimeWarp * std::max(static_cast<TTime>(0), timeWarp1);
 
@@ -291,7 +291,7 @@ void LocalSearch::calculateNeighbours()
                                                   data.client(i).twEarly);
             TTime const timeWarp2 = earliestArrival2 + data.client(i).servDur
                                   + data.duration(i, j) - data.client(j).twLate;
-            TTime const prox2 = data.duration(i, j)
+            TCost const prox2 = data.dist(i, j)
                               + params.weightWaitTime * std::max(static_cast<TTime>(0), waitTime2)
                               + params.weightTimeWarp * std::max(static_cast<TTime>(0), timeWarp2);
 
