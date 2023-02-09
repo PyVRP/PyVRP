@@ -11,6 +11,7 @@ try:
 except ModuleNotFoundError:
     raise ModuleNotFoundError("Install tqdm to use benchmark script.")
 
+from pyvrp import read
 from pyvrp.solve import solve
 
 
@@ -50,7 +51,7 @@ def parse_args():
 
 
 def _solve(data_loc, *args, **kwargs):
-    res = solve(data_loc, *args, **kwargs)
+    res = solve(read(data_loc), *args, **kwargs)
     instance_name = pathlib.Path(data_loc).stem
 
     return (

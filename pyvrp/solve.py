@@ -7,11 +7,11 @@ from pyvrp import (
     Population,
     ProblemData,
     XorShift128,
-    read,
 )
 from pyvrp.crossover import selective_route_exchange
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.educate import NODE_OPERATORS, ROUTE_OPERATORS, LocalSearch
+from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime, StoppingCriterion
 
 
@@ -19,8 +19,15 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="pyvrp.solve")
 
     parser.add_argument("data_loc")
-    parser.add_argument("--instance_format", type=str, default="vrplib")
-    parser.add_argument("--round_func", type=str, default="none")
+    parser.add_argument(
+        "--instance_format",
+        type=str,
+        choices=["vrplib", "solomon"],
+        default="vrplib",
+    )
+    parser.add_argument(
+        "--round_func", type=str, default="none", choices=ROUND_FUNCS.keys()
+    )
 
     parser.add_argument("--seed", required=True, type=int)
 
@@ -67,11 +74,7 @@ def solve(
 
 def main():
     args = parse_args()
-    data = read(
-        args.data_loc,
-        instance_format=args.instance_format,
-        round_func=args.round_func,
-    )
+    data = read(args.data_loc, args.instance_format, args.round_func)
     res = solve(data, **vars(args))
 
     print(res)
