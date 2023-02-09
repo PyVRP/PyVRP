@@ -6,17 +6,17 @@ from pyvrp import ProblemData
 
 from .plot_coordinates import plot_coordinates
 from .plot_demands import plot_demands
-from .plot_timewindows import plot_timewindows
+from .plot_time_windows import plot_time_windows
 
 
 def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
     """
-    Plots coordinates, time windows and demands for an instance.
+    Plots client coordinate, time window and demand data of the given instance.
 
     Parameters
     ----------
     data
-        Data instance for which to plot coordinates, time windows and demands.
+        Data instance.
     fig, optional
         Optional Figure to draw on. One will be created if not provided.
     """
@@ -29,7 +29,7 @@ def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
     # client and depot locations on a grid.
     gs = fig.add_gridspec(2, 2, width_ratios=(2 / 5, 3 / 5))
 
-    plot_timewindows(data, ax=fig.add_subplot(gs[0, 0]))
+    plot_time_windows(data, ax=fig.add_subplot(gs[0, 0]))
     plot_demands(data, ax=fig.add_subplot(gs[1, 0]))
     plot_coordinates(data, ax=fig.add_subplot(gs[:, 1]))
 

@@ -17,12 +17,11 @@ def plot_demands(
     Parameters
     ----------
     data
-        Data instance
+        Data instance.
     title, optional
-        Title to add to the plot
+        Title to add to the plot.
     ax, optional
-        Axes object to draw the plot on. One will be created if not
-        provided.
+        Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:
         _, ax = plt.subplots()
@@ -37,8 +36,9 @@ def plot_demands(
     if title is None:
         title = (
             f"Demands (cap = {data.vehicle_capacity}, "
-            + "{data.vehicle_capacity / demand.mean():.2f} stops/route)"
+            + f"{data.vehicle_capacity / demand.mean():.2f} stops/route)"
         )
+
     ax.set_title(title)
     ax.set_xlabel("Client (sorted by demand)")
     ax.set_ylabel("Demand")

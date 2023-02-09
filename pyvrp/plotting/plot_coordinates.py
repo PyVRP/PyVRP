@@ -17,12 +17,11 @@ def plot_coordinates(
     Parameters
     ----------
     data
-        Data instance
+        Data instance.
     title, optional
-        Title to add to the plot
+        Title to add to the plot.
     ax, optional
-        Axes object to draw the plot on. One will be created if not
-        provided.
+        Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:
         _, ax = plt.subplots()

@@ -7,4 +7,4 @@ from .plot_result import plot_result
 from .plot_route_schedule import plot_route_schedule
 from .plot_runtimes import plot_runtimes
 from .plot_solution import plot_solution
-from .plot_timewindows import plot_timewindows
+from .plot_time_windows import plot_time_windows

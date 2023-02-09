@@ -7,23 +7,22 @@ from matplotlib.collections import LineCollection
 from pyvrp import ProblemData
 
 
-def plot_timewindows(
+def plot_time_windows(
     data: ProblemData,
     title: str = "Time windows",
     ax: Optional[plt.Axes] = None,
 ):
     """
-    Plots time windows for clients, as vertical bars sorted by time window.
+    Plots client time windows, as vertical bars sorted by time window.
 
     Parameters
     ----------
     data
-        Data instance
+        Data instance.
     title, optional
-        Title to add to the plot
+        Title to add to the plot.
     ax, optional
-        Axes object to draw the plot on. One will be created if not
-        provided.
+        Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:
         _, ax = plt.subplots()

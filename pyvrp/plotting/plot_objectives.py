@@ -20,13 +20,11 @@ def plot_objectives(
     result
         Result for which to plot objectives.
     num_to_skip, optional
-        Number of initial iterations to skip in the plot. These early
-        iterations typically have very high objective values, and obscure
-        what's going on later in the search. The default skips the first 5%
-        of iterations.
+        Number of initial iterations to skip when plotting. Early iterations
+        often have very high objective values, and obscure what's going on
+        later in the search. The default skips the first 5% of iterations.
     ax, optional
-        Axes object to draw the plot on. One will be created if not
-        provided.
+        Axes object to draw the plot on. One will be created if not provided.
 
     Raises
     ------

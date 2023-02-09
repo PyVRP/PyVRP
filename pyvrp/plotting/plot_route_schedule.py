@@ -18,25 +18,26 @@ def plot_route_schedule(
     Plots a route schedule. This function plots multiple time statistics
     as a function of distance traveled:
 
-    Solid: earliest possible trajectory / time (using timewarp if infeasible)
-    Shaded: slack up to latest possible trajectory / time (only if no timewarp)
-    Dash-dotted: driving + service time, excluding wait time and timewarp
-    Dotted: driving time only
-    Grey shaded background: remaining load in vehicle (on secondary y-axis)
+    * Solid: earliest possible trajectory / time, using time warp if the route
+      is infeasible.
+    * Shaded: slack up to latest possible trajectory / time, only if no time
+      warp on the route.
+    * Dash-dotted: driving and service time, excluding wait time and time warp.
+    * Dotted: pure driving time.
+    * Grey shaded background: remaining load in the vehicle.
 
     Parameters
     ----------
     data
         Data instance for which to plot the route schedule.
     route
-        Route (list of indices) to plot schedule for.
-    legend
-        Whether or not to show the legends
+        Route (list of clients) whose schedule to plot.
+    legend, optional
+        Whether or not to show the legends. Default True.
     title, optional
-        Title to add to the plot
+        Title to add to the plot.
     ax, optional
-        Axes object to draw the plot on. One will be created if not
-        provided.
+        Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:
         _, ax = plt.subplots()
@@ -46,7 +47,6 @@ def plot_route_schedule(
     start_time = max(
         [depot.tw_early] + [data.client(idx).release_time for idx in route]
     )
-    # Interpret depot.service_duration as loading duration, typically 0
 
     # Initialize tracking variables
     t = start_time

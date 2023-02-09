@@ -13,7 +13,7 @@ def plot_solution(
     ax: Optional[plt.Axes] = None,
 ):
     """
-    Plots the best solution.
+    Plots the given solution.
 
     Parameters
     ----------
@@ -21,11 +21,11 @@ def plot_solution(
         Solution to plot.
     data
         Data instance underlying the solution.
-    plot_customers
-        Whether to plot customers as dots (default plots only routes)
+    plot_customers, optional
+        Whether to plot customers as dots. Default False, which plots only the
+        solution's routes.
     ax, optional
-        Axes object to draw the plot on. One will be created if not
-        provided.
+        Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:
         _, ax = plt.subplots()
