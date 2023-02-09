@@ -4,7 +4,8 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.9"
-
-python:
-  install:
-    - requirements: docs/requirements.txt
+  commands:
+    - pip install poetry
+    - poetry install --with docs
+    - (cd docs && poetry run make html)
+    - mv docs/build/html _readthedocs/ 

@@ -2,11 +2,11 @@
 
 This directory hosts the documentation. 
 We use Sphinx for this.
-The documentation has a few unique dependencies that are listed in the `requirements.txt` file.
-These cannot be placed in the top-level `pyproject.toml` file, because we also use readthedocs to render our documentation, and they do not work nicely with poetry.
+The documentation has a few unique dependencies that are listed in the optional `docs` group in the top-level `pyproject.toml`.
+If you want to build the documentation, make sure to install that group (using `poetry install --with docs` or `--only docs`).
 
 The Makefile in this directory can be used to build the documentation.
-Running the command `make help` from this directory provides an overview of the available options.
-In particular `make html` is useful, as that will build the documentation in the exact same way as it will be displayed on readthedocs later.
+Running the command `poetry run make help` from this directory provides an overview of the available options.
+In particular `poetry run make html` is useful, as that will build the documentation in the exact same way as it will be displayed on readthedocs later.
 
 Finally, all Sphinx-related settings are configured in `docs/source/conf.py`.
