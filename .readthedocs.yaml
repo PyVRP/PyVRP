@@ -7,5 +7,5 @@ build:
   commands:
     - pip install poetry
     - poetry install --with docs
-    - (cd docs && poetry run make html)
+    - poetry run make html --directory=docs
     - mv docs/build/html _readthedocs/ 

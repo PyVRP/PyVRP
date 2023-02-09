@@ -9,4 +9,6 @@ The Makefile in this directory can be used to build the documentation.
 Running the command `poetry run make help` from this directory provides an overview of the available options.
 In particular `poetry run make html` is useful, as that will build the documentation in the exact same way as it will be displayed on readthedocs later.
 
+> Alternatively, one can run `poetry run make html --directory=docs` from the project root as well.
+
 Finally, all Sphinx-related settings are configured in `docs/source/conf.py`.
