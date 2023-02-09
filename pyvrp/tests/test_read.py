@@ -152,7 +152,7 @@ def test_reading_RC208_instance():  # Solomon style instance
     assert_equal(data.client(1).demand, 20)
     assert_equal(data.client(1).tw_early, 3880)
     assert_equal(data.client(1).tw_late, 9110)
-    assert_equal(data.client(1).serv_dur, 100)
+    assert_equal(data.client(1).service_duration, 100)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -166,5 +166,5 @@ def test_reading_RC208_instance():  # Solomon style instance
     assert_equal(data.dist(1, 0), 380)
 
     for client in range(1, data.num_clients + 1):  # excl. depot
-        assert_equal(data.client(client).serv_dur, 100)
+        assert_equal(data.client(client).service_duration, 100)
         assert_equal(data.client(client).release_time, 0)

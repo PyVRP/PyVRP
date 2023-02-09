@@ -46,7 +46,7 @@ def plot_route_schedule(
     start_time = max(
         [depot.tw_early] + [data.client(idx).release_time for idx in route]
     )
-    # Interpret depot.serv_dur as loading duration, typically 0
+    # Interpret depot.service_duration as loading duration, typically 0
 
     # Initialize tracking variables
     t = start_time
@@ -75,8 +75,8 @@ def plot_route_schedule(
 
     add_traces(dist, t, drive_time, serv_time, load)
 
-    t += depot.serv_dur
-    serv_time += depot.serv_dur
+    t += depot.service_duration
+    serv_time += depot.service_duration
 
     add_traces(dist, t, drive_time, serv_time, load)
 
@@ -106,8 +106,8 @@ def plot_route_schedule(
         add_traces(dist, t, drive_time, serv_time, load)
 
         if idx != 0:  # Don't plot service and timewindow for return to depot
-            t += stop.serv_dur
-            serv_time += stop.serv_dur
+            t += stop.service_duration
+            serv_time += stop.service_duration
 
             add_traces(dist, t, drive_time, serv_time, load)
 

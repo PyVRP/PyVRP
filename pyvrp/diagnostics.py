@@ -44,8 +44,8 @@ def get_route_statistics(
     start_time = max(
         [depot.tw_early] + [data.client(idx).release_time for idx in route]
     )
-    # Interpret depot.serv_dur as loading duration, typically 0
-    current_time = start_time + depot.serv_dur
+    # Interpret depot.service_duration as loading duration, typically 0
+    current_time = start_time + depot.service_duration
     wait_time = 0
     time_warp = 0
     distance = 0
@@ -66,7 +66,7 @@ def get_route_statistics(
             current_time = stop.tw_late
 
         if idx != 0:  # Don't count final depot
-            current_time += stop.serv_dur
+            current_time += stop.service_duration
         prev_idx = idx
 
     demand = sum([data.client(idx).demand for idx in route])
@@ -77,8 +77,8 @@ def get_route_statistics(
         duration=current_time - start_time,
         timewarp=time_warp,
         wait_time=wait_time,
-        service_time=depot.serv_dur
-        + sum([data.client(idx).serv_dur for idx in route]),
+        service_time=depot.service_duration
+        + sum([data.client(idx).service_duration for idx in route]),
         num_stops=len(route),
         total_demand=demand,
         fillrate=demand / data.vehicle_capacity,
