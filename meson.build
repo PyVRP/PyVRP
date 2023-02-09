@@ -33,12 +33,14 @@ endif
 # Next we get the extension dependencies. These are pretty simple: we only
 # depend on Python (duh!) and pybind11.
 py = import('python').find_installation()
-pybind11 = dependency('pybind11')
+pybind11 = dependency('pybind11', required: false)
 
 if not pybind11.found()
     # Fallback: this looks for the pybind11 header files using pybind11-config.
     # Getting pybind11 using Meson's dependency mechanism is nicer, but that
     # sometimes fails even when pybind11 is actually available on the system.
+    message('Could not find pybind11 as a dependency: trying headers.')
+
     pybind11 = find_program('pybind11-config')
     pybind11 = run_command(pybind11, ['--includes'], check: true)
     pybind11 = pybind11.stdout().split('-I')[-1].strip()
