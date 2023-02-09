@@ -45,12 +45,12 @@ void Individual::evaluateCompleteCost()
 
         for (size_t idx = 1; idx < route.size(); idx++)
         {
-            // Sum the rDist, load, servDur and time associated with the vehicle
-            // traveling from the depot to the next client
+            // Sum the rDist, load, serviceDuration and time associated with the
+            // vehicle traveling from the depot to the next client
             rDist += data->dist(route[idx - 1], route[idx]);
             load += data->client(route[idx]).demand;
 
-            time += data->client(route[idx - 1]).servDur
+            time += data->client(route[idx - 1]).serviceDuration
                     + data->dist(route[idx - 1], route[idx]);
 
             // Add possible waiting time
@@ -68,8 +68,8 @@ void Individual::evaluateCompleteCost()
         // For the last client, the successors is the depot. Also update the
         // rDist and time
         rDist += data->dist(route.back(), 0);
-        time
-            += data->client(route.back()).servDur + data->dist(route.back(), 0);
+        time += data->client(route.back()).serviceDuration
+                + data->dist(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
@@ -124,8 +124,8 @@ void Individual::makeNeighbours()
 
 bool Individual::operator==(Individual const &other) const
 {
-    // First compare costs, since that's a quick and cheap check. Only when 
-    // the costs are the same do we compare the routes.  
+    // First compare costs, since that's a quick and cheap check. Only when
+    // the costs are the same do we compare the routes.
     return cost() == other.cost() && routes_ == other.routes_;
 }
 

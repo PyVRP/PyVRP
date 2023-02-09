@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.abspath("../../"))
 now = datetime.date.today()
 
 project = "PyVRP"
-author = "PyVRP contributors"
-copyright = f"2019 - {now.year}, {author}"
+authors = "PyVRP contributors"
+copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
@@ -27,18 +27,25 @@ for file in glob.iglob("../../examples/*.ipynb"):
     print(f"Copy {path.name} into docs/source/examples/")
     shutil.copy2(path, f"examples/{path.name}")
 
-# -- Autodoc
+# -- Autoapi
 
-autoclass_content = "class"
+autoapi_type = "python"
+autoapi_dirs = ["../../pyvrp"]
+autoapi_options = ["members", "undoc-members", "special-members"]
+autoapi_ignore = ["*test_*"]
 
-autodoc_member_order = "bysource"
+autoapi_generate_api_docs = False
+autoapi_add_toctree_entry = False
+autoapi_add_objects_to_toctree = False
 
-autodoc_default_flags = ["members"]
+autoapi_python_class_content = "class"
+autoapi_member_order = "bysource"
 
 # -- Numpydoc
 
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
+napoleon_include_special_with_doc = True
 
 # -- nbsphinx
 
@@ -50,7 +57,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    # "sphinx.ext.autosummary",
+    "autoapi.extension",
     "sphinx.ext.intersphinx",
     "sphinx_rtd_theme",
     "nbsphinx",
@@ -68,6 +75,8 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ["std"]
 
 templates_path = ["_templates"]
+
+add_module_names = False
 
 # -- Options for HTML output
 

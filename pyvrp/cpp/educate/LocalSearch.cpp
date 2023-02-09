@@ -270,13 +270,14 @@ void LocalSearch::calculateNeighbours()
 
             // Proximity from j to i
             int const waitTime1 = data.client(i).twEarly - data.dist(j, i)
-                                  - data.client(j).servDur
+                                  - data.client(j).serviceDuration
                                   - data.client(j).twLate;
 
             int const earliestArrival1 = std::max(maxRelease + data.dist(0, j),
                                                   data.client(j).twEarly);
 
-            int const timeWarp1 = earliestArrival1 + data.client(j).servDur
+            int const timeWarp1 = earliestArrival1
+                                  + data.client(j).serviceDuration
                                   + data.dist(j, i) - data.client(i).twLate;
 
             int const prox1 = data.dist(j, i)
@@ -285,11 +286,12 @@ void LocalSearch::calculateNeighbours()
 
             // Proximity from i to j
             int const waitTime2 = data.client(j).twEarly - data.dist(i, j)
-                                  - data.client(i).servDur
+                                  - data.client(i).serviceDuration
                                   - data.client(i).twLate;
             int const earliestArrival2 = std::max(maxRelease + data.dist(0, i),
                                                   data.client(i).twEarly);
-            int const timeWarp2 = earliestArrival2 + data.client(i).servDur
+            int const timeWarp2 = earliestArrival2
+                                  + data.client(i).serviceDuration
                                   + data.dist(i, j) - data.client(j).twLate;
             int const prox2 = data.dist(i, j)
                               + params.weightWaitTime * std::max(0, waitTime2)
@@ -326,7 +328,7 @@ void LocalSearch::loadIndividual(Individual const &indiv)
         clients[client].tw = {&data.distanceMatrix(),
                               static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
-                              data.client(client).servDur,
+                              data.client(client).serviceDuration,
                               0,
                               data.client(client).twEarly,
                               data.client(client).twLate,

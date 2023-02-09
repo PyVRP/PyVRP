@@ -94,7 +94,7 @@ def test_reading_OkSmall_instance():
     expected = [0, 360, 360, 420, 360]
 
     for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).serv_dur, expected[client])
+        assert_equal(data.client(client).service_duration, expected[client])
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB
@@ -126,7 +126,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     max_int = np.iinfo(np.int32).max
 
     for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).serv_dur, 0)
+        assert_equal(data.client(client).service_duration, 0)
         assert_equal(data.client(client).tw_early, 0)
         assert_equal(data.client(client).tw_late, max_int)
         assert_equal(data.client(client).release_time, 0)
