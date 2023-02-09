@@ -20,7 +20,8 @@ int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
                                      data.client(client).releaseTime);
     int prevEarliestArrival = std::max(prevClientRelease + data.dist(0, prev),
                                        data.client(prev).twEarly);
-    int prevEarliestFinish = prevEarliestArrival + data.client(prev).servDur;
+    int prevEarliestFinish
+        = prevEarliestArrival + data.client(prev).serviceDuration;
     int distPrevClient = data.dist(prev, client);
     int clientLate = data.client(client).twLate;
 
@@ -32,7 +33,7 @@ int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     int clientEarliestArrival = std::max(
         clientNextRelease + data.dist(0, client), data.client(client).twEarly);
     int clientEarliestFinish
-        = clientEarliestArrival + data.client(client).servDur;
+        = clientEarliestArrival + data.client(client).serviceDuration;
     int distClientNext = data.dist(client, next);
     int nextLate = data.client(next).twLate;
 

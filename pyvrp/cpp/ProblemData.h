@@ -12,14 +12,14 @@ class ProblemData
 public:
     struct Client
     {
-        int x;            // Coordinate X
-        int y;            // Coordinate Y
-        int servDur;      // Service duration
-        int demand;       // Demand
-        int twEarly;      // Earliest arrival (when using time windows)
-        int twLate;       // Latest arrival (when using time windows)
-        int releaseTime;  // Routes with this client cannot leave depot before
-                          // this time
+        int x;                // Coordinate X
+        int y;                // Coordinate Y
+        int serviceDuration;  // Service duration
+        int demand;           // Demand
+        int twEarly;          // Earliest arrival (when using time windows)
+        int twLate;           // Latest arrival (when using time windows)
+        int releaseTime;      // Routes with this client must leave depot after
+                              // this time
     };
 
 private:

@@ -164,6 +164,7 @@ dmypy.json
 # Compiled or generated assets
 debug/
 release/
+_readthedocs/
 
 # Data files
 data/
