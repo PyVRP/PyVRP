@@ -8,4 +8,5 @@ build:
     - pip install poetry
     - poetry install --with docs
     - poetry run make html --directory=docs
+    - mkdir _readthedocs/
     - mv docs/build/html _readthedocs/ 
