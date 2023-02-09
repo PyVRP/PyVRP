@@ -1,9 +1,9 @@
 .. module:: pyvrp.crossover
-   :synopsis: Crossover
+   :synopsis: Crossover operators
 
 
-Crossover
-=========
+Crossover operators
+===================
 
 The :mod:`pyvrp.crossover` module provides operators that are responsible for generating a new offspring :class:`pyvrp.Individual.Individual` solution from two parent solutions.
 
