@@ -168,3 +168,6 @@ def test_reading_RC208_instance():  # Solomon style instance
     for client in range(1, data.num_clients + 1):  # excl. depot
         assert_equal(data.client(client).service_duration, 100)
         assert_equal(data.client(client).release_time, 0)
+
+
+# TODO test round funcs

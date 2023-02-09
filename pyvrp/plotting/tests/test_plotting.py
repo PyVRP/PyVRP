@@ -16,9 +16,6 @@ def test_plotting_methods_raise_when_no_stats_available():
     assert_(not res.has_statistics())
 
     with assert_raises(StatisticsNotCollectedError):
-        plotting.plot_result(res, data)
-
-    with assert_raises(StatisticsNotCollectedError):
         plotting.plot_diversity(res)
 
     with assert_raises(StatisticsNotCollectedError):
@@ -27,5 +24,7 @@ def test_plotting_methods_raise_when_no_stats_available():
     with assert_raises(StatisticsNotCollectedError):
         plotting.plot_runtimes(res)
 
-    # This one should not raise, since it does not depend on statistics.
+    # These should not raise, since they do not depend on statistics
+    # (plot_solution) or optionally print statistics (plot_result).
     plotting.plot_solution(res.best, data)
+    plotting.plot_result(res, data)
