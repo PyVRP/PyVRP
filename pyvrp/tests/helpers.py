@@ -3,16 +3,27 @@ import time
 from functools import lru_cache
 
 from pyvrp.read import read as _read
+from pyvrp.read import read_solution as _read_solution
 
 
 @lru_cache
 def read(where: str, *args, **kwargs):
     """
-    Lightweight wrapper around ``pyvrp.read()``, reading files relative to the
-    current directory.
+    Lightweight wrapper around ``pyvrp.read()``, reading problem files
+    relative to the current directory.
     """
     this_dir = pathlib.Path(__file__).parent
     return _read(this_dir / where, *args, **kwargs)
+
+
+@lru_cache
+def read_solution(where: str, *args, **kwargs):
+    """
+    Lightweight wrapper around ``pyvrp.read()``, reading solutions files
+    relative to the current directory.
+    """
+    this_dir = pathlib.Path(__file__).parent
+    return _read_solution(this_dir / where, *args, **kwargs)
 
 
 def sleep(duration, get_now=time.perf_counter):

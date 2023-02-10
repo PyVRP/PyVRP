@@ -1,11 +1,14 @@
 import functools
 import pathlib
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, List, Union
 
 import numpy as np
 import vrplib
 
 from .ProblemData import ProblemData
+
+# Following vrplib, but we define it here so we can change it if desired
+Solution = Dict[str, Union[float, str, List]]
 
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
@@ -131,3 +134,22 @@ ROUND_FUNCS: Dict[str, _RoundingFunc] = {
     "dimacs": functools.partial(scale_and_truncate_to_decimals, decimals=1),
     "none": no_rounding,
 }
+
+
+def read_solution(where: Union[str, pathlib.Path]) -> Solution:
+    """
+    Reads a solution in VRPLIB format from file at the given location, and
+    returns it as a list of routes, i.e. a list of list of integer dices.
+
+    Parameters
+    ----------
+    where
+        File location to read. Assumes the solution in the file on the given
+        location is in VRPLIB solution format.
+
+    Returns
+    -------
+    Solution
+        Solution read from file.
+    """
+    return vrplib.read_solution(where)
