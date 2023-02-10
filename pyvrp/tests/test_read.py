@@ -18,8 +18,7 @@ from pyvrp.tests.helpers import read
         # ("data/DepotSectionDoesNotEndInMinusOne.txt", RuntimeError),
         ("data/MoreThanOneDepot.txt", ValueError),
         ("data/NonZeroDepotServiceDuration.txt", ValueError),
-        # TODO: release times not in VRBLIB format, so not supported by VRPLIB
-        # ("data/NonZeroDepotReleaseTime.txt", ValueError),
+        ("data/NonZeroDepotReleaseTime.txt", ValueError),
         ("data/NonZeroDepotOpenTimeWindow.txt", ValueError),
         ("data/NonZeroDepotDemand.txt", ValueError),
         # TODO: I think 0 length time window is allowed
