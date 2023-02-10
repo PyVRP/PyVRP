@@ -52,9 +52,9 @@ TODO
    .. autoapiclass:: ProblemData
       :members:
 
-.. autoapimodule:: pyvrp.read
+.. automodule:: pyvrp.read
 
-   .. autoapifunction:: read
+   .. autofunction:: read
 
 .. autoapimodule:: pyvrp.Result
 

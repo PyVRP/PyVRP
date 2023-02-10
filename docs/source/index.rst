@@ -17,4 +17,5 @@ TODO
    api/crossover
    api/diversity
    api/educate
+   api/plotting
    api/stop

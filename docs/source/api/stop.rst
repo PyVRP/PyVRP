@@ -10,14 +10,27 @@ These can be used to stop the :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`'
 
 All stopping criteria implement the :class:`~pyvrp.stop.StoppingCriterion.StoppingCriterion` protocol.
 
-.. autoapimodule:: pyvrp.stop.StoppingCriterion
-   :members:
+.. automodule:: pyvrp.stop.StoppingCriterion
 
-.. autoapimodule:: pyvrp.stop.MaxIterations
-   :members:
+   .. autoclass:: StoppingCriterion
+      :members:
 
-.. autoapimodule:: pyvrp.stop.MaxRuntime
-   :members:
+.. automodule:: pyvrp.stop.MaxIterations
 
-.. autoapimodule:: pyvrp.stop.NoImprovement
-   :members:
+   .. autoclass:: MaxIterations
+      :members:
+
+.. automodule:: pyvrp.stop.MaxRuntime
+
+   .. autoclass:: MaxRuntime
+      :members:
+
+.. automodule:: pyvrp.stop.NoImprovement
+
+   .. autoclass:: NoImprovement
+      :members:
+
+.. automodule:: pyvrp.stop.TimedNoImprovement
+
+   .. autoclass:: TimedNoImprovement
+      :members:
