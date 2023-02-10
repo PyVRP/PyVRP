@@ -83,7 +83,8 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-      - name: Archive test artifacts
+      - if: failure()  # Archive test artifacts if something fails
+        name: Archive test artifacts
         uses: actions/upload-artifact@v3
         with:
           name: test-plotting-images
