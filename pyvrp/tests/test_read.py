@@ -21,8 +21,6 @@ from pyvrp.tests.helpers import read
         ("data/NonZeroDepotReleaseTime.txt", ValueError),
         ("data/NonZeroDepotOpenTimeWindow.txt", ValueError),
         ("data/NonZeroDepotDemand.txt", ValueError),
-        # TODO: I think 0 length time window is allowed
-        # ("data/TimeWindowOpenEqualToClose.txt", RuntimeError),
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
