@@ -7,9 +7,7 @@ import vrplib
 
 from .ProblemData import ProblemData
 
-# Following vrplib, but we define it here so we can change it if desired
-Solution = Dict[str, Union[float, str, List]]
-
+_Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 INT_MAX = np.iinfo(np.int32).max
@@ -136,10 +134,10 @@ ROUND_FUNCS: Dict[str, _RoundingFunc] = {
 }
 
 
-def read_solution(where: Union[str, pathlib.Path]) -> Solution:
+def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     """
     Reads a solution in VRPLIB format from file at the given location, and
-    returns it as a list of routes, i.e. a list of list of integer dices.
+    returns the routes contained in it.
 
     Parameters
     ----------
@@ -149,7 +147,8 @@ def read_solution(where: Union[str, pathlib.Path]) -> Solution:
 
     Returns
     -------
-    Solution
-        Solution read from file.
+    list
+        List of routes, where each route is a list of client numbers.
     """
-    return vrplib.read_solution(where)
+    sol = vrplib.read_solution(str(where))
+    return sol["routes"]  # type: ignore

@@ -9,7 +9,7 @@ from pyvrp.read import read_solution as _read_solution
 @lru_cache
 def read(where: str, *args, **kwargs):
     """
-    Lightweight wrapper around ``pyvrp.read()``, reading problem files
+    Lightweight wrapper around ``pyvrp.read.read()``, reading problem files
     relative to the current directory.
     """
     this_dir = pathlib.Path(__file__).parent
@@ -19,8 +19,8 @@ def read(where: str, *args, **kwargs):
 @lru_cache
 def read_solution(where: str, *args, **kwargs):
     """
-    Lightweight wrapper around ``pyvrp.read()``, reading solutions files
-    relative to the current directory.
+    Lightweight wrapper around ``pyvrp.read.read_solution()``, reading solution
+    files relative to the current directory.
     """
     this_dir = pathlib.Path(__file__).parent
     return _read_solution(this_dir / where, *args, **kwargs)

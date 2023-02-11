@@ -1,16 +1,18 @@
+from matplotlib.testing.decorators import image_comparison
 from numpy.testing import assert_, assert_raises
 
-from pyvrp import Individual, PenaltyManager, plotting
+from pyvrp import Individual, PenaltyManager, Population, XorShift128, plotting
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
+from pyvrp.diversity import broken_pairs_distance
 from pyvrp.exceptions import StatisticsNotCollectedError
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import read, read_solution
 
 
 def test_plotting_methods_raise_when_no_stats_available():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    individual = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    individual = Individual(data, pm, [[1, 2, 3, 4]])
     res = Result(individual, Statistics(), 0, 0.0)
 
     assert_(not res.has_statistics())
@@ -28,3 +30,77 @@ def test_plotting_methods_raise_when_no_stats_available():
     # (plot_solution) or optionally print statistics (plot_result).
     plotting.plot_solution(res.best, data)
     plotting.plot_result(res, data)
+
+
+@image_comparison(
+    baseline_images=["plot_solution", "plot_solution_with_customers"],
+    remove_text=True,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_plot_solution():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    bks = read_solution("data/RC208.sol")
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    individual = Individual(data, pm, bks)
+
+    plotting.plot_solution(individual, data)
+    plotting.plot_solution(individual, data, plot_customers=True)
+
+
+@image_comparison(
+    baseline_images=["plot_result"],
+    remove_text=True,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_plot_result():
+    num_iterations = 100
+
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    bks = read_solution("data/RC208.sol")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    pop = Population(data, pm, rng, broken_pairs_distance)
+    stats = Statistics()
+
+    for i in range(num_iterations):
+        if i == num_iterations // 2:
+            # Make sure we insert a feasible solution
+            individual = Individual(data, pm, bks)
+        else:
+            individual = Individual(data, pm, rng)
+
+        pop.add(individual)
+        stats.collect_from(pop)
+
+        # Hacky to produce deterministic result
+        stats.runtimes[-1] = i % 3
+
+    res = Result(pop.get_best_found(), stats, num_iterations, 0.0)
+
+    plotting.plot_result(res, data)
+
+
+@image_comparison(
+    baseline_images=["plot_instance"],
+    remove_text=True,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_plot_instance():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    plotting.plot_instance(data)
+
+
+@image_comparison(
+    baseline_images=["plot_route_schedule"],
+    remove_text=True,
+    extensions=["png"],
+    style="mpl20",
+)
+def test_plot_route_schedule():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    bks = read_solution("data/RC208.sol")
+    plotting.plot_route_schedule(data, bks[0])

@@ -15,7 +15,7 @@ from pyvrp.tests.helpers import read
 
 @mark.parametrize(
     "routes, num_iterations, runtime",
-    [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4], [], []], 100, 54.2)],
+    [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4]], 100, 54.2)],
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
     data = read("data/OkSmall.txt")

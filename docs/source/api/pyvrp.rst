@@ -56,6 +56,8 @@ TODO
 
    .. autofunction:: read
 
+   .. autofunction:: read_solution
+
 .. autoapimodule:: pyvrp.Result
 
    .. autoapiclass:: Result
