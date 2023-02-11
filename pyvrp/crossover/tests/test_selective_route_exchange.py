@@ -23,7 +23,7 @@ def test_srex_move_all_routes():
     assert_equal(offspring.get_routes(), indiv2.get_routes())
 
 
-def test_srex_move_start_indinces():
+def test_srex_changed_start_indices():
     """
     Tests the case where the initial start indices are changed in SREX.
     """
