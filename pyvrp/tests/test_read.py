@@ -31,6 +31,15 @@ def test_raises_invalid_file(where: str, exception: Exception):
         read(where)
 
 
+def test_raises_unknown_round_func():
+    with assert_raises(ValueError):
+        # Unknown round_func, so should raise.
+        read("data/OkSmall.txt", round_func="asdbsadfas")
+
+    # Is the default round_func, so should not raise.
+    read("data/OkSmall.txt", round_func="none")
+
+
 def test_reading_OkSmall_instance():
     data = read("data/OkSmall.txt")
 
