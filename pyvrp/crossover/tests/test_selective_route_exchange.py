@@ -66,7 +66,7 @@ def test_srex_greedy_repair():
     # This results in two incomplete offspring [[2, 3], [4]] and [[2], [3, 4]],
     # which are both repaired using greedy repair. After repair, we obtain the
     # offspring [[2, 3, 1], [4]] with cost 8735, and [[1, 2], [3, 4]] with
-    # cost 9725.The first one is returned since it has the lowest cost.
+    # cost 9725. The first one is returned since it has the lowest cost.
     offspring = srex(parents, data, pm, rng)
 
     assert_equal(offspring.get_routes(), [[2, 3, 1], [4], []])
