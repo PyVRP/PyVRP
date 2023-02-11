@@ -15,6 +15,7 @@ TODO
 
    api/pyvrp
    api/crossover
+   api/diagnostics
    api/diversity
    api/educate
    api/plotting

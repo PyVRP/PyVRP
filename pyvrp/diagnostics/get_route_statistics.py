@@ -6,6 +6,38 @@ from pyvrp import Individual, ProblemData
 
 @dataclass
 class RouteStatistics:
+    """
+    Object storing various route statistics.
+
+    Attributes
+    ----------
+    distance
+        Total distance travelled over this route.
+    start_time
+        Earliest starting time on this route, that is, the earliest time this
+        route can leave the depot.
+    end_time
+        Time at which the truck returns to the depot.
+    duration
+        Total route duration, including waiting time.
+    timewarp
+        Any time warp incurred along the route.
+    wait_time
+        Time spent waiting on the route.
+    service_time
+        Total service time on the route.
+    num_stops
+        Number of clients visits along the route.
+    total_demand
+        Total client demand on this route.
+    fillrate
+        Capacity used by total client demand.
+    is_feasible
+        Whether the route is load and time feasible.
+    is_empty
+        Whether the route is empty.
+    """
+
     distance: int
     start_time: int
     end_time: int
@@ -70,6 +102,8 @@ def get_route_statistics(
         prev_idx = idx
 
     demand = sum([data.client(idx).demand for idx in route])
+    serv_dur = sum([data.client(idx).service_duration for idx in route])
+
     return RouteStatistics(
         distance=distance,
         start_time=start_time,
@@ -77,8 +111,7 @@ def get_route_statistics(
         duration=current_time - start_time,
         timewarp=time_warp,
         wait_time=wait_time,
-        service_time=depot.service_duration
-        + sum([data.client(idx).service_duration for idx in route]),
+        service_time=serv_dur,
         num_stops=len(route),
         total_demand=demand,
         fillrate=demand / data.vehicle_capacity,
