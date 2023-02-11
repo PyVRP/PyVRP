@@ -45,5 +45,3 @@ def plot_result(
         plot_runtimes(result, ax=fig.add_subplot(gs[2, 0], sharex=ax_div))
 
     plot_solution(result.best, data, ax=fig.add_subplot(gs[:, 1]))
-
-    plt.tight_layout()
