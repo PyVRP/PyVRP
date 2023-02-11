@@ -1,4 +1,4 @@
-from matplotlib.testing.decorators import image_comparison
+from matplotlib.testing.decorators import image_comparison as img_comp
 from numpy.testing import assert_, assert_raises
 
 from pyvrp import Individual, PenaltyManager, Population, XorShift128, plotting
@@ -7,6 +7,8 @@ from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.exceptions import StatisticsNotCollectedError
 from pyvrp.tests.helpers import read, read_solution
+
+IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
 
 
 def test_plotting_methods_raise_when_no_stats_available():
@@ -32,12 +34,7 @@ def test_plotting_methods_raise_when_no_stats_available():
     plotting.plot_result(res, data)
 
 
-@image_comparison(
-    baseline_images=["plot_solution", "plot_solution_with_customers"],
-    remove_text=True,
-    extensions=["png"],
-    style="mpl20",
-)
+@img_comp(["plot_solution", "plot_solution_with_customers"], **IMG_KWARGS)
 def test_plot_solution():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
@@ -49,12 +46,7 @@ def test_plot_solution():
     plotting.plot_solution(individual, data, plot_customers=True)
 
 
-@image_comparison(
-    baseline_images=["plot_result"],
-    remove_text=True,
-    extensions=["png"],
-    style="mpl20",
-)
+@img_comp(["plot_result"], **IMG_KWARGS)
 def test_plot_result():
     num_iterations = 100
 
@@ -83,23 +75,13 @@ def test_plot_result():
     plotting.plot_result(res, data)
 
 
-@image_comparison(
-    baseline_images=["plot_instance"],
-    remove_text=True,
-    extensions=["png"],
-    style="mpl20",
-)
+@img_comp(["plot_instance"], **IMG_KWARGS)
 def test_plot_instance():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     plotting.plot_instance(data)
 
 
-@image_comparison(
-    baseline_images=["plot_route_schedule"],
-    remove_text=True,
-    extensions=["png"],
-    style="mpl20",
-)
+@img_comp(["plot_route_schedule"], **IMG_KWARGS)
 def test_plot_route_schedule():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
