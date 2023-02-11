@@ -53,7 +53,7 @@ def test_srex_greedy_repair():
     """
     Tests the case where greedy repair is used during SREX crossover.
     """
-    data = read("data/OkSmall.txt")
+    data = read("data/OkSmallGreedyRepair.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2)  # startA = 0 and nMovedRoutes = 1
 
