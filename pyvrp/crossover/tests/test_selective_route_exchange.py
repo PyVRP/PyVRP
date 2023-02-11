@@ -37,9 +37,9 @@ def test_srex_changed_start_indices():
 
     # The start indices at initialization are startA = 0 and startB = 0.
     # The difference for A to move left (= right) is -1. The difference for B
-    # to move left (= right) is 0. The new indices become startA = 1 and
+    # to move left (= right) is 1. The new indices become startA = 1 and
     # startB = 0. There are no improving moves in this position since the
-    # difference for A is 1 and difference for B is 1.
+    # difference for A to move is 1 and difference for B to move is 1.
     # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
     # This results in two candidate offspring, [[3], [1, 2, 4]] with cost
     # 10195, and [[1, 2, 3], [4]] with cost 31029. The first candidate is
