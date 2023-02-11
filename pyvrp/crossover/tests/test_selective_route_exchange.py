@@ -7,8 +7,8 @@ from pyvrp.tests.helpers import read
 
 def test_srex_move_all_routes():
     """
-    Tests if all routes are moved during crossover, then SREX produces
-    an offspring that is identical to the second parent.
+    Tests if SREX produces an offspring that is identical to the second parent
+    when all routes are replaced during crossover.
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -25,7 +25,7 @@ def test_srex_move_all_routes():
 
 def test_srex_move_start_indinces():
     """
-    Tests the case where the initial start indices are changed.
+    Tests the case where the initial start indices are changed in SREX.
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -43,7 +43,7 @@ def test_srex_move_start_indinces():
     # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
     # This results in two candidate offspring, [[3], [1, 2, 4]] with cost
     # 10195, and [[1, 2, 3], [4]] with cost 31029. The first candidate is
-    # returned, because it has the lowest cost
+    # returned since it has the lowest cost.
     offspring = srex(parents, data, pm, rng)
 
     assert_equal(offspring.get_routes(), [[3], [1, 2, 4], []])
@@ -63,10 +63,10 @@ def test_srex_greedy_repair():
 
     # The start indices do not change because there are no improving moves.
     # So, indiv1's route [1, 2] will be replaced by indiv2's route [2, 3].
-    # This results in two incomplete offspring, [[2, 3], [4]] and [[2], [3, 4]]
-    # which are both repaired by greedy repair. After repair, we obtain the
+    # This results in two incomplete offspring [[2, 3], [4]] and [[2], [3, 4]],
+    # which are both repaired using greedy repair. After repair, we obtain the
     # offspring [[2, 3, 1], [4]] with cost 8735, and [[1, 2], [3, 4]] with
-    # cost 9725.
+    # cost 9725.The first one is returned since it has the lowest cost.
     offspring = srex(parents, data, pm, rng)
 
     assert_equal(offspring.get_routes(), [[2, 3, 1], [4], []])
