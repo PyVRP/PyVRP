@@ -179,11 +179,6 @@ class ProblemData:
         Any
             Travel duration matrix.
         """
-    @staticmethod
-    def from_file(where: str) -> ProblemData:
-        """
-        TODO remove
-        """
     @property
     def num_clients(self) -> int:
         """

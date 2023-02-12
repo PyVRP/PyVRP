@@ -45,6 +45,5 @@ PYBIND11_MODULE(ProblemData, m)
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
-             py::return_value_policy::reference)
-        .def_static("from_file", &ProblemData::fromFile, py::arg("where"));
+             py::return_value_policy::reference);
 }
