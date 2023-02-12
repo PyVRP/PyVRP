@@ -49,6 +49,78 @@ def test_srex_changed_start_indices():
     assert_equal(offspring.get_routes(), [[3], [1, 2, 4], []])
 
 
+def test_srex_changed_start_indices_b_left():
+    """
+    Tests the case where the initial start indices are changed in SREX.
+    "LEFT B"
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
+    parents = (indiv1, indiv2)
+
+    offspring = srex(parents, data, pm, rng)
+
+    assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
+
+
+def test_srex_changed_start_indices_b_right():
+    """
+    Tests the case where the initial start indices are changed in SREX.
+    "RIGHT B"
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, pm, [[3], [4, 1], [2]])
+    parents = (indiv1, indiv2)
+
+    offspring = srex(parents, data, pm, rng)
+
+    assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
+
+
+def test_srex_changed_start_indices_a_right():
+    """
+    Tests the case where the initial start indices are changed in SREX.
+    "RIGHT B"
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
+    indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
+    parents = (indiv1, indiv2)
+
+    offspring = srex(parents, data, pm, rng)
+
+    assert_equal(offspring.get_routes(), [[3], [4, 1], [2]])
+
+
+def test_srex_changed_start_indices_a_left():
+    """
+    Tests the case where the initial start indices are changed in SREX.
+    "RIGHT B"
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    indiv1 = Individual(data, pm, [[1, 3], [2], [4]])
+    indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
+    parents = (indiv1, indiv2)
+
+    offspring = srex(parents, data, pm, rng)
+
+    assert_equal(offspring.get_routes(), [[3], [2], [4, 1]])
+
+
 def test_srex_greedy_repair():
     """
     Tests the case where greedy repair is used during SREX crossover.
