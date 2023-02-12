@@ -12,7 +12,9 @@ def test_srex_move_all_routes():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=4)  # nMovedRoutes = 3
+
+    # This RNG seed will cause ``nMovedRoutes = 3``.
+    rng = XorShift128(seed=4)
 
     indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
@@ -29,7 +31,9 @@ def test_srex_greedy_repair():
     """
     data = read("data/OkSmallGreedyRepair.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=2)  # startA = 0 and nMovedRoutes = 1
+
+    # This RNG seed will cause ``startA = 0`` and ``nMovedRoutes = 1``.
+    rng = XorShift128(seed=2)
 
     indiv1 = Individual(data, pm, [[1, 2], [3, 4], []])
     indiv2 = Individual(data, pm, [[2, 3], [4, 1], []])
@@ -52,7 +56,9 @@ def test_srex_changed_start_indices():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=2)  # startA = 0 and nMovedRoutes = 1
+
+    # This RNG seed will cause ``startA = 0`` and ``nMovedRoutes = 1``.
+    rng = XorShift128(seed=2)
 
     indiv1 = Individual(data, pm, [[1, 2, 3], [4], []])
     indiv2 = Individual(data, pm, [[1, 2, 4], [3], []])
@@ -79,7 +85,9 @@ def test_srex_a_left_move():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    # This RNG seed will cause ``startA = 0`` and ``nMovedRoutes = 1``.
+    rng = XorShift128(seed=17)
 
     indiv1 = Individual(data, pm, [[1, 3], [2], [4]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
@@ -126,7 +134,9 @@ def test_srex_a_right_move():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    # This RNG seed will cause ``startA = 0`` and ``nMovedRoutes = 1``.
+    rng = XorShift128(seed=17)
 
     indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
@@ -144,7 +154,9 @@ def test_srex_b_left_move():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    # This RNG seed will cause ``startA = 0`` and ``nMovedRoutes = 1``.
+    rng = XorShift128(seed=17)
 
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
@@ -162,7 +174,9 @@ def test_srex_b_right_move():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=17)  # startA = 0 and nMovedRoutes = 1
+
+    # This RNG seed will cause ``startA = 0`` and ``nMovedRoutes = 1``.
+    rng = XorShift128(seed=17)
 
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [4, 1], [2]])
