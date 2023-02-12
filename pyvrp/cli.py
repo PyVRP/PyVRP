@@ -20,7 +20,7 @@ from pyvrp import (
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.educate import NODE_OPERATORS, ROUTE_OPERATORS, LocalSearch
-from pyvrp.read import ROUND_FUNCS, read
+from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
 
 
@@ -176,8 +176,8 @@ def main():
 
     parser.add_argument(
         "--instance_format",
-        choices=["vrplib", "solomon"],
         default="vrplib",
+        choices=INSTANCE_FORMATS,
         help="File format. Default 'vrplib'.",
     )
 
