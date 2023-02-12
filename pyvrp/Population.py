@@ -160,10 +160,11 @@ class SubPopulation:
             diversity.append((avg_diversity, rank))
 
         diversity.sort(reverse=True)
+
         nb_elite = min(self._params.nb_elite, len(self))
+        div_weight = 1 - nb_elite / len(self)
 
         for div_rank, (_, cost_rank) in enumerate(diversity):
-            div_weight = 1 - nb_elite / len(self)
             new_fitness = (cost_rank + div_weight * div_rank) / len(self)
 
             idx = by_cost[cost_rank]
