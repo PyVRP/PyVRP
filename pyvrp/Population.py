@@ -87,9 +87,6 @@ class SubPopulation:
 
         for other, _, other_prox in self:
             diversity = self._op(self._data, individual, other)
-
-            # TODO this is not very fast, so we might want to go for something
-            #  different if this turns out to be problematic.
             insort_left(indiv_prox, _DiversityItem(other, diversity))
             insort_left(other_prox, _DiversityItem(individual, diversity))
 
