@@ -32,7 +32,7 @@ def test_srex_greedy_repair():
     data = read("data/OkSmallGreedyRepair.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This RNG seed sets the internal SREX variables to ``startA = 0`` and
+    # This RNG seed sets the internal SREX variables ``startA = 0`` and
     # ``nMovedRoutes = 1``.
     rng = XorShift128(seed=2)
 
@@ -58,7 +58,7 @@ def test_srex_changed_start_indices():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This RNG seed sets the internal SREX variables to ``startA = 0`` and
+    # This RNG seed sets the internal SREX variables ``startA = 0`` and
     # ``nMovedRoutes = 1``.
     rng = XorShift128(seed=2)
 
@@ -88,7 +88,7 @@ def test_srex_a_left_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This RNG seed sets the internal SREX variables to ``startA = 0`` and
+    # This RNG seed sets the internal SREX variables ``startA = 0`` and
     # ``nMovedRoutes = 1``.
     rng = XorShift128(seed=17)
 
@@ -138,7 +138,7 @@ def test_srex_a_right_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This RNG seed sets the internal SREX variables to ``startA = 0`` and
+    # This RNG seed sets the internal SREX variables ``startA = 0`` and
     # ``nMovedRoutes = 1``.
     rng = XorShift128(seed=17)
 
@@ -159,7 +159,7 @@ def test_srex_b_left_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This RNG seed sets the internal SREX variables to ``startA = 0`` and
+    # This RNG seed sets the internal SREX variables ``startA = 0`` and
     # ``nMovedRoutes = 1``.
     rng = XorShift128(seed=17)
 
@@ -180,7 +180,7 @@ def test_srex_b_right_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This RNG seed sets the internal SREX variables to ``startA = 0`` and
+    # This RNG seed sets the internal SREX variables ``startA = 0`` and
     # ``nMovedRoutes = 1``.
     rng = XorShift128(seed=17)
 
