@@ -128,12 +128,6 @@ def benchmark(instances: List[str], **kwargs):
     ----------
     instances
         Paths to the VRPLIB instances to solve.
-
-    Raises
-    ------
-    ModuleNotFoundError
-        When the ``tqdm`` package is not installed. This is required for
-        running the benchmark script.
     """
     func = partial(benchmark_solve, **kwargs)
     func_args = sorted(instances)
