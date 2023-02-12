@@ -4,8 +4,6 @@ from bisect import insort_left
 from dataclasses import dataclass
 from typing import Callable, Iterator, List, NamedTuple, Tuple
 
-import numpy as np
-
 from .Individual import Individual
 from .PenaltyManager import PenaltyManager
 from .ProblemData import ProblemData
@@ -30,6 +28,12 @@ class _Item(NamedTuple):
     individual: Individual
     fitness: float
     proximity: List[_DiversityItem]
+
+    def __lt__(self, other) -> bool:
+        return (
+            isinstance(other, _Item)
+            and self.individual.cost() < other.individual.cost()
+        )
 
 
 class SubPopulation:
@@ -92,6 +96,7 @@ class SubPopulation:
 
         # Insert new individual and update everyone's biased fitness score.
         self._items.append(_Item(individual, 0.0, indiv_prox))
+        self._items.sort()
         self.update_fitness()
 
         if len(self) > self._params.max_pop_size:
@@ -154,24 +159,19 @@ class SubPopulation:
         This fitness depends on the quality of the solution (based on its cost)
         and the diversity w.r.t. to other individuals in the subpopulation.
         """
-        by_cost = np.argsort([indiv.cost() for indiv, _, _ in self])
-        diversity = []
-
-        for rank in range(len(self)):
-            avg_diversity = self.avg_distance_closest(by_cost[rank])
-            diversity.append((avg_diversity, rank))
-
-        diversity.sort(reverse=True)
+        diversity = sorted(
+            range(len(self)),
+            key=lambda idx: (self.avg_distance_closest(idx), idx),
+            reverse=True,
+        )
 
         nb_elite = min(self._params.nb_elite, len(self))
         div_weight = 1 - nb_elite / len(self)
 
-        for div_rank, (_, cost_rank) in enumerate(diversity):
+        for div_rank, cost_rank in enumerate(diversity):
             new_fitness = (cost_rank + div_weight * div_rank) / len(self)
-
-            idx = by_cost[cost_rank]
-            individual, _, prox = self[idx]
-            self._items[idx] = _Item(individual, new_fitness, prox)
+            individual, _, prox = self._items[cost_rank]
+            self._items[cost_rank] = _Item(individual, new_fitness, prox)
 
     def avg_distance_closest(self, individual_idx: int) -> float:
         """
