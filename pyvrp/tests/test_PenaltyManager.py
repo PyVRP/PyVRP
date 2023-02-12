@@ -30,7 +30,7 @@ def test_constructor_throws_when_arguments_invalid(
     target_feasible: float,
 ):
     with assert_raises(ValueError):
-        params = PenaltyParams(
+        PenaltyParams(
             init_load_penalty,
             init_tw_penalty,
             repair_booster,
@@ -38,8 +38,6 @@ def test_constructor_throws_when_arguments_invalid(
             penalty_decrease,
             target_feasible,
         )
-
-        PenaltyManager(1, params)
 
 
 def test_load_penalty():

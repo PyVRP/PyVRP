@@ -1,3 +1,2 @@
 ignore:
   - "**/*_bindings.cpp"  # ignore pybind11 bindings
-  - "build_extension.py"
