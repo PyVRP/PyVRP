@@ -40,6 +40,7 @@ classifiers = [
 python = "^3.8,<4.0"
 numpy = ">=1.15.2"
 matplotlib = ">=2.2.0"
+vrplib = "^1.0.0"
 
 [tool.poetry.group.benchmark]
 optional = true
@@ -58,6 +59,13 @@ numpydoc = ">=1.5.0"
 sphinx_rtd_theme = ">=0.5.1"
 sphinx-autoapi = ">=2.0.1"
 docutils = "==0.16"
+
+[tool.poetry.group.examples]
+optional = true
+
+[tool.poetry.group.examples.dependencies]
+jupyter = ">=1.0.0"
+pandas = ">=1.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"

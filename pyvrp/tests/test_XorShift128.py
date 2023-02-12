@@ -1,5 +1,3 @@
-import ctypes
-
 import numpy as np
 from numpy.testing import assert_, assert_almost_equal, assert_equal
 from pytest import mark
@@ -9,9 +7,7 @@ from pyvrp.XorShift128 import XorShift128
 
 def test_bounds():
     assert_equal(XorShift128.min(), 0)
-
-    bits = 8 * ctypes.sizeof(ctypes.c_uint)
-    assert_equal(XorShift128.max(), 2**bits - 1)
+    assert_equal(XorShift128.max(), np.iinfo(np.uint32).max)
 
 
 def test_call():

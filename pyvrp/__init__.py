@@ -5,4 +5,4 @@ from .Population import Population, PopulationParams
 from .ProblemData import ProblemData
 from .Result import Result
 from .XorShift128 import XorShift128
-from .read import read
+from .read import read, read_solution
