@@ -81,8 +81,7 @@ pybind11 = {extras = ["global"], version = "^2.10.3"}
 mypy = "^0.991"
 
 [tool.poetry.scripts]
-benchmark = "pyvrp.benchmark:main"
-solve = "pyvrp.solve:main"
+pyvrp = "pyvrp.cli:main"
 
 [tool.black]
 line-length = 79

@@ -10,7 +10,7 @@ from .ProblemData import ProblemData
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
-INT_MAX = np.iinfo(np.int32).max
+_INT_MAX = np.iinfo(np.int32).max
 
 
 def convert_to_int(vals: np.ndarray):
@@ -25,6 +25,7 @@ def no_rounding(vals):
     return vals
 
 
+INSTANCE_FORMATS = ["vrplib", "solomon"]
 ROUND_FUNCS: Dict[str, _RoundingFunc] = {
     "trunc": convert_to_int,
     "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
@@ -84,7 +85,7 @@ def read(
 
     depots = instance.get("depot", np.array([0]))
     num_vehicles = instance.get("vehicles", num_clients - 1)
-    capacity = instance.get("capacity", INT_MAX)
+    capacity = instance.get("capacity", _INT_MAX)
     edge_weight = round_func(instance["edge_weight"])
 
     if "demand" in instance:
@@ -100,7 +101,7 @@ def read(
     if "time_window" in instance:
         time_windows = round_func(instance["time_window"])
     else:
-        time_windows = np.repeat([[0, INT_MAX]], num_clients, axis=0)
+        time_windows = np.repeat([[0, _INT_MAX]], num_clients, axis=0)
 
     if "service_time" in instance:
         service_times = round_func(instance["service_time"])
