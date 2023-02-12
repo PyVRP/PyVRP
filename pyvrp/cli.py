@@ -7,10 +7,8 @@ import numpy as np
 
 try:
     from tqdm.contrib.concurrent import process_map
-
-    HAS_TQDM = True
 except ModuleNotFoundError:
-    HAS_TQDM = False
+    raise ModuleNotFoundError("Install 'tqdm' to use benchmark script.")
 
 from pyvrp import (
     GeneticAlgorithm,
@@ -137,9 +135,6 @@ def benchmark(instances: List[str], **kwargs):
         When the ``tqdm`` package is not installed. This is required for
         running the benchmark script.
     """
-    if not HAS_TQDM:
-        raise ModuleNotFoundError("Install 'tqdm' to use benchmark script.")
-
     func = partial(benchmark_solve, **kwargs)
     func_args = sorted(instances)
 
