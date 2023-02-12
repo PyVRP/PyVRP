@@ -166,6 +166,9 @@ debug/
 release/
 _readthedocs/
 
+# Profiler results
+*.prof
+
 # Data files
 data/
 !pyvrp/tests/data/
