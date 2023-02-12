@@ -11,17 +11,6 @@ PenaltyManager::PenaltyManager(unsigned int vehicleCapacity,
       capacityPenalty(params.initCapacityPenalty),
       timeWarpPenalty(params.initTimeWarpPenalty)
 {
-    if (params.penaltyIncrease < 1.)
-        throw std::invalid_argument("Expected penaltyIncrease >= 1.");
-
-    if (params.penaltyDecrease < 0. || params.penaltyDecrease > 1.)
-        throw std::invalid_argument("Expected penaltyDecrease in [0, 1].");
-
-    if (params.targetFeasible < 0. || params.targetFeasible > 1.)
-        throw std::invalid_argument("Expected targetFeasible in [0, 1].");
-
-    if (params.repairBooster < 1)
-        throw std::invalid_argument("Expected repairBooster >= 1.");
 }
 
 unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const

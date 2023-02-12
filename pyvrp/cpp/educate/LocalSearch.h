@@ -10,6 +10,7 @@
 #include "XorShift128.h"
 
 #include <functional>
+#include <stdexcept>
 #include <vector>
 
 struct LocalSearchParams
@@ -28,7 +29,8 @@ struct LocalSearchParams
           nbGranular(nbGranular),
           postProcessPathLength(postProcessPathLength)
     {
-        // TODO parameter validation
+        if (nbGranular == 0)
+            throw std::invalid_argument("Expected nbGranular > 0.");
     }
 };
 

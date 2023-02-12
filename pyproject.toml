@@ -96,6 +96,7 @@ omit = [
     "*/tests/*",
     "venv/*",
     "docs/*",
+    "build_extension.py",
 ]
 
 [tool.coverage.report]

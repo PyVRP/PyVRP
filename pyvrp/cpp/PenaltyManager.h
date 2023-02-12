@@ -1,6 +1,8 @@
 #ifndef HGS_PENALTYMANAGER_H
 #define HGS_PENALTYMANAGER_H
 
+#include <stdexcept>
+
 struct PenaltyParams
 {
     unsigned int const initCapacityPenalty;
@@ -24,7 +26,17 @@ struct PenaltyParams
           penaltyDecrease(penaltyDecrease),
           targetFeasible(targetFeasible)
     {
-        // TODO parameter validation
+        if (penaltyIncrease < 1.)
+            throw std::invalid_argument("Expected penaltyIncrease >= 1.");
+
+        if (penaltyDecrease < 0. || penaltyDecrease > 1.)
+            throw std::invalid_argument("Expected penaltyDecrease in [0, 1].");
+
+        if (targetFeasible < 0. || targetFeasible > 1.)
+            throw std::invalid_argument("Expected targetFeasible in [0, 1].");
+
+        if (repairBooster < 1)
+            throw std::invalid_argument("Expected repairBooster >= 1.");
     }
 };
 
