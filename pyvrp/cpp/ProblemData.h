@@ -72,15 +72,6 @@ public:
     [[nodiscard]] size_t vehicleCapacity() const;
 
     /**
-     * Constructs a ProblemData object from the data read (in VRPLIB format)
-     * from the given instance path.
-     *
-     * @param where Path to the instance data.
-     * @returns     The constructed object.
-     */
-    static ProblemData fromFile(std::string const &where);
-
-    /**
      * Constructs a ProblemData object with the given data. Assumes the data
      * contains the depot, such that each vector is one longer than the number
      * of clients.
