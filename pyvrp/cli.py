@@ -8,7 +8,7 @@ import numpy as np
 try:
     from tqdm.contrib.concurrent import process_map
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("Install 'tqdm' to use benchmark script.")
+    raise ModuleNotFoundError("Install 'tqdm' to use the commandline program.")
 
 from pyvrp import (
     GeneticAlgorithm,
