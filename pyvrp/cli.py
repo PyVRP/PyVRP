@@ -63,6 +63,12 @@ def solve(
     ----------
     data_loc
         Filesystem location of the VRPLIB instance.
+    instance_format
+        Data format of the filesystem instance. Argument is passed to
+        ``read()``.
+    round_func
+        Rounding function to use for rounding non-integral data. Argument is
+        passed to ``read()``.
     seed
         Seed to use for the RNG.
     max_runtime
