@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from bisect import insort_left
 from dataclasses import dataclass
 from typing import Callable, Iterator, List, NamedTuple, Tuple
 
@@ -16,6 +17,13 @@ _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
 class _DiversityItem(NamedTuple):
     individual: Individual
     diversity: float
+
+    def __lt__(self, other) -> bool:
+        return (
+            isinstance(other, _DiversityItem)
+            and self.diversity < other.diversity
+            and self.individual.cost() < other.individual.cost()
+        )
 
 
 class _Item(NamedTuple):
@@ -75,18 +83,15 @@ class SubPopulation:
         individual
             Individual to add to the subpopulation.
         """
-        indiv_prox = []
+        indiv_prox: List[_DiversityItem] = []
 
         for other, _, other_prox in self:
             diversity = self._op(self._data, individual, other)
 
             # TODO this is not very fast, so we might want to go for something
             #  different if this turns out to be problematic.
-            indiv_prox.append(_DiversityItem(other, diversity))
-            indiv_prox.sort(key=lambda a: (a.diversity, a.individual.cost()))
-
-            other_prox.append(_DiversityItem(individual, diversity))
-            other_prox.sort(key=lambda a: (a.diversity, a.individual.cost()))
+            insort_left(indiv_prox, _DiversityItem(other, diversity))
+            insort_left(other_prox, _DiversityItem(individual, diversity))
 
         # Insert new individual and update everyone's biased fitness score.
         self._items.append(_Item(individual, 0.0, indiv_prox))
@@ -188,9 +193,13 @@ class SubPopulation:
             The average distance/diversity of the given individual relative to
             the total subpopulation.
         """
-        _, _, prox = self[individual_idx]
-        closest = prox[: self._params.nb_close]
-        return np.mean([div for _, div in closest]) if closest else 0.0
+        item = self._items[individual_idx]
+        closest = item.proximity[: self._params.nb_close]
+
+        if closest:
+            return sum(div for _, div in closest) / len(closest)
+        else:
+            return 0.0
 
 
 @dataclass
