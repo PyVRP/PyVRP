@@ -16,11 +16,11 @@ from pyvrp import (
     Population,
     Result,
     XorShift128,
-    read,
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.educate import NODE_OPERATORS, ROUTE_OPERATORS, LocalSearch
+from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
 
 
@@ -49,6 +49,8 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
 
 def solve(
     data_loc: str,
+    instance_format: str,
+    round_func: str,
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
@@ -75,7 +77,7 @@ def solve(
     Result
         Object storing the solver outcome.
     """
-    data = read(data_loc)
+    data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity)
     pop = Population(data, pen_manager, rng, bpd)
@@ -170,8 +172,21 @@ def main():
     """
     parser = argparse.ArgumentParser(prog="pyvrp", description=description)
 
-    msg = "Instance paths. Should be in VRPLIB format."
-    parser.add_argument("instances", nargs="+", help=msg)
+    parser.add_argument("instances", nargs="+", help="Instance paths.")
+
+    parser.add_argument(
+        "--instance_format",
+        choices=["vrplib", "solomon"],
+        default="vrplib",
+        help="File format. Default 'vrplib'.",
+    )
+
+    parser.add_argument(
+        "--round_func",
+        default="none",
+        choices=ROUND_FUNCS.keys(),
+        help="Round function to apply for non-integral data. Default 'none'.",
+    )
 
     msg = "Seed to use for reproducible results."
     parser.add_argument("--seed", required=True, type=int, help=msg)
