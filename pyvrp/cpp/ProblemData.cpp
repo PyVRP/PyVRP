@@ -30,6 +30,8 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
       numVehicles_(numVehicles),
       vehicleCapacity_(vehicleCap)
 {
+    // TODO argument checks
+
     for (size_t idx = 0; idx <= static_cast<size_t>(numClients_); ++idx)
         clients_[idx] = {coords[idx].first,
                          coords[idx].second,
