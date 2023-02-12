@@ -29,12 +29,17 @@ def test_route_constructor_raises():
 
     assert_equal(data.num_vehicles, 3)
 
-    with assert_raises(RuntimeError):
-        # Two routes, but three vehicles: should raise.
-        Individual(data, pm, [[1, 2], [4, 2]])
+    # Only two routes should not raise. But we should always get num_vehicles
+    # routes back.
+    individual = Individual(data, pm, [[1, 2], [4, 2]])
+    assert_equal(len(individual.get_routes()), data.num_vehicles)
 
     # Empty third route should not raise.
     Individual(data, pm, [[1, 2], [4, 2], []])
+
+    # More than three routes should raise, since we only have three vehicles.
+    with assert_raises(RuntimeError):
+        Individual(data, pm, [[1], [2], [3], [4]])
 
 
 def test_get_neighbours():
@@ -63,7 +68,7 @@ def test_feasibility():
     pm = PenaltyManager(data.vehicle_capacity)
 
     # This solution is infeasible due to both load and time window violations.
-    indiv = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv = Individual(data, pm, [[1, 2, 3, 4]])
     assert_(not indiv.is_feasible())
 
     # First route has total load 18, but vehicle capacity is only 10.
@@ -105,7 +110,7 @@ def test_capacity_cost_calculation():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv = Individual(data, pm, [[4, 3, 1, 2], [], []])
+    indiv = Individual(data, pm, [[4, 3, 1, 2]])
     assert_(indiv.has_excess_capacity())
     assert_(not indiv.has_time_warp())
 
@@ -131,7 +136,7 @@ def test_time_warp_cost_calculation():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv = Individual(data, pm, [[1, 3], [2, 4], []])
+    indiv = Individual(data, pm, [[1, 3], [2, 4]])
     assert_(not indiv.has_excess_capacity())
     assert_(indiv.has_time_warp())
 
@@ -164,14 +169,19 @@ def test_eq():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv1 = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv1 = Individual(data, pm, [[1, 2, 3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
-    indiv3 = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv3 = Individual(data, pm, [[1, 2, 3, 4]])
 
     assert_(indiv1 == indiv1)  # individuals should be equal to themselves
     assert_(indiv2 == indiv2)
     assert_(indiv1 != indiv2)  # different routes, so should not be equal
     assert_(indiv1 == indiv3)  # same solution, different individual
+
+    indiv4 = Individual(data, pm, [[1, 2, 3], [], [4]])
+    indiv5 = Individual(data, pm, [[1, 2, 3], [4], []])
+
+    assert_(indiv4 == indiv5)  # routes are the same, but in different order
 
 
 def test_str_contains_essential_information():

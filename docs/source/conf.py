@@ -27,7 +27,7 @@ for file in glob.iglob("../../examples/*.ipynb"):
     print(f"Copy {path.name} into docs/source/examples/")
     shutil.copy2(path, f"examples/{path.name}")
 
-# -- Autoapi
+# -- Autoapi and autodoc
 
 autoapi_type = "python"
 autoapi_dirs = ["../../pyvrp"]
@@ -40,6 +40,8 @@ autoapi_add_objects_to_toctree = False
 
 autoapi_python_class_content = "class"
 autoapi_member_order = "bysource"
+
+autodoc_typehints = "signature"
 
 # -- Numpydoc
 

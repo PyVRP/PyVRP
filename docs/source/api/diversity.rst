@@ -1,9 +1,9 @@
 .. module:: pyvrp.diversity
-   :synopsis: Diversity
+   :synopsis: Diversity measures
 
 
-Diversity
-=========
+Diversity measures
+==================
 
 The :mod:`pyvrp.diversity` module contains operators that determine the relative difference between two :class:`~pyvrp.Individual.Individual` solutions.
 This difference provides a measure of diversity: a :class:`~pyvrp.Population.Population` of highly diverse solutions allows the genetic algorithm to perform better.

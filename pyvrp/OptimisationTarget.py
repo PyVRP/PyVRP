@@ -7,4 +7,4 @@ class OptimisationTarget(Protocol):  # pragma: no cover
     """
 
     def cost(self) -> Union[int, float]:
-        pass
+        ...
