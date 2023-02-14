@@ -17,10 +17,11 @@ class _DiversityItem(NamedTuple):
     diversity: float
 
     def __lt__(self, other) -> bool:
+        # Note: this is only used for computing most similar indivs for
+        # average diversity, therefore a tie-breaker on cost is not necessary
         return (
             isinstance(other, _DiversityItem)
             and self.diversity < other.diversity
-            and self.individual.cost() < other.individual.cost()
         )
 
 
@@ -159,10 +160,10 @@ class SubPopulation:
         This fitness depends on the quality of the solution (based on its cost)
         and the diversity w.r.t. to other individuals in the subpopulation.
         """
+        # Sort first by largest diversity, then smallest cost as tie-breaker
         diversity = sorted(
             range(len(self)),
-            key=lambda idx: (self.avg_distance_closest(idx), idx),
-            reverse=True,
+            key=lambda idx: (-self.avg_distance_closest(idx), idx),
         )
 
         nb_elite = min(self._params.nb_elite, len(self))
