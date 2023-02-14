@@ -2,7 +2,20 @@ from __future__ import annotations
 
 from bisect import insort_left
 from dataclasses import dataclass
-from typing import Callable, Iterator, List, NamedTuple, Tuple, Type
+from typing import (
+    Callable,
+    Generic,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Protocol,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import numpy as np
 
@@ -11,11 +24,29 @@ from .PenaltyManager import PenaltyManager
 from .ProblemData import ProblemData
 from .XorShift128 import XorShift128
 
-_DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
+
+class PopulationIndividual(Protocol):  # pragma: no cover
+    """
+    Defines an individual that can be put in a population target protocol.
+    """
+
+    def cost(self) -> Union[int, float]:
+        ...
+
+    def is_feasible(self) -> bool:
+        ...
+
+
+TIndiv = TypeVar("TIndiv", bound=PopulationIndividual)
+
+_DiversityMeasure = Callable[
+    [PopulationIndividual, PopulationIndividual], float
+]
+_RandIntFunc = Callable[[int], int]
 
 
 class _DiversityItem(NamedTuple):
-    individual: Individual
+    individual: PopulationIndividual
     diversity: float
 
     def __lt__(self, other) -> bool:
@@ -28,24 +59,31 @@ class _DiversityItem(NamedTuple):
 
 
 class _Item(NamedTuple):
-    individual: Individual
+    individual: PopulationIndividual
     fitness: float
+    cost: float
+    # proximity: List[_DiversityItem]
+
+    def __lt__(self, other) -> bool:
+        assert False, "Don't use, slow"
+        return isinstance(other, _Item) and self.cost < other.cost
+
+
+class _ItemWithProximity(NamedTuple):
+    item: _Item
     proximity: List[_DiversityItem]
 
     def __lt__(self, other) -> bool:
-        return (
-            isinstance(other, _Item)
-            and self.individual.cost() < other.individual.cost()
-        )
+        assert False, "Don't use, slow"
 
 
 class SubPopulation:
     def __init__(
         self,
-        data: ProblemData,
         diversity_op: _DiversityMeasure,
         params: PopulationParams,
     ):
+        self._op = diversity_op
         pass
 
     def __getitem__(self, idx: int) -> _Item:
@@ -57,7 +95,38 @@ class SubPopulation:
     def __len__(self) -> int:
         raise NotImplementedError()
 
-    def add(self, individual: Individual):
+    def add(
+        self,
+        individual: PopulationIndividual,
+        cost: Optional[float] = None,
+        distances: Optional[List[float]] = None,
+    ):
+        """
+        Adds the given individual to the subpopulation. Survivor selection is
+        automatically triggered when the population reaches its maximum size.
+
+        Parameters
+        ----------
+        individual
+            Individual to add to the subpopulation.
+        cost, optional
+            Cost of individual that is added, if none will be computed
+        distances, optional
+            List with diversities to individuals currently in the population.
+            If none, will be computed.
+        """
+        if cost is None:
+            cost = individual.cost()
+        if distances is None:
+            distances = [self._op(individual, other) for other, _, _ in self]
+        self._add(individual, cost, distances)
+
+    def _add(
+        self,
+        individual: PopulationIndividual,
+        cost: float,
+        distances: List[float],
+    ):
         raise NotImplementedError()
 
     def avg_distance_closest(self, individual_idx: int) -> float:
@@ -67,7 +136,6 @@ class SubPopulation:
 class SubPopulationPython(SubPopulation):
     def __init__(
         self,
-        data: ProblemData,
         diversity_op: _DiversityMeasure,
         params: PopulationParams,
     ):
@@ -83,54 +151,51 @@ class SubPopulationPython(SubPopulation):
 
         Parameters
         ----------
-        data
-            Data object describing the problem to be solved.
         diversity_op
             Operator to use to determine pairwise diversity between solutions.
         params, optional
             Population parameters. If not provided, a default will be used.
         """
-        self._data = data
         self._op = diversity_op
         self._params = params
 
-        self._items: List[_Item] = []
+        self._items: List[_ItemWithProximity] = []
 
     def __getitem__(self, idx: int) -> _Item:
-        return self._items[idx]
+        return self._items[idx].item
 
     def __iter__(self) -> Iterator[_Item]:
-        return iter(self._items)
+        for item in self._items:
+            yield item.item
 
     def __len__(self) -> int:
         return len(self._items)
 
-    def add(self, individual: Individual):
-        """
-        Adds the given individual to the subpopulation. Survivor selection is
-        automatically triggered when the population reaches its maximum size.
-
-        Parameters
-        ----------
-        individual
-            Individual to add to the subpopulation.
-        """
+    def _add(
+        self,
+        individual: PopulationIndividual,
+        cost: float,
+        distances: List[float],
+    ):
         indiv_prox: List[_DiversityItem] = []
 
-        for other, _, other_prox in self:
-            diversity = self._op(self._data, individual, other)
+        for ((other, _, _), other_prox), diversity in zip(
+            self._items, distances
+        ):
             insort_left(indiv_prox, _DiversityItem(other, diversity))
             insort_left(other_prox, _DiversityItem(individual, diversity))
 
         # Insert new individual and update everyone's biased fitness score.
-        self._items.append(_Item(individual, 0.0, indiv_prox))
-        self._items.sort()
+        self._items.append(
+            _ItemWithProximity(_Item(individual, 0.0, cost), indiv_prox)
+        )
+        self._items.sort(key=lambda it: it.item.cost)
         self.update_fitness()
 
         if len(self) > self._params.max_pop_size:
             self.purge()
 
-    def remove(self, individual: Individual):
+    def remove(self, individual: PopulationIndividual):
         """
         Removes the given individual from the subpopulation. Note that
         individuals are compared by identity, not by equality.
@@ -145,14 +210,14 @@ class SubPopulationPython(SubPopulation):
         ValueError
             When the given individual could not be found in the subpopulation.
         """
-        for _, _, prox in self:  # remove individual from other proximities
+        for _, prox in self._items:  # remove individual from other proximities
             for idx, (other, _) in enumerate(prox):
                 if other is individual:
                     del prox[idx]
                     break
 
-        for item in self:  # remove individual from subpopulation.
-            if item.individual is individual:
+        for item in self._items:  # remove individual from subpopulation.
+            if item.item.individual is individual:
                 self._items.remove(item)
                 break
         else:
@@ -167,7 +232,7 @@ class SubPopulationPython(SubPopulation):
         """
 
         while len(self) > self._params.min_pop_size:
-            for individual, _, prox in self:
+            for (individual, _, _), prox in self._items:
                 if prox and prox[0].individual == individual:  # has duplicate?
                     self.remove(individual)
                     break
@@ -198,8 +263,10 @@ class SubPopulationPython(SubPopulation):
 
         for div_rank, cost_rank in enumerate(diversity):
             new_fitness = (cost_rank + div_weight * div_rank) / len(self)
-            individual, _, prox = self._items[cost_rank]
-            self._items[cost_rank] = _Item(individual, new_fitness, prox)
+            (individual, _, cost), prox = self._items[cost_rank]
+            self._items[cost_rank] = _ItemWithProximity(
+                _Item(individual, new_fitness, cost), prox
+            )
 
     def avg_distance_closest(self, individual_idx: int) -> float:
         """
@@ -230,7 +297,6 @@ class SubPopulationPython(SubPopulation):
 class SubPopulationNumpy(SubPopulation):
     def __init__(
         self,
-        data: ProblemData,
         diversity_op: _DiversityMeasure,
         params: PopulationParams,
     ):
@@ -246,14 +312,11 @@ class SubPopulationNumpy(SubPopulation):
 
         Parameters
         ----------
-        data
-            Data object describing the problem to be solved.
         diversity_op
             Operator to use to determine pairwise diversity between solutions.
         params, optional
             Population parameters. If not provided, a default will be used.
         """
-        self._data = data
         self._op = diversity_op
         self._params = params
 
@@ -276,21 +339,30 @@ class SubPopulationNumpy(SubPopulation):
         # self._diversity_rank = np.zeros(n, dtype=int)
         self._biased_fitness = np.zeros(n, dtype=float)
 
-        self._indivs: List[Individual] = []
+        self._indivs: List[PopulationIndividual] = []
 
         self.DO_CHECKS = False
 
     def __getitem__(self, idx: int) -> _Item:
-        return _Item(self._indivs[idx], self._biased_fitness[idx], [])
+        return _Item(
+            self._indivs[idx], self._biased_fitness[idx], self._cost[idx]
+        )
 
     def __iter__(self) -> Iterator[_Item]:
-        for indiv, fitness in zip(self._indivs, self._biased_fitness):
-            yield _Item(indiv, fitness, [])
+        for indiv, fitness, cost in zip(
+            self._indivs, self._biased_fitness, self._cost
+        ):
+            yield _Item(indiv, fitness, cost)
 
     def __len__(self) -> int:
         return len(self._indivs)
 
-    def add(self, individual: Individual):
+    def _add(
+        self,
+        individual: PopulationIndividual,
+        cost: float,
+        distances: List[float],
+    ):
         """
         Adds the given individual to the subpopulation. Survivor selection is
         automatically triggered when the population reaches its maximum size.
@@ -299,6 +371,11 @@ class SubPopulationNumpy(SubPopulation):
         ----------
         individual
             Individual to add to the subpopulation.
+        cost, optional
+            Cost of individual that is added, if none will be computed
+        distances, optional
+            List with diversities to individuals currently in the population.
+            If none, will be computed.
         """
 
         # Get n = current size / index of new item and increase size
@@ -307,14 +384,12 @@ class SubPopulationNumpy(SubPopulation):
         if n == 0:
             # # Insert new individual
             self._indivs.append(individual)
-            self._cost[n] = individual.cost()
+            self._cost[n] = cost
             # First individual, no diversity computation needed
             return
 
         # Update the distance matrix
-        dist = np.array(
-            [self._op(self._data, individual, other) for other, _, _ in self]
-        )
+        dist = np.array(distances)
         self._dist[n, :n] = dist
         self._dist[:n, n] = dist
 
@@ -370,7 +445,6 @@ class SubPopulationNumpy(SubPopulation):
             self._dist_closest_argmax[n] = k - 1
 
         # Compute cost rank and insert individual by increasing rank of worse
-        cost = individual.cost()
         cost_rank = (self._cost[:n] <= cost).sum()
         self._cost_rank[:n][self._cost_rank[:n] >= cost_rank] += 1
         self._cost[n] = cost
@@ -451,7 +525,27 @@ class SubPopulationNumpy(SubPopulation):
 
         return (cost_rank + div_weight * diversity_rank) / n
 
-    def remove(self, individual: Individual):
+    def avg_distance_closest(self, individual_idx: int) -> float:
+        """
+        Determines the average distance of the individual at the given index to
+        a number of individuals that are most similar to it. This provides a
+        measure of the relative 'diversity' of this individual.
+
+        Parameters
+        ----------
+        individual_idx
+            Individual whose average distance/diversity to calculate.
+
+        Returns
+        -------
+        float
+            The average distance/diversity of the given individual relative to
+            the total subpopulation.
+        """
+        k = min(self._params.nb_close, len(self) - 1)
+        return self._dist_closest_sum[individual_idx] / k
+
+    def remove(self, individual: PopulationIndividual):
         """
         Removes the given individual from the subpopulation. Note that
         individuals are compared by identity, not by equality.
@@ -665,47 +759,38 @@ class PopulationParams:
         return self.min_pop_size + self.generation_size
 
 
-class Population:
+class GenericPopulation(Generic[TIndiv]):
     def __init__(
         self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
+        best: TIndiv,
         diversity_op: _DiversityMeasure,
+        rand_int_func: _RandIntFunc,
         params: PopulationParams = PopulationParams(),
     ):
         """
-        Creates a Population instance.
+        Creates a GenericPopulation instance.
 
         Parameters
         ----------
-        data
-            Data object describing the problem to be solved.
-        penalty_manager
-            Penalty manager to use.
-        rng
-            Random number generator.
         diversity_op
             Operator to use to determine pairwise diversity between solutions.
+        rand_int_func
+            Function to generate random integer
         params, optional
             Population parameters. If not provided, a default will be used.
         """
-        self._data = data
-        self._pm = penalty_manager
-        self._rng = rng
         self._op = diversity_op
+        self._rand_int_func = rand_int_func
         self._params = params
 
         subpop_cls: Type[SubPopulation] = (
             SubPopulationNumpy if params.use_numpy else SubPopulationPython
         )
-        self._feas = subpop_cls(data, diversity_op, params)
-        self._infeas = subpop_cls(data, diversity_op, params)
+        self._feas = subpop_cls(diversity_op, params)
+        self._infeas = subpop_cls(diversity_op, params)
 
-        self._best = Individual(data, penalty_manager, rng)
-
-        for _ in range(params.min_pop_size):
-            self.add(Individual(data, penalty_manager, rng))
+        self._best = best
+        self._best_cost = best.cost()
 
     @property
     def feasible_subpopulation(self) -> SubPopulation:
@@ -745,7 +830,11 @@ class Population:
         """
         return len(self._feas) + len(self._infeas)
 
-    def add(self, individual: Individual):
+    def initialize(self, factory: Callable[[], TIndiv]):
+        for _ in range(self._params.min_pop_size):
+            self.add(factory())
+
+    def add(self, individual: TIndiv):
         """
         Adds the given individual to the population. Survivor selection is
         automatically triggered when the population reaches its maximum size.
@@ -755,15 +844,17 @@ class Population:
         individual
             Individual to add to the population.
         """
+        cost = individual.cost()
         if individual.is_feasible():
-            self._feas.add(individual)
+            self._feas.add(individual, cost)
 
-            if individual.cost() < self._best.cost():
+            if self._best is None or cost < self._best_cost:
                 self._best = individual
+                self._best_cost = cost
         else:
-            self._infeas.add(individual)
+            self._infeas.add(individual, cost)
 
-    def select(self) -> Tuple[Individual, Individual]:
+    def select(self) -> Tuple[TIndiv, TIndiv]:
         """
         Selects two (if possible non-identical) parents by binary tournament,
         subject to a diversity restriction.
@@ -776,7 +867,7 @@ class Population:
         first = self.get_binary_tournament()
         second = self.get_binary_tournament()
 
-        diversity = self._op(self._data, first, second)
+        diversity = self._op(first, second)
         lb = self._params.lb_diversity
         ub = self._params.ub_diversity
 
@@ -784,11 +875,11 @@ class Population:
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
             second = self.get_binary_tournament()
-            diversity = self._op(self._data, first, second)
+            diversity = self._op(first, second)
 
         return first, second
 
-    def get_binary_tournament(self) -> Individual:
+    def get_binary_tournament(self) -> TIndiv:
         """
         Selects an individual from this population by binary tournament.
 
@@ -800,7 +891,7 @@ class Population:
 
         def select():
             num_feas = len(self._feas)
-            idx = self._rng.randint(len(self))
+            idx = self._rand_int_func(len(self))
 
             if idx < num_feas:
                 return self._feas[idx]
@@ -815,7 +906,7 @@ class Population:
 
         return item2.individual
 
-    def get_best_found(self) -> Individual:
+    def get_best_found(self) -> TIndiv:
         """
         Returns the best found solution so far. In early iterations, this
         solution might not be feasible yet.
@@ -827,3 +918,45 @@ class Population:
         """
         # TODO move this best solution stuff to GeneticAlgorithm
         return self._best
+
+
+_IndividualDiversityMeasure = Callable[
+    [ProblemData, Individual, Individual], float
+]
+
+
+class Population(GenericPopulation):
+    def __init__(
+        self,
+        data: ProblemData,
+        penalty_manager: PenaltyManager,
+        rng: XorShift128,
+        diversity_op: _IndividualDiversityMeasure,
+        params: PopulationParams = PopulationParams(),
+    ):
+        """
+        Creates a Population instance.
+
+        Parameters
+        ----------
+        data
+            Data object describing the problem to be solved.
+        penalty_manager
+            Penalty manager to use.
+        rng
+            Random number generator.
+        diversity_op
+            Operator to use to determine pairwise diversity between solutions.
+        params, optional
+            Population parameters. If not provided, a default will be used.
+        """
+        super().__init__(
+            Individual(data, penalty_manager, rng),
+            lambda first, second: diversity_op(
+                data, cast(Individual, first), cast(Individual, second)
+            ),
+            rng.randint,
+            params,
+        )
+
+        self.initialize(lambda: Individual(data, penalty_manager, rng))
