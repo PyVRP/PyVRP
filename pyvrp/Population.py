@@ -62,19 +62,11 @@ class _Item(NamedTuple):
     individual: PopulationIndividual
     fitness: float
     cost: float
-    # proximity: List[_DiversityItem]
-
-    def __lt__(self, other) -> bool:
-        assert False, "Don't use, slow"
-        return isinstance(other, _Item) and self.cost < other.cost
 
 
 class _ItemWithProximity(NamedTuple):
     item: _Item
     proximity: List[_DiversityItem]
-
-    def __lt__(self, other) -> bool:
-        assert False, "Don't use, slow"
 
 
 class SubPopulation:
@@ -84,7 +76,6 @@ class SubPopulation:
         params: PopulationParams,
     ):
         self._op = diversity_op
-        pass
 
     def __getitem__(self, idx: int) -> _Item:
         raise NotImplementedError()
