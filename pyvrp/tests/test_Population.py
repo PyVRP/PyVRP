@@ -1,3 +1,6 @@
+from typing import NamedTuple, cast
+
+import numpy as np
 from numpy.testing import (
     assert_,
     assert_almost_equal,
@@ -13,6 +16,7 @@ from pyvrp import (
     PopulationParams,
     XorShift128,
 )
+from pyvrp.Population import GenericPopulation, PopulationIndividual
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.tests.helpers import read
 
@@ -239,6 +243,132 @@ def test_custom_initial_solutions():
 
     pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
     assert_equal(len(pop), 3)
+
+
+@mark.parametrize(
+    "use_numpy",
+    [False, True],
+)
+def test_biased_fitness_computation(use_numpy: bool):
+
+    # Helper functions
+    def has_duplicates(vals: np.ndarray):
+        sorted_vals = np.sort(vals)
+        return np.isclose(sorted_vals[:-1], sorted_vals[1:]).any()
+
+    def get_rank(vals: np.ndarray[float]):
+        rank = np.zeros(len(vals), dtype=int)
+        rank[np.argsort(vals)] = np.arange(len(vals))
+        return rank
+
+    # TODO setup as fixture
+    class TestIndividual(NamedTuple):
+        idx: int
+        costval: float
+
+        def cost(self) -> float:
+            return self.costval
+
+        def is_feasible(self) -> bool:
+            return True
+
+    rng = np.random.default_rng(seed=2_147_483_647)
+
+    n = 100
+    costs = rng.random(n)
+    dists = rng.random((n, n))
+    dists = np.maximum(dists, dists.T)  # Symmetrize
+
+    indivs = [TestIndividual(i, c) for i, c in enumerate(costs)]
+
+    def get_diversity(
+        indiv1: PopulationIndividual, indiv2: PopulationIndividual
+    ):
+        return dists[
+            cast(TestIndividual, indiv1).idx, cast(TestIndividual, indiv2).idx
+        ]
+
+    params = PopulationParams(
+        use_numpy=use_numpy, min_pop_size=25, generation_size=n - 25
+    )
+    pop = GenericPopulation[TestIndividual](
+        indivs[0], get_diversity, rng.integers, params=params
+    )
+
+    for indiv in indivs:
+        pop.add(indiv)
+
+    # Test that we haven't purged indeed
+    assert_equal(n, len(pop))
+
+    best = pop.get_best_found()
+    assert_equal(costs.argmin(), best.idx)
+    assert_almost_equal(costs.min(), best.cost())
+
+    # Compute expected distance closest
+    k = params.nb_close
+    expected_div = np.partition(dists + np.eye(n) * 1e9, k - 1, axis=-1)[
+        :, :k
+    ].mean(-1)
+
+    # Check that we have no duplicates which makes rank and biased fitness
+    # computation unstable
+    assert_(not has_duplicates(costs))
+    assert_(not has_duplicates(expected_div))
+
+    subpop = pop.feasible_subpopulation
+    subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
+
+    # Note: order of individuals can be arbitrary
+    for i, indiv in enumerate(subpop_indivs):
+        assert_almost_equal(
+            expected_div[indiv.idx], subpop.avg_distance_closest(i)
+        )
+
+    cost_rank = get_rank(costs)
+    div_rank = get_rank(-expected_div)
+
+    nb_elite = min(params.nb_elite, n)
+    div_weight = 1 - nb_elite / n
+
+    expected_fitness = (cost_rank + div_weight * div_rank) / n
+
+    # Note: order of individuals can be arbitrary
+    for indiv, item in zip(subpop_indivs, subpop):
+        assert_almost_equal(expected_fitness[indiv.idx], item.fitness)
+
+    # Test that if we do a binary tournament many times, the ranking of the
+    # sampled items should approximately equal the ranking of the fitness
+    n_trials = n * 100
+    freqs = np.bincount(
+        [pop.get_binary_tournament().idx for _ in range(n_trials)]
+    )
+    rank_binary_tournament = get_rank(-freqs)  # Higher is better
+    fitness_rank = get_rank(expected_fitness)  # Lower is better
+    perc_rank_off = (rank_binary_tournament - fitness_rank) / n
+    assert_(np.abs(perc_rank_off).mean() < 0.1)
+
+    # Test that if we purge we purge the individual with wordt biased fitness
+    # Note that if we have min_pop_size 1, generation size 1, then max size = 2
+    # And we purge after we add the 3rd indiv back to 1 so we always purge at
+    # least 2 indivs but these do not need to be the two with worst fitness
+    # as the fitness gets updated after removing the first individual
+    params = PopulationParams(
+        use_numpy=use_numpy, min_pop_size=n - 2, generation_size=1
+    )
+    pop = GenericPopulation[TestIndividual](
+        indivs[0], get_diversity, rng.integers, params=params
+    )
+
+    for indiv in indivs:
+        pop.add(indiv)
+
+    assert_equal(len(pop), n - 2)
+
+    subpop = pop.feasible_subpopulation
+    subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
+
+    assert_(indivs[expected_fitness.argmax()] not in subpop_indivs)
 
 
 # @mark.parametrize("min_pop_size", [0, 2, 5, 10])

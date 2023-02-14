@@ -754,7 +754,7 @@ class GenericPopulation(Generic[TIndiv]):
     def __init__(
         self,
         best: TIndiv,
-        diversity_op: _DiversityMeasure,
+        diversity_op: Callable[[TIndiv, TIndiv], float],
         rand_int_func: _RandIntFunc,
         params: PopulationParams = PopulationParams(),
     ):
@@ -770,15 +770,15 @@ class GenericPopulation(Generic[TIndiv]):
         params, optional
             Population parameters. If not provided, a default will be used.
         """
-        self._op = diversity_op
+        self._op = cast(_DiversityMeasure, diversity_op)
         self._rand_int_func = rand_int_func
         self._params = params
 
         subpop_cls: Type[SubPopulation] = (
             SubPopulationNumpy if params.use_numpy else SubPopulationPython
         )
-        self._feas = subpop_cls(diversity_op, params)
-        self._infeas = subpop_cls(diversity_op, params)
+        self._feas = subpop_cls(self._op, params)
+        self._infeas = subpop_cls(self._op, params)
 
         self._best = best
         self._best_cost = best.cost()
@@ -916,7 +916,7 @@ _IndividualDiversityMeasure = Callable[
 ]
 
 
-class Population(GenericPopulation):
+class Population(GenericPopulation[Individual]):
     def __init__(
         self,
         data: ProblemData,
@@ -947,9 +947,7 @@ class Population(GenericPopulation):
         """
         super().__init__(
             Individual(data, penalty_manager, rng),
-            lambda first, second: diversity_op(
-                data, cast(Individual, first), cast(Individual, second)
-            ),
+            lambda first, second: diversity_op(data, first, second),
             rng.randint,
             params,
         )
