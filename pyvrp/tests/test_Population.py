@@ -110,7 +110,7 @@ def test_add_triggers_purge():
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -152,7 +152,7 @@ def test_add_updates_best_found_solution():
     rng = XorShift128(seed=2_133_234_000)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
     # Should not have added any individuals to the population pool. The 'best'
     # individual, however, has already been initialised, with a random
@@ -183,7 +183,7 @@ def test_select_returns_same_parents_if_no_other_option():
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
     assert_equal(len(pop), 0)
 
@@ -215,6 +215,30 @@ def test_select_returns_same_parents_if_no_other_option():
 
 
 # // TODO test more select() - diversity, feas/infeas pairs
+def test_custom_initial_solutions():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=2_147_483_647)
+
+    params = PopulationParams(min_pop_size=0)
+
+    initial_solutions = [
+        Individual(data, pm, [[3, 2], [1, 4], []]),
+        Individual(data, pm, [[3, 2], [1], [4]]),
+    ]
+    pop = Population(
+        data,
+        pm,
+        rng,
+        broken_pairs_distance,
+        initial_solutions=initial_solutions,
+        params=params,
+    )
+
+    assert_equal(len(pop), 2)
+
+    pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
+    assert_equal(len(pop), 3)
 
 
 # @mark.parametrize("min_pop_size", [0, 2, 5, 10])

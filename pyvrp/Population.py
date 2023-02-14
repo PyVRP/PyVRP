@@ -932,6 +932,7 @@ class Population(GenericPopulation):
         penalty_manager: PenaltyManager,
         rng: XorShift128,
         diversity_op: _IndividualDiversityMeasure,
+        initial_solutions: Optional[List[Individual]] = None,
         params: PopulationParams = PopulationParams(),
     ):
         """
@@ -947,6 +948,9 @@ class Population(GenericPopulation):
             Random number generator.
         diversity_op
             Operator to use to determine pairwise diversity between solutions.
+        initial_solutions
+            List of Individuals to populate the population with.
+            Will be generated randomly if None.
         params, optional
             Population parameters. If not provided, a default will be used.
         """
@@ -959,4 +963,8 @@ class Population(GenericPopulation):
             params,
         )
 
-        self.initialize(lambda: Individual(data, penalty_manager, rng))
+        if initial_solutions:
+            for indiv in initial_solutions:
+                self.add(indiv)
+        else:
+            self.initialize(lambda: Individual(data, penalty_manager, rng))
