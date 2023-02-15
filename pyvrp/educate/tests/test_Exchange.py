@@ -124,6 +124,10 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
 
 @mark.parametrize("operator", [Exchange32, Exchange33])
 def test_cannot_exchange_when_segments_overlap(operator):
+    """
+    (3, 2)- and (3, 3)-exchange cannot exchange anything on a length-four
+    single route solution: there's always overlap between the segments.
+    """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
@@ -142,6 +146,10 @@ def test_cannot_exchange_when_segments_overlap(operator):
 
 
 def test_cannot_swap_adjacent_segments():
+    """
+    (2, 2)-exchange on a single route cannot swap adjacent segments, since
+    that's already covered by (2, 0)-exchange.
+    """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
@@ -157,3 +165,26 @@ def test_cannot_swap_adjacent_segments():
     ls.search(individual)
 
     assert_equal(individual, copy)
+
+
+def test_swap_between_routes_OkSmall():
+    """
+    On the OkSmall example, (2, 1)-exchange should be able to swap parts of a
+    two route solution, resulting in something better.
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    params = LocalSearchParams(nb_granular=data.num_clients)
+    ls = LocalSearch(data, pm, rng, params)
+    op = Exchange21(data, pm)
+    ls.add_node_operator(op)
+
+    individual = Individual(data, pm, [[1, 2], [3, 4]])
+    copy = Individual(individual)
+
+    ls.search(individual)
+
+    assert_equal(individual.get_routes(), [[3, 4, 2], [1], []])
+    assert_(individual.cost() < copy.cost())
