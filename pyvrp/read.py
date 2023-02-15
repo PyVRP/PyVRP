@@ -13,6 +13,10 @@ _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 _INT_MAX = np.iinfo(np.int32).max
 
 
+def round_nearest(vals: np.ndarray):
+    return np.round(vals).astype(int)
+
+
 def convert_to_int(vals: np.ndarray):
     return vals.astype(int)
 
@@ -27,6 +31,7 @@ def no_rounding(vals):
 
 INSTANCE_FORMATS = ["vrplib", "solomon"]
 ROUND_FUNCS: Dict[str, _RoundingFunc] = {
+    "round": round_nearest,
     "trunc": convert_to_int,
     "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
     "dimacs": functools.partial(scale_and_truncate_to_decimals, decimals=1),
