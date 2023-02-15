@@ -108,10 +108,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.max_pop_size, min_pop_size + generation_size)
 
 
-@mark.parametrize(
-    "use_numpy",
-    [False, True],
-)
+@mark.parametrize("use_numpy", [False, True])
 def test_add_triggers_purge(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -166,10 +163,7 @@ def test_add_triggers_purge(use_numpy: bool):
         num_feas = params.min_pop_size
 
 
-@mark.parametrize(
-    "use_numpy",
-    [False, True],
-)
+@mark.parametrize("use_numpy", [False, True])
 def test_add_updates_best_found_solution(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -201,10 +195,7 @@ def test_add_updates_best_found_solution(use_numpy: bool):
 # TODO test more add() - fitness, duplicate, purge
 
 
-@mark.parametrize(
-    "use_numpy",
-    [False, True],
-)
+@mark.parametrize("use_numpy", [False, True])
 def test_select_returns_same_parents_if_no_other_option(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -273,10 +264,70 @@ def test_custom_initial_solutions(use_numpy: bool):
     assert_equal(len(pop), 3)
 
 
-@mark.parametrize(
-    "use_numpy",
-    [False, True],
-)
+@mark.parametrize("use_numpy", [False, True])
+@mark.parametrize("nb_elite", [5, 25])
+def test_elite_not_purged_computation(nb_elite: int, use_numpy: bool):
+
+    # Helper functions
+    def has_duplicates(vals: np.ndarray):
+        sorted_vals = np.sort(vals)
+        return np.isclose(sorted_vals[:-1], sorted_vals[1:]).any()
+
+    def get_rank(vals: np.ndarray[float]):
+        rank = np.zeros(len(vals), dtype=int)
+        rank[np.argsort(vals)] = np.arange(len(vals))
+        return rank
+
+    # TODO setup as fixture
+    class TestIndividual(NamedTuple):
+        idx: int
+        costval: float
+
+        def cost(self) -> float:
+            return self.costval
+
+        def is_feasible(self) -> bool:
+            return True
+
+    rng = np.random.default_rng(seed=2_147_483_647)
+
+    n = 100
+    costs = rng.random(n)
+    dists = rng.random((n, n))
+    dists = np.maximum(dists, dists.T)  # Symmetrize
+
+    indivs = [TestIndividual(i, c) for i, c in enumerate(costs)]
+
+    def get_diversity(
+        indiv1: PopulationIndividual, indiv2: PopulationIndividual
+    ):
+        return dists[
+            cast(TestIndividual, indiv1).idx, cast(TestIndividual, indiv2).idx
+        ]
+
+    params = PopulationParams(
+        use_numpy=use_numpy,
+        min_pop_size=25,
+        generation_size=n - 25,
+        nb_elite=nb_elite,
+    )
+    pop = GenericPopulation[TestIndividual](
+        indivs[0], get_diversity, rng.integers, params=params
+    )
+
+    for indiv in indivs:
+        pop.add(indiv)
+
+    # Test that we have purged indeed
+    assert_equal(params.min_pop_size, len(pop))
+
+    # Make sure elite individuals are among these
+    for elite_idx in np.argsort(costs)[: params.nb_elite]:
+        # Note: O(n) not most efficient way to check but will do for testing
+        assert_(indivs[elite_idx] in pop.feasible_subpopulation)
+
+
+@mark.parametrize("use_numpy", [False, True])
 def test_biased_fitness_computation(use_numpy: bool):
 
     # Helper functions
