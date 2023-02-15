@@ -364,6 +364,8 @@ class BiasedFitness:
             # Decrease cost rank of all items ranked after removed indiv
             cost_rank[rng[cost_rank[rng] > cost_rank[idx_remove]]] -= 1
 
+        idx_survivor = rng
+
         # Update datastructures
         n = len(rng)
         k = min(self.nb_close, n - 1)
@@ -376,7 +378,7 @@ class BiasedFitness:
         self._cost[:n] = self._cost[rng]
         self._cost_rank[:n] = cost_rank[rng]
 
-        idx_survivor = rng
+        self._size = n
 
         rng = np.arange(n)
 

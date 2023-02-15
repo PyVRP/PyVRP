@@ -108,12 +108,16 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.max_pop_size, min_pop_size + generation_size)
 
 
-def test_add_triggers_purge():
+@mark.parametrize(
+    "use_numpy",
+    [False, True],
+)
+def test_add_triggers_purge(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    params = PopulationParams()
+    params = PopulationParams(use_numpy=use_numpy)
     pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
     # Population should initialise at least min_pop_size individuals
@@ -124,38 +128,54 @@ def test_add_triggers_purge():
 
     assert_equal(len(pop), num_feas + num_infeas)
 
-    while True:  # keep adding feasible individuals until we are about to purge
+    for _ in range(3):
+        while (
+            True
+        ):  # keep adding feasible individuals until we are about to purge
+            individual = Individual(data, pm, rng)
+
+            if individual.is_feasible():
+                pop.add(individual)
+                num_feas += 1
+
+                assert_equal(len(pop), num_feas + num_infeas)
+                assert_equal(len(pop.feasible_subpopulation), num_feas)
+
+            if (
+                num_feas == params.max_pop_size - 1
+            ):  # next add() triggers purge
+                break
+
+        # Since we now have a feasible population that is of maximal size,
+        # adding an individual should trigger survivor selection (purge).
+        # Survivor selection reduces the feasible subpopulation to
+        # min_pop_size, so the overal population is then just num_infeas +
+        # min_pop_size.
+
+        # Find a feasible individual (should not take forever)
         individual = Individual(data, pm, rng)
+        while not individual.is_feasible():
+            individual = Individual(data, pm, rng)
 
-        if individual.is_feasible():
-            pop.add(individual)
-            num_feas += 1
+        assert_(individual.is_feasible())
 
-            assert_equal(len(pop), num_feas + num_infeas)
-            assert_equal(len(pop.feasible_subpopulation), num_feas)
+        pop.add(individual)
+        assert_equal(len(pop.feasible_subpopulation), params.min_pop_size)
+        assert_equal(len(pop), num_infeas + params.min_pop_size)
 
-        if num_feas == params.max_pop_size - 1:  # next add() triggers purge
-            break
-
-    # RNG is fixed, and this next individual is feasible. Since we now have a
-    # feasible population that is of maximal size, adding this individual
-    # should trigger survivor selection (purge). Survivor selection reduces the
-    # feasible subpopulation to min_pop_size, so the overal population is then
-    # just num_infeas + min_pop_size.
-    individual = Individual(data, pm, rng)
-    assert_(individual.is_feasible())
-
-    pop.add(individual)
-    assert_equal(len(pop.feasible_subpopulation), params.min_pop_size)
-    assert_equal(len(pop), num_infeas + params.min_pop_size)
+        num_feas = params.min_pop_size
 
 
-def test_add_updates_best_found_solution():
+@mark.parametrize(
+    "use_numpy",
+    [False, True],
+)
+def test_add_updates_best_found_solution(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_133_234_000)
 
-    params = PopulationParams(min_pop_size=0)
+    params = PopulationParams(min_pop_size=0, use_numpy=use_numpy)
     pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
     # Should not have added any individuals to the population pool. The 'best'
@@ -181,12 +201,16 @@ def test_add_updates_best_found_solution():
 # TODO test more add() - fitness, duplicate, purge
 
 
-def test_select_returns_same_parents_if_no_other_option():
+@mark.parametrize(
+    "use_numpy",
+    [False, True],
+)
+def test_select_returns_same_parents_if_no_other_option(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_147_483_647)
 
-    params = PopulationParams(min_pop_size=0)
+    params = PopulationParams(min_pop_size=0, use_numpy=use_numpy)
     pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
     assert_equal(len(pop), 0)
@@ -219,12 +243,16 @@ def test_select_returns_same_parents_if_no_other_option():
 
 
 # // TODO test more select() - diversity, feas/infeas pairs
-def test_custom_initial_solutions():
+@mark.parametrize(
+    "use_numpy",
+    [False, True],
+)
+def test_custom_initial_solutions(use_numpy: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2_147_483_647)
 
-    params = PopulationParams(min_pop_size=0)
+    params = PopulationParams(min_pop_size=0, use_numpy=use_numpy)
 
     initial_solutions = [
         Individual(data, pm, [[3, 2], [1, 4], []]),
