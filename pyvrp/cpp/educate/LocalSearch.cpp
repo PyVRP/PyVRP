@@ -18,7 +18,7 @@ void LocalSearch::search(Individual &indiv)
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
 
     if (nodeOps.empty())
-        throw std::runtime_error("No known node operators.");
+        throw std::logic_error("No known node operators.");
 
     // Caches the last time nodes were tested for modification (uses nbMoves to
     // track this). The lastModified field, in contrast, track when a route was
