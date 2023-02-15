@@ -39,9 +39,7 @@ class PopulationIndividual(Protocol):  # pragma: no cover
 
 TIndiv = TypeVar("TIndiv", bound=PopulationIndividual)
 
-_DiversityMeasure = Callable[
-    [PopulationIndividual, PopulationIndividual], float
-]
+_DiversityMeasure = Callable[[TIndiv, TIndiv], float]
 _RandIntFunc = Callable[[int], int]
 
 
@@ -49,23 +47,10 @@ class _DiversityItem(NamedTuple):
     individual: PopulationIndividual
     diversity: float
 
-    def __lt__(self, other) -> bool:
-        # Note: this is only used for computing most similar indivs for
-        # average diversity, therefore a tie-breaker on cost is not necessary
-        return (
-            isinstance(other, _DiversityItem)
-            and self.diversity < other.diversity
-        )
-
 
 class _Item(NamedTuple):
     individual: PopulationIndividual
     fitness: float
-    cost: float
-
-
-class _ItemWithProximity(NamedTuple):
-    item: _Item
     proximity: List[_DiversityItem]
 
 
@@ -131,14 +116,14 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
         self._op = diversity_op
         self._params = params
 
-        self._items: List[_ItemWithProximity] = []
+        self._items: List[_Item] = []
 
     def __getitem__(self, idx: int) -> TIndiv:
-        return cast(TIndiv, self._items[idx].item.individual)
+        return cast(TIndiv, self._items[idx].individual)
 
     def __iter__(self) -> Iterator[TIndiv]:
         for item in self._items:
-            yield cast(TIndiv, item.item.individual)
+            yield cast(TIndiv, item.individual)
 
     def __len__(self) -> int:
         return len(self._items)
@@ -146,18 +131,22 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
     def add(self, individual: PopulationIndividual):
         indiv_prox: List[_DiversityItem] = []
 
-        for (other, _, _), other_prox in self._items:
+        for other, _, other_prox in self._items:
             diversity = self._op(individual, other)
-            insort_left(indiv_prox, _DiversityItem(other, diversity))
-            insort_left(other_prox, _DiversityItem(individual, diversity))
+            insort_left(
+                indiv_prox,
+                _DiversityItem(other, diversity),
+                key=lambda di: di.diversity,
+            )
+            insort_left(
+                other_prox,
+                _DiversityItem(individual, diversity),
+                key=lambda di: di.diversity,
+            )
 
         # Insert new individual and update everyone's biased fitness score.
-        self._items.append(
-            _ItemWithProximity(
-                _Item(individual, 0.0, individual.cost()), indiv_prox
-            )
-        )
-        self._items.sort(key=lambda it: it.item.cost)
+        self._items.append(_Item(individual, 0.0, indiv_prox))
+        self._items.sort(key=lambda it: it.individual.cost())
         self.update_fitness()
 
         if len(self) >= self._params.max_pop_size:
@@ -178,14 +167,18 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
         ValueError
             When the given individual could not be found in the subpopulation.
         """
-        for _, prox in self._items:  # remove individual from other proximities
+        for (
+            _,
+            _,
+            prox,
+        ) in self._items:  # remove individual from other proximities
             for idx, (other, _) in enumerate(prox):
                 if other is individual:
                     del prox[idx]
                     break
 
         for item in self._items:  # remove individual from subpopulation.
-            if item.item.individual is individual:
+            if item.individual is individual:
                 self._items.remove(item)
                 break
         else:
@@ -200,7 +193,7 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
         """
 
         while len(self) > self._params.min_pop_size:
-            for (individual, _, _), prox in self._items:
+            for individual, _, prox in self._items:
                 if prox and prox[0].individual == individual:  # has duplicate?
                     self.remove(individual)
                     break
@@ -213,9 +206,7 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
             # Find the worst individual (in terms of biased fitness) in the
             # population, and remove it.
             self.remove(
-                max(
-                    self._items, key=lambda item: item.item.fitness
-                ).item.individual
+                max(self._items, key=lambda item: item.fitness).individual
             )
 
     def update_fitness(self):
@@ -235,10 +226,8 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
 
         for div_rank, cost_rank in enumerate(diversity):
             new_fitness = (cost_rank + div_weight * div_rank) / len(self)
-            (individual, _, cost), prox = self._items[cost_rank]
-            self._items[cost_rank] = _ItemWithProximity(
-                _Item(individual, new_fitness, cost), prox
-            )
+            individual, _, prox = self._items[cost_rank]
+            self._items[cost_rank] = _Item(individual, new_fitness, prox)
 
     def avg_distance_closest(self, individual_idx: int) -> float:
         """
@@ -266,7 +255,7 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
             return 0.0
 
     def get_biased_fitness(self, individual_idx: int) -> float:
-        return self._items[individual_idx].item.fitness
+        return self._items[individual_idx].fitness
 
 
 class SubPopulationNumpy(SubPopulation, Generic[TIndiv]):
