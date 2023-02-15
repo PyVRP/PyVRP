@@ -54,6 +54,7 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
+    benchmark_cvrp: optional[bool],
     **kwargs,
 ) -> Result:
     """
@@ -101,7 +102,11 @@ def solve(
 
     algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
 
-    if max_runtime is not None:
+    if benchmark_cvrp is not None:
+        # Use CVRP benchmark time limit as in Vidal (2020)
+        time_limit = data.num_clients * (240 / 100)
+        stop = MaxRuntime(time_limit)
+    elif max_runtime is not None:
         stop = MaxRuntime(max_runtime)
     else:
         assert max_iterations is not None
@@ -208,6 +213,7 @@ def main():
     msg = "Maximum number of iterations for solving each instance."
     stop.add_argument("--max_iterations", type=int, help=msg)
 
+    stop.add_argument("--benchmark_cvrp", type=bool)
     run(**vars(parser.parse_args()))
 
 
