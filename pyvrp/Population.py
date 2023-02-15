@@ -47,6 +47,14 @@ class _DiversityItem(NamedTuple):
     individual: PopulationIndividual
     diversity: float
 
+    def __lt__(self, other) -> bool:
+        # Note: this is only used for computing most similar indivs for
+        # average diversity, therefore a tie-breaker on cost is not necessary
+        return (
+            isinstance(other, _DiversityItem)
+            and self.diversity < other.diversity
+        )
+
 
 class _Item(NamedTuple):
     individual: PopulationIndividual
@@ -133,16 +141,8 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
 
         for other, _, other_prox in self._items:
             diversity = self._op(individual, other)
-            insort_left(
-                indiv_prox,
-                _DiversityItem(other, diversity),
-                key=lambda di: di.diversity,
-            )
-            insort_left(
-                other_prox,
-                _DiversityItem(individual, diversity),
-                key=lambda di: di.diversity,
-            )
+            insort_left(indiv_prox, _DiversityItem(other, diversity))
+            insort_left(other_prox, _DiversityItem(individual, diversity))
 
         # Insert new individual and update everyone's biased fitness score.
         self._items.append(_Item(individual, 0.0, indiv_prox))
