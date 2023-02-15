@@ -1,4 +1,4 @@
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 import numpy as np
 from numpy.testing import (
@@ -16,7 +16,7 @@ from pyvrp import (
     PopulationParams,
     XorShift128,
 )
-from pyvrp.Population import GenericPopulation, PopulationIndividual
+from pyvrp.Population import GenericPopulation
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.tests.helpers import read
 
@@ -298,12 +298,8 @@ def test_elite_not_purged_computation(nb_elite: int, use_numpy: bool):
 
     indivs = [TestIndividual(i, c) for i, c in enumerate(costs)]
 
-    def get_diversity(
-        indiv1: PopulationIndividual, indiv2: PopulationIndividual
-    ):
-        return dists[
-            cast(TestIndividual, indiv1).idx, cast(TestIndividual, indiv2).idx
-        ]
+    def get_diversity(indiv1: TestIndividual, indiv2: TestIndividual):
+        return dists[indiv1.idx, indiv2.idx]
 
     params = PopulationParams(
         use_numpy=use_numpy,
@@ -360,12 +356,8 @@ def test_biased_fitness_computation(use_numpy: bool):
 
     indivs = [TestIndividual(i, c) for i, c in enumerate(costs)]
 
-    def get_diversity(
-        indiv1: PopulationIndividual, indiv2: PopulationIndividual
-    ):
-        return dists[
-            cast(TestIndividual, indiv1).idx, cast(TestIndividual, indiv2).idx
-        ]
+    def get_diversity(indiv1: TestIndividual, indiv2: TestIndividual):
+        return dists[indiv1.idx, indiv2.idx]
 
     params = PopulationParams(
         use_numpy=use_numpy, min_pop_size=25, generation_size=n - 25 + 1
@@ -396,7 +388,6 @@ def test_biased_fitness_computation(use_numpy: bool):
     assert_(not has_duplicates(expected_div))
 
     subpop = pop.feasible_subpopulation
-    # subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
 
     # Note: order of individuals can be arbitrary
     for i, indiv in enumerate(subpop):
@@ -450,36 +441,5 @@ def test_biased_fitness_computation(use_numpy: bool):
     assert_equal(len(pop), n - 1)
 
     subpop = pop.feasible_subpopulation
-    # subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
 
     assert_(indivs[expected_fitness.argmax()] not in subpop)
-
-
-# @mark.parametrize("min_pop_size", [0, 2, 5, 10])
-# def test_proximity_structures_are_kept_up_to_date(min_pop_size: int):
-#     data = read("data/OkSmall.txt")
-#     pm = PenaltyManager(data.vehicle_capacity)
-#     rng = XorShift128(seed=42)
-
-#     params = PopulationParams(min_pop_size=min_pop_size, use_numpy=False)
-#     pop = Population(data, pm, rng, broken_pairs_distance, params)
-
-#     feas = pop.feasible_subpopulation
-#     infeas = pop.infeasible_subpopulation
-
-#     # We run a few times the maximum pop size, to make sure that we get one
-#     # or more purge cycles in.
-#     for _ in range(5 * params.max_pop_size):
-#         indiv = Individual(data, pm, rng)
-#         pop.add(indiv)
-
-#         for indiv, prox in feas._items:
-#             # Each individual should have a proximity value for every other
-#             # individual in the same subpopulation (so there should be n - 1
-#             # such values).
-#             print(prox)
-#             assert_equal(len(prox), len(feas) - 1)
-
-#         for indiv, prox in infeas._items:
-#             # The same must hold for the infeasible subpopulation, of course!
-#             assert_equal(len(prox), len(infeas) - 1)
