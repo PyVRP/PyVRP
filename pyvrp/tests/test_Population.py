@@ -317,10 +317,10 @@ def test_biased_fitness_computation(use_numpy: bool):
     assert_(not has_duplicates(expected_div))
 
     subpop = pop.feasible_subpopulation
-    subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
+    # subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
 
     # Note: order of individuals can be arbitrary
-    for i, indiv in enumerate(subpop_indivs):
+    for i, indiv in enumerate(subpop):
         assert_almost_equal(
             expected_div[indiv.idx], subpop.avg_distance_closest(i)
         )
@@ -334,8 +334,10 @@ def test_biased_fitness_computation(use_numpy: bool):
     expected_fitness = (cost_rank + div_weight * div_rank) / n
 
     # Note: order of individuals can be arbitrary
-    for indiv, item in zip(subpop_indivs, subpop):
-        assert_almost_equal(expected_fitness[indiv.idx], item.fitness)
+    for i, indiv in enumerate(subpop):
+        assert_almost_equal(
+            expected_fitness[indiv.idx], subpop.get_biased_fitness(i)
+        )
 
     # Test that if we do a binary tournament many times, the ranking of the
     # sampled items should approximately equal the ranking of the fitness
@@ -366,9 +368,9 @@ def test_biased_fitness_computation(use_numpy: bool):
     assert_equal(len(pop), n - 2)
 
     subpop = pop.feasible_subpopulation
-    subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
+    # subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
 
-    assert_(indivs[expected_fitness.argmax()] not in subpop_indivs)
+    assert_(indivs[expected_fitness.argmax()] not in subpop)
 
 
 # @mark.parametrize("min_pop_size", [0, 2, 5, 10])

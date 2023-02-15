@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 from time import perf_counter
-from typing import List, cast
+from typing import List
 
 import numpy as np
 
-from .Individual import Individual
 from .Population import Population, SubPopulation
 
 
@@ -71,9 +70,8 @@ class Statistics:
             )
 
         size = len(subpop)
-        individuals = [cast(Individual, indiv) for indiv, *_ in subpop]
-        costs = [individual.cost() for individual in individuals]
-        num_routes = [individual.num_routes() for individual in individuals]
+        costs = [individual.cost() for individual in subpop]
+        num_routes = [individual.num_routes() for individual in subpop]
         diversities = [subpop.avg_distance_closest(idx) for idx in range(size)]
 
         return _Datum(

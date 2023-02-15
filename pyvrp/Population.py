@@ -69,7 +69,7 @@ class _ItemWithProximity(NamedTuple):
     proximity: List[_DiversityItem]
 
 
-class SubPopulation:
+class SubPopulation(Generic[TIndiv]):
     def __init__(
         self,
         diversity_op: _DiversityMeasure,
@@ -77,10 +77,10 @@ class SubPopulation:
     ):
         self._op = diversity_op
 
-    def __getitem__(self, idx: int) -> _Item:
+    def __getitem__(self, idx: int) -> TIndiv:
         raise NotImplementedError()
 
-    def __iter__(self) -> Iterator[_Item]:
+    def __iter__(self) -> Iterator[TIndiv]:
         raise NotImplementedError()
 
     def __len__(self) -> int:
@@ -88,7 +88,7 @@ class SubPopulation:
 
     def add(
         self,
-        individual: PopulationIndividual,
+        individual: TIndiv,
         cost: Optional[float] = None,
         distances: Optional[List[float]] = None,
     ):
@@ -109,12 +109,12 @@ class SubPopulation:
         if cost is None:
             cost = individual.cost()
         if distances is None:
-            distances = [self._op(individual, other) for other, _, _ in self]
+            distances = [self._op(individual, other) for other in self]
         self._add(individual, cost, distances)
 
     def _add(
         self,
-        individual: PopulationIndividual,
+        individual: TIndiv,
         cost: float,
         distances: List[float],
     ):
@@ -123,8 +123,11 @@ class SubPopulation:
     def avg_distance_closest(self, individual_idx: int) -> float:
         raise NotImplementedError()
 
+    def get_biased_fitness(self, individual_idx: int) -> float:
+        raise NotImplementedError()
 
-class SubPopulationPython(SubPopulation):
+
+class SubPopulationPython(SubPopulation, Generic[TIndiv]):
     def __init__(
         self,
         diversity_op: _DiversityMeasure,
@@ -152,12 +155,12 @@ class SubPopulationPython(SubPopulation):
 
         self._items: List[_ItemWithProximity] = []
 
-    def __getitem__(self, idx: int) -> _Item:
-        return self._items[idx].item
+    def __getitem__(self, idx: int) -> TIndiv:
+        return cast(TIndiv, self._items[idx].item.individual)
 
-    def __iter__(self) -> Iterator[_Item]:
+    def __iter__(self) -> Iterator[TIndiv]:
         for item in self._items:
-            yield item.item
+            yield cast(TIndiv, item.item.individual)
 
     def __len__(self) -> int:
         return len(self._items)
@@ -235,7 +238,11 @@ class SubPopulationPython(SubPopulation):
 
             # Find the worst individual (in terms of biased fitness) in the
             # population, and remove it.
-            self.remove(max(self, key=lambda item: item.fitness).individual)
+            self.remove(
+                max(
+                    self._items, key=lambda item: item.item.fitness
+                ).item.individual
+            )
 
     def update_fitness(self):
         """
@@ -284,8 +291,11 @@ class SubPopulationPython(SubPopulation):
         else:
             return 0.0
 
+    def get_biased_fitness(self, individual_idx: int) -> float:
+        return self._items[individual_idx].item.fitness
 
-class SubPopulationNumpy(SubPopulation):
+
+class SubPopulationNumpy(SubPopulation, Generic[TIndiv]):
     def __init__(
         self,
         diversity_op: _DiversityMeasure,
@@ -330,27 +340,22 @@ class SubPopulationNumpy(SubPopulation):
         # self._diversity_rank = np.zeros(n, dtype=int)
         self._biased_fitness = np.zeros(n, dtype=float)
 
-        self._indivs: List[PopulationIndividual] = []
+        self._indivs: List[TIndiv] = []
 
         self.DO_CHECKS = False
 
-    def __getitem__(self, idx: int) -> _Item:
-        return _Item(
-            self._indivs[idx], self._biased_fitness[idx], self._cost[idx]
-        )
+    def __getitem__(self, idx: int) -> TIndiv:
+        return self._indivs[idx]
 
-    def __iter__(self) -> Iterator[_Item]:
-        for indiv, fitness, cost in zip(
-            self._indivs, self._biased_fitness, self._cost
-        ):
-            yield _Item(indiv, fitness, cost)
+    def __iter__(self) -> Iterator[TIndiv]:
+        return iter(self._indivs)
 
     def __len__(self) -> int:
         return len(self._indivs)
 
     def _add(
         self,
-        individual: PopulationIndividual,
+        individual: TIndiv,
         cost: float,
         distances: List[float],
     ):
@@ -535,6 +540,9 @@ class SubPopulationNumpy(SubPopulation):
         """
         k = min(self._params.nb_close, len(self) - 1)
         return self._dist_closest_sum[individual_idx] / k
+
+    def get_biased_fitness(self, individual_idx: int) -> float:
+        return self._biased_fitness[individual_idx]
 
     def remove(self, individual: PopulationIndividual):
         """
@@ -885,17 +893,19 @@ class GenericPopulation(Generic[TIndiv]):
             idx = self._rand_int_func(len(self))
 
             if idx < num_feas:
-                return self._feas[idx]
+                return self._feas[idx], self._feas.get_biased_fitness(idx)
 
-            return self._infeas[idx - num_feas]
+            return self._infeas[
+                idx - num_feas
+            ], self._infeas.get_biased_fitness(idx - num_feas)
 
-        item1 = select()
-        item2 = select()
+        indiv1, fitness1 = select()
+        indiv2, fitness2 = select()
 
-        if item1.fitness < item2.fitness:
-            return item1.individual
+        if fitness1 < fitness2:
+            return indiv1
 
-        return item2.individual
+        return indiv2
 
     def get_best_found(self) -> TIndiv:
         """
