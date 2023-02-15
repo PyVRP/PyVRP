@@ -10,8 +10,6 @@ from .ProblemData import ProblemData
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
-_INT_MAX = np.iinfo(np.int32).max
-
 
 def round_nearest(vals: np.ndarray):
     return np.round(vals).astype(int)
@@ -90,7 +88,9 @@ def read(
 
     depots = instance.get("depot", np.array([0]))
     num_vehicles = instance.get("vehicles", num_clients - 1)
-    capacity = instance.get("capacity", _INT_MAX)
+    capacity = instance.get(
+        "capacity", 1_000_000
+    )  # TODO What's a good bound here?
     edge_weight = round_func(instance["edge_weight"])
 
     if "demand" in instance:
@@ -103,15 +103,22 @@ def read(
     else:
         coords = np.zeros((num_clients, 2), dtype=int)
 
-    if "time_window" in instance:
-        time_windows = round_func(instance["time_window"])
-    else:
-        time_windows = np.repeat([[0, _INT_MAX]], num_clients, axis=0)
-
     if "service_time" in instance:
         service_times = round_func(instance["service_time"])
     else:
         service_times = np.zeros(num_clients, dtype=int)
+
+    if "time_window" in instance:
+        time_windows = round_func(instance["time_window"])
+    else:
+        # Upper bound based on the maximum route duration
+        max_route_len = capacity // demands[demands > 0].min()
+        max_leg_duration = edge_weight.max() + service_times.max()
+        max_route_duration = (max_route_len + 1) * max_leg_duration
+
+        time_windows = np.repeat(
+            [[0, max_route_duration]], num_clients, axis=0
+        )
 
     if "release_time" in instance:
         release_times = round_func(instance["release_time"])
