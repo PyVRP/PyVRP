@@ -134,7 +134,7 @@ def test_add_triggers_purge():
             assert_equal(len(pop), num_feas + num_infeas)
             assert_equal(len(pop.feasible_subpopulation), num_feas)
 
-        if num_feas == params.max_pop_size:  # next add() triggers purge
+        if num_feas == params.max_pop_size - 1:  # next add() triggers purge
             break
 
     # RNG is fixed, and this next individual is feasible. Since we now have a
@@ -289,7 +289,7 @@ def test_biased_fitness_computation(use_numpy: bool):
         ]
 
     params = PopulationParams(
-        use_numpy=use_numpy, min_pop_size=25, generation_size=n - 25
+        use_numpy=use_numpy, min_pop_size=25, generation_size=n - 25 + 1
     )
     pop = GenericPopulation[TestIndividual](
         indivs[0], get_diversity, rng.integers, params=params
@@ -356,16 +356,19 @@ def test_biased_fitness_computation(use_numpy: bool):
     # least 2 indivs but these do not need to be the two with worst fitness
     # as the fitness gets updated after removing the first individual
     params = PopulationParams(
-        use_numpy=use_numpy, min_pop_size=n - 2, generation_size=1
+        use_numpy=use_numpy, min_pop_size=n - 1, generation_size=1
     )
     pop = GenericPopulation[TestIndividual](
         indivs[0], get_diversity, rng.integers, params=params
     )
 
-    for indiv in indivs:
+    for indiv in indivs[:-1]:
         pop.add(indiv)
 
-    assert_equal(len(pop), n - 2)
+    assert_equal(len(pop), n - 1)
+    # Now add last indiv which should trigger purge
+    pop.add(indivs[-1])
+    assert_equal(len(pop), n - 1)
 
     subpop = pop.feasible_subpopulation
     # subpop_indivs = [cast(TestIndividual, indiv) for indiv, *_ in subpop]
