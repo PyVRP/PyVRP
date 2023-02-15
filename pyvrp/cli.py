@@ -54,7 +54,7 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
-    benchmark_cvrp: optional[bool],
+    benchmark_cvrp: Optional[bool],
     **kwargs,
 ) -> Result:
     """
