@@ -120,3 +120,40 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     ls.search(individual)
 
     assert_equal(individual, copy)
+
+
+@mark.parametrize("operator", [Exchange32, Exchange33])
+def test_cannot_exchange_when_segments_overlap(operator):
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    params = LocalSearchParams(nb_granular=data.num_clients)
+    ls = LocalSearch(data, pm, rng, params)
+    op = operator(data, pm)
+    ls.add_node_operator(op)
+
+    individual = Individual(data, pm, [[1, 2, 3, 4]])
+    copy = Individual(individual)
+
+    ls.search(individual)
+
+    assert_equal(individual, copy)
+
+
+def test_cannot_swap_adjacent_segments():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    params = LocalSearchParams(nb_granular=data.num_clients)
+    ls = LocalSearch(data, pm, rng, params)
+    op = Exchange22(data, pm)
+    ls.add_node_operator(op)
+
+    individual = Individual(data, pm, [[1, 2, 3, 4]])
+    copy = Individual(individual)
+
+    ls.search(individual)
+
+    assert_equal(individual, copy)
