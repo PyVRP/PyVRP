@@ -12,6 +12,7 @@ from .MoveTwoClientsReversed import MoveTwoClientsReversed
 from .RelocateStar import RelocateStar
 from .SwapStar import SwapStar
 from .TwoOpt import TwoOpt
+from .neighbourhood import NeighbourhoodParams, Neighbours, compute_neighbours
 
 NODE_OPERATORS = [
     Exchange20,

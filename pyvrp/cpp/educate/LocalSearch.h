@@ -34,6 +34,8 @@ struct LocalSearchParams
     }
 };
 
+// TODO define within LocalSearch
+using Neighbours = std::vector<std::vector<int>>;
 class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Node>;
@@ -44,10 +46,12 @@ class LocalSearch
     XorShift128 &rng;
     LocalSearchParams params;
 
+public:
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
-    std::vector<std::vector<int>> neighbours;
+    Neighbours neighbours;
 
+private:
     std::vector<int> orderNodes;   // random node order used in RI operators
     std::vector<int> orderRoutes;  // random route order used in SWAP* operators
 
@@ -117,6 +121,7 @@ public:
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
+                Neighbours neighbours,
                 XorShift128 &rng,
                 LocalSearchParams params = LocalSearchParams());
 };

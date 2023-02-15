@@ -5,6 +5,8 @@ from typing import List, Optional
 
 import numpy as np
 
+from pyvrp.educate.neighbourhood import compute_neighbours
+
 try:
     from tqdm.contrib.concurrent import process_map
 except ModuleNotFoundError:
@@ -87,7 +89,8 @@ def solve(
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity)
     pop = Population(data, pen_manager, rng, bpd)
-    ls = LocalSearch(data, pen_manager, rng)
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, pen_manager, neighbours, rng)
 
     node_ops = [node_op(data, pen_manager) for node_op in NODE_OPERATORS]
 

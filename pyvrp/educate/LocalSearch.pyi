@@ -1,9 +1,11 @@
-from typing import overload
+from typing import List, overload
 
 from pyvrp.Individual import Individual
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.ProblemData import ProblemData
 from pyvrp.XorShift128 import XorShift128
+
+Neighbours = List[List[int]]
 
 class LocalSearch:
     @overload
@@ -11,6 +13,7 @@ class LocalSearch:
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
+        neighbours: Neighbours,
         rng: XorShift128,
         params: LocalSearchParams,
     ) -> None: ...
@@ -19,10 +22,13 @@ class LocalSearch:
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
+        neighbours: Neighbours,
         rng: XorShift128,
     ) -> None: ...
     def add_node_operator(self, op) -> None: ...
     def add_route_operator(self, op) -> None: ...
+    @property
+    def neighbours(self) -> Neighbours: ...
     def intensify(self, individual: Individual) -> None: ...
     def search(self, individual: Individual) -> None: ...
 
