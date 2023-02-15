@@ -426,7 +426,7 @@ class GenericPopulation(Generic[TIndiv]):
         params, optional
             Population parameters. If not provided, a default will be used.
         """
-        self._op = cast(_DiversityMeasure, diversity_op)
+        self._op = diversity_op
         self._rand_int_func = rand_int_func
         self._params = params
 
