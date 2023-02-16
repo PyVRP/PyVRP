@@ -146,6 +146,13 @@ class SubPopulation:
             # population, and remove it.
             self.remove(max(self, key=lambda item: item.fitness).individual)
 
+    def restart(self):
+        """
+        Restarts the population by removing all individuals within the
+        population.
+        """
+        self._items = []
+
     def update_fitness(self):
         """
         Updates the biased fitness scores of individuals in the subpopulation.
@@ -350,6 +357,16 @@ class Population:
             diversity = self._op(self._data, first, second)
 
         return first, second
+
+    def restart(self):
+        """
+        Restarts the population.
+        """
+        self._feas.restart()
+        self._infeas.restart()
+
+        for _ in range(self._params.min_pop_size):
+            self.add(Individual(self._data, self._pm, self._rng))
 
     def get_binary_tournament(self) -> Individual:
         """
