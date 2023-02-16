@@ -65,3 +65,5 @@ def test_local_search_search_raises_when_there_are_no_node_operators():
 
     with assert_raises(RuntimeError):
         ls.search(individual)
+
+    # TODO intensify without route ops should also raise
