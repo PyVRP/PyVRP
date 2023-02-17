@@ -60,6 +60,7 @@ def read(
         Optional rounding function. Will be applied to round data if the data
         is not already integer. This can either be a function or a string:
 
+            * ``'round'`` rounds the values to the nearest integer;
             * ``'trunc'`` truncates the values to be integral;
             * ``'trunc1'`` or ``'dimacs'`` scale and truncate to the nearest
               decimal;

@@ -146,12 +146,6 @@ class SubPopulation:
             # population, and remove it.
             self.remove(max(self, key=lambda item: item.fitness).individual)
 
-    def restart(self):
-        """
-        Restarts the subpopulation by removing all its individuals.
-        """
-        self._items = []
-
     def update_fitness(self):
         """
         Updates the biased fitness scores of individuals in the subpopulation.
@@ -362,8 +356,8 @@ class Population:
         Restarts the population. All individuals are removed and a new initial
         population population is generated.
         """
-        self._feas.restart()
-        self._infeas.restart()
+        self._feas = SubPopulation(self._data, self._op, self._params)
+        self._infeas = SubPopulation(self._data, self._op, self._params)
 
         for _ in range(self._params.min_pop_size):
             self.add(Individual(self._data, self._pm, self._rng))
