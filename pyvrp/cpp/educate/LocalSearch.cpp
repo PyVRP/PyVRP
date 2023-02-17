@@ -421,17 +421,25 @@ void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
 
 void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
+void LocalSearch::setNeighbours(Neighbours neighbours)
+{
+    this->neighbours = neighbours;
+}
+
+Neighbours LocalSearch::getNeighbours()
+{
+    return neighbours;
+}
+
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
-                         Neighbours neighbours,
                          XorShift128 &rng,
                          LocalSearchParams params)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
       params(params),
-      neighbours(neighbours),
-    //   neighbours(data.numClients() + 1),
+      neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
@@ -444,7 +452,7 @@ LocalSearch::LocalSearch(ProblemData &data,
     startDepots = std::vector<Node>(data.numVehicles());
     endDepots = std::vector<Node>(data.numVehicles());
 
-    // calculateNeighbours();
+    calculateNeighbours();
 
     for (size_t i = 0; i <= data.numClients(); i++)
     {

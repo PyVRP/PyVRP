@@ -13,7 +13,8 @@ class NeighbourhoodParams:
     weight_wait_time: int = 18
     weight_time_warp: int = 20
     nb_granular: int = 34
-    symmetric: bool = False
+    symmetric_proximity: bool = True
+    symmetric_neighbours: bool = False
 
     def __post_init__(self):
 
@@ -53,45 +54,23 @@ def compute_proximity(
         dtype=float,
     )
 
-    return (
+    min_wait_time = np.maximum(
+        earliest[None, :] - durations - service[:, None] - latest[:, None], 0
+    )
+    min_time_warp = np.maximum(
+        earliest[:, None] + service[:, None] + durations - latest[None, :],
+        0,
+    )
+
+    prox = (
         durations
-        + np.minimum(
-            params.weight_wait_time
-            * np.maximum(
-                earliest[None, :]
-                - durations
-                - service[:, None]
-                - latest[:, None],
-                0,
-            )
-            + params.weight_time_warp
-            * np.maximum(
-                earliest[:, None]
-                + service[:, None]
-                + durations
-                - latest[None, :],
-                0,
-            ),
-            params.weight_wait_time
-            * np.maximum(
-                earliest[:, None]
-                - durations
-                - service[None, :]
-                - latest[None, :],
-                0,
-            )
-            + params.weight_time_warp
-            * np.maximum(
-                earliest[None, :]
-                + service[None, :]
-                + durations
-                - latest[:, None],
-                0,
-            ),
-        )
-    )[
-        1:, 1:
-    ]  # Skip depot
+        + params.weight_wait_time * min_wait_time
+        + params.weight_time_warp * min_time_warp
+    )
+
+    if params.symmetric_proximity:
+        prox = np.minimum(prox, prox.T)
+    return prox[1:, 1:]  # Skip depot
 
 
 def compute_neighbours(
@@ -126,13 +105,15 @@ def compute_neighbours(
     masked_proximity = np.where(mask, 1e9, proximity + 1e-6 * rng[None, :])
     idx_topk = np.argpartition(masked_proximity, k, axis=-1)[:, :k]
 
-    # Convert into adjacency matrix that can be symmetrized
-    adj = np.zeros_like(mask)
-    adj[rng[:, None], idx_topk] = 1
+    if params.symmetric_neighbours:
+        # Convert into adjacency matrix that can be symmetrized
+        adj = np.zeros_like(mask)
+        adj[rng[:, None], idx_topk] = 1
 
-    if params.symmetric:
         # Add correlated vertex if correlated in one of two directions
         adj = adj | adj.transpose()
 
-    # Append empty neighbours for depot and add 1 to offset depot indexing
-    return [[]] + [(np.flatnonzero(row) + 1).tolist() for row in adj]
+        # Append empty neighbours for depot and add 1 to offset depot indexing
+        return [[]] + [(np.flatnonzero(row) + 1).tolist() for row in adj]
+    else:
+        return [[]] + (np.sort(idx_topk, -1) + 1).tolist()

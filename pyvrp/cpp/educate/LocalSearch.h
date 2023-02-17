@@ -46,12 +46,10 @@ class LocalSearch
     XorShift128 &rng;
     LocalSearchParams params;
 
-public:
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
     Neighbours neighbours;
 
-private:
     std::vector<int> orderNodes;   // random node order used in RI operators
     std::vector<int> orderRoutes;  // random route order used in SWAP* operators
 
@@ -109,6 +107,19 @@ public:
     void addRouteOperator(RouteOp &op);
 
     /**
+     * Set neighbourhood structure to use by the local search. This should be
+     * for each client, a list of nearby clients, with no nearby clients for 
+     * the depot.
+    */
+    void setNeighbours(Neighbours neighbours);
+
+    /**
+     * Get neighbourhood structure currently used by the local search.
+    */
+    Neighbours getNeighbours();
+
+
+    /**
      * Performs regular (node-based) local search around the given individual.
      */
     void search(Individual &indiv);
@@ -121,7 +132,6 @@ public:
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
-                Neighbours neighbours,
                 XorShift128 &rng,
                 LocalSearchParams params = LocalSearchParams());
 };
