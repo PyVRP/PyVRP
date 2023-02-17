@@ -6,10 +6,7 @@ from pyvrp.educate import LocalSearch, LocalSearchParams, TwoOpt
 from pyvrp.tests.helpers import read
 
 
-def test_OkSmall_instance_single_route():
-    """
-    TODO
-    """
+def test_OkSmall_instance():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
