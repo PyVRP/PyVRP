@@ -18,7 +18,7 @@ void LocalSearch::search(Individual &indiv)
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
 
     if (nodeOps.empty())
-        throw std::runtime_error("No known node operators.");
+        throw std::logic_error("No known node operators.");
 
     int neighbourhood_size = 0;
     for (auto const client : orderNodes)
@@ -126,8 +126,8 @@ void LocalSearch::intensify(Individual &indiv)
                     continue;
             }
 
-            if (lastModified[U.idx] > lastTested)
-                enumerateSubpaths(U);
+            // if (lastModified[U.idx] > lastTested)
+            //     enumerateSubpaths(U);
         }
     }
 

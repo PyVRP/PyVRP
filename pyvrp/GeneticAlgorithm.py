@@ -25,6 +25,7 @@ class GeneticAlgorithmParams:
     repair_probability: float = 0.80
     collect_statistics: bool = False
     should_intensify: bool = True
+    nb_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
         if self.nb_penalty_management < 0:
@@ -93,13 +94,27 @@ class GeneticAlgorithm:
         start = time.perf_counter()
         stats = Statistics()
         iters = 0
+        iters_no_improvement = 1
 
         while not stop(self._pop.get_best_found()):
             iters += 1
 
+            if iters_no_improvement == self._params.nb_iter_no_improvement:
+                self._pop.restart()
+                iters_no_improvement = 1
+
+            curr_best = self._pop.get_best_found().cost()
+
             parents = self._pop.select()
             offspring = self._op(parents, self._data, self._pm, self._rng)
             self._educate(offspring)
+
+            new_best = self._pop.get_best_found().cost()
+
+            if new_best < curr_best:
+                iters_no_improvement = 1
+            else:
+                iters_no_improvement += 1
 
             if iters % self._params.nb_penalty_management == 0:
                 self._update_penalties()
