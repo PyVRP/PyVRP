@@ -148,8 +148,7 @@ class SubPopulation:
 
     def restart(self):
         """
-        Restarts the population by removing all individuals within the
-        population.
+        Restarts the subpopulation by removing all its individuals.
         """
         self._items = []
 
@@ -360,7 +359,8 @@ class Population:
 
     def restart(self):
         """
-        Restarts the population.
+        Restarts the population. All individuals are removed and a new initial
+        population population is generated.
         """
         self._feas.restart()
         self._infeas.restart()
