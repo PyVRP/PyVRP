@@ -15,22 +15,12 @@
 
 struct LocalSearchParams
 {
-    size_t const weightWaitTime;
-    size_t const weightTimeWarp;
-    size_t const nbGranular;
     size_t const postProcessPathLength;
 
-    LocalSearchParams(size_t weightWaitTime = 18,
-                      size_t weightTimeWarp = 20,
-                      size_t nbGranular = 34,
-                      size_t postProcessPathLength = 7)
-        : weightWaitTime(weightWaitTime),
-          weightTimeWarp(weightTimeWarp),
-          nbGranular(nbGranular),
-          postProcessPathLength(postProcessPathLength)
+    LocalSearchParams(size_t postProcessPathLength = 7)
+        : postProcessPathLength(postProcessPathLength)
     {
-        if (nbGranular == 0)
-            throw std::invalid_argument("Expected nbGranular > 0.");
+        
     }
 };
 
@@ -87,12 +77,6 @@ class LocalSearch
                                Node const *before,
                                Node const *after,
                                Route const &route) const;
-
-    /**
-     * Calculate, for all vertices, the correlation ('nearness') of the
-     * nbGranular closest vertices.
-     */
-    void calculateNeighbours();
 
 public:
     /**
