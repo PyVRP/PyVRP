@@ -120,8 +120,8 @@ void LocalSearch::intensify(Individual &indiv)
                     continue;
             }
 
-            if (lastModified[U.idx] > lastTested)
-                enumerateSubpaths(U);
+            // if (lastModified[U.idx] > lastTested)
+            //     enumerateSubpaths(U);
         }
     }
 
