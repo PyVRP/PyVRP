@@ -167,11 +167,8 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
         ValueError
             When the given individual could not be found in the subpopulation.
         """
-        for (
-            _,
-            _,
-            prox,
-        ) in self._items:  # remove individual from other proximities
+        # remove individual from other proximities
+        for _, _, prox in self._items:
             for idx, (other, _) in enumerate(prox):
                 if other is individual:
                     del prox[idx]
