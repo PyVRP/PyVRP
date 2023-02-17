@@ -99,7 +99,7 @@ def compute_neighbours(
     # and add the index with a very small weight as tie-breaker (to mimic
     # original c++ version)
     n = len(proximity)
-    k = params.nb_granular
+    k = min(params.nb_granular, n - 1)
     rng = np.arange(n)
     mask = np.eye(n, dtype=bool)
     masked_proximity = np.where(mask, 1e9, proximity + 1e-6 * rng[None, :])

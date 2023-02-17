@@ -130,7 +130,7 @@ def test_local_search_params_does_not_raise_for_valid_arguments(
         # fmt: on
     ],
 )
-def test_get_neighbours(
+def test_compute_neighbours(
     data_loc: str,
     instance_format: str,
     round_func: str,
@@ -163,6 +163,15 @@ def test_get_neighbours(
             assert_(len(neighb) >= nb_granular)
         else:
             assert_equal(len(neighb), nb_granular)
+
+
+def test_more_neighbours_than_instance_size():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    params = NeighbourhoodParams(nb_granular=data.num_clients)
+    neighbours = compute_neighbours(data, params)
+
+    for neighb in neighbours[1:]:
+        assert_equal(len(neighb), data.num_clients - 1)
 
 
 @mark.parametrize(
