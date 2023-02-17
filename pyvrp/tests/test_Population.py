@@ -245,3 +245,31 @@ def test_proximity_structures_are_kept_up_to_date(min_pop_size: int):
         for indiv, _, prox in infeas:
             # The same must hold for the infeasible subpopulation, of course!
             assert_equal(len(prox), len(infeas) - 1)
+
+
+def test_restart_generates_min_pop_size_new_individuals():
+    """
+    Tests if restarting the population will generate ``min_pop_size`` new
+    individuals.
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=2_147_483_647)
+
+    params = PopulationParams(min_pop_size=2)
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
+
+    feas = pop.feasible_subpopulation
+    infeas = pop.infeasible_subpopulation
+    old = [item for item in feas] + [item for item in infeas]
+
+    pop.restart()
+
+    assert_equal(len(pop), 2)
+
+    # Check that the new individuals are not the old ones
+    for item in pop.feasible_subpopulation:
+        assert_(item not in old)
+
+    for item in pop.infeasible_subpopulation:
+        assert_(item not in old)
