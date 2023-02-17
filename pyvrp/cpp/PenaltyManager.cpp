@@ -42,19 +42,6 @@ void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
     timeWarpPenalty = compute(timeWarpPenalty, currFeasPct);
 }
 
-unsigned int PenaltyManager::loadPenalty(unsigned int load) const
-{
-    if (load > vehicleCapacity)
-        return (load - vehicleCapacity) * capacityPenalty;
-
-    return 0;
-}
-
-unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const
-{
-    return timeWarp * timeWarpPenalty;
-}
-
 PenaltyManager::PenaltyBooster PenaltyManager::getPenaltyBooster()
 {
     return PenaltyBooster(*this);
