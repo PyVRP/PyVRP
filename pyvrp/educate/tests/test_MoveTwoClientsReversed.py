@@ -10,6 +10,10 @@ from pyvrp.tests.helpers import read
 
 
 def test_single_route_OkSmall():
+    """
+    This test checks that MoveTwoClientsReversed properly solves the small
+    instance where we know what's going on.
+    """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
@@ -27,8 +31,6 @@ def test_single_route_OkSmall():
     # The new solution should strictly improve on our original solution.
     assert_equal(individual.num_routes(), 1)
     assert_(individual.cost() < copy.cost())
-
-    print(individual.get_routes())
 
     # (2, 3) was inserted after the depot as (3, 2)
     assert_equal(individual.get_routes(), [[3, 2, 1, 4], [], []])
