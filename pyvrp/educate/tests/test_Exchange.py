@@ -30,9 +30,9 @@ from pyvrp.tests.helpers import read
 )
 def test_swap_single_route_stays_single_route(operator):
     """
-    Swap operators (operators with non-zero M) on a single route can only move
-    within the same route, so they can never find a solution that has more than
-    one route.
+    Swap operators ((N, M)-exchange operators with M > 0) on a single route can
+    only move within the same route, so they can never find a solution that has
+    more than one route.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -159,6 +159,9 @@ def test_cannot_swap_adjacent_segments():
     op = Exchange22(data, pm)
     ls.add_node_operator(op)
 
+    # An adjacent swap by (2, 2)-exchange could have created the single-route
+    # solution [3, 4, 1, 2], which has a much lower cost. But that's not
+    # allowed because adjacent swaps are not allowed.
     individual = Individual(data, pm, [[1, 2, 3, 4]])
     copy = Individual(individual)
 
