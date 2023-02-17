@@ -20,7 +20,7 @@ def convert_to_int(vals: np.ndarray):
 
 
 def scale_and_truncate_to_decimals(vals: np.ndarray, decimals: int = 0):
-    return (vals * (10**decimals)).astype(int)
+    return (vals * (10 ** decimals)).astype(int)
 
 
 def no_rounding(vals):
@@ -88,15 +88,14 @@ def read(
 
     depots = instance.get("depot", np.array([0]))
     num_vehicles = instance.get("vehicles", num_clients - 1)
-    capacity = instance.get(
-        "capacity", 1_000_000
-    )  # TODO What's a good bound here?
     edge_weight = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands = instance["demand"]
     else:
         demands = np.zeros(num_clients, dtype=int)
+
+    capacity = instance.get("capacity", demands.sum())
 
     if "node_coord" in instance:
         coords = round_func(instance["node_coord"])
@@ -113,8 +112,8 @@ def read(
     else:
         # Upper bound based on the maximum route duration
         max_route_len = capacity // demands[demands > 0].min()
-        max_leg_duration = edge_weight.max() + service_times.max()
-        max_route_duration = (max_route_len + 1) * max_leg_duration
+        max_edge_duration = edge_weight.max() + service_times.max()
+        max_route_duration = (max_route_len + 1) * max_edge_duration
 
         time_windows = np.repeat(
             [[0, max_route_duration]], num_clients, axis=0
