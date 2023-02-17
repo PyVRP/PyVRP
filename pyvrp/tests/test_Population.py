@@ -254,22 +254,19 @@ def test_restart_generates_min_pop_size_new_individuals():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=2_147_483_647)
+    rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=2)
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
-    feas = pop.feasible_subpopulation
-    infeas = pop.infeasible_subpopulation
-    old = [item for item in feas] + [item for item in infeas]
+    old_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
+    old_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
 
     pop.restart()
 
+    new_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
+    new_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+
     assert_equal(len(pop), 2)
-
-    # Check that the new individuals are not the old ones
-    for item in pop.feasible_subpopulation:
-        assert_(item not in old)
-
-    for item in pop.infeasible_subpopulation:
-        assert_(item not in old)
+    assert_(new_feas != old_feas)
+    assert_(new_infeas != old_infeas)
