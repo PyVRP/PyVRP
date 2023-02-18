@@ -84,6 +84,9 @@ void LocalSearch::intensify(Individual &indiv)
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 
+    if (routeOps.empty())
+        throw std::logic_error("No known route operators.");
+
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
@@ -119,9 +122,6 @@ void LocalSearch::intensify(Individual &indiv)
                 if (lastModifiedRoute > lastTested && applyRouteOps(&U, &V))
                     continue;
             }
-
-            // if (lastModified[U.idx] > lastTested)
-            //     enumerateSubpaths(U);
         }
     }
 
@@ -178,73 +178,6 @@ void LocalSearch::update(Route *U, Route *V)
         for (auto op : routeOps)
             op->update(V);
     }
-}
-
-// TODO this should be some sort of operator passed into LS, it should not be
-//  defined here.
-void LocalSearch::enumerateSubpaths(Route &U)
-{
-    auto const k = std::min(params.postProcessPathLength, U.size());
-
-    if (k <= 1)  // 0 or 1 means we are either not doing anything at all (0),
-        return;  // or recombining a single node (1). Neither helps.
-
-    std::vector<size_t> path(k);
-
-    // This postprocessing step optimally recombines all node segments of a
-    // given length in each route. This recombination works by enumeration; see
-    // issue #98 for details.
-    for (size_t start = 1; start + k <= U.size() + 1; ++start)
-    {
-        auto *prev = p(U[start]);   // we process [start, start + k). So fixed
-        auto *next = U[start + k];  // endpoints are p(start) and start + k
-
-        std::iota(path.begin(), path.end(), start);
-        auto currCost = evaluateSubpath(path, prev, next, U);
-
-        while (std::next_permutation(path.begin(), path.end()))
-        {
-            auto const cost = evaluateSubpath(path, prev, next, U);
-
-            if (cost < currCost)
-            {
-                for (auto pos : path)
-                {
-                    auto *node = U[pos];
-                    node->insertAfter(prev);
-                    prev = node;
-                }
-
-                update(&U, &U);  // it is rare to find more than one improving
-                break;           // move, so we break after the first
-            }
-        }
-    }
-}
-
-int LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
-                                 Node const *before,
-                                 Node const *after,
-                                 Route const &route) const
-{
-    auto totalDist = 0;
-    auto tws = before->twBefore;
-    auto from = before->client;
-
-    // Calculates travel distance and time warp of the subpath permutation.
-    for (auto &pos : subpath)
-    {
-        auto *to = route[pos];
-
-        totalDist += data.dist(from, to->client);
-        tws = TimeWindowSegment::merge(tws, to->tw);
-        from = to->client;
-    }
-
-    totalDist += data.dist(from, after->client);
-    tws = TimeWindowSegment::merge(tws, after->twAfter);
-
-    return totalDist + penaltyManager.twPenalty(tws.totalTimeWarp());
 }
 
 void LocalSearch::calculateNeighbours()
