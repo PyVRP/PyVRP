@@ -47,6 +47,11 @@ The first uses (via `poetry-core`, as defined under `[build-system]` in the `pyp
 
 In short: (for now) everything runs via `scripts/install.sh`.
 
+You can also compile for different problem types.
+Currently, `cvrp` and `vrptw` are supported.
+This is achieved by passing `-Dproblem=<type>` to the `scripts/install.sh` script.
+The default is `vrptw`.
+
 ### Build system
 
 Any recent compiler should do.
