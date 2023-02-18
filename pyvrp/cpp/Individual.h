@@ -59,17 +59,17 @@ public:
     /**
      * @return True when this solution is feasible; false otherwise.
      */
-    [[nodiscard]] bool isFeasible() const;
+    [[nodiscard]] inline bool isFeasible() const;
 
     /**
      * @return True if the solution violates load constraints.
      */
-    [[nodiscard]] bool hasExcessCapacity() const;
+    [[nodiscard]] inline bool hasExcessCapacity() const;
 
     /**
      * @return True if the solution violates time window constraints.
      */
-    [[nodiscard]] bool hasTimeWarp() const;
+    [[nodiscard]] inline bool hasTimeWarp() const;
 
     bool operator==(Individual const &other) const;
 
@@ -109,5 +109,21 @@ public:
 
 // Outputs an individual into a given ostream in VRPLIB format
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
+
+bool Individual::isFeasible() const
+{
+    return !hasExcessCapacity() && !hasTimeWarp();
+}
+
+bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
+
+bool Individual::hasTimeWarp() const 
+{ 
+#ifdef VRP_NO_TIME_WINDOWS
+    return false;
+#else
+    return timeWarp > 0;
+#endif
+}
 
 #endif

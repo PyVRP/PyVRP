@@ -102,15 +102,6 @@ std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
     return neighbours;
 }
 
-bool Individual::isFeasible() const
-{
-    return !hasExcessCapacity() && !hasTimeWarp();
-}
-
-bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
-
-bool Individual::hasTimeWarp() const { return timeWarp > 0; }
-
 void Individual::makeNeighbours()
 {
     neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
