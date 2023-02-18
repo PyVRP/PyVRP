@@ -9,6 +9,10 @@ project(
     ]
 )
 
+if get_option('problem') == 'cvrp'
+    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
+endif
+
 # The following lines define compiler and linker options for the debug build.
 # In particular, we also set up debug builds to provide coverage results.
 compiler = meson.get_compiler('cpp')
