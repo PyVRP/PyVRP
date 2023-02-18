@@ -130,7 +130,11 @@ unsigned int PenaltyManager::loadPenalty(unsigned int load) const
 
 unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const
 {
+#ifdef VRP_NO_TIME_WINDOWS
+    return 0;
+#else
     return timeWarp * timeWarpPenalty;
+#endif
 }
 
 #endif  // HGS_PENALTYMANAGER_H
