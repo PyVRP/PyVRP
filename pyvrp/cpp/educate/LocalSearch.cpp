@@ -84,6 +84,9 @@ void LocalSearch::intensify(Individual &indiv)
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 
+    if (routeOps.empty())
+        throw std::logic_error("No known route operators.");
+
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
@@ -119,9 +122,6 @@ void LocalSearch::intensify(Individual &indiv)
                 if (lastModifiedRoute > lastTested && applyRouteOps(&U, &V))
                     continue;
             }
-
-            // if (lastModified[U.idx] > lastTested)
-            //     enumerateSubpaths(U);
         }
     }
 
