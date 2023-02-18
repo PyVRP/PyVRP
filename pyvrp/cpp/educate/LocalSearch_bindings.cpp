@@ -7,7 +7,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(LocalSearch, m)
 {
     py::class_<LocalSearchParams>(m, "LocalSearchParams")
-        .def(py::init<size_t, size_t, size_t, size_t>(),
+        .def(py::init<size_t, size_t, size_t>(),
              py::arg("weight_wait_time") = 18,
              py::arg("weight_time_warp") = 20,
              py::arg("nb_granular") = 34)
