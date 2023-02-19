@@ -30,6 +30,18 @@ if compiler.has_argument('-Wno-unused-parameter')
     add_project_arguments('-Wno-unused-parameter', language: 'cpp')
 endif
 
+if get_option('problem') == 'cvrp'
+    # CVRP does not have time windows, so we set a flag that compiles time 
+    # window stuff out of the extension modules.
+    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
+
+    if compiler.has_argument('-Wno-unused-private-field')
+        # Ignore unused fields, since a number of time window related fields
+        # are unused by the CVRP.
+        add_project_arguments('-Wno-unused-private-field', language: 'cpp')
+    endif
+endif
+
 # Next we get the extension dependencies. These are pretty simple: we only
 # depend on Python (duh!) and pybind11.
 py = import('python').find_installation()
@@ -48,12 +60,6 @@ if not pybind11.found()
 endif
 
 assert(pybind11.found(), 'Could not find pybind11!')
-
-if get_option('problem') == 'cvrp'
-    # CVRP does not have time windows, so we set a flag that compiles time 
-    # window stuff out of the extension modules.
-    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
-endif
 
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
