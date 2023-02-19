@@ -14,8 +14,6 @@ from pyvrp.tests.helpers import read
         ("somewhere that does not exist", FileNotFoundError),
         ("data/FileWithUnknownSection.txt", ValueError),
         ("data/DepotNotOne.txt", ValueError),
-        # TODO: check must be done by VRPLIB
-        # ("data/DepotSectionDoesNotEndInMinusOne.txt", RuntimeError),
         ("data/MoreThanOneDepot.txt", ValueError),
         ("data/NonZeroDepotServiceDuration.txt", ValueError),
         ("data/NonZeroDepotReleaseTime.txt", ValueError),
