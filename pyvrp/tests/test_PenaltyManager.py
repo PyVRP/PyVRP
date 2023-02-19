@@ -273,7 +273,7 @@ def test_does_not_update_penalties_before_sufficient_registrations():
         pm.register_load_feasible(feas)
         assert_equal(pm.load_penalty(2), 4)
 
-    # Update the fourth time. Now the penalties should change. Since there are
+    # Register a fourth time. Now the penalties should change. Since there are
     # more feasible registrations than desired, the penalties should decrease.
     pm.register_load_feasible(True)
     assert_equal(pm.load_penalty(2), 2)
