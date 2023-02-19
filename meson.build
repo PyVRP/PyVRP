@@ -9,10 +9,6 @@ project(
     ]
 )
 
-if get_option('problem') == 'cvrp'
-    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
-endif
-
 # The following lines define compiler and linker options for the debug build.
 # In particular, we also set up debug builds to provide coverage results.
 compiler = meson.get_compiler('cpp')
@@ -52,6 +48,12 @@ if not pybind11.found()
 endif
 
 assert(pybind11.found(), 'Could not find pybind11!')
+
+if get_option('problem') == 'cvrp'
+    # CVRP does not have time windows, so we set a flag that compiles time 
+    # window stuff out of the extension modules.
+    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
+endif
 
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
