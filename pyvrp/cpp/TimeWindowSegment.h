@@ -76,22 +76,11 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
             std::max(release, other.release)};
 }
 
-int TimeWindowSegment::segmentTimeWarp() const 
-{
-#ifdef VRP_NO_TIME_WINDOWS
-    return 0;
-#else
-    return timeWarp;
-#endif
-}
+int TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
 
 int TimeWindowSegment::totalTimeWarp() const
 {
-#ifdef VRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return segmentTimeWarp() + std::max(release - twLate, 0);
-#endif
 }
 
 TimeWindowSegment::TimeWindowSegment(Matrix<int> const *dist,
