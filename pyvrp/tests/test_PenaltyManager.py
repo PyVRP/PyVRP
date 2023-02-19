@@ -253,3 +253,30 @@ def test_time_warp_penalty_update_decrease():
     for feas in [True] * num_registerations:
         pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 1)
+
+
+def test_does_not_update_penalties_before_sufficient_registrations():
+    num_registerations = 4
+    params = PenaltyParams(4, 4, 1, num_registerations, 1.1, 0.9, 0.5)
+    pm = PenaltyManager(1, params)
+
+    # Both have four initial penalty, and vehicle capacity is one.
+    assert_equal(pm.tw_penalty(1), 4)
+    assert_equal(pm.load_penalty(2), 4)
+
+    # Register three times. We need at least four registrations before the
+    # penalties are updated, so this should not change anything.
+    for feas in [True, False, True]:
+        pm.register_time_feasible(feas)
+        assert_equal(pm.tw_penalty(1), 4)
+
+        pm.register_load_feasible(feas)
+        assert_equal(pm.load_penalty(2), 4)
+
+    # Update the fourth time. Now the penalties should change. Since there are
+    # more feasible registrations than desired, the penalties should decrease.
+    pm.register_load_feasible(True)
+    assert_equal(pm.load_penalty(2), 2)
+
+    pm.register_time_feasible(True)
+    assert_equal(pm.tw_penalty(1), 2)
