@@ -8,23 +8,25 @@ from pyvrp import PenaltyManager, PenaltyParams
     "init_load_penalty,"
     "init_tw_penalty,"
     "repair_booster,"
+    "num_iters_between_penalty_updates,"
     "penalty_increase,"
     "penalty_decrease,"
     "target_feasible",
     [
-        (1, 1, 1, -1.0, 0.5, 0.5),  # -1 penalty increase
-        (1, 1, 1, 0.5, 0.5, 0.5),  # 0.5 penalty increase
-        (1, 1, 1, 1.5, -1, 0.5),  # -1 penalty decrease
-        (1, 1, 1, 1.5, 2, 0.5),  # 2 penalty decrease
-        (1, 1, 1, 1, 1, -1),  # -1 target feasible
-        (1, 1, 1, 1, 1, 2),  # 2 target feasible
-        (1, 1, 0, 1, 1, 1),  # 0 repair booster
+        (1, 1, 1, 0, -1.0, 0.5, 0.5),  # -1 penalty increase
+        (1, 1, 1, 0, 0.5, 0.5, 0.5),  # 0.5 penalty increase
+        (1, 1, 1, 0, 1.5, -1, 0.5),  # -1 penalty decrease
+        (1, 1, 1, 0, 1.5, 2, 0.5),  # 2 penalty decrease
+        (1, 1, 1, 0, 1, 1, -1),  # -1 target feasible
+        (1, 1, 1, 0, 1, 1, 2),  # 2 target feasible
+        (1, 1, 0, 0, 1, 1, 1),  # 0 repair booster
     ],
 )
 def test_constructor_throws_when_arguments_invalid(
     init_load_penalty: int,
     init_tw_penalty: int,
     repair_booster: int,
+    num_iters_between_penalty_updates: int,
     penalty_increase: float,
     penalty_decrease: float,
     target_feasible: float,
@@ -34,6 +36,7 @@ def test_constructor_throws_when_arguments_invalid(
             init_load_penalty,
             init_tw_penalty,
             repair_booster,
+            num_iters_between_penalty_updates,
             penalty_increase,
             penalty_decrease,
             target_feasible,
@@ -41,7 +44,7 @@ def test_constructor_throws_when_arguments_invalid(
 
 
 def test_load_penalty():
-    params = PenaltyParams(2, 1, 1, 1, 1, 1)
+    params = PenaltyParams(2, 1, 1, 1, 1, 1, 1)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.load_penalty(0), 0)  # below capacity
@@ -52,7 +55,7 @@ def test_load_penalty():
     assert_equal(pm.load_penalty(3), 4)  # 2 units above capacity
 
     # Penalty per unit excess capacity is 4
-    params = PenaltyParams(4, 1, 1, 1, 1, 1)
+    params = PenaltyParams(4, 1, 1, 1, 1, 1, 1)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.load_penalty(2), 4)  # 1 unit above capacity
@@ -60,7 +63,7 @@ def test_load_penalty():
 
 
 def test_tw_penalty():
-    params = PenaltyParams(1, 2, 1, 1, 1, 1)
+    params = PenaltyParams(1, 2, 1, 1, 1, 1, 1)
     pm = PenaltyManager(1, params)
 
     # Penalty per unit time warp is 2
@@ -68,7 +71,7 @@ def test_tw_penalty():
     assert_equal(pm.tw_penalty(1), 2)
     assert_equal(pm.tw_penalty(2), 4)
 
-    params = PenaltyParams(1, 4, 1, 1, 1, 1)
+    params = PenaltyParams(1, 4, 1, 1, 1, 1, 1)
     pm = PenaltyManager(1, params)
 
     # Penalty per unit excess capacity is now 4
@@ -78,7 +81,7 @@ def test_tw_penalty():
 
 
 def test_repair_booster():
-    params = PenaltyParams(1, 1, 5, 1, 1, 1)
+    params = PenaltyParams(1, 1, 5, 1, 1, 1, 1)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.tw_penalty(1), 1)
