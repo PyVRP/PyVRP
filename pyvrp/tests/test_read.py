@@ -2,7 +2,6 @@ import numpy as np
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp.Matrix import IntMatrix  # noqa: F401
 from pyvrp.tests.helpers import read
 
 
