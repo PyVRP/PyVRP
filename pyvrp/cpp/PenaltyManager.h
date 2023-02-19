@@ -47,10 +47,10 @@ struct PenaltyParams
 };
 
 /**
- * Dynamic penalty manager class. This class manages current time warp and
- * load penalties, and can be asked to provide those values. Additionally, it
- * updates these penalties based on recent history, and can be used to provide
- * a temporary penalty booster object that increases the penalties.
+ * Penalty manager class. This class manages time warp and load penalties, and
+ * provides penalty terms for given time warp and load values. It updates these
+ * penalties based on recent history, and can be used to provide a temporary
+ * penalty booster object that increases the penalties for a short duration.
  */
 class PenaltyManager
 {
