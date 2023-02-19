@@ -2,7 +2,6 @@ import numpy as np
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp.Matrix import IntMatrix  # noqa: F401
 from pyvrp.tests.helpers import read
 
 
@@ -14,8 +13,6 @@ from pyvrp.tests.helpers import read
         ("somewhere that does not exist", FileNotFoundError),
         ("data/FileWithUnknownSection.txt", ValueError),
         ("data/DepotNotOne.txt", ValueError),
-        # TODO: check must be done by VRPLIB
-        # ("data/DepotSectionDoesNotEndInMinusOne.txt", RuntimeError),
         ("data/MoreThanOneDepot.txt", ValueError),
         ("data/NonZeroDepotServiceDuration.txt", ValueError),
         ("data/NonZeroDepotReleaseTime.txt", ValueError),

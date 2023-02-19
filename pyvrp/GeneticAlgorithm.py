@@ -34,6 +34,9 @@ class GeneticAlgorithmParams:
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
 
+        if self.nb_iter_no_improvement < 0:
+            raise ValueError("nb_iter_no_improvement < 0 not understood.")
+
 
 class GeneticAlgorithm:
     def __init__(
