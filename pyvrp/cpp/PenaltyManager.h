@@ -19,7 +19,7 @@ struct PenaltyParams
     PenaltyParams(unsigned int initCapacityPenalty = 20,
                   unsigned int initTimeWarpPenalty = 6,
                   unsigned int repairBooster = 12,
-                  unsigned int numRegistrationsBetweenPenaltyUpdates = 47,
+                  unsigned int numRegistrationsBetweenPenaltyUpdates = 50,
                   double penaltyIncrease = 1.34,
                   double penaltyDecrease = 0.32,
                   double targetFeasible = 0.43)
@@ -60,8 +60,8 @@ class PenaltyManager
     unsigned int capacityPenalty;
     unsigned int timeWarpPenalty;
 
-    std::vector<bool> loadFeasible;
-    std::vector<bool> twFeasible;
+    std::vector<bool> loadFeas;  // tracks recent load feasibility results
+    std::vector<bool> timeFeas;  // tracks recent time feasibility results
 
     // Computes and returns the new penalty value, given the current value and
     // the percentage of feasible solutions since the last update.
@@ -102,15 +102,15 @@ public:
 
     /**
      * Registers another capacity feasibility result. The current load penalty
-     * is updated if sufficiently many results have been gathered.
+     * is updated once sufficiently many results have been gathered.
      */
     void registerLoadFeasible(bool isLoadFeasible);
 
     /**
-     * Registers another time window feasibility result. The current time warp
-     * penalty is updated if sufficiently many results have been gathered.
+     * Registers another time feasibility result. The current time warp penalty
+     * is updated once sufficiently many results have been gathered.
      */
-    void registerTimeWarpFeasible(bool isTimeWarpFeasible);
+    void registerTimeFeasible(bool isTimeFeasible);
 
     /**
      * Computes the total excess capacity penalty for the given vehicle load.

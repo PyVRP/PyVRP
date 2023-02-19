@@ -102,134 +102,154 @@ def test_repair_booster():
 
 
 def test_capacity_penalty_update_increase():
-    params = PenaltyParams(1, 1, 1, 1.1, 0.9, 0.5)
+    num_registerations = 4
+    params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.load_penalty(2), 1)
-    pm.update_capacity_penalty(0.5)
+    for feas in [True, False, True, False]:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 1)
 
     # Below targetFeasible, so should increase the capacityPenalty by +1
     # (normally to 1.1 due to penaltyIncrease, but we should not end up at the
     # same int).
-    pm.update_capacity_penalty(0.4)
+    for feas in [False] * num_registerations:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 2)
 
     # Now we start from a much bigger initial capacityPenalty. Here we want the
     # penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due to
     # double -> int.
-    params = PenaltyParams(100, 1, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(100, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.load_penalty(2), 100)
-    pm.update_capacity_penalty(0.4)
+    for feas in [False] * num_registerations:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 111)
 
     # Test that the penalty cannot increase beyond 1000, its maximum value.
-    params = PenaltyParams(1000, 1, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(1000, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.load_penalty(2), 1000)
-    pm.update_capacity_penalty(0.4)
+    for feas in [False] * num_registerations:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 1000)
 
 
 def test_capacity_penalty_update_decrease():
-    params = PenaltyParams(4, 1, 1, 1.1, 0.9, 0.5)
+    num_registerations = 4
+    params = PenaltyParams(4, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.load_penalty(2), 4)
-    pm.update_capacity_penalty(0.5)
+    for feas in [True, False, True, False]:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 4)
 
     # Above targetFeasible, so should decrease the capacityPenalty to 90%, and
     # -1 from the bounds check. So 0.9 * 4 = 3.6, 3.6 - 1 = 2.6, (int) 2.6 = 2
-    pm.update_capacity_penalty(0.6)
+    for feas in [True] * num_registerations:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 2)
 
     # Now we start from a much bigger initial capacityPenalty. Here we want the
     # penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due to
     # double -> int.
-    params = PenaltyParams(100, 1, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(100, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.load_penalty(2), 100)
-    pm.update_capacity_penalty(0.6)
+    for feas in [True] * num_registerations:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 89)
 
     # Test that the penalty cannot decrease beyond 1, its minimum value.
-    params = PenaltyParams(1, 1, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.load_penalty(2), 1)
-    pm.update_capacity_penalty(0.6)
+    for feas in [True] * num_registerations:
+        pm.register_load_feasible(feas)
     assert_equal(pm.load_penalty(2), 1)
 
 
 def test_time_warp_penalty_update_increase():
-    params = PenaltyParams(1, 1, 1, 1.1, 0.9, 0.5)
+    num_registerations = 4
+    params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.tw_penalty(1), 1)
-    pm.update_time_warp_penalty(0.5)
+    for feas in [True, False, True, False]:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 1)
 
     # Below targetFeasible, so should increase the tw penalty by +1
     # (normally to 1.1 due to penaltyIncrease, but we should not end up at the
     # same int).
-    pm.update_time_warp_penalty(0.4)
+    for feas in [False] * num_registerations:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 2)
 
     # Now we start from a much bigger initial tw penalty. Here we want
     # the penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due
     # to double -> int.
-    params = PenaltyParams(1, 100, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(1, 100, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.tw_penalty(1), 100)
-    pm.update_time_warp_penalty(0.4)
+    for feas in [False] * num_registerations:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 111)
 
     # Test that the penalty cannot increase beyond 1000, its maximum value.
-    params = PenaltyParams(1, 1000, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(1, 1000, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.tw_penalty(1), 1000)
-    pm.update_time_warp_penalty(0.4)
+    for feas in [False] * num_registerations:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 1000)
 
 
 def test_time_warp_penalty_update_decrease():
-    params = PenaltyParams(1, 4, 1, 1.1, 0.9, 0.5)
+    num_registerations = 4
+    params = PenaltyParams(1, 4, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.tw_penalty(1), 4)
-    pm.update_time_warp_penalty(0.5)
+    for feas in [True, False, True, False]:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 4)
 
     # Above targetFeasible, so should decrease the timeWarPenalty to 90%, and
     # -1 from the bounds check. So 0.9 * 4 = 3.6, 3.6 - 1 = 2.6, (int) 2.6 = 2
-    pm.update_time_warp_penalty(0.6)
+    for feas in [True] * num_registerations:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 2)
 
     # Now we start from a much bigger initial timeWarpCapacity. Here we want
     # the penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
     # to double -> int.
-    params = PenaltyParams(1, 100, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(1, 100, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.tw_penalty(1), 100)
-    pm.update_time_warp_penalty(0.6)
+    for feas in [True] * num_registerations:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 89)
 
     # Test that the penalty cannot decrease beyond 1, its minimum value.
-    params = PenaltyParams(1, 1, 1, 1.1, 0.9, 0.5)
+    params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(1, params)
 
     assert_equal(pm.tw_penalty(1), 1)
-    pm.update_time_warp_penalty(0.6)
+    for feas in [True] * num_registerations:
+        pm.register_time_feasible(feas)
     assert_equal(pm.tw_penalty(1), 1)

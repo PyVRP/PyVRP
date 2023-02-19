@@ -132,7 +132,7 @@ class GeneticAlgorithm:
 
         self._pop.add(individual)
         self._pm.register_load_feasible(not individual.has_excess_capacity())
-        self._pm.register_time_warp_feasible(not individual.has_time_warp())
+        self._pm.register_time_feasible(not individual.has_time_warp())
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
@@ -157,4 +157,4 @@ class GeneticAlgorithm:
                     # We already know the individual is feasible, so load and
                     # time constraints are both satisfied.
                     self._pm.register_load_feasible(True)
-                    self._pm.register_time_warp_feasible(True)
+                    self._pm.register_time_feasible(True)

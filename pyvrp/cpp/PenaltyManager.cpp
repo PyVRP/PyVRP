@@ -32,31 +32,29 @@ unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
 
 void PenaltyManager::registerLoadFeasible(bool isLoadFeasible)
 {
-    loadFeasible.emplace_back(isLoadFeasible);
+    loadFeas.emplace_back(isLoadFeasible);
 
-    if (loadFeasible.size() == params.numRegistrationsBetweenPenaltyUpdates)
+    if (loadFeas.size() == params.numRegistrationsBetweenPenaltyUpdates)
     {
-        auto const sum
-            = std::accumulate(loadFeasible.begin(), loadFeasible.end(), 0.);
-        auto const avg = loadFeasible.empty() ? 1.0 : sum / loadFeasible.size();
+        double const sum = std::accumulate(loadFeas.begin(), loadFeas.end(), 0);
+        auto const avg = loadFeas.empty() ? 1.0 : sum / loadFeas.size();
 
         capacityPenalty = compute(capacityPenalty, avg);
-        loadFeasible.clear();
+        loadFeas.clear();
     }
 }
 
-void PenaltyManager::registerTimeWarpFeasible(bool isTimeWarpFeasible)
+void PenaltyManager::registerTimeFeasible(bool isTimeFeasible)
 {
-    twFeasible.emplace_back(isTimeWarpFeasible);
+    timeFeas.emplace_back(isTimeFeasible);
 
-    if (twFeasible.size() == params.numRegistrationsBetweenPenaltyUpdates)
+    if (timeFeas.size() == params.numRegistrationsBetweenPenaltyUpdates)
     {
-        auto const sum
-            = std::accumulate(twFeasible.begin(), twFeasible.end(), 0.);
-        auto const avg = twFeasible.empty() ? 1.0 : sum / twFeasible.size();
+        double const sum = std::accumulate(timeFeas.begin(), timeFeas.end(), 0);
+        auto const avg = timeFeas.empty() ? 1.0 : sum / timeFeas.size();
 
         timeWarpPenalty = compute(timeWarpPenalty, avg);
-        twFeasible.clear();
+        timeFeas.clear();
     }
 }
 

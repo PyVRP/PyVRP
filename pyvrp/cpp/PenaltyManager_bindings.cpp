@@ -17,7 +17,7 @@ PYBIND11_MODULE(PenaltyManager, m)
              py::arg("init_capacity_penalty") = 20,
              py::arg("init_time_warp_penalty") = 6,
              py::arg("repair_booster") = 12,
-             py::arg("num_registrations_between_penalty_updates") = 47,
+             py::arg("num_registrations_between_penalty_updates") = 50,
              py::arg("penalty_increase") = 1.34,
              py::arg("penalty_decrease") = 0.32,
              py::arg("target_feasible") = 0.43)
@@ -56,9 +56,9 @@ PYBIND11_MODULE(PenaltyManager, m)
         .def("register_load_feasible",
              &PenaltyManager::registerLoadFeasible,
              py::arg("is_load_feasible"))
-        .def("register_time_warp_feasible",
-             &PenaltyManager::registerTimeWarpFeasible,
-             py::arg("is_time_warp_feasible"))
+        .def("register_time_feasible",
+             &PenaltyManager::registerTimeFeasible,
+             py::arg("is_time_feasible"))
         .def("load_penalty", &PenaltyManager::loadPenalty, py::arg("load"))
         .def("tw_penalty", &PenaltyManager::twPenalty, py::arg("time_warp"))
         .def("get_penalty_booster", &PenaltyManager::getPenaltyBooster);

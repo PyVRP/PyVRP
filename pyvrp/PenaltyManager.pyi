@@ -18,17 +18,15 @@ class PenaltyManager:
     def load_penalty(self, load: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
     def register_load_feasible(self, is_load_feasible: bool) -> None: ...
-    def register_time_warp_feasible(
-        self, is_time_warp_feasible: bool
-    ) -> None: ...
+    def register_time_feasible(self, is_time_feasible: bool) -> None: ...
 
 class PenaltyParams:
     def __init__(
         self,
         init_capacity_penalty: int = ...,
         init_time_warp_penalty: int = ...,
-        num_registrations_between_penalty_updates: int = ...,
         repair_booster: int = ...,
+        num_registrations_between_penalty_updates: int = ...,
         penalty_increase: float = ...,
         penalty_decrease: float = ...,
         target_feasible: float = ...,
