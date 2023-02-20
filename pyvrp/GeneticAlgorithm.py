@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import Callable, List, Tuple
+from typing import Callable, Tuple
 
 from pyvrp.educate import LocalSearch
 from pyvrp.stop import StoppingCriterion
@@ -21,16 +21,12 @@ CrossoverOperator = Callable[
 
 @dataclass
 class GeneticAlgorithmParams:
-    nb_penalty_management: int = 47
     repair_probability: float = 0.80
     collect_statistics: bool = False
     should_intensify: bool = True
     nb_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
-        if self.nb_penalty_management < 0:
-            raise ValueError("nb_penalty_management < 0 not understood.")
-
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
 
@@ -76,9 +72,6 @@ class GeneticAlgorithm:
         self._op = crossover_op
         self._params = params
 
-        self._load_feas: List[bool] = []
-        self._tw_feas: List[bool] = []
-
     def run(self, stop: StoppingCriterion):
         """
         Runs the genetic algorithm with the provided stopping criterion.
@@ -119,9 +112,6 @@ class GeneticAlgorithm:
             else:
                 iters_no_improvement += 1
 
-            if iters % self._params.nb_penalty_management == 0:
-                self._update_penalties()
-
             if self._params.collect_statistics:
                 stats.collect_from(self._pop)
 
@@ -141,8 +131,8 @@ class GeneticAlgorithm:
             self._ls.intensify(individual)
 
         self._pop.add(individual)
-        self._load_feas.append(not individual.has_excess_capacity())
-        self._tw_feas.append(not individual.has_time_warp())
+        self._pm.register_load_feasible(not individual.has_excess_capacity())
+        self._pm.register_time_feasible(not individual.has_time_warp())
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
@@ -166,14 +156,5 @@ class GeneticAlgorithm:
 
                     # We already know the individual is feasible, so load and
                     # time constraints are both satisfied.
-                    self._load_feas.append(True)
-                    self._tw_feas.append(True)
-
-    def _update_penalties(self):
-        feas_load_pct = sum(self._load_feas) / len(self._load_feas)
-        self._pm.update_capacity_penalty(feas_load_pct)
-        self._load_feas = []
-
-        feas_tw_pct = sum(self._tw_feas) / len(self._tw_feas)
-        self._pm.update_time_warp_penalty(feas_tw_pct)
-        self._tw_feas = []
+                    self._pm.register_load_feasible(True)
+                    self._pm.register_time_feasible(True)
