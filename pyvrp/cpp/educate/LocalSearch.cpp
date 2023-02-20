@@ -20,10 +20,10 @@ void LocalSearch::search(Individual &indiv)
     if (nodeOps.empty())
         throw std::logic_error("No known node operators.");
 
-    int neighbourhood_size = 0;
+    auto neighbourhoodSize = 0;
     for (auto const client : orderNodes)
-        neighbourhood_size += neighbours[client].size();
-    if (neighbourhood_size == 0)
+        neighbourhoodSize += neighbours[client].size();
+    if (neighbourhoodSize == 0)
         throw std::runtime_error("Granular neighbourhood is empty.");
 
     // Caches the last time nodes were tested for modification (uses nbMoves to

@@ -19,7 +19,6 @@ class NeighbourhoodParams:
     symmetric_neighbours: bool = False
 
     def __post_init__(self):
-
         if self.nb_granular <= 0:
             raise ValueError("nb_granular <= 0 not understood.")
 
@@ -102,8 +101,8 @@ def compute_neighbours(
     # original c++ version)
     n = len(proximity)
     k = min(params.nb_granular, n - 1)
-    rng = np.arange(n)
-    jitter = 1e-6 * rng  # add a bit of jitter to break ties
+    idcs = np.arange(n)
+    jitter = 1e-6 * idcs  # add a bit of jitter to break ties
     proximity = proximity + jitter[None, :]
     np.fill_diagonal(proximity, np.inf)  # exclude self from neighbourhood
     idx_topk = np.argpartition(proximity, k, axis=-1)[:, :k]
@@ -111,7 +110,7 @@ def compute_neighbours(
     if params.symmetric_neighbours:
         # Convert into adjacency matrix that can be symmetrized
         adj = np.zeros_like(proximity, dtype=bool)
-        adj[rng[:, None], idx_topk] = True
+        adj[idcs[:, None], idx_topk] = True
 
         # Add correlated vertex if correlated in one of two directions
         adj = adj | adj.transpose()

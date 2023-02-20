@@ -70,17 +70,16 @@ public:
     void addRouteOperator(RouteOp &op);
 
     /**
-     * Set neighbourhood structure to use by the local search. This should be
-     * for each client, a list of nearby clients, with no nearby clients for 
-     * the depot.
-    */
+     * Set neighbourhood structure to use by the local search. For each client,
+     * the neighbourhood structure is a vector of nearby clients. The depot has
+     * no nearby client.
+     */
     void setNeighbours(Neighbours neighbours);
 
     /**
-     * Get neighbourhood structure currently used by the local search.
-    */
+     * @return The neighbourhood structure currently in use.
+     */
     Neighbours getNeighbours();
-
 
     /**
      * Performs regular (node-based) local search around the given individual.
