@@ -14,12 +14,11 @@
 #include <vector>
 
 
-// TODO define within LocalSearch
-using Neighbours = std::vector<std::vector<int>>;
 class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
+    using Neighbours = std::vector<std::vector<int>>;
 
     ProblemData &data;
     PenaltyManager &penaltyManager;

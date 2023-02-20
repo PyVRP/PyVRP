@@ -290,7 +290,7 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     this->neighbours = neighbours;
 }
 
-Neighbours LocalSearch::getNeighbours()
+LocalSearch::Neighbours LocalSearch::getNeighbours()
 {
     return neighbours;
 }
