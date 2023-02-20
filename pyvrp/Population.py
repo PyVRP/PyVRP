@@ -427,11 +427,11 @@ class GenericPopulation(Generic[TIndiv]):
         self._rand_int_func = rand_int_func
         self._params = params
 
-        subpop_cls: Type[SubPopulation] = (
+        self._subpop_cls: Type[SubPopulation] = (
             SubPopulationNumpy if params.use_numpy else SubPopulationPython
         )
-        self._feas = subpop_cls(self._op, params)
-        self._infeas = subpop_cls(self._op, params)
+        self._feas = self._subpop_cls(self._op, params)
+        self._infeas = self._subpop_cls(self._op, params)
 
         self._best = best
 
@@ -473,9 +473,41 @@ class GenericPopulation(Generic[TIndiv]):
         """
         return len(self._feas) + len(self._infeas)
 
+    def reset(self):
+        """
+        Resets the population, creating empty subpopulations.
+        """
+        self._feas = self._subpop_cls(self._op, self._params)
+        self._infeas = self._subpop_cls(self._op, self._params)
+
     def initialize(self, factory: Callable[[], TIndiv]):
+        """
+        Initializes the population by adding self._params.min_pop_size
+        individuals using the factory function to create individuals.
+
+        Parameters
+        ----------
+        factory
+            Function to use to create a single individual to add to the
+            population.
+        """
         for _ in range(self._params.min_pop_size):
             self.add(factory())
+
+    def restart(self, factory: Callable[[], TIndiv]):
+        """
+        Resets the population and then initializes it by adding
+        self._params.min_pop_size individuals using the factory function to
+        create individuals.
+
+        Parameters
+        ----------
+        factory
+            Function to use to create a single individual to add to the
+            population.
+        """
+        self.reset()
+        self.initialize(factory)
 
     def add(self, individual: TIndiv):
         """
@@ -519,17 +551,6 @@ class GenericPopulation(Generic[TIndiv]):
             diversity = self._op(first, second)
 
         return first, second
-
-    def restart(self):
-        """
-        Restarts the population. All individuals are removed and a new initial
-        population population is generated.
-        """
-        self._feas = SubPopulation(self._data, self._op, self._params)
-        self._infeas = SubPopulation(self._data, self._op, self._params)
-
-        for _ in range(self._params.min_pop_size):
-            self.add(Individual(self._data, self._pm, self._rng))
 
     def get_binary_tournament(self) -> TIndiv:
         """
@@ -615,8 +636,19 @@ class Population(GenericPopulation[Individual]):
             params,
         )
 
+        self._data = data
+        self._pm = penalty_manager
+        self._rng = rng
+
         if initial_solutions:
             for indiv in initial_solutions:
                 self.add(indiv)
         else:
             self.initialize(lambda: Individual(data, penalty_manager, rng))
+
+    def restart(self):
+        """
+        Restarts the population. All individuals are removed and a new initial
+        population population is generated.
+        """
+        super().restart(lambda: Individual(self._data, self._pm, self._rng))

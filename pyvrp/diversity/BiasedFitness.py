@@ -238,7 +238,7 @@ class BiasedFitness:
             the total subpopulation.
         """
         k = min(self.nb_close, len(self) - 1)
-        return self._dist_closest_sum[individual_idx] / k
+        return self._dist_closest_sum[individual_idx] / k if k > 0 else 0.0
 
     def get_biased_fitness(self, individual_idx: int) -> float:
         return self._biased_fitness[individual_idx]

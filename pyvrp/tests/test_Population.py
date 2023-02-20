@@ -264,19 +264,37 @@ def test_custom_initial_solutions(use_numpy: bool):
     assert_equal(len(pop), 3)
 
 
+@mark.parametrize(
+    "use_numpy",
+    [False, True],
+)
+def test_diversity_zero_for_single_individual_in_population(use_numpy: bool):
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=2_147_483_647)
+
+    params = PopulationParams(min_pop_size=0, use_numpy=use_numpy)
+
+    initial_solutions = [
+        Individual(data, pm, [[3, 2], [1, 4], []]),
+    ]
+    pop = Population(
+        data,
+        pm,
+        rng,
+        broken_pairs_distance,
+        initial_solutions=initial_solutions,
+        params=params,
+    )
+
+    assert_equal(len(pop.feasible_subpopulation), 1)
+    assert_equal(len(pop.infeasible_subpopulation), 0)
+    assert_equal(pop.feasible_subpopulation.avg_distance_closest(0), 0)
+
+
 @mark.parametrize("use_numpy", [False, True])
 @mark.parametrize("nb_elite", [5, 25])
 def test_elite_not_purged_computation(nb_elite: int, use_numpy: bool):
-
-    # Helper functions
-    def has_duplicates(vals: np.ndarray):
-        sorted_vals = np.sort(vals)
-        return np.isclose(sorted_vals[:-1], sorted_vals[1:]).any()
-
-    def get_rank(vals: np.ndarray[float]):
-        rank = np.zeros(len(vals), dtype=int)
-        rank[np.argsort(vals)] = np.arange(len(vals))
-        return rank
 
     # TODO setup as fixture
     class TestIndividual(NamedTuple):
@@ -455,15 +473,15 @@ def test_restart_generates_min_pop_size_new_individuals():
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=2)
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(data, pm, rng, broken_pairs_distance, params=params)
 
-    old_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
-    old_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+    old_feas = {id(indiv) for indiv in pop.feasible_subpopulation}
+    old_infeas = {id(indiv) for indiv in pop.infeasible_subpopulation}
 
     pop.restart()
 
-    new_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
-    new_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+    new_feas = {id(indiv) for indiv in pop.feasible_subpopulation}
+    new_infeas = {id(indiv) for indiv in pop.infeasible_subpopulation}
 
     assert_equal(len(pop), 2)
     assert_(new_feas != old_feas)
