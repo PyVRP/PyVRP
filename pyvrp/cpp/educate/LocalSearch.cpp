@@ -1,13 +1,9 @@
 #include "LocalSearch.h"
 
-#include <pybind11/pybind11.h>
-
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <vector>
-
-namespace py = pybind11;
 
 void LocalSearch::search(Individual &indiv)
 {
