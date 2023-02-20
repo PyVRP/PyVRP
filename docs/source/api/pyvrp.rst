@@ -63,6 +63,9 @@ TODO
    .. autoapiclass:: Result
       :members:
 
+.. automodule:: pyvrp.show_versions
+   :members:
+
 .. autoapimodule:: pyvrp.Statistics
 
    .. autoapiclass:: Statistics
