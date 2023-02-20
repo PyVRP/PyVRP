@@ -165,7 +165,7 @@ class BiasedFitness:
             return
         n = len(self)
         k = min(self.nb_close, n - 1)
-        rng = np.arange(n)
+        idcs = np.arange(n)
 
         dist_closest = np.sort(self._dist[:n, :n] + np.eye(n) * 1e9, -1)[:, :k]
         assert np.allclose(
@@ -174,7 +174,7 @@ class BiasedFitness:
 
         maxv = self._dist_closest[:n, :k].max(-1)
         assert np.allclose(
-            self._dist_closest[rng, self._dist_closest_argmax[:n]], maxv
+            self._dist_closest[idcs, self._dist_closest_argmax[:n]], maxv
         )
         assert np.allclose(self._dist_closest_max[:n], maxv)
         assert np.allclose(
@@ -186,7 +186,7 @@ class BiasedFitness:
 
         cost_rank = np.zeros(n, dtype=int)
         argsort_cost = np.argsort(self._cost[:n])
-        cost_rank[argsort_cost] = rng
+        cost_rank[argsort_cost] = idcs
         assert np.allclose(
             self._cost[np.argsort(self._cost_rank[:n])],
             np.sort(self._cost[:n]),
@@ -267,7 +267,7 @@ class BiasedFitness:
 
         assert n >= 2
 
-        rng = np.arange(n)  # Idx's of remaining indivs
+        idcs = np.arange(n)  # Idx's of remaining indivs
 
         # Find k nearest others for each individual, mask self in _dist
         k = min(self.nb_close, n - 1)
@@ -277,15 +277,15 @@ class BiasedFitness:
         # rest_start_idx = np.zeros(n, dtype=int)
         is_removed = np.zeros(n, dtype=bool)
         is_closest = np.zeros((n, n), dtype=bool)
-        is_closest[rng[:, None], idx_sorted[:, :k]] = True
+        is_closest[idcs[:, None], idx_sorted[:, :k]] = True
 
         # Make a (cyclic) linked list of the ordered
         prv = np.zeros((n, n), dtype=int)
         nxt = np.zeros((n, n), dtype=int)
 
         idx_sorted_nxt = np.roll(idx_sorted, -1, axis=-1)
-        prv[rng[:, None], idx_sorted_nxt] = idx_sorted
-        nxt[rng[:, None], idx_sorted] = idx_sorted_nxt
+        prv[idcs[:, None], idx_sorted_nxt] = idx_sorted
+        nxt[idcs[:, None], idx_sorted] = idx_sorted_nxt
         # We track a pointer pointing at the indiv which is the least closest
         # of the 'topk' nb_closest (for each individual)
         idx_least_closest = idx_sorted[:, k - 1]
@@ -295,21 +295,20 @@ class BiasedFitness:
         dist_closest_mean = dist_closest_sum / k
         assert np.allclose(
             dist_closest_sum,
-            self._dist[rng[:, None], idx_sorted[:, :k]].sum(-1),
+            self._dist[idcs[:, None], idx_sorted[:, :k]].sum(-1),
         )
 
         cost_rank = self._cost_rank[:n]
 
-        while len(rng) > size:
-
+        while len(idcs) > size:
             idx_remove = None
             if head is not None:
-                idx_duplicate = rng[self._dist[rng, head[rng]] == 0]
+                idx_duplicate = idcs[self._dist[idcs, head[idcs]] == 0]
                 if len(idx_duplicate) > 0:
                     idx_remove = idx_duplicate[0]
 
                     # Update head of the list where we remove the closest
-                    idx_update_head = rng[head[rng] == idx_remove]
+                    idx_update_head = idcs[head[idcs] == idx_remove]
                     head[idx_update_head] = nxt[
                         idx_update_head, head[idx_update_head]
                     ]
@@ -320,31 +319,32 @@ class BiasedFitness:
 
             if idx_remove is None:
                 # TODO can we do more efficient since ordering hardly changes?
-                biased_fitness_rng = self._compute_biased_fitness(
-                    cost_rank[rng], dist_closest_mean[rng]
+                biased_fitness_idcs = self._compute_biased_fitness(
+                    cost_rank[idcs], dist_closest_mean[idcs]
                 )
 
                 # Find idx of item to remove (with largest biased fitness)
-                idx_remove = rng[biased_fitness_rng.argmax()]
+                idx_remove = idcs[biased_fitness_idcs.argmax()]
 
-            # Update rng with indices of remaining nodes
+            # Update idcs with indices of remaining nodes
             is_removed[idx_remove] = True
-            (rng,) = np.where(~is_removed)
+            (idcs,) = np.where(~is_removed)
 
-            if len(rng) <= k:
-                # All others were part of closest k (since we had len(rng) + 1
-                # indivs so len(rng) others before removing), so we no longer
+            if len(idcs) <= k:
+                # All others were part of closest k (since we had len(idcs) + 1
+                # indivs so len(idcs) others before removing), so we no longer
                 # need to track anything
-                dist_closest_sum[rng] -= self._dist[rng, idx_remove]
-                dist_closest_mean[rng] = dist_closest_sum[rng] / (len(rng) - 1)
+                dist_closest_sum[idcs] -= self._dist[idcs, idx_remove]
+                dist_closest_mean[idcs] = dist_closest_sum[idcs] / (
+                    len(idcs) - 1
+                )
             else:
-
                 # Remove from linked list
-                prv[rng, nxt[rng, idx_remove]] = prv[rng, idx_remove]
-                nxt[rng, prv[rng, idx_remove]] = nxt[rng, idx_remove]
+                prv[idcs, nxt[idcs, idx_remove]] = prv[idcs, idx_remove]
+                nxt[idcs, prv[idcs, idx_remove]] = nxt[idcs, idx_remove]
 
                 # If the removed indiv is in the topk, we advance topk pointer
-                idx_update_topk = rng[is_closest[rng, idx_remove]]
+                idx_update_topk = idcs[is_closest[idcs, idx_remove]]
                 new_idx_least_closest = nxt[
                     idx_update_topk, idx_least_closest[idx_update_topk]
                 ]
@@ -362,25 +362,25 @@ class BiasedFitness:
                 )
 
             # Decrease cost rank of all items ranked after removed indiv
-            cost_rank[rng[cost_rank[rng] > cost_rank[idx_remove]]] -= 1
+            cost_rank[idcs[cost_rank[idcs] > cost_rank[idx_remove]]] -= 1
 
-        idx_survivor = rng
+        idx_survivor = idcs
 
         # Update datastructures
-        n = len(rng)
+        n = len(idcs)
         k = min(self.nb_close, n - 1)
 
         # Update dist and indexing
-        self._dist[:n, :n] = self._dist[np.ix_(rng, rng)]
+        self._dist[:n, :n] = self._dist[np.ix_(idcs, idcs)]
         self._dist[n:, :] = 0
         self._dist[:, n:] = 0
 
-        self._cost[:n] = self._cost[rng]
-        self._cost_rank[:n] = cost_rank[rng]
+        self._cost[:n] = self._cost[idcs]
+        self._cost_rank[:n] = cost_rank[idcs]
 
         self._size = n
 
-        rng = np.arange(n)
+        idcs = np.arange(n)
 
         # Number of individuals in the subpopulation
 
@@ -390,11 +390,11 @@ class BiasedFitness:
         )[:, :k]
         # n x k with distances to closest others
         self._dist_closest[:n, :k] = self._dist[
-            rng[:, None], self._idx_closest[:n, :k]
+            idcs[:, None], self._idx_closest[:n, :k]
         ]
         self._dist_closest_argmax[:n] = self._dist_closest[:n, :k].argmax(-1)
         self._dist_closest_max[:n] = self._dist_closest[
-            rng, self._dist_closest_argmax[:n]
+            idcs, self._dist_closest_argmax[:n]
         ]
 
         # Average distance to closest (a.k.a. diversity)
