@@ -1,3 +1,2 @@
 ignore:
   - "**/*_bindings.cpp"  # ignore pybind11 bindings
-  - "pyvrp/cli.py"  # tested in other ways than unit tests
