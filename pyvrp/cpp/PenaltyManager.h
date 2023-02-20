@@ -114,17 +114,13 @@ public:
 
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
-     *
-     * TODO maybe inline
      */
-    [[nodiscard]] unsigned int loadPenalty(unsigned int load) const;
+    [[nodiscard]] inline unsigned int loadPenalty(unsigned int load) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
-     *
-     * TODO maybe inline
      */
-    [[nodiscard]] unsigned int twPenalty(unsigned int timeWarp) const;
+    [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
 
     /**
      * Returns a penalty booster that temporarily increases infeasibility
@@ -132,5 +128,22 @@ public:
      */
     [[nodiscard]] PenaltyBooster getPenaltyBooster();
 };
+
+unsigned int PenaltyManager::loadPenalty(unsigned int load) const
+{
+    if (load > vehicleCapacity)
+        return (load - vehicleCapacity) * capacityPenalty;
+
+    return 0;
+}
+
+unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const
+{
+#ifdef VRP_NO_TIME_WINDOWS
+    return 0;
+#else
+    return timeWarp * timeWarpPenalty;
+#endif
+}
 
 #endif  // HGS_PENALTYMANAGER_H

@@ -14,6 +14,7 @@ BUILD_TYPE=${1:-debug};
 params=(
     --buildtype "$BUILD_TYPE"
     -Dpython.platlibdir="$PWD"
+    "${@:2}"  # any additional arguments
 )
 
 if [ ! -d "build" ];  # does a build directory already exist?
