@@ -13,37 +13,20 @@
 #include <stdexcept>
 #include <vector>
 
-struct LocalSearchParams
-{
-    size_t const weightWaitTime;
-    size_t const weightTimeWarp;
-    size_t const nbGranular;
-
-    LocalSearchParams(size_t weightWaitTime = 18,
-                      size_t weightTimeWarp = 20,
-                      size_t nbGranular = 34)
-        : weightWaitTime(weightWaitTime),
-          weightTimeWarp(weightTimeWarp),
-          nbGranular(nbGranular)
-    {
-        if (nbGranular == 0)
-            throw std::invalid_argument("Expected nbGranular > 0.");
-    }
-};
 
 class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
+    using Neighbours = std::vector<std::vector<int>>;
 
     ProblemData &data;
     PenaltyManager &penaltyManager;
     XorShift128 &rng;
-    LocalSearchParams params;
 
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
-    std::vector<std::vector<int>> neighbours;
+    Neighbours neighbours;
 
     std::vector<int> orderNodes;   // random node order used in RI operators
     std::vector<int> orderRoutes;  // random route order used in SWAP* operators
@@ -74,12 +57,6 @@ class LocalSearch
     // Updates solution state after an improving local search move
     void update(Route *U, Route *V);
 
-    /**
-     * Calculate, for all vertices, the correlation ('nearness') of the
-     * nbGranular closest vertices.
-     */
-    void calculateNeighbours();
-
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
@@ -91,6 +68,18 @@ public:
      * operators are executed for route pairs whose circle sectors overlap.
      */
     void addRouteOperator(RouteOp &op);
+
+    /**
+     * Set neighbourhood structure to use by the local search. For each client,
+     * the neighbourhood structure is a vector of nearby clients. The depot has
+     * no nearby client.
+     */
+    void setNeighbours(Neighbours neighbours);
+
+    /**
+     * @return The neighbourhood structure currently in use.
+     */
+    Neighbours getNeighbours();
 
     /**
      * Performs regular (node-based) local search around the given individual.
@@ -105,8 +94,7 @@ public:
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
-                XorShift128 &rng,
-                LocalSearchParams params = LocalSearchParams());
+                XorShift128 &rng);
 };
 
 #endif

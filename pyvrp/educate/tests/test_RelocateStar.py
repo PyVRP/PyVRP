@@ -5,8 +5,9 @@ from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp.educate import (
     Exchange10,
     LocalSearch,
-    LocalSearchParams,
+    NeighbourhoodParams,
     RelocateStar,
+    compute_neighbours,
 )
 from pyvrp.tests.helpers import read
 
@@ -21,11 +22,12 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    params = LocalSearchParams(nb_granular=data.num_clients)
+    ls = LocalSearch(data, pm, rng)
+    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
+    ls.set_neighbours(compute_neighbours(data, nb_params))
+
     exchange = Exchange10(data, pm)
     relocate = RelocateStar(data, pm)
-
-    ls = LocalSearch(data, pm, rng, params)
     ls.add_node_operator(exchange)
     ls.add_route_operator(relocate)
 
@@ -52,11 +54,12 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    params = LocalSearchParams(nb_granular=size)
+    ls = LocalSearch(data, pm, rng)
+    nb_params = NeighbourhoodParams(nb_granular=size)
+    ls.set_neighbours(compute_neighbours(data, nb_params))
+
     exchange = Exchange10(data, pm)
     relocate = RelocateStar(data, pm)
-
-    ls = LocalSearch(data, pm, rng, params)
     ls.add_node_operator(exchange)
     ls.add_route_operator(relocate)
 
