@@ -125,8 +125,8 @@ void Individual::makeNeighbours()
 bool Individual::operator==(Individual const &other) const
 {
     // First compare costs, since that's a quick and cheap check. Only when
-    // the costs are the same do we compare the routes.
-    return cost() == other.cost() && routes_ == other.routes_;
+    // the costs are the same do we test if the neighbours are all equal.
+    return cost() == other.cost() && neighbours == other.neighbours;
 }
 
 Individual::Individual(ProblemData const &data,

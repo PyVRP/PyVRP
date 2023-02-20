@@ -1,0 +1,7 @@
+option(
+    'problem',
+    type: 'combo',
+    value: 'vrptw',
+    choices: ['cvrp', 'vrptw'], 
+    description: 'Problem configuration to compile.'
+)

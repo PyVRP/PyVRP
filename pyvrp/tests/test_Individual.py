@@ -179,7 +179,7 @@ def test_eq():
     assert_(indiv1 == indiv3)  # same solution, different individual
 
     indiv4 = Individual(data, pm, [[1, 2, 3], [], [4]])
-    indiv5 = Individual(data, pm, [[1, 2, 3], [4], []])
+    indiv5 = Individual(data, pm, [[4], [1, 2, 3], []])
 
     assert_(indiv4 == indiv5)  # routes are the same, but in different order
 

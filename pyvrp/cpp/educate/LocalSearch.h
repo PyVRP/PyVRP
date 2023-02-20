@@ -18,16 +18,13 @@ struct LocalSearchParams
     size_t const weightWaitTime;
     size_t const weightTimeWarp;
     size_t const nbGranular;
-    size_t const postProcessPathLength;
 
     LocalSearchParams(size_t weightWaitTime = 18,
                       size_t weightTimeWarp = 20,
-                      size_t nbGranular = 34,
-                      size_t postProcessPathLength = 7)
+                      size_t nbGranular = 34)
         : weightWaitTime(weightWaitTime),
           weightTimeWarp(weightTimeWarp),
-          nbGranular(nbGranular),
-          postProcessPathLength(postProcessPathLength)
+          nbGranular(nbGranular)
     {
         if (nbGranular == 0)
             throw std::invalid_argument("Expected nbGranular > 0.");
@@ -76,15 +73,6 @@ class LocalSearch
 
     // Updates solution state after an improving local search move
     void update(Route *U, Route *V);
-
-    // Enumerates and optimally recombines subpaths of the given route
-    void enumerateSubpaths(Route &U);
-
-    // Evaluates the path before -> <nodes in sub path> -> after
-    inline int evaluateSubpath(std::vector<size_t> const &subpath,
-                               Node const *before,
-                               Node const *after,
-                               Route const &route) const;
 
     /**
      * Calculate, for all vertices, the correlation ('nearness') of the
