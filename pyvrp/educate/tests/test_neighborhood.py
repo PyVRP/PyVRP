@@ -155,7 +155,7 @@ def test_compute_neighbours(
     assert_equal(len(neighbours), data.num_clients + 1)
     assert_equal(len(neighbours[0]), 0)
 
-    assert neighbours[idx_check] == expected_neighbours_check
+    assert_equal(neighbours[idx_check], expected_neighbours_check)
 
     # Check that we have at least or exactly nb_granular depending on symmetric
     for neighb in neighbours[1:]:
@@ -212,16 +212,16 @@ def test_set_get_neighbours(
     neighbours = compute_neighbours(data, params)
     # neighbours = compute_neighbours(data)
     # Test that before we set neighbours we don't have same
-    assert ls.get_neighbours() != neighbours
+    assert_(ls.get_neighbours() != neighbours)
     # Test after we set we have the same
     ls.set_neighbours(neighbours)
     ls_neighbours = ls.get_neighbours()
-    assert ls_neighbours == neighbours
+    assert_equal(ls_neighbours, neighbours)
 
     # Check that the bindings make a copy (in both directions)
-    assert ls_neighbours is not neighbours
+    assert_(ls_neighbours is not neighbours)
     ls_neighbours[1] = []
-    assert ls.get_neighbours() != ls_neighbours
-    assert ls.get_neighbours() == neighbours
+    assert_(ls.get_neighbours() != ls_neighbours)
+    assert_equal(ls.get_neighbours(), neighbours)
     neighbours[1] = []
-    assert ls.get_neighbours() != neighbours
+    assert_(ls.get_neighbours() != neighbours)
