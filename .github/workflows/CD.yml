@@ -3,8 +3,8 @@ name: CD
 on:
   release:
     types: [ created ]
-  # pull_request:  # uncomment these lines to test CD build
-  #   branches: [ main ]
+  pull_request:  # uncomment these lines to test CD build
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.ref }}
