@@ -520,6 +520,17 @@ class GenericPopulation(Generic[TIndiv]):
 
         return first, second
 
+    def restart(self):
+        """
+        Restarts the population. All individuals are removed and a new initial
+        population population is generated.
+        """
+        self._feas = SubPopulation(self._data, self._op, self._params)
+        self._infeas = SubPopulation(self._data, self._op, self._params)
+
+        for _ in range(self._params.min_pop_size):
+            self.add(Individual(self._data, self._pm, self._rng))
+
     def get_binary_tournament(self) -> TIndiv:
         """
         Selects an individual from this population by binary tournament.

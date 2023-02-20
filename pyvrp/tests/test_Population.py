@@ -443,3 +443,28 @@ def test_biased_fitness_computation(use_numpy: bool):
     subpop = pop.feasible_subpopulation
 
     assert_(indivs[expected_fitness.argmax()] not in subpop)
+
+
+def test_restart_generates_min_pop_size_new_individuals():
+    """
+    Tests if restarting the population will generate ``min_pop_size`` new
+    individuals.
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=12)
+
+    params = PopulationParams(min_pop_size=2)
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
+
+    old_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
+    old_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+
+    pop.restart()
+
+    new_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
+    new_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+
+    assert_equal(len(pop), 2)
+    assert_(new_feas != old_feas)
+    assert_(new_infeas != old_infeas)

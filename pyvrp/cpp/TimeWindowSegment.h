@@ -51,16 +51,23 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &first,
                                            TimeWindowSegment const &second,
                                            Args... args)
 {
+#ifdef VRP_NO_TIME_WINDOWS
+    return {};
+#else
     auto const res = first.merge(second);
 
     if constexpr (sizeof...(args) == 0)
         return res;
     else
         return merge(res, args...);
+#endif
 }
 
 TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
 {
+#ifdef VRP_NO_TIME_WINDOWS
+    return {};
+#else
     int const distance = (*dist)(idxLast, other.idxFirst);
     int const delta = duration - timeWarp + distance;
     int const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
@@ -74,6 +81,7 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
             std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
             std::min(other.twLate - delta, twLate) + deltaTimeWarp,
             std::max(release, other.release)};
+#endif
 }
 
 int TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
