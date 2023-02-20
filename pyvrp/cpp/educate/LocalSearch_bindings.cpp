@@ -9,9 +9,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(LocalSearch, m)
 {
     py::class_<LocalSearchParams>(m, "LocalSearchParams")
-        .def(py::init<size_t>(), py::arg("post_process_path_length") = 7)
-        .def_readonly("post_process_path_length",
-                      &LocalSearchParams::postProcessPathLength);
+        .def(py::init<>());
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<ProblemData &,

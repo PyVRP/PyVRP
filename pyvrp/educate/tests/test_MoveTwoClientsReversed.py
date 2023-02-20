@@ -36,13 +36,14 @@ def test_single_route_OkSmall():
     assert_equal(individual.num_routes(), 1)
     assert_(individual.cost() < copy.cost())
 
-    # (2, 3) was inserted after the depot as (3, 2)
-    assert_equal(individual.get_routes(), [[3, 2, 1, 4], [], []])
+    # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
+    # after 2 as 2 -> 3 -> 1 -> 4.
+    assert_equal(individual.get_routes(), [[2, 3, 1, 4], [], []])
 
     # These two-route solutions can all be created by MoveTwoClientsReversed
     # from the returned solution. So they must have a cost that's at best equal
     # to the returned solution's cost.
-    for routes in ([[3, 2], [4, 1]], [[2, 3], [1, 4]], [[3, 4], [1, 2]]):
+    for routes in ([[3, 2], [1, 4]], [[2, 3], [4, 1]], [[2, 4], [1, 3]]):
         other = Individual(data, pm, routes)
         assert_(individual.cost() <= other.cost())
 
