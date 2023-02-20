@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import List
 
@@ -101,14 +103,15 @@ def compute_neighbours(
     n = len(proximity)
     k = min(params.nb_granular, n - 1)
     rng = np.arange(n)
-    mask = np.eye(n, dtype=bool)
-    masked_proximity = np.where(mask, 1e9, proximity + 1e-6 * rng[None, :])
-    idx_topk = np.argpartition(masked_proximity, k, axis=-1)[:, :k]
+    jitter = 1e-6 * rng  # add a bit of jitter to break ties
+    proximity = proximity + jitter[None, :]
+    np.fill_diagonal(proximity, np.inf)  # exclude self from neighbourhood
+    idx_topk = np.argpartition(proximity, k, axis=-1)[:, :k]
 
     if params.symmetric_neighbours:
         # Convert into adjacency matrix that can be symmetrized
-        adj = np.zeros_like(mask)
-        adj[rng[:, None], idx_topk] = 1
+        adj = np.zeros_like(proximity, dtype=bool)
+        adj[rng[:, None], idx_topk] = True
 
         # Add correlated vertex if correlated in one of two directions
         adj = adj | adj.transpose()
