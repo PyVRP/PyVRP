@@ -85,7 +85,7 @@ libcommon = static_library(
         SRC_DIR / 'educate' / 'RelocateStar.cpp',
         SRC_DIR / 'educate' / 'SwapStar.cpp',
     ],
-    dependencies: [py.dependency(), pybind11],
+    dependencies: [py.dependency()],
     include_directories: [include_directories(SRC_DIR)],
 )
 
