@@ -19,7 +19,12 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.educate import NODE_OPERATORS, ROUTE_OPERATORS, LocalSearch
+from pyvrp.educate import (
+    NODE_OPERATORS,
+    ROUTE_OPERATORS,
+    LocalSearch,
+    compute_neighbours,
+)
 from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
 
@@ -88,6 +93,7 @@ def solve(
     pen_manager = PenaltyManager(data.vehicle_capacity)
     pop = Population(data, pen_manager, rng, bpd)
     ls = LocalSearch(data, pen_manager, rng)
+    ls.set_neighbours(compute_neighbours(data))
 
     node_ops = [node_op(data, pen_manager) for node_op in NODE_OPERATORS]
 
