@@ -297,12 +297,10 @@ Neighbours LocalSearch::getNeighbours()
 
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
-                         XorShift128 &rng,
-                         LocalSearchParams params)
+                         XorShift128 &rng)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
-      params(params),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),

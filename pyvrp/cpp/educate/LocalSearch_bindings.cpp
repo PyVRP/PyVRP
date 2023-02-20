@@ -8,18 +8,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(LocalSearch, m)
 {
-    py::class_<LocalSearchParams>(m, "LocalSearchParams")
-        .def(py::init<>());
-
     py::class_<LocalSearch>(m, "LocalSearch")
-        .def(py::init<ProblemData &,
-                      PenaltyManager &,
-                      XorShift128 &,
-                      LocalSearchParams>(),
-             py::arg("data"),
-             py::arg("penalty_manager"),
-             py::arg("rng"),
-             py::arg("params"))
         .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
              py::arg("data"),
              py::arg("penalty_manager"),

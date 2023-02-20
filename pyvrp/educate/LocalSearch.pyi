@@ -8,15 +8,6 @@ from pyvrp.XorShift128 import XorShift128
 Neighbours = List[List[int]]
 
 class LocalSearch:
-    @overload
-    def __init__(
-        self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
-        params: LocalSearchParams,
-    ) -> None: ...
-    @overload
     def __init__(
         self,
         data: ProblemData,
@@ -29,17 +20,3 @@ class LocalSearch:
     def get_neighbours(self) -> Neighbours: ...
     def intensify(self, individual: Individual) -> None: ...
     def search(self, individual: Individual) -> None: ...
-
-class LocalSearchParams:
-    def __init__(
-        self,
-        weight_wait_time: int = ...,
-        weight_time_warp: int = ...,
-        nb_granular: int = ...,
-    ) -> None: ...
-    @property
-    def nb_granular(self) -> int: ...
-    @property
-    def weight_time_warp(self) -> int: ...
-    @property
-    def weight_wait_time(self) -> int: ...

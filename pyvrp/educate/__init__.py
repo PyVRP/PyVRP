@@ -7,7 +7,7 @@ from .Exchange import (
     Exchange32,
     Exchange33,
 )
-from .LocalSearch import LocalSearch, LocalSearchParams
+from .LocalSearch import LocalSearch
 from .MoveTwoClientsReversed import MoveTwoClientsReversed
 from .RelocateStar import RelocateStar
 from .SwapStar import SwapStar

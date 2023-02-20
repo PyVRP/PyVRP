@@ -13,13 +13,6 @@
 #include <stdexcept>
 #include <vector>
 
-struct LocalSearchParams
-{
-    LocalSearchParams()
-    {
-        
-    }
-};
 
 // TODO define within LocalSearch
 using Neighbours = std::vector<std::vector<int>>;
@@ -31,7 +24,6 @@ class LocalSearch
     ProblemData &data;
     PenaltyManager &penaltyManager;
     XorShift128 &rng;
-    LocalSearchParams params;
 
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
@@ -104,8 +96,7 @@ public:
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
-                XorShift128 &rng,
-                LocalSearchParams params = LocalSearchParams());
+                XorShift128 &rng);
 };
 
 #endif
