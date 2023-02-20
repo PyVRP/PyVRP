@@ -77,7 +77,7 @@ def compute_proximity(
 
 def compute_neighbours(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
-):
+) -> Neighbours:
     """
     Computes neighbours defining the neighbourhood for a problem instance.
 
@@ -90,9 +90,9 @@ def compute_neighbours(
 
     Returns
     -------
-    List[List[int]]
-        A numpy array of size n x n where n = data.num_clients containing
-        the proximities values between all clients (depot excluded).
+    Neighbours
+        A list of list of integers representing the neighbours for each client.
+        The first element represents the depot and is an empty list.
     """
 
     proximity = compute_proximity(data, params)
