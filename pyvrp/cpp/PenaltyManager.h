@@ -2,12 +2,15 @@
 #define HGS_PENALTYMANAGER_H
 
 #include <stdexcept>
+#include <vector>
 
 struct PenaltyParams
 {
     unsigned int const initCapacityPenalty;
     unsigned int const initTimeWarpPenalty;
     unsigned int const repairBooster;
+
+    unsigned int const numRegistrationsBetweenPenaltyUpdates;
 
     double const penaltyIncrease;
     double const penaltyDecrease;
@@ -16,12 +19,15 @@ struct PenaltyParams
     PenaltyParams(unsigned int initCapacityPenalty = 20,
                   unsigned int initTimeWarpPenalty = 6,
                   unsigned int repairBooster = 12,
+                  unsigned int numRegistrationsBetweenPenaltyUpdates = 50,
                   double penaltyIncrease = 1.34,
                   double penaltyDecrease = 0.32,
                   double targetFeasible = 0.43)
         : initCapacityPenalty(initCapacityPenalty),
           initTimeWarpPenalty(initTimeWarpPenalty),
           repairBooster(repairBooster),
+          numRegistrationsBetweenPenaltyUpdates(
+              numRegistrationsBetweenPenaltyUpdates),
           penaltyIncrease(penaltyIncrease),
           penaltyDecrease(penaltyDecrease),
           targetFeasible(targetFeasible)
@@ -40,6 +46,12 @@ struct PenaltyParams
     }
 };
 
+/**
+ * Penalty manager class. This class manages time warp and load penalties, and
+ * provides penalty terms for given time warp and load values. It updates these
+ * penalties based on recent history, and can be used to provide a temporary
+ * penalty booster object that increases the penalties for a short duration.
+ */
 class PenaltyManager
 {
     PenaltyParams const params;
@@ -47,6 +59,9 @@ class PenaltyManager
 
     unsigned int capacityPenalty;
     unsigned int timeWarpPenalty;
+
+    std::vector<bool> loadFeas;  // tracks recent load feasibility results
+    std::vector<bool> timeFeas;  // tracks recent time feasibility results
 
     // Computes and returns the new penalty value, given the current value and
     // the percentage of feasible solutions since the last update.
@@ -86,22 +101,16 @@ public:
                             PenaltyParams params = PenaltyParams());
 
     /**
-     * Updates the capacity penalty based on the percentage of load-feasible
-     * solutions since the last update.
-     *
-     * @param currFeasPct Percentage of load feasible solutions. Should be a
-     *                    number in [0, 1].
+     * Registers another capacity feasibility result. The current load penalty
+     * is updated once sufficiently many results have been gathered.
      */
-    void updateCapacityPenalty(double currFeasPct);
+    void registerLoadFeasible(bool isLoadFeasible);
 
     /**
-     * Updates the time warp penalty based on the percentage of time-feasible
-     * solutions since the last update.
-     *
-     * @param currFeasPct Percentage of time feasible solutions. Should be a
-     *                    number in [0, 1].
+     * Registers another time feasibility result. The current time warp penalty
+     * is updated once sufficiently many results have been gathered.
      */
-    void updateTimeWarpPenalty(double currFeasPct);
+    void registerTimeFeasible(bool isTimeFeasible);
 
     /**
      * Computes the total excess capacity penalty for the given vehicle load.

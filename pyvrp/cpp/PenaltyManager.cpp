@@ -1,8 +1,6 @@
 #include "PenaltyManager.h"
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
+#include <numeric>
 
 PenaltyManager::PenaltyManager(unsigned int vehicleCapacity,
                                PenaltyParams params)
@@ -32,14 +30,32 @@ unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
     return static_cast<int>(dPenalty);
 }
 
-void PenaltyManager::updateCapacityPenalty(double currFeasPct)
+void PenaltyManager::registerLoadFeasible(bool isLoadFeasible)
 {
-    capacityPenalty = compute(capacityPenalty, currFeasPct);
+    loadFeas.emplace_back(isLoadFeasible);
+
+    if (loadFeas.size() == params.numRegistrationsBetweenPenaltyUpdates)
+    {
+        double const sum = std::accumulate(loadFeas.begin(), loadFeas.end(), 0);
+        auto const avg = loadFeas.empty() ? 1.0 : sum / loadFeas.size();
+
+        capacityPenalty = compute(capacityPenalty, avg);
+        loadFeas.clear();
+    }
 }
 
-void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
+void PenaltyManager::registerTimeFeasible(bool isTimeFeasible)
 {
-    timeWarpPenalty = compute(timeWarpPenalty, currFeasPct);
+    timeFeas.emplace_back(isTimeFeasible);
+
+    if (timeFeas.size() == params.numRegistrationsBetweenPenaltyUpdates)
+    {
+        double const sum = std::accumulate(timeFeas.begin(), timeFeas.end(), 0);
+        auto const avg = timeFeas.empty() ? 1.0 : sum / timeFeas.size();
+
+        timeWarpPenalty = compute(timeWarpPenalty, avg);
+        timeFeas.clear();
+    }
 }
 
 PenaltyManager::PenaltyBooster PenaltyManager::getPenaltyBooster()
