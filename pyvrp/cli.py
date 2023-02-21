@@ -6,15 +6,19 @@ from typing import List, Optional
 import numpy as np
 
 try:
+    import tomli
     from tqdm.contrib.concurrent import process_map
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("Install 'tqdm' to use the commandline program.")
+    msg = "Install 'tqdm' and 'tomli' to use the command line program."
+    raise ModuleNotFoundError(msg)
 
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
     PenaltyManager,
+    PenaltyParams,
     Population,
+    PopulationParams,
     Result,
     XorShift128,
 )
@@ -93,10 +97,26 @@ def solve(
     Result
         Object storing the solver outcome.
     """
+    if kwargs.get("config_loc"):
+        with open(kwargs["config_loc"], "rb") as fh:
+            config = tomli.load(fh)
+    else:
+        config = {}
+
+    gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
+
+    if stats_dir:
+        # If the statistics directory argument was passed, that trumps whatever
+        # we read from the configuration file.
+        gen_params.collect_statistics = True
+
+    pen_params = PenaltyParams(**config.get("penalty", {}))
+    pop_params = PopulationParams(**config.get("population", {}))
+
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity)
-    pop = Population(data, pen_manager, rng, bpd)
+    pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
+    pop = Population(data, pen_manager, rng, bpd, pop_params)
     ls = LocalSearch(data, pen_manager, rng)
     ls.set_neighbours(compute_neighbours(data))
 
@@ -110,8 +130,7 @@ def solve(
     for op in route_ops:
         ls.add_route_operator(op)
 
-    params = GeneticAlgorithmParams(collect_statistics=bool(stats_dir))
-    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
+    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, gen_params)
 
     if max_runtime is not None:
         stop = MaxRuntime(max_runtime)
@@ -223,6 +242,13 @@ def main():
         choices=ROUND_FUNCS.keys(),
         help="Round function to apply for non-integral data. Default 'none'.",
     )
+
+    msg = """
+    Optional parameter configuration file (in TOML format). These arguments
+    replace the defaults if a file is passed; default parameters are used when
+    this argument is not given.
+    """
+    parser.add_argument("--config_loc", help=msg)
 
     msg = "Seed to use for reproducible results."
     parser.add_argument("--seed", required=True, type=int, help=msg)
