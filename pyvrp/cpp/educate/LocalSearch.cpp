@@ -119,7 +119,7 @@ void LocalSearch::intensify(Individual &indiv)
             {
                 auto &V = routes[rV];
 
-                if (V.empty())
+                if (V.empty() || !U.overlapsWith(V))
                     continue;
 
                 auto const lastModifiedRoute

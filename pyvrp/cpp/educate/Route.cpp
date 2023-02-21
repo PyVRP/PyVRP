@@ -15,13 +15,21 @@ void Route::setupNodes()
     } while (!node->isDepot());
 }
 
-void Route::setupAngle()
+void Route::setupSector()
 {
     if (empty())
     {
         angleCenter = 1.e30;
         return;
     }
+
+    auto const depotData = data->client(0);
+    auto const clientData = data->client(n(depot)->client);
+    auto const angle = CircleSector::positive_mod(static_cast<int>(
+        32768. * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
+        / M_PI));
+
+    sector.initialize(angle);
 
     int cumulatedX = 0;
     int cumulatedY = 0;
@@ -33,6 +41,14 @@ void Route::setupAngle()
 
         cumulatedX += data->client(node->client).x;
         cumulatedY += data->client(node->client).y;
+
+        auto const clientData = data->client(node->client);
+        auto const angle = CircleSector::positive_mod(static_cast<int>(
+            32768.
+            * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
+            / M_PI));
+
+        sector.extend(angle);
     }
 
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
@@ -54,6 +70,11 @@ void Route::setupRouteTimeWindows()
         prev->twAfter = TimeWindowSegment::merge(prev->tw, node->twAfter);
         node = prev;
     } while (!node->isDepot());
+}
+
+bool Route::overlapsWith(const Route &other) const
+{
+    return CircleSector::overlap(sector, other.sector);
 }
 
 void Route::update()
@@ -98,7 +119,7 @@ void Route::update()
         node->twBefore = TimeWindowSegment::merge(p(node)->twBefore, node->tw);
     }
 
-    setupAngle();
+    setupSector();
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;

@@ -1,6 +1,7 @@
 #ifndef HGS_VRPTW_ROUTE_H
 #define HGS_VRPTW_ROUTE_H
 
+#include "CircleSector.h"
 #include "Node.h"
 #include "TimeWindowSegment.h"
 
@@ -12,6 +13,7 @@
 class Route
 {
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
+    CircleSector sector;        // Circle sector of the route's clients
 
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
@@ -22,8 +24,8 @@ class Route
     // Populates the nodes vector.
     void setupNodes();
 
-    // Sets the route center angle.
-    void setupAngle();
+    // Sets the angle and sector data.
+    void setupSector();
 
     // Sets forward node time windows.
     void setupRouteTimeWindows();
@@ -98,6 +100,12 @@ public:  // TODO make fields private
     [[nodiscard]] inline int loadBetween(size_t start, size_t end) const;
 
     /**
+     * Tests if this route overlaps with the other route, that is, whether
+     * their circle sectors overlap with a given tolerance.
+     */
+    [[nodiscard]] bool overlapsWith(Route const &other) const;
+
+    /**
      * Updates this route. To be called after swapping nodes/changing the
      * solution.
      */
@@ -111,12 +119,12 @@ bool Route::isFeasible() const
 
 bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
 
-bool Route::hasTimeWarp() const 
+bool Route::hasTimeWarp() const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return false;
 #else
-    return !isTimeWarpFeasible_; 
+    return !isTimeWarpFeasible_;
 #endif
 }
 
