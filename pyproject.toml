@@ -116,6 +116,11 @@ exclude_lines = [
     "@abstract",
 ]
 
+[tool.cibuildwheel]
+skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+build-verbosity = "3"
+build-frontend = "build"
+
 [tool.poetry.build]
 generate-setup-file = false
 script = "build_extensions.py"
