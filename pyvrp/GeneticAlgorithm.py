@@ -21,15 +21,18 @@ CrossoverOperator = Callable[
 
 @dataclass
 class GeneticAlgorithmParams:
-    repair_probability: float = 0.80
     collect_statistics: bool = False
-    should_intensify: bool = True
-    nb_iter_no_improvement: int = 20_000
+    repair_probability: float = 0.80
     intensification_probability: float = 0.15
+    intensify_on_best: bool = True
+    nb_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
+
+        if not 0 <= self.intensification_probability <= 1:
+            raise ValueError("intensification_probability must be in [0, 1].")
 
         if self.nb_iter_no_improvement < 0:
             raise ValueError("nb_iter_no_improvement < 0 not understood.")
@@ -140,7 +143,7 @@ class GeneticAlgorithm:
         # Only intensify feasible, new best solutions. See also the repair
         # step below.
         if (
-            self._params.should_intensify
+            self._params.intensify_on_best
             and individual.is_feasible()
             and individual.cost() < self._pop.get_best_found().cost()
         ):
@@ -175,7 +178,7 @@ class GeneticAlgorithm:
 
                 if individual.is_feasible():
                     if (
-                        self._params.should_intensify
+                        self._params.intensify_on_best
                         and individual.cost() < best_found.cost()
                     ):
                         self._ls.intensify(individual)
