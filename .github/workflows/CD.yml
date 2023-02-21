@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linux:
+  build:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -22,7 +22,8 @@ jobs:
       - name: Install rtools
         if: ${{ runner.os == 'Windows' }}
         run: |
-          # mingw-w64
+          # mingw-w64. This is what scipy uses to update the build toolchain
+          # on Windows systems.
           choco install rtools --no-progress
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels

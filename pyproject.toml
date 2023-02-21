@@ -122,6 +122,11 @@ skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
 build-verbosity = "3"
 build-frontend = "build"
 
+[tool.cibuildwheel.windows]
+# The meson build dir is somehow not properly re-used between wheel builds on
+# Windows, so it is best to start fresh for each build.
+before-build = "rm -rf {project}/build"
+
 [tool.poetry.build]
 generate-setup-file = false
 script = "build_extensions.py"
