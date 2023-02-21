@@ -157,7 +157,22 @@ class GeneticAlgorithm:
             best_found = self._pop.get_best_found()
 
             with self._pm.get_penalty_booster() as booster:  # noqa
-                self._ls.search(individual)
+                # HACK We keep searching and intensifying to mimic the local
+                # search implementation of HGS-CVRP and HGS-VRPTW
+                while True:
+                    self._ls.search(individual)
+
+                    if (
+                        self._rng.rand()
+                        < self._params.intensification_probability
+                    ):
+                        cost = individual.cost()
+                        self._ls.intensify(individual)
+
+                        if individual.cost() < cost:
+                            continue
+
+                    break
 
                 if individual.is_feasible():
                     if (
