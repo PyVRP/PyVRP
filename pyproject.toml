@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.0.3a0"
+version = "0.0.3a1"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -14,6 +14,7 @@ include = [
     { path = "LICENSE.md" },
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
+    { path = "build_extensions.py", format = "sdist" },
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
@@ -135,15 +136,10 @@ exclude_lines = [
 
 
 [tool.cibuildwheel]
-build-verbosity = "3"
-build-frontend = "build"
-
-# Meson build dir is somehow re-used between builds, which is not desirable as
-# Python versions and dependencies change.
-before-build = "rm -rf {project}/build"
-
 # We do not support old Python versions (<3.8) and somewhat uncommon platforms.
 skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
+build-verbosity = "3"
+build-frontend = "build"
 
 
 [tool.poetry.build]

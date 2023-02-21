@@ -1,4 +1,5 @@
 import argparse
+import os
 import pathlib
 from subprocess import check_call
 from typing import List
@@ -53,6 +54,12 @@ def build(
     cwd = pathlib.Path.cwd()
     build_loc = cwd / build_dir
     install_loc = cwd / "pyvrp"
+
+    if os.environ.get("CIBUILDWHEEL", "0") == "1":
+        # If this is a CI wheel build, then clean the build directory and
+        # uninstall previously compiled extension modules between builds.
+        check_call(["ninja", "-C", build_loc, "clean"])
+        check_call(["ninja", "-C", build_loc, "uninstall"])
 
     args = [
         # fmt: off
