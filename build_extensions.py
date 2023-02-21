@@ -1,6 +1,6 @@
 import argparse
 import pathlib
-from subprocess import call
+from subprocess import check_call
 
 
 def parse_args():
@@ -63,19 +63,19 @@ def build(
     ]
 
     if not build_loc.exists():
-        call(["meson", "setup", build_loc, *args])
+        check_call(["meson", "setup", build_loc, *args])
     else:
-        call(["meson", "configure", build_loc, *args])
+        check_call(["meson", "configure", build_loc, *args])
 
-    call(["meson", "compile", "-C", build_loc])
-    call(["meson", "install", "-C", build_loc])
+    check_call(["meson", "compile", "-C", build_loc])
+    check_call(["meson", "install", "-C", build_loc])
 
     if regen_stubs:
         for extension in install_loc.rglob("*.so"):  # TODO only *.so?
             ext_dir = extension.parent
             ext_name, _ = extension.name.split(".", maxsplit=1)
 
-            call(
+            check_call(
                 ["stubgen", "--parse-only", "-o", ".", "-m", ext_name],
                 cwd=ext_dir,
             )
