@@ -113,10 +113,11 @@ class Statistics:
         def make_datum(row, prefix) -> _Datum:
             datum = {}
 
-            for k, v in row.items():
-                k = k[len(prefix) :]
-                if k in field2type:
-                    datum[k] = field2type[k](v)
+            for name, value in row.items():
+                if (field_name := name[len(prefix) :]) in field2type:
+                    # If the prefixless name is a field name, cast the row's
+                    # value to the appropriate type and add the data.
+                    datum[field_name] = field2type[field_name](value)
 
             return _Datum(**datum)
 
