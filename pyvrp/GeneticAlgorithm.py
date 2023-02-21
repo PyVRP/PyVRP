@@ -120,12 +120,14 @@ class GeneticAlgorithm:
         return Result(self._pop.get_best_found(), stats, iters, end)
 
     def _educate(self, individual: Individual):
+        intensify = self._rng.rand() < self._params.intensification_probability
+
         # HACK We keep searching and intensifying to mimic the local search
         # implementation of HGS-CVRP and HGS-VRPTW
         while True:
             self._ls.search(individual)
 
-            if self._rng.rand() < self._params.intensification_probability:
+            if intensify:
                 cost = individual.cost()
                 self._ls.intensify(individual)
 
@@ -162,10 +164,7 @@ class GeneticAlgorithm:
                 while True:
                     self._ls.search(individual)
 
-                    if (
-                        self._rng.rand()
-                        < self._params.intensification_probability
-                    ):
+                    if intensify:
                         cost = individual.cost()
                         self._ls.intensify(individual)
 
