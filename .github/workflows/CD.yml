@@ -23,7 +23,7 @@ jobs:
         if: ${{ runner.os == 'Windows' }}
         run: |
           # mingw-w64. This is what scipy uses to update the build toolchain
-          # on Windows systems.
+          # on Windows systems; also works fine for us.
           choco install rtools --no-progress
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels
@@ -36,29 +36,29 @@ jobs:
           name: dist
           path: ./dist/*
 
-  # deploy:
-  #   name: Deploy to PyPI
-  #   needs: [ build ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: 3.9
-  #     - name: Update pip and poetry
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install poetry
-  #     - uses: actions/download-artifact@v3  # download previously built wheels
-  #       with:
-  #         name: dist
-  #         path: dist/
-  #     - name: Build sdist
-  #       run: poetry build --format sdist
-  #     - name: List packaged distributions
-  #       run: ls -la dist/
-  #     - name: Deploy to PyPI
-  #       run: |
-  #         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-  #         poetry publish
+  deploy:
+    name: Deploy to PyPI
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - uses: actions/download-artifact@v3  # download previously built wheels
+        with:
+          name: dist
+          path: dist/
+      - name: Build sdist
+        run: poetry build --format sdist
+      - name: List packaged distributions
+        run: ls -la dist/
+      - name: Deploy to PyPI
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish

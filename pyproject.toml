@@ -117,8 +117,8 @@ testpaths = "pyvrp"
 [tool.coverage.run]
 omit = [
     "build_extensions.py",  # build entrypoint
-    "PyVRP/show_versions.py",  # only prints debug information
-    "PyVRP/cli.py",  # tested in other ways than unit tests
+    "pyvrp/show_versions.py",  # only prints debug information
+    "pyvrp/cli.py",  # tested in other ways than unit tests
     "*/tests/*",
     "venv/*",
     "docs/*",

@@ -50,7 +50,7 @@ For deployment, we use the [`pypa/build`](https://github.com/pypa/build) fronten
 
 You can also compile for different problem types.
 Currently, `cvrp` and `vrptw` are supported.
-This is achieved by passing `--problem=<type>` to the `build_extensions.py` script.
+This is achieved by passing `--problem <type>` to the `build_extensions.py` script.
 The default is `vrptw`.
 
 ### Build system
