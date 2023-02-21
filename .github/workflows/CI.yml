@@ -75,7 +75,7 @@ jobs:
         with:
           version: ${{ matrix.compiler-version }}
       - name: Build pyvrp
-        run: poetry run scripts/install.sh
+        run: poetry run python build_extensions.py --build_type debug
       - name: Run tests
         run: poetry run python -m pytest
       - if: matrix.compiler == 'gcc'

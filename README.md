@@ -31,26 +31,26 @@ poetry run pytest
 ```
 If all tests pass without errors, you have a working installation of the codebase.
 
-From this point onwards, recompilation of the C++ extensions can best be done using the `scripts/install.sh` script.
+From this point onwards, recompilation of the C++ extensions can best be done using the `build_extensions.py` script.
 It can be called as
 ```shell
-poetry run scripts/install.sh <buildtype>
+poetry run python build_extensions.py
 ``` 
-It also takes an optional build type argument: valid options include `debug` (default), and `release`.
+It takes several optional build arguments, which you can discover using
+```shell
+poetry run python build_extensions.py --help
+```
 
 ### Details
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the `meson.build` file in the repository root. 
-You should not have to touch this file often: all installation is handled via the `scripts/install.sh` script.
-For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend.
-The first uses (via `poetry-core`, as defined under `[build-system]` in the `pyproject.toml` file) the `build_extension.py` file to call into `scripts/install.sh`.
-
-In short: (for now) everything runs via `scripts/install.sh`.
+You should not have to touch this file often: all installation is handled via the `build_extensions.py` script.
+For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend, which calls into the `build_extensions.py` file as defined under `[build-system]` in `pyproject.toml.
 
 You can also compile for different problem types.
 Currently, `cvrp` and `vrptw` are supported.
-This is achieved by passing `-Dproblem=<type>` to the `scripts/install.sh` script.
+This is achieved by passing `--problem=<type>` to the `build_extensions.py` script.
 The default is `vrptw`.
 
 ### Build system

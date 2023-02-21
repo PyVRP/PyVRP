@@ -118,7 +118,7 @@ exclude_lines = [
 
 [tool.poetry.build]
 generate-setup-file = false
-script = "build_extension.py"
+script = "build_extensions.py"
 
 [build-system]
 # pybind11, meson, and ninja are needed to build the C++ extensions.
