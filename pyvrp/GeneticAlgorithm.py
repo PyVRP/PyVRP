@@ -21,8 +21,8 @@ CrossoverOperator = Callable[
 
 @dataclass
 class GeneticAlgorithmParams:
-    collect_statistics: bool = False
     repair_probability: float = 0.80
+    collect_statistics: bool = False
     intensification_probability: float = 0.15
     intensify_on_best: bool = True
     nb_iter_no_improvement: int = 20_000
