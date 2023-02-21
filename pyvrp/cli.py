@@ -106,8 +106,8 @@ def solve(
     gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
 
     if stats_dir:
-        # If the statistics directory argument was passed, that trumps whatever
-        # we read from the configuration file.
+        # The statistics directory argument trumps whatever we got earlier
+        # from the configuration file.
         gen_params.collect_statistics = True
 
     pen_params = PenaltyParams(**config.get("penalty", {}))
