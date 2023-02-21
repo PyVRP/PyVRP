@@ -1,8 +1,9 @@
-from dataclasses import dataclass, field
+import csv
+from dataclasses import dataclass, field, fields
 from math import nan
 from statistics import fmean
 from time import perf_counter
-from typing import List
+from typing import List, Union
 
 from .Population import Population, SubPopulation
 
@@ -81,3 +82,40 @@ class Statistics:
             avg_cost=fmean(costs),
             avg_num_routes=fmean(num_routes),
         )
+
+    def to_csv(self, where: str, dialect: Union[csv.Dialect, str] = "unix"):
+        """
+        Writes this statistics object to the given location, as a CSV file.
+
+        Parameters
+        ----------
+        where
+            Filesystem location to write to.
+        dailect
+            CSV dialect to use. Defaults to 'unix'.
+        """
+        field_names = [f.name for f in fields(_Datum)]
+        feas_fields = ["feas_" + field for field in field_names]
+        infeas_fields = ["infeas_" + field for field in field_names]
+
+        feas_data = [
+            {f: v for f, v in zip(feas_fields, vars(datum).values())}
+            for datum in self.feas_stats
+        ]
+
+        infeas_data = [
+            {f: v for f, v in zip(infeas_fields, vars(datum).values())}
+            for datum in self.infeas_stats
+        ]
+
+        with open(where, "w") as fh:
+            header = ["runtime"] + feas_fields + infeas_fields
+            writer = csv.DictWriter(fh, header, dialect=dialect)
+            writer.writeheader()
+
+            for idx in range(self.num_iterations):
+                row = dict(runtime=self.runtimes[idx])
+                row.update(feas_data[idx])
+                row.update(infeas_data[idx])
+
+                writer.writerow(row)
