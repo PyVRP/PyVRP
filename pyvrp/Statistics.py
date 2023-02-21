@@ -1,11 +1,15 @@
 import csv
 from dataclasses import dataclass, field, fields
 from math import nan
+from pathlib import Path
 from statistics import fmean
 from time import perf_counter
 from typing import List, Union
 
 from .Population import Population, SubPopulation
+
+_FEAS_CSV_PREFIX = "feas_"
+_INFEAS_CSV_PREFIX = "infeas_"
 
 
 @dataclass
@@ -83,9 +87,59 @@ class Statistics:
             avg_num_routes=fmean(num_routes),
         )
 
-    def to_csv(self, where: str, dialect: Union[csv.Dialect, str] = "unix"):
+    @classmethod
+    def from_csv(
+        cls, where: Union[Path, str], dialect: Union[csv.Dialect, str] = "unix"
+    ):
         """
-        Writes this statistics object to the given location, as a CSV file.
+        Reads a Statistics object from the CSV file at the given filesystem
+        location.
+
+        Parameters
+        ----------
+        where
+            Filesystem location to read from.
+        dailect
+            CSV dialect to use. Defaults to 'unix'.
+
+        Returns
+        -------
+        Statistics
+            Statistics object populated with the data read from the given
+            filesystem location.
+        """
+        field2type = {field.name: field.type for field in fields(_Datum)}
+
+        def make_datum(row, prefix) -> _Datum:
+            datum = {}
+
+            for k, v in row.items():
+                k = k[len(prefix) :]
+                if k in field2type:
+                    datum[k] = field2type[k](v)
+
+            return _Datum(**datum)
+
+        with open(where) as fh:
+            lines = fh.readlines()
+
+        stats = cls()
+
+        for row in csv.DictReader(lines, dialect=dialect):
+            stats.runtimes.append(float(row["runtime"]))
+            stats.num_iterations += 1
+            stats.feas_stats.append(make_datum(row, _FEAS_CSV_PREFIX))
+            stats.infeas_stats.append(make_datum(row, _INFEAS_CSV_PREFIX))
+
+        return stats
+
+    def to_csv(
+        self,
+        where: Union[Path, str],
+        dialect: Union[csv.Dialect, str] = "unix",
+    ):
+        """
+        Writes this Statistics object to the given location, as a CSV file.
 
         Parameters
         ----------
@@ -95,8 +149,8 @@ class Statistics:
             CSV dialect to use. Defaults to 'unix'.
         """
         field_names = [f.name for f in fields(_Datum)]
-        feas_fields = ["feas_" + field for field in field_names]
-        infeas_fields = ["infeas_" + field for field in field_names]
+        feas_fields = [_FEAS_CSV_PREFIX + field for field in field_names]
+        infeas_fields = [_INFEAS_CSV_PREFIX + field for field in field_names]
 
         feas_data = [
             {f: v for f, v in zip(feas_fields, vars(datum).values())}
