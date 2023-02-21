@@ -47,6 +47,7 @@ optional = true
 
 [tool.poetry.group.benchmark.dependencies]
 tqdm = "^4.64.1"
+tomli = "^2.0.1"
 
 [tool.poetry.group.docs]
 optional = true
