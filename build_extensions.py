@@ -1,10 +1,11 @@
 import argparse
 import pathlib
 from subprocess import check_call
+from typing import List
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(prog="builder")
+    parser = argparse.ArgumentParser(prog="build_extensions")
 
     parser.add_argument(
         "--build_dir",
@@ -46,7 +47,7 @@ def build(
     build_type: str,
     problem: str,
     regen_stubs: bool,
-    additional: list[str],
+    additional: List[str],
     **kwargs,
 ):
     cwd = pathlib.Path.cwd()

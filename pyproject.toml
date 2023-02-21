@@ -117,6 +117,7 @@ exclude_lines = [
 ]
 
 [tool.cibuildwheel]
+# We do not support old Python versions (<3.8) and somewhat uncommon platforms.
 skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
 build-verbosity = "3"
 build-frontend = "build"
