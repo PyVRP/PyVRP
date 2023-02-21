@@ -1,12 +1,10 @@
 name: CI
 
 on:
-  release:
-    types: [ created ]
-  # push:
-  #   branches: [ main ]
-  # pull_request:
-  #   branches: [ main ]
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.ref }}
