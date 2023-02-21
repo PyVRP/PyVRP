@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-2019]  # [ubuntu-20.04, windows-2019, macos-10.15]
+        os: [ ubuntu-20.04, windows-2019, macos-10.15 ]
     steps:
       - uses: actions/checkout@v3
       - name: Install rtools
@@ -38,7 +38,7 @@ jobs:
 
   # deploy:
   #   name: Deploy to PyPI
-  #   needs: [ linux ]  # , windows, macos ]
+  #   needs: [ build ]
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v3
@@ -53,11 +53,11 @@ jobs:
   #     - uses: actions/download-artifact@v3  # download previously built wheels
   #       with:
   #         name: dist
-  #         path: dist
+  #         path: dist/
   #     - name: Build sdist
   #       run: poetry build --format sdist
-  #     - name: Check packaged distributions
-  #       run: ls -la dist
+  #     - name: List packaged distributions
+  #       run: ls -la dist/
   #     - name: Deploy to PyPI
   #       run: |
   #         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
