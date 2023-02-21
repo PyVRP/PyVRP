@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
+from math import nan
+from statistics import fmean
 from time import perf_counter
 from typing import List
-
-import numpy as np
 
 from .Population import Population, SubPopulation
 
@@ -63,10 +63,10 @@ class Statistics:
         if not subpop:  # empty, so many statistics cannot be collected
             return _Datum(
                 size=0,
-                avg_diversity=np.nan,
-                best_cost=np.nan,
-                avg_cost=np.nan,
-                avg_num_routes=np.nan,
+                avg_diversity=nan,
+                best_cost=nan,
+                avg_cost=nan,
+                avg_num_routes=nan,
             )
 
         size = len(subpop)
@@ -76,8 +76,8 @@ class Statistics:
 
         return _Datum(
             size=size,
-            avg_diversity=np.mean(diversities),
-            best_cost=np.min(costs),
-            avg_cost=np.mean(costs),
-            avg_num_routes=np.mean(num_routes),
+            avg_diversity=fmean(diversities),
+            best_cost=min(costs),
+            avg_cost=fmean(costs),
+            avg_num_routes=fmean(num_routes),
         )
