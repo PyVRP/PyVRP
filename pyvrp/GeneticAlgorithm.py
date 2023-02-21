@@ -25,6 +25,7 @@ class GeneticAlgorithmParams:
     collect_statistics: bool = False
     should_intensify: bool = True
     nb_iter_no_improvement: int = 20_000
+    intensification_probability: float = 0.15
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
@@ -119,7 +120,20 @@ class GeneticAlgorithm:
         return Result(self._pop.get_best_found(), stats, iters, end)
 
     def _educate(self, individual: Individual):
-        self._ls.search(individual)
+        # HACK We keep searching and intensifying to mimic the local search
+        # implementation of HGS-CVRP and HGS-VRPTW
+        while True:
+            self._ls.search(individual)
+
+            if self._rng.rand() < self._params.intensification_probability:
+                cost = individual.cost()
+                self._ls.intensify(individual)
+
+                # Intensification improved the solution, so we search again.
+                if individual.cost() < cost:
+                    continue
+
+            break
 
         # Only intensify feasible, new best solutions. See also the repair
         # step below.
