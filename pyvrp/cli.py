@@ -12,6 +12,7 @@ except ModuleNotFoundError:
 
 from pyvrp import (
     GeneticAlgorithm,
+    GeneticAlgorithmParams,
     PenaltyManager,
     Population,
     Result,
@@ -59,6 +60,7 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
+    stats_dir: Optional[str],
     **kwargs,
 ) -> Result:
     """
@@ -82,6 +84,9 @@ def solve(
     max_iterations
         Maximum number of iterations for solving. Either ``max_runtime`` or
         ``max_iterations`` must be specified.
+    stats_dir, optional
+        The directory to write runtime statistics to. Enables statistics
+        collection when passed.
 
     Returns
     -------
@@ -105,7 +110,8 @@ def solve(
     for op in route_ops:
         ls.add_route_operator(op)
 
-    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+    params = GeneticAlgorithmParams(collect_statistics=bool(stats_dir))
+    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
 
     if max_runtime is not None:
         stop = MaxRuntime(max_runtime)
@@ -113,13 +119,21 @@ def solve(
         assert max_iterations is not None
         stop = MaxIterations(max_iterations)  # type: ignore
 
-    return algo.run(stop)
+    result = algo.run(stop)
+
+    if stats_dir:
+        instance_name = pathlib.Path(data_loc).stem
+        where = pathlib.Path(stats_dir) / (instance_name + ".csv")
+        result.stats.to_csv(where)
+
+    return result
 
 
 def benchmark_solve(instance: str, **kwargs):
     """
     Small wrapper script around ``solve()`` that translates result objects into
-    a few key statistics, and returns those.
+    a few key statistics, and returns those. This is needed because the result
+    solution (of type ``Individual``) cannot be pickled.
     """
     res = solve(instance, **kwargs)
     instance_name = pathlib.Path(instance).stem
@@ -143,6 +157,17 @@ def benchmark(instances: List[str], **kwargs):
     instances
         Paths to the VRPLIB instances to solve.
     """
+    if kwargs.get("stats_dir"):
+        # If we're collecting statistics, we should make sure the statistics
+        # directory (where we're writing the files) is not empty.
+        stats_dir = pathlib.Path(kwargs["stats_dir"])
+        stats_dir.mkdir(parents=True, exist_ok=True)
+
+    if len(instances) == 1:
+        res = solve(instances[0], **kwargs)
+        print(res)
+        return
+
     func = partial(benchmark_solve, **kwargs)
     func_args = sorted(instances)
 
@@ -167,14 +192,6 @@ def benchmark(instances: List[str], **kwargs):
     print(f"        Total not OK: {np.count_nonzero(data['ok'] == 'N')}")
 
 
-def run(instances: List[str], **kwargs):
-    if len(instances) > 1:
-        benchmark(instances, **kwargs)
-    else:
-        res = solve(instances[0], **kwargs)
-        print(res)
-
-
 def main():
     description = """
     This program is a command line interface for solving CVRP and VRPTW
@@ -185,6 +202,13 @@ def main():
     parser = argparse.ArgumentParser(prog="pyvrp", description=description)
 
     parser.add_argument("instances", nargs="+", help="Instance paths.")
+
+    msg = """
+    Directory to store runtime statistics in, as CSV files (one per instance).
+    If passed, this enables collecting runtime statistics (default False), at
+    a slight performance hit.
+    """
+    parser.add_argument("--stats_dir", help=msg)
 
     parser.add_argument(
         "--instance_format",
@@ -214,7 +238,7 @@ def main():
     msg = "Maximum number of iterations for solving each instance."
     stop.add_argument("--max_iterations", type=int, help=msg)
 
-    run(**vars(parser.parse_args()))
+    benchmark(**vars(parser.parse_args()))
 
 
 if __name__ == "__main__":
