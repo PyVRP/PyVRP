@@ -1,5 +1,4 @@
 import argparse
-import os
 import pathlib
 from subprocess import check_call
 from typing import List
@@ -64,16 +63,8 @@ def build(
         # fmt: on
     ]
 
-    if build_loc.exists() and os.environ.get("CIBUILDWHEEL", "0") == "1":
-        # If this is a CI wheel build, then clean the build directory and
-        # uninstall previously compiled extension modules between builds.
-        check_call(["ninja", "-C", build_loc, "uninstall"])
-        check_call(["ninja", "-C", build_loc, "clean"])
-        check_call(["meson", "setup", build_loc, *args])
-    else:
-        cmd = "configure" if build_loc.exists() else "setup"
-        check_call(["meson", cmd, build_loc, *args])
-
+    cmd = "configure" if build_loc.exists() else "setup"
+    check_call(["meson", cmd, build_loc, *args])
     check_call(["meson", "compile", "-C", build_loc])
     check_call(["meson", "install", "-C", build_loc])
 

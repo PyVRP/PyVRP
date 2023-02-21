@@ -141,6 +141,11 @@ skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
 build-verbosity = "3"
 build-frontend = "build"
 
+# The build dir is not cleared between builds, which causes issues when Python and dependency versions 
+# change. We additionally remove all previously generated extension modules.
+before-build = """
+    rm -rf {project}/build && (find {project}/pyvrp \\( -name "*.so" -o -name "*.pyd" \\) -type f -delete)
+"""
 
 [tool.poetry.build]
 generate-setup-file = false
