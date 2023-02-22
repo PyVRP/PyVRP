@@ -1,7 +1,23 @@
-from numpy.testing import assert_almost_equal, assert_equal, assert_raises
+from numpy.testing import (
+    assert_,
+    assert_almost_equal,
+    assert_equal,
+    assert_raises,
+)
 from pytest import mark
 
-from pyvrp import GeneticAlgorithmParams
+from pyvrp import (
+    GeneticAlgorithm,
+    GeneticAlgorithmParams,
+    PenaltyManager,
+    Population,
+    XorShift128,
+)
+from pyvrp.crossover import selective_route_exchange as srex
+from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp.educate import Exchange10, LocalSearch, compute_neighbours
+from pyvrp.stop import MaxIterations
+from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
@@ -69,6 +85,25 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
 
 
-# TODO functional tests
+def test_best_solution_improves_with_more_iterations():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    rng = XorShift128(seed=42)
+    pen_manager = PenaltyManager(data.vehicle_capacity)
+    pop = Population(data, pen_manager, rng, bpd)
+    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+
+    node_op = Exchange10(data, pen_manager)
+    ls.add_node_operator(node_op)
+
+    params = GeneticAlgorithmParams(should_intensify=False)
+    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
+
+    initial_best = algo.run(MaxIterations(0)).best
+    new_best = algo.run(MaxIterations(25)).best
+
+    assert_(new_best.cost() < initial_best.cost())
+
+
+# TODO more functional tests
 
 # TODO test statistics collection on Result.has_statistics

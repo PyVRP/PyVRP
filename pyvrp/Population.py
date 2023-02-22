@@ -266,8 +266,6 @@ class Population:
         self._feas = SubPopulation(data, diversity_op, params)
         self._infeas = SubPopulation(data, diversity_op, params)
 
-        self._best = Individual(data, penalty_manager, rng)
-
         for _ in range(params.min_pop_size):
             self.add(Individual(data, penalty_manager, rng))
 
@@ -321,9 +319,6 @@ class Population:
         """
         if individual.is_feasible():
             self._feas.add(individual)
-
-            if individual.cost() < self._best.cost():
-                self._best = individual
         else:
             self._infeas.add(individual)
 
@@ -389,16 +384,3 @@ class Population:
             return item1.individual
 
         return item2.individual
-
-    def get_best_found(self) -> Individual:
-        """
-        Returns the best found solution so far. In early iterations, this
-        solution might not be feasible yet.
-
-        Returns
-        -------
-        Individual
-            The best solution found so far.
-        """
-        # TODO move this best solution stuff to GeneticAlgorithm
-        return self._best

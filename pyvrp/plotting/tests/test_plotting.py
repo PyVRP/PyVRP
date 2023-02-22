@@ -70,8 +70,7 @@ def test_plot_result():
         # Hacky to produce deterministic result
         stats.runtimes[-1] = i % 3
 
-    res = Result(pop.get_best_found(), stats, num_iterations, 0.0)
-
+    res = Result(Individual(data, pm, bks), stats, num_iterations, 0.0)
     plotting.plot_result(res, data)
 
 

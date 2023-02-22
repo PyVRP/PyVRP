@@ -72,6 +72,8 @@ class GeneticAlgorithm:
         self._op = crossover_op
         self._params = params
 
+        self._best = Individual(data, penalty_manager, rng)
+
     def run(self, stop: StoppingCriterion):
         """
         Runs the genetic algorithm with the provided stopping criterion.
@@ -92,20 +94,20 @@ class GeneticAlgorithm:
         iters = 0
         iters_no_improvement = 1
 
-        while not stop(self._pop.get_best_found()):
+        while not stop(self._best):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
                 self._pop.restart()
                 iters_no_improvement = 1
 
-            curr_best = self._pop.get_best_found().cost()
+            curr_best = self._best.cost()
 
             parents = self._pop.select()
             offspring = self._op(parents, self._data, self._pm, self._rng)
             self._educate(offspring)
 
-            new_best = self._pop.get_best_found().cost()
+            new_best = self._best.cost()
 
             if new_best < curr_best:
                 iters_no_improvement = 1
@@ -116,7 +118,7 @@ class GeneticAlgorithm:
                 stats.collect_from(self._pop)
 
         end = time.perf_counter() - start
-        return Result(self._pop.get_best_found(), stats, iters, end)
+        return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
         self._ls.search(individual)
@@ -126,9 +128,12 @@ class GeneticAlgorithm:
         if (
             self._params.should_intensify
             and individual.is_feasible()
-            and individual.cost() < self._pop.get_best_found().cost()
+            and individual.cost() < self._best.cost()
         ):
             self._ls.intensify(individual)
+
+        if individual.cost() < self._best.cost():
+            self._best = individual
 
         self._pop.add(individual)
         self._pm.register_load_feasible(not individual.has_excess_capacity())
@@ -140,17 +145,18 @@ class GeneticAlgorithm:
             not individual.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            best_found = self._pop.get_best_found()
-
             with self._pm.get_penalty_booster() as booster:  # noqa
                 self._ls.search(individual)
 
                 if individual.is_feasible():
                     if (
                         self._params.should_intensify
-                        and individual.cost() < best_found.cost()
+                        and individual.cost() < self._best.cost()
                     ):
                         self._ls.intensify(individual)
+
+                    if individual.cost() < self._best.cost():
+                        self._best = individual
 
                     self._pop.add(individual)
 
