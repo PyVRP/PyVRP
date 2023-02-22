@@ -59,7 +59,7 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
     for _ in range(num_iterations):
         stats.collect_from(pop)
 
-    res = Result(pop.get_best_found(), stats, num_iterations, 0.0)
+    res = Result(Individual(data, pm, rng), stats, num_iterations, 0.0)
     assert_equal(res.has_statistics(), has_statistics)
     assert_equal(res.num_iterations, num_iterations)
 
