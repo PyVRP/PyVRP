@@ -281,7 +281,7 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     if (neighbours.size() != data.numClients() + 1)
         throw std::logic_error("Neighbourhood dimensions do not match.");
 
-    auto const predicate = std::empty<std::vector<int>>;
+    auto predicate = [](auto const &neighbours) { return neighbours.empty(); };
     if (std::all_of(neighbours.begin(), neighbours.end(), predicate))
         throw std::runtime_error("Neighbourhood is empty.");
 
