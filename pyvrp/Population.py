@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from statistics import fmean
 from typing import Callable, Iterator, List, NamedTuple, Tuple
 
 import numpy as np
@@ -189,7 +190,7 @@ class SubPopulation:
         """
         _, _, prox = self[individual_idx]
         closest = prox[: self._params.nb_close]
-        return np.mean([div for _, div in closest]) if closest else 0.0
+        return fmean(div for _, div in closest) if closest else 0.0
 
 
 @dataclass
