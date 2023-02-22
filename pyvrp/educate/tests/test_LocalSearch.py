@@ -11,7 +11,7 @@ def test_local_search_raises_when_there_are_no_operators():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
     individual = Individual(data, pm, rng)
 
     with assert_raises(RuntimeError):
@@ -26,13 +26,35 @@ def test_local_search_raises_when_neighbourhood_structure_is_empty():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
-    ls.set_neighbours([[] for _ in range(data.num_clients + 1)])
-
-    individual = Individual(data, pm, rng)
+    # Is completely empty neighbourhood, so there's nothing to do for the
+    # local search in this case.
+    neighbours = [[] for _ in range(data.num_clients + 1)]
 
     with assert_raises(RuntimeError):
-        ls.search(individual)
+        LocalSearch(data, pm, rng, neighbours)
+
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+
+    with assert_raises(RuntimeError):
+        ls.set_neighbours(neighbours)
+
+
+@mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
+def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    # Each of the given sizes is either smaller than or bigger than desired.
+    neighbours = [[] for _ in range(size)]
+
+    with assert_raises(RuntimeError):
+        LocalSearch(data, pm, rng, neighbours)
+
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+
+    with assert_raises(RuntimeError):
+        ls.set_neighbours(neighbours)
 
 
 @mark.parametrize(
@@ -61,7 +83,10 @@ def test_local_search_set_get_neighbours(
     seed = 42
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity)
-    ls = LocalSearch(data, pen_manager, rng)
+
+    prev_neighbours = [[client] for client in range(data.num_clients)]
+    prev_neighbours.insert(0, [])
+    ls = LocalSearch(data, pen_manager, rng, prev_neighbours)
 
     params = NeighbourhoodParams(
         weight_wait_time,

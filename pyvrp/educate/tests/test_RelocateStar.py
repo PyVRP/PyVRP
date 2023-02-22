@@ -22,9 +22,8 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     exchange = Exchange10(data, pm)
     relocate = RelocateStar(data, pm)
@@ -54,9 +53,8 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=size)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     exchange = Exchange10(data, pm)
     relocate = RelocateStar(data, pm)

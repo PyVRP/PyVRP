@@ -1,5 +1,6 @@
 #include "LocalSearch.h"
 
+#include <algorithm>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -15,12 +16,6 @@ void LocalSearch::search(Individual &indiv)
 
     if (nodeOps.empty())
         throw std::logic_error("No known node operators.");
-
-    auto neighbourhoodSize = 0;
-    for (auto const client : orderNodes)
-        neighbourhoodSize += neighbours[client].size();
-    if (neighbourhoodSize == 0)
-        throw std::runtime_error("Granular neighbourhood is empty.");
 
     // Caches the last time nodes were tested for modification (uses nbMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -283,6 +278,13 @@ void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
+    if (neighbours.size() != data.numClients() + 1)
+        throw std::logic_error("Neighbourhood dimensions do not match.");
+
+    auto const predicate = std::empty<std::vector<int>>;
+    if (std::all_of(neighbours.begin(), neighbours.end(), predicate))
+        throw std::runtime_error("Neighbourhood is empty.");
+
     this->neighbours = neighbours;
 }
 
@@ -293,7 +295,8 @@ LocalSearch::Neighbours LocalSearch::getNeighbours()
 
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
-                         XorShift128 &rng)
+                         XorShift128 &rng,
+                         Neighbours neighbours)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
@@ -302,6 +305,8 @@ LocalSearch::LocalSearch(ProblemData &data,
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
 {
+    setNeighbours(neighbours);
+
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
