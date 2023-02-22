@@ -46,6 +46,7 @@ numpy = ">=1.15.2"
 matplotlib = ">=2.2.0"
 vrplib = "^1.0.0"
 tqdm = "^4.64.1"
+tomli = "^2.0.1"
 
 
 [tool.poetry.group.docs]
