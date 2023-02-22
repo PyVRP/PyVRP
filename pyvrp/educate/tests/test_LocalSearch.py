@@ -57,6 +57,17 @@ def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
         ls.set_neighbours(neighbours)
 
 
+def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    neighbours = [[client] for client in range(data.num_clients + 1)]
+
+    with assert_raises(RuntimeError):
+        LocalSearch(data, pm, rng, neighbours)
+
+
 @mark.parametrize(
     "weight_wait_time,"
     "weight_time_warp,"
@@ -84,8 +95,8 @@ def test_local_search_set_get_neighbours(
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity)
 
-    prev_neighbours = [[client] for client in range(data.num_clients)]
-    prev_neighbours.insert(0, [])
+    params = NeighbourhoodParams(nb_granular=1)
+    prev_neighbours = compute_neighbours(data, params)
     ls = LocalSearch(data, pen_manager, rng, prev_neighbours)
 
     params = NeighbourhoodParams(
