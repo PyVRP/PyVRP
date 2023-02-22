@@ -1,4 +1,0 @@
-Quickstart template
-===================
-
-TODO

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from bisect import insort_left
 from dataclasses import dataclass
+from statistics import fmean
 from typing import (
     Callable,
     Generic,
@@ -246,10 +247,7 @@ class SubPopulationPython(SubPopulation, Generic[TIndiv]):
         item = self._items[individual_idx]
         closest = item.proximity[: self._params.nb_close]
 
-        if closest:
-            return sum(div for _, div in closest) / len(closest)
-        else:
-            return 0.0
+        return fmean(div for _, div in closest) if closest else 0.0
 
     def get_biased_fitness(self, individual_idx: int) -> float:
         return self._items[individual_idx].fitness

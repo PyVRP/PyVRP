@@ -1,10 +1,15 @@
-from dataclasses import dataclass, field
+import csv
+from dataclasses import dataclass, field, fields
+from math import nan
+from pathlib import Path
+from statistics import fmean
 from time import perf_counter
-from typing import List
-
-import numpy as np
+from typing import List, Union
 
 from .Population import Population, SubPopulation
+
+_FEAS_CSV_PREFIX = "feas_"
+_INFEAS_CSV_PREFIX = "infeas_"
 
 
 @dataclass
@@ -63,10 +68,10 @@ class Statistics:
         if not subpop:  # empty, so many statistics cannot be collected
             return _Datum(
                 size=0,
-                avg_diversity=np.nan,
-                best_cost=np.nan,
-                avg_cost=np.nan,
-                avg_num_routes=np.nan,
+                avg_diversity=nan,
+                best_cost=nan,
+                avg_cost=nan,
+                avg_num_routes=nan,
             )
 
         size = len(subpop)
@@ -76,8 +81,107 @@ class Statistics:
 
         return _Datum(
             size=size,
-            avg_diversity=np.mean(diversities),
-            best_cost=np.min(costs),
-            avg_cost=np.mean(costs),
-            avg_num_routes=np.mean(num_routes),
+            avg_diversity=fmean(diversities),
+            best_cost=min(costs),
+            avg_cost=fmean(costs),
+            avg_num_routes=fmean(num_routes),
         )
+
+    @classmethod
+    def from_csv(cls, where: Union[Path, str], delimiter: str = ",", **kwargs):
+        """
+        Reads a Statistics object from the CSV file at the given filesystem
+        location.
+
+        Parameters
+        ----------
+        where
+            Filesystem location to read from.
+        delimiter
+            Value separator. Default comma.
+        kwargs
+            Additional keyword arguments. These are passed to
+            :class:`csv.DictReader`.
+
+        Returns
+        -------
+        Statistics
+            Statistics object populated with the data read from the given
+            filesystem location.
+        """
+        field2type = {field.name: field.type for field in fields(_Datum)}
+
+        def make_datum(row, prefix) -> _Datum:
+            datum = {}
+
+            for name, value in row.items():
+                if (field_name := name[len(prefix) :]) in field2type:
+                    # If the prefixless name is a field name, cast the row's
+                    # value to the appropriate type and add the data.
+                    datum[field_name] = field2type[field_name](value)
+
+            return _Datum(**datum)
+
+        with open(where) as fh:
+            lines = fh.readlines()
+
+        stats = cls()
+
+        for row in csv.DictReader(lines, delimiter=delimiter, **kwargs):
+            stats.runtimes.append(float(row["runtime"]))
+            stats.num_iterations += 1
+            stats.feas_stats.append(make_datum(row, _FEAS_CSV_PREFIX))
+            stats.infeas_stats.append(make_datum(row, _INFEAS_CSV_PREFIX))
+
+        return stats
+
+    def to_csv(
+        self,
+        where: Union[Path, str],
+        delimiter: str = ",",
+        quoting: int = csv.QUOTE_MINIMAL,
+        **kwargs,
+    ):
+        """
+        Writes this Statistics object to the given location, as a CSV file.
+
+        Parameters
+        ----------
+        where
+            Filesystem location to write to.
+        delimiter
+            Value separator. Default comma.
+        quoting
+            Quoting strategy. Default only quotes values when necessary.
+        kwargs
+            Additional keyword arguments. These are passed to
+            :class:`csv.DictWriter`.
+        """
+        field_names = [f.name for f in fields(_Datum)]
+        feas_fields = [_FEAS_CSV_PREFIX + field for field in field_names]
+        infeas_fields = [_INFEAS_CSV_PREFIX + field for field in field_names]
+
+        feas_data = [
+            {f: v for f, v in zip(feas_fields, vars(datum).values())}
+            for datum in self.feas_stats
+        ]
+
+        infeas_data = [
+            {f: v for f, v in zip(infeas_fields, vars(datum).values())}
+            for datum in self.infeas_stats
+        ]
+
+        with open(where, "w") as fh:
+            header = ["runtime"] + feas_fields + infeas_fields
+            writer = csv.DictWriter(
+                fh, header, delimiter=delimiter, quoting=quoting, **kwargs
+            )
+
+            writer.writeheader()
+
+            for idx in range(self.num_iterations):
+                row = dict(runtime=self.runtimes[idx])
+                row.update(feas_data[idx])
+                row.update(infeas_data[idx])
+
+                writer.writerow(row)

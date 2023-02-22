@@ -13,7 +13,6 @@
 #include <stdexcept>
 #include <vector>
 
-
 class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Node>;

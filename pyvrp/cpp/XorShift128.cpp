@@ -1,6 +1,6 @@
 #include "XorShift128.h"
 
-XorShift128::XorShift128(int seed)
+XorShift128::XorShift128(uint32_t seed)
 {
     state_[0] = seed;
     state_[1] = 123456789;
@@ -11,10 +11,10 @@ XorShift128::XorShift128(int seed)
 XorShift128::result_type XorShift128::operator()()
 {
     // Algorithm "xor128" from p. 5 of Marsaglia, "Xorshift RNGs"
-    unsigned t = state_[3];
+    uint32_t t = state_[3];
 
     // Perform a contrived 32-bit shift.
-    unsigned s = state_[0];
+    uint32_t s = state_[0];
     state_[3] = state_[2];
     state_[2] = state_[1];
     state_[1] = s;
