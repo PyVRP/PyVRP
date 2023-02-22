@@ -45,6 +45,9 @@ This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvr
    .. autoclass:: Exchange33
       :members:
 
+.. automodule:: pyvrp.educate.neighbourhood
+   :members:
+
 .. autoapimodule:: pyvrp.educate.MoveTwoClientsReversed
 
    .. autoclass:: MoveTwoClientsReversed

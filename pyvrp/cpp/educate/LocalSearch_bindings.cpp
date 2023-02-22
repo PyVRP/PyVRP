@@ -9,10 +9,14 @@ namespace py = pybind11;
 PYBIND11_MODULE(LocalSearch, m)
 {
     py::class_<LocalSearch>(m, "LocalSearch")
-        .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
+        .def(py::init<ProblemData &,
+                      PenaltyManager &, 
+                      XorShift128 &,
+                      std::vector<std::vector<int>>>(),
              py::arg("data"),
              py::arg("penalty_manager"),
-             py::arg("rng"))
+             py::arg("rng"),
+             py::arg("neighbours"))
         .def("add_node_operator", &LocalSearch::addNodeOperator, py::arg("op"))
         .def(
             "add_route_operator", &LocalSearch::addRouteOperator, py::arg("op"))

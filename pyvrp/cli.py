@@ -126,8 +126,7 @@ def solve(
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
     pop = Population(data, pen_manager, rng, bpd, pop_params)
-    ls = LocalSearch(data, pen_manager, rng)
-    ls.set_neighbours(compute_neighbours(data))
+    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
 
     node_ops = [node_op(data, pen_manager) for node_op in NODE_OPERATORS]
 

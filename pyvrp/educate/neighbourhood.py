@@ -23,7 +23,54 @@ class NeighbourhoodParams:
             raise ValueError("nb_granular <= 0 not understood.")
 
 
-def compute_proximity(
+def compute_neighbours(
+    data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
+) -> Neighbours:
+    """
+    Computes neighbours defining the neighbourhood for a problem instance.
+
+    Parameters
+    ----------
+    data
+        ProblemData for which to compute correlated vertices.
+    params
+        NeighbourhoodParams that define how the neighbourhood is computed.
+
+    Returns
+    -------
+    Neighbours
+        A list of list of integers representing the neighbours for each client.
+        The first element represents the depot and is an empty list.
+    """
+
+    proximity = _compute_proximity(data, params)
+
+    # Mask self from proximities by adding a large constant
+    # and add the index with a very small weight as tie-breaker (to mimic
+    # original c++ version)
+    n = len(proximity)
+    k = min(params.nb_granular, n - 1)
+    idcs = np.arange(n)
+    jitter = 1e-6 * idcs  # add a bit of jitter to break ties
+    proximity = proximity + jitter[None, :]
+    np.fill_diagonal(proximity, np.inf)  # exclude self from neighbourhood
+    idx_topk = np.argpartition(proximity, k, axis=-1)[:, :k]
+
+    if params.symmetric_neighbours:
+        # Convert into adjacency matrix that can be symmetrized
+        adj = np.zeros_like(proximity, dtype=bool)
+        adj[idcs[:, None], idx_topk] = True
+
+        # Add correlated vertex if correlated in one of two directions
+        adj = adj | adj.transpose()
+
+        # Append empty neighbours for depot and add 1 to offset depot indexing
+        return [[]] + [(np.flatnonzero(row) + 1).tolist() for row in adj]
+    else:
+        return [[]] + (np.sort(idx_topk, -1) + 1).tolist()
+
+
+def _compute_proximity(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
 ) -> np.ndarray[float]:
     """
@@ -72,50 +119,3 @@ def compute_proximity(
     if params.symmetric_proximity:
         prox = np.minimum(prox, prox.T)
     return prox[1:, 1:]  # Skip depot
-
-
-def compute_neighbours(
-    data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
-) -> Neighbours:
-    """
-    Computes neighbours defining the neighbourhood for a problem instance.
-
-    Parameters
-    ----------
-    data
-        ProblemData for which to compute correlated vertices.
-    params
-        NeighbourhoodParams that define how the neighbourhood is computed.
-
-    Returns
-    -------
-    Neighbours
-        A list of list of integers representing the neighbours for each client.
-        The first element represents the depot and is an empty list.
-    """
-
-    proximity = compute_proximity(data, params)
-
-    # Mask self from proximities by adding a large constant
-    # and add the index with a very small weight as tie-breaker (to mimic
-    # original c++ version)
-    n = len(proximity)
-    k = min(params.nb_granular, n - 1)
-    idcs = np.arange(n)
-    jitter = 1e-6 * idcs  # add a bit of jitter to break ties
-    proximity = proximity + jitter[None, :]
-    np.fill_diagonal(proximity, np.inf)  # exclude self from neighbourhood
-    idx_topk = np.argpartition(proximity, k, axis=-1)[:, :k]
-
-    if params.symmetric_neighbours:
-        # Convert into adjacency matrix that can be symmetrized
-        adj = np.zeros_like(proximity, dtype=bool)
-        adj[idcs[:, None], idx_topk] = True
-
-        # Add correlated vertex if correlated in one of two directions
-        adj = adj | adj.transpose()
-
-        # Append empty neighbours for depot and add 1 to offset depot indexing
-        return [[]] + [(np.flatnonzero(row) + 1).tolist() for row in adj]
-    else:
-        return [[]] + (np.sort(idx_topk, -1) + 1).tolist()

@@ -20,9 +20,8 @@ def test_single_route_OkSmall():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = MoveTwoClientsReversed(data, pm)
     ls.add_node_operator(op)
@@ -54,9 +53,8 @@ def test_RC208_instance(seed: int):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=seed)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = MoveTwoClientsReversed(data, pm)
     ls.add_node_operator(op)
