@@ -15,7 +15,7 @@ To benchmark ``pyvrp``, we use the following `CRVPLIB <http://vrp.atd-lab.inf.pu
 
 * For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
 
-To get both instance sets quickly, the following script can be used to download and unpack them:
+To get both instance sets quickly, the following shell script can be used to download and unpack them:
 
 .. code-block:: shell
 
@@ -31,3 +31,8 @@ To get both instance sets quickly, the following script can be used to download 
    rm "Vrp-Set-X.tgz";
 
 These commands create two directories, ``GH/`` and ``X/``, which contain the downloaded problem instance files and the current best known solutions.
+
+.. hint::
+
+   On Windows, these commands likely will not work.
+   In that case, please download the relevant files manually.

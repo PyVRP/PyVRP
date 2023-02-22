@@ -58,7 +58,7 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
         extension.unlink()
 
 
-def regen_stubs(install_dir: pathlib.Path):
+def regenerate_stubs(install_dir: pathlib.Path):
     def _regen(extension):
         ext_dir = extension.parent
         ext_name, _ = extension.name.split(".", maxsplit=1)
@@ -111,7 +111,7 @@ def main():
     build(build_dir, args.build_type, args.problem, args.additional)
 
     if args.regenerate_type_stubs:
-        regen_stubs(install_dir)
+        regenerate_stubs(install_dir)
 
 
 if __name__ == "__main__":

@@ -45,13 +45,6 @@ python = "^3.8,<4.0"
 numpy = ">=1.15.2"
 matplotlib = ">=2.2.0"
 vrplib = "^1.0.0"
-
-
-[tool.poetry.group.benchmark]
-optional = true
-
-
-[tool.poetry.group.benchmark.dependencies]
 tqdm = "^4.64.1"
 
 
