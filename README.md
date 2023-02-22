@@ -46,7 +46,7 @@ poetry run python build_extensions.py --help
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the `meson.build` file in the repository root. 
 You should not have to touch this file often: all installation is handled via the `build_extensions.py` script.
-For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend, which calls into the `build_extensions.py` file as defined under `[build-system]` in `pyproject.toml.
+For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend, which calls into the `build_extensions.py` file as defined under `[build-system]` in `pyproject.toml`.
 
 You can also compile for different problem types.
 Currently, `cvrp` and `vrptw` are supported.
