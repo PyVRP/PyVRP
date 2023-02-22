@@ -5,8 +5,7 @@ TODO
 
 .. hint::
 
-    Have a look at the :doc:`quickstart template <setup/template>` to get started with the package.
-    If you are new to metaheuristics or VRP, you might benefit from first reading the :doc:`introduction to HGS for VRP <setup/introduction_to_hgs>`.
+    If you are new to metaheuristics or vehicle routing, you might benefit from first reading the :doc:`introduction to HGS for VRP <setup/introduction_to_hgs>`.
     To set up an installation from source, or to run the examples listed below yourself, please have a look at the :doc:`installation instructions <setup/installation>`.
 
 .. toctree::
@@ -14,10 +13,10 @@ TODO
    :caption: Getting started
 
    setup/introduction_to_hgs
-   setup/template
    setup/installation
    setup/contributing
    setup/getting_help
+   setup/benchmarking
 
 .. toctree::
    :maxdepth: 1

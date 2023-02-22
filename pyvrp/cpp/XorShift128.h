@@ -2,7 +2,8 @@
 #define XORSHIFT128_H
 
 #include <climits>
-#include <iosfwd>
+#include <cstdint>
+#include <cstddef>
 #include <type_traits>
 
 /**
@@ -13,17 +14,17 @@
  */
 class XorShift128
 {
-    unsigned state_[4]{};
+    uint32_t state_[4]{};
 
 public:
-    typedef unsigned result_type;
+    typedef uint32_t result_type;
 
     /**
      * Constructs a XOR-shift pseudo-RNG, seeded at the given seed.
      *
      * @param seed Used to seed the pseudo-RNG state.
      */
-    explicit XorShift128(int seed);
+    explicit XorShift128(uint32_t seed);
 
     /**
      * @return The minimum value this pRNG can generate.
@@ -61,7 +62,7 @@ public:
 
 constexpr size_t XorShift128::min() { return 0; }
 
-constexpr size_t XorShift128::max() { return UINT_MAX; }
+constexpr size_t XorShift128::max() { return UINT32_MAX; }
 
 template <typename T> T XorShift128::rand()
 {
