@@ -145,10 +145,11 @@ Individual::Individual(ProblemData const &data,
     // Distribute clients evenly over the routes: the total number of clients
     // per vehicle, with an adjustment in case the division is not perfect.
     auto const numVehicles = data.numVehicles();
-    auto const perVehicle = std::max(data.numClients() / numVehicles, 1UL);
-    auto const perRoute = perVehicle + (data.numClients() % numVehicles != 0);
+    auto const numClients = data.numClients();
+    auto const perVehicle = std::max(numClients / numVehicles, size_t(1));
+    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
 
-    for (size_t idx = 0; idx != data.numClients(); ++idx)
+    for (size_t idx = 0; idx != numClients; ++idx)
         routes_[idx / perRoute].push_back(clients[idx]);
 
     makeNeighbours();

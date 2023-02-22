@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from bisect import insort_left
 from dataclasses import dataclass
+from statistics import fmean
 from typing import Callable, Iterator, List, NamedTuple, Tuple
 
 from .Individual import Individual
@@ -194,10 +195,7 @@ class SubPopulation:
         item = self._items[individual_idx]
         closest = item.proximity[: self._params.nb_close]
 
-        if closest:
-            return sum(div for _, div in closest) / len(closest)
-        else:
-            return 0.0
+        return fmean(div for _, div in closest) if closest else 0.0
 
 
 @dataclass

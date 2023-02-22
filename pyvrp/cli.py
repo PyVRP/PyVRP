@@ -1,19 +1,24 @@
 import argparse
-import pathlib
 from functools import partial
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
 
 try:
+    import tomli
     from tqdm.contrib.concurrent import process_map
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("Install 'tqdm' to use the commandline program.")
+    msg = "Install 'tqdm' and 'tomli' to use the command line program."
+    raise ModuleNotFoundError(msg)
 
 from pyvrp import (
     GeneticAlgorithm,
+    GeneticAlgorithmParams,
     PenaltyManager,
+    PenaltyParams,
     Population,
+    PopulationParams,
     Result,
     XorShift128,
 )
@@ -52,6 +57,12 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
     return "\n".join(header + content)
 
 
+def maybe_mkdir(where: str):
+    if where:
+        stats_dir = Path(where)
+        stats_dir.mkdir(parents=True, exist_ok=True)
+
+
 def solve(
     data_loc: str,
     instance_format: str,
@@ -59,6 +70,8 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
+    stats_dir: Optional[str],
+    sol_dir: Optional[str],
     **kwargs,
 ) -> Result:
     """
@@ -82,16 +95,37 @@ def solve(
     max_iterations
         Maximum number of iterations for solving. Either ``max_runtime`` or
         ``max_iterations`` must be specified.
+    stats_dir
+        The directory to write runtime statistics to. Enables statistics
+        collection when passed.
+    sol_dir
+        The directory to write the best found solutions to.
 
     Returns
     -------
     Result
         Object storing the solver outcome.
     """
+    if kwargs.get("config_loc"):
+        with open(kwargs["config_loc"], "rb") as fh:
+            config = tomli.load(fh)
+    else:
+        config = {}
+
+    gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
+
+    if stats_dir:
+        # The statistics directory argument trumps whatever we got earlier
+        # from the configuration file.
+        gen_params.collect_statistics = True
+
+    pen_params = PenaltyParams(**config.get("penalty", {}))
+    pop_params = PopulationParams(**config.get("population", {}))
+
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity)
-    pop = Population(data, pen_manager, rng, bpd)
+    pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
+    pop = Population(data, pen_manager, rng, bpd, pop_params)
     ls = LocalSearch(data, pen_manager, rng)
     ls.set_neighbours(compute_neighbours(data))
 
@@ -105,7 +139,7 @@ def solve(
     for op in route_ops:
         ls.add_route_operator(op)
 
-    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, gen_params)
 
     if max_runtime is not None:
         stop = MaxRuntime(max_runtime)
@@ -113,16 +147,31 @@ def solve(
         assert max_iterations is not None
         stop = MaxIterations(max_iterations)  # type: ignore
 
-    return algo.run(stop)
+    result = algo.run(stop)
+
+    if stats_dir:
+        instance_name = Path(data_loc).stem
+        where = Path(stats_dir) / (instance_name + ".csv")
+        result.stats.to_csv(where)
+
+    if sol_dir:
+        instance_name = Path(data_loc).stem
+        where = Path(sol_dir) / (instance_name + ".sol")
+
+        with open(where, "w") as fh:
+            fh.write(str(result.best))
+
+    return result
 
 
 def benchmark_solve(instance: str, **kwargs):
     """
     Small wrapper script around ``solve()`` that translates result objects into
-    a few key statistics, and returns those.
+    a few key statistics, and returns those. This is needed because the result
+    solution (of type ``Individual``) cannot be pickled.
     """
     res = solve(instance, **kwargs)
-    instance_name = pathlib.Path(instance).stem
+    instance_name = Path(instance).stem
 
     return (
         instance_name,
@@ -143,6 +192,14 @@ def benchmark(instances: List[str], **kwargs):
     instances
         Paths to the VRPLIB instances to solve.
     """
+    maybe_mkdir(kwargs.get("stats_dir", ""))
+    maybe_mkdir(kwargs.get("sol_dir", ""))
+
+    if len(instances) == 1:
+        res = solve(instances[0], **kwargs)
+        print(res)
+        return
+
     func = partial(benchmark_solve, **kwargs)
     func_args = sorted(instances)
 
@@ -167,14 +224,6 @@ def benchmark(instances: List[str], **kwargs):
     print(f"        Total not OK: {np.count_nonzero(data['ok'] == 'N')}")
 
 
-def run(instances: List[str], **kwargs):
-    if len(instances) > 1:
-        benchmark(instances, **kwargs)
-    else:
-        res = solve(instances[0], **kwargs)
-        print(res)
-
-
 def main():
     description = """
     This program is a command line interface for solving CVRP and VRPTW
@@ -185,6 +234,19 @@ def main():
     parser = argparse.ArgumentParser(prog="pyvrp", description=description)
 
     parser.add_argument("instances", nargs="+", help="Instance paths.")
+
+    msg = """
+    Directory to store runtime statistics in, as CSV files (one per instance).
+    If passed, this enables collecting runtime statistics (default False), at
+    a slight performance hit.
+    """
+    parser.add_argument("--stats_dir", help=msg)
+
+    msg = """
+    Directory to store best observed solutions in, in VRPLIB format (one file
+    per instance).
+    """
+    parser.add_argument("--sol_dir", help=msg)
 
     parser.add_argument(
         "--instance_format",
@@ -200,6 +262,13 @@ def main():
         help="Round function to apply for non-integral data. Default 'none'.",
     )
 
+    msg = """
+    Optional parameter configuration file (in TOML format). These arguments
+    replace the defaults if a file is passed; default parameters are used when
+    this argument is not given.
+    """
+    parser.add_argument("--config_loc", help=msg)
+
     msg = "Seed to use for reproducible results."
     parser.add_argument("--seed", required=True, type=int, help=msg)
 
@@ -214,7 +283,7 @@ def main():
     msg = "Maximum number of iterations for solving each instance."
     stop.add_argument("--max_iterations", type=int, help=msg)
 
-    run(**vars(parser.parse_args()))
+    benchmark(**vars(parser.parse_args()))
 
 
 if __name__ == "__main__":
