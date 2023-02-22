@@ -1,5 +1,6 @@
 #include "LocalSearch.h"
 
+#include <algorithm>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -14,13 +15,7 @@ void LocalSearch::search(Individual &indiv)
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
 
     if (nodeOps.empty())
-        throw std::logic_error("No known node operators.");
-
-    auto neighbourhoodSize = 0;
-    for (auto const client : orderNodes)
-        neighbourhoodSize += neighbours[client].size();
-    if (neighbourhoodSize == 0)
-        throw std::runtime_error("Granular neighbourhood is empty.");
+        throw std::runtime_error("No known node operators.");
 
     // Caches the last time nodes were tested for modification (uses nbMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -87,7 +82,7 @@ void LocalSearch::intensify(Individual &indiv)
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 
     if (routeOps.empty())
-        throw std::logic_error("No known route operators.");
+        throw std::runtime_error("No known route operators.");
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
@@ -283,6 +278,29 @@ void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
+    if (neighbours.size() != data.numClients() + 1)
+        throw std::runtime_error("Neighbourhood dimensions do not match.");
+
+    for (size_t client = 0; client <= data.numClients(); ++client)
+    {
+        auto const beginPos = neighbours[client].begin();
+        auto const endPos = neighbours[client].end();
+
+        auto const clientPos = std::find(beginPos, endPos, client);
+        auto const depotPos = std::find(beginPos, endPos, 0);
+
+        if (clientPos != endPos || depotPos != endPos)
+        {
+            throw std::runtime_error("Neighbourhood of client "
+                                     + std::to_string(client)
+                                     + " contains itself or the depot.");
+        }
+    }
+
+    auto isEmpty = [](auto const &neighbours) { return neighbours.empty(); };
+    if (std::all_of(neighbours.begin(), neighbours.end(), isEmpty))
+        throw std::runtime_error("Neighbourhood is empty.");
+
     this->neighbours = neighbours;
 }
 
@@ -293,7 +311,8 @@ LocalSearch::Neighbours LocalSearch::getNeighbours()
 
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
-                         XorShift128 &rng)
+                         XorShift128 &rng,
+                         Neighbours neighbours)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
@@ -302,6 +321,8 @@ LocalSearch::LocalSearch(ProblemData &data,
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
 {
+    setNeighbours(neighbours);
+
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 

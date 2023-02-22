@@ -38,9 +38,8 @@ def test_swap_single_route_stays_single_route(operator):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = operator(data, pm)
     ls.add_node_operator(op)
@@ -73,9 +72,8 @@ def test_relocate_uses_empty_routes(operator):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = operator(data, pm)
     ls.add_node_operator(op)
@@ -113,9 +111,8 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = operator(data, pm)
     ls.add_node_operator(op)
@@ -138,9 +135,8 @@ def test_cannot_exchange_when_segments_overlap(operator):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = operator(data, pm)
     ls.add_node_operator(op)
@@ -162,9 +158,8 @@ def test_cannot_swap_adjacent_segments():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = Exchange22(data, pm)
     ls.add_node_operator(op)
@@ -189,9 +184,8 @@ def test_swap_between_routes_OkSmall():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
 
-    ls = LocalSearch(data, pm, rng)
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls.set_neighbours(compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
     op = Exchange21(data, pm)
     ls.add_node_operator(op)

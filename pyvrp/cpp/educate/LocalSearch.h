@@ -93,7 +93,8 @@ public:
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
-                XorShift128 &rng);
+                XorShift128 &rng,
+                Neighbours neighbours);
 };
 
 #endif
