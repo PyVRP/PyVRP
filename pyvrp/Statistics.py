@@ -88,9 +88,7 @@ class Statistics:
         )
 
     @classmethod
-    def from_csv(
-        cls, where: Union[Path, str], dialect: Union[csv.Dialect, str] = "unix"
-    ):
+    def from_csv(cls, where: Union[Path, str], delimiter: str = ",", **kwargs):
         """
         Reads a Statistics object from the CSV file at the given filesystem
         location.
@@ -99,8 +97,11 @@ class Statistics:
         ----------
         where
             Filesystem location to read from.
-        dailect
-            CSV dialect to use. Defaults to 'unix'.
+        delimiter
+            Value separator. Default comma.
+        kwargs
+            Additional keyword arguments. These are passed to
+            :class:`csv.DictReader`.
 
         Returns
         -------
@@ -126,7 +127,7 @@ class Statistics:
 
         stats = cls()
 
-        for row in csv.DictReader(lines, dialect=dialect):
+        for row in csv.DictReader(lines, delimiter=delimiter, **kwargs):
             stats.runtimes.append(float(row["runtime"]))
             stats.num_iterations += 1
             stats.feas_stats.append(make_datum(row, _FEAS_CSV_PREFIX))
@@ -137,7 +138,9 @@ class Statistics:
     def to_csv(
         self,
         where: Union[Path, str],
-        dialect: Union[csv.Dialect, str] = "unix",
+        delimiter: str = ",",
+        quoting: int = csv.QUOTE_MINIMAL,
+        **kwargs,
     ):
         """
         Writes this Statistics object to the given location, as a CSV file.
@@ -146,8 +149,13 @@ class Statistics:
         ----------
         where
             Filesystem location to write to.
-        dailect
-            CSV dialect to use. Defaults to 'unix'.
+        delimiter
+            Value separator. Default comma.
+        quoting
+            Quoting strategy. Default only quotes values when necessary.
+        kwargs
+            Additional keyword arguments. These are passed to
+            :class:`csv.DictWriter`.
         """
         field_names = [f.name for f in fields(_Datum)]
         feas_fields = [_FEAS_CSV_PREFIX + field for field in field_names]
@@ -165,7 +173,10 @@ class Statistics:
 
         with open(where, "w") as fh:
             header = ["runtime"] + feas_fields + infeas_fields
-            writer = csv.DictWriter(fh, header, dialect=dialect)
+            writer = csv.DictWriter(
+                fh, header, delimiter=delimiter, quoting=quoting, **kwargs
+            )
+
             writer.writeheader()
 
             for idx in range(self.num_iterations):

@@ -1,6 +1,6 @@
 import argparse
-import pathlib
 from functools import partial
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
@@ -57,6 +57,12 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
     return "\n".join(header + content)
 
 
+def maybe_mkdir(where: str):
+    if where:
+        stats_dir = Path(where)
+        stats_dir.mkdir(parents=True, exist_ok=True)
+
+
 def solve(
     data_loc: str,
     instance_format: str,
@@ -65,6 +71,7 @@ def solve(
     max_runtime: Optional[float],
     max_iterations: Optional[int],
     stats_dir: Optional[str],
+    sol_dir: Optional[str],
     **kwargs,
 ) -> Result:
     """
@@ -88,9 +95,11 @@ def solve(
     max_iterations
         Maximum number of iterations for solving. Either ``max_runtime`` or
         ``max_iterations`` must be specified.
-    stats_dir, optional
+    stats_dir
         The directory to write runtime statistics to. Enables statistics
         collection when passed.
+    sol_dir
+        The directory to write the best found solutions to.
 
     Returns
     -------
@@ -141,9 +150,16 @@ def solve(
     result = algo.run(stop)
 
     if stats_dir:
-        instance_name = pathlib.Path(data_loc).stem
-        where = pathlib.Path(stats_dir) / (instance_name + ".csv")
+        instance_name = Path(data_loc).stem
+        where = Path(stats_dir) / (instance_name + ".csv")
         result.stats.to_csv(where)
+
+    if sol_dir:
+        instance_name = Path(data_loc).stem
+        where = Path(sol_dir) / (instance_name + ".sol")
+
+        with open(where, "w") as fh:
+            fh.write(str(result.best))
 
     return result
 
@@ -155,7 +171,7 @@ def benchmark_solve(instance: str, **kwargs):
     solution (of type ``Individual``) cannot be pickled.
     """
     res = solve(instance, **kwargs)
-    instance_name = pathlib.Path(instance).stem
+    instance_name = Path(instance).stem
 
     return (
         instance_name,
@@ -176,11 +192,8 @@ def benchmark(instances: List[str], **kwargs):
     instances
         Paths to the VRPLIB instances to solve.
     """
-    if kwargs.get("stats_dir"):
-        # If we're collecting statistics, we should make sure the statistics
-        # directory (where we're writing the files) is not empty.
-        stats_dir = pathlib.Path(kwargs["stats_dir"])
-        stats_dir.mkdir(parents=True, exist_ok=True)
+    maybe_mkdir(kwargs.get("stats_dir", ""))
+    maybe_mkdir(kwargs.get("sol_dir", ""))
 
     if len(instances) == 1:
         res = solve(instances[0], **kwargs)
@@ -228,6 +241,12 @@ def main():
     a slight performance hit.
     """
     parser.add_argument("--stats_dir", help=msg)
+
+    msg = """
+    Directory to store best observed solutions in, in VRPLIB format (one file
+    per instance).
+    """
+    parser.add_argument("--sol_dir", help=msg)
 
     parser.add_argument(
         "--instance_format",
