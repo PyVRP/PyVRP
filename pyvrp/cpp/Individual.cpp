@@ -24,15 +24,11 @@ void Individual::evaluateCompleteCost()
 
         nbRoutes++;
 
-        int lastRelease = 0;
-        for (auto const idx : route)
-            lastRelease = std::max(lastRelease, data->client(idx).releaseTime);
-
         int rDist = data->dist(0, route[0]);
         int rTimeWarp = 0;
 
         int load = data->client(route[0]).demand;
-        int time = lastRelease + rDist;
+        int time = rDist;
 
         if (time < data->client(route[0]).twEarly)
             time = data->client(route[0]).twEarly;

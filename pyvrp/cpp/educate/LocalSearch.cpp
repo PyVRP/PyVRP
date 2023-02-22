@@ -186,8 +186,7 @@ void LocalSearch::loadIndividual(Individual const &indiv)
                               data.client(client).serviceDuration,
                               0,
                               data.client(client).twEarly,
-                              data.client(client).twLate,
-                              data.client(client).releaseTime};
+                              data.client(client).twLate};
 
     auto const &routesIndiv = indiv.getRoutes();
 
