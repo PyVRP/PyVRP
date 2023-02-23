@@ -132,7 +132,7 @@ class GeneticAlgorithm:
         ):
             self._ls.intensify(individual)
 
-        if individual.cost() < self._best.cost():
+        if individual.is_feasible() and individual.cost() < self._best.cost():
             self._best = individual
 
         self._pop.add(individual)
@@ -155,7 +155,10 @@ class GeneticAlgorithm:
                     ):
                         self._ls.intensify(individual)
 
-                    if individual.cost() < self._best.cost():
+                    if (
+                        individual.is_feasible()
+                        and individual.cost() < self._best.cost()
+                    ):
                         self._best = individual
 
                     self._pop.add(individual)
