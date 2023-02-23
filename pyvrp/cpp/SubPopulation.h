@@ -51,11 +51,9 @@ class SubPopulation
 {
     struct Item
     {
-        using Proximity = std::vector<std::pair<Individual const *, const double>>;
-
         Individual const *individual;
         double fitness;
-        Proximity proximity;
+        std::vector<std::pair<double, Individual const *>> proximity;
     };
 
     ProblemData const &data;

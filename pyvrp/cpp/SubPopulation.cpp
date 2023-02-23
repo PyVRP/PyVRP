@@ -11,18 +11,18 @@ void SubPopulation::add(Individual const *individual)
 {
     Item item = {individual, 0.0, {}};
 
-    for (auto const &other : items)  // update distance to other individuals
+    for (auto &other : items)  // update distance to other individuals
     {
         auto const div = divOp(data, *individual, *other.individual);
-        auto cmp = [](auto &elem, auto &value) { return elem.second < value; };
+        auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
 
         auto &oProx = other.proximity;
         auto place = std::lower_bound(oProx.begin(), oProx.end(), div, cmp);
-        oProx.emplace(place, individual, div);
+        oProx.emplace(place, div, individual);
 
-        auto &tProx = item.proximity;
-        place = std::lower_bound(tProx.begin(), tProx.end(), div, cmp);
-        tProx.emplace(place, other.individual, div);
+        auto &iProx = item.proximity;
+        place = std::lower_bound(iProx.begin(), iProx.end(), div, cmp);
+        iProx.emplace(place, div, other.individual);
     }
 
     items.push_back(item);
@@ -43,10 +43,10 @@ void SubPopulation::purge()
 {
     auto remove = [&](auto &iterator)
     {
-        for (auto [_, _, proximity] : items)
+        for (auto &[individual, fitness, proximity] : items)
             // Remove individual from other proximities.
             for (size_t idx = 0; idx != proximity.size(); ++idx)
-                if (proximity[idx].first == iterator->individual)
+                if (proximity[idx].second == iterator->individual)
                 {
                     proximity.erase(proximity.begin() + idx);
                     break;
@@ -62,7 +62,7 @@ void SubPopulation::purge()
         auto const pred = [&](auto &iterator)
         {
             return !iterator.proximity.empty()
-                   && iterator.proximity[1].first == iterator.individual;
+                   && *iterator.proximity[1].second == *iterator.individual;
         };
 
         auto const duplicate = std::find_if(items.begin(), items.end(), pred);
@@ -121,7 +121,7 @@ double SubPopulation::avgDistanceClosest(size_t idx) const
     auto result = 0.0;
 
     for (size_t idx = 0; idx != maxSize; ++idx)
-        result += item.proximity[idx].second;
+        result += item.proximity[idx].first;
 
     return result / maxSize;
 }
