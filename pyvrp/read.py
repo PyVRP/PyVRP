@@ -114,11 +114,6 @@ def read(
     else:
         service_times = np.zeros(num_clients, dtype=int)
 
-    if "release_time" in instance:
-        release_times = round_func(instance["release_time"])
-    else:
-        release_times = np.zeros(num_clients, dtype=int)
-
     # Checks
     if len(depots) != 1 or depots[0] != 0:
         raise ValueError(
@@ -132,14 +127,8 @@ def read(
     if time_windows[0, 0] != 0:
         raise ValueError("Depot start of time window must be 0")
 
-    if release_times[0] != 0:
-        raise ValueError("Depot release time must be 0")
-
     if service_times[0] != 0:
         raise ValueError("Depot service duration must be 0")
-
-    if release_times[0] != 0:
-        raise ValueError("Depot release time must be 0")
 
     if (time_windows[:, 0] > time_windows[:, 1]).any():
         raise ValueError("Time window cannot start after end")
@@ -152,7 +141,6 @@ def read(
         time_windows,
         service_times,
         edge_weight,
-        release_times,
     )
 
 

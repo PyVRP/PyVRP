@@ -14,7 +14,6 @@ class TimeWindowSegment
     int timeWarp = 0;  // Cumulative time warp
     int twEarly = 0;   // Earliest visit moment of first client
     int twLate = 0;    // Latest visit moment of last client
-    int release = 0;   // Release time; cannot leave depot earlier
 
     [[nodiscard]] inline TWS merge(TWS const &other) const;
 
@@ -22,11 +21,6 @@ public:
     template <typename... Args>
     [[nodiscard]] inline static TWS
     merge(TWS const &first, TWS const &second, Args... args);
-
-    /**
-     * Returns the time warp along the segment, assuming we can depart in time.
-     */
-    [[nodiscard]] inline int segmentTimeWarp() const;
 
     /**
      * Total time warp, that is, the time warp along the the segment, and
@@ -42,8 +36,7 @@ public:
                              int duration,
                              int timeWarp,
                              int twEarly,
-                             int twLate,
-                             int release);
+                             int twLate);
 };
 
 template <typename... Args>
@@ -79,16 +72,13 @@ TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
             duration + other.duration + distance + deltaWaitTime,
             timeWarp + other.timeWarp + deltaTimeWarp,
             std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
-            std::min(other.twLate - delta, twLate) + deltaTimeWarp,
-            std::max(release, other.release)};
+            std::min(other.twLate - delta, twLate) + deltaTimeWarp};
 #endif
 }
 
-int TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
-
 int TimeWindowSegment::totalTimeWarp() const
 {
-    return segmentTimeWarp() + std::max(release - twLate, 0);
+    return timeWarp;
 }
 
 TimeWindowSegment::TimeWindowSegment(Matrix<int> const *dist,
@@ -97,16 +87,14 @@ TimeWindowSegment::TimeWindowSegment(Matrix<int> const *dist,
                                      int duration,
                                      int timeWarp,
                                      int twEarly,
-                                     int twLate,
-                                     int release)
+                                     int twLate)
     : dist(dist),
       idxFirst(idxFirst),
       idxLast(idxLast),
       duration(duration),
       timeWarp(timeWarp),
       twEarly(twEarly),
-      twLate(twLate),
-      release(release)
+      twLate(twLate)
 {
 }
 
