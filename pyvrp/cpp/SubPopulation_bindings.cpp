@@ -27,5 +27,17 @@ PYBIND11_MODULE(Population, m)
         .def_readwrite("lb_diversity", &PopulationParams::lbDiversity)
         .def_readwrite("ub_diversity", &PopulationParams::ubDiversity);
 
-
+    py::class_<SubPopulation>(m, "SubPopulation")
+        .def(py::init<ProblemData const &,
+                  DiversityMeasure const &,
+                  PopulationParams const &>(),
+                  py::arg("data"),
+                  py::arg("diversity_op"),
+                  py::arg("params"))
+        .def("add", &SubPopulation::add, py::keep_alive<1, 2>())
+        .def("__len__", &SubPopulation::size)
+        .def("__getitem__", &SubPopulation::operator[], py::return_value_policy::reference_internal)
+        .def("purge", &SubPopulation::purge)
+        .def("update_fitness", &SubPopulation::updateFitness)
+        .def("avg_distance_closest", &SubPopulation::avgDistanceClosest);
 }

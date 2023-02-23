@@ -1,5 +1,5 @@
-#ifndef POPULATION_H
-#define POPULATION_H
+#ifndef SUBPOPULATION_H
+#define SUBPOPULATION_H
 
 #include "Individual.h"
 #include "ProblemData.h"
@@ -7,6 +7,7 @@
 
 #include <iosfwd>
 #include <stdexcept>
+#include <vector>
 
 struct PopulationParams
 {
@@ -48,14 +49,30 @@ struct PopulationParams
 
 class SubPopulation
 {
+    struct Item
+    {
+        using Proximity = std::vector<std::pair<Individual const *, const double>>;
+
+        Individual const *individual;
+        double fitness;
+        Proximity proximity;
+    };
+
+    ProblemData const &data;
+    DiversityMeasure const &divOp;
+    PopulationParams const &params;
+    std::vector<Item> items;
+
 public:
     SubPopulation(ProblemData const &data,
                   DiversityMeasure const &divOp,
                   PopulationParams const &params);
 
-    void add(Individual const &individual);
+    void add(Individual const *individual);
 
-    void remove(Individual const &individual);
+    size_t size() const;
+
+    Individual const *operator[](size_t idx) const;
 
     void purge();
 
@@ -64,28 +81,4 @@ public:
     double avgDistanceClosest(size_t idx) const;
 };
 
-class Population
-{
-    Individual const *getBinaryTournament() const;
-
-public:
-    Population(ProblemData const &data,
-               PenaltyManager const &penManager,
-               XorShift128 const &rng,
-               DiversityMeasure const &divOp,
-               PopulationParams params = PopulationParams())
-
-    SubPopulation const &feasibleSubPopulation() const;
-
-    SubPopulation const &infeasibleSubPopulation() const;
-
-    size_t size() const;
-
-    void add(Individual const &individual);
-
-    std::pair<Individual const *, Individual const *> select() const;
-
-    void restart();
-};
-
-#endif  // POPULATION_H
+#endif  // SUBPOPULATION_H
