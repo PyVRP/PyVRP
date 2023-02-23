@@ -162,8 +162,9 @@ class GeneticAlgorithm:
                         self._best = individual
 
                     self._pop.add(individual)
-
-                    # We already know the individual is feasible, so load and
-                    # time constraints are both satisfied.
-                    self._pm.register_load_feasible(True)
-                    self._pm.register_time_feasible(True)
+                    self._pm.register_load_feasible(
+                        not individual.has_excess_capacity()
+                    )
+                    self._pm.register_time_feasible(
+                        not individual.has_time_warp()
+                    )
