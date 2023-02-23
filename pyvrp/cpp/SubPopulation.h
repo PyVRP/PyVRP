@@ -49,6 +49,11 @@ struct PopulationParams
 
 class SubPopulation
 {
+    ProblemData const &data;
+    DiversityMeasure divOp;
+    PopulationParams const &params;
+
+public:
     struct Item
     {
         Individual const *individual;
@@ -56,21 +61,23 @@ class SubPopulation
         std::vector<std::pair<double, Individual const *>> proximity;
     };
 
-    ProblemData const &data;
-    DiversityMeasure const &divOp;
-    PopulationParams const &params;
+private:
     std::vector<Item> items;
 
 public:
     SubPopulation(ProblemData const &data,
-                  DiversityMeasure const &divOp,
+                  DiversityMeasure divOp,
                   PopulationParams const &params);
 
     void add(Individual const *individual);
 
+    std::vector<Item>::const_iterator cbegin() const;
+
+    std::vector<Item>::const_iterator cend() const;
+
     size_t size() const;
 
-    Individual const *operator[](size_t idx) const;
+    Item const &operator[](size_t idx) const;
 
     void purge();
 

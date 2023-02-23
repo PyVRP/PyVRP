@@ -75,8 +75,8 @@ class Statistics:
             )
 
         size = len(subpop)
-        costs = [individual.cost() for individual, *_ in subpop]
-        num_routes = [individual.num_routes() for individual, *_ in subpop]
+        costs = [item.individual.cost() for item in subpop]
+        num_routes = [item.individual.num_routes() for item in subpop]
         diversities = [subpop.avg_distance_closest(idx) for idx in range(size)]
 
         return _Datum(

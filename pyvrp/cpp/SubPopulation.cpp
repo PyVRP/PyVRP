@@ -1,7 +1,7 @@
 #include "SubPopulation.h"
 
 SubPopulation::SubPopulation(ProblemData const &data,
-                             DiversityMeasure const &divOp,
+                             DiversityMeasure divOp,
                              PopulationParams const &params)
     : data(data), divOp(divOp), params(params)
 {
@@ -34,9 +34,19 @@ void SubPopulation::add(Individual const *individual)
 
 size_t SubPopulation::size() const { return items.size(); }
 
-Individual const *SubPopulation::operator[](size_t idx) const
+SubPopulation::Item const &SubPopulation::operator[](size_t idx) const
 {
-    return items[idx].individual;
+    return items[idx];
+}
+
+std::vector<SubPopulation::Item>::const_iterator SubPopulation::cbegin() const
+{
+    return items.cbegin();
+}
+
+std::vector<SubPopulation::Item>::const_iterator SubPopulation::cend() const
+{
+    return items.cend();
 }
 
 void SubPopulation::purge()

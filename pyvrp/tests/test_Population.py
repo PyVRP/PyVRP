@@ -25,16 +25,12 @@ from pyvrp.tests.helpers import read
     "lb_diversity,"
     "ub_diversity",
     [
-        (-1, 1, 1, 1, 0.0, 1.0),  # -1 min_pop_size
-        (1, -1, 1, 1, 0.0, 1.0),  # -1 generation_size
-        (1, 1, -1, 1, 0.0, 1.0),  # -1 nb_elite
-        (1, 1, 1, -1, 0.0, 1.0),  # -1 nb_close
-        (1, 1, 1, -1, -1, 1.0),  # -1 lb_diversity
-        (1, 1, 1, -1, 2, 1.0),  # 2 lb_diversity
-        (1, 1, 1, -1, 0, -1.0),  # -1 ub_diversity
-        (1, 1, 1, -1, 0, 2.0),  # 2 ub_diversity
-        (1, 1, 1, -1, 1, 0.5),  # ub_diversity < lb_diversity
-        (1, 1, 1, -1, 0.5, 0.5),  # ub_diversity == lb_diversity
+        (1, 1, 1, 1, -1, 1.0),  # -1 lb_diversity
+        (1, 1, 1, 1, 2, 1.0),  # 2 lb_diversity
+        (1, 1, 1, 1, 0, -1.0),  # -1 ub_diversity
+        (1, 1, 1, 1, 0, 2.0),  # 2 ub_diversity
+        (1, 1, 1, 1, 1, 0.5),  # ub_diversity < lb_diversity
+        (1, 1, 1, 1, 0.5, 0.5),  # ub_diversity == lb_diversity
     ],
 )
 def test_params_constructor_throws_when_arguments_invalid(
@@ -207,16 +203,15 @@ def test_proximity_structures_are_kept_up_to_date(min_pop_size: int):
         indiv = Individual(data, pm, rng)
         pop.add(indiv)
 
-        for indiv, _, prox in feas:
+        for item in feas:
             # Each individual should have a proximity value for every other
             # individual in the same subpopulation (so there should be n - 1
             # such values).
-            print(prox)
-            assert_equal(len(prox), len(feas) - 1)
+            assert_equal(len(item.proximity), len(feas) - 1)
 
-        for indiv, _, prox in infeas:
+        for item in infeas:
             # The same must hold for the infeasible subpopulation, of course!
-            assert_equal(len(prox), len(infeas) - 1)
+            assert_equal(len(item.proximity), len(infeas) - 1)
 
 
 def test_restart_generates_min_pop_size_new_individuals():
@@ -231,13 +226,13 @@ def test_restart_generates_min_pop_size_new_individuals():
     params = PopulationParams(min_pop_size=2)
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
-    old_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
-    old_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+    old_feas = {id(item.individual) for item in pop.feasible_subpopulation}
+    old_infeas = {id(item.individual) for item in pop.infeasible_subpopulation}
 
     pop.restart()
 
-    new_feas = {id(indiv) for indiv, *_ in pop.feasible_subpopulation}
-    new_infeas = {id(indiv) for indiv, *_ in pop.infeasible_subpopulation}
+    new_feas = {id(item.individual) for item in pop.feasible_subpopulation}
+    new_infeas = {id(item.individual) for item in pop.infeasible_subpopulation}
 
     assert_equal(len(pop), 2)
     assert_(new_feas != old_feas)
