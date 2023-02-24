@@ -16,7 +16,7 @@ class LocalSearch:
         penalty_manager: PenaltyManager,
         rng: XorShift128,
         neighbours: Neighbours,
-    ) -> None:
+    ):
         """
         Python wrapper for a LocalSearch instance.
 
@@ -33,20 +33,20 @@ class LocalSearch:
         """
         self._ls = _LocalSearch(data, penalty_manager, rng, neighbours)
 
-    def add_node_operator(self, op) -> None:
+    def add_node_operator(self, op):
         self._ls.add_node_operator(op)
 
-    def add_route_operator(self, op) -> None:
+    def add_route_operator(self, op):
         self._ls.add_route_operator(op)
 
-    def set_neighbours(self, neighbours: Neighbours) -> None:
+    def set_neighbours(self, neighbours: Neighbours):
         self._ls.set_neighbours(neighbours)
 
     def get_neighbours(self) -> Neighbours:
         return self._ls.get_neighbours()
 
-    def intensify(self, individual: Individual) -> None:
+    def intensify(self, individual: Individual):
         self._ls.intensify(individual)
 
-    def search(self, individual: Individual) -> None:
+    def search(self, individual: Individual):
         self._ls.search(individual)
