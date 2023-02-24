@@ -124,10 +124,10 @@ void SubPopulation::updateFitness()
         { return items[a].individual->cost() < items[b].individual->cost(); });
 
     std::vector<std::pair<double, size_t>> diversity;
-    for (size_t rank = 0; rank != size(); rank++)
+    for (size_t costRank = 0; costRank != size(); costRank++)
     {
-        auto const dist = avgDistanceClosest(byCost[rank]);
-        diversity.emplace_back(dist, rank);
+        auto const dist = avgDistanceClosest(byCost[costRank]);
+        diversity.emplace_back(dist, costRank);
     }
 
     std::stable_sort(diversity.begin(), diversity.end(), std::greater<>());

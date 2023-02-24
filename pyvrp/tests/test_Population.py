@@ -237,3 +237,59 @@ def test_restart_generates_min_pop_size_new_individuals():
     assert_equal(len(pop), 2)
     assert_(new_feas != old_feas)
     assert_(new_infeas != old_infeas)
+
+
+def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=12)
+
+    params = PopulationParams(min_pop_size=0, generation_size=0)
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
+
+    assert_equal(len(pop), 0)
+
+    for _ in range(10):
+        # With zero min_pop_size and zero generation_size, every additional
+        # individual triggers a purge. So the population size can never grow
+        # beyond zero.
+        pop.add(Individual(data, pm, rng))
+        assert_equal(len(pop), 0)
+
+
+@mark.parametrize("nb_elite", [5, 25])
+def test_elite_individuals_are_not_purged(nb_elite: int):
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    params = PopulationParams(nb_elite=nb_elite)
+    rng = XorShift128(seed=42)
+
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    infeas = pop.infeasible_subpopulation
+
+    # Keep adding individuals until the infeasible subpopulation is of maximum
+    # size.
+    while len(infeas) != params.max_pop_size:
+        pop.add(Individual(data, pm, rng))
+
+    assert_equal(len(infeas), params.max_pop_size)
+
+    # These are the nb_elite best solutions in the current solution pool. These
+    # should never be purged.
+    curr_individuals = [item.individual for item in infeas]
+    best_individuals = sorted(curr_individuals, key=lambda indiv: indiv.cost())
+
+    # Add a solution that is certainly not feasible, thus causing a purge.
+    single_route = [client for client in range(1, data.num_clients + 1)]
+    pop.add(Individual(data, pm, [single_route]))
+
+    # After the purge, there should remain min_pop_size infeasible solutions.
+    assert_equal(len(infeas), params.min_pop_size)
+
+    # In that infeasible subpopulation, nb_elite solutions from before the
+    # purge should also still be present. We test that here, by selection the
+    # nb_elite best individuals from before the purge. We test by id/memory
+    # location because these individuals should be present, unmodified.
+    new_individuals = [id(item.individual) for item in infeas]
+    for elite_individual in best_individuals[:nb_elite]:
+        assert_(id(elite_individual) in new_individuals)
