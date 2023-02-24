@@ -9,8 +9,17 @@ SubPopulation::SubPopulation(ProblemData const &data,
 {
 }
 
+SubPopulation::~SubPopulation()
+{
+    for (auto &item : items)
+        delete item.individual;
+}
+
 void SubPopulation::add(Individual const *individual)
 {
+    // Copy the given individual into a new memory location, and use that from
+    // now on.
+    individual = new Individual(*individual);
     Item item = {individual, 0.0, {}};
 
     for (auto &other : items)  // update distance to other individuals
@@ -51,23 +60,24 @@ std::vector<SubPopulation::Item>::const_iterator SubPopulation::cend() const
     return items.cend();
 }
 
+void SubPopulation::remove(
+    std::vector<SubPopulation::Item>::iterator const &iterator)
+{
+    for (auto &[individual, fitness, proximity] : items)
+        // Remove individual from other proximities.
+        for (size_t idx = 0; idx != proximity.size(); ++idx)
+            if (proximity[idx].second == iterator->individual)
+            {
+                proximity.erase(proximity.begin() + idx);
+                break;
+            }
+
+    delete iterator->individual;  // dispose of manually allocated memory
+    items.erase(iterator);        // before the item is removed.
+}
+
 void SubPopulation::purge()
 {
-    auto remove = [&](auto &iterator)
-    {
-        for (auto &[individual, fitness, proximity] : items)
-            // Remove individual from other proximities.
-            for (size_t idx = 0; idx != proximity.size(); ++idx)
-                if (proximity[idx].second == iterator->individual)
-                {
-                    proximity.erase(proximity.begin() + idx);
-                    break;
-                }
-
-        // Remove individual from subpopulation.
-        items.erase(iterator);
-    };
-
     while (size() > params.minPopSize)
     {
         // Remove duplicates from the subpopulation (if they exist)

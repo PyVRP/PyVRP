@@ -25,9 +25,13 @@ PYBIND11_MODULE(SubPopulation, m)
         .def_readwrite("ub_diversity", &PopulationParams::ubDiversity);
 
     py::class_<SubPopulation::Item>(m, "SubPopulationItem")
-        .def_readonly("individual", &SubPopulation::Item::individual)
+        .def_readonly("individual",
+                      &SubPopulation::Item::individual,
+                      py::return_value_policy::reference_internal)
         .def_readonly("fitness", &SubPopulation::Item::fitness)
-        .def_readonly("_proximity", &SubPopulation::Item::proximity);
+        .def_readonly("_proximity",
+                      &SubPopulation::Item::proximity,
+                      py::return_value_policy::reference_internal);
 
     py::class_<SubPopulation>(m, "SubPopulation")
         .def(py::init<ProblemData const &,
@@ -36,21 +40,20 @@ PYBIND11_MODULE(SubPopulation, m)
              py::arg("data"),
              py::arg("diversity_op"),
              py::arg("params"))
-        .def("add",
-             &SubPopulation::add,
-             py::arg("individual"),
-             py::keep_alive<1, 2>())
+        .def("add", &SubPopulation::add, py::arg("individual"))
         .def("__len__", &SubPopulation::size)
-        .def("__getitem__",
-             [](SubPopulation const &subPop, int idx) {
+        .def(
+            "__getitem__",
+            [](SubPopulation const &subPop, int idx)
+            {
                 // int so we also support negative offsets from the end.
                 idx = idx < 0 ? subPop.size() + idx : idx;
                 if (idx < 0 || static_cast<size_t>(idx) >= subPop.size())
                     throw py::index_error();
                 return subPop[idx];
-             },
-             py::arg("idx"),
-             py::return_value_policy::reference_internal)
+            },
+            py::arg("idx"),
+            py::return_value_policy::reference_internal)
         .def(
             "__iter__",
             [](SubPopulation const &subPop)

@@ -58,6 +58,10 @@ public:
     {
         using Proximity = std::vector<std::pair<double, Individual const *>>;
 
+        // Note that this pointer is not owned by the Item - it is merely a
+        // reference to memory owned and allocated by the SubPopulation this
+        // item is part of. The SubPopulation remains responsible for managing
+        // that memory.
         Individual const *individual;
         double fitness;
         Proximity proximity;
@@ -66,10 +70,15 @@ public:
 private:
     std::vector<Item> items;
 
+    // Removes the element at the given iterator location from the items.
+    void remove(std::vector<Item>::iterator const &iterator);
+
 public:
     SubPopulation(ProblemData const &data,
                   DiversityMeasure divOp,
                   PopulationParams const &params);
+
+    ~SubPopulation();
 
     void add(Individual const *individual);
 
