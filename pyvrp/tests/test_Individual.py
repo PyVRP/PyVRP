@@ -183,6 +183,13 @@ def test_eq():
 
     assert_(indiv4 == indiv5)  # routes are the same, but in different order
 
+    # And a few tests against things that are not Individuals, just to be sure
+    # there's also a type check in there somewhere.
+    assert_(indiv4 != 1)
+    assert_(indiv4 != "abc")
+    assert_(indiv5 != 5)
+    assert_(indiv5 != "cd")
+
 
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
@@ -209,3 +216,32 @@ def test_str_contains_essential_information():
 
         # Last line should contain the cost
         assert_(str(individual.cost()) in str_representation[-1])
+
+
+def test_hash():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=2)
+
+    indiv1 = Individual(data, pm, rng)
+    indiv2 = Individual(data, pm, rng)
+
+    hash1 = hash(indiv1)
+    hash2 = hash(indiv2)
+
+    # Two random solutions. They're not the same, so the hashes should not be
+    # the same either.
+    assert_(indiv1 != indiv2)
+    assert_(hash1 != hash2)
+
+    indiv3 = Individual(indiv2)  # is a direct copy
+
+    # These two are the same solution, so their hashes should be the same too.
+    assert_equal(indiv2, indiv3)
+    assert_equal(hash(indiv2), hash(indiv3))
+
+    with pm.get_penalty_booster():
+        # This tests the hash does not depend on obviously changing values,
+        # like the Individual's cost (through the penalty manager).
+        assert_equal(hash(indiv1), hash1)
+        assert_equal(hash(indiv2), hash2)
