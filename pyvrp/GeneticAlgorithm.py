@@ -125,7 +125,8 @@ class GeneticAlgorithm:
         return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
-        intensify = self._rng.rand() < self._params.intensification_probability
+        intensification_prob = self._params.intensification_probability
+        intensify = self._rng.rand() < intensification_prob
 
         self._ls.run(individual, intensify)
 
@@ -152,9 +153,7 @@ class GeneticAlgorithm:
             and self._rng.rand() < self._params.repair_probability
         ):
             with self._pm.get_penalty_booster() as booster:  # noqa
-
-                # TODO shouldn't we resample the 'intensify' variable here?
-                # this is what HGS used to do
+                intensify = self._rng.rand() < intensification_prob
                 self._ls.run(individual, intensify)
 
                 if individual.is_feasible():
