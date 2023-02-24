@@ -106,7 +106,9 @@ def test_best_solution_improves_with_more_iterations():
     node_op = Exchange10(data, pen_manager)
     ls.add_node_operator(node_op)
 
-    params = GeneticAlgorithmParams(intensify_on_best=False)
+    params = GeneticAlgorithmParams(
+        intensification_probability=0, intensify_on_best=False
+    )
     algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
 
     initial_best = algo.run(MaxIterations(0)).best
