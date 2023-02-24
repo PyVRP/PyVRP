@@ -207,11 +207,11 @@ def test_proximity_structures_are_kept_up_to_date(min_pop_size: int):
             # Each individual should have a proximity value for every other
             # individual in the same subpopulation (so there should be n - 1
             # such values).
-            assert_equal(len(item.proximity), len(feas) - 1)
+            assert_equal(len(item._proximity), len(feas) - 1)
 
         for item in infeas:
             # The same must hold for the infeasible subpopulation, of course!
-            assert_equal(len(item.proximity), len(infeas) - 1)
+            assert_equal(len(item._proximity), len(infeas) - 1)
 
 
 def test_restart_generates_min_pop_size_new_individuals():
