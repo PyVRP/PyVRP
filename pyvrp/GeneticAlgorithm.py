@@ -125,26 +125,31 @@ class GeneticAlgorithm:
         return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
+        def _is_new_best(indiv):
+            return indiv.is_feasible() and indiv.cost() < self._best.cost()
+
+        def _add_and_register(indiv):
+            self._pop.add(indiv)
+            self._pm.register_load_feasible(not indiv.has_excess_capacity())
+            self._pm.register_time_feasible(not indiv.has_time_warp())
+
         intensification_prob = self._params.intensification_probability
         intensify = self._rng.rand() < intensification_prob
 
         self._ls.run(individual, intensify)
 
-        # Only intensify feasible, new best solutions. See also the repair
-        # step below.
-        if (
-            self._params.intensify_on_best
-            and individual.is_feasible()
-            and individual.cost() < self._best.cost()
-        ):
-            self._ls.intensify(individual)
-
-        if individual.is_feasible() and individual.cost() < self._best.cost():
+        if _is_new_best(individual):
             self._best = individual
 
-        self._pop.add(individual)
-        self._pm.register_load_feasible(not individual.has_excess_capacity())
-        self._pm.register_time_feasible(not individual.has_time_warp())
+            # Only intensify feasible, new best solutions. See also the repair
+            # step below. TODO Refactor to on_best callback (see issue #111)
+            if self._params.intensify_on_best:
+                self._ls.intensify(individual)
+
+                if _is_new_best(individual):
+                    self._best = individual
+
+        _add_and_register(individual)
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
@@ -156,23 +161,15 @@ class GeneticAlgorithm:
                 intensify = self._rng.rand() < intensification_prob
                 self._ls.run(individual, intensify)
 
-                if individual.is_feasible():
-                    if (
-                        self._params.intensify_on_best
-                        and individual.cost() < self._best.cost()
-                    ):
+                if _is_new_best(individual):
+                    self._best = individual
+
+                    # TODO Refactor to on_best callback (see issue #111)
+                    if self._params.intensify_on_best:
                         self._ls.intensify(individual)
 
-                    if (
-                        individual.is_feasible()
-                        and individual.cost() < self._best.cost()
-                    ):
-                        self._best = individual
+                        if _is_new_best(individual):
+                            self._best = individual
 
-                    self._pop.add(individual)
-                    self._pm.register_load_feasible(
-                        not individual.has_excess_capacity()
-                    )
-                    self._pm.register_time_feasible(
-                        not individual.has_time_warp()
-                    )
+                if individual.is_feasible():
+                    _add_and_register(individual)
