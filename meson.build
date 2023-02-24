@@ -114,13 +114,25 @@ foreach extension : extensions  # extension[0] = name, extension[1] = subdir
     source_dir = '/'.join([SRC_DIR, extension[1]])
     install_dir = '/'.join([INST_DIR, extension[1]])
 
-    py.extension_module(
-        extension[0],
-        source_dir / extension[0] + '_bindings.cpp',
-        dependencies: [py.dependency(), pybind11],
-        link_with: libcommon,
-        install: true,
-        subdir: install_dir,
-        include_directories: [include_directories(SRC_DIR)],
-    )
+    if extension[0] == 'LocalSearch'
+        py.extension_module(
+            '_' + extension[0],
+            source_dir / extension[0] + '_bindings.cpp',
+            dependencies: [py.dependency(), pybind11],
+            link_with: libcommon,
+            install: true,
+            subdir: install_dir,
+            include_directories: [include_directories(SRC_DIR)],
+        )
+    else
+        py.extension_module(
+            extension[0],
+            source_dir / extension[0] + '_bindings.cpp',
+            dependencies: [py.dependency(), pybind11],
+            link_with: libcommon,
+            install: true,
+            subdir: install_dir,
+            include_directories: [include_directories(SRC_DIR)],
+        )
+    endif
 endforeach
