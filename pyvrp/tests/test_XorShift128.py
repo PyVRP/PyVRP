@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_almost_equal, assert_equal
 from pytest import mark
 
-from pyvrp.XorShift128 import XorShift128
+from pyvrp._XorShift128 import XorShift128
 
 
 def test_bounds():
