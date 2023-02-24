@@ -1,3 +1,4 @@
+from .LocalSearch import LocalSearch
 from ._Exchange import (
     Exchange10,
     Exchange11,
@@ -7,7 +8,6 @@ from ._Exchange import (
     Exchange32,
     Exchange33,
 )
-from .LocalSearch import LocalSearch
 from ._MoveTwoClientsReversed import MoveTwoClientsReversed
 from ._RelocateStar import RelocateStar
 from ._SwapStar import SwapStar

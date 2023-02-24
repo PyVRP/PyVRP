@@ -5,12 +5,12 @@ from typing import Callable, Tuple
 from pyvrp.educate import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
-from ._Individual import Individual
-from ._PenaltyManager import PenaltyManager
 from .Population import Population
-from ._ProblemData import ProblemData
 from .Result import Result
 from .Statistics import Statistics
+from ._Individual import Individual
+from ._PenaltyManager import PenaltyManager
+from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 
 _Parents = Tuple[Individual, Individual]

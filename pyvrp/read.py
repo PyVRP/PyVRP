@@ -22,7 +22,7 @@ def convert_to_int(vals: np.ndarray):
 
 
 def scale_and_truncate_to_decimals(vals: np.ndarray, decimals: int = 0):
-    return (vals * (10 ** decimals)).astype(int)
+    return (vals * (10**decimals)).astype(int)
 
 
 def no_rounding(vals):

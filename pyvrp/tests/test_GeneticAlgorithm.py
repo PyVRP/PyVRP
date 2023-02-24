@@ -72,7 +72,7 @@ def test_params_constructor_throws_when_arguments_invalid(
 def test_params_constructor_does_not_raise_when_arguments_valid(
     repair_probability: float,
     collect_statistics: bool,
-    intensification_probability: int,
+    intensification_probability: float,
     intensify_on_best: bool,
     nb_iter_no_improvement: int,
 ):
@@ -89,7 +89,9 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
     assert_almost_equal(params.repair_probability, repair_probability)
     assert_equal(params.collect_statistics, collect_statistics)
-    assert_equal(params.intensification_probability, intensify_on_best)
+    assert_equal(
+        params.intensification_probability, intensification_probability
+    )
     assert_equal(params.intensify_on_best, intensify_on_best)
     assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
 
@@ -104,7 +106,7 @@ def test_best_solution_improves_with_more_iterations():
     node_op = Exchange10(data, pen_manager)
     ls.add_node_operator(node_op)
 
-    params = GeneticAlgorithmParams(should_intensify=False)
+    params = GeneticAlgorithmParams(intensify_on_best=False)
     algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
 
     initial_best = algo.run(MaxIterations(0)).best
