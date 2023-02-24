@@ -11,7 +11,7 @@ SubPopulation::SubPopulation(ProblemData const &data,
 
 void SubPopulation::add(Individual const *individual)
 {
-    Item::Proximity proximity;
+    Item item = {individual, 0.0, {}};
 
     for (auto &other : items)  // update distance to other individuals
     {
@@ -22,12 +22,12 @@ void SubPopulation::add(Individual const *individual)
         auto place = std::lower_bound(oProx.begin(), oProx.end(), div, cmp);
         oProx.emplace(place, div, individual);
 
-        auto &iProx = proximity;
+        auto &iProx = item.proximity;
         place = std::lower_bound(iProx.begin(), iProx.end(), div, cmp);
         iProx.emplace(place, div, other.individual);
     }
 
-    items.emplace_back(individual, 0.0, proximity);
+    items.push_back(item);
     updateFitness();
 
     if (size() > params.maxPopSize())
