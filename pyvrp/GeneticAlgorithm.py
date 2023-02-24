@@ -127,20 +127,7 @@ class GeneticAlgorithm:
     def _educate(self, individual: Individual):
         intensify = self._rng.rand() < self._params.intensification_probability
 
-        # HACK We keep searching and intensifying to mimic the local search
-        # implementation of HGS-CVRP and HGS-VRPTW
-        while True:
-            self._ls.search(individual)
-
-            if intensify:
-                cost = individual.cost()
-                self._ls.intensify(individual)
-
-                # Intensification improved the solution, so we search again.
-                if individual.cost() < cost:
-                    continue
-
-            break
+        self._ls.run(individual, intensify)
 
         # Only intensify feasible, new best solutions. See also the repair
         # step below.
@@ -165,19 +152,10 @@ class GeneticAlgorithm:
             and self._rng.rand() < self._params.repair_probability
         ):
             with self._pm.get_penalty_booster() as booster:  # noqa
-                # HACK We keep searching and intensifying to mimic the local
-                # search implementation of HGS-CVRP and HGS-VRPTW
-                while True:
-                    self._ls.search(individual)
 
-                    if intensify:
-                        cost = individual.cost()
-                        self._ls.intensify(individual)
-
-                        if individual.cost() < cost:
-                            continue
-
-                    break
+                # TODO shouldn't we resample the 'intensify' variable here?
+                # this is what HGS used to do
+                self._ls.run(individual, intensify)
 
                 if individual.is_feasible():
                     if (
