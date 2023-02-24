@@ -22,8 +22,7 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          size_t vehicleCap,
                          std::vector<std::pair<int, int>> const &timeWindows,
                          std::vector<int> const &servDurs,
-                         std::vector<std::vector<int>> const &distMat,
-                         std::vector<int> const &releases)
+                         std::vector<std::vector<int>> const &distMat)
     : dist_(distMat),
       clients_(coords.size()),
       numClients_(static_cast<int>(coords.size()) - 1),
@@ -38,6 +37,5 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          servDurs[idx],
                          demands[idx],
                          timeWindows[idx].first,
-                         timeWindows[idx].second,
-                         releases[idx]};
+                         timeWindows[idx].second};
 }

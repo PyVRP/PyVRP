@@ -102,6 +102,7 @@ def test_best_solution_improves_with_more_iterations():
     new_best = algo.run(MaxIterations(25)).best
 
     assert_(new_best.cost() < initial_best.cost())
+    assert_(new_best.is_feasible())  # best must be feasible
 
 
 # TODO more functional tests

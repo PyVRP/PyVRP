@@ -18,8 +18,6 @@ public:
         int demand;           // Demand
         int twEarly;          // Earliest arrival (when using time windows)
         int twLate;           // Latest arrival (when using time windows)
-        int releaseTime;      // Routes with this client must leave depot after
-                              // this time
     };
 
 private:
@@ -83,7 +81,6 @@ public:
      * @param timeWindows  Time windows as pairs of [early, late].
      * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
-     * @param releases     Client release times.
      */
     ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
@@ -91,8 +88,7 @@ public:
                 size_t vehicleCap,
                 std::vector<std::pair<int, int>> const &timeWindows,
                 std::vector<int> const &servDurs,
-                std::vector<std::vector<int>> const &distMat,
-                std::vector<int> const &releases);
+                std::vector<std::vector<int>> const &distMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const

@@ -16,16 +16,6 @@ class Client:
             The amount this client's demanding.
         """
     @property
-    def release_time(self) -> int:
-        """
-        Returns this client's release time.
-
-        Returns
-        -------
-        int
-            The earliest time this client can leave the depot.
-        """
-    @property
     def service_duration(self) -> int:
         """
         Returns this client's service duration.
@@ -89,7 +79,6 @@ class ProblemData:
         time_windows: List[Tuple[int, int]],
         service_durations: List[int],
         duration_matrix: List[List[int]],
-        release_times: List[int],
     ):
         """
         Creates a problem data instance. This instance contains all information
@@ -119,9 +108,6 @@ class ProblemData:
         duration_matrix
             A matrix that gives the travel times between clients (and the
             depot at index 0). Does not have to be symmetric.
-        release_times
-            Release times give the earliest time at which a client's request
-            may leave the depot.
 
         Notes
         -----

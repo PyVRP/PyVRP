@@ -16,7 +16,6 @@ def test_depot_is_first_client():
         time_windows=[(0, 10), (0, 10)],
         service_durations=[0, 0],
         duration_matrix=[[0, 1], [1, 0]],
-        release_times=[0, 0],
     )
 
     assert_(data.depot() is data.client(0))

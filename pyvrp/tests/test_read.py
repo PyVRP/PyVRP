@@ -15,7 +15,6 @@ from pyvrp.tests.helpers import read
         ("data/DepotNotOne.txt", ValueError),
         ("data/MoreThanOneDepot.txt", ValueError),
         ("data/NonZeroDepotServiceDuration.txt", ValueError),
-        ("data/NonZeroDepotReleaseTime.txt", ValueError),
         ("data/NonZeroDepotOpenTimeWindow.txt", ValueError),
         ("data/NonZeroDepotDemand.txt", ValueError),
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
@@ -132,7 +131,6 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
         assert_equal(data.client(client).service_duration, 0)
         assert_equal(data.client(client).tw_early, 0)
         assert_equal(data.client(client).tw_late, max_int)
-        assert_equal(data.client(client).release_time, 0)
 
 
 def test_reading_RC208_instance():  # Solomon style instance
@@ -170,7 +168,6 @@ def test_reading_RC208_instance():  # Solomon style instance
 
     for client in range(1, data.num_clients + 1):  # excl. depot
         assert_equal(data.client(client).service_duration, 100)
-        assert_equal(data.client(client).release_time, 0)
 
 
 # TODO test round funcs

@@ -73,9 +73,8 @@ def get_route_statistics(
     assert 0 not in route, "Route should not contain depot"
 
     depot = data.depot()  # For readability, define variable
-    start_time = max(
-        [depot.tw_early] + [data.client(idx).release_time for idx in route]
-    )
+    start_time = depot.tw_early
+
     # Interpret depot.service_duration as loading duration, typically 0
     current_time = start_time + depot.service_duration
     wait_time = 0

@@ -16,10 +16,8 @@ struct InsertPos  // best insert position, used to plan unplanned clients
 // Evaluates the cost change of inserting client between prev and next.
 int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    int prevClientRelease = std::max(data.client(prev).releaseTime,
-                                     data.client(client).releaseTime);
-    int prevEarliestArrival = std::max(prevClientRelease + data.dist(0, prev),
-                                       data.client(prev).twEarly);
+    int prevEarliestArrival
+        = std::max(data.dist(0, prev), data.client(prev).twEarly);
     int prevEarliestFinish
         = prevEarliestArrival + data.client(prev).serviceDuration;
     int distPrevClient = data.dist(prev, client);
@@ -28,10 +26,8 @@ int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     if (prevEarliestFinish + distPrevClient >= clientLate)
         return INT_MAX;
 
-    int clientNextRelease = std::max(data.client(client).releaseTime,
-                                     data.client(next).releaseTime);
-    int clientEarliestArrival = std::max(
-        clientNextRelease + data.dist(0, client), data.client(client).twEarly);
+    int clientEarliestArrival
+        = std::max(data.dist(0, client), data.client(client).twEarly);
     int clientEarliestFinish
         = clientEarliestArrival + data.client(client).serviceDuration;
     int distClientNext = data.dist(client, next);
