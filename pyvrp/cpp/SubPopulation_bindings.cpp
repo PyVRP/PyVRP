@@ -42,7 +42,13 @@ PYBIND11_MODULE(SubPopulation, m)
              py::keep_alive<1, 2>())
         .def("__len__", &SubPopulation::size)
         .def("__getitem__",
-             &SubPopulation::operator[],
+             [](SubPopulation const &subPop, int idx) {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? subPop.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= subPop.size())
+                    throw py::index_error();
+                return subPop[idx];
+             },
              py::arg("idx"),
              py::return_value_policy::reference_internal)
         .def(

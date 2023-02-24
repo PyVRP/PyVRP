@@ -1,5 +1,7 @@
 #include "SubPopulation.h"
 
+#include <numeric>
+
 SubPopulation::SubPopulation(ProblemData const &data,
                              DiversityMeasure divOp,
                              PopulationParams const &params)
@@ -25,11 +27,7 @@ void SubPopulation::add(Individual const *individual)
         iProx.emplace(place, div, other.individual);
     }
 
-    auto byCost = [](auto &a, auto &b)
-    { return a.individual->cost() < b.individual->cost(); };
     items.emplace_back(individual, 0.0, proximity);
-    std::sort(items.begin(), items.end(), byCost);
-
     updateFitness();
 
     if (size() > params.maxPopSize())
@@ -103,14 +101,23 @@ void SubPopulation::purge()
 
 void SubPopulation::updateFitness()
 {
+    std::vector<size_t> byCost(items.size());
+    std::iota(byCost.begin(), byCost.end(), 0);
+
+    std::stable_sort(
+        byCost.begin(),
+        byCost.end(),
+        [&](size_t a, size_t b)
+        { return items[a].individual->cost() < items[b].individual->cost(); });
+
     std::vector<std::pair<double, size_t>> diversity;
     for (size_t rank = 0; rank != size(); rank++)
     {
-        auto const dist = avgDistanceClosest(rank);
+        auto const dist = avgDistanceClosest(byCost[rank]);
         diversity.emplace_back(dist, rank);
     }
 
-    std::sort(diversity.begin(), diversity.end(), std::greater<>());
+    std::stable_sort(diversity.begin(), diversity.end(), std::greater<>());
 
     auto const popSize = static_cast<double>(size());
     auto const nbElite = std::min(params.nbElite, size());
@@ -120,7 +127,8 @@ void SubPopulation::updateFitness()
         auto const costRank = diversity[divRank].second;
         auto const divWeight = 1 - nbElite / popSize;
 
-        items[costRank].fitness = (costRank + divWeight * divRank) / popSize;
+        auto const idx = byCost[costRank];
+        items[idx].fitness = (costRank + divWeight * divRank) / popSize;
     }
 }
 
