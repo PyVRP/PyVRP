@@ -27,7 +27,7 @@ PYBIND11_MODULE(SubPopulation, m)
     py::class_<SubPopulation::Item>(m, "SubPopulationItem")
         .def_readonly("individual", &SubPopulation::Item::individual)
         .def_readonly("fitness", &SubPopulation::Item::fitness)
-        .def_readonly("proximity", &SubPopulation::Item::proximity);
+        .def_readonly("_proximity", &SubPopulation::Item::proximity);
 
     py::class_<SubPopulation>(m, "SubPopulation")
         .def(py::init<ProblemData const &,

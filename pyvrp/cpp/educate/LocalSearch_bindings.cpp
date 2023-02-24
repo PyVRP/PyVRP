@@ -10,17 +10,24 @@ PYBIND11_MODULE(LocalSearch, m)
 {
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<ProblemData &,
-                      PenaltyManager &, 
+                      PenaltyManager &,
                       XorShift128 &,
                       std::vector<std::vector<int>>>(),
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("neighbours"))
-        .def("add_node_operator", &LocalSearch::addNodeOperator, py::arg("op"))
-        .def(
-            "add_route_operator", &LocalSearch::addRouteOperator, py::arg("op"))
-        .def("set_neighbours", &LocalSearch::setNeighbours, py::arg("neighbours"))
+        .def("add_node_operator",
+             &LocalSearch::addNodeOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
+        .def("add_route_operator",
+             &LocalSearch::addRouteOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
+        .def("set_neighbours",
+             &LocalSearch::setNeighbours,
+             py::arg("neighbours"))
         .def("get_neighbours", &LocalSearch::getNeighbours)
         .def("search", &LocalSearch::search, py::arg("individual"))
         .def("intensify", &LocalSearch::intensify, py::arg("individual"));

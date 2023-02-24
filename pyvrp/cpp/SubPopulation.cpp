@@ -9,7 +9,7 @@ SubPopulation::SubPopulation(ProblemData const &data,
 
 void SubPopulation::add(Individual const *individual)
 {
-    Item item = {individual, 0.0, {}};
+    Item::Proximity proximity;
 
     for (auto &other : items)  // update distance to other individuals
     {
@@ -20,12 +20,16 @@ void SubPopulation::add(Individual const *individual)
         auto place = std::lower_bound(oProx.begin(), oProx.end(), div, cmp);
         oProx.emplace(place, div, individual);
 
-        auto &iProx = item.proximity;
+        auto &iProx = proximity;
         place = std::lower_bound(iProx.begin(), iProx.end(), div, cmp);
         iProx.emplace(place, div, other.individual);
     }
 
-    items.push_back(item);
+    auto byCost = [](auto &a, auto &b)
+    { return a.individual->cost() < b.individual->cost(); };
+    items.emplace_back(individual, 0.0, proximity);
+    std::sort(items.begin(), items.end(), byCost);
+
     updateFitness();
 
     if (size() > params.maxPopSize())
@@ -100,10 +104,10 @@ void SubPopulation::purge()
 void SubPopulation::updateFitness()
 {
     std::vector<std::pair<double, size_t>> diversity;
-    for (size_t idx = 0; idx != size(); idx++)
+    for (size_t rank = 0; rank != size(); rank++)
     {
-        auto const dist = avgDistanceClosest(idx);
-        diversity.emplace_back(dist, idx);
+        auto const dist = avgDistanceClosest(rank);
+        diversity.emplace_back(dist, rank);
     }
 
     std::sort(diversity.begin(), diversity.end(), std::greater<>());
