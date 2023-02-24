@@ -30,7 +30,7 @@ class LocalSearch:
         rng
             Random number generator.
         neighbours
-            Matrix that defines the local search neighbourhood.
+            List of lists that defines the local search neighbourhood.
         """
         self._ls = _LocalSearch(data, penalty_manager, rng, neighbours)
 
