@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(ProblemData, m)
+PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
         .def_readonly("x", &ProblemData::Client::x)

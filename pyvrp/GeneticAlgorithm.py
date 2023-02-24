@@ -5,13 +5,13 @@ from typing import Callable, Tuple
 from pyvrp.educate import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
-from .Individual import Individual
-from .PenaltyManager import PenaltyManager
+from ._Individual import Individual
+from ._PenaltyManager import PenaltyManager
 from .Population import Population
-from .ProblemData import ProblemData
+from ._ProblemData import ProblemData
 from .Result import Result
 from .Statistics import Statistics
-from .XorShift128 import XorShift128
+from ._XorShift128 import XorShift128
 
 _Parents = Tuple[Individual, Individual]
 CrossoverOperator = Callable[

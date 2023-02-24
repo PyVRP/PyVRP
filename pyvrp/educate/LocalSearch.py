@@ -1,9 +1,10 @@
 from typing import List
 
-from pyvrp.Individual import Individual
-from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.ProblemData import ProblemData
-from pyvrp.XorShift128 import XorShift128
+from pyvrp._Individual import Individual
+from pyvrp._PenaltyManager import PenaltyManager
+from pyvrp._ProblemData import ProblemData
+from pyvrp._XorShift128 import XorShift128
+
 from ._LocalSearch import LocalSearch as _LocalSearch
 
 Neighbours = List[List[int]]

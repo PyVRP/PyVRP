@@ -5,7 +5,7 @@
 namespace py = pybind11;
 using TWS = TimeWindowSegment;
 
-PYBIND11_MODULE(TimeWindowSegment, m)
+PYBIND11_MODULE(_TimeWindowSegment, m)
 {
     py::class_<TWS>(m, "TimeWindowSegment")
         .def(py::init<Matrix<int> const *, int, int, int, int, int, int>(),

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .Individual import Individual
+from ._Individual import Individual
 from .Statistics import Statistics
 
 

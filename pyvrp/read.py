@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
-from .ProblemData import ProblemData
+from ._ProblemData import ProblemData
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -22,7 +22,7 @@ def convert_to_int(vals: np.ndarray):
 
 
 def scale_and_truncate_to_decimals(vals: np.ndarray, decimals: int = 0):
-    return (vals * (10**decimals)).astype(int)
+    return (vals * (10 ** decimals)).astype(int)
 
 
 def no_rounding(vals):
