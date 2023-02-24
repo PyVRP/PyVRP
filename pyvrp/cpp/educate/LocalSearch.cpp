@@ -82,9 +82,11 @@ void LocalSearch::search(Individual &indiv)
     indiv = exportIndividual();
 }
 
-void LocalSearch::intensify(Individual &indiv)
+void LocalSearch::intensify(Individual &indiv, int overlapToleranceDegrees)
 {
     loadIndividual(indiv);
+
+    auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
@@ -119,7 +121,7 @@ void LocalSearch::intensify(Individual &indiv)
             {
                 auto &V = routes[rV];
 
-                if (V.empty() || !U.overlapsWith(V))
+                if (V.empty() || !U.overlapsWith(V, overlapTolerance))
                     continue;
 
                 auto const lastModifiedRoute
@@ -290,10 +292,7 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     this->neighbours = neighbours;
 }
 
-LocalSearch::Neighbours LocalSearch::getNeighbours()
-{
-    return neighbours;
-}
+LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
 
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,

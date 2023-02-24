@@ -103,7 +103,8 @@ public:  // TODO make fields private
      * Tests if this route overlaps with the other route, that is, whether
      * their circle sectors overlap with a given tolerance.
      */
-    [[nodiscard]] bool overlapsWith(Route const &other) const;
+    [[nodiscard]] bool overlapsWith(Route const &other,
+                                    int const tolerance) const;
 
     /**
      * Updates this route. To be called after swapping nodes/changing the

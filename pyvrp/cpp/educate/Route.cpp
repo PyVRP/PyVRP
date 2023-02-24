@@ -72,9 +72,9 @@ void Route::setupRouteTimeWindows()
     } while (!node->isDepot());
 }
 
-bool Route::overlapsWith(const Route &other) const
+bool Route::overlapsWith(Route const &other, int const tolerance) const
 {
-    return CircleSector::overlap(sector, other.sector);
+    return CircleSector::overlap(sector, other.sector, tolerance);
 }
 
 void Route::update()
