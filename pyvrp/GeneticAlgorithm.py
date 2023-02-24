@@ -181,7 +181,7 @@ class GeneticAlgorithm:
 
                 if individual.is_feasible():
                     if (
-                        self._params.should_intensify
+                        self._params.intensify_on_best
                         and individual.cost() < self._best.cost()
                     ):
                         self._ls.intensify(individual)
