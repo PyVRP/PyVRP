@@ -46,8 +46,24 @@ class LocalSearch:
     def get_neighbours(self) -> Neighbours:
         return self._ls.get_neighbours()
 
-    def intensify(self, individual: Individual):
+    def run(self, individual: Individual, intensify: bool):
+        # HACK We keep searching and intensifying to mimic the local search
+        # implementation of HGS-CVRP and HGS-VRPTW
+        # TODO separate load/export individual from c++ implementation
+        # so we only need to do it once
+        while True:
+            self.search(individual)
+            if not (intensify and self.intensify(individual)):
+                # Return unless we succesfully intensified
+                return
+
+    def intensify(self, individual: Individual) -> bool:
+        # Runs intensification on the individual and returns whether an
+        # improvement was found (TODO let c++ return this)
+        cost = individual.cost()
         self._ls.intensify(individual)
+        return individual.cost() < cost
 
     def search(self, individual: Individual):
+        # TODO return whether improvement was found
         self._ls.search(individual)
