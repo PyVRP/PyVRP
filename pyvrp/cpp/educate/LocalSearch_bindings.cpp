@@ -25,5 +25,8 @@ PYBIND11_MODULE(_LocalSearch, m)
              py::arg("neighbours"))
         .def("get_neighbours", &LocalSearch::getNeighbours)
         .def("search", &LocalSearch::search, py::arg("individual"))
-        .def("intensify", &LocalSearch::intensify, py::arg("individual"));
+        .def("intensify",
+             &LocalSearch::intensify,
+             py::arg("individual"),
+             py::arg("overlap_tolerance_degrees") = 0);
 }

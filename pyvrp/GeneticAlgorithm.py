@@ -23,12 +23,16 @@ CrossoverOperator = Callable[
 class GeneticAlgorithmParams:
     repair_probability: float = 0.80
     collect_statistics: bool = False
-    should_intensify: bool = True
+    intensification_probability: float = 0.15
+    intensify_on_best: bool = True
     nb_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
+
+        if not 0 <= self.intensification_probability <= 1:
+            raise ValueError("intensification_probability must be in [0, 1].")
 
         if self.nb_iter_no_improvement < 0:
             raise ValueError("nb_iter_no_improvement < 0 not understood.")
@@ -121,12 +125,27 @@ class GeneticAlgorithm:
         return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
-        self._ls.search(individual)
+        intensify = self._rng.rand() < self._params.intensification_probability
+
+        # HACK We keep searching and intensifying to mimic the local search
+        # implementation of HGS-CVRP and HGS-VRPTW
+        while True:
+            self._ls.search(individual)
+
+            if intensify:
+                cost = individual.cost()
+                self._ls.intensify(individual)
+
+                # Intensification improved the solution, so we search again.
+                if individual.cost() < cost:
+                    continue
+
+            break
 
         # Only intensify feasible, new best solutions. See also the repair
         # step below.
         if (
-            self._params.should_intensify
+            self._params.intensify_on_best
             and individual.is_feasible()
             and individual.cost() < self._best.cost()
         ):
@@ -146,7 +165,19 @@ class GeneticAlgorithm:
             and self._rng.rand() < self._params.repair_probability
         ):
             with self._pm.get_penalty_booster() as booster:  # noqa
-                self._ls.search(individual)
+                # HACK We keep searching and intensifying to mimic the local
+                # search implementation of HGS-CVRP and HGS-VRPTW
+                while True:
+                    self._ls.search(individual)
+
+                    if intensify:
+                        cost = individual.cost()
+                        self._ls.intensify(individual)
+
+                        if individual.cost() < cost:
+                            continue
+
+                    break
 
                 if individual.is_feasible():
                     if (
