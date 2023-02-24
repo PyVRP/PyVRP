@@ -101,7 +101,10 @@ void SubPopulation::purge()
 
 void SubPopulation::updateFitness()
 {
-    std::vector<size_t> byCost(items.size());
+    if (items.empty())
+        return;
+
+    std::vector<size_t> byCost(size());
     std::iota(byCost.begin(), byCost.end(), 0);
 
     std::stable_sort(
@@ -121,12 +124,11 @@ void SubPopulation::updateFitness()
 
     auto const popSize = static_cast<double>(size());
     auto const nbElite = std::min(params.nbElite, size());
+    auto const divWeight = 1 - nbElite / popSize;
 
     for (size_t divRank = 0; divRank != size(); divRank++)
     {
         auto const costRank = diversity[divRank].second;
-        auto const divWeight = 1 - nbElite / popSize;
-
         auto const idx = byCost[costRank];
         items[idx].fitness = (costRank + divWeight * divRank) / popSize;
     }
