@@ -84,7 +84,7 @@ void SubPopulation::purge()
         auto const pred = [&](auto &iterator)
         {
             return !iterator.proximity.empty()
-                   && *iterator.proximity[1].second == *iterator.individual;
+                   && *iterator.proximity[0].second == *iterator.individual;
         };
 
         auto const duplicate = std::find_if(items.begin(), items.end(), pred);
