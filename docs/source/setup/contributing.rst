@@ -17,7 +17,7 @@ Then, clone your new fork to some local environment:
 
    git clone https://github.com/<your username>/PyVRP.git
 
-Now, change into the ALNS directory, and set-up the virtual environment using ``poetry``:
+Now, change into the PyVRP directory, and set-up the virtual environment using ``poetry``:
 
 .. code-block:: shell
 
