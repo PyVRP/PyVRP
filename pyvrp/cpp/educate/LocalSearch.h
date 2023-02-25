@@ -89,7 +89,7 @@ public:
      * Performs a more intensive local search around the given individual,
      * using route-based operators and subpath enumeration.
      */
-    void intensify(Individual &indiv);
+    void intensify(Individual &indiv, int overlapToleranceDegrees = 0);
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,

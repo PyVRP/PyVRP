@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
-from .ProblemData import ProblemData
+from ._ProblemData import ProblemData
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]

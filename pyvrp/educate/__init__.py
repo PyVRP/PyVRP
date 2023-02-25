@@ -1,4 +1,5 @@
-from .Exchange import (
+from .LocalSearch import LocalSearch
+from ._Exchange import (
     Exchange10,
     Exchange11,
     Exchange20,
@@ -7,11 +8,10 @@ from .Exchange import (
     Exchange32,
     Exchange33,
 )
-from .LocalSearch import LocalSearch
-from .MoveTwoClientsReversed import MoveTwoClientsReversed
-from .RelocateStar import RelocateStar
-from .SwapStar import SwapStar
-from .TwoOpt import TwoOpt
+from ._MoveTwoClientsReversed import MoveTwoClientsReversed
+from ._RelocateStar import RelocateStar
+from ._SwapStar import SwapStar
+from ._TwoOpt import TwoOpt
 from .neighbourhood import NeighbourhoodParams, Neighbours, compute_neighbours
 
 NODE_OPERATORS = [

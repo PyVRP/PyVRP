@@ -3,7 +3,7 @@ from pytest import mark
 
 from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
-from pyvrp.educate.Exchange import (
+from pyvrp.educate._Exchange import (
     Exchange10,
     Exchange11,
     Exchange20,

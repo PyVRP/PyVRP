@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Callable, Generator, Tuple
 
-from .Individual import Individual
-from .PenaltyManager import PenaltyManager
-from .ProblemData import ProblemData
 from .SubPopulation import PopulationParams, SubPopulation
-from .XorShift128 import XorShift128
+from ._Individual import Individual
+from ._PenaltyManager import PenaltyManager
+from ._ProblemData import ProblemData
+from ._XorShift128 import XorShift128
 
 _DiversityMeasure = Callable[[ProblemData, Individual, Individual], float]
 

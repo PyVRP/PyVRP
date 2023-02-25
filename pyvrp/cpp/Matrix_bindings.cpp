@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(Matrix, m)
+PYBIND11_MODULE(_Matrix, m)
 {
     py::class_<Matrix<int>>(m, "IntMatrix")
         .def(py::init<size_t>(), py::arg("dimension"))

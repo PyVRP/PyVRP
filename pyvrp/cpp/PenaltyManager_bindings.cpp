@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(PenaltyManager, m)
+PYBIND11_MODULE(_PenaltyManager, m)
 {
     py::class_<PenaltyParams>(m, "PenaltyParams")
         .def(py::init<unsigned int,
@@ -26,7 +26,7 @@ PYBIND11_MODULE(PenaltyManager, m)
         .def_readonly("init_time_warp_penalty",
                       &PenaltyParams::initTimeWarpPenalty)
         .def_readonly("repair_booster", &PenaltyParams::repairBooster)
-        .def_readonly("num_registrations_between_penalty_updates", 
+        .def_readonly("num_registrations_between_penalty_updates",
                       &PenaltyParams::numRegistrationsBetweenPenaltyUpdates)
         .def_readonly("penalty_increase", &PenaltyParams::penaltyIncrease)
         .def_readonly("penalty_decrease", &PenaltyParams::penaltyDecrease)
