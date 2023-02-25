@@ -3,6 +3,7 @@
 
 #include "Individual.h"
 
+#include <functional>
 #include <iosfwd>
 #include <stdexcept>
 #include <vector>

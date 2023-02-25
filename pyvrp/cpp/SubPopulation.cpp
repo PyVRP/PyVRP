@@ -2,7 +2,7 @@
 
 #include <numeric>
 
-SubPopulation::SubPopulation(DiversityMeasure divOp,
+SubPopulation::SubPopulation(SubPopulation::DiversityMeasure divOp,
                              PopulationParams const &params)
     : divOp(divOp), params(params)
 {
