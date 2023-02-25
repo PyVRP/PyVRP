@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
@@ -46,7 +48,7 @@ def test_swap_single_route_stays_single_route(operator):
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
@@ -80,7 +82,7 @@ def test_relocate_uses_empty_routes(operator):
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
@@ -118,7 +120,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     ls.add_node_operator(op)
 
     individual = Individual(data, pm, [[1, 2], [3], [4]])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
@@ -142,7 +144,7 @@ def test_cannot_exchange_when_segments_overlap(operator):
     ls.add_node_operator(op)
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
@@ -168,7 +170,7 @@ def test_cannot_swap_adjacent_segments():
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
@@ -191,7 +193,7 @@ def test_swap_between_routes_OkSmall():
     ls.add_node_operator(op)
 
     individual = Individual(data, pm, [[1, 2], [3, 4]])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
