@@ -139,15 +139,15 @@ class GeneticAlgorithm:
         self._ls.run(individual, intensify)
 
         if _is_new_best(individual):
-            self._best = individual
+            self._best = Individual(individual)
 
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
-                self._ls.intensify(individual)
+                self._ls.intensify(individual, overlapToleranceDegrees=360)
 
                 if _is_new_best(individual):
-                    self._best = individual
+                    self._best = Individual(individual)
 
         _add_and_register(individual)
 
@@ -162,14 +162,16 @@ class GeneticAlgorithm:
                 self._ls.run(individual, intensify)
 
                 if _is_new_best(individual):
-                    self._best = individual
+                    self._best = Individual(individual)
 
                     # TODO Refactor to on_best callback (see issue #111)
                     if self._params.intensify_on_best:
-                        self._ls.intensify(individual)
+                        self._ls.intensify(
+                            individual, overlapToleranceDegrees=360
+                        )
 
                         if _is_new_best(individual):
-                            self._best = individual
+                            self._best = Individual(individual)
 
                 if individual.is_feasible():
                     _add_and_register(individual)

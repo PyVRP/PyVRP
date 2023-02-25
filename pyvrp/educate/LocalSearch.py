@@ -57,11 +57,13 @@ class LocalSearch:
                 # Return unless we succesfully intensified
                 return
 
-    def intensify(self, individual: Individual) -> bool:
+    def intensify(
+        self, individual: Individual, overlapToleranceDegrees: int = 0
+    ) -> bool:
         # Runs intensification on the individual and returns whether an
         # improvement was found (TODO let c++ return this)
         cost = individual.cost()
-        self._ls.intensify(individual)
+        self._ls.intensify(individual, overlapToleranceDegrees)
         return individual.cost() < cost
 
     def search(self, individual: Individual):
