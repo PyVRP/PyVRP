@@ -151,14 +151,16 @@ class Population:
             idx = self._rng.randint(len(self))
 
             if idx < num_feas:
-                return self._feas[idx]
+                return self._feas[idx], self._feas.get_biased_fitness(idx)
 
-            return self._infeas[idx - num_feas]
+            return self._infeas[
+                idx - num_feas
+            ], self._infeas.get_biased_fitness(idx - num_feas)
 
-        item1 = select()
-        item2 = select()
+        indiv1, fitness1 = select()
+        indiv2, fitness2 = select()
 
-        if item1.fitness < item2.fitness:
-            return item1.individual
+        if fitness1 < fitness2:
+            return indiv1
 
-        return item2.individual
+        return indiv2

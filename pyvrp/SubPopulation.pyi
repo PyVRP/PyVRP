@@ -72,6 +72,21 @@ class SubPopulation:
             The average distance/diversity of the given individual relative to
             the total subpopulation.
         """
+    def get_biased_fitness(self, idx: int) -> float:
+        """
+        Returns the biased fitness of the individual at the given index,
+         taking into account the diversity rank and fitness rank.
+
+        Parameters
+        ----------
+        idx
+            Index of the Individual whose biased fitness to return.
+
+        Returns
+        -------
+        float
+            The biased fitness of the individual at the given index.
+        """
     def purge(self) -> None:
         """
         Performs survivor selection: individuals in the subpopulation are
@@ -85,14 +100,11 @@ class SubPopulation:
         This fitness depends on the quality of the solution (based on its cost)
         and the diversity w.r.t. to other individuals in the subpopulation.
         """
-    def __getitem__(self, idx: int) -> SubPopulationItem: ...
-    def __iter__(self) -> Iterator[SubPopulationItem]: ...
+    def _get_proximity(self, idx: int) -> List[Tuple[float, Individual]]:
+        """
+        Gets proximity structure for individual at index (for testing).
+        """
+    def __getitem__(self, idx: int) -> Individual: ...
+    # TODO is explicit iterator faster?
+    # def __iter__(self) -> Iterator[Individual]: ...
     def __len__(self) -> int: ...
-
-class SubPopulationItem:
-    @property
-    def fitness(self) -> float: ...
-    @property
-    def individual(self) -> Individual: ...
-    @property
-    def _proximity(self) -> List[Tuple[float, Individual]]: ...

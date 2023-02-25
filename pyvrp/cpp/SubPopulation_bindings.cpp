@@ -48,18 +48,31 @@ PYBIND11_MODULE(SubPopulation, m)
                 idx = idx < 0 ? subPop.size() + idx : idx;
                 if (idx < 0 || static_cast<size_t>(idx) >= subPop.size())
                     throw py::index_error();
-                return subPop[idx];
+                return subPop[idx].individual;
             },
             py::arg("idx"),
             py::return_value_policy::reference_internal)
-        .def(
-            "__iter__",
-            [](SubPopulation const &subPop)
-            { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
-            py::return_value_policy::reference_internal)
+        // TODO how do we make iterator return individuals?
+        // .def(
+        //     "__iter__",
+        //     [](SubPopulation const &subPop)
+        //     { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
+        //     py::return_value_policy::reference_internal)
         .def("purge", &SubPopulation::purge)
         .def("update_fitness", &SubPopulation::updateFitness)
         .def("avg_distance_closest",
              &SubPopulation::avgDistanceClosest,
+             py::arg("idx"))
+        .def("get_biased_fitness",
+             [](SubPopulation const &subPop, int idx)
+             {
+                 return subPop[idx].fitness;
+             },
+             py::arg("idx"))
+        .def("_get_proximity",
+             [](SubPopulation const &subPop, int idx)
+             {
+                 return subPop[idx].proximity;
+             },
              py::arg("idx"));
 }
