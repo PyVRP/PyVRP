@@ -20,7 +20,7 @@ void SubPopulation::add(Individual const *individual)
     // Copy the given individual into a new memory location, and use that from
     // now on.
     individual = new Individual(*individual);
-    Item item = {individual, 0.0, {}};
+    Item item = {&params, individual, 0.0, {}};
 
     for (auto &other : items)  // update distance to other individuals
     {
@@ -63,7 +63,7 @@ std::vector<SubPopulation::Item>::const_iterator SubPopulation::cend() const
 void SubPopulation::remove(
     std::vector<SubPopulation::Item>::iterator const &iterator)
 {
-    for (auto &[individual, fitness, proximity] : items)
+    for (auto &[params, individual, fitness, proximity] : items)
         // Remove individual from other proximities.
         for (size_t idx = 0; idx != proximity.size(); ++idx)
             if (proximity[idx].second == iterator->individual)
@@ -126,7 +126,7 @@ void SubPopulation::updateFitness()
     std::vector<std::pair<double, size_t>> diversity;
     for (size_t costRank = 0; costRank != size(); costRank++)
     {
-        auto const dist = avgDistanceClosest(byCost[costRank]);
+        auto const dist = items[byCost[costRank]].avgDistanceClosest();
         diversity.emplace_back(dist, costRank);
     }
 
@@ -144,10 +144,9 @@ void SubPopulation::updateFitness()
     }
 }
 
-double SubPopulation::avgDistanceClosest(size_t idx) const
+double SubPopulation::Item::avgDistanceClosest() const
 {
-    auto const &item = items[idx];
-    auto const maxSize = std::min(item.proximity.size(), params.nbClose);
+    auto const maxSize = std::min(proximity.size(), params->nbClose);
 
     if (maxSize == 0)
         return 0.0;  // TODO 0.0 or 1.0?
@@ -155,7 +154,7 @@ double SubPopulation::avgDistanceClosest(size_t idx) const
     auto result = 0.0;
 
     for (size_t idx = 0; idx != maxSize; ++idx)
-        result += item.proximity[idx].first;
+        result += proximity[idx].first;
 
     return result / maxSize;
 }

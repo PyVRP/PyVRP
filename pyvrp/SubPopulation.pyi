@@ -55,24 +55,6 @@ class SubPopulation:
         individual
             Individual to add to the subpopulation.
         """
-    def avg_distance_closest(self, idx: int) -> float:
-        """
-        Determines the average distance of the individual at the given index to
-        a number of individuals that are most similar to it. This provides a
-        measure of the relative 'diversity' of this individual.
-
-        Parameters
-        ----------
-        idx
-            Index of the Individual whose average distance/diversity to
-            calculate.
-
-        Returns
-        -------
-        float
-            The average distance/diversity of the given individual relative to
-            the total subpopulation.
-        """
     def purge(self) -> None:
         """
         Performs survivor selection: individuals in the subpopulation are
@@ -97,3 +79,14 @@ class SubPopulationItem:
     def individual(self) -> Individual: ...
     @property
     def _proximity(self) -> List[Tuple[float, Individual]]: ...
+    def avg_distance_closest(self) -> float:
+        """
+        Determines the average distance of the individual wrapped by this item
+        to a number of individuals that are most similar to it. This provides a
+        measure of the relative 'diversity' of the wrapped individual.
+
+        Returns
+        -------
+        float
+            The average distance/diversity of the wrapped individual.
+        """

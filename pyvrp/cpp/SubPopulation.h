@@ -58,6 +58,8 @@ public:
     {
         using Proximity = std::vector<std::pair<double, Individual const *>>;
 
+        PopulationParams const *params;
+
         // Note that this pointer is not owned by the Item - it is merely a
         // reference to memory owned and allocated by the SubPopulation this
         // item is part of. The SubPopulation remains responsible for managing
@@ -65,6 +67,8 @@ public:
         Individual const *individual;
         double fitness;
         Proximity proximity;
+        
+        double avgDistanceClosest() const;
     };
 
 private:
@@ -93,8 +97,6 @@ public:
     void purge();
 
     void updateFitness();
-
-    double avgDistanceClosest(size_t idx) const;
 };
 
 #endif  // SUBPOPULATION_H

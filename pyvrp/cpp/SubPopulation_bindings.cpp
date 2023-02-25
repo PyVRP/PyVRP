@@ -31,7 +31,8 @@ PYBIND11_MODULE(SubPopulation, m)
         .def_readonly("fitness", &SubPopulation::Item::fitness)
         .def_readonly("_proximity",
                       &SubPopulation::Item::proximity,
-                      py::return_value_policy::reference_internal);
+                      py::return_value_policy::reference_internal)
+        .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
         .def(py::init<ProblemData const &,
@@ -60,8 +61,5 @@ PYBIND11_MODULE(SubPopulation, m)
             { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
             py::return_value_policy::reference_internal)
         .def("purge", &SubPopulation::purge)
-        .def("update_fitness", &SubPopulation::updateFitness)
-        .def("avg_distance_closest",
-             &SubPopulation::avgDistanceClosest,
-             py::arg("idx"));
+        .def("update_fitness", &SubPopulation::updateFitness);
 }
