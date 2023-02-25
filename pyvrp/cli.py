@@ -29,6 +29,7 @@ from pyvrp.educate import (
     ROUTE_OPERATORS,
     LocalSearch,
     compute_neighbours,
+    NeighbourhoodParams,
 )
 from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
@@ -121,12 +122,14 @@ def solve(
 
     pen_params = PenaltyParams(**config.get("penalty", {}))
     pop_params = PopulationParams(**config.get("population", {}))
+    nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
 
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
     pop = Population(data, pen_manager, rng, bpd, pop_params)
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+    neighbours = compute_neighbours(data, nb_params)
+    ls = LocalSearch(data, pen_manager, rng, neighbours)
 
     node_ops = [node_op(data, pen_manager) for node_op in NODE_OPERATORS]
 
