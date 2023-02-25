@@ -35,10 +35,8 @@ PYBIND11_MODULE(SubPopulation, m)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
-        .def(py::init<ProblemData const &,
-                      DiversityMeasure,
+        .def(py::init<SubPopulation::DiversityMeasure,
                       PopulationParams const &>(),
-             py::arg("data"),
              py::arg("diversity_op"),
              py::arg("params"))
         .def("add", &SubPopulation::add, py::arg("individual"))
