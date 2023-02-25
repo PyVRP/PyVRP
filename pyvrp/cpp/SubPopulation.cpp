@@ -147,14 +147,10 @@ void SubPopulation::updateFitness()
 double SubPopulation::Item::avgDistanceClosest() const
 {
     auto const maxSize = std::min(proximity.size(), params->nbClose);
-
-    if (maxSize == 0)
-        return 0.0;  // TODO 0.0 or 1.0?
-
     auto result = 0.0;
 
     for (size_t idx = 0; idx != maxSize; ++idx)
         result += proximity[idx].first;
 
-    return result / maxSize;
+    return result / std::max(maxSize, size_t(1));
 }

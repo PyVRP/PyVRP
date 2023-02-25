@@ -202,7 +202,6 @@ def test_restart_generates_min_pop_size_new_individuals():
     new = {individual for individual in pop}
 
     assert_equal(len(pop), params.min_pop_size)
-    print(old, new)
     assert_equal(len(old & new), 0)  # no old pops survived the restart
 
 
