@@ -2,10 +2,9 @@
 
 #include <numeric>
 
-SubPopulation::SubPopulation(ProblemData const &data,
-                             DiversityMeasure divOp,
+SubPopulation::SubPopulation(DiversityMeasure divOp,
                              PopulationParams const &params)
-    : data(data), divOp(divOp), params(params)
+    : divOp(divOp), params(params)
 {
 }
 
@@ -24,7 +23,7 @@ void SubPopulation::add(Individual const *individual)
 
     for (auto &other : items)  // update distance to other individuals
     {
-        auto const div = divOp(data, *individual, *other.individual);
+        auto const div = divOp(*individual, *other.individual);
         auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
 
         auto &oProx = other.proximity;

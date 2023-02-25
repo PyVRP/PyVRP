@@ -2,7 +2,6 @@
 #define SUBPOPULATION_H
 
 #include "Individual.h"
-#include "ProblemData.h"
 #include "diversity/diversity.h"
 
 #include <iosfwd>
@@ -49,7 +48,6 @@ struct PopulationParams
 
 class SubPopulation
 {
-    ProblemData const &data;
     DiversityMeasure divOp;
     PopulationParams const &params;
 
@@ -74,8 +72,7 @@ private:
     void remove(std::vector<Item>::iterator const &iterator);
 
 public:
-    SubPopulation(ProblemData const &data,
-                  DiversityMeasure divOp,
+    SubPopulation(DiversityMeasure divOp,
                   PopulationParams const &params);
 
     ~SubPopulation();

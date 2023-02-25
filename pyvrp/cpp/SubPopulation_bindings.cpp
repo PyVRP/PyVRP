@@ -34,10 +34,8 @@ PYBIND11_MODULE(SubPopulation, m)
                       py::return_value_policy::reference_internal);
 
     py::class_<SubPopulation>(m, "SubPopulation")
-        .def(py::init<ProblemData const &,
-                      DiversityMeasure,
+        .def(py::init<DiversityMeasure,
                       PopulationParams const &>(),
-             py::arg("data"),
              py::arg("diversity_op"),
              py::arg("params"))
         .def("add", &SubPopulation::add, py::arg("individual"))

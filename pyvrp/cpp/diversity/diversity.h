@@ -7,7 +7,7 @@
 #include <functional>
 
 typedef std::function<double(
-    ProblemData const &, Individual const &, Individual const &)>
+    Individual const &, Individual const &)>
     DiversityMeasure;
 
 /**
