@@ -39,11 +39,11 @@ class Population:
         self._data = data
         self._pm = penalty_manager
         self._rng = rng
-        self._op = lambda first, second: diversity_op(data, first, second)
+        self._op = diversity_op
         self._params = params
 
-        self._feas = SubPopulation(self._op, params)
-        self._infeas = SubPopulation(self._op, params)
+        self._feas = SubPopulation(data, diversity_op, params)
+        self._infeas = SubPopulation(data, diversity_op, params)
 
         for _ in range(params.min_pop_size):
             self.add(Individual(data, penalty_manager, rng))
@@ -114,7 +114,7 @@ class Population:
         first = self.get_binary_tournament()
         second = self.get_binary_tournament()
 
-        diversity = self._op(first, second)
+        diversity = self._op(self._data, first, second)
         lb = self._params.lb_diversity
         ub = self._params.ub_diversity
 
@@ -122,7 +122,7 @@ class Population:
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
             second = self.get_binary_tournament()
-            diversity = self._op(first, second)
+            diversity = self._op(self._data, first, second)
 
         return first, second
 
@@ -131,8 +131,8 @@ class Population:
         Restarts the population. All individuals are removed and a new initial
         population population is generated.
         """
-        self._feas = SubPopulation(self._op, self._params)
-        self._infeas = SubPopulation(self._op, self._params)
+        self._feas = SubPopulation(self._data, self._op, self._params)
+        self._infeas = SubPopulation(self._data, self._op, self._params)
 
         for _ in range(self._params.min_pop_size):
             self.add(Individual(self._data, self._pm, self._rng))

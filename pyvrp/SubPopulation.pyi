@@ -1,6 +1,7 @@
 from typing import Iterator, List, Tuple
 
 from pyvrp.Individual import Individual
+from pyvrp.ProblemData import ProblemData
 
 class PopulationParams:
     generation_size: int
@@ -22,19 +23,23 @@ class PopulationParams:
     def max_pop_size(self) -> int: ...
 
 class SubPopulation:
-    def __init__(self, diversity_op, params: PopulationParams) -> None:
+    def __init__(
+        self, data: ProblemData, diversity_op, params: PopulationParams
+    ) -> None:
         """
         Creates a SubPopulation instance.
 
         This subpopulation manages a number individuals, and initiates survivor
         selection (purging) when their number grows large. A subpopulation's
         individuals (and metadata) can be accessed via indexing and iteration.
-        Each individual is wrapped in small wrapper object that stores the
-        individual itself, a fitness score (higher is worse), and a list of
-        proximity values to the other individuals in the subpopulation.
+        Each individual is stored as a tuple of type ``_Item``, which stores
+        the individual itself, a fitness score (higher is worse), and a list
+        of proximity values to the other individuals in the subpopulation.
 
         Parameters
         ----------
+        data
+            Data object describing the problem to be solved.
         diversity_op
             Operator to use to determine pairwise diversity between solutions.
         params

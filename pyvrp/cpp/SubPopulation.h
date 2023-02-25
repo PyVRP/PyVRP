@@ -2,6 +2,8 @@
 #define SUBPOPULATION_H
 
 #include "Individual.h"
+#include "ProblemData.h"
+#include "diversity/diversity.h"
 
 #include <functional>
 #include <iosfwd>
@@ -48,10 +50,11 @@ struct PopulationParams
 
 class SubPopulation
 {
-public:
-    using DiversityMeasure
-        = std::function<double(Individual const &, Individual const &)>;
+    ProblemData const &data;
+    DiversityMeasure divOp;
+    PopulationParams const &params;
 
+public:
     struct Item
     {
         using Proximity = std::vector<std::pair<double, Individual const *>>;
@@ -65,20 +68,20 @@ public:
         Individual const *individual;
         double fitness;
         Proximity proximity;
-
+        
         double avgDistanceClosest() const;
     };
 
 private:
-    DiversityMeasure divOp;
-    PopulationParams const &params;
     std::vector<Item> items;
 
     // Removes the element at the given iterator location from the items.
     void remove(std::vector<Item>::iterator const &iterator);
 
 public:
-    SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
+    SubPopulation(ProblemData const &data,
+                  DiversityMeasure divOp,
+                  PopulationParams const &params);
 
     ~SubPopulation();
 
