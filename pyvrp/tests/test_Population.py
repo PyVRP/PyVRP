@@ -142,9 +142,6 @@ def test_add_triggers_purge():
     assert_equal(len(pop), num_infeas + params.min_pop_size)
 
 
-# TODO test more add() - fitness, duplicate, purge
-
-
 def test_select_returns_same_parents_if_no_other_option():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -297,3 +294,41 @@ def test_binary_tournament_ranks_by_fitness():
     pct_off = np.abs((actual_rank - expected_rank) / len(infeas)).mean()
 
     assert_(pct_off < 0.05)
+
+
+def test_purge_removes_duplicates():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    params = PopulationParams(min_pop_size=20, generation_size=5)
+    rng = XorShift128(seed=42)
+
+    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    assert_equal(len(pop), params.min_pop_size)
+
+    # This is the individual we are going to add a few times. That should make
+    # sure the relevant subpopulation definitely contains duplicates.
+    individual = Individual(data, pm, rng)
+    assert_(not individual.is_feasible())
+
+    for _ in range(params.generation_size):
+        pop.add(individual)
+
+    # Make sure we have not yet purged, and increase the minimum population
+    # size by one to make sure we're definitely not removing *all* of the
+    # duplicate individuals.
+    assert_(pop.num_infeasible() != params.min_pop_size)
+    params.min_pop_size += 1
+
+    # Keep adding individuals until we have had a purge, and returned to the
+    # minimum population size.
+    while pop.num_infeasible() != params.min_pop_size:
+        pop.add(Individual(data, pm, rng))
+
+    # Since duplicates are purged first, there should now be only one of them
+    # in the subpopulation. There cannot be zero, because we made sure of that.
+    duplicates = 0
+    for other in pop:
+        if other == individual:
+            duplicates += 1
+
+    assert_equal(duplicates, 1)
