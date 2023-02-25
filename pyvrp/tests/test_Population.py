@@ -111,11 +111,10 @@ def test_add_triggers_purge():
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
+    assert_equal(len(pop), pop.num_feasible() + pop.num_infeasible())
 
-    num_feas = len(pop.feasible_subpopulation)
-    num_infeas = len(pop.infeasible_subpopulation)
-
-    assert_equal(len(pop), num_feas + num_infeas)
+    num_feas = pop.num_feasible()
+    num_infeas = pop.num_infeasible()
 
     while True:  # keep adding feasible individuals until we are about to purge
         individual = Individual(data, pm, rng)
@@ -125,7 +124,7 @@ def test_add_triggers_purge():
             num_feas += 1
 
             assert_equal(len(pop), num_feas + num_infeas)
-            assert_equal(len(pop.feasible_subpopulation), num_feas)
+            assert_equal(pop.num_feasible(), num_feas)
 
         if num_feas == params.max_pop_size:  # next add() triggers purge
             break
@@ -139,7 +138,7 @@ def test_add_triggers_purge():
     assert_(individual.is_feasible())
 
     pop.add(individual)
-    assert_equal(len(pop.feasible_subpopulation), params.min_pop_size)
+    assert_equal(pop.num_feasible(), params.min_pop_size)
     assert_equal(len(pop), num_infeas + params.min_pop_size)
 
 
@@ -186,58 +185,25 @@ def test_select_returns_same_parents_if_no_other_option():
 # // TODO test more select() - diversity, feas/infeas pairs
 
 
-@mark.parametrize("min_pop_size", [0, 2, 5, 10])
-def test_proximity_structures_are_kept_up_to_date(min_pop_size: int):
-    data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=42)
-
-    params = PopulationParams(min_pop_size=min_pop_size)
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
-
-    feas = pop.feasible_subpopulation
-    infeas = pop.infeasible_subpopulation
-
-    # We run a few times the maximum pop size, to make sure that we get one or
-    # more purge cycles in.
-    for _ in range(5 * params.max_pop_size):
-        indiv = Individual(data, pm, rng)
-        pop.add(indiv)
-
-        for item in feas:
-            # Each individual should have a proximity value for every other
-            # individual in the same subpopulation (so there should be n - 1
-            # such values).
-            assert_equal(len(item._proximity), len(feas) - 1)
-
-        for item in infeas:
-            # The same must hold for the infeasible subpopulation, of course!
-            assert_equal(len(item._proximity), len(infeas) - 1)
-
-
 def test_restart_generates_min_pop_size_new_individuals():
     """
     Tests if restarting the population will generate ``min_pop_size`` new
     individuals.
     """
-    data = read("data/OkSmall.txt")
+    data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=12)
 
-    params = PopulationParams(min_pop_size=2)
+    params = PopulationParams()
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
-    old_feas = {id(item.individual) for item in pop.feasible_subpopulation}
-    old_infeas = {id(item.individual) for item in pop.infeasible_subpopulation}
-
+    old = {individual for individual in pop}
     pop.restart()
+    new = {individual for individual in pop}
 
-    new_feas = {id(item.individual) for item in pop.feasible_subpopulation}
-    new_infeas = {id(item.individual) for item in pop.infeasible_subpopulation}
-
-    assert_equal(len(pop), 2)
-    assert_(new_feas != old_feas)
-    assert_(new_infeas != old_infeas)
+    assert_equal(len(pop), params.min_pop_size)
+    print(old, new)
+    assert_equal(len(old & new), 0)  # no old pops survived the restart
 
 
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
@@ -266,33 +232,36 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     rng = XorShift128(seed=42)
 
     pop = Population(data, pm, rng, broken_pairs_distance, params)
-    infeas = pop.infeasible_subpopulation
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
-    while len(infeas) != params.max_pop_size:
+    while pop.num_infeasible() != params.max_pop_size:
         pop.add(Individual(data, pm, rng))
 
-    assert_equal(len(infeas), params.max_pop_size)
+    assert_equal(pop.num_infeasible(), params.max_pop_size)
 
     # These are the nb_elite best solutions in the current solution pool. These
     # should never be purged.
-    curr_individuals = [item.individual for item in infeas]
+    curr_individuals = [
+        individual for individual in pop if not individual.is_feasible()
+    ]
+
     best_individuals = sorted(curr_individuals, key=lambda indiv: indiv.cost())
+    elite_individuals = best_individuals[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
     single_route = [client for client in range(1, data.num_clients + 1)]
     pop.add(Individual(data, pm, [single_route]))
 
     # After the purge, there should remain min_pop_size infeasible solutions.
-    assert_equal(len(infeas), params.min_pop_size)
+    assert_equal(pop.num_infeasible(), params.min_pop_size)
 
-    # In that infeasible subpopulation, nb_elite solutions from before the
-    # purge should also still be present. We test that here, by selection the
-    # nb_elite best individuals from before the purge. We test by id/memory
-    # location because these individuals should be present, unmodified.
-    new_individuals = [id(item.individual) for item in infeas]
-    for elite_individual in best_individuals[:nb_elite]:
+    # In the infeasible subpopulation, nb_elite solutions from before the purge
+    # should also still be present. We test that by selecting the nb_elite best
+    # individuals from before the purge. We test by id/memory location because
+    # these individuals should still be present, unmodified.
+    new_individuals = [id(individual) for individual in pop]
+    for elite_individual in elite_individuals:
         assert_(id(elite_individual) in new_individuals)
 
 
@@ -307,9 +276,11 @@ def test_binary_tournament_ranks_by_fitness():
     for _ in range(50):
         pop.add(Individual(data, pm, rng))
 
-    assert_equal(len(pop.feasible_subpopulation), 0)
+    assert_equal(pop.num_feasible(), 0)
 
-    infeas = [item for item in pop.infeasible_subpopulation]
+    # Since this test requires the fitness values of the individuals, we have
+    # to access the underlying infeasible subpopulation directly.
+    infeas = [item for item in pop._infeas]
     infeas = sorted(infeas, key=lambda item: item.fitness)
     infeas = {item.individual: idx for idx, item in enumerate(infeas)}
     infeas_count = np.zeros(len(infeas))

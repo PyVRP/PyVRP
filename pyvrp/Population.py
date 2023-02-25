@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from typing import Callable, Generator, Tuple
 
 from .Individual import Individual
 from .PenaltyManager import PenaltyManager
@@ -48,36 +48,24 @@ class Population:
         for _ in range(params.min_pop_size):
             self.add(Individual(data, penalty_manager, rng))
 
-    @property
-    def feasible_subpopulation(self) -> SubPopulation:
+    def __iter__(self) -> Generator[Individual, None, None]:
         """
-        Returns the feasible subpopulation maintained by this population
-        instance.
+        Iterates over the individuals contained in this population.
 
-        Returns
-        -------
-        SubPopulation
-            Feasible subpopulation.
+        Yields
+        ------
+        iterable
+            An iterable object of individuals.
         """
-        return self._feas
+        for item in self._feas:
+            yield item.individual
 
-    @property
-    def infeasible_subpopulation(self) -> SubPopulation:
-        """
-        Returns the infeasible subpopulation maintained by this population
-        instance.
-
-        Returns
-        -------
-        SubPopulation
-            Infeasible subpopulation.
-        """
-        return self._infeas
+        for item in self._infeas:
+            yield item.individual
 
     def __len__(self) -> int:
         """
-        Returns the current population size, that is, the size of its feasible
-        and infeasible subpopulations.
+        Returns the current population size.
 
         Returns
         -------
@@ -85,6 +73,28 @@ class Population:
             Population size.
         """
         return len(self._feas) + len(self._infeas)
+
+    def num_feasible(self) -> int:
+        """
+        Returns the number of feasible individuals in the population.
+
+        Returns
+        -------
+        int
+            Number of feasible individuals.
+        """
+        return len(self._feas)
+
+    def num_infeasible(self) -> int:
+        """
+        Returns the number of infeasible individuals in the population.
+
+        Returns
+        -------
+        int
+            Number of infeasible individuals.
+        """
+        return len(self._infeas)
 
     def add(self, individual: Individual):
         """

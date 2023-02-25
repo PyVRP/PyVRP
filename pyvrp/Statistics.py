@@ -56,11 +56,14 @@ class Statistics:
         self.runtimes.append(self._clock - start)
         self.num_iterations += 1
 
-        feas_subpop = population.feasible_subpopulation
+        # The following lines access private members of the population, but in
+        # this case that is mostly OK: we really want to have that access to
+        # enable detailed statistics logging.
+        feas_subpop = population._feas  # noqa
         feas_datum = self._collect_from_subpop(feas_subpop)
         self.feas_stats.append(feas_datum)
 
-        infeas_subpop = population.infeasible_subpopulation
+        infeas_subpop = population._infeas  # noqa
         infeas_datum = self._collect_from_subpop(infeas_subpop)
         self.infeas_stats.append(infeas_datum)
 

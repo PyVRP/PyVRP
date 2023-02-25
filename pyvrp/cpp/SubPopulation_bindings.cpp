@@ -29,7 +29,7 @@ PYBIND11_MODULE(SubPopulation, m)
                       &SubPopulation::Item::individual,
                       py::return_value_policy::reference_internal)
         .def_readonly("fitness", &SubPopulation::Item::fitness)
-        .def_readonly("_proximity",
+        .def_readonly("_proximity",  // TODO this field might become obsolete
                       &SubPopulation::Item::proximity,
                       py::return_value_policy::reference_internal)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
