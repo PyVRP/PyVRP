@@ -9,54 +9,47 @@
 
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem solver.
 
-## Local installation
-
-You will need a recent/modern C++ compiler. 
-Any recent version of gcc, clang, or msvc should do.
-We also use poetry extensively. 
-If you do not have poetry, you can get it via
-```shell
-pip install poetry
+`pyvrp` may be installed in the usual way as
 ```
-Now we need to install all dependencies into the local environment:
-```shell
-poetry install
+pip install pyvrp
 ```
-This command does two things: first, it installs all dependencies that are required for developing `pyvrp`.
-Second, it installs the `pyvrp` package in editable mode in the poetry environment.
-Setting up the poetry environment and installing the `pyvrp` package takes a little while, but most of it only needs to be done once.
-When the command finishes, you can verify everything went correctly by running
-```shell
-poetry run pytest
-```
-If all tests pass without errors, you have a working installation of the codebase.
+This also resolves the few core dependencies `pyvrp` has.
+The documentation is available [here][1].
 
-From this point onwards, recompilation of the C++ extensions can best be done using the `build_extensions.py` script.
-It can be called as
-```shell
-poetry run python build_extensions.py
-``` 
-It takes several optional build arguments, which you can discover using
-```shell
-poetry run python build_extensions.py --help
-```
+### Getting started
 
-### Details
+TODO
 
-We use the Meson build system to compile the C++ extensions.
-Meson is configured using the `meson.build` file in the repository root. 
-You should not have to touch this file often: all installation is handled via the `build_extensions.py` script.
-For deployment, we use the [`pypa/build`](https://github.com/pypa/build) frontend, which calls into the `build_extensions.py` file as defined under `[build-system]` in `pyproject.toml`.
+### Examples
 
-You can also compile for different problem types.
-Currently, `cvrp` and `vrptw` are supported.
-This is achieved by passing `--problem <type>` to the `build_extensions.py` script.
-The default is `vrptw`.
+We provide some example notebooks that show how the `pyvrp` package may be used to solve vehicle routing problems.
+These include:
 
-### Build system
+- The vehicle routing problem with time windows (VRPTW), [here][4].
+  We solve several instances from the literature, including a large 1000 customer instance.
 
-Any recent compiler should do.
-We test using clang 12 and up, and gcc 10 and up.
+TODO
 
-Any recent Python version should do.
-We test using Python 3.8 and up (currently 3.8 - 3.11).
+### Contributing
+
+We are very grateful for any contributions you are willing to make. Please have
+a look [here][2] to get started. If you aim to make a large change, it is
+helpful to discuss the change first in a new GitHub issue. Feel free to open
+one!
+
+### Getting help
+
+If you are looking for help, please follow the instructions [here][3].
+
+### How to cite PyVRP
+
+TODO
+
+
+[1]: https://pyvrp.readthedocs.io/en/latest/
+
+[2]: https://pyvrp.readthedocs.io/en/latest/setup/contributing.html
+
+[3]: https://pyvrp.readthedocs.io/en/latest/setup/getting_help.html
+
+[4]: https://pyvrp.readthedocs.io/en/latest/examples/vrptw.html
