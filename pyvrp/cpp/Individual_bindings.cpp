@@ -29,9 +29,19 @@ PYBIND11_MODULE(_Individual, m)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
         .def("__eq__", &Individual::operator==)
-        .def("__str__", [](Individual const &individual) {
-            std::stringstream stream;
-            stream << individual;
-            return stream.str();
-        });
+        .def("__copy__",
+             [](Individual const &individual)
+             { return Individual(individual); })
+        .def(
+            "__deepcopy__",
+            [](Individual const &individual, py::dict)
+            { return Individual(individual); },
+            py::arg("memo"))
+        .def("__str__",
+             [](Individual const &individual)
+             {
+                 std::stringstream stream;
+                 stream << individual;
+                 return stream.str();
+             });
 }

@@ -1,4 +1,5 @@
 import time
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, Tuple
 
@@ -139,7 +140,7 @@ class GeneticAlgorithm:
         self._ls.run(individual, should_intensify)
 
         if is_new_best(individual):
-            self._best = Individual(individual)
+            self._best = deepcopy(individual)
 
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
@@ -147,7 +148,7 @@ class GeneticAlgorithm:
                 self._ls.intensify(individual, overlapToleranceDegrees=360)
 
                 if is_new_best(individual):
-                    self._best = Individual(individual)
+                    self._best = deepcopy(individual)
 
         add_and_register(individual)
 
@@ -162,7 +163,7 @@ class GeneticAlgorithm:
                 self._ls.run(individual, should_intensify)
 
                 if is_new_best(individual):
-                    self._best = Individual(individual)
+                    self._best = deepcopy(individual)
 
                     # TODO Refactor to on_best callback (see issue #111)
                     if self._params.intensify_on_best:
@@ -171,7 +172,7 @@ class GeneticAlgorithm:
                         )
 
                         if is_new_best(individual):
-                            self._best = Individual(individual)
+                            self._best = deepcopy(individual)
 
                 if individual.is_feasible():
                     add_and_register(individual)
