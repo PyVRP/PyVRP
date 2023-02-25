@@ -23,7 +23,7 @@ CrossoverOperator = Callable[
 class GeneticAlgorithmParams:
     repair_probability: float = 0.80
     collect_statistics: bool = False
-    intensification_probability: float = 0.15
+    intensify_probability: float = 0.15
     intensify_on_best: bool = True
     nb_iter_no_improvement: int = 20_000
 
@@ -31,8 +31,8 @@ class GeneticAlgorithmParams:
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
 
-        if not 0 <= self.intensification_probability <= 1:
-            raise ValueError("intensification_probability must be in [0, 1].")
+        if not 0 <= self.intensify_probability <= 1:
+            raise ValueError("intensify_probability must be in [0, 1].")
 
         if self.nb_iter_no_improvement < 0:
             raise ValueError("nb_iter_no_improvement < 0 not understood.")
@@ -125,20 +125,20 @@ class GeneticAlgorithm:
         return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
-        def _is_new_best(indiv):
+        def is_new_best(indiv):
             return indiv.is_feasible() and indiv.cost() < self._best.cost()
 
-        def _add_and_register(indiv):
+        def add_and_register(indiv):
             self._pop.add(indiv)
             self._pm.register_load_feasible(not indiv.has_excess_capacity())
             self._pm.register_time_feasible(not indiv.has_time_warp())
 
-        intensification_prob = self._params.intensification_probability
-        intensify = self._rng.rand() < intensification_prob
+        intensify_prob = self._params.intensify_probability
+        should_intensify = self._rng.rand() < intensify_prob
 
-        self._ls.run(individual, intensify)
+        self._ls.run(individual, should_intensify)
 
-        if _is_new_best(individual):
+        if is_new_best(individual):
             self._best = Individual(individual)
 
             # Only intensify feasible, new best solutions. See also the repair
@@ -146,10 +146,10 @@ class GeneticAlgorithm:
             if self._params.intensify_on_best:
                 self._ls.intensify(individual, overlapToleranceDegrees=360)
 
-                if _is_new_best(individual):
+                if is_new_best(individual):
                     self._best = Individual(individual)
 
-        _add_and_register(individual)
+        add_and_register(individual)
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
@@ -158,10 +158,10 @@ class GeneticAlgorithm:
             and self._rng.rand() < self._params.repair_probability
         ):
             with self._pm.get_penalty_booster() as booster:  # noqa
-                intensify = self._rng.rand() < intensification_prob
-                self._ls.run(individual, intensify)
+                should_intensify = self._rng.rand() < intensify_prob
+                self._ls.run(individual, should_intensify)
 
-                if _is_new_best(individual):
+                if is_new_best(individual):
                     self._best = Individual(individual)
 
                     # TODO Refactor to on_best callback (see issue #111)
@@ -170,8 +170,8 @@ class GeneticAlgorithm:
                             individual, overlapToleranceDegrees=360
                         )
 
-                        if _is_new_best(individual):
+                        if is_new_best(individual):
                             self._best = Individual(individual)
 
                 if individual.is_feasible():
-                    _add_and_register(individual)
+                    add_and_register(individual)
