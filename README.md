@@ -22,6 +22,12 @@ TODO
 
 ### Examples
 
+We provide some example notebooks that show how the `pyvrp` package may be used to solve vehicle routing problems.
+These include:
+
+- The vehicle routing problem with time windows (VRPTW), [here][4].
+  We solve several instances from the literature, including a large 1000 customer instance.
+
 TODO
 
 ### Contributing
@@ -45,3 +51,5 @@ TODO
 [2]: https://pyvrp.readthedocs.io/en/latest/setup/contributing.html
 
 [3]: https://pyvrp.readthedocs.io/en/latest/setup/getting_help.html
+
+[4]: https://pyvrp.readthedocs.io/en/latest/examples/vrptw.html
