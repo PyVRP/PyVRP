@@ -60,6 +60,5 @@ PYBIND11_MODULE(_SubPopulation, m)
             [](SubPopulation const &subPop)
             { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
             py::return_value_policy::reference_internal)
-        .def("purge", &SubPopulation::purge)
-        .def("update_fitness", &SubPopulation::updateFitness);
+        .def("purge", &SubPopulation::purge);
 }

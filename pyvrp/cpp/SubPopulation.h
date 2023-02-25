@@ -32,10 +32,10 @@ struct PopulationParams
           lbDiversity(lbDiversity),
           ubDiversity(ubDiversity)
     {
-        if (0 > lbDiversity || 1 < lbDiversity)
+        if (lbDiversity < 0 || lbDiversity > 1)
             throw std::invalid_argument("lb_diversity must be in [0, 1].");
 
-        if (0 > ubDiversity || 1 < ubDiversity)
+        if (ubDiversity < 0 || ubDiversity > 1)
             throw std::invalid_argument("ub_diversity must be in [0, 1].");
 
         if (ubDiversity <= lbDiversity)
@@ -68,7 +68,7 @@ public:
         Individual const *individual;
         double fitness;
         Proximity proximity;
-        
+
         double avgDistanceClosest() const;
     };
 
@@ -77,6 +77,11 @@ private:
 
     // Removes the element at the given iterator location from the items.
     void remove(std::vector<Item>::iterator const &iterator);
+
+    // Recomputes the fitness of all individuals maintained by this population.
+    // This is called whenever an individual is added to, or removed from, the
+    // population.
+    void updateFitness();
 
 public:
     SubPopulation(ProblemData const &data,
@@ -96,8 +101,6 @@ public:
     Item const &operator[](size_t idx) const;
 
     void purge();
-
-    void updateFitness();
 };
 
 #endif  // SUBPOPULATION_H
