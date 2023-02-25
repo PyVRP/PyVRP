@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(RelocateStar, m)
+PYBIND11_MODULE(_RelocateStar, m)
 {
     py::class_<LocalSearchOperator<Route>>(
         m, "RouteOperator", py::module_local());

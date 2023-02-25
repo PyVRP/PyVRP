@@ -115,7 +115,7 @@ foreach extension : extensions  # extension[0] = name, extension[1] = subdir
     install_dir = '/'.join([INST_DIR, extension[1]])
 
     py.extension_module(
-        extension[0],
+        '_' + extension[0], # module names are prepended by an underscore
         source_dir / extension[0] + '_bindings.cpp',
         dependencies: [py.dependency(), pybind11],
         link_with: libcommon,

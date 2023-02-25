@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(Individual, m)
+PYBIND11_MODULE(_Individual, m)
 {
     py::class_<Individual>(m, "Individual")
         .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),

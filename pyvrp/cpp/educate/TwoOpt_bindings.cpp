@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(TwoOpt, m)
+PYBIND11_MODULE(_TwoOpt, m)
 {
     py::class_<LocalSearchOperator<Node>>(
         m, "NodeOperator", py::module_local());

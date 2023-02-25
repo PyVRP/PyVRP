@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 
-from pyvrp.ProblemData import ProblemData
+from pyvrp._ProblemData import ProblemData
 
 Neighbours = List[List[int]]
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from .Individual import Individual
 from .Statistics import Statistics
+from ._Individual import Individual
 
 
 @dataclass

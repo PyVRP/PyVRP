@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(XorShift128, m)
+PYBIND11_MODULE(_XorShift128, m)
 {
     py::class_<XorShift128>(m, "XorShift128")
         .def(py::init<int>(), py::arg("seed"))
