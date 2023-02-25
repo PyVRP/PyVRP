@@ -6,7 +6,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(SubPopulation, m)
+PYBIND11_MODULE(_SubPopulation, m)
 {
     py::class_<PopulationParams>(m, "PopulationParams")
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
