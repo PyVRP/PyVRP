@@ -32,7 +32,7 @@ for file in glob.iglob("../../examples/*.ipynb"):
 autoapi_type = "python"
 autoapi_dirs = ["../../pyvrp"]
 autoapi_options = ["members", "undoc-members", "special-members"]
-autoapi_ignore = ["*test_*"]
+autoapi_ignore = ["*/tests/*.py"]
 
 autoapi_generate_api_docs = False
 autoapi_add_toctree_entry = False

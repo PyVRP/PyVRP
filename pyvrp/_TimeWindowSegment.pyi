@@ -1,6 +1,6 @@
 from typing import Union, overload
 
-from .Matrix import DoubleMatrix, IntMatrix
+from ._Matrix import DoubleMatrix, IntMatrix
 
 class TimeWindowSegment:
     def __init__(
