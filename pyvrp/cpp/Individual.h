@@ -10,6 +10,8 @@
 
 class Individual
 {
+    friend struct std::hash<Individual>;  // friend struct to enable hashing
+
     using Client = int;
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
@@ -73,7 +75,8 @@ public:
 
     bool operator==(Individual const &other) const;
 
-    Individual &operator=(Individual const &other) = default;
+    Individual &operator=(Individual const &other) = delete;   // is immutable
+    Individual &operator=(Individual const &&other) = delete;  // is immutable
 
     /**
      * Constructs a random individual using the given random number generator.
@@ -109,5 +112,22 @@ public:
 
 // Outputs an individual into a given ostream in VRPLIB format
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
+
+namespace std
+{
+template <> struct hash<Individual>
+{
+    std::size_t operator()(Individual const &individual) const
+    {
+        size_t res = 17;
+        res = res * 31 + std::hash<size_t>()(individual.nbRoutes);
+        res = res * 31 + std::hash<size_t>()(individual.distance);
+        res = res * 31 + std::hash<size_t>()(individual.capacityExcess);
+        res = res * 31 + std::hash<size_t>()(individual.timeWarp);
+
+        return res;
+    }
+};
+}  // namespace std
 
 #endif
