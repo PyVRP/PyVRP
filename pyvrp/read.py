@@ -104,15 +104,20 @@ def read(
     else:
         coords = np.zeros((num_clients, 2), dtype=int)
 
-    if "time_window" in instance:
-        time_windows = round_func(instance["time_window"])
-    else:
-        time_windows = np.repeat([[0, _INT_MAX]], num_clients, axis=0)
-
     if "service_time" in instance:
         service_times = round_func(instance["service_time"])
     else:
         service_times = np.zeros(num_clients, dtype=int)
+
+    if "time_window" in instance:
+        time_windows = round_func(instance["time_window"])
+    else:
+        # We compute a bound for the time windows using the maximum route
+        # duration. This makes sure that we get well-defined behavior when one
+        # uses the VRPTW compiled solver for problems without TWs.
+        bound = (num_clients + 1) * (edge_weight.max() + service_times.max())
+        bound = bound if bound < _INT_MAX else _INT_MAX
+        time_windows = np.repeat([[0, bound]], num_clients, axis=0)
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:
