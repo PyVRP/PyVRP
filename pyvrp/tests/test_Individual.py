@@ -253,7 +253,7 @@ def test_hash():
     assert_(indiv1 != indiv2)
     assert_(hash1 != hash2)
 
-    indiv3 = Individual(indiv2)  # is a direct copy
+    indiv3 = deepcopy(indiv2)  # is a direct copy
 
     # These two are the same solution, so their hashes should be the same too.
     assert_equal(indiv2, indiv3)
