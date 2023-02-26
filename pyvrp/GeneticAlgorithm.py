@@ -145,7 +145,7 @@ class GeneticAlgorithm:
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
-                self._ls.intensify(individual, overlapToleranceDegrees=360)
+                self._ls.intensify(individual, overlap_tolerance_degrees=360)
 
                 if is_new_best(individual):
                     self._best = deepcopy(individual)
@@ -168,7 +168,7 @@ class GeneticAlgorithm:
                     # TODO Refactor to on_best callback (see issue #111)
                     if self._params.intensify_on_best:
                         self._ls.intensify(
-                            individual, overlapToleranceDegrees=360
+                            individual, overlap_tolerance_degrees=360
                         )
 
                         if is_new_best(individual):

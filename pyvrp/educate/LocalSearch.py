@@ -52,20 +52,23 @@ class LocalSearch:
         # TODO separate load/export individual from c++ implementation
         # so we only need to do it once
         while True:
-            self.search(individual)
-            if not (should_intensify and self.intensify(individual)):
-                # Return unless we succesfully intensified
-                return
+            individual = self.search(individual)
+
+            if not should_intensify:
+                return individual
+
+            new_individual = self.intensify(individual)
+
+            if new_individual.cost() < individual.cost():
+                individual = new_individual
+                continue
+
+            return individual
 
     def intensify(
-        self, individual: Individual, overlapToleranceDegrees: int = 0
-    ) -> bool:
-        # Runs intensification on the individual and returns whether an
-        # improvement was found (TODO let c++ return this)
-        cost = individual.cost()
-        self._ls.intensify(individual, overlapToleranceDegrees)
-        return individual.cost() < cost
+        self, individual: Individual, overlap_tolerance_degrees: int = 0
+    ) -> Individual:
+        return self._ls.intensify(individual, overlap_tolerance_degrees)
 
-    def search(self, individual: Individual):
-        # TODO return whether improvement was found
-        self._ls.search(individual)
+    def search(self, individual: Individual) -> Individual:
+        return self._ls.search(individual)
