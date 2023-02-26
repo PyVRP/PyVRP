@@ -119,19 +119,14 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     # When no individuals are elite, the fitness ranking is based on the sum
     # of the cost and diversity ranks.
     cost = np.array([item.individual.cost() for item in subpop])
-    by_cost = np.argsort(cost, kind="stable")
+    cost_rank = np.argsort(cost, kind="stable")
+
+    diversity = np.array([item.avg_distance_closest() for item in subpop])
+    div_rank = np.argsort(-diversity[cost_rank], kind="stable")
 
     ranks = np.empty((len(subpop), 2))
-    ranks[by_cost, 0] = np.arange(len(subpop))
-
-    diversity = []
-    for rank in range(len(subpop)):
-        avg_diversity = subpop[by_cost[rank]].avg_distance_closest()
-        diversity.append((-avg_diversity, rank))
-    diversity.sort()
-
-    for div_rank, (_, cost_rank) in enumerate(diversity):
-        ranks[by_cost[cost_rank], 1] = div_rank
+    ranks[cost_rank, 0] = np.arange(len(subpop))
+    ranks[cost_rank[div_rank], 1] = np.arange(len(subpop))
 
     expected_fitness = ranks.sum(axis=1) / (2 * len(subpop))
     actual_fitness = np.array([item.fitness for item in subpop])
