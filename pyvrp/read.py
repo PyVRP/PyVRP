@@ -112,10 +112,9 @@ def read(
     if "time_window" in instance:
         time_windows = round_func(instance["time_window"])
     else:
-        # We compute a bound for the time windows using the maximum route
-        # duration. This makes sure that we get well-defined behavior when one
-        # uses the VRPTW compiled solver for problems without TWs.
-        bound = (num_clients + 1) * (edge_weight.max() + service_times.max())
+        # The default value for the time window based on the maximum route
+        # duration.
+        bound = num_clients * (edge_weight.max() + service_times.max())
         bound = bound if bound < _INT_MAX else _INT_MAX
         time_windows = np.repeat([[0, bound]], num_clients, axis=0)
 

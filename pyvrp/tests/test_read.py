@@ -1,4 +1,3 @@
-import numpy as np
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
@@ -125,12 +124,17 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
 
     # These fields are not present in the data file, and should thus retain
     # their default values.
-    max_int = np.iinfo(np.int32).max
+    max_distance = max(
+        data.dist(i, j)
+        for i in range(data.num_clients + 1)
+        for j in range(data.num_clients + 1)
+    )
+    bound = (data.num_clients + 1) * max_distance
 
     for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).service_duration, 0)
         assert_equal(data.client(client).tw_early, 0)
-        assert_equal(data.client(client).tw_late, max_int)
+        assert_equal(data.client(client).tw_late, bound)
 
 
 def test_reading_RC208_instance():  # Solomon style instance
