@@ -129,8 +129,8 @@ def plot_route_schedule(
     # Plot time windows & time warps
     lc_time_windows = LineCollection(
         timewindow_lines,
-        colors="black",
-        linewidths=2,
+        colors="grey",
+        linewidths=1,
         label="Time window",
     )
     ax.add_collection(lc_time_windows)
