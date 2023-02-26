@@ -28,8 +28,8 @@ from pyvrp.educate import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
-    compute_neighbours,
     NeighbourhoodParams,
+    compute_neighbours,
 )
 from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
