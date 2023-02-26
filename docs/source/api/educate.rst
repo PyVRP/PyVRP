@@ -8,15 +8,12 @@ Education
 The :mod:`pyvrp.educate` module contains classes and methods responsible for educating (improving) a newly created offspring solution.
 This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`. 
 
-.. autoapimodule:: pyvrp.educate.LocalSearch
-
-   .. autoclass:: LocalSearchParams
-      :members:
+.. automodule:: pyvrp.educate.LocalSearch
 
    .. autoclass:: LocalSearch
       :members:
 
-.. autoapimodule:: pyvrp.educate.Exchange
+.. autoapimodule:: pyvrp.educate._Exchange
 
    .. autoclass:: Exchange10
       :members:
@@ -48,22 +45,22 @@ This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvr
 .. automodule:: pyvrp.educate.neighbourhood
    :members:
 
-.. autoapimodule:: pyvrp.educate.MoveTwoClientsReversed
+.. autoapimodule:: pyvrp.educate._MoveTwoClientsReversed
 
    .. autoclass:: MoveTwoClientsReversed
       :members:
 
-.. autoapimodule:: pyvrp.educate.RelocateStar
+.. autoapimodule:: pyvrp.educate._RelocateStar
 
    .. autoclass:: RelocateStar
       :members:
 
-.. autoapimodule:: pyvrp.educate.SwapStar
+.. autoapimodule:: pyvrp.educate._SwapStar
 
    .. autoclass:: SwapStar
       :members:
 
-.. autoapimodule:: pyvrp.educate.TwoOpt
+.. autoapimodule:: pyvrp.educate._TwoOpt
 
    .. autoclass:: TwoOpt
       :members:

@@ -1,8 +1,8 @@
-from typing import List, Tuple, overload
+from typing import Dict, List, Tuple, overload
 
-from .PenaltyManager import PenaltyManager
-from .ProblemData import ProblemData
-from .XorShift128 import XorShift128
+from ._PenaltyManager import PenaltyManager
+from ._ProblemData import ProblemData
+from ._XorShift128 import XorShift128
 
 class Individual:
     @overload
@@ -26,3 +26,5 @@ class Individual:
     def has_time_warp(self) -> bool: ...
     def is_feasible(self) -> bool: ...
     def num_routes(self) -> int: ...
+    def __copy__(self) -> Individual: ...
+    def __deepcopy__(self, memo: Dict) -> Individual: ...

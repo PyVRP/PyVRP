@@ -17,13 +17,13 @@ TODO
    .. autoapiclass:: GeneticAlgorithm
       :members:
 
-.. autoapimodule:: pyvrp.Individual
+.. autoapimodule:: pyvrp._Individual
    
    .. autoapiclass:: Individual
       :members:
       :special-members:
 
-.. autoapimodule:: pyvrp.PenaltyManager
+.. autoapimodule:: pyvrp._PenaltyManager
 
    .. autoapiclass:: PenaltyBooster
       :members:
@@ -44,7 +44,7 @@ TODO
       :members:  
       :special-members:
  
-.. autoapimodule:: pyvrp.ProblemData
+.. autoapimodule:: pyvrp._ProblemData
 
    .. autoapiclass:: Client
       :members:
@@ -72,7 +72,7 @@ TODO
       :members:
       :special-members:
 
-.. autoapimodule:: pyvrp.XorShift128
+.. autoapimodule:: pyvrp._XorShift128
 
    .. autoapiclass:: XorShift128
       :members:
