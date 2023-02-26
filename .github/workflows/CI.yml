@@ -75,7 +75,13 @@ jobs:
       - name: Install Valgrind
         run: sudo apt install valgrind
       - name: Build pyvrp
-        run: poetry run python build_extensions.py --build_type debug
+        # This step consists of two commands. First, we install the project into
+        # the poetry environment. This ensures imports like "from pyvrp import X"
+        # work. But poetry builds in release mode by default, which is undesirable
+        # for testing. So we also compile a debug build directly afterwards.
+        run: |
+          poetry install --only-root
+          poetry run python build_extensions.py --build_type debug
       - name: Run tests
         run: poetry run python -m pytest
       - if: matrix.compiler == 'gcc'
