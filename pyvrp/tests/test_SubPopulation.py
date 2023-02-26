@@ -77,3 +77,30 @@ def test_avg_distance_closest_for_single_route_solutions():
         # same for all of them.
         distances = np.array([item.avg_distance_closest() for item in subpop])
         assert_allclose(distances, distances.mean())
+
+
+def test_fitness_is_purely_based_on_cost_when_only_elites():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    rng = XorShift128(seed=51)
+    params = PopulationParams(nb_elite=25, min_pop_size=25)
+    subpop = SubPopulation(data, broken_pairs_distance, params)
+
+    for _ in range(params.min_pop_size):
+        subpop.add(Individual(data, pm, rng))
+
+    # When all individuals are elite the diversity weight term drops out, and
+    # fitness rankings are purely based on the cost ranking.
+    cost = np.array([item.individual.cost() for item in subpop])
+    by_cost = np.argsort(cost, kind="stable")
+
+    rank = np.empty(len(subpop))
+    rank[by_cost] = np.arange(len(subpop))
+
+    expected_fitness = rank / (2 * len(subpop))
+    actual_fitness = np.array([item.fitness for item in subpop])
+
+    # The fitness terms should all be bounded to [0, 1], and the values should
+    # agree with what we've computed above.
+    assert_(((0 <= actual_fitness) & (actual_fitness <= 1)).all())
+    assert_allclose(actual_fitness, expected_fitness)
