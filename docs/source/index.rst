@@ -23,6 +23,7 @@ TODO
    :caption: Examples
 
    examples/vrptw
+   examples/cvrp
 
 .. toctree::
    :maxdepth: 1
