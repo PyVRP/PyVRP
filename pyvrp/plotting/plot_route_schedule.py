@@ -61,7 +61,6 @@ def plot_route_schedule(
     trace_drive_serv = []
     trace_load = []
     timewindow_lines = []
-    timewindow_colors = []
     timewarp_lines = []
 
     def add_traces(dist, t, drive_time, serv_time, load):
@@ -111,11 +110,6 @@ def plot_route_schedule(
             timewindow_lines.append(
                 ((dist, stop.tw_early), (dist, stop.tw_late))
             )
-            timewindow_colors.append(
-                "black"
-                if (stop.tw_late - stop.tw_early) <= horizon / 2
-                else "gray"
-            )
 
         prev_idx = idx
 
@@ -135,7 +129,7 @@ def plot_route_schedule(
     # Plot time windows & time warps
     lc_time_windows = LineCollection(
         timewindow_lines,
-        colors=timewindow_colors,
+        colors="black",
         linewidths=2,
         label="Time window",
     )
