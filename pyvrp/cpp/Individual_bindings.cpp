@@ -15,7 +15,7 @@ PYBIND11_MODULE(_Individual, m)
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::keep_alive<1, 2>(),  // keep data and penalty_manager alive
-             py::keep_alive<1, 3>())  // at least until individual is freed 
+             py::keep_alive<1, 3>())  // at least until individual is freed
         .def(py::init<ProblemData &,
                       PenaltyManager &,
                       std::vector<std::vector<int>>>(),
@@ -23,11 +23,15 @@ PYBIND11_MODULE(_Individual, m)
              py::arg("penalty_manager"),
              py::arg("routes"),
              py::keep_alive<1, 2>(),  // keep data and penalty_manager alive
-             py::keep_alive<1, 3>())  // at least until individual is freed 
+             py::keep_alive<1, 3>())  // at least until individual is freed
         .def("cost", &Individual::cost)
         .def("num_routes", &Individual::numRoutes)
-        .def("get_routes", &Individual::getRoutes, py::return_value_policy::reference_internal)
-        .def("get_neighbours", &Individual::getNeighbours, py::return_value_policy::reference_internal)
+        .def("get_routes",
+             &Individual::getRoutes,
+             py::return_value_policy::reference_internal)
+        .def("get_neighbours",
+             &Individual::getNeighbours,
+             py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
