@@ -38,7 +38,6 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     # has already been evaluated and applied by regular (1, )-exchange. Thus,
     # at this point the individual cannot be improved further by RELOCATE*.
     relocate_individual = ls.intensify(exchange_individual)
-
     assert_equal(relocate_individual, exchange_individual)
 
 
