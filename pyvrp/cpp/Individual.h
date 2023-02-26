@@ -75,8 +75,11 @@ public:
 
     bool operator==(Individual const &other) const;
 
-    Individual &operator=(Individual const &other) = delete;   // is immutable
-    Individual &operator=(Individual const &&other) = delete;  // is immutable
+    Individual &operator=(Individual const &other) = delete;  // is immutable
+    Individual &operator=(Individual &&other) = delete;       // is immutable
+
+    Individual(Individual const &other) = default;
+    Individual(Individual &&other) = default;
 
     /**
      * Constructs a random individual using the given random number generator.
@@ -101,13 +104,6 @@ public:
     Individual(ProblemData const &data,
                PenaltyManager const &penaltyManager,
                Routes routes);
-
-    /**
-     * Constructs a copy of the given other individual.
-     *
-     * @param other Other individual to copy.
-     */
-    Individual(Individual const &other);
 };
 
 // Outputs an individual into a given ostream in VRPLIB format

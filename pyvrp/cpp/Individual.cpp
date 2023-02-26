@@ -180,18 +180,6 @@ Individual::Individual(ProblemData const &data,
     evaluateCompleteCost();
 }
 
-Individual::Individual(Individual const &other)  // copy fields from other
-    : nbRoutes(other.nbRoutes),                  // individual
-      distance(other.distance),
-      capacityExcess(other.capacityExcess),
-      timeWarp(other.timeWarp),
-      data(other.data),
-      penaltyManager(other.penaltyManager),
-      routes_(other.routes_),
-      neighbours(other.neighbours)
-{
-}
-
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
     auto const &routes = indiv.getRoutes();
