@@ -35,6 +35,9 @@ PYBIND11_MODULE(_Individual, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
+        .def("__hash__",
+             [](Individual const &individual)
+             { return std::hash<Individual>()(individual); })
         .def("__eq__", &Individual::operator==)
         .def(
             "__copy__",
