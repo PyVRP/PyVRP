@@ -1,9 +1,4 @@
-from numpy.testing import (
-    assert_,
-    assert_almost_equal,
-    assert_equal,
-    assert_raises,
-)
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import Individual, PenaltyManager, Population, XorShift128
@@ -26,8 +21,8 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
     assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
-    assert_almost_equal(res.cost(), indiv.cost())
-    assert_almost_equal(res.runtime, runtime)
+    assert_allclose(res.cost(), indiv.cost())
+    assert_allclose(res.runtime, runtime)
 
 
 @mark.parametrize(
