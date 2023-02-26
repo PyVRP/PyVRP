@@ -140,7 +140,7 @@ void SubPopulation::updateFitness()
     {
         auto const costRank = diversity[divRank].second;
         auto const idx = byCost[costRank];
-        items[idx].fitness = (costRank + divWeight * divRank) / popSize;
+        items[idx].fitness = (costRank + divWeight * divRank) / (2 * popSize);
     }
 }
 
