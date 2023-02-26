@@ -95,6 +95,7 @@ jobs:
         # Force Python to use the regular malloc() for the duration of this valgrind run.
         # That ensures we do not catch all sorts of false positives from Python's custom
         # malloc.
+        # TODO also run with --leak-check=full?
         run: |
           RUN_CMD="python pyvrp/cli.py pyvrp/tests/data/ORTEC-VRPTW-ASYM-0bdff870-d1-n458-k35.txt --max_runtime 0.5 --seed 1"
           poetry run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $RUN_CMD
