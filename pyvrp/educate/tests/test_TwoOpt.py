@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
@@ -23,7 +25,7 @@ def test_OkSmall_instance():
     ls.add_node_operator(op)
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
@@ -51,7 +53,7 @@ def test_RC208_instance(seed: int):
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    copy = Individual(individual)
+    copy = deepcopy(individual)
 
     ls.search(individual)
 
