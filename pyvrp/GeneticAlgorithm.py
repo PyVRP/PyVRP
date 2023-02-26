@@ -3,7 +3,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, Tuple
 
-from pyvrp.educate import LocalSearch
+from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
 from .Population import Population
@@ -158,7 +158,7 @@ class GeneticAlgorithm:
             not individual.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            with self._pm.get_penalty_booster() as booster:  # noqa
+            with self._pm.get_penalty_booster():
                 should_intensify = self._rng.rand() < intensify_prob
                 self._ls.run(individual, should_intensify)
 

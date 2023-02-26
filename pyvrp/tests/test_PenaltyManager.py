@@ -89,7 +89,7 @@ def test_repair_booster():
 
     # While the booster lives, the penalty values are multiplied by the
     # repairBooster term (x5 in this case).
-    with pm.get_penalty_booster() as booster:  # noqa
+    with pm.get_penalty_booster():
         assert_equal(pm.tw_penalty(1), 5)
         assert_equal(pm.tw_penalty(2), 10)
 

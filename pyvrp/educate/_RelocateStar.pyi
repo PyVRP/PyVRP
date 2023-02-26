@@ -1,5 +1,4 @@
-from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.ProblemData import ProblemData
+from pyvrp import PenaltyManager, ProblemData
 
 class RelocateStar(RouteOperator):
     def __init__(
