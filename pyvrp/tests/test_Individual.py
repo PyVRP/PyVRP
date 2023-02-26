@@ -202,6 +202,13 @@ def test_eq():
 
     assert_(indiv4 == indiv5)  # routes are the same, but in different order
 
+    # And a few tests against things that are not Individuals, just to be sure
+    # there's also a type check in there somewhere.
+    assert_(indiv4 != 1)
+    assert_(indiv4 != "abc")
+    assert_(indiv5 != 5)
+    assert_(indiv5 != "cd")
+
 
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
