@@ -116,7 +116,7 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     for _ in range(params.min_pop_size):
         subpop.add(Individual(data, pm, rng))
 
-    # When no individuals are elite, the fitness ranking is based on the sum
+    # When no individuals are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.
     cost = np.array([item.individual.cost() for item in subpop])
     cost_rank = np.argsort(cost, kind="stable")
