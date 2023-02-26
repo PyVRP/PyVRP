@@ -177,5 +177,3 @@ class GeneticAlgorithm:
 
                 if individual.is_feasible():
                     add_and_register(individual)
-
-    # TODO fix this
