@@ -104,3 +104,39 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     # agree with what we've computed above.
     assert_(((0 <= actual_fitness) & (actual_fitness <= 1)).all())
     assert_allclose(actual_fitness, expected_fitness)
+
+
+def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    rng = XorShift128(seed=52)
+    params = PopulationParams(nb_elite=0, min_pop_size=25)
+    subpop = SubPopulation(data, broken_pairs_distance, params)
+
+    for _ in range(params.min_pop_size):
+        subpop.add(Individual(data, pm, rng))
+
+    # When no individuals are elite, the fitness ranking is based on the sum
+    # of the cost and diversity ranks.
+    cost = np.array([item.individual.cost() for item in subpop])
+    by_cost = np.argsort(cost, kind="stable")
+
+    ranks = np.empty((len(subpop), 2))
+    ranks[by_cost, 0] = np.arange(len(subpop))
+
+    diversity = []
+    for rank in range(len(subpop)):
+        avg_diversity = subpop[by_cost[rank]].avg_distance_closest()
+        diversity.append((-avg_diversity, rank))
+    diversity.sort()
+
+    for div_rank, (_, cost_rank) in enumerate(diversity):
+        ranks[by_cost[cost_rank], 1] = div_rank
+
+    expected_fitness = ranks.sum(axis=1) / (2 * len(subpop))
+    actual_fitness = np.array([item.fitness for item in subpop])
+
+    # The fitness terms should all be bounded to [0, 1], and the values should
+    # agree with what we've computed above.
+    assert_(((0 <= actual_fitness) & (actual_fitness <= 1)).all())
+    assert_allclose(actual_fitness, expected_fitness)

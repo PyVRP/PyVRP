@@ -127,10 +127,10 @@ void SubPopulation::updateFitness()
     for (size_t costRank = 0; costRank != size(); costRank++)
     {
         auto const dist = items[byCost[costRank]].avgDistanceClosest();
-        diversity.emplace_back(dist, costRank);
+        diversity.emplace_back(-dist, costRank);  // higher is better
     }
 
-    std::stable_sort(diversity.begin(), diversity.end(), std::greater<>());
+    std::stable_sort(diversity.begin(), diversity.end());
 
     auto const popSize = static_cast<double>(size());
     auto const nbElite = std::min(params.nbElite, size());
