@@ -13,17 +13,21 @@ PYBIND11_MODULE(_Individual, m)
         .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
              py::arg("data"),
              py::arg("penalty_manager"),
-             py::arg("rng"))
+             py::arg("rng"),
+             py::keep_alive<1, 2>(),  // keep data and penalty_manager alive
+             py::keep_alive<1, 3>())  // at least until individual is freed 
         .def(py::init<ProblemData &,
                       PenaltyManager &,
                       std::vector<std::vector<int>>>(),
              py::arg("data"),
              py::arg("penalty_manager"),
-             py::arg("routes"))
+             py::arg("routes"),
+             py::keep_alive<1, 2>(),  // keep data and penalty_manager alive
+             py::keep_alive<1, 3>())  // at least until individual is freed 
         .def("cost", &Individual::cost)
         .def("num_routes", &Individual::numRoutes)
-        .def("get_routes", &Individual::getRoutes)
-        .def("get_neighbours", &Individual::getNeighbours)
+        .def("get_routes", &Individual::getRoutes, py::return_value_policy::reference_internal)
+        .def("get_neighbours", &Individual::getNeighbours, py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
