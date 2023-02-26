@@ -81,6 +81,7 @@ jobs:
         # for testing. So we also compile a debug build directly afterwards.
         run: |
           poetry install --only-root
+          rm -rf build/
           poetry run python build_extensions.py --build_type debug
       - name: Run tests
         run: poetry run python -m pytest
