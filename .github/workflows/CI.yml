@@ -72,6 +72,8 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           version: ${{ matrix.compiler-version }}
+      - name: Install Valgrind
+        run: sudo apt install valgrind
       - name: Build pyvrp
         run: poetry run python build_extensions.py --build_type debug
       - name: Run tests
@@ -83,3 +85,10 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
+      - name: Briefly run an instance under Valgrind
+        # Force Python to use the regular malloc() for the duration of this valgrind run.
+        # That ensures we do not catch all sorts of false positives from Python's custom
+        # malloc.
+        run: |
+          RUN_CMD="poetry run pyvrp pyvrp/tests/data/ORTEC-VRPTW-ASYM-0bdff870-d1-n458-k35.txt --max_runtime 0.5 --seed 1"
+          env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $RUN_CMD
