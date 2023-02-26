@@ -50,7 +50,7 @@ def plot_solution(
 
             # Edges from and to the depot, very thinly dashed.
             kwargs = dict(ls=(0, (5, 15)), linewidth=0.25, color="grey")
-            ax.plot([x_coords[0], x[0]], [y_coords[0], y[1]], **kwargs)
+            ax.plot([x_coords[0], x[0]], [y_coords[0], y[0]], **kwargs)
             ax.plot([x[-1], x_coords[0]], [y[-1], y_coords[0]], **kwargs)
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
