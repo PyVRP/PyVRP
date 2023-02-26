@@ -34,7 +34,7 @@ def plot_coordinates(
     kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
     ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
 
-    ax.scatter(x_coords[1:], y_coords[1:], s=75, label="Clients")
+    ax.scatter(x_coords[1:], y_coords[1:], s=50, label="Clients")
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
 
