@@ -12,9 +12,9 @@ Neighbours = List[List[int]]
 
 @dataclass
 class NeighbourhoodParams:
-    weight_wait_time: int = 18
-    weight_time_warp: int = 20
-    nb_granular: int = 34
+    weight_wait_time: float = 0.2
+    weight_time_warp: float = 1.0
+    nb_granular: int = 40
     symmetric_proximity: bool = True
     symmetric_neighbours: bool = False
 
