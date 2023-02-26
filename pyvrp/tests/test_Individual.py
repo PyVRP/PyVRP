@@ -1,3 +1,5 @@
+from copy import copy, deepcopy
+
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Individual, PenaltyManager, XorShift128
@@ -163,6 +165,23 @@ def test_time_warp_cost_calculation():
 
 
 # TODO test all time warp cases
+
+
+def test_copy():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    indiv = Individual(data, pm, [[1, 2, 3, 4]])
+    copy_indiv = copy(indiv)
+    deepcopy_indiv = deepcopy(indiv)
+
+    # Copied individuals are equal to the original individual
+    assert_(indiv == copy_indiv)
+    assert_(indiv == deepcopy_indiv)
+
+    # But they are not the same object
+    assert_(indiv is not copy_indiv)
+    assert_(indiv is not deepcopy_indiv)
 
 
 def test_eq():
