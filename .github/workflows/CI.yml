@@ -72,9 +72,13 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           version: ${{ matrix.compiler-version }}
+      - name: Install Valgrind
+        run: sudo apt install valgrind
       - name: Build pyvrp
         run: poetry run python build_extensions.py --build_type debug
-      - name: Run tests
+      - name: Run small example under Valgrind
+        run: valgrind --tool=memcheck --suppresions=.github/valgrind-python.supp poetry run pyvrp pyvrp/tests/data/ORTEC-VRPTW-ASYM-0bdff870-d1-n458-k35.txt --max_runtime 2 --seed 1
+      - name: 
         run: poetry run python -m pytest
       - if: matrix.compiler == 'gcc'
         # Clang does not generate accurate coverage reports, so there is no
