@@ -3,7 +3,7 @@ from copy import deepcopy
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import Individual, PenaltyManager, PenaltyParams, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.educate._Exchange import (
     Exchange10,
@@ -16,7 +16,7 @@ from pyvrp.educate._Exchange import (
     Exchange32,
     Exchange33,
 )
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import read, read_solution
 
 
 @mark.parametrize(
@@ -199,3 +199,63 @@ def test_swap_between_routes_OkSmall():
 
     assert_equal(individual.get_routes(), [[3, 4, 2], [1], []])
     assert_(individual.cost() < copy.cost())
+
+
+def test_relocate_single_after_depot_RC2_10_8():
+    """
+    Route #8: [depot] 325 533 866 ...   -> cost 337934
+    Route #8: [depot] 533 325 866   -> cost 337877
+
+    When u = 533, v = 325 calling Exchange<1,0> should result in the
+    second option since v->prev == depot, so we will try to move 533
+    after the depot which will result in an improvement.
+    """
+    data = read(
+        "../educate/tests/data/RC2_10_8.txt",
+        instance_format="solomon",
+        round_func="trunc1",
+    )
+
+    sol_before = read_solution(
+        "../educate/tests/data/RC2_10_8_before_move_single_depot_533_325.sol"
+    )
+    sol_after = read_solution(
+        "../educate/tests/data/RC2_10_8_after_move_single_depot_533_325.sol"
+    )
+
+    pen_params = PenaltyParams(
+        init_capacity_penalty=157,
+        init_time_warp_penalty=1,
+        repair_booster=1,
+    )
+    pm = PenaltyManager(data.vehicle_capacity, params=pen_params)
+    rng = XorShift128(seed=42)
+
+    indiv_expected = Individual(data, pm, sol_after)
+
+    # First test normal relocate (325 after 533)
+    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours[325].append(533)
+    ls = LocalSearch(data, pm, rng, neighbours)
+
+    op = Exchange10(data, pm)
+    ls.add_node_operator(op)
+
+    indiv = Individual(data, pm, sol_before)
+    assert_(indiv_expected.cost() < indiv.cost())
+    ls.search(indiv)
+    assert_equal(indiv, indiv_expected)
+
+    # Now test depot relocate (533 after prev(325) = depot)
+    # First test normal relocate (325 after 533)
+    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours[533].append(325)
+    ls = LocalSearch(data, pm, rng, neighbours)
+
+    op = Exchange10(data, pm)
+    ls.add_node_operator(op)
+
+    indiv = Individual(data, pm, sol_before)
+    assert_(indiv_expected.cost() < indiv.cost())
+    ls.search(indiv)
+    assert_equal(indiv, indiv_expected)
