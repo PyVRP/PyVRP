@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
@@ -33,16 +31,15 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     ls.add_route_operator(relocate)
 
     individual = Individual(data, pm, rng)
-    ls.search(individual)
+    exchange_individual = ls.search(individual)
 
     # RELOCATE* applies the best (1, 0)-exchange moves between routes. But when
     # the granular neighbourhood covers the entire client space, that best move
     # has already been evaluated and applied by regular (1, )-exchange. Thus,
     # at this point the individual cannot be improved further by RELOCATE*.
-    copy = deepcopy(individual)
-    ls.intensify(individual)
+    relocate_individual = ls.intensify(exchange_individual)
 
-    assert_equal(individual, copy)
+    assert_equal(relocate_individual, exchange_individual)
 
 
 @mark.parametrize("size", [5, 10, 15])
@@ -64,11 +61,8 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     ls.add_route_operator(relocate)
 
     individual = Individual(data, pm, rng)
-    exchange_individual = deepcopy(individual)
-    ls.search(exchange_individual)
-
-    relocate_individual = deepcopy(exchange_individual)
-    ls.intensify(relocate_individual)
+    exchange_individual = ls.search(individual)
+    relocate_individual = ls.intensify(exchange_individual)
 
     # The original individual was not that great, so after (1, 0)-Exchange it
     # should have improved. But that operator is restricted by the size of the

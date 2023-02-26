@@ -1,5 +1,4 @@
 import time
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, Tuple
 
@@ -137,18 +136,20 @@ class GeneticAlgorithm:
         intensify_prob = self._params.intensify_probability
         should_intensify = self._rng.rand() < intensify_prob
 
-        self._ls.run(individual, should_intensify)
+        individual = self._ls.run(individual, should_intensify)
 
         if is_new_best(individual):
-            self._best = deepcopy(individual)
+            self._best = individual
 
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
-                self._ls.intensify(individual, overlap_tolerance_degrees=360)
+                individual = self._ls.intensify(
+                    individual, overlap_tolerance_degrees=360
+                )
 
                 if is_new_best(individual):
-                    self._best = deepcopy(individual)
+                    self._best = individual
 
         add_and_register(individual)
 
@@ -160,19 +161,21 @@ class GeneticAlgorithm:
         ):
             with self._pm.get_penalty_booster():
                 should_intensify = self._rng.rand() < intensify_prob
-                self._ls.run(individual, should_intensify)
+                individual = self._ls.run(individual, should_intensify)
 
                 if is_new_best(individual):
-                    self._best = deepcopy(individual)
+                    self._best = individual
 
                     # TODO Refactor to on_best callback (see issue #111)
                     if self._params.intensify_on_best:
-                        self._ls.intensify(
+                        individual = self._ls.intensify(
                             individual, overlap_tolerance_degrees=360
                         )
 
                         if is_new_best(individual):
-                            self._best = deepcopy(individual)
+                            self._best = individual
 
                 if individual.is_feasible():
                     add_and_register(individual)
+
+    # TODO fix this
