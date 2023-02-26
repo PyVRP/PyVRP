@@ -91,4 +91,4 @@ jobs:
         # malloc.
         run: |
           RUN_CMD="poetry run pyvrp pyvrp/tests/data/ORTEC-VRPTW-ASYM-0bdff870-d1-n458-k35.txt --max_runtime 1 --seed 1"
-          env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $RUN_CMD
+          env PYTHONMALLOC=malloc valgrind --tool=memcheck --suppressions=.github/valgrind-python.supp --quiet $RUN_CMD
