@@ -15,8 +15,8 @@ def test_swap_star_identifies_more_moves_than_regular_swap():
     """
     SWAP* can move two clients to any position in the routes, whereas regular
     swap ((1, 1)-exchange) must reinsert each client in the other's position.
-    Thus, SWAP* should be able to identify more improving moves than the
-    regular (1, 1)-exchange move.
+    Thus, SWAP* should be able to identify additional improving moves beyond
+    those of the regular (1, 1)-exchange operator.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.vehicle_capacity)
@@ -35,7 +35,11 @@ def test_swap_star_identifies_more_moves_than_regular_swap():
 
         swap_individual = ls.search(individual)
         swap_star_individual = ls.intensify(
-            individual, overlap_tolerance_degrees=360
+            swap_individual, overlap_tolerance_degrees=360
         )
 
+        # The regular swap operator should have been able to improve the random
+        # individual. After swap gets stuck, SWAP* should still be able to
+        # further improve the individual.
+        assert_(swap_individual.cost() < individual.cost())
         assert_(swap_star_individual.cost() < swap_individual.cost())
