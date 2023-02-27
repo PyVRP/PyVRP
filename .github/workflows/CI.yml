@@ -81,16 +81,7 @@ jobs:
           poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean
       - name: Run tests
-        continue-on-error: true
         run: poetry run python -m pytest
-      - uses: actions/upload-artifact@v3
-        with:
-          name: result_images
-          path: result_images/
-      - uses: actions/download-artifact@v3  # download images from plot tests
-        with:
-          name: result_images
-          path: result_images/
       - if: matrix.compiler == 'gcc'
         # Clang does not generate accurate coverage reports, so there is no
         # point in uploading those.
@@ -112,9 +103,10 @@ jobs:
         run: |
           VALGRIND_CMD="pyvrp pyvrp/tests/data/ORTEC-VRPTW-ASYM-0bdff870-d1-n458-k35.txt --max_runtime 0.5 --seed 1"
           poetry run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
-      - if: matrix.compiler == 'gcc' && matrix.python-version == '3.11'
-        # Run this only on one job to minimize the workflow runtime.
+      - if: matrix.compiler == 'clang' && matrix.python-version == '3.11'
+        # Run this only for one job to reduce workflow runtimes.
         name: Run example notebooks
         run: |
+          poetry install --with examples
           poetry run jupyter nbconvert --to notebook --execute examples/cvrp.ipynb
           poetry run jupyter nbconvert --to notebook --execute examples/vrptw.ipynb
