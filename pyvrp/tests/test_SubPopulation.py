@@ -4,7 +4,7 @@ from pytest import mark
 
 from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp._SubPopulation import PopulationParams, SubPopulation
-from pyvrp.diversity import broken_pairs_distance
+from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
 
 
@@ -18,7 +18,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
         min_pop_size=0, generation_size=250, nb_close=nb_close
     )
 
-    subpop = SubPopulation(data, broken_pairs_distance, params)
+    subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
 
     for _ in range(nb_close):
@@ -48,7 +48,7 @@ def test_avg_distance_closest_for_single_route_solutions():
     pm = PenaltyManager(data.num_vehicles)
     params = PopulationParams(min_pop_size=0, nb_close=10)
 
-    subpop = SubPopulation(data, broken_pairs_distance, params)
+    subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
 
     single_route = [client for client in range(1, data.num_clients + 1)]
@@ -64,10 +64,7 @@ def test_avg_distance_closest_for_single_route_solutions():
             # broken links with this new shifted individual, both around the
             # depot. So the average broken pairs distance is 2 / num_clients
             # for all of them.
-            assert_equal(
-                broken_pairs_distance(data, item.individual, shifted),
-                2 / data.num_clients,
-            )
+            assert_equal(bpd(item.individual, shifted), 2 / data.num_clients)
 
         subpop.add(shifted)
         assert_equal(len(subpop), offset + 1)
@@ -84,7 +81,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     pm = PenaltyManager(data.num_vehicles)
     rng = XorShift128(seed=51)
     params = PopulationParams(nb_elite=25, min_pop_size=25)
-    subpop = SubPopulation(data, broken_pairs_distance, params)
+    subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
         subpop.add(Individual(data, pm, rng))
@@ -111,7 +108,7 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     pm = PenaltyManager(data.num_vehicles)
     rng = XorShift128(seed=52)
     params = PopulationParams(nb_elite=0, min_pop_size=25)
-    subpop = SubPopulation(data, broken_pairs_distance, params)
+    subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
         subpop.add(Individual(data, pm, rng))

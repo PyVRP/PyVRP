@@ -53,7 +53,7 @@ public:
 
     /**
      * Returns a vector of [pred, succ] clients for each client (index) in this
-     * individual's routes.
+     * individual's routes. Includes the depot at index 0.
      */
     [[nodiscard]] std::vector<std::pair<Client, Client>> const &
     getNeighbours() const;

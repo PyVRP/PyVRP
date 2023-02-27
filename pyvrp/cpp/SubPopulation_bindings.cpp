@@ -32,14 +32,11 @@ PYBIND11_MODULE(_SubPopulation, m)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
-        .def(py::init<ProblemData const &,
-                      DiversityMeasure,
+        .def(py::init<DiversityMeasure,
                       PopulationParams const &>(),
-             py::arg("data"),
              py::arg("diversity_op"),
              py::arg("params"),
-             py::keep_alive<1, 2>(),  // keep data and parameters alive at
-             py::keep_alive<1, 4>())  // least until subpopulation is freed
+             py::keep_alive<1, 3>())  // keep params alive
         .def("add", &SubPopulation::add, py::arg("individual"))
         .def("__len__", &SubPopulation::size)
         .def(

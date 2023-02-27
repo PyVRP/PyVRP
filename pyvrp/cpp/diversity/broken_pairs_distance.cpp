@@ -1,15 +1,14 @@
 #include "diversity.h"
 
-double brokenPairsDistance(ProblemData const &data,
-                           Individual const &first,
-                           Individual const &second)
+double brokenPairsDistance(Individual const &first, Individual const &second)
 {
     auto const &fNeighbours = first.getNeighbours();
     auto const &sNeighbours = second.getNeighbours();
 
-    int numBrokenPairs = 0;
+    size_t const numClients = fNeighbours.size() - 1;
+    size_t numBrokenPairs = 0;
 
-    for (size_t j = 1; j <= data.numClients(); j++)
+    for (size_t j = 1; j <= numClients; j++)
     {
         auto const [fPred, fSucc] = fNeighbours[j];
         auto const [sPred, sSucc] = sNeighbours[j];
@@ -23,5 +22,5 @@ double brokenPairsDistance(ProblemData const &data,
     // numBrokenPairs is at most 2n: for each client, since we can count at
     // most two broken edges in the loop above. Here, we normalise the distance
     // to [0, 1].
-    return numBrokenPairs / (2. * data.numClients());
+    return numBrokenPairs / (2. * numClients);
 }

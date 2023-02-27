@@ -1,7 +1,6 @@
 from typing import Iterator, List, Tuple
 
-from pyvrp.Individual import Individual
-from pyvrp.ProblemData import ProblemData
+from pyvrp._Individual import Individual
 
 class PopulationParams:
     generation_size: int
@@ -23,9 +22,7 @@ class PopulationParams:
     def max_pop_size(self) -> int: ...
 
 class SubPopulation:
-    def __init__(
-        self, data: ProblemData, diversity_op, params: PopulationParams
-    ) -> None:
+    def __init__(self, diversity_op, params: PopulationParams) -> None:
         """
         Creates a SubPopulation instance.
 
@@ -38,8 +35,6 @@ class SubPopulation:
 
         Parameters
         ----------
-        data
-            Data object describing the problem to be solved.
         diversity_op
             Operator to use to determine pairwise diversity between solutions.
         params
