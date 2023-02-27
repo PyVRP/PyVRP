@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES  // needed to get M_PI etc. on Windows builds
+
 #include "Route.h"
 
 #include <cmath>
