@@ -1,6 +1,7 @@
 #include "Route.h"
 
 #include <cmath>
+#include <numbers>
 #include <ostream>
 
 void Route::setupNodes()
@@ -27,7 +28,7 @@ void Route::setupSector()
     auto const clientData = data->client(n(depot)->client);
     auto const angle = CircleSector::positive_mod(static_cast<int>(
         32768. * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
-        / M_PI));
+        / std::numbers::pi));
 
     sector.initialize(angle);
 
@@ -46,7 +47,7 @@ void Route::setupSector()
         auto const angle = CircleSector::positive_mod(static_cast<int>(
             32768.
             * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
-            / M_PI));
+            / std::numbers::pi));
 
         sector.extend(angle);
     }
