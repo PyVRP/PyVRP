@@ -116,7 +116,7 @@ def read(
         # route duration. This ensures that the time window constraints are
         # always satisfied.
         bound = num_clients * (edge_weight.max() + service_times.max())
-        bound = bound if bound < _INT_MAX else _INT_MAX
+        bound = min(bound, _INT_MAX)
         time_windows = np.repeat([[0, bound]], num_clients, axis=0)
 
     # Checks
