@@ -18,9 +18,7 @@ def test_OkSmall_instance():
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = TwoOpt(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(TwoOpt(data, pm))
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
     improved_individual = ls.search(individual)
@@ -43,9 +41,7 @@ def test_RC208_instance(seed: int):
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = TwoOpt(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(TwoOpt(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
