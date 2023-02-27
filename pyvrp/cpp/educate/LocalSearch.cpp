@@ -130,13 +130,13 @@ Individual LocalSearch::intensify(Individual &individual,
 
 bool LocalSearch::applyNodeOps(Node *U, Node *V)
 {
-    for (auto op : nodeOps)
-        if (op->evaluate(U, V) < 0)
+    for (auto *nodeOp : nodeOps)
+        if (nodeOp->evaluate(U, V) < 0)
         {
             auto *routeU = U->route;  // copy pointers because the operator can
             auto *routeV = V->route;  // modify the node's route membership
 
-            op->apply(U, V);
+            nodeOp->apply(U, V);
             update(routeU, routeV);
 
             return true;
@@ -147,11 +147,17 @@ bool LocalSearch::applyNodeOps(Node *U, Node *V)
 
 bool LocalSearch::applyRouteOps(Route *U, Route *V)
 {
-    for (auto op : routeOps)
-        if (op->evaluate(U, V) < 0)
+    for (auto *routeOp : routeOps)
+        if (routeOp->evaluate(U, V) < 0)
         {
-            op->apply(U, V);
+            routeOp->apply(U, V);
             update(U, V);
+
+            for (auto *op : routeOps)  // this is used by some route operators
+            {                          // (particularly SWAP*) to keep caches
+                op->update(U);         // in sync.
+                op->update(V);
+            }
 
             return true;
         }
@@ -167,16 +173,10 @@ void LocalSearch::update(Route *U, Route *V)
     U->update();
     lastModified[U->idx] = nbMoves;
 
-    for (auto op : routeOps)  // TODO only route operators use this (SWAP*).
-        op->update(U);        //  Maybe later also expand to node ops?
-
     if (U != V)
     {
         V->update();
         lastModified[V->idx] = nbMoves;
-
-        for (auto op : routeOps)
-            op->update(V);
     }
 }
 
@@ -240,11 +240,8 @@ void LocalSearch::loadIndividual(Individual const &individual)
         route->update();
     }
 
-    for (auto op : nodeOps)
-        op->init(individual);
-
-    for (auto op : routeOps)
-        op->init(individual);
+    for (auto *routeOp : routeOps)
+        routeOp->init(individual);
 }
 
 Individual LocalSearch::exportIndividual()

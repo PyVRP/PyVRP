@@ -1,11 +1,5 @@
 #include "RelocateStar.h"
 
-void RelocateStar::init(Individual const &indiv)
-{
-    LocalSearchOperator<Route>::init(indiv);
-    relocate.init(indiv);
-}
-
 int RelocateStar::evaluate(Route *U, Route *V)
 {
     move = {};
