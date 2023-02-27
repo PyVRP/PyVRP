@@ -29,9 +29,6 @@ PYBIND11_MODULE(_SubPopulation, m)
                       &SubPopulation::Item::individual,
                       py::return_value_policy::reference_internal)
         .def_readonly("fitness", &SubPopulation::Item::fitness)
-        .def_readonly("_proximity",  // TODO this field might become obsolete
-                      &SubPopulation::Item::proximity,
-                      py::return_value_policy::reference_internal)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
@@ -40,7 +37,9 @@ PYBIND11_MODULE(_SubPopulation, m)
                       PopulationParams const &>(),
              py::arg("data"),
              py::arg("diversity_op"),
-             py::arg("params"))
+             py::arg("params"),
+             py::keep_alive<1, 2>(),  // keep data and parameters alive at
+             py::keep_alive<1, 4>())  // least until subpopulation is freed
         .def("add", &SubPopulation::add, py::arg("individual"))
         .def("__len__", &SubPopulation::size)
         .def(

@@ -15,7 +15,8 @@ PYBIND11_MODULE(_TimeWindowSegment, m)
              py::arg("duration"),
              py::arg("time_warp"),
              py::arg("tw_early"),
-             py::arg("tw_late"))
+             py::arg("tw_late"),
+             py::keep_alive<1, 2>())  // keep matrix alive
         .def("total_time_warp", &TWS::totalTimeWarp)
         .def_static("merge", &TWS::merge<>)
         .def_static("merge", &TWS::merge<TWS>)

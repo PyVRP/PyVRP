@@ -16,7 +16,10 @@ PYBIND11_MODULE(_LocalSearch, m)
              py::arg("data"),
              py::arg("penalty_manager"),
              py::arg("rng"),
-             py::arg("neighbours"))
+             py::arg("neighbours"),
+             py::keep_alive<1, 2>(),  // keep data, penalty_manager and rng
+             py::keep_alive<1, 3>(),  // alive at least until local search
+             py::keep_alive<1, 4>())  // is freed
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
              py::arg("op"),
@@ -28,7 +31,9 @@ PYBIND11_MODULE(_LocalSearch, m)
         .def("set_neighbours",
              &LocalSearch::setNeighbours,
              py::arg("neighbours"))
-        .def("get_neighbours", &LocalSearch::getNeighbours)
+        .def("get_neighbours",
+             &LocalSearch::getNeighbours,
+             py::return_value_policy::reference_internal)
         .def("search", &LocalSearch::search, py::arg("individual"))
         .def("intensify",
              &LocalSearch::intensify,
