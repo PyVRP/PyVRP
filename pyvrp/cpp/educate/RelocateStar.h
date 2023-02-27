@@ -23,8 +23,6 @@ class RelocateStar : public LocalSearchOperator<Route>
     Move move;
 
 public:
-    void init(Individual const &indiv) override;
-
     int evaluate(Route *U, Route *V) override;
 
     void apply(Route *U, Route *V) override;
