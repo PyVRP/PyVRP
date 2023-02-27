@@ -10,6 +10,24 @@ from ._XorShift128 import XorShift128
 
 
 class Population:
+    """
+    Creates a Population instance.
+
+    Parameters
+    ----------
+    data
+        Data object describing the problem to be solved.
+    penalty_manager
+        Penalty manager to use.
+    rng
+        Random number generator.
+    diversity_op
+        Operator to use to determine pairwise diversity between solutions. Have
+        a look at :mod:`pyvrp.diversity` for available operators.
+    params, optional
+        Population parameters. If not provided, a default will be used.
+    """
+
     def __init__(
         self,
         data: ProblemData,
@@ -18,22 +36,6 @@ class Population:
         diversity_op: Callable[[Individual, Individual], float],
         params: PopulationParams = PopulationParams(),
     ):
-        """
-        Creates a Population instance.
-
-        Parameters
-        ----------
-        data
-            Data object describing the problem to be solved.
-        penalty_manager
-            Penalty manager to use.
-        rng
-            Random number generator.
-        diversity_op
-            Operator to use to determine pairwise diversity between solutions.
-        params, optional
-            Population parameters. If not provided, a default will be used.
-        """
         self._data = data
         self._pm = penalty_manager
         self._rng = rng

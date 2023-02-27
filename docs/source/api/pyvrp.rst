@@ -42,9 +42,9 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoapiclass:: PopulationParams
       :members:
 
-   .. autoapiclass:: Population
+   .. autoclass:: Population
       :members:  
-      :special-members:
+      :special-members: __iter__, __len__
  
 .. autoapimodule:: pyvrp._ProblemData
 
