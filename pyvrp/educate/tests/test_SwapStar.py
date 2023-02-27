@@ -47,7 +47,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
-def test_RC208_instance(seed: int):
+def test_swap_star_on_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=seed)
