@@ -17,7 +17,7 @@ jobs:
       ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - compiler: gcc
@@ -50,7 +50,7 @@ jobs:
           key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: Install Python dependencies
         if: steps.cache-python.outputs.cache-hit != 'true'
-        run: poetry install --no-root
+        run: poetry install --no-root --with examples
       - name: Cache pre-commit
         uses: actions/cache@v3
         id: cache-pre-commit
@@ -107,6 +107,6 @@ jobs:
         # Run this only for one job to reduce workflow runtimes.
         name: Run example notebooks
         run: |
-          poetry install --with examples
-          poetry run jupyter nbconvert --to notebook --execute examples/cvrp.ipynb
-          poetry run jupyter nbconvert --to notebook --execute examples/vrptw.ipynb
+          for f in examples/*.ipynb;
+            do poetry run jupyter nbconvert --to notebook --execute $f;
+          done
