@@ -195,8 +195,8 @@ def test_relocate_after_depot_should_work():
     ls.add_node_operator(Exchange10(data, pm))
 
     # This individual can be improved by moving 3 into its own route, that is,
-    # inserting it after the depot. Before the bug was fixed, (1, 0)-exchange
-    # never performed this move.
+    # inserting it after the depot of an empty route. Before the bug was fixed,
+    # (1, 0)-exchange never performed this move.
     individual = Individual(data, pm, [[1, 2, 3], [4]])
     expected = Individual(data, pm, [[1, 2], [3], [4]])
     assert_equal(ls.search(individual), expected)
