@@ -83,6 +83,10 @@ jobs:
       - name: Run tests
         continue-on-error: true
         run: poetry run python -m pytest
+      - uses: actions/upload-artifact@v3
+        with:
+          name: result_images
+          path: result_images/
       - uses: actions/download-artifact@v3  # download images from plot tests
         with:
           name: result_images
