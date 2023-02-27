@@ -1,7 +1,7 @@
 from typing import Iterator, List, Tuple
 
-from pyvrp.Individual import Individual
-from pyvrp.ProblemData import ProblemData
+from pyvrp._Individual import Individual
+from pyvrp._ProblemData import ProblemData
 
 class PopulationParams:
     generation_size: int
