@@ -6,6 +6,8 @@
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
+#include <cassert>
+
 using TWS = TimeWindowSegment;
 
 /**
@@ -57,7 +59,9 @@ bool Exchange<N, M>::overlap(Node *U, Node *V) const
 {
     // clang-format off
     return U->route == V->route
-        && U->position <= V->position + M - 1
+        // We need max(M, 1) here because when V is the depot and M == 0, this
+        // would turn negative and wrap around to a large number.
+        && U->position <= V->position + std::max(M, size_t(1)) - 1
         && V->position <= U->position + N - 1;
     // clang-format on
 }
@@ -74,9 +78,12 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 template <size_t N, size_t M>
 int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 {
-    auto *endU = N == 1 ? U : (*U->route)[U->position + N - 1];
     auto const posU = U->position;
     auto const posV = V->position;
+
+    assert(posU > 0);
+
+    auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
     int const current = U->route->distBetween(posU - 1, posU + N)
                         + data.dist(V->client, n(V)->client);
@@ -151,11 +158,13 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 template <size_t N, size_t M>
 int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 {
-    auto *endU = N == 1 ? U : (*U->route)[U->position + N - 1];
-    auto *endV = M == 1 ? V : (*V->route)[V->position + M - 1];
-
     auto const posU = U->position;
     auto const posV = V->position;
+
+    assert(posU > 0 && posV > 0);
+
+    auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
+    auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
     int const current = U->route->distBetween(posU - 1, posU + N)
                         + V->route->distBetween(posV - 1, posV + M);

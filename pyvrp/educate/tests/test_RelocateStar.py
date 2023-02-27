@@ -43,7 +43,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
         assert_equal(relocate_individual, exchange_individual)
 
 
-@mark.parametrize("size", [5, 10, 15])
+@mark.parametrize("size", [2, 5, 10])
 def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     """
     This test restricts the sizes of the granular neighbourhoods, so now

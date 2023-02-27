@@ -173,3 +173,30 @@ def test_swap_between_routes_OkSmall():
 
     assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
     assert_(improved_individual.cost() < individual.cost())
+
+
+def test_relocate_after_depot_should_work():
+    """
+    This test exercises the bug identified in issue #142, involving a relocate
+    action that should insert directly after the depot.
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.num_vehicles)
+    rng = XorShift128(seed=42)
+
+    # This is a non-empty neighbourhood (so LS does not complain), but the only
+    # client moves allowed by it will not improve the initial solution created
+    # below. So the only improvements (1, 0)-exchange can make must come from
+    # moving clients behind the depot of a route.
+    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours[2].append(1)
+
+    ls = LocalSearch(data, pm, rng, neighbours)
+    ls.add_node_operator(Exchange10(data, pm))
+
+    # This individual can be improved by moving 3 into its own route, that is,
+    # inserting it after the depot of an empty route. Before the bug was fixed,
+    # (1, 0)-exchange never performed this move.
+    individual = Individual(data, pm, [[1, 2, 3], [4]])
+    expected = Individual(data, pm, [[1, 2], [3], [4]])
+    assert_equal(ls.search(individual), expected)
