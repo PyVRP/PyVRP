@@ -87,6 +87,7 @@ def build(
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
         f"-Dproblem={problem}",
+        f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         *additional,
         # fmt: on
     ]
