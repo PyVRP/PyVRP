@@ -11,7 +11,7 @@ def plot_objectives(
     result: Result,
     num_to_skip: Optional[int] = None,
     ax: Optional[plt.Axes] = None,
-    ylim_adjust: Tuple = (0.95, 1.15),
+    ylim_adjust: Tuple[float, float] = (0.95, 1.15),
 ):
     """
     Plots each subpopulation's objective values.
