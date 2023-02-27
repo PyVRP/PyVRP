@@ -22,9 +22,7 @@ def test_single_route_OkSmall():
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = MoveTwoClientsReversed(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(MoveTwoClientsReversed(data, pm))
 
     individual = Individual(data, pm, [[1, 4, 2, 3]])
     improved_individual = ls.search(individual)
@@ -53,9 +51,7 @@ def test_RC208_instance(seed: int):
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = MoveTwoClientsReversed(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(MoveTwoClientsReversed(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])

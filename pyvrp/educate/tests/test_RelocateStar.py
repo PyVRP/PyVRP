@@ -25,20 +25,22 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
-    exchange = Exchange10(data, pm)
-    relocate = RelocateStar(data, pm)
-    ls.add_node_operator(exchange)
-    ls.add_route_operator(relocate)
+    ls.add_node_operator(Exchange10(data, pm))
+    ls.add_route_operator(RelocateStar(data, pm))
 
-    individual = Individual(data, pm, rng)
-    exchange_individual = ls.search(individual)
+    for _ in range(10):  # repeat a few times to really make sure
+        individual = Individual(data, pm, rng)
+        exchange_individual = ls.search(individual)
+        relocate_individual = ls.intensify(
+            exchange_individual, overlap_tolerance_degrees=360
+        )
 
-    # RELOCATE* applies the best (1, 0)-exchange moves between routes. But when
-    # the granular neighbourhood covers the entire client space, that best move
-    # has already been evaluated and applied by regular (1, )-exchange. Thus,
-    # at this point the individual cannot be improved further by RELOCATE*.
-    relocate_individual = ls.intensify(exchange_individual)
-    assert_equal(relocate_individual, exchange_individual)
+        # RELOCATE* applies the best (1, 0)-exchange moves between routes. But
+        # when the granular neighbourhood covers the entire client space, that
+        # best move has already been evaluated and applied by regular (1,0)
+        # exchange. Thus, at this point the individual cannot be improved
+        # further by RELOCATE*.
+        assert_equal(relocate_individual, exchange_individual)
 
 
 @mark.parametrize("size", [5, 10, 15])
@@ -54,14 +56,14 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     nb_params = NeighbourhoodParams(nb_granular=size)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
-    exchange = Exchange10(data, pm)
-    relocate = RelocateStar(data, pm)
-    ls.add_node_operator(exchange)
-    ls.add_route_operator(relocate)
+    ls.add_node_operator(Exchange10(data, pm))
+    ls.add_route_operator(RelocateStar(data, pm))
 
     individual = Individual(data, pm, rng)
     exchange_individual = ls.search(individual)
-    relocate_individual = ls.intensify(exchange_individual)
+    relocate_individual = ls.intensify(
+        exchange_individual, overlap_tolerance_degrees=360
+    )
 
     # The original individual was not that great, so after (1, 0)-Exchange it
     # should have improved. But that operator is restricted by the size of the
