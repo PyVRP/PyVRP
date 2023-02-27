@@ -17,7 +17,7 @@ jobs:
       ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - compiler: gcc
@@ -82,6 +82,10 @@ jobs:
           poetry run python build_extensions.py --build_type debug --clean
       - name: Run tests
         run: poetry run python -m pytest
+      - uses: actions/download-artifact@v3  # download images from plot tests
+        with:
+          name: result_images
+          path: result_images/
       - if: matrix.compiler == 'gcc'
         # Clang does not generate accurate coverage reports, so there is no
         # point in uploading those.
