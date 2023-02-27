@@ -17,9 +17,14 @@ PYBIND11_MODULE(_LocalSearch, m)
              py::arg("penalty_manager"),
              py::arg("rng"),
              py::arg("neighbours"))
-        .def("add_node_operator", &LocalSearch::addNodeOperator, py::arg("op"))
-        .def(
-            "add_route_operator", &LocalSearch::addRouteOperator, py::arg("op"))
+        .def("add_node_operator",
+             &LocalSearch::addNodeOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
+        .def("add_route_operator",
+             &LocalSearch::addRouteOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
         .def("set_neighbours",
              &LocalSearch::setNeighbours,
              py::arg("neighbours"))

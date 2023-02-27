@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
@@ -42,19 +40,15 @@ def test_swap_single_route_stays_single_route(operator):
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = operator(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(operator(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    copy = deepcopy(individual)
-
-    ls.search(individual)
+    improved_individual = ls.search(individual)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(individual.num_routes(), 1)
-    assert_(individual.cost() < copy.cost())
+    assert_equal(improved_individual.num_routes(), 1)
+    assert_(improved_individual.cost() < individual.cost())
 
 
 @mark.parametrize(
@@ -76,20 +70,16 @@ def test_relocate_uses_empty_routes(operator):
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = operator(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(operator(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    copy = deepcopy(individual)
-
-    ls.search(individual)
+    improved_individual = ls.search(individual)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
-    assert_(individual.num_routes() > 1)
-    assert_(individual.cost() < copy.cost())
+    assert_(improved_individual.num_routes() > 1)
+    assert_(improved_individual.cost() < individual.cost())
 
 
 @mark.parametrize(
@@ -115,16 +105,12 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = operator(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(operator(data, pm))
 
     individual = Individual(data, pm, [[1, 2], [3], [4]])
-    copy = deepcopy(individual)
+    new_individual = ls.search(individual)
 
-    ls.search(individual)
-
-    assert_equal(individual, copy)
+    assert_equal(new_individual, individual)
 
 
 @mark.parametrize("operator", [Exchange32, Exchange33])
@@ -139,16 +125,12 @@ def test_cannot_exchange_when_segments_overlap(operator):
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = operator(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(operator(data, pm))
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    copy = deepcopy(individual)
+    new_individual = ls.search(individual)
 
-    ls.search(individual)
-
-    assert_equal(individual, copy)
+    assert_equal(new_individual, individual)
 
 
 def test_cannot_swap_adjacent_segments():
@@ -162,19 +144,15 @@ def test_cannot_swap_adjacent_segments():
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = Exchange22(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(Exchange22(data, pm))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    copy = deepcopy(individual)
+    new_individual = ls.search(individual)
 
-    ls.search(individual)
-
-    assert_equal(individual, copy)
+    assert_equal(new_individual, individual)
 
 
 def test_swap_between_routes_OkSmall():
@@ -188,17 +166,13 @@ def test_swap_between_routes_OkSmall():
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
-
-    op = Exchange21(data, pm)
-    ls.add_node_operator(op)
+    ls.add_node_operator(Exchange21(data, pm))
 
     individual = Individual(data, pm, [[1, 2], [3, 4]])
-    copy = deepcopy(individual)
+    improved_individual = ls.search(individual)
 
-    ls.search(individual)
-
-    assert_equal(individual.get_routes(), [[3, 4, 2], [1], []])
-    assert_(individual.cost() < copy.cost())
+    assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
+    assert_(improved_individual.cost() < individual.cost())
 
 
 def test_relocate_single_after_depot_RC2_10_8():

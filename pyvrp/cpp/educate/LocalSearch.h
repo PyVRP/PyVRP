@@ -44,7 +44,7 @@ class LocalSearch
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve
-    void loadIndividual(Individual const &indiv);
+    void loadIndividual(Individual const &individual);
 
     // Export the LS solution back into an individual
     Individual exportIndividual();
@@ -81,15 +81,18 @@ public:
     Neighbours getNeighbours();
 
     /**
-     * Performs regular (node-based) local search around the given individual.
+     * Performs regular (node-based) local search around the given individual,
+     * and returns a new, hopefully improved individual.
      */
-    void search(Individual &indiv);
+    Individual search(Individual &individual);
 
     /**
      * Performs a more intensive local search around the given individual,
-     * using route-based operators and subpath enumeration.
+     * using route-based operators and subpath enumeration. Returns a new,
+     * hopefully improved individual.
      */
-    void intensify(Individual &indiv, int overlapToleranceDegrees = 0);
+    Individual intensify(Individual &individual,
+                         int overlapToleranceDegrees = 0);
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,

@@ -28,6 +28,7 @@ from pyvrp.educate import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
+    NeighbourhoodParams,
     compute_neighbours,
 )
 from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
@@ -121,22 +122,20 @@ def solve(
 
     pen_params = PenaltyParams(**config.get("penalty", {}))
     pop_params = PopulationParams(**config.get("population", {}))
+    nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
 
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
     pop = Population(data, pen_manager, rng, bpd, pop_params)
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+    neighbours = compute_neighbours(data, nb_params)
+    ls = LocalSearch(data, pen_manager, rng, neighbours)
 
-    node_ops = [node_op(data, pen_manager) for node_op in NODE_OPERATORS]
+    for op in NODE_OPERATORS:
+        ls.add_node_operator(op(data, pen_manager))
 
-    for op in node_ops:
-        ls.add_node_operator(op)
-
-    route_ops = [route_op(data, pen_manager) for route_op in ROUTE_OPERATORS]
-
-    for op in route_ops:
-        ls.add_route_operator(op)
+    for op in ROUTE_OPERATORS:
+        ls.add_route_operator(op(data, pen_manager))
 
     algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, gen_params)
 

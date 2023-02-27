@@ -1,5 +1,6 @@
 #include "Individual.h"
 
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -35,7 +36,6 @@ PYBIND11_MODULE(_Individual, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
-        .def("__eq__", &Individual::operator==)
         .def(
             "__copy__",
             [](Individual const &individual) { return Individual(individual); })
@@ -45,9 +45,15 @@ PYBIND11_MODULE(_Individual, m)
                 return Individual(individual);
             },
             py::arg("memo"))
-        .def("__str__", [](Individual const &individual) {
-            std::stringstream stream;
-            stream << individual;
-            return stream.str();
-        });
+        .def("__hash__",
+             [](Individual const &individual)
+             { return std::hash<Individual>()(individual); })
+        .def(pybind11::self == pybind11::self)  // this is __eq__
+        .def("__str__",
+             [](Individual const &individual)
+             {
+                 std::stringstream stream;
+                 stream << individual;
+                 return stream.str();
+             });
 }

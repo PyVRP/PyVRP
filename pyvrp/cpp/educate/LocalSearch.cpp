@@ -6,9 +6,9 @@
 #include <stdexcept>
 #include <vector>
 
-void LocalSearch::search(Individual &indiv)
+Individual LocalSearch::search(Individual &individual)
 {
-    loadIndividual(indiv);
+    loadIndividual(individual);
 
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
@@ -70,12 +70,13 @@ void LocalSearch::search(Individual &indiv)
         }
     }
 
-    indiv = exportIndividual();
+    return exportIndividual();
 }
 
-void LocalSearch::intensify(Individual &indiv, int overlapToleranceDegrees)
+Individual LocalSearch::intensify(Individual &individual,
+                                  int overlapToleranceDegrees)
 {
-    loadIndividual(indiv);
+    loadIndividual(individual);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
@@ -124,7 +125,7 @@ void LocalSearch::intensify(Individual &indiv, int overlapToleranceDegrees)
         }
     }
 
-    indiv = exportIndividual();
+    return exportIndividual();
 }
 
 bool LocalSearch::applyNodeOps(Node *U, Node *V)
@@ -179,7 +180,7 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
-void LocalSearch::loadIndividual(Individual const &indiv)
+void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
         clients[client].tw = {&data.distanceMatrix(),
@@ -190,7 +191,7 @@ void LocalSearch::loadIndividual(Individual const &indiv)
                               data.client(client).twEarly,
                               data.client(client).twLate};
 
-    auto const &routesIndiv = indiv.getRoutes();
+    auto const &routesIndiv = individual.getRoutes();
 
     for (size_t r = 0; r < data.numVehicles(); r++)
     {
@@ -240,10 +241,10 @@ void LocalSearch::loadIndividual(Individual const &indiv)
     }
 
     for (auto op : nodeOps)
-        op->init(indiv);
+        op->init(individual);
 
     for (auto op : routeOps)
-        op->init(indiv);
+        op->init(individual);
 }
 
 Individual LocalSearch::exportIndividual()
