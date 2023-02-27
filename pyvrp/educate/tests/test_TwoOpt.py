@@ -23,18 +23,16 @@ def test_OkSmall_instance():
     ls.add_node_operator(op)
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    copy = Individual(individual)
-
-    ls.search(individual)
+    improved_individual = ls.search(individual)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(individual.num_routes(), 2)
-    assert_(individual.cost() < copy.cost())
+    assert_equal(improved_individual.num_routes(), 2)
+    assert_(improved_individual.cost() < individual.cost())
 
     # First improving (U, V) node pair is (1, 3), which results in the route
     # [1, 3, 2, 4]. The second improving node pair involves the depot of an
     # empty route: (1, 0). This results in routes [3, 2, 4] and [1].
-    assert_equal(individual.get_routes(), [[3, 2, 4], [1], []])
+    assert_equal(improved_individual.get_routes(), [[3, 2, 4], [1], []])
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
@@ -51,9 +49,7 @@ def test_RC208_instance(seed: int):
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    copy = Individual(individual)
-
-    ls.search(individual)
+    improved_individual = ls.search(individual)
 
     # The new solution should strictly improve on our original solution.
-    assert_(individual.cost() < copy.cost())
+    assert_(improved_individual.cost() < individual.cost())

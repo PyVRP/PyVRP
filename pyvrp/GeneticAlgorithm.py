@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable, Tuple
 
-from pyvrp.educate import LocalSearch
+from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
 from .Population import Population
@@ -136,18 +136,20 @@ class GeneticAlgorithm:
         intensify_prob = self._params.intensify_probability
         should_intensify = self._rng.rand() < intensify_prob
 
-        self._ls.run(individual, should_intensify)
+        individual = self._ls.run(individual, should_intensify)
 
         if is_new_best(individual):
-            self._best = Individual(individual)
+            self._best = individual
 
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
-                self._ls.intensify(individual, overlapToleranceDegrees=360)
+                individual = self._ls.intensify(
+                    individual, overlap_tolerance_degrees=360
+                )
 
                 if is_new_best(individual):
-                    self._best = Individual(individual)
+                    self._best = individual
 
         add_and_register(individual)
 
@@ -157,21 +159,21 @@ class GeneticAlgorithm:
             not individual.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            with self._pm.get_penalty_booster() as booster:  # noqa
+            with self._pm.get_penalty_booster():
                 should_intensify = self._rng.rand() < intensify_prob
-                self._ls.run(individual, should_intensify)
+                individual = self._ls.run(individual, should_intensify)
 
                 if is_new_best(individual):
-                    self._best = Individual(individual)
+                    self._best = individual
 
                     # TODO Refactor to on_best callback (see issue #111)
                     if self._params.intensify_on_best:
-                        self._ls.intensify(
-                            individual, overlapToleranceDegrees=360
+                        individual = self._ls.intensify(
+                            individual, overlap_tolerance_degrees=360
                         )
 
                         if is_new_best(individual):
-                            self._best = Individual(individual)
+                            self._best = individual
 
                 if individual.is_feasible():
                     add_and_register(individual)
