@@ -15,7 +15,7 @@ This object can be used to obtain the best observed solution, and detailed runti
 
    Have a look at the examples to see how these classes relate!
 
-.. autoapimodule:: pyvrp.GeneticAlgorithm
+.. automodule:: pyvrp.GeneticAlgorithm
 
    .. autoapiclass:: GeneticAlgorithmParams
       :members:
@@ -23,13 +23,13 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoapiclass:: GeneticAlgorithm
       :members:
 
-.. autoapimodule:: pyvrp._Individual
+.. automodule:: pyvrp._Individual
    
    .. autoapiclass:: Individual
       :members:
       :special-members:
 
-.. autoapimodule:: pyvrp._PenaltyManager
+.. automodule:: pyvrp._PenaltyManager
 
    .. autoapiclass:: PenaltyParams
       :members:
@@ -37,7 +37,7 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoapiclass:: PenaltyManager
       :members: 
 
-.. autoapimodule:: pyvrp.Population
+.. automodule:: pyvrp.Population
 
    .. autoapiclass:: PopulationParams
       :members:
@@ -46,7 +46,7 @@ This object can be used to obtain the best observed solution, and detailed runti
       :members:  
       :special-members: __iter__, __len__
  
-.. autoapimodule:: pyvrp._ProblemData
+.. automodule:: pyvrp._ProblemData
 
    .. autoapiclass:: Client
       :members:
@@ -69,7 +69,7 @@ This object can be used to obtain the best observed solution, and detailed runti
 .. automodule:: pyvrp.Statistics
    :members:
 
-.. autoapimodule:: pyvrp._XorShift128
+.. automodule:: pyvrp._XorShift128
 
    .. autoapiclass:: XorShift128
       :members:
