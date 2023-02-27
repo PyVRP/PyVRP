@@ -1,7 +1,9 @@
+#define _USE_MATH_DEFINES  // needed to get M_PI etc. on Windows builds
+// TODO use std::numbers::pi instead of M_PI when C++20 is supported by CIBW
+
 #include "Route.h"
 
 #include <cmath>
-#include <numbers>
 #include <ostream>
 
 void Route::setupNodes()
@@ -28,7 +30,7 @@ void Route::setupSector()
     auto const clientData = data->client(n(depot)->client);
     auto const angle = CircleSector::positive_mod(static_cast<int>(
         32768. * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
-        / std::numbers::pi));
+        / M_PI));
 
     sector.initialize(angle);
 
@@ -47,7 +49,7 @@ void Route::setupSector()
         auto const angle = CircleSector::positive_mod(static_cast<int>(
             32768.
             * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
-            / std::numbers::pi));
+            / M_PI));
 
         sector.extend(angle);
     }
