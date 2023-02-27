@@ -56,7 +56,7 @@ def get_route_statistics(
     data: ProblemData, route: List[int]
 ) -> RouteStatistics:
     """
-    Returns statistics for a route
+    Returns statistics for a route.
 
     Parameters
     ----------
@@ -123,7 +123,7 @@ def get_all_route_statistics(
     solution: Individual, data: ProblemData
 ) -> List[RouteStatistics]:
     """
-    Returns route statistics for a set of routes.
+    Returns route statistics for a set of routes. Empty routes are skipped.
 
     Parameters
     ----------
@@ -138,5 +138,7 @@ def get_all_route_statistics(
         List of RouteStatistic objects with statistics for each route.
     """
     return [
-        get_route_statistics(data, route) for route in solution.get_routes()
+        get_route_statistics(data, route)
+        for route in solution.get_routes()
+        if route  # skip empty routes
     ]

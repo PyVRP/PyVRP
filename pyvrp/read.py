@@ -104,15 +104,20 @@ def read(
     else:
         coords = np.zeros((num_clients, 2), dtype=int)
 
-    if "time_window" in instance:
-        time_windows = round_func(instance["time_window"])
-    else:
-        time_windows = np.repeat([[0, _INT_MAX]], num_clients, axis=0)
-
     if "service_time" in instance:
         service_times = round_func(instance["service_time"])
     else:
         service_times = np.zeros(num_clients, dtype=int)
+
+    if "time_window" in instance:
+        time_windows = round_func(instance["time_window"])
+    else:
+        # The default value for the latest time window based on the maximum
+        # route duration. This ensures that the time window constraints are
+        # always satisfied.
+        bound = num_clients * (edge_weight.max() + service_times.max())
+        bound = min(bound, _INT_MAX)
+        time_windows = np.repeat([[0, bound]], num_clients, axis=0)
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:

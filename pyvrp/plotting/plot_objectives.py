@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +11,7 @@ def plot_objectives(
     result: Result,
     num_to_skip: Optional[int] = None,
     ax: Optional[plt.Axes] = None,
+    ylim_adjust: Tuple[float, float] = (0.95, 1.15),
 ):
     """
     Plots each subpopulation's objective values.
@@ -25,6 +26,9 @@ def plot_objectives(
         later in the search. The default skips the first 5% of iterations.
     ax, optional
         Axes object to draw the plot on. One will be created if not provided.
+    ylim_adjust
+        Adjusts the y-limits to ``(best*ylim_adjust[0], best*ylim_adjust[1])``,
+        where ``best`` denotes the best found feasible objective value.
 
     Raises
     ------
@@ -57,6 +61,10 @@ def plot_objectives(
 
     y = [d.avg_cost for d in result.stats.feas_stats]
     _plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
+
+    # Use best objectives to set reasonable y-limits
+    best = np.nanmin([d.best_cost for d in result.stats.feas_stats])
+    ax.set_ylim(best * ylim_adjust[0], best * ylim_adjust[1])
 
     ax.set_title("Feasible objectives")
     ax.set_xlabel("Iteration (#)")

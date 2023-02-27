@@ -1,9 +1,4 @@
-from numpy.testing import (
-    assert_,
-    assert_almost_equal,
-    assert_equal,
-    assert_raises,
-)
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
@@ -87,7 +82,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
         nb_iter_no_improvement,
     )
 
-    assert_almost_equal(params.repair_probability, repair_probability)
+    assert_allclose(params.repair_probability, repair_probability)
     assert_equal(params.collect_statistics, collect_statistics)
     assert_equal(params.intensify_probability, intensify_probability)
     assert_equal(params.intensify_on_best, intensify_on_best)

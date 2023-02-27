@@ -50,7 +50,7 @@ jobs:
           key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: Install Python dependencies
         if: steps.cache-python.outputs.cache-hit != 'true'
-        run: poetry install --no-root
+        run: poetry install --no-root --with examples
       - name: Cache pre-commit
         uses: actions/cache@v3
         id: cache-pre-commit
@@ -103,3 +103,10 @@ jobs:
         run: |
           VALGRIND_CMD="pyvrp pyvrp/tests/data/RC208.txt --instance_format solomon --round_func dimacs --max_runtime 0.5 --seed 1"
           poetry run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
+      - if: matrix.compiler == 'clang' && matrix.python-version == '3.11'
+        # Run this only for one job to reduce workflow runtimes.
+        name: Run example notebooks
+        run: |
+          for f in examples/*.ipynb;
+            do poetry run jupyter nbconvert --to notebook --execute $f;
+          done
