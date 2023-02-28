@@ -20,6 +20,12 @@ Node operators
 --------------
 
 Instances of these operators can be added to the :class:`~pyvrp.educate.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.educate.LocalSearch.LocalSearch.add_node_operator` method.
+As a convenience, the :mod:`pyvrp.educate` module makes all these operators available as ``NODE_OPERATORS``:
+
+.. code-block:: python
+
+   from pyvrp.educate import NODE_OPERATORS
+
 
 .. automodule:: pyvrp.educate._Exchange
 
@@ -64,6 +70,12 @@ Route operators
 ---------------
 
 Instances of these operators can be added to the :class:`~pyvrp.educate.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.educate.LocalSearch.LocalSearch.add_route_operator` method.
+As a convenience, the :mod:`pyvrp.educate` module makes all these operators available as ``ROUTE_OPERATORS``:
+
+.. code-block:: python
+
+   from pyvrp.educate import ROUTE_OPERATORS
+
 
 .. automodule:: pyvrp.educate._RelocateStar
 
