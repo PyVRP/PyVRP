@@ -27,7 +27,6 @@ This object can be used to obtain the best observed solution, and detailed runti
    
    .. autoapiclass:: Individual
       :members:
-      :special-members:
 
 .. automodule:: pyvrp._PenaltyManager
 
