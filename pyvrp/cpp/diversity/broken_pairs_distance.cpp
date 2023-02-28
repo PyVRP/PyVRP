@@ -5,6 +5,8 @@ double brokenPairsDistance(Individual const &first, Individual const &second)
     auto const &fNeighbours = first.getNeighbours();
     auto const &sNeighbours = second.getNeighbours();
 
+    // The neighbours vector contains the depot, so its size is always at least
+    // one. Thus numClients >= 0.
     size_t const numClients = fNeighbours.size() - 1;
     size_t numBrokenPairs = 0;
 
@@ -19,8 +21,7 @@ double brokenPairsDistance(Individual const &first, Individual const &second)
         numBrokenPairs += fPred != sPred;
     }
 
-    // numBrokenPairs is at most 2n: for each client, since we can count at
-    // most two broken edges in the loop above. Here, we normalise the distance
-    // to [0, 1].
-    return numBrokenPairs / (2. * numClients);
+    // numBrokenPairs is at most 2n since we can count at most two broken edges
+    // for each client. Here, we normalise the distance to [0, 1].
+    return numBrokenPairs / (2. * std::max(numClients, size_t(1)));
 }

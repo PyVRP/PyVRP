@@ -2,11 +2,23 @@ from pyvrp._Individual import Individual
 
 def broken_pairs_distance(first: Individual, second: Individual) -> float:
     """
-    Computes the symmetric broken pairs distance between the given two
+    Computes the symmetric broken pairs distance (BPD) between the given two
     individuals. This function determines whether each client in the problem
     shares neighbours between the first and second solution. If not, the
     client is part of a 'broken pair': a link that is part of one solution,
     but not of the other.
+
+    Formally, given two individuals :math:`f` and :math:`s`, let :math:`p_f(i)`
+    and :math:`p_s(i)` be the preceding client (or depot) of client
+    :math:`i = 1, \\ldots, n` in :math:`f` and :math:`s`, respectively.
+    Similarly define :math:`s_f(i)` and :math:`s_s(i)` for the succeeding
+    client (or depot). Then, we have
+
+    .. math::
+
+       \\text{BPD}(f, s) = \\frac{
+            \\sum_{i = 1}^n 1_{p_f(i) \\ne p_s(i)} + 1_{s_f(i) \\ne s_s(i)}
+        }{2n}.
 
     Parameters
     ----------
