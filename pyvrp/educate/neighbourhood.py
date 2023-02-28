@@ -12,6 +12,30 @@ Neighbours = List[List[int]]
 
 @dataclass
 class NeighbourhoodParams:
+    """
+    Configuration for calculating a granular neighbourhood.
+
+    Attributes
+    ----------
+    weight_wait_time
+        TODO
+    weight_time_warp
+        TODO
+    nb_granular
+        Number of other clients that are in each client's granular
+        neighbourhood. This parameter determines the size of the overall
+        neighbourhood.
+    symmetric_proximity
+        TODO
+    symmetric_neighbours
+        TODO
+
+    Raises
+    ------
+    ValueError
+        When ``nb_granular`` is non-positive.
+    """
+
     weight_wait_time: float = 0.2
     weight_time_warp: float = 1.0
     nb_granular: int = 40
@@ -32,7 +56,7 @@ def compute_neighbours(
     Parameters
     ----------
     data
-        ProblemData for which to compute correlated vertices.
+        ProblemData for which to compute the neighbourhood.
     params
         NeighbourhoodParams that define how the neighbourhood is computed.
 

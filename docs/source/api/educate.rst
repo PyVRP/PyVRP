@@ -13,54 +13,64 @@ This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvr
    .. autoclass:: LocalSearch
       :members:
 
-.. autoapimodule:: pyvrp.educate._Exchange
-
-   .. autoclass:: Exchange10
-      :members:
-
-   .. autoclass:: Exchange20
-      :members:
-
-   .. autoclass:: Exchange30
-      :members:
-   
-   .. autoclass:: Exchange11
-      :members:
-
-   .. autoclass:: Exchange21
-      :members:
-
-   .. autoclass:: Exchange31
-      :members:
-   
-   .. autoclass:: Exchange22
-      :members:
-
-   .. autoclass:: Exchange32
-      :members:
-   
-   .. autoclass:: Exchange33
-      :members:
-
 .. automodule:: pyvrp.educate.neighbourhood
    :members:
 
-.. autoapimodule:: pyvrp.educate._MoveTwoClientsReversed
+Node operators
+--------------
 
-   .. autoclass:: MoveTwoClientsReversed
+Instances of these operators can be added to the :class:`~pyvrp.educate.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.educate.LocalSearch.LocalSearch.add_node_operator` method.
+
+.. automodule:: pyvrp.educate._Exchange
+
+   .. autoapiclass:: Exchange10
       :members:
 
-.. autoapimodule:: pyvrp.educate._RelocateStar
-
-   .. autoclass:: RelocateStar
+   .. autoapiclass:: Exchange20
       :members:
 
-.. autoapimodule:: pyvrp.educate._SwapStar
-
-   .. autoclass:: SwapStar
+   .. autoapiclass:: Exchange30
+      :members:
+   
+   .. autoapiclass:: Exchange11
       :members:
 
-.. autoapimodule:: pyvrp.educate._TwoOpt
+   .. autoapiclass:: Exchange21
+      :members:
 
-   .. autoclass:: TwoOpt
+   .. autoapiclass:: Exchange31
+      :members:
+   
+   .. autoapiclass:: Exchange22
+      :members:
+
+   .. autoapiclass:: Exchange32
+      :members:
+   
+   .. autoapiclass:: Exchange33
+      :members:
+
+.. automodule:: pyvrp.educate._MoveTwoClientsReversed
+
+   .. autoapiclass:: MoveTwoClientsReversed
+      :members:
+
+.. automodule:: pyvrp.educate._TwoOpt
+
+   .. autoapiclass:: TwoOpt
+      :members:
+
+Route operators
+---------------
+
+Instances of these operators can be added to the :class:`~pyvrp.educate.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.educate.LocalSearch.LocalSearch.add_route_operator` method.
+
+.. automodule:: pyvrp.educate._RelocateStar
+
+   .. autoapiclass:: RelocateStar
+      :members:
+
+.. automodule:: pyvrp.educate._SwapStar
+
+   .. autoapiclass:: SwapStar
       :members:
