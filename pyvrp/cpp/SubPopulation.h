@@ -2,7 +2,6 @@
 #define SUBPOPULATION_H
 
 #include "Individual.h"
-#include "ProblemData.h"
 #include "diversity/diversity.h"
 
 #include <functional>
@@ -50,7 +49,6 @@ struct PopulationParams
 
 class SubPopulation
 {
-    ProblemData const &data;
     DiversityMeasure divOp;
     PopulationParams const &params;
 
@@ -84,9 +82,7 @@ private:
     void updateFitness();
 
 public:
-    SubPopulation(ProblemData const &data,
-                  DiversityMeasure divOp,
-                  PopulationParams const &params);
+    SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
 
     ~SubPopulation();
 

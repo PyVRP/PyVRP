@@ -9,4 +9,4 @@ The :mod:`pyvrp.crossover` module provides operators that are responsible for ge
 
 .. autoapimodule:: pyvrp.crossover._selective_route_exchange
 
-   .. autofunction:: selective_route_exchange
+   .. autoapifunction:: selective_route_exchange
