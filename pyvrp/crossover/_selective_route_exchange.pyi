@@ -1,6 +1,9 @@
 from typing import Tuple
 
-from pyvrp import Individual, PenaltyManager, ProblemData, XorShift128
+from pyvrp._Individual import Individual
+from pyvrp._PenaltyManager import PenaltyManager
+from pyvrp._ProblemData import ProblemData
+from pyvrp._XorShift128 import XorShift128
 
 def selective_route_exchange(
     parents: Tuple[Individual, Individual],
