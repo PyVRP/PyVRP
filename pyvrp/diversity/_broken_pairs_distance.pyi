@@ -20,6 +20,11 @@ def broken_pairs_distance(first: Individual, second: Individual) -> float:
             \\sum_{i = 1}^n 1_{p_f(i) \\ne p_s(i)} + 1_{s_f(i) \\ne s_s(i)}
         }{2n}.
 
+    .. note::
+
+        Note that our definition is directed: a route ``[1, 2, 3, 4]`` is
+        considered completely different from a route ``[4, 3, 2, 1]``.
+
     Parameters
     ----------
     first
