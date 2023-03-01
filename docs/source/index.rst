@@ -14,7 +14,6 @@ TODO
 
    setup/introduction_to_hgs
    setup/installation
-   setup/contributing
    setup/getting_help
    setup/benchmarks
 
