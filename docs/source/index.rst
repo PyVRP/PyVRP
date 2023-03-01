@@ -16,7 +16,7 @@ TODO
    setup/installation
    setup/contributing
    setup/getting_help
-   setup/benchmarking
+   setup/benchmarks
 
 .. toctree::
    :maxdepth: 1
@@ -36,3 +36,10 @@ TODO
    api/educate
    api/plotting
    api/stop
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Developing PyVRP
+
+   dev/contributing
+   dev/benchmarking

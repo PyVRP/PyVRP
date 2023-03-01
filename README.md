@@ -14,9 +14,7 @@ pip install pyvrp
 This also resolves the few core dependencies `pyvrp` has.
 The documentation is available [here][1].
 
-### Getting started
-
-TODO
+> If you are new to metaheuristics or vehicle routing, you might benefit from reading the [introduction to HGS for VRP][6] page.
 
 ### Examples
 
@@ -46,8 +44,12 @@ TODO
 
 [1]: https://pyvrp.readthedocs.io/en/latest/
 
-[2]: https://pyvrp.readthedocs.io/en/latest/setup/contributing.html
+[2]: https://pyvrp.readthedocs.io/en/latest/dev/contributing.html
 
 [3]: https://pyvrp.readthedocs.io/en/latest/setup/getting_help.html
 
 [4]: https://pyvrp.readthedocs.io/en/latest/examples/vrptw.html
+
+[5]: https://pyvrp.readthedocs.io/en/latest/examples/cvrp.html
+
+[6]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_hgs.html
