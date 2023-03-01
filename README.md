@@ -3,8 +3,6 @@
 [![Documentation Status](https://readthedocs.org/projects/pyvrp/badge/?version=latest)](https://pyvrp.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/N-Wouda/pyvrp/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/N-Wouda/pyvrp)
 
-⚠️⚠️⚠️ **This package is under heavy development - expect things to break!** ⚠️⚠️⚠️ 
-
 # PyVRP
 
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem solver.
@@ -27,8 +25,8 @@ These include:
 
 - The vehicle routing problem with time windows (VRPTW), [here][4].
   We solve several instances from the literature, including a large 1000 customer instance.
-
-TODO
+- The capacitated vehicle routing problem, [here][5].
+  We solve an instance with 439 customers to near optimality within 30 seconds.
 
 ### Contributing
 
