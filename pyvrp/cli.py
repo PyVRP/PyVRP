@@ -70,8 +70,6 @@ def solve(
     instance_format: str,
     round_func: str,
     seed: int,
-    node_ops: List[str],
-    route_ops: List[str],
     max_runtime: Optional[float],
     max_iterations: Optional[int],
     stats_dir: Optional[str],
@@ -134,11 +132,11 @@ def solve(
     neighbours = compute_neighbours(data, nb_params)
     ls = LocalSearch(data, pen_manager, rng, neighbours)
 
-    for node_op in node_ops:
+    for node_op in config.get("node_ops", NODE_OPERATORS):
         op = getattr(pyvrp.educate, node_op)
         ls.add_node_operator(op(data, pen_manager))
 
-    for route_op in route_ops:
+    for route_op in config.get("route_ops", ROUTE_OPERATORS):
         op = getattr(pyvrp.educate, route_op)
         ls.add_route_operator(op(data, pen_manager))
 
@@ -271,14 +269,6 @@ def main():
     this argument is not given.
     """
     parser.add_argument("--config_loc", help=msg)
-
-    msg = "Node operators to apply. Defaults to all."
-    node_ops = [op.__name__ for op in NODE_OPERATORS]
-    parser.add_argument("--node_ops", nargs="+", default=node_ops, help=msg)
-
-    msg = "Route operators to apply. Defaults to all."
-    route_ops = [op.__name__ for op in ROUTE_OPERATORS]
-    parser.add_argument("--route_ops", nargs="+", default=route_ops, help=msg)
 
     msg = "Seed to use for reproducible results."
     parser.add_argument("--seed", required=True, type=int, help=msg)
