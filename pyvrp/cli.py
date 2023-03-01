@@ -132,12 +132,14 @@ def solve(
     neighbours = compute_neighbours(data, nb_params)
     ls = LocalSearch(data, pen_manager, rng, neighbours)
 
-    for node_op in config.get("node_ops", NODE_OPERATORS):
-        op = getattr(pyvrp.educate, node_op)
+    for op in config.get("node_ops", NODE_OPERATORS):
+        if isinstance(op, str):
+            op = getattr(pyvrp.educate, op)
         ls.add_node_operator(op(data, pen_manager))
 
-    for route_op in config.get("route_ops", ROUTE_OPERATORS):
-        op = getattr(pyvrp.educate, route_op)
+    for op in config.get("route_ops", ROUTE_OPERATORS):
+        if isinstance(op, str):
+            op = getattr(pyvrp.educate, op)
         ls.add_route_operator(op(data, pen_manager))
 
     algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, gen_params)
