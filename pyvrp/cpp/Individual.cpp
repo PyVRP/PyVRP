@@ -9,10 +9,9 @@ using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
 
-void Individual::evaluateCompleteCost(ProblemData const &data)
+void Individual::evaluate(ProblemData const &data)
 {
-    // TODO simplify implementation
-    nbRoutes = 0;
+    numRoutes_ = 0;
     distance = 0;
     capacityExcess = 0;
     timeWarp = 0;
@@ -22,29 +21,27 @@ void Individual::evaluateCompleteCost(ProblemData const &data)
         if (route.empty())  // First empty route. All subsequent routes are
             break;          // empty as well.
 
-        nbRoutes++;
+        numRoutes_++;
 
-        int rDist = data.dist(0, route[0]);
-        int rTimeWarp = 0;
+        int routeDist = data.dist(0, route[0]);
+        int routeTimeWarp = 0;
+        int routeLoad = data.client(route[0]).demand;
 
-        int load = data.client(route[0]).demand;
-        int time = rDist;
+        int time = routeDist;
 
         if (time < data.client(route[0]).twEarly)
             time = data.client(route[0]).twEarly;
 
         if (time > data.client(route[0]).twLate)
         {
-            rTimeWarp += time - data.client(route[0]).twLate;
+            routeTimeWarp += time - data.client(route[0]).twLate;
             time = data.client(route[0]).twLate;
         }
 
         for (size_t idx = 1; idx < route.size(); idx++)
         {
-            // Sum the rDist, load, serviceDuration and time associated with the
-            // vehicle traveling from the depot to the next client
-            rDist += data.dist(route[idx - 1], route[idx]);
-            load += data.client(route[idx]).demand;
+            routeDist += data.dist(route[idx - 1], route[idx]);
+            routeLoad += data.client(route[idx]).demand;
 
             time += data.client(route[idx - 1]).serviceDuration
                     + data.dist(route[idx - 1], route[idx]);
@@ -56,27 +53,27 @@ void Individual::evaluateCompleteCost(ProblemData const &data)
             // Add possible time warp
             if (time > data.client(route[idx]).twLate)
             {
-                rTimeWarp += time - data.client(route[idx]).twLate;
+                routeTimeWarp += time - data.client(route[idx]).twLate;
                 time = data.client(route[idx]).twLate;
             }
         }
 
         // For the last client, the successors is the depot. Also update the
         // rDist and time
-        rDist += data.dist(route.back(), 0);
+        routeDist += data.dist(route.back(), 0);
         time += data.client(route.back()).serviceDuration
                 + data.dist(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
-        rTimeWarp += std::max(time - data.depot().twLate, 0);
+        routeTimeWarp += std::max(time - data.depot().twLate, 0);
 
         // Whole solution stats
-        distance += rDist;
-        timeWarp += rTimeWarp;
+        distance += routeDist;
+        timeWarp += routeTimeWarp;
 
-        if (static_cast<size_t>(load) > data.vehicleCapacity())
-            capacityExcess += load - data.vehicleCapacity();
+        if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
+            capacityExcess += routeLoad - data.vehicleCapacity();
     }
 }
 
@@ -88,7 +85,7 @@ size_t Individual::cost() const
     return distance + loadPenalty + twPenalty;
 }
 
-size_t Individual::numRoutes() const { return nbRoutes; }
+size_t Individual::numRoutes() const { return numRoutes_; }
 
 Routes const &Individual::getRoutes() const { return routes_; }
 
@@ -147,7 +144,7 @@ Individual::Individual(ProblemData const &data,
         routes_[idx / perRoute].push_back(clients[idx]);
 
     makeNeighbours();
-    evaluateCompleteCost(data);
+    evaluate(data);
 }
 
 Individual::Individual(ProblemData const &data,
@@ -174,7 +171,7 @@ Individual::Individual(ProblemData const &data,
     std::stable_sort(routes_.begin(), routes_.end(), comp);
 
     makeNeighbours();
-    evaluateCompleteCost(data);
+    evaluate(data);
 }
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
