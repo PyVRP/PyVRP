@@ -62,6 +62,20 @@ def test_load_penalty():
     assert_equal(pm.load_penalty(3), 8)  # 2 units above capacity
 
 
+@mark.parametrize("capacity", [5, 15, 29, 51, 103])
+def test_load_penalty_always_zero_when_below_capacity(capacity: int):
+    load_penalty = 2
+    params = PenaltyParams(load_penalty, 1, 1, 1, 1, 1, 1)
+    pm = PenaltyManager(capacity, params)
+
+    for load in range(capacity):  # all below capacity
+        assert_equal(pm.load_penalty(load), 0)
+
+    assert_equal(pm.load_penalty(capacity), 0)  # at capacity
+    assert_equal(pm.load_penalty(capacity + 1), load_penalty)  # above capacity
+    assert_equal(pm.load_penalty(capacity + 2), 2 * load_penalty)
+
+
 def test_tw_penalty():
     params = PenaltyParams(1, 2, 1, 1, 1, 1, 1)
     pm = PenaltyManager(1, params)
