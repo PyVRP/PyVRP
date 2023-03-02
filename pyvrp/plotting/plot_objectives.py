@@ -20,15 +20,16 @@ def plot_objectives(
     ----------
     result
         Result for which to plot objectives.
-    num_to_skip, optional
+    num_to_skip
         Number of initial iterations to skip when plotting. Early iterations
         often have very high objective values, and obscure what's going on
         later in the search. The default skips the first 5% of iterations.
-    ax, optional
+    ax
         Axes object to draw the plot on. One will be created if not provided.
     ylim_adjust
-        Adjusts the y-limits to ``(best*ylim_adjust[0], best*ylim_adjust[1])``,
-        where ``best`` denotes the best found feasible objective value.
+        Bounds the y-axis to ``(best * ylim_adjust[0], best * ylim_adjust[1])``
+        where ``best`` denotes the best found feasible objective value. Default
+        (0.95, 1.15).
 
     Raises
     ------
