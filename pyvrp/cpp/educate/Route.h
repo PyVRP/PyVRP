@@ -12,6 +12,8 @@
 
 class Route
 {
+    ProblemData const &data;
+
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
 
@@ -31,8 +33,6 @@ class Route
     void setupRouteTimeWindows();
 
 public:  // TODO make fields private
-    ProblemData const *data;
-
     int idx;             // Route index
     Node *depot;         // Pointer to the associated depot
     double angleCenter;  // Angle of the barycenter of the route
@@ -111,6 +111,8 @@ public:  // TODO make fields private
      * solution.
      */
     void update();
+
+    Route(ProblemData const &data);
 };
 
 bool Route::isFeasible() const
@@ -150,7 +152,7 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
     assert(start <= end);
 
-    auto const &dist = data->distanceMatrix();
+    auto const &dist = data.distanceMatrix();
     auto tws = nodes[start - 1]->tw;
 
     for (size_t step = start; step != end; ++step)
@@ -176,7 +178,7 @@ int Route::loadBetween(size_t start, size_t end) const
     assert(start <= end && end <= nodes.size());
 
     auto const *startNode = start == 0 ? depot : nodes[start - 1];
-    auto const atStart = data->client(startNode->client).demand;
+    auto const atStart = data.client(startNode->client).demand;
     auto const startLoad = startNode->cumulatedLoad;
     auto const endLoad = nodes[end - 1]->cumulatedLoad;
 
