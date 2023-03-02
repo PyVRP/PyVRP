@@ -15,6 +15,7 @@ public:  // TODO make fields private
     Node *prev;       // Previous node in the route order
     Route *route;     // Pointer towards the associated route
 
+    // TODO can these data fields be moved to Route?
     int cumulatedLoad;              // Load from depot to client (inclusive)
     int cumulatedDistance;          // Distance from depot to client (inclusive)
     int cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
