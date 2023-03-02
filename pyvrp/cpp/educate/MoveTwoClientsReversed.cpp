@@ -13,12 +13,13 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
     auto const posU = U->position;
     auto const posV = V->position;
 
+    auto const &dist = data.distanceMatrix();
+
     int const current = U->route->distBetween(posU - 1, posU + 2)
-                        + data.dist(V->client, n(V)->client);
-    int const proposed = data.dist(p(U)->client, nn(U)->client)
-                         + data.dist(V->client, n(U)->client)
-                         + data.dist(n(U)->client, U->client)
-                         + data.dist(U->client, n(V)->client);
+                        + dist(V->client, n(V)->client);
+    int const proposed
+        = dist(p(U)->client, nn(U)->client) + dist(V->client, n(U)->client)
+          + dist(n(U)->client, U->client) + dist(U->client, n(V)->client);
 
     int deltaCost = proposed - current;
 
@@ -27,7 +28,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(p(U)->twBefore, nn(U)->twAfter);
+        auto uTWS = TWS::merge(dist, p(U)->twBefore, nn(U)->twAfter);
 
         deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
@@ -43,7 +44,8 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
         deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
         deltaCost -= penaltyManager.loadPenalty(V->route->load());
 
-        auto vTWS = TWS::merge(V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
+        auto vTWS
+            = TWS::merge(dist, V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
 
         deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
@@ -57,7 +59,8 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
         if (posU < posV)
         {
-            auto const uTWS = TWS::merge(p(U)->twBefore,
+            auto const uTWS = TWS::merge(dist,
+                                         p(U)->twBefore,
                                          route->twBetween(posU + 2, posV),
                                          n(U)->tw,
                                          U->tw,
@@ -67,7 +70,8 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
         }
         else
         {
-            auto const uTWS = TWS::merge(V->twBefore,
+            auto const uTWS = TWS::merge(dist,
+                                         V->twBefore,
                                          n(U)->tw,
                                          U->tw,
                                          route->twBetween(posV + 1, posU - 1),

@@ -1,11 +1,10 @@
-from typing import Union, overload
+from typing import overload
 
-from ._Matrix import DoubleMatrix, IntMatrix
+from ._Matrix import IntMatrix
 
 class TimeWindowSegment:
     def __init__(
         self,
-        dist: Union[DoubleMatrix, IntMatrix],
         idx_first: int,
         idx_last: int,
         duration: int,
@@ -18,8 +17,6 @@ class TimeWindowSegment:
 
         Parameters
         ----------
-        dist
-            Matrix to use for duration computations.
         idx_first
             Index of the first customer in the route segment.
         idx_last
@@ -36,7 +33,9 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        arg0: TimeWindowSegment, arg1: TimeWindowSegment
+        dist: IntMatrix,
+        arg0: TimeWindowSegment,
+        arg1: TimeWindowSegment,
     ) -> TimeWindowSegment:
         """
         Merges two time window segments, in order.
@@ -44,6 +43,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
+        dist: IntMatrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,
@@ -54,6 +54,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
+        dist: IntMatrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,

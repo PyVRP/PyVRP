@@ -183,8 +183,7 @@ void LocalSearch::update(Route *U, Route *V)
 void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
-        clients[client].tw = {&data.distanceMatrix(),
-                              static_cast<int>(client),  // TODO cast
+        clients[client].tw = {static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).serviceDuration,
                               0,
