@@ -66,7 +66,7 @@ def plot_objectives(
     best = np.nanmin([d.best_cost for d in result.stats.feas_stats])
     ax.set_ylim(best * ylim_adjust[0], best * ylim_adjust[1])
 
-    ax.set_title("Feasible objectives")
+    ax.set_title("Objectives")
     ax.set_xlabel("Iteration (#)")
     ax.set_ylabel("Objective")
 
