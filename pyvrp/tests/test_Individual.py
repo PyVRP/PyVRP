@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import Individual, PenaltyManager, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
 
 
@@ -162,6 +162,41 @@ def test_time_warp_cost_calculation():
     )
 
     assert_equal(indiv.cost(), dist + tw_penalty)
+
+
+def test_time_warp_for_a_very_constrained_problem():
+    """
+    This tests an artificial instance where the second client cannot be reached
+    directly from the depot in a feasible solution, but only after the first
+    client.
+    """
+    data = ProblemData(
+        coords=[(0, 0), (1, 0), (2, 0)],
+        demands=[0, 0, 0],
+        nb_vehicles=2,
+        vehicle_cap=0,
+        time_windows=[(0, 10), (0, 5), (0, 5)],
+        service_durations=[0, 0, 0],
+        duration_matrix=[
+            [0, 1, 10],  # cannot get to 2 from depot within 2's time window
+            [1, 0, 1],
+            [1, 1, 0],
+        ],
+    )
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    # This solution directly visits the second client, which is not time window
+    # feasible.
+    infeasible = Individual(data, pm, [[1], [2]])
+    assert_(infeasible.has_time_warp())
+    assert_(not infeasible.has_excess_capacity())
+    assert_(not infeasible.is_feasible())
+
+    # But visiting the second client after the first is feasible.
+    feasible = Individual(data, pm, [[1, 2]])
+    assert_(not feasible.has_time_warp())
+    assert_(not feasible.has_excess_capacity())
+    assert_(feasible.is_feasible())
 
 
 # TODO test all time warp cases
