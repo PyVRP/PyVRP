@@ -50,7 +50,7 @@ struct PopulationParams
 class SubPopulation
 {
     DiversityMeasure divOp;
-    PopulationParams const &params;
+    PopulationParams const &params;  // owned by Population, on the Python side
 
 public:
     struct Item
