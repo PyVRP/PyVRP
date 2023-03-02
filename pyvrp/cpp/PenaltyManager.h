@@ -143,8 +143,8 @@ unsigned int PenaltyManager::loadPenaltyExcess(unsigned int excessLoad) const
 
 unsigned int PenaltyManager::loadPenalty(unsigned int load) const
 {
-    // Branchless for performance: when load > capacity we return the excess 
-    // load penalty; else zero. Note that when load - vehicleCapacity wraps 
+    // Branchless for performance: when load > capacity we return the excess
+    // load penalty; else zero. Note that when load - vehicleCapacity wraps
     // around, we return zero because load > vehicleCapacity evaluates as zero
     // (so there is no issue here due to unsignedness).
     return (load > vehicleCapacity) * loadPenaltyExcess(load - vehicleCapacity);
