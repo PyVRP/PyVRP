@@ -21,7 +21,6 @@ class Individual
     size_t capacityExcess = 0;  // Total excess load over all routes
     size_t timeWarp = 0;        // All route time warp of late arrivals
 
-    ProblemData const *data;
     PenaltyManager const *penaltyManager;
 
     Routes routes_;  // Routes - only the first nbRoutes are non-empty
@@ -31,7 +30,7 @@ class Individual
     void makeNeighbours();
 
     // Evaluates this solution's objective value.
-    void evaluateCompleteCost();
+    void evaluateCompleteCost(ProblemData const &data);
 
 public:
     /**

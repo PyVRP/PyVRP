@@ -118,6 +118,13 @@ public:
     [[nodiscard]] inline unsigned int loadPenalty(unsigned int load) const;
 
     /**
+     * Computes the excess capacity penalty for the given excess load, that is,
+     * the part of the load that exceeds the vehicle capacity.
+     */
+    [[nodiscard]] inline unsigned int
+    loadPenaltyExcess(unsigned int excessLoad) const;
+
+    /**
      * Computes the time warp penalty for the given time warp.
      */
     [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
@@ -129,12 +136,16 @@ public:
     [[nodiscard]] PenaltyBooster getPenaltyBooster();
 };
 
+unsigned int PenaltyManager::loadPenaltyExcess(unsigned int excessLoad) const
+{
+    return excessLoad * capacityPenalty;
+}
+
 unsigned int PenaltyManager::loadPenalty(unsigned int load) const
 {
-    if (load > vehicleCapacity)
-        return (load - vehicleCapacity) * capacityPenalty;
-
-    return 0;
+    // Branchless implementation: if load > capacity we return the excess load
+    // penalty; else zero. 
+    return (load > vehicleCapacity) * loadPenaltyExcess(load - vehicleCapacity);
 }
 
 unsigned int PenaltyManager::twPenalty(unsigned int timeWarp) const
