@@ -327,10 +327,7 @@ LocalSearch::LocalSearch(ProblemData &data,
     endDepots = std::vector<Node>(data.numVehicles());
 
     for (size_t i = 0; i <= data.numClients(); i++)
-    {
-        clients[i].data = &data;
         clients[i].client = i;
-    }
 
     for (size_t i = 0; i < data.numVehicles(); i++)
     {
@@ -338,11 +335,9 @@ LocalSearch::LocalSearch(ProblemData &data,
         routes[i].idx = i;
         routes[i].depot = &startDepots[i];
 
-        startDepots[i].data = &data;
         startDepots[i].client = 0;
         startDepots[i].route = &routes[i];
 
-        startDepots[i].data = &data;
         endDepots[i].client = 0;
         endDepots[i].route = &routes[i];
     }

@@ -18,7 +18,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
     int const current = U->route->distBetween(posU - 1, posU + 2)
                         + dist(V->client, n(V)->client);
     int const proposed
-        = dist(p(U)->client, nn(U)->client) + dist(V->client, n(U)->client)
+        = dist(p(U)->client, n(n(U))->client) + dist(V->client, n(U)->client)
           + dist(n(U)->client, U->client) + dist(U->client, n(V)->client);
 
     int deltaCost = proposed - current;
@@ -28,7 +28,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist, p(U)->twBefore, nn(U)->twAfter);
+        auto uTWS = TWS::merge(dist, p(U)->twBefore, n(n(U))->twAfter);
 
         deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
@@ -75,7 +75,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
                                          n(U)->tw,
                                          U->tw,
                                          route->twBetween(posV + 1, posU - 1),
-                                         nn(U)->twAfter);
+                                         n(n(U))->twAfter);
 
             deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         }

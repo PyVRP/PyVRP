@@ -9,8 +9,6 @@ class Route;
 class Node
 {
 public:  // TODO make fields private
-    ProblemData const *data;
-
     int client;       // Client represented with this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
@@ -49,10 +47,5 @@ inline Node *p(Node *node) { return node->prev; }
  * Convenience method accessing the node directly after the argument.
  */
 inline Node *n(Node *node) { return node->next; }
-
-/**
- * Convenience method accessing the node two positions after the argument.
- */
-inline Node *nn(Node *node) { return node->next->next; }
 
 #endif  // NODE_H
