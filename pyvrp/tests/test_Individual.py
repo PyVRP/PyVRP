@@ -185,8 +185,8 @@ def test_time_warp_for_a_very_constrained_problem():
     )
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # This solution directly visits the second client, which is not time window
-    # feasible.
+    # This solution directly visits the second client from the depot, which is
+    # not time window feasible.
     infeasible = Individual(data, pm, [[1], [2]])
     assert_(infeasible.has_time_warp())
     assert_(not infeasible.has_excess_capacity())
