@@ -47,6 +47,7 @@ endif
 # installation directories here, as a shorthand.
 INST_DIR = 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'
+INCLUDES = [include_directories(SRC_DIR)]
 
 libcommon = static_library(
     'common',
@@ -67,7 +68,7 @@ libcommon = static_library(
         SRC_DIR / 'educate' / 'RelocateStar.cpp',
         SRC_DIR / 'educate' / 'SwapStar.cpp',
     ],
-    include_directories: [include_directories(SRC_DIR)],
+    include_directories: INCLUDES,
 )
 
 # Next we get the extension dependencies. These are pretty simple: we only
@@ -88,6 +89,7 @@ if not pybind11.found()
 endif
 
 assert(pybind11.found(), 'Could not find pybind11!')
+dependencies = [py.dependency(), pybind11]
 
 # Extension as [extension name, subdirectory]. Here 'extension name' names the
 # eventual module name and the bindings source file, and 'subdirectory' gives 
@@ -117,12 +119,12 @@ foreach extension : extensions  # extension[0] = name, extension[1] = subdir
     install_dir = '/'.join([INST_DIR, extension[1]])
 
     py.extension_module(
-        '_' + extension[0], # module names are prepended by an underscore
+        '_' + extension[0],  # native extensions are prepended by an underscore
         source_dir / extension[0] + '_bindings.cpp',
-        dependencies: [py.dependency(), pybind11],
+        dependencies: dependencies,
         link_with: libcommon,
         install: true,
         subdir: install_dir,
-        include_directories: [include_directories(SRC_DIR)],
+        include_directories: INCLUDES,
     )
 endforeach

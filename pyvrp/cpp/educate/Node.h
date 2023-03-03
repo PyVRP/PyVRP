@@ -9,14 +9,13 @@ class Route;
 class Node
 {
 public:  // TODO make fields private
-    ProblemData const *data;
-
     int client;       // Client represented with this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
     Node *prev;       // Previous node in the route order
     Route *route;     // Pointer towards the associated route
 
+    // TODO can these data fields be moved to Route?
     int cumulatedLoad;              // Load from depot to client (inclusive)
     int cumulatedDistance;          // Distance from depot to client (inclusive)
     int cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
@@ -49,10 +48,5 @@ inline Node *p(Node *node) { return node->prev; }
  * Convenience method accessing the node directly after the argument.
  */
 inline Node *n(Node *node) { return node->next; }
-
-/**
- * Convenience method accessing the node two positions after the argument.
- */
-inline Node *nn(Node *node) { return node->next->next; }
 
 #endif  // NODE_H

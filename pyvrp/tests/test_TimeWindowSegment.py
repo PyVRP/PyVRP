@@ -7,17 +7,16 @@ from pyvrp._TimeWindowSegment import TimeWindowSegment
 
 @mark.parametrize("existing_time_warp", [2, 5, 10])
 def test_total_time_warp(existing_time_warp):
-    mat = IntMatrix(0)
-    tws1 = TimeWindowSegment(mat, 0, 0, 0, existing_time_warp, 0, 0)
+    tws1 = TimeWindowSegment(0, 0, 0, existing_time_warp, 0, 0)
     assert_equal(tws1.total_time_warp(), existing_time_warp)
 
 
 def test_merge_two():
-    mat = IntMatrix([[1, 4], [1, 2]])
-    tws1 = TimeWindowSegment(mat, 0, 0, 5, 0, 0, 5)
-    tws2 = TimeWindowSegment(mat, 1, 1, 0, 5, 3, 6)
+    tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5)
+    tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6)
 
-    merged = TimeWindowSegment.merge(tws1, tws2)
+    mat = IntMatrix([[1, 4], [1, 2]])
+    merged = TimeWindowSegment.merge(mat, tws1, tws2)
 
     # There is no release time, so segment time warp and total time warp should
     # be equal. The first stop (tws1) takes already has five duration, and
@@ -29,14 +28,14 @@ def test_merge_two():
 
 
 def test_merge_multiple():
-    mat = IntMatrix([[1, 4, 1], [1, 2, 4], [1, 1, 1]])
-    tws1 = TimeWindowSegment(mat, 0, 0, 5, 0, 0, 5)
-    tws2 = TimeWindowSegment(mat, 1, 1, 0, 0, 3, 6)
-    tws3 = TimeWindowSegment(mat, 2, 2, 0, 0, 2, 3)
+    tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5)
+    tws2 = TimeWindowSegment(1, 1, 0, 0, 3, 6)
+    tws3 = TimeWindowSegment(2, 2, 0, 0, 2, 3)
 
-    merged1 = TimeWindowSegment.merge(tws1, tws2)
-    merged2 = TimeWindowSegment.merge(merged1, tws3)
-    merged3 = TimeWindowSegment.merge(tws1, tws2, tws3)
+    mat = IntMatrix([[1, 4, 1], [1, 2, 4], [1, 1, 1]])
+    merged1 = TimeWindowSegment.merge(mat, tws1, tws2)
+    merged2 = TimeWindowSegment.merge(mat, merged1, tws3)
+    merged3 = TimeWindowSegment.merge(mat, tws1, tws2, tws3)
 
     # Merge all together should be the same as merging in several steps.
     assert_equal(merged3.total_time_warp(), merged2.total_time_warp())

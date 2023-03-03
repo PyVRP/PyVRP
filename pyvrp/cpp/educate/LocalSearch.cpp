@@ -183,8 +183,7 @@ void LocalSearch::update(Route *U, Route *V)
 void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
-        clients[client].tw = {&data.distanceMatrix(),
-                              static_cast<int>(client),  // TODO cast
+        clients[client].tw = {static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).serviceDuration,
                               0,
@@ -315,35 +314,28 @@ LocalSearch::LocalSearch(ProblemData &data,
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1)
+      lastModified(data.numVehicles(), -1),
+      clients(data.numClients() + 1),
+      routes(data.numVehicles(), data),
+      startDepots(data.numVehicles()),
+      endDepots(data.numVehicles())
 {
     setNeighbours(neighbours);
 
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    clients = std::vector<Node>(data.numClients() + 1);
-    routes = std::vector<Route>(data.numVehicles());
-    startDepots = std::vector<Node>(data.numVehicles());
-    endDepots = std::vector<Node>(data.numVehicles());
-
     for (size_t i = 0; i <= data.numClients(); i++)
-    {
-        clients[i].data = &data;
         clients[i].client = i;
-    }
 
     for (size_t i = 0; i < data.numVehicles(); i++)
     {
-        routes[i].data = &data;
         routes[i].idx = i;
         routes[i].depot = &startDepots[i];
 
-        startDepots[i].data = &data;
         startDepots[i].client = 0;
         startDepots[i].route = &routes[i];
 
-        startDepots[i].data = &data;
         endDepots[i].client = 0;
         endDepots[i].route = &routes[i];
     }
