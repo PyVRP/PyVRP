@@ -76,7 +76,7 @@ class GeneticAlgorithm:
         self._op = crossover_op
         self._params = params
 
-        self._best = Individual(data, penalty_manager, rng)
+        self._best = Individual.make_random(data, penalty_manager, rng)
 
     def run(self, stop: StoppingCriterion):
         """

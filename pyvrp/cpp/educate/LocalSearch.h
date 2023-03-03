@@ -32,7 +32,7 @@ class LocalSearch
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
-    std::vector<Node> clients;      // Note that clients[0] is a sentinel value
+    std::vector<Node> clients;  // Note that clients[0] is a sentinel value
     std::vector<Route> routes;
     std::vector<Node> startDepots;  // These mark the start of routes
     std::vector<Node> endDepots;    // These mark the end of routes

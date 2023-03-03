@@ -12,7 +12,7 @@ def test_local_search_raises_when_there_are_no_operators():
     rng = XorShift128(seed=42)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    individual = Individual(data, pm, rng)
+    individual = Individual.make_random(data, pm, rng)
 
     with assert_raises(RuntimeError):
         ls.search(individual)

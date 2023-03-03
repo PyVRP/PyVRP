@@ -46,7 +46,7 @@ class Population:
         self._infeas = SubPopulation(diversity_op, params)
 
         for _ in range(params.min_pop_size):
-            self.add(Individual(data, penalty_manager, rng))
+            self.add(Individual.make_random(data, penalty_manager, rng))
 
     def __iter__(self) -> Generator[Individual, None, None]:
         """
@@ -145,7 +145,7 @@ class Population:
         self._infeas = SubPopulation(self._op, self._params)
 
         for _ in range(self._params.min_pop_size):
-            self.add(Individual(self._data, self._pm, self._rng))
+            self.add(Individual.make_random(self._data, self._pm, self._rng))
 
     def get_binary_tournament(self) -> Individual:
         """

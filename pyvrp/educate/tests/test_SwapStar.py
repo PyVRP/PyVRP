@@ -32,7 +32,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     ls.add_route_operator(SwapStar(data, pm))
 
     for _ in range(10):  # repeat a few times to really make sure
-        individual = Individual(data, pm, rng)
+        individual = Individual.make_random(data, pm, rng)
 
         swap_individual = ls.search(individual)
         swap_star_individual = ls.intensify(

@@ -62,7 +62,7 @@ def test_plot_result():
             # Make sure we insert a feasible solution
             individual = Individual(data, pm, bks)
         else:
-            individual = Individual(data, pm, rng)
+            individual = Individual.make_random(data, pm, rng)
 
         pop.add(individual)
         stats.collect_from(pop)

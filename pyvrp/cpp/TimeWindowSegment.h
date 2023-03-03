@@ -40,7 +40,6 @@ public:
                              int twLate);
 };
 
-
 TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
                                            TimeWindowSegment const &other) const
 {

@@ -251,7 +251,7 @@ def test_str_contains_essential_information():
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
-        individual = Individual(data, pm, rng)
+        individual = Individual.make_random(data, pm, rng)
         str_representation = str(individual).splitlines()
 
         routes = individual.get_routes()
@@ -277,8 +277,8 @@ def test_hash():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=2)
 
-    indiv1 = Individual(data, pm, rng)
-    indiv2 = Individual(data, pm, rng)
+    indiv1 = Individual.make_random(data, pm, rng)
+    indiv2 = Individual.make_random(data, pm, rng)
 
     hash1 = hash(indiv1)
     hash2 = hash(indiv2)

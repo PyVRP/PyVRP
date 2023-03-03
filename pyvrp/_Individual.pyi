@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, overload
+from typing import Any, Dict, List, Tuple
 
 from ._PenaltyManager import PenaltyManager
 from ._ProblemData import ProblemData
@@ -7,15 +7,36 @@ from ._XorShift128 import XorShift128
 class Individual:
     """
     The Individual class encodes VRP solutions.
+
+    Parameters
+    ----------
+    data
+        Data instance.
+    penalty_manager
+        Penalty manager instance.
+    routes
+        Route list to use.
+
+    Raises
+    ------
+    RuntimeError
+        When the number of routes in the ``routes`` argument exceeds
+        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
     """
 
-    @overload
     def __init__(
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
+        routes: List[List[int]],
+    ) -> None: ...
+    @classmethod
+    def make_random(
+        cls,
+        data: ProblemData,
+        penalty_manager: PenaltyManager,
         rng: XorShift128,
-    ) -> None:
+    ) -> Individual:
         """
         Creates a randomly generated Individual.
 
@@ -27,31 +48,11 @@ class Individual:
             Penalty manager instance.
         rng
             Random number generator to use.
-        """
-    @overload
-    def __init__(
-        self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        routes: List[List[int]],
-    ) -> None:
-        """
-        Creates an Individual with the given route list as its solution.
 
-        Parameters
-        ----------
-        data
-            Data instance.
-        penalty_manager
-            Penalty manager instance.
-        routes
-            Route list to use.
-
-        Raises
-        ------
-        RuntimeError
-            When the number of routes in the ``routes`` argument exceeds
-            :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
+        Returns
+        -------
+        Individual
+            The randomly generated Individual.
         """
     def cost(self) -> int:
         """
