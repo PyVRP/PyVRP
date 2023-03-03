@@ -11,8 +11,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(_Individual, m)
 {
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData &,
-                      PenaltyManager &,
+        .def(py::init<ProblemData const &,
+                      PenaltyManager const &,
                       std::vector<std::vector<int>>>(),
              py::arg("data"),
              py::arg("penalty_manager"),
