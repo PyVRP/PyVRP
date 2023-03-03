@@ -2,8 +2,8 @@
 #define XORSHIFT128_H
 
 #include <climits>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 /**

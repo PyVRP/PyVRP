@@ -32,8 +32,7 @@ PYBIND11_MODULE(_SubPopulation, m)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
-        .def(py::init<DiversityMeasure,
-                      PopulationParams const &>(),
+        .def(py::init<DiversityMeasure, PopulationParams const &>(),
              py::arg("diversity_op"),
              py::arg("params"),
              py::keep_alive<1, 3>())  // keep params alive
@@ -41,8 +40,7 @@ PYBIND11_MODULE(_SubPopulation, m)
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
-            [](SubPopulation const &subPop, int idx)
-            {
+            [](SubPopulation const &subPop, int idx) {
                 // int so we also support negative offsets from the end.
                 idx = idx < 0 ? subPop.size() + idx : idx;
                 if (idx < 0 || static_cast<size_t>(idx) >= subPop.size())
@@ -53,8 +51,9 @@ PYBIND11_MODULE(_SubPopulation, m)
             py::return_value_policy::reference_internal)
         .def(
             "__iter__",
-            [](SubPopulation const &subPop)
-            { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
+            [](SubPopulation const &subPop) {
+                return py::make_iterator(subPop.cbegin(), subPop.cend());
+            },
             py::return_value_policy::reference_internal)
         .def("purge", &SubPopulation::purge);
 }

@@ -19,7 +19,6 @@ typedef std::function<double(Individual const &, Individual const &)>
  * @return The (symmetric) broken pairs distance between the two
  *         individuals.
  */
-double brokenPairsDistance(Individual const &first,
-                           Individual const &second);
+double brokenPairsDistance(Individual const &first, Individual const &second);
 
 #endif  // HGS_DIVERSITY_H

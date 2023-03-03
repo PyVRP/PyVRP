@@ -32,7 +32,7 @@ class Route
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:  // TODO make fields private
+public:                  // TODO make fields private
     int idx;             // Route index
     Node *depot;         // Pointer to the associated depot
     double angleCenter;  // Angle of the barycenter of the route

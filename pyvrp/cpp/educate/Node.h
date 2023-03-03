@@ -8,7 +8,7 @@ class Route;
 
 class Node
 {
-public:  // TODO make fields private
+public:               // TODO make fields private
     int client;       // Client represented with this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
