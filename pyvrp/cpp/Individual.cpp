@@ -154,7 +154,7 @@ Individual::Individual(ProblemData const &data,
       routes_(std::move(routes)),
       neighbours(data.numClients() + 1)
 {
-    if (routes_.size() > static_cast<size_t>(data.numVehicles()))
+    if (routes_.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
@@ -162,7 +162,7 @@ Individual::Individual(ProblemData const &data,
 
     // Expand to at least numVehicles routes, where any newly inserted routes
     // will be empty.
-    routes_.resize(static_cast<size_t>(data.numVehicles()));
+    routes_.resize(data.numVehicles());
 
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but
