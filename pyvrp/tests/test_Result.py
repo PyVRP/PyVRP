@@ -54,7 +54,8 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
     for _ in range(num_iterations):
         stats.collect_from(pop)
 
-    res = Result(Individual(data, pm, rng), stats, num_iterations, 0.0)
+    best = Individual.make_random(data, pm, rng)
+    res = Result(best, stats, num_iterations, 0.0)
     assert_equal(res.has_statistics(), has_statistics)
     assert_equal(res.num_iterations, num_iterations)
 
@@ -65,7 +66,7 @@ def test_str_contains_essential_information():
     rng = XorShift128(seed=42)
 
     for _ in range(5):  # let's do this a few times to really make sure
-        individual = Individual(data, pm, rng)
+        individual = Individual.make_random(data, pm, rng)
         res = Result(individual, Statistics(), 0, 0.0)
         str_representation = str(res)
 

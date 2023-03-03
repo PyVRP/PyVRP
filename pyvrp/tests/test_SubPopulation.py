@@ -22,7 +22,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     assert_equal(len(subpop), 0)
 
     for _ in range(nb_close):
-        subpop.add(Individual(data, pm, rng))
+        subpop.add(Individual.make_random(data, pm, rng))
 
     # The first nb_close individuals all have each other in their "closest"
     # list. The averages only differ because each individual is themselves not
@@ -34,7 +34,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
 
     # Let's add a significantly larger set of individuals.
     for _ in range(250 - nb_close):
-        subpop.add(Individual(data, pm, rng))
+        subpop.add(Individual.make_random(data, pm, rng))
 
     # Now the "closest" lists should differ quite a bit between individuals,
     # and the average distances should thus not all be the same any more.
@@ -84,7 +84,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Individual(data, pm, rng))
+        subpop.add(Individual.make_random(data, pm, rng))
 
     # When all individuals are elite the diversity weight term drops out, and
     # fitness rankings are purely based on the cost ranking.
@@ -111,7 +111,7 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Individual(data, pm, rng))
+        subpop.add(Individual.make_random(data, pm, rng))
 
     # When no individuals are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.

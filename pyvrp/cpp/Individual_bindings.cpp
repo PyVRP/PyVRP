@@ -11,11 +11,6 @@ namespace py = pybind11;
 PYBIND11_MODULE(_Individual, m)
 {
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData &, PenaltyManager &, XorShift128 &>(),
-             py::arg("data"),
-             py::arg("penalty_manager"),
-             py::arg("rng"),
-             py::keep_alive<1, 3>())  // keep penalty_manager alive
         .def(py::init<ProblemData &,
                       PenaltyManager &,
                       std::vector<std::vector<int>>>(),
@@ -23,6 +18,20 @@ PYBIND11_MODULE(_Individual, m)
              py::arg("penalty_manager"),
              py::arg("routes"),
              py::keep_alive<1, 3>())  // keep penalty_manager alive
+        .def_property_readonly_static(
+            "make_random",                // this is a bit of a workaround for
+            [](py::object)                // classmethods, because pybind does
+            {                             // not yet support those natively.
+                return py::cpp_function(  // See issue 1693 in the pybind repo.
+                    [](ProblemData const &data,
+                       PenaltyManager const &penaltyManager,
+                       XorShift128 &rng)
+                    { return Individual(data, penaltyManager, rng); },
+                    py::arg("data"),
+                    py::arg("penalty_manager"),
+                    py::arg("routes"),
+                    py::keep_alive<0, 2>());  // keep penalty_manager alive
+            })
         .def("cost", &Individual::cost)
         .def("num_routes", &Individual::numRoutes)
         .def("get_routes",

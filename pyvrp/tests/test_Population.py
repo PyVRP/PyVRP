@@ -112,7 +112,7 @@ def test_add_triggers_purge():
     num_infeas = pop.num_infeasible()
 
     while True:  # keep adding feasible individuals until we are about to purge
-        individual = Individual(data, pm, rng)
+        individual = Individual.make_random(data, pm, rng)
 
         if individual.is_feasible():
             pop.add(individual)
@@ -129,7 +129,7 @@ def test_add_triggers_purge():
     # should trigger survivor selection (purge). Survivor selection reduces the
     # feasible subpopulation to min_pop_size, so the overal population is then
     # just num_infeas + min_pop_size.
-    individual = Individual(data, pm, rng)
+    individual = Individual.make_random(data, pm, rng)
     assert_(individual.is_feasible())
 
     pop.add(individual)
@@ -211,7 +211,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
         # With zero min_pop_size and zero generation_size, every additional
         # individual triggers a purge. So the population size can never grow
         # beyond zero.
-        pop.add(Individual(data, pm, rng))
+        pop.add(Individual.make_random(data, pm, rng))
         assert_equal(len(pop), 0)
 
 
@@ -227,7 +227,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
     while pop.num_infeasible() != params.max_pop_size:
-        pop.add(Individual(data, pm, rng))
+        pop.add(Individual.make_random(data, pm, rng))
 
     assert_equal(pop.num_infeasible(), params.max_pop_size)
 
@@ -265,7 +265,7 @@ def test_binary_tournament_ranks_by_fitness():
     pop = Population(data, pm, rng, broken_pairs_distance, params)
 
     for _ in range(50):
-        pop.add(Individual(data, pm, rng))
+        pop.add(Individual.make_random(data, pm, rng))
 
     assert_equal(pop.num_feasible(), 0)
 
@@ -302,7 +302,7 @@ def test_purge_removes_duplicates():
 
     # This is the individual we are going to add a few times. That should make
     # sure the relevant subpopulation definitely contains duplicates.
-    individual = Individual(data, pm, rng)
+    individual = Individual.make_random(data, pm, rng)
     assert_(not individual.is_feasible())
 
     for _ in range(params.generation_size):
@@ -317,7 +317,7 @@ def test_purge_removes_duplicates():
     # Keep adding individuals until we have had a purge, and returned to the
     # minimum population size.
     while pop.num_infeasible() != params.min_pop_size:
-        pop.add(Individual(data, pm, rng))
+        pop.add(Individual.make_random(data, pm, rng))
 
     # Since duplicates are purged first, there should now be only one of them
     # in the subpopulation. There cannot be zero, because we made sure of that.
