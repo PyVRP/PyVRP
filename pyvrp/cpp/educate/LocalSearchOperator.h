@@ -15,19 +15,18 @@ using TDist = double;
 using TTime = double;
 #endif
 
-template <typename Arg> class LocalSearchOperator
+template <typename Arg> class LocalSearchOperatorBase
 {
+    // Can only be specialised into either a Node or Route operator; there
+    // are no other types that are expected to work.
+    static_assert(std::is_same<Arg, Node>::value
+                  || std::is_same<Arg, Route>::value);
+
 protected:
     ProblemData const &data;
     PenaltyManager const &penaltyManager;
 
 public:
-    /**
-     * Called once after loading in the individual to improve. This can be used
-     * to e.g. update local operator state.
-     */
-    virtual void init(Individual const &indiv){};
-
     /**
      * Determines the cost delta of applying this operator to the arguments.
      * If the cost delta is negative, this is an improving move.
@@ -47,20 +46,44 @@ public:
      */
     virtual void apply(Arg *U, Arg *V){};
 
+    explicit LocalSearchOperatorBase(ProblemData const &data,
+                                     PenaltyManager const &penaltyManager)
+        : data(data), penaltyManager(penaltyManager)
+    {
+    }
+
+    virtual ~LocalSearchOperatorBase() = default;
+};
+
+template <typename Arg>
+class LocalSearchOperator : public LocalSearchOperatorBase<Arg>
+{
+};
+
+template <>  // specialisation for node operators
+class LocalSearchOperator<Node> : public LocalSearchOperatorBase<Node>
+{
+    using LocalSearchOperatorBase::LocalSearchOperatorBase;
+};
+
+template <>  // specialisation for route operators
+class LocalSearchOperator<Route> : public LocalSearchOperatorBase<Route>
+{
+    using LocalSearchOperatorBase::LocalSearchOperatorBase;
+
+public:
+    /**
+     * Called once after loading in the individual to improve. This can be used
+     * to e.g. update local operator state.
+     */
+    virtual void init(Individual const &indiv){};
+
     /**
      * Called when a route has been changed. Can be used to update caches, but
      * the implementation should be fast: this is called every time something
      * changes!
      */
     virtual void update(Route *U){};
-
-    explicit LocalSearchOperator(ProblemData const &data,
-                                 PenaltyManager const &penaltyManager)
-        : data(data), penaltyManager(penaltyManager)
-    {
-    }
-
-    virtual ~LocalSearchOperator() = default;
 };
 
 #endif  // LOCALSEARCHOPERATOR_H

@@ -9,4 +9,18 @@ class StoppingCriterion(Protocol):  # pragma: no cover
     """
 
     def __call__(self, best: OptimisationTarget) -> bool:
-        pass
+        """
+        When called, this stopping criterion should return True if the
+        algorithm should stop, and False otherwise.
+
+        Parameters
+        ----------
+        best
+            Current best solution.
+
+        Returns
+        -------
+        bool
+            True if the algorithm should stop, False otherwise.
+        """
+        ...

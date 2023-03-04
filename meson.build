@@ -30,28 +30,24 @@ if compiler.has_argument('-Wno-unused-parameter')
     add_project_arguments('-Wno-unused-parameter', language: 'cpp')
 endif
 
-# Next we get the extension dependencies. These are pretty simple: we only
-# depend on Python (duh!) and pybind11.
-py = import('python').find_installation()
-pybind11 = dependency('pybind11')
+if get_option('problem') == 'cvrp'
+    # CVRP does not have time windows, so we set a flag that compiles time 
+    # window stuff out of the extension modules.
+    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
 
-if not pybind11.found()
-    # Fallback: this looks for the pybind11 header files using pybind11-config.
-    # Getting pybind11 using Meson's dependency mechanism is nicer, but that
-    # sometimes fails even when pybind11 is actually available on the system.
-    pybind11 = find_program('pybind11-config')
-    pybind11 = run_command(pybind11, ['--includes'], check: true)
-    pybind11 = pybind11.stdout().split('-I')[-1].strip()
-    pybind11 = declare_dependency(include_directories: [pybind11])
+    if compiler.has_argument('-Wno-unused-private-field')
+        # Ignore unused fields, since a number of time window related fields
+        # are unused by the CVRP.
+        add_project_arguments('-Wno-unused-private-field', language: 'cpp')
+    endif
 endif
-
-assert(pybind11.found(), 'Could not find pybind11!')
 
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
 # installation directories here, as a shorthand.
 INST_DIR = 'pyvrp'
 SRC_DIR = 'pyvrp' / 'cpp'
+INCLUDES = [include_directories(SRC_DIR)]
 
 libcommon = static_library(
     'common',
@@ -60,6 +56,7 @@ libcommon = static_library(
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'XorShift128.cpp',
         SRC_DIR / 'Individual.cpp',
+        SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
         SRC_DIR / 'crossover' / 'crossover.cpp',
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
@@ -71,9 +68,28 @@ libcommon = static_library(
         SRC_DIR / 'educate' / 'RelocateStar.cpp',
         SRC_DIR / 'educate' / 'SwapStar.cpp',
     ],
-    dependencies: [py.dependency(), pybind11],
-    include_directories: [include_directories(SRC_DIR)],
+    include_directories: INCLUDES,
 )
+
+# Next we get the extension dependencies. These are pretty simple: we only
+# depend on Python (duh!) and pybind11.
+py = import('python').find_installation()
+pybind11 = dependency('pybind11', required: false)
+
+if not pybind11.found()
+    # Fallback: this looks for the pybind11 header files using pybind11-config.
+    # Getting pybind11 using Meson's dependency mechanism is nicer, but that
+    # sometimes fails even when pybind11 is actually available on the system.
+    message('Could not find pybind11 as a dependency: trying headers.')
+
+    pybind11 = find_program('pybind11-config')
+    pybind11 = run_command(pybind11, ['--includes'], check: true)
+    pybind11 = pybind11.stdout().split('-I')[-1].strip()
+    pybind11 = declare_dependency(include_directories: [pybind11])
+endif
+
+assert(pybind11.found(), 'Could not find pybind11!')
+dependencies = [py.dependency(), pybind11]
 
 # Extension as [extension name, subdirectory]. Here 'extension name' names the
 # eventual module name and the bindings source file, and 'subdirectory' gives 
@@ -82,6 +98,7 @@ extensions = [
     ['Matrix', ''],
     ['PenaltyManager', ''],
     ['ProblemData', ''],
+    ['SubPopulation', ''],
     ['TimeWindowSegment', ''],
     ['XorShift128', ''],
     ['Individual', ''],
@@ -102,12 +119,12 @@ foreach extension : extensions  # extension[0] = name, extension[1] = subdir
     install_dir = '/'.join([INST_DIR, extension[1]])
 
     py.extension_module(
-        extension[0],
+        '_' + extension[0],  # native extensions are prepended by an underscore
         source_dir / extension[0] + '_bindings.cpp',
-        dependencies: [py.dependency(), pybind11],
+        dependencies: dependencies,
         link_with: libcommon,
         install: true,
         subdir: install_dir,
-        include_directories: [include_directories(SRC_DIR)],
+        include_directories: INCLUDES,
     )
 endforeach

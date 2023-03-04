@@ -6,8 +6,7 @@
 
 #include <functional>
 
-typedef std::function<double(
-    ProblemData const &, Individual const &, Individual const &)>
+typedef std::function<double(Individual const &, Individual const &)>
     DiversityMeasure;
 
 /**
@@ -15,14 +14,11 @@ typedef std::function<double(
  * the number of arcs that differ between them. The distance is normalised to
  * [0, 1].
  *
- * @param data   Data instance describing the problem that is being solved.
  * @param first  First individual.
  * @param second Second individual.
  * @return The (symmetric) broken pairs distance between the two
  *         individuals.
  */
-double brokenPairsDistance(ProblemData const &data,
-                           Individual const &first,
-                           Individual const &second);
+double brokenPairsDistance(Individual const &first, Individual const &second);
 
 #endif  // HGS_DIVERSITY_H

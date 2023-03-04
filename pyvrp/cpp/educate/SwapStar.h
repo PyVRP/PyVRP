@@ -9,16 +9,6 @@
 #include <array>
 #include <vector>
 
-#ifdef INT_PRECISION
-using TCost = int;
-using TDist = int;
-using TTime = int;
-#else
-using TCost = double;
-using TDist = double;
-using TTime = double;
-#endif
-
 /**
  * Explores the SWAP* neighbourhood of [1]. The SWAP* neighbourhood explores
  * free form re-insertions of nodes U and V in the given routes (so the nodes

@@ -4,10 +4,10 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(XorShift128, m)
+PYBIND11_MODULE(_XorShift128, m)
 {
     py::class_<XorShift128>(m, "XorShift128")
-        .def(py::init<int>(), py::arg("seed"))
+        .def(py::init<uint32_t>(), py::arg("seed"))
         .def("min", &XorShift128::min)
         .def("max", &XorShift128::max)
         .def("__call__", &XorShift128::operator())

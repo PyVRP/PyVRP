@@ -1,6 +1,8 @@
+from copy import copy, deepcopy
+
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import Individual, PenaltyManager, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
 
 
@@ -29,12 +31,17 @@ def test_route_constructor_raises():
 
     assert_equal(data.num_vehicles, 3)
 
-    with assert_raises(RuntimeError):
-        # Two routes, but three vehicles: should raise.
-        Individual(data, pm, [[1, 2], [4, 2]])
+    # Only two routes should not raise. But we should always get num_vehicles
+    # routes back.
+    individual = Individual(data, pm, [[1, 2], [4, 2]])
+    assert_equal(len(individual.get_routes()), data.num_vehicles)
 
     # Empty third route should not raise.
     Individual(data, pm, [[1, 2], [4, 2], []])
+
+    # More than three routes should raise, since we only have three vehicles.
+    with assert_raises(RuntimeError):
+        Individual(data, pm, [[1], [2], [3], [4]])
 
 
 def test_get_neighbours():
@@ -63,7 +70,7 @@ def test_feasibility():
     pm = PenaltyManager(data.vehicle_capacity)
 
     # This solution is infeasible due to both load and time window violations.
-    indiv = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv = Individual(data, pm, [[1, 2, 3, 4]])
     assert_(not indiv.is_feasible())
 
     # First route has total load 18, but vehicle capacity is only 10.
@@ -105,7 +112,7 @@ def test_capacity_cost_calculation():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv = Individual(data, pm, [[4, 3, 1, 2], [], []])
+    indiv = Individual(data, pm, [[4, 3, 1, 2]])
     assert_(indiv.has_excess_capacity())
     assert_(not indiv.has_time_warp())
 
@@ -131,7 +138,7 @@ def test_time_warp_cost_calculation():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv = Individual(data, pm, [[1, 3], [2, 4], []])
+    indiv = Individual(data, pm, [[1, 3], [2, 4]])
     assert_(not indiv.has_excess_capacity())
     assert_(indiv.has_time_warp())
 
@@ -157,21 +164,85 @@ def test_time_warp_cost_calculation():
     assert_equal(indiv.cost(), dist + tw_penalty)
 
 
+def test_time_warp_for_a_very_constrained_problem():
+    """
+    This tests an artificial instance where the second client cannot be reached
+    directly from the depot in a feasible solution, but only after the first
+    client.
+    """
+    data = ProblemData(
+        coords=[(0, 0), (1, 0), (2, 0)],
+        demands=[0, 0, 0],
+        nb_vehicles=2,
+        vehicle_cap=0,
+        time_windows=[(0, 10), (0, 5), (0, 5)],
+        service_durations=[0, 0, 0],
+        duration_matrix=[
+            [0, 1, 10],  # cannot get to 2 from depot within 2's time window
+            [1, 0, 1],
+            [1, 1, 0],
+        ],
+    )
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    # This solution directly visits the second client from the depot, which is
+    # not time window feasible.
+    infeasible = Individual(data, pm, [[1], [2]])
+    assert_(infeasible.has_time_warp())
+    assert_(not infeasible.has_excess_capacity())
+    assert_(not infeasible.is_feasible())
+
+    # But visiting the second client after the first is feasible.
+    feasible = Individual(data, pm, [[1, 2]])
+    assert_(not feasible.has_time_warp())
+    assert_(not feasible.has_excess_capacity())
+    assert_(feasible.is_feasible())
+
+
 # TODO test all time warp cases
+
+
+def test_copy():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    indiv = Individual(data, pm, [[1, 2, 3, 4]])
+    copy_indiv = copy(indiv)
+    deepcopy_indiv = deepcopy(indiv)
+
+    # Copied individuals are equal to the original individual
+    assert_(indiv == copy_indiv)
+    assert_(indiv == deepcopy_indiv)
+
+    # But they are not the same object
+    assert_(indiv is not copy_indiv)
+    assert_(indiv is not deepcopy_indiv)
 
 
 def test_eq():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv1 = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv1 = Individual(data, pm, [[1, 2, 3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
-    indiv3 = Individual(data, pm, [[1, 2, 3, 4], [], []])
+    indiv3 = Individual(data, pm, [[1, 2, 3, 4]])
 
     assert_(indiv1 == indiv1)  # individuals should be equal to themselves
     assert_(indiv2 == indiv2)
     assert_(indiv1 != indiv2)  # different routes, so should not be equal
     assert_(indiv1 == indiv3)  # same solution, different individual
+
+    indiv4 = Individual(data, pm, [[1, 2, 3], [], [4]])
+    indiv5 = Individual(data, pm, [[4], [1, 2, 3], []])
+
+    assert_(indiv4 == indiv5)  # routes are the same, but in different order
+
+    # And a few tests against things that are not Individuals, just to be sure
+    # there's also a type check in there somewhere.
+    assert_(indiv4 != 1)
+    assert_(indiv4 != "abc")
+    assert_(indiv5 != 5)
+    assert_(indiv5 != "cd")
 
 
 def test_str_contains_essential_information():
@@ -180,7 +251,7 @@ def test_str_contains_essential_information():
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
-        individual = Individual(data, pm, rng)
+        individual = Individual.make_random(data, pm, rng)
         str_representation = str(individual).splitlines()
 
         routes = individual.get_routes()
@@ -199,3 +270,32 @@ def test_str_contains_essential_information():
 
         # Last line should contain the cost
         assert_(str(individual.cost()) in str_representation[-1])
+
+
+def test_hash():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=2)
+
+    indiv1 = Individual.make_random(data, pm, rng)
+    indiv2 = Individual.make_random(data, pm, rng)
+
+    hash1 = hash(indiv1)
+    hash2 = hash(indiv2)
+
+    # Two random solutions. They're not the same, so the hashes should not be
+    # the same either.
+    assert_(indiv1 != indiv2)
+    assert_(hash1 != hash2)
+
+    indiv3 = deepcopy(indiv2)  # is a direct copy
+
+    # These two are the same solution, so their hashes should be the same too.
+    assert_equal(indiv2, indiv3)
+    assert_equal(hash(indiv2), hash(indiv3))
+
+    with pm.get_penalty_booster():
+        # This tests the hash does not depend on obviously changing values,
+        # like the Individual's cost (through the penalty manager).
+        assert_equal(hash(indiv1), hash1)
+        assert_equal(hash(indiv2), hash2)

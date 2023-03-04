@@ -10,12 +10,12 @@ TCost TwoOpt::evalWithinRoute(Node *U, Node *V)
     if (U->position + 1 >= V->position)
         return 0;
 
-    TCost deltaCost = data.dist(U->client, V->client)
-                    + data.dist(n(U)->client, n(V)->client)
-                    + V->cumulatedReversalDistance
-                    - data.dist(U->client, n(U)->client)
-                    - data.dist(V->client, n(V)->client)
-                    - n(U)->cumulatedReversalDistance;
+    auto const &dist = data.distanceMatrix();
+
+    TCost deltaCost
+        = dist(U->client, V->client) + dist(n(U)->client, n(V)->client)
+          + V->cumulatedReversalDistance - dist(U->client, n(U)->client)
+          - dist(V->client, n(V)->client) - n(U)->cumulatedReversalDistance;
 
     if (!U->route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;
@@ -24,11 +24,11 @@ TCost TwoOpt::evalWithinRoute(Node *U, Node *V)
     auto *itRoute = V;
     while (itRoute != U)
     {
-        tws = TWS::merge(tws, itRoute->tw);
+        tws = TWS::merge(dist, tws, itRoute->tw);
         itRoute = p(itRoute);
     }
 
-    tws = TWS::merge(tws, n(V)->twAfter);
+    tws = TWS::merge(dist, tws, n(V)->twAfter);
 
     deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
     deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
@@ -38,22 +38,24 @@ TCost TwoOpt::evalWithinRoute(Node *U, Node *V)
 
 TCost TwoOpt::evalBetweenRoutes(Node *U, Node *V)
 {
-    TDist const current = data.dist(U->client, n(U)->client)
-                        + data.dist(V->client, n(V)->client);
-    TDist const proposed = data.dist(U->client, n(V)->client)
-                         + data.dist(V->client, n(U)->client);
+    auto const &dist = data.distanceMatrix();
+
+    TDist const current
+        = dist(U->client, n(U)->client) + dist(V->client, n(V)->client);
+    TDist const proposed
+        = dist(U->client, n(V)->client) + dist(V->client, n(U)->client);
 
     TCost deltaCost = proposed - current;
 
     if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
-    auto const uTWS = TWS::merge(U->twBefore, n(V)->twAfter);
+    auto const uTWS = TWS::merge(dist, U->twBefore, n(V)->twAfter);
 
     deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
-    auto const vTWS = TWS::merge(V->twBefore, n(U)->twAfter);
+    auto const vTWS = TWS::merge(dist, V->twBefore, n(U)->twAfter);
 
     deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());

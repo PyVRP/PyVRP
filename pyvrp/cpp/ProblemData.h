@@ -16,23 +16,22 @@ using TCost = double;
 using TDist = double;
 using TTime = double;
 #endif
+
 class ProblemData
 {
 public:
     struct Client
     {
-        TDist x;            // Coordinate X
-        TDist y;            // Coordinate Y
-        TTime servDur;      // Service duration
-        int demand;       // Demand
-        TTime twEarly;      // Earliest arrival (when using time windows)
-        TTime twLate;       // Latest arrival (when using time windows)
-        TTime releaseTime;  // Routes with this client cannot leave depot before
-                          // this time
+        int x;                  // Coordinate X
+        int y;                  // Coordinate Y
+        TTime serviceDuration;  // Service duration
+        int demand;             // Demand
+        TTime twEarly;          // Earliest arrival (when using time windows)
+        TTime twLate;           // Latest arrival (when using time windows)
     };
 
 private:
-    Matrix<TDist> const dist_;       // Distance matrix (+depot)
+    Matrix<TDist> const dist_;     // Distance matrix (+depot)
     std::vector<Client> clients_;  // Client (+depot) information
 
     size_t const numClients_;
@@ -95,15 +94,6 @@ public:
     [[nodiscard]] size_t vehicleCapacity() const;
 
     /**
-     * Constructs a ProblemData object from the data read (in VRPLIB format)
-     * from the given instance path.
-     *
-     * @param where Path to the instance data.
-     * @returns     The constructed object.
-     */
-    static ProblemData fromFile(std::string const &where);
-
-    /**
      * Constructs a ProblemData object with the given data. Assumes the data
      * contains the depot, such that each vector is one longer than the number
      * of clients.
@@ -115,16 +105,14 @@ public:
      * @param timeWindows  Time windows as pairs of [early, late].
      * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
-     * @param releases     Client release times.
      */
-    ProblemData(std::vector<std::pair<TDist, TDist>> const &coords,
+    ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
                 size_t numVehicles,
                 size_t vehicleCap,
                 std::vector<std::pair<TTime, TTime>> const &timeWindows,
                 std::vector<TTime> const &servDurs,
-                std::vector<std::vector<TDist>> const &distMat,
-                std::vector<TTime> const &releases);
+                std::vector<std::vector<TTime>> const &distMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const

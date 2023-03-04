@@ -16,26 +16,25 @@ struct InsertPos  // best insert position, used to plan unplanned clients
 // Evaluates the cost change of inserting client between prev and next.
 TCost deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    TTime prevClientRelease = std::max(data.client(prev).releaseTime,
-                                     data.client(client).releaseTime);
-    TTime prevEarliestArrival = std::max(prevClientRelease + data.duration(0, prev),
-                                       data.client(prev).twEarly);
-    TTime prevEarliestFinish = prevEarliestArrival + data.client(prev).servDur;
+    TTime prevEarliestArrival
+        = std::max(data.dist(0, prev), data.client(prev).twEarly);
+    TTime prevEarliestFinish
+        = prevEarliestArrival + data.client(prev).serviceDuration;
+    TTime distPrevClient = data.dist(prev, client);
     TTime clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + data.duration(prev, client) >= clientLate)
         return static_cast<TCost>(INT_MAX);
 
-    TTime clientNextRelease = std::max(data.client(client).releaseTime,
-                                     data.client(next).releaseTime);
-    TTime clientEarliestArrival = std::max(
-        clientNextRelease + data.duration(0, client), data.client(client).twEarly);
+    TTime clientEarliestArrival
+        = std::max(data.dist(0, client), data.client(client).twEarly);
     TTime clientEarliestFinish
-        = clientEarliestArrival + data.client(client).servDur;
-    int nextLate = data.client(next).twLate;
+        = clientEarliestArrival + data.client(client).serviceDuration;
+    TTime distClientNext = data.dist(client, next);
+    TTime nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + data.duration(client, next) >= nextLate)
-        return INT_MAX;
+        return static_cast<TCost>(INT_MAX);
 
     return data.dist(prev, client) + data.dist(client, next) - data.dist(prev, next);
 }

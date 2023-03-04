@@ -1,8 +1,6 @@
 #include "PenaltyManager.h"
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
+#include <numeric>
 
 PenaltyManager::PenaltyManager(unsigned int vehicleCapacity,
                                PenaltyParams params)
@@ -11,17 +9,6 @@ PenaltyManager::PenaltyManager(unsigned int vehicleCapacity,
       capacityPenalty(params.initCapacityPenalty),
       timeWarpPenalty(params.initTimeWarpPenalty)
 {
-    if (params.penaltyIncrease < 1.)
-        throw std::invalid_argument("Expected penaltyIncrease >= 1.");
-
-    if (params.penaltyDecrease < 0. || params.penaltyDecrease > 1.)
-        throw std::invalid_argument("Expected penaltyDecrease in [0, 1].");
-
-    if (params.targetFeasible < 0. || params.targetFeasible > 1.)
-        throw std::invalid_argument("Expected targetFeasible in [0, 1].");
-
-    if (params.repairBooster < 1)
-        throw std::invalid_argument("Expected repairBooster >= 1.");
 }
 
 unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
@@ -43,27 +30,32 @@ unsigned int PenaltyManager::compute(unsigned int penalty, double feasPct) const
     return static_cast<int>(dPenalty);
 }
 
-void PenaltyManager::updateCapacityPenalty(double currFeasPct)
+void PenaltyManager::registerLoadFeasible(bool isLoadFeasible)
 {
-    capacityPenalty = compute(capacityPenalty, currFeasPct);
+    loadFeas.emplace_back(isLoadFeasible);
+
+    if (loadFeas.size() == params.numRegistrationsBetweenPenaltyUpdates)
+    {
+        double const sum = std::accumulate(loadFeas.begin(), loadFeas.end(), 0);
+        auto const avg = loadFeas.empty() ? 1.0 : sum / loadFeas.size();
+
+        capacityPenalty = compute(capacityPenalty, avg);
+        loadFeas.clear();
+    }
 }
 
-void PenaltyManager::updateTimeWarpPenalty(double currFeasPct)
+void PenaltyManager::registerTimeFeasible(bool isTimeFeasible)
 {
-    timeWarpPenalty = compute(timeWarpPenalty, currFeasPct);
-}
+    timeFeas.emplace_back(isTimeFeasible);
 
-unsigned int PenaltyManager::loadPenalty(unsigned int load) const
-{
-    if (load > vehicleCapacity)
-        return (load - vehicleCapacity) * capacityPenalty;
+    if (timeFeas.size() == params.numRegistrationsBetweenPenaltyUpdates)
+    {
+        double const sum = std::accumulate(timeFeas.begin(), timeFeas.end(), 0);
+        auto const avg = timeFeas.empty() ? 1.0 : sum / timeFeas.size();
 
-    return 0;
-}
-
-TTime PenaltyManager::twPenalty(TTime timeWarp) const
-{
-    return timeWarp * timeWarpPenalty;
+        timeWarpPenalty = compute(timeWarpPenalty, avg);
+        timeFeas.clear();
+    }
 }
 
 PenaltyManager::PenaltyBooster PenaltyManager::getPenaltyBooster()

@@ -17,26 +17,22 @@ class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    Matrix<TTime> const *durationMatrix = nullptr;  // Duration matrix
     int idxFirst = 0;  // Index of the first client in the segment
     int idxLast = 0;   // Index of the last client in the segment
     TTime duration = 0;  // Total duration, incl. waiting and servicing
     TTime timeWarp = 0;  // Cumulative time warp
     TTime twEarly = 0;   // Earliest visit moment of first client
     TTime twLate = 0;    // Latest visit moment of last client
-    TTime release = 0;   // Release time; cannot leave depot earlier
 
-    [[nodiscard]] inline TWS merge(TWS const &other) const;
+    [[nodiscard]] inline TWS merge(Matrix<int> const &dist,
+                                   TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS
-    merge(TWS const &first, TWS const &second, Args... args);
-
-    /**
-     * Returns the time warp along the segment, assuming we can depart in time.
-     */
-    [[nodiscard]] inline TTime segmentTimeWarp() const;
+    [[nodiscard]] inline static TWS merge(Matrix<int> const &dist,
+                                          TWS const &first,
+                                          TWS const &second,
+                                          Args... args);
 
     /**
      * Total time warp, that is, the time warp along the the segment, and
@@ -44,71 +40,67 @@ public:
      */
     [[nodiscard]] inline TTime totalTimeWarp() const;
 
-    TimeWindowSegment() = default;  // TODO get rid of this constructor
+    TimeWindowSegment() = default;
 
-    inline TimeWindowSegment(Matrix<TTime> const *durationMatrix,
-                             int idxFirst,
+    inline TimeWindowSegment(int idxFirst,
                              int idxLast,
                              TTime duration,
                              TTime timeWarp,
                              TTime twEarly,
-                             TTime twLate,
-                             TTime release);
-};
+                             TTime twLate);
 
-template <typename... Args>
-TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &first,
-                                           TimeWindowSegment const &second,
-                                           Args... args)
+TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
+                                           TimeWindowSegment const &other) const
 {
-    auto const res = first.merge(second);
+#ifdef VRP_NO_TIME_WINDOWS
+    return {};
+#else
+    auto const distance = dist(idxLast, other.idxFirst);
+    auto const delta = duration - timeWarp + distance;
+    auto const deltaWaitTime = std::max(other.twEarly - delta - twLate, TTime(0));
+    auto const deltaTimeWarp = std::max(twEarly + delta - other.twLate, TTime(0));
 
-    if constexpr (sizeof...(args) == 0)
-        return res;
-    else
-        return merge(res, args...);
-}
-
-TimeWindowSegment TimeWindowSegment::merge(TimeWindowSegment const &other) const
-{
-    int const distance = (*durationMatrix)(idxLast, other.idxFirst);
-    TTime const delta = duration - timeWarp + distance;
-    TTime const deltaWaitTime = std::max(other.twEarly - delta - twLate, static_cast<TTime>(0));
-    TTime const deltaTimeWarp = std::max(twEarly + delta - other.twLate, static_cast<TTime>(0));
-
-    return {durationMatrix,
-            idxFirst,
+    return {idxFirst,
             other.idxLast,
             duration + other.duration + distance + deltaWaitTime,
             timeWarp + other.timeWarp + deltaTimeWarp,
             std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
-            std::min(other.twLate - delta, twLate) + deltaTimeWarp,
-            std::max(release, other.release)};
+            std::min(other.twLate - delta, twLate) + deltaTimeWarp};
+#endif
 }
 
-TTime TimeWindowSegment::segmentTimeWarp() const { return timeWarp; }
-
-TTime TimeWindowSegment::totalTimeWarp() const
+template <typename... Args>
+TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
+                                           TimeWindowSegment const &first,
+                                           TimeWindowSegment const &second,
+                                           Args... args)
 {
-    return segmentTimeWarp() + std::max(release - twLate, static_cast<TTime>(0));
+#ifdef VRP_NO_TIME_WINDOWS
+    return {};
+#else
+    auto const res = first.merge(dist, second);
+
+    if constexpr (sizeof...(args) == 0)
+        return res;
+    else
+        return merge(dist, res, args...);
+#endif
 }
 
-TimeWindowSegment::TimeWindowSegment(Matrix<TTime> const *durationMatrix,
-                                     int idxFirst,
+int TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
+
+TimeWindowSegment::TimeWindowSegment(int idxFirst,
                                      int idxLast,
                                      TTime duration,
                                      TTime timeWarp,
                                      TTime twEarly,
-                                     TTime twLate,
-                                     TTime release)
-    : durationMatrix(durationMatrix),
-      idxFirst(idxFirst),
+                                     TTime twLate)
+    : idxFirst(idxFirst),
       idxLast(idxLast),
       duration(duration),
       timeWarp(timeWarp),
       twEarly(twEarly),
-      twLate(twLate),
-      release(release)
+      twLate(twLate)
 {
 }
 

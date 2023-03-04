@@ -1,17 +1,14 @@
 #include "LocalSearch.h"
 
-#include <pybind11/pybind11.h>
-
+#include <algorithm>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <vector>
 
-namespace py = pybind11;
-
-void LocalSearch::search(Individual &indiv)
+Individual LocalSearch::search(Individual &individual)
 {
-    loadIndividual(indiv);
+    loadIndividual(individual);
 
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
@@ -73,16 +70,22 @@ void LocalSearch::search(Individual &indiv)
         }
     }
 
-    indiv = exportIndividual();
+    return exportIndividual();
 }
 
-void LocalSearch::intensify(Individual &indiv)
+Individual LocalSearch::intensify(Individual &individual,
+                                  int overlapToleranceDegrees)
 {
-    loadIndividual(indiv);
+    loadIndividual(individual);
+
+    auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
+
+    if (routeOps.empty())
+        throw std::runtime_error("No known route operators.");
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
@@ -110,7 +113,7 @@ void LocalSearch::intensify(Individual &indiv)
             {
                 auto &V = routes[rV];
 
-                if (V.empty())
+                if (V.empty() || !U.overlapsWith(V, overlapTolerance))
                     continue;
 
                 auto const lastModifiedRoute
@@ -119,24 +122,21 @@ void LocalSearch::intensify(Individual &indiv)
                 if (lastModifiedRoute > lastTested && applyRouteOps(&U, &V))
                     continue;
             }
-
-            if (lastModified[U.idx] > lastTested)
-                enumerateSubpaths(U);
         }
     }
 
-    indiv = exportIndividual();
+    return exportIndividual();
 }
 
 bool LocalSearch::applyNodeOps(Node *U, Node *V)
 {
-    for (auto op : nodeOps)
-        if (op->evaluate(U, V) < 0)
+    for (auto *nodeOp : nodeOps)
+        if (nodeOp->evaluate(U, V) < 0)
         {
             auto *routeU = U->route;  // copy pointers because the operator can
             auto *routeV = V->route;  // modify the node's route membership
 
-            op->apply(U, V);
+            nodeOp->apply(U, V);
             update(routeU, routeV);
 
             return true;
@@ -147,11 +147,17 @@ bool LocalSearch::applyNodeOps(Node *U, Node *V)
 
 bool LocalSearch::applyRouteOps(Route *U, Route *V)
 {
-    for (auto op : routeOps)
-        if (op->evaluate(U, V) < 0)
+    for (auto *routeOp : routeOps)
+        if (routeOp->evaluate(U, V) < 0)
         {
-            op->apply(U, V);
+            routeOp->apply(U, V);
             update(U, V);
+
+            for (auto *op : routeOps)  // this is used by some route operators
+            {                          // (particularly SWAP*) to keep caches
+                op->update(U);         // in sync.
+                op->update(V);
+            }
 
             return true;
         }
@@ -167,172 +173,24 @@ void LocalSearch::update(Route *U, Route *V)
     U->update();
     lastModified[U->idx] = nbMoves;
 
-    for (auto op : routeOps)  // TODO only route operators use this (SWAP*).
-        op->update(U);        //  Maybe later also expand to node ops?
-
     if (U != V)
     {
         V->update();
         lastModified[V->idx] = nbMoves;
-
-        for (auto op : routeOps)
-            op->update(V);
     }
 }
 
-// TODO this should be some sort of operator passed into LS, it should not be
-//  defined here.
-void LocalSearch::enumerateSubpaths(Route &U)
-{
-    auto const k = std::min(params.postProcessPathLength, U.size());
-
-    if (k <= 1)  // 0 or 1 means we are either not doing anything at all (0),
-        return;  // or recombining a single node (1). Neither helps.
-
-    std::vector<size_t> path(k);
-
-    // This postprocessing step optimally recombines all node segments of a
-    // given length in each route. This recombination works by enumeration; see
-    // issue #98 for details.
-    for (size_t start = 1; start + k <= U.size() + 1; ++start)
-    {
-        auto *prev = p(U[start]);   // we process [start, start + k). So fixed
-        auto *next = U[start + k];  // endpoints are p(start) and start + k
-
-        std::iota(path.begin(), path.end(), start);
-        auto currCost = evaluateSubpath(path, prev, next, U);
-
-        while (std::next_permutation(path.begin(), path.end()))
-        {
-            auto const cost = evaluateSubpath(path, prev, next, U);
-
-            if (cost < currCost)
-            {
-                for (auto pos : path)
-                {
-                    auto *node = U[pos];
-                    node->insertAfter(prev);
-                    prev = node;
-                }
-
-                update(&U, &U);  // it is rare to find more than one improving
-                break;           // move, so we break after the first
-            }
-        }
-    }
-}
-
-TCost LocalSearch::evaluateSubpath(std::vector<size_t> const &subpath,
-                                 Node const *before,
-                                 Node const *after,
-                                 Route const &route) const
-{
-    TDist totalDist = 0;
-    auto tws = before->twBefore;
-    auto from = before->client;
-
-    // Calculates travel distance and time warp of the subpath permutation.
-    for (auto &pos : subpath)
-    {
-        auto *to = route[pos];
-
-        totalDist += data.dist(from, to->client);
-        tws = TimeWindowSegment::merge(tws, to->tw);
-        from = to->client;
-    }
-
-    totalDist += data.dist(from, after->client);
-    tws = TimeWindowSegment::merge(tws, after->twAfter);
-
-    return totalDist + penaltyManager.twPenalty(tws.totalTimeWarp());
-}
-
-void LocalSearch::calculateNeighbours()
-{
-    // TODO clean up this method / rethink proximity determination
-    auto proximities
-        = std::vector<std::vector<std::pair<TCost, int>>>(data.numClients() + 1);
-
-    for (size_t i = 1; i <= data.numClients(); i++)  // exclude depot
-    {
-        auto &proximity = proximities[i];
-
-        for (size_t j = 1; j <= data.numClients(); j++)  // exclude depot
-        {
-            if (i == j)  // exclude the current client
-                continue;
-
-            // Compute proximity using Eq. 4 in Vidal 2012. The proximity is
-            // computed by the distance, min. wait time and min. time warp
-            // going from either i -> j or j -> i, whichever is the least.
-            TTime const maxRelease = std::max(data.client(i).releaseTime,
-                                            data.client(j).releaseTime);
-
-            // Proximity from j to i
-            TTime const waitTime1 = data.client(i).twEarly - data.duration(j, i)
-                                  - data.client(j).servDur
-                                  - data.client(j).twLate;
-
-            TTime const earliestArrival1 = std::max(maxRelease + data.duration(0, j),
-                                                  data.client(j).twEarly);
-
-            TTime const timeWarp1 = earliestArrival1 + data.client(j).servDur
-                                  + data.duration(j, i) - data.client(i).twLate;
-
-            TCost const prox1 = data.dist(j, i)
-                              + params.weightWaitTime * std::max(static_cast<TTime>(0), waitTime1)
-                              + params.weightTimeWarp * std::max(static_cast<TTime>(0), timeWarp1);
-
-            // Proximity from i to j
-            TTime const waitTime2 = data.client(j).twEarly - data.duration(i, j)
-                                  - data.client(i).servDur
-                                  - data.client(i).twLate;
-            TTime const earliestArrival2 = std::max(maxRelease + data.duration(0, i),
-                                                  data.client(i).twEarly);
-            TTime const timeWarp2 = earliestArrival2 + data.client(i).servDur
-                                  + data.duration(i, j) - data.client(j).twLate;
-            TCost const prox2 = data.dist(i, j)
-                              + params.weightWaitTime * std::max(static_cast<TTime>(0), waitTime2)
-                              + params.weightTimeWarp * std::max(static_cast<TTime>(0), timeWarp2);
-
-            proximity.emplace_back(std::min(prox1, prox2), j);
-        }
-
-        std::sort(proximity.begin(), proximity.end());
-    }
-
-    // First create a set of correlated vertices for each vertex (where the
-    // depot is not taken into account)
-    std::vector<std::set<int>> set(data.numClients() + 1);
-    size_t const granularity = std::min(
-        params.nbGranular, static_cast<size_t>(data.numClients()) - 1);
-
-    for (size_t i = 1; i <= data.numClients(); i++)  // again exclude depot
-    {
-        auto const &orderProximity = proximities[i];
-
-        for (size_t j = 0; j != granularity; ++j)
-            set[i].insert(orderProximity[j].second);
-    }
-
-    for (size_t i = 1; i <= data.numClients(); i++)
-        for (int x : set[i])
-            neighbours[i].push_back(x);
-}
-
-void LocalSearch::loadIndividual(Individual const &indiv)
+void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
-        clients[client].tw = {&data.durationMatrix(),
+        clients[client].tw = {static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
-                              static_cast<int>(client),  // TODO cast
-                              data.client(client).servDur,
+                              data.client(client).serviceDuration,
                               0,
                               data.client(client).twEarly,
-                              data.client(client).twLate,
-                              data.client(client).releaseTime};
+                              data.client(client).twLate};
 
-    auto const &routesIndiv = indiv.getRoutes();
+    auto const &routesIndiv = individual.getRoutes();
 
     for (size_t r = 0; r < data.numVehicles(); r++)
     {
@@ -381,11 +239,8 @@ void LocalSearch::loadIndividual(Individual const &indiv)
         route->update();
     }
 
-    for (auto op : nodeOps)
-        op->init(indiv);
-
-    for (auto op : routeOps)
-        op->init(indiv);
+    for (auto *routeOp : routeOps)
+        routeOp->init(individual);
 }
 
 Individual LocalSearch::exportIndividual()
@@ -419,46 +274,68 @@ void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
 
 void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
+void LocalSearch::setNeighbours(Neighbours neighbours)
+{
+    if (neighbours.size() != data.numClients() + 1)
+        throw std::runtime_error("Neighbourhood dimensions do not match.");
+
+    for (size_t client = 0; client <= data.numClients(); ++client)
+    {
+        auto const beginPos = neighbours[client].begin();
+        auto const endPos = neighbours[client].end();
+
+        auto const clientPos = std::find(beginPos, endPos, client);
+        auto const depotPos = std::find(beginPos, endPos, 0);
+
+        if (clientPos != endPos || depotPos != endPos)
+        {
+            throw std::runtime_error("Neighbourhood of client "
+                                     + std::to_string(client)
+                                     + " contains itself or the depot.");
+        }
+    }
+
+    auto isEmpty = [](auto const &neighbours) { return neighbours.empty(); };
+    if (std::all_of(neighbours.begin(), neighbours.end(), isEmpty))
+        throw std::runtime_error("Neighbourhood is empty.");
+
+    this->neighbours = neighbours;
+}
+
+LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
+
 LocalSearch::LocalSearch(ProblemData &data,
                          PenaltyManager &penaltyManager,
                          XorShift128 &rng,
-                         LocalSearchParams params)
+                         Neighbours neighbours)
     : data(data),
       penaltyManager(penaltyManager),
       rng(rng),
-      params(params),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1)
+      lastModified(data.numVehicles(), -1),
+      clients(data.numClients() + 1),
+      routes(data.numVehicles(), data),
+      startDepots(data.numVehicles()),
+      endDepots(data.numVehicles())
 {
+    setNeighbours(neighbours);
+
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    clients = std::vector<Node>(data.numClients() + 1);
-    routes = std::vector<Route>(data.numVehicles());
-    startDepots = std::vector<Node>(data.numVehicles());
-    endDepots = std::vector<Node>(data.numVehicles());
-
-    calculateNeighbours();
-
     for (size_t i = 0; i <= data.numClients(); i++)
-    {
-        clients[i].data = &data;
         clients[i].client = i;
-    }
 
     for (size_t i = 0; i < data.numVehicles(); i++)
     {
-        routes[i].data = &data;
         routes[i].idx = i;
         routes[i].depot = &startDepots[i];
 
-        startDepots[i].data = &data;
         startDepots[i].client = 0;
         startDepots[i].route = &routes[i];
 
-        startDepots[i].data = &data;
         endDepots[i].client = 0;
         endDepots[i].route = &routes[i];
     }

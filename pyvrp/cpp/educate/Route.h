@@ -1,6 +1,7 @@
 #ifndef HGS_VRPTW_ROUTE_H
 #define HGS_VRPTW_ROUTE_H
 
+#include "CircleSector.h"
 #include "Node.h"
 #include "TimeWindowSegment.h"
 
@@ -21,7 +22,10 @@ using TTime = double;
 
 class Route
 {
+    ProblemData const &data;
+
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
+    CircleSector sector;        // Circle sector of the route's clients
 
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
@@ -32,15 +36,13 @@ class Route
     // Populates the nodes vector.
     void setupNodes();
 
-    // Sets the route center angle.
-    void setupAngle();
+    // Sets the angle and sector data.
+    void setupSector();
 
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:  // TODO make fields private
-    ProblemData const *data;
-
+public:                  // TODO make fields private
     int idx;             // Route index
     Node *depot;         // Pointer to the associated depot
     double angleCenter;  // Angle of the barycenter of the route
@@ -108,10 +110,19 @@ public:  // TODO make fields private
     [[nodiscard]] inline int loadBetween(size_t start, size_t end) const;
 
     /**
+     * Tests if this route overlaps with the other route, that is, whether
+     * their circle sectors overlap with a given tolerance.
+     */
+    [[nodiscard]] bool overlapsWith(Route const &other,
+                                    int const tolerance) const;
+
+    /**
      * Updates this route. To be called after swapping nodes/changing the
      * solution.
      */
     void update();
+
+    Route(ProblemData const &data);
 };
 
 bool Route::isFeasible() const
@@ -121,7 +132,14 @@ bool Route::isFeasible() const
 
 bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
 
-bool Route::hasTimeWarp() const { return isTimeWarpFeasible_; }
+bool Route::hasTimeWarp() const
+{
+#ifdef VRP_NO_TIME_WINDOWS
+    return false;
+#else
+    return !isTimeWarpFeasible_;
+#endif
+}
 
 Node *Route::operator[](size_t position) const
 {
@@ -144,10 +162,11 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
     assert(start <= end);
 
+    auto const &dist = data.distanceMatrix();
     auto tws = nodes[start - 1]->tw;
 
     for (size_t step = start; step != end; ++step)
-        tws = TimeWindowSegment::merge(tws, nodes[step]->tw);
+        tws = TimeWindowSegment::merge(dist, tws, nodes[step]->tw);
 
     return tws;
 }
@@ -169,7 +188,7 @@ int Route::loadBetween(size_t start, size_t end) const
     assert(start <= end && end <= nodes.size());
 
     auto const *startNode = start == 0 ? depot : nodes[start - 1];
-    auto const atStart = data->client(startNode->client).demand;
+    auto const atStart = data.client(startNode->client).demand;
     auto const startLoad = startNode->cumulatedLoad;
     auto const endLoad = nodes[end - 1]->cumulatedLoad;
 

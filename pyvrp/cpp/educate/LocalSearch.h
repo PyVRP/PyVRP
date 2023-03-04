@@ -10,6 +10,7 @@
 #include "XorShift128.h"
 
 #include <functional>
+#include <stdexcept>
 #include <vector>
 
 #ifdef INT_PRECISION
@@ -22,49 +23,29 @@ using TDist = double;
 using TTime = double;
 #endif
 
-struct LocalSearchParams
-{
-    size_t const weightWaitTime;
-    size_t const weightTimeWarp;
-    size_t const nbGranular;
-    size_t const postProcessPathLength;
-
-    LocalSearchParams(size_t weightWaitTime = 18,
-                      size_t weightTimeWarp = 20,
-                      size_t nbGranular = 34,
-                      size_t postProcessPathLength = 7)
-        : weightWaitTime(weightWaitTime),
-          weightTimeWarp(weightTimeWarp),
-          nbGranular(nbGranular),
-          postProcessPathLength(postProcessPathLength)
-    {
-        // TODO parameter validation
-    }
-};
-
 class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
+    using Neighbours = std::vector<std::vector<int>>;
 
     ProblemData &data;
     PenaltyManager &penaltyManager;
     XorShift128 &rng;
-    LocalSearchParams params;
 
     // Neighborhood restrictions: For each client, list of nearby clients (size
     // nbClients + 1, but nothing stored for the depot!)
-    std::vector<std::vector<int>> neighbours;
+    Neighbours neighbours;
 
     std::vector<int> orderNodes;   // random node order used in RI operators
     std::vector<int> orderRoutes;  // random route order used in SWAP* operators
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
-    std::vector<Node> clients;      // Note that clients[0] is a sentinel value
+    std::vector<Node> clients;  // Note that clients[0] is a sentinel value
+    std::vector<Route> routes;
     std::vector<Node> startDepots;  // These mark the start of routes
     std::vector<Node> endDepots;    // These mark the end of routes
-    std::vector<Route> routes;
 
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
@@ -73,7 +54,7 @@ class LocalSearch
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve
-    void loadIndividual(Individual const &indiv);
+    void loadIndividual(Individual const &individual);
 
     // Export the LS solution back into an individual
     Individual exportIndividual();
@@ -84,21 +65,6 @@ class LocalSearch
 
     // Updates solution state after an improving local search move
     void update(Route *U, Route *V);
-
-    // Enumerates and optimally recombines subpaths of the given route
-    void enumerateSubpaths(Route &U);
-
-    // Evaluates the path before -> <nodes in sub path> -> after
-    inline TCost evaluateSubpath(std::vector<size_t> const &subpath,
-                               Node const *before,
-                               Node const *after,
-                               Route const &route) const;
-
-    /**
-     * Calculate, for all vertices, the correlation ('nearness') of the
-     * nbGranular closest vertices.
-     */
-    void calculateNeighbours();
 
 public:
     /**
@@ -113,20 +79,35 @@ public:
     void addRouteOperator(RouteOp &op);
 
     /**
-     * Performs regular (node-based) local search around the given individual.
+     * Set neighbourhood structure to use by the local search. For each client,
+     * the neighbourhood structure is a vector of nearby clients. The depot has
+     * no nearby client.
      */
-    void search(Individual &indiv);
+    void setNeighbours(Neighbours neighbours);
+
+    /**
+     * @return The neighbourhood structure currently in use.
+     */
+    Neighbours getNeighbours();
+
+    /**
+     * Performs regular (node-based) local search around the given individual,
+     * and returns a new, hopefully improved individual.
+     */
+    Individual search(Individual &individual);
 
     /**
      * Performs a more intensive local search around the given individual,
-     * using route-based operators and subpath enumeration.
+     * using route-based operators and subpath enumeration. Returns a new,
+     * hopefully improved individual.
      */
-    void intensify(Individual &indiv);
+    Individual intensify(Individual &individual,
+                         int overlapToleranceDegrees = 0);
 
     LocalSearch(ProblemData &data,
                 PenaltyManager &penaltyManager,
                 XorShift128 &rng,
-                LocalSearchParams params = LocalSearchParams());
+                Neighbours neighbours);
 };
 
 #endif

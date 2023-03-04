@@ -1,17 +1,17 @@
 import time
 from dataclasses import dataclass
-from typing import Callable, List, Tuple
+from typing import Callable, Tuple
 
-from pyvrp.educate import LocalSearch
+from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
-from .Individual import Individual
-from .PenaltyManager import PenaltyManager
 from .Population import Population
-from .ProblemData import ProblemData
 from .Result import Result
 from .Statistics import Statistics
-from .XorShift128 import XorShift128
+from ._Individual import Individual
+from ._PenaltyManager import PenaltyManager
+from ._ProblemData import ProblemData
+from ._XorShift128 import XorShift128
 
 _Parents = Tuple[Individual, Individual]
 CrossoverOperator = Callable[
@@ -21,17 +21,21 @@ CrossoverOperator = Callable[
 
 @dataclass
 class GeneticAlgorithmParams:
-    nb_penalty_management: int = 47
     repair_probability: float = 0.80
     collect_statistics: bool = False
-    should_intensify: bool = True
+    intensify_probability: float = 0.15
+    intensify_on_best: bool = True
+    nb_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
-        if self.nb_penalty_management < 0:
-            raise ValueError("nb_penalty_management < 0 not understood.")
-
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
+
+        if not 0 <= self.intensify_probability <= 1:
+            raise ValueError("intensify_probability must be in [0, 1].")
+
+        if self.nb_iter_no_improvement < 0:
+            raise ValueError("nb_iter_no_improvement < 0 not understood.")
 
 
 class GeneticAlgorithm:
@@ -72,8 +76,7 @@ class GeneticAlgorithm:
         self._op = crossover_op
         self._params = params
 
-        self._load_feas: List[bool] = []
-        self._tw_feas: List[bool] = []
+        self._best = Individual.make_random(data, penalty_manager, rng)
 
     def run(self, stop: StoppingCriterion):
         """
@@ -93,38 +96,62 @@ class GeneticAlgorithm:
         start = time.perf_counter()
         stats = Statistics()
         iters = 0
+        iters_no_improvement = 1
 
-        while not stop(self._pop.get_best_found()):
+        while not stop(self._best):
             iters += 1
+
+            if iters_no_improvement == self._params.nb_iter_no_improvement:
+                self._pop.restart()
+                iters_no_improvement = 1
+
+            curr_best = self._best.cost()
 
             parents = self._pop.select()
             offspring = self._op(parents, self._data, self._pm, self._rng)
             self._educate(offspring)
 
-            if iters % self._params.nb_penalty_management == 0:
-                self._update_penalties()
+            new_best = self._best.cost()
+
+            if new_best < curr_best:
+                iters_no_improvement = 1
+            else:
+                iters_no_improvement += 1
 
             if self._params.collect_statistics:
                 stats.collect_from(self._pop)
 
         end = time.perf_counter() - start
-        return Result(self._pop.get_best_found(), stats, iters, end)
+        return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
-        self._ls.search(individual)
+        def is_new_best(indiv):
+            return indiv.is_feasible() and indiv.cost() < self._best.cost()
 
-        # Only intensify feasible, new best solutions. See also the repair
-        # step below.
-        if (
-            self._params.should_intensify
-            and individual.is_feasible()
-            and individual.cost() < self._pop.get_best_found().cost()
-        ):
-            self._ls.intensify(individual)
+        def add_and_register(indiv):
+            self._pop.add(indiv)
+            self._pm.register_load_feasible(not indiv.has_excess_capacity())
+            self._pm.register_time_feasible(not indiv.has_time_warp())
 
-        self._pop.add(individual)
-        self._load_feas.append(not individual.has_excess_capacity())
-        self._tw_feas.append(not individual.has_time_warp())
+        intensify_prob = self._params.intensify_probability
+        should_intensify = self._rng.rand() < intensify_prob
+
+        individual = self._ls.run(individual, should_intensify)
+
+        if is_new_best(individual):
+            self._best = individual
+
+            # Only intensify feasible, new best solutions. See also the repair
+            # step below. TODO Refactor to on_best callback (see issue #111)
+            if self._params.intensify_on_best:
+                individual = self._ls.intensify(
+                    individual, overlap_tolerance_degrees=360
+                )
+
+                if is_new_best(individual):
+                    self._best = individual
+
+        add_and_register(individual)
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
@@ -132,30 +159,21 @@ class GeneticAlgorithm:
             not individual.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            best_found = self._pop.get_best_found()
+            with self._pm.get_penalty_booster():
+                should_intensify = self._rng.rand() < intensify_prob
+                individual = self._ls.run(individual, should_intensify)
 
-            with self._pm.get_penalty_booster() as booster:  # noqa
-                self._ls.search(individual)
+                if is_new_best(individual):
+                    self._best = individual
+
+                    # TODO Refactor to on_best callback (see issue #111)
+                    if self._params.intensify_on_best:
+                        individual = self._ls.intensify(
+                            individual, overlap_tolerance_degrees=360
+                        )
+
+                        if is_new_best(individual):
+                            self._best = individual
 
                 if individual.is_feasible():
-                    if (
-                        self._params.should_intensify
-                        and individual.cost() < best_found.cost()
-                    ):
-                        self._ls.intensify(individual)
-
-                    self._pop.add(individual)
-
-                    # We already know the individual is feasible, so load and
-                    # time constraints are both satisfied.
-                    self._load_feas.append(True)
-                    self._tw_feas.append(True)
-
-    def _update_penalties(self):
-        feas_load_pct = sum(self._load_feas) / len(self._load_feas)
-        self._pm.update_capacity_penalty(feas_load_pct)
-        self._load_feas = []
-
-        feas_tw_pct = sum(self._tw_feas) / len(self._tw_feas)
-        self._pm.update_time_warp_penalty(feas_tw_pct)
-        self._tw_feas = []
+                    add_and_register(individual)

@@ -6,15 +6,7 @@
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
-#ifdef INT_PRECISION
-using TCost = int;
-using TDist = int;
-using TTime = int;
-#else
-using TCost = double;
-using TDist = double;
-using TTime = double;
-#endif
+#include <cassert>
 
 using TWS = TimeWindowSegment;
 
@@ -67,7 +59,9 @@ bool Exchange<N, M>::overlap(Node *U, Node *V) const
 {
     // clang-format off
     return U->route == V->route
-        && U->position <= V->position + M - 1
+        // We need max(M, 1) here because when V is the depot and M == 0, this
+        // would turn negative and wrap around to a large number.
+        && U->position <= V->position + std::max(M, size_t(1)) - 1
         && V->position <= U->position + N - 1;
     // clang-format on
 }
@@ -84,17 +78,22 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 template <size_t N, size_t M>
 TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 {
-    auto *endU = N == 1 ? U : (*U->route)[U->position + N - 1];
     auto const posU = U->position;
     auto const posV = V->position;
 
-    TDist const current = U->route->distBetween(posU - 1, posU + N)
-                        + data.dist(V->client, n(V)->client);
+    assert(posU > 0);
 
-    TDist const proposed = data.dist(V->client, U->client)
+    auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
+
+    auto const &dist = data.distanceMatrix();
+
+    TDist const current = U->route->distBetween(posU - 1, posU + N)
+                        + dist(V->client, n(V)->client);
+
+    TDist const proposed = dist(V->client, U->client)
                          + U->route->distBetween(posU, posU + N - 1)
-                         + data.dist(endU->client, n(V)->client)
-                         + data.dist(p(U)->client, n(endU)->client);
+                         + dist(endU->client, n(V)->client)
+                         + dist(p(U)->client, n(endU)->client);
 
     TCost deltaCost = proposed - current;
 
@@ -103,7 +102,7 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(p(U)->twBefore, n(endU)->twAfter);
+        auto uTWS = TWS::merge(dist, p(U)->twBefore, n(endU)->twAfter);
 
         deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
@@ -119,7 +118,8 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
         deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
         deltaCost -= penaltyManager.loadPenalty(V->route->load());
 
-        auto vTWS = TWS::merge(V->twBefore,
+        auto vTWS = TWS::merge(dist,
+                               V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
 
@@ -135,7 +135,8 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(p(U)->twBefore,
+            auto const tws = TWS::merge(dist,
+                                        p(U)->twBefore,
                                         route->twBetween(posU + N, posV),
                                         route->twBetween(posU, posU + N - 1),
                                         n(V)->twAfter);
@@ -144,7 +145,8 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
         }
         else
         {
-            auto const tws = TWS::merge(V->twBefore,
+            auto const tws = TWS::merge(dist,
+                                        V->twBefore,
                                         route->twBetween(posU, posU + N - 1),
                                         route->twBetween(posV + 1, posU - 1),
                                         n(endU)->twAfter);
@@ -161,11 +163,15 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 template <size_t N, size_t M>
 TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 {
-    auto *endU = N == 1 ? U : (*U->route)[U->position + N - 1];
-    auto *endV = M == 1 ? V : (*V->route)[V->position + M - 1];
-
     auto const posU = U->position;
     auto const posV = V->position;
+
+    assert(posU > 0 && posV > 0);
+
+    auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
+    auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
+
+    auto const &dist = data.distanceMatrix();
 
     TDist const current = U->route->distBetween(posU - 1, posU + N)
                         + V->route->distBetween(posV - 1, posV + M);
@@ -173,12 +179,11 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     TDist const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
-        = data.dist(p(U)->client, V->client)
+        = dist(p(U)->client, V->client)
           + V->route->distBetween(posV, posV + M - 1)
-          + data.dist(endV->client, n(endU)->client)
-          + data.dist(p(V)->client, U->client)
+          + dist(endV->client, n(endU)->client) + dist(p(V)->client, U->client)
           + U->route->distBetween(posU, posU + N - 1)
-          + data.dist(endU->client, n(endV)->client);
+          + dist(endU->client, n(endV)->client);
 
     TCost deltaCost = proposed - current;
 
@@ -187,14 +192,16 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
         if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(p(U)->twBefore,
+        auto uTWS = TWS::merge(dist,
+                               p(U)->twBefore,
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
 
         deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
-        auto vTWS = TWS::merge(p(V)->twBefore,
+        auto vTWS = TWS::merge(dist,
+                               p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
 
@@ -220,7 +227,8 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(p(U)->twBefore,
+            auto const tws = TWS::merge(dist,
+                                        p(U)->twBefore,
                                         route->twBetween(posV, posV + M - 1),
                                         route->twBetween(posU + N, posV - 1),
                                         route->twBetween(posU, posU + N - 1),
@@ -230,7 +238,8 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
         }
         else
         {
-            auto const tws = TWS::merge(p(V)->twBefore,
+            auto const tws = TWS::merge(dist,
+                                        p(V)->twBefore,
                                         route->twBetween(posU, posU + N - 1),
                                         route->twBetween(posV + M, posU - 1),
                                         route->twBetween(posV, posV + M - 1),

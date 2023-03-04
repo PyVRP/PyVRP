@@ -83,6 +83,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+result_images/
 
 # Translations
 *.mo
@@ -164,10 +165,15 @@ dmypy.json
 # Compiled or generated assets
 debug/
 release/
+_readthedocs/
+
+# Profiler results
+*.prof
 
 # Data files
 data/
 !pyvrp/tests/data/
+!examples/data
 
 # Ignore Mac DS_Store files
 .DS_Store

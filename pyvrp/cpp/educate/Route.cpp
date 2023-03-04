@@ -1,7 +1,14 @@
+#define _USE_MATH_DEFINES  // needed to get M_PI etc. on Windows builds
+// TODO use std::numbers::pi instead of M_PI when C++20 is supported by CIBW
+
 #include "Route.h"
 
 #include <cmath>
 #include <ostream>
+
+using TWS = TimeWindowSegment;
+
+Route::Route(ProblemData const &data) : data(data) {}
 
 void Route::setupNodes()
 {
@@ -15,13 +22,21 @@ void Route::setupNodes()
     } while (!node->isDepot());
 }
 
-void Route::setupAngle()
+void Route::setupSector()
 {
     if (empty())
     {
         angleCenter = 1.e30;
         return;
     }
+
+    auto const depotData = data.client(0);
+    auto const clientData = data.client(n(depot)->client);
+    auto const angle = CircleSector::positive_mod(static_cast<int>(
+        32768. * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
+        / M_PI));
+
+    sector.initialize(angle);
 
     TDist cumulatedX = 0;
     TDist cumulatedY = 0;
@@ -31,35 +46,51 @@ void Route::setupAngle()
         auto const *node = *it;
         assert(!node->isDepot());
 
-        cumulatedX += data->client(node->client).x;
-        cumulatedY += data->client(node->client).y;
+        cumulatedX += data.client(node->client).x;
+        cumulatedY += data.client(node->client).y;
+
+        auto const clientData = data.client(node->client);
+        auto const angle = CircleSector::positive_mod(static_cast<int>(
+            32768.
+            * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
+            / M_PI));
+
+        sector.extend(angle);
     }
 
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
     auto const routeSize = static_cast<double>(size());
-    auto const dy = cumulatedY / routeSize - data->depot().y;
-    auto const dx = cumulatedX / routeSize - data->depot().x;
+    auto const dy = cumulatedY / routeSize - data.depot().y;
+    auto const dx = cumulatedX / routeSize - data.depot().x;
     angleCenter = std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
 void Route::setupRouteTimeWindows()
 {
+    auto const &dist = data.distanceMatrix();
     auto *node = nodes.back();
 
     do  // forward time window segments
     {
         auto *prev = p(node);
-        prev->twAfter = TimeWindowSegment::merge(prev->tw, node->twAfter);
+        prev->twAfter = TWS::merge(dist, prev->tw, node->twAfter);
         node = prev;
     } while (!node->isDepot());
+}
+
+bool Route::overlapsWith(Route const &other, int const tolerance) const
+{
+    return CircleSector::overlap(sector, other.sector, tolerance);
 }
 
 void Route::update()
 {
     auto const oldNodes = nodes;
     setupNodes();
+
+    auto const &dist = data.distanceMatrix();
 
     int load = 0;
     TDist distance = 0;
@@ -85,24 +116,24 @@ void Route::update()
         if (!foundChange)
             continue;
 
-        load += data->client(node->client).demand;
-        distance += data->dist(p(node)->client, node->client);
+        load += data.client(node->client).demand;
+        distance += dist(p(node)->client, node->client);
 
-        reverseDistance += data->dist(node->client, p(node)->client);
-        reverseDistance -= data->dist(p(node)->client, node->client);
+        reverseDistance += dist(node->client, p(node)->client);
+        reverseDistance -= dist(p(node)->client, node->client);
 
         node->position = pos + 1;
         node->cumulatedLoad = load;
         node->cumulatedDistance = distance;
         node->cumulatedReversalDistance = reverseDistance;
-        node->twBefore = TimeWindowSegment::merge(p(node)->twBefore, node->tw);
+        node->twBefore = TWS::merge(dist, p(node)->twBefore, node->tw);
     }
 
-    setupAngle();
+    setupSector();
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;
-    isLoadFeasible_ = static_cast<size_t>(load_) <= data->vehicleCapacity();
+    isLoadFeasible_ = static_cast<size_t>(load_) <= data.vehicleCapacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;
