@@ -94,18 +94,20 @@ def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
     pm = PenaltyManager(data.vehicle_capacity)
-    params = PopulationParams()
-    init = make_random_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(init, bpd, params=params)
+
+    pop_params = PopulationParams()
+    init = make_random_solutions(pop_params.min_pop_size, pm, rng, data)
+    pop = Population(init, bpd, params=pop_params)
+
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
 
     node_op = Exchange10(data, pm)
     ls.add_node_operator(node_op)
 
-    params = GeneticAlgorithmParams(
+    ga_params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False
     )
-    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, params)
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, ga_params)
 
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best

@@ -63,7 +63,7 @@ def test_plot_result():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
     params = PopulationParams()
-    init = make_random_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(params.min_pop_size, pm, rng, data)
 
     pop = Population(init, broken_pairs_distance, params=params)
     stats = Statistics()
