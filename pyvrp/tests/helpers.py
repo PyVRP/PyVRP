@@ -40,7 +40,7 @@ def sleep(duration, get_now=time.perf_counter):
 
 def make_random_initial_solutions(data, pm, rng, num_init):
     """
-    Returns a list of a ``num_init`` random initial solutions.
+    Returns a list of a ``num_init`` random solutions.
     """
     return [Individual.make_random(data, pm, rng) for _ in range(num_init)]
 
