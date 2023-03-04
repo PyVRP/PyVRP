@@ -38,13 +38,11 @@ def sleep(duration, get_now=time.perf_counter):
         now = get_now()
 
 
-def make_random_initial_solutions(data, pm, rng, num_individuals):
+def make_random_initial_solutions(data, pm, rng, num_init):
     """
-    Returns a list of a ``num_individuals`` random initial solutions.
+    Returns a list of a ``num_init`` random initial solutions.
     """
-    return [
-        Individual.make_random(data, pm, rng) for _ in range(num_individuals)
-    ]
+    return [Individual.make_random(data, pm, rng) for _ in range(num_init)]
 
 
 class DummyTarget:
