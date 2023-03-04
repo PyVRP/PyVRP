@@ -13,11 +13,7 @@ from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.exceptions import StatisticsNotCollectedError
-from pyvrp.tests.helpers import (
-    make_random_initial_solutions,
-    read,
-    read_solution,
-)
+from pyvrp.tests.helpers import make_random_solutions, read, read_solution
 
 IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
 
@@ -67,7 +63,7 @@ def test_plot_result():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
     params = PopulationParams()
-    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(data, pm, rng, params.min_pop_size)
 
     pop = Population(init, broken_pairs_distance, params=params)
     stats = Statistics()

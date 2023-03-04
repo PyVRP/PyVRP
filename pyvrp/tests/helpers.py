@@ -38,7 +38,7 @@ def sleep(duration, get_now=time.perf_counter):
         now = get_now()
 
 
-def make_random_initial_solutions(data, pm, rng, num_init):
+def make_random_solutions(data, pm, rng, num_init):
     """
     Returns a list of a ``num_init`` random solutions.
     """

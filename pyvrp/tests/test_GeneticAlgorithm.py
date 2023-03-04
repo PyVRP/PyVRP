@@ -13,7 +13,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.educate import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import make_random_initial_solutions, read
+from pyvrp.tests.helpers import make_random_solutions, read
 
 
 @mark.parametrize(
@@ -95,7 +95,7 @@ def test_best_solution_improves_with_more_iterations():
     rng = XorShift128(seed=42)
     pm = PenaltyManager(data.vehicle_capacity)
     params = PopulationParams()
-    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(data, pm, rng, params.min_pop_size)
     pop = Population(init, bpd, params=params)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
 

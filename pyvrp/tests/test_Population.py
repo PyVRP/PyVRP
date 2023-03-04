@@ -10,7 +10,7 @@ from pyvrp import (
     XorShift128,
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.tests.helpers import make_random_initial_solutions, read
+from pyvrp.tests.helpers import make_random_solutions, read
 
 
 @mark.parametrize(
@@ -102,7 +102,7 @@ def test_add_triggers_purge():
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(data, pm, rng, params.min_pop_size)
     pop = Population(init, bpd, params)
 
     # Population should initialise at least min_pop_size individuals
@@ -183,7 +183,7 @@ def test_same_initial_solutions():
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=12)
     params = PopulationParams(min_pop_size=10)
-    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(data, pm, rng, params.min_pop_size)
 
     pop = Population(init, bpd, params)
 
@@ -207,7 +207,7 @@ def test_num_initial_solutions(num_init):
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=10)
-    init = make_random_initial_solutions(data, pm, rng, num_init)
+    init = make_random_solutions(data, pm, rng, num_init)
     pop = Population(init, bpd, params)
 
     # If there are more initial individuals than the maximal population size
@@ -282,7 +282,7 @@ def test_binary_tournament_ranks_by_fitness():
     rng = XorShift128(seed=42)
     params = PopulationParams()
 
-    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(data, pm, rng, params.min_pop_size)
     pop = Population(init, bpd, params)
     for _ in range(50):
         pop.add(Individual.make_random(data, pm, rng))
@@ -317,7 +317,7 @@ def test_purge_removes_duplicates():
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
-    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    init = make_random_solutions(data, pm, rng, params.min_pop_size)
     pop = Population(init, bpd, params)
     assert_equal(len(pop), params.min_pop_size)
 
