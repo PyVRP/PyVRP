@@ -2,14 +2,15 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import PenaltyManager, Population, Statistics, XorShift128
 from pyvrp.diversity import broken_pairs_distance
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_random_initial_solutions, read
 
 
 def test_csv_serialises_correctly(tmp_path):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
-    pop = Population(data, pm, rng, broken_pairs_distance)
+    init = make_random_initial_solutions(data, pm, rng, 10)
+    pop = Population(broken_pairs_distance, init)
 
     collected_stats = Statistics()
 
