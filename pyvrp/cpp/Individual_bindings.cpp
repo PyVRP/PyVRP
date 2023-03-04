@@ -25,8 +25,9 @@ PYBIND11_MODULE(_Individual, m)
                 return py::cpp_function(  // See issue 1693 in the pybind repo.
                     [](ProblemData const &data,
                        PenaltyManager const &penaltyManager,
-                       XorShift128 &rng)
-                    { return Individual(data, penaltyManager, rng); },
+                       XorShift128 &rng) {
+                        return Individual(data, penaltyManager, rng);
+                    },
                     py::arg("data"),
                     py::arg("penalty_manager"),
                     py::arg("routes"),
@@ -43,23 +44,23 @@ PYBIND11_MODULE(_Individual, m)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_capacity", &Individual::hasExcessCapacity)
         .def("has_time_warp", &Individual::hasTimeWarp)
-        .def("__copy__",
-             [](Individual const &individual)
-             { return Individual(individual); })
+        .def(
+            "__copy__",
+            [](Individual const &individual) { return Individual(individual); })
         .def(
             "__deepcopy__",
-            [](Individual const &individual, py::dict)
-            { return Individual(individual); },
+            [](Individual const &individual, py::dict) {
+                return Individual(individual);
+            },
             py::arg("memo"))
         .def("__hash__",
-             [](Individual const &individual)
-             { return std::hash<Individual>()(individual); })
+             [](Individual const &individual) {
+                 return std::hash<Individual>()(individual);
+             })
         .def(pybind11::self == pybind11::self)  // this is __eq__
-        .def("__str__",
-             [](Individual const &individual)
-             {
-                 std::stringstream stream;
-                 stream << individual;
-                 return stream.str();
-             });
+        .def("__str__", [](Individual const &individual) {
+            std::stringstream stream;
+            stream << individual;
+            return stream.str();
+        });
 }
