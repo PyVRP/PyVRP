@@ -138,7 +138,7 @@ class Population:
     def restart(self):
         """
         Restarts the population. All current individuals are removed and the
-        initial individuals are added back.
+        initial individuals used to seed the restarted population.
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
