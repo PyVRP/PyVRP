@@ -182,14 +182,14 @@ def test_same_initial_solutions():
     data = read("data/E-n22-k4.txt", round_func="round")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=12)
+
     params = PopulationParams(min_pop_size=10)
     init = make_random_solutions(params.min_pop_size, pm, rng, data)
-
     pop = Population(init, bpd, params)
 
-    # Check that the current population individuals have the same routes as the
-    # initial solutions. We check for equality here because the population
-    # creates new individuals.
+    # Check that the initial population individuals have the same routes as the
+    # passed-in initial solutions. We check for equality here because the
+    # population creates new individuals.
     for indiv in pop:
         assert_(np.any(indiv == other for other in init))
 
@@ -239,9 +239,9 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
 def test_elite_individuals_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
-    params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
+    params = PopulationParams(nb_elite=nb_elite)
     pop = Population([], bpd, params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
@@ -280,10 +280,11 @@ def test_binary_tournament_ranks_by_fitness():
     data = read("data/RC208LessVehicles.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
     rng = XorShift128(seed=42)
-    params = PopulationParams()
 
+    params = PopulationParams()
     init = make_random_solutions(params.min_pop_size, pm, rng, data)
     pop = Population(init, bpd, params)
+
     for _ in range(50):
         pop.add(Individual.make_random(data, pm, rng))
 
@@ -314,11 +315,12 @@ def test_binary_tournament_ranks_by_fitness():
 def test_purge_removes_duplicates():
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
-    params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
+    params = PopulationParams(min_pop_size=20, generation_size=5)
     init = make_random_solutions(params.min_pop_size, pm, rng, data)
     pop = Population(init, bpd, params)
+
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make
