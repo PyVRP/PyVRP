@@ -13,8 +13,6 @@ class Population:
 
     Parameters
     ----------
-    rng
-        Random number generator.
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
@@ -26,12 +24,10 @@ class Population:
 
     def __init__(
         self,
-        rng: XorShift128,
         diversity_op: Callable[[Individual, Individual], float],
         initial_solutions: List[Individual],
         params: PopulationParams = PopulationParams(),
     ):
-        self._rng = rng
         self._op = diversity_op
         self._initial_solutions = initial_solutions
         self._params = params
@@ -105,18 +101,23 @@ class Population:
         else:
             self._infeas.add(individual)
 
-    def select(self) -> Tuple[Individual, Individual]:
+    def select(self, rng: XorShift128) -> Tuple[Individual, Individual]:
         """
         Selects two (if possible non-identical) parents by binary tournament,
         subject to a diversity restriction.
+
+        Parameters
+        ----------
+        rng
+            Random number generator.
 
         Returns
         -------
         tuple
             A pair of individuals (parents).
         """
-        first = self.get_binary_tournament()
-        second = self.get_binary_tournament()
+        first = self.get_binary_tournament(rng)
+        second = self.get_binary_tournament(rng)
 
         diversity = self._op(first, second)
         lb = self._params.lb_diversity
@@ -125,7 +126,7 @@ class Population:
         tries = 1
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
-            second = self.get_binary_tournament()
+            second = self.get_binary_tournament(rng)
             diversity = self._op(first, second)
 
         return first, second
@@ -141,9 +142,14 @@ class Population:
         for indiv in self._initial_solutions:
             self.add(indiv)
 
-    def get_binary_tournament(self) -> Individual:
+    def get_binary_tournament(self, rng: XorShift128) -> Individual:
         """
         Selects an individual from this population by binary tournament.
+
+        Parameters
+        ----------
+        rng
+            Random number generator.
 
         Returns
         -------
@@ -153,7 +159,7 @@ class Population:
 
         def select():
             num_feas = len(self._feas)
-            idx = self._rng.randint(len(self))
+            idx = rng.randint(len(self))
 
             if idx < num_feas:
                 return self._feas[idx]

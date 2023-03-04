@@ -107,7 +107,7 @@ class GeneticAlgorithm:
 
             curr_best = self._best.cost()
 
-            parents = self._pop.select()
+            parents = self._pop.select(self._rng)
             offspring = self._op(parents, self._data, self._pm, self._rng)
             self._educate(offspring)
 

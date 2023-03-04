@@ -134,7 +134,7 @@ def solve(
         Individual.make_random(data, pen_manager, rng)
         for _ in range(pop_params.min_pop_size)
     ]
-    pop = Population(rng, bpd, init_solutions, pop_params)
+    pop = Population(bpd, init_solutions, pop_params)
 
     neighbours = compute_neighbours(data, nb_params)
     ls = LocalSearch(data, pen_manager, rng, neighbours)
