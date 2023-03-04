@@ -13,7 +13,8 @@ void SwapStar::updateRemovalCosts(Route *R1)
         removalCosts(R1->idx, U->client)
             = dist(p(U)->client, n(U)->client) - dist(p(U)->client, U->client)
               - dist(U->client, n(U)->client)
-              + penaltyManager.twPenalty(twData.totalTimeWarp()) - currTWPenalty;
+              + penaltyManager.twPenalty(twData.totalTimeWarp())
+              - currTWPenalty;
     }
 }
 
@@ -29,9 +30,9 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
     auto twData
         = TWS::merge(dist, R->depot->twBefore, U->tw, n(R->depot)->twAfter);
     TCost cost = dist(0, U->client) + dist(U->client, n(R->depot)->client)
-               - dist(0, n(R->depot)->client)
-               + penaltyManager.twPenalty(twData.totalTimeWarp())
-               - penaltyManager.twPenalty(R->timeWarp());
+                 - dist(0, n(R->depot)->client)
+                 + penaltyManager.twPenalty(twData.totalTimeWarp())
+                 - penaltyManager.twPenalty(R->timeWarp());
 
     insertPositions.maybeAdd(cost, R->depot);
 
@@ -40,10 +41,10 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(dist, V->twBefore, U->tw, n(V)->twAfter);
         TCost deltaCost = dist(V->client, U->client)
-                        + dist(U->client, n(V)->client)
-                        - dist(V->client, n(V)->client)
-                        + penaltyManager.twPenalty(twData.totalTimeWarp())
-                        - penaltyManager.twPenalty(R->timeWarp());
+                          + dist(U->client, n(V)->client)
+                          - dist(V->client, n(V)->client)
+                          + penaltyManager.twPenalty(twData.totalTimeWarp())
+                          - penaltyManager.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
     }
@@ -64,10 +65,10 @@ std::pair<TCost, Node *> SwapStar::getBestInsertPoint(Node *U, Node *V)
     // As a fallback option, we consider inserting in the place of V
     auto const twData = TWS::merge(dist, p(V)->twBefore, U->tw, n(V)->twAfter);
     TCost deltaCost = dist(p(V)->client, U->client)
-                    + dist(U->client, n(V)->client)
-                    - dist(p(V)->client, n(V)->client)
-                    + penaltyManager.twPenalty(twData.totalTimeWarp())
-                    - penaltyManager.twPenalty(V->route->timeWarp());
+                      + dist(U->client, n(V)->client)
+                      - dist(p(V)->client, n(V)->client)
+                      + penaltyManager.twPenalty(twData.totalTimeWarp())
+                      - penaltyManager.twPenalty(V->route->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -153,12 +154,12 @@ TCost SwapStar::evaluate(Route *routeU, Route *routeV)
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
     TDist const current = dist(p(best.U)->client, best.U->client)
-                        + dist(best.U->client, n(best.U)->client)
-                        + dist(p(best.V)->client, best.V->client)
-                        + dist(best.V->client, n(best.V)->client);
+                          + dist(best.U->client, n(best.U)->client)
+                          + dist(p(best.V)->client, best.V->client)
+                          + dist(best.V->client, n(best.V)->client);
 
     TDist const proposed = dist(best.VAfter->client, best.V->client)
-                         + dist(best.UAfter->client, best.U->client);
+                           + dist(best.UAfter->client, best.U->client);
 
     TCost deltaCost = proposed - current;
 

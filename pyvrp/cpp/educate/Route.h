@@ -30,7 +30,7 @@ class Route
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
-    TTime timeWarp_;             // Current route time warp.
+    TTime timeWarp_;           // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
@@ -175,7 +175,8 @@ TDist Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
-    auto const startDist = start == 0 ? TDist(0) : nodes[start - 1]->cumulatedDistance;
+    auto const startDist
+        = start == 0 ? TDist(0) : nodes[start - 1]->cumulatedDistance;
     auto const endDist = nodes[end - 1]->cumulatedDistance;
 
     assert(startDist <= endDist);

@@ -17,8 +17,8 @@ class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    int idxFirst = 0;  // Index of the first client in the segment
-    int idxLast = 0;   // Index of the last client in the segment
+    int idxFirst = 0;    // Index of the first client in the segment
+    int idxLast = 0;     // Index of the last client in the segment
     TTime duration = 0;  // Total duration, incl. waiting and servicing
     TTime timeWarp = 0;  // Cumulative time warp
     TTime twEarly = 0;   // Earliest visit moment of first client
@@ -58,8 +58,10 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<TDist> const &dist,
 #else
     auto const distance = dist(idxLast, other.idxFirst);
     auto const delta = duration - timeWarp + distance;
-    auto const deltaWaitTime = std::max(other.twEarly - delta - twLate, TTime(0));
-    auto const deltaTimeWarp = std::max(twEarly + delta - other.twLate, TTime(0));
+    auto const deltaWaitTime
+        = std::max(other.twEarly - delta - twLate, TTime(0));
+    auto const deltaTimeWarp
+        = std::max(twEarly + delta - other.twLate, TTime(0));
 
     return {idxFirst,
             other.idxLast,

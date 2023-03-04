@@ -131,8 +131,7 @@ public:
      * Computes the excess capacity penalty for the given excess load, that is,
      * the part of the load that exceeds the vehicle capacity.
      */
-    [[nodiscard]] inline TCost
-    loadPenaltyExcess(unsigned int excessLoad) const;
+    [[nodiscard]] inline TCost loadPenaltyExcess(unsigned int excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.

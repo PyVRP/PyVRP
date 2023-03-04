@@ -88,12 +88,12 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
     auto const &dist = data.distanceMatrix();
 
     TDist const current = U->route->distBetween(posU - 1, posU + N)
-                        + dist(V->client, n(V)->client);
+                          + dist(V->client, n(V)->client);
 
     TDist const proposed = dist(V->client, U->client)
-                         + U->route->distBetween(posU, posU + N - 1)
-                         + dist(endU->client, n(V)->client)
-                         + dist(p(U)->client, n(endU)->client);
+                           + U->route->distBetween(posU, posU + N - 1)
+                           + dist(endU->client, n(V)->client)
+                           + dist(p(U)->client, n(endU)->client);
 
     TCost deltaCost = proposed - current;
 
@@ -174,7 +174,7 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     auto const &dist = data.distanceMatrix();
 
     TDist const current = U->route->distBetween(posU - 1, posU + N)
-                        + V->route->distBetween(posV - 1, posV + M);
+                          + V->route->distBetween(posV - 1, posV + M);
 
     TDist const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)

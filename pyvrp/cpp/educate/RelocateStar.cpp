@@ -6,7 +6,8 @@ TCost RelocateStar::evaluate(Route *U, Route *V)
 
     for (auto *nodeU = n(U->depot); !nodeU->isDepot(); nodeU = n(nodeU))
     {
-        TCost deltaCost = relocate.evaluate(nodeU, V->depot);  // test after depot
+        TCost deltaCost
+            = relocate.evaluate(nodeU, V->depot);  // test after depot
 
         if (deltaCost < move.deltaCost)
             move = {deltaCost, nodeU, V->depot};

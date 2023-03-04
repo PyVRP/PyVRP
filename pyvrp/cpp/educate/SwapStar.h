@@ -25,11 +25,9 @@ class SwapStar : public LocalSearchOperator<Route>
     struct ThreeBest  // stores three best SWAP* insertion points
     {
         bool shouldUpdate = true;
-        std::array<TCost, 3> costs = {
-            static_cast<TCost>(INT_MAX),
-            static_cast<TCost>(INT_MAX),
-            static_cast<TCost>(INT_MAX)
-        };
+        std::array<TCost, 3> costs = {static_cast<TCost>(INT_MAX),
+                                      static_cast<TCost>(INT_MAX),
+                                      static_cast<TCost>(INT_MAX)};
         std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
 
         void maybeAdd(TCost costInsert, Node *placeInsert)

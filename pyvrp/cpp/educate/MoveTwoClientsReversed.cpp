@@ -16,7 +16,7 @@ TCost MoveTwoClientsReversed::evaluate(Node *U, Node *V)
     auto const &dist = data.distanceMatrix();
 
     TDist const current = U->route->distBetween(posU - 1, posU + 2)
-                        + dist(V->client, n(V)->client);
+                          + dist(V->client, n(V)->client);
     TDist const proposed
         = dist(p(U)->client, n(n(U))->client) + dist(V->client, n(U)->client)
           + dist(n(U)->client, U->client) + dist(U->client, n(V)->client);
