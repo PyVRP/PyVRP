@@ -4,8 +4,10 @@ from pytest import mark
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
+    Individual,
     PenaltyManager,
     Population,
+    PopulationParams,
     XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
@@ -89,15 +91,43 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
 
 
+def test_raises_when_too_small_population():
+    """
+    Tests that GeneticAlgorithm rejects populations without at least two
+    individuals in them, since that is insufficient to do proper crossovers.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pen_manager = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+
+    params = PopulationParams(min_pop_size=0)
+    pop = Population(data, pen_manager, rng, bpd, params)
+    assert_equal(len(pop), 0)
+
+    with assert_raises(ValueError):
+        GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+
+    pop.add(Individual.make_random(data, pen_manager, rng))
+    assert_equal(len(pop), 1)
+
+    with assert_raises(ValueError):
+        GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+
+    pop.add(Individual.make_random(data, pen_manager, rng))
+    assert_equal(len(pop), 2)
+
+    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+
+
 def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
     pen_manager = PenaltyManager(data.vehicle_capacity)
     pop = Population(data, pen_manager, rng, bpd)
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
 
-    node_op = Exchange10(data, pen_manager)
-    ls.add_node_operator(node_op)
+    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data, pen_manager))
 
     params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False

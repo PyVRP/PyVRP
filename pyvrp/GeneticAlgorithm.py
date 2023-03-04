@@ -39,6 +39,33 @@ class GeneticAlgorithmParams:
 
 
 class GeneticAlgorithm:
+    """
+    Creates a GeneticAlgorithm instance.
+
+    Parameters
+    ----------
+    data
+        Data object describing the problem to be solved.
+    penalty_manager
+        Penalty manager to use.
+    rng
+        Random number generator.
+    population
+        Population to use.
+    local_search
+        Local search instance to use.
+    crossover_op
+        Crossover operator to use for generating offspring.
+    params
+        Genetic algorithm parameters. If not provided, a default will be used.
+
+    Raises
+    ------
+    ValueError
+        When the population does not contain at least two individuals. At least
+        two are needed for crossover to work.
+    """
+
     def __init__(
         self,
         data: ProblemData,
@@ -49,25 +76,10 @@ class GeneticAlgorithm:
         crossover_op: CrossoverOperator,
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
-        """
-        Creates a GeneticAlgorithm instance.
+        if len(population) < 2:
+            # Cannot do meaningful crossover without at least two individuals.
+            raise ValueError("Expected population size at least two.")
 
-        Parameters
-        ----------
-        data
-            Data object describing the problem to be solved.
-        penalty_manager
-            Penalty manager to use.
-        rng
-            Random number generator.
-        local_search
-            Local search instance to use.
-        crossover_op
-            Crossover operator to use for generating offspring.
-        params, optional
-            Genetic algorithm parameters. If not provided, a default will be
-            used.
-        """
         self._data = data
         self._pm = penalty_manager
         self._rng = rng
