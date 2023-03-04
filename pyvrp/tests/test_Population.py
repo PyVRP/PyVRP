@@ -9,7 +9,7 @@ from pyvrp import (
     PopulationParams,
     XorShift128,
 )
-from pyvrp.diversity import broken_pairs_distance
+from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import make_random_initial_solutions, read
 
 
@@ -103,7 +103,7 @@ def test_add_triggers_purge():
 
     params = PopulationParams()
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(init, broken_pairs_distance, params)
+    pop = Population(init, bpd, params)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -144,7 +144,7 @@ def test_select_returns_same_parents_if_no_other_option():
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population([], broken_pairs_distance, params=params)
+    pop = Population([], bpd, params=params)
 
     assert_equal(len(pop), 0)
 
@@ -189,34 +189,36 @@ def test_restart_same_initial_solutions():
     params = PopulationParams()
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
 
-    pop = Population(init, broken_pairs_distance, params)
+    pop = Population(init, bpd, params)
 
-    old = {individual for individual in pop}
+    # Check that the current population individuals have the same routes as the
+    # initial solutions. We check for equality here because the population
+    # makes new individuals.
+    for indiv in pop:
+        assert_(np.any(indiv == other for other in init))
+
     pop.restart()
-    new = {individual for individual in pop}
 
-    assert_equal(len(pop), len(init))
-    assert_equal(len(old & new), len(init))  # old and new should be the same
+    # Check again for the restarted population.
+    for indiv in pop:
+        assert_(np.any(indiv == other for other in init))
 
 
-# @mark.parametrize("num_init", [1, 15, 21, 30, 100])
-# def test_num_initial_solutions(num_init):
-#     data = read("data/OkSmallFeasible.txt")
-#     pm = PenaltyManager(data.vehicle_capacity)
-#     rng = XorShift128(seed=12)
+@mark.parametrize("num_init", [1, 15, 21, 30, 100])
+def test_num_initial_solutions(num_init):
+    data = read("data/OkSmallFeasible.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=12)
 
-#     params = PopulationParams(min_pop_size=10, generation_size=10)
-#     init = make_random_initial_solutions(data, pm, rng, num_init)
-#     pop = Population(broken_pairs_distance, init, params)
+    params = PopulationParams(min_pop_size=0, generation_size=10)
+    init = make_random_initial_solutions(data, pm, rng, num_init)
+    pop = Population(init, bpd, params)
 
-#     # If there are more initial individuals than the maximal population size
-#     # allows, then a purge is triggered. This will remove 11 clients each
-#     # time.
-#     num_after_purge = num_init % 11 + 11
-#     desired = num_init if num_init <= 20 else num_after_purge
-
-#     # TODO
-#     # assert_equal(len(pop), desired)
+    # If there are more initial individuals than the maximal population size
+    # allows, then a purge is triggered. This resulting population size is
+    # equal to ``num_init`` modulo the number individuals that need to
+    # be added to trigger a purge (11).
+    assert_equal(len(pop), num_init % 11)
 
 
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
@@ -225,7 +227,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
-    pop = Population([], broken_pairs_distance, params)
+    pop = Population([], bpd, params)
 
     assert_equal(len(pop), 0)
 
@@ -244,7 +246,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
-    pop = Population([], broken_pairs_distance, params)
+    pop = Population([], bpd, params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
@@ -285,7 +287,7 @@ def test_binary_tournament_ranks_by_fitness():
     params = PopulationParams()
 
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(init, broken_pairs_distance, params)
+    pop = Population(init, bpd, params)
     for _ in range(50):
         pop.add(Individual.make_random(data, pm, rng))
 
@@ -320,7 +322,7 @@ def test_purge_removes_duplicates():
     rng = XorShift128(seed=42)
 
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(init, broken_pairs_distance, params)
+    pop = Population(init, bpd, params)
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make
