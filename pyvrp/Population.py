@@ -13,19 +13,19 @@ class Population:
 
     Parameters
     ----------
+    initial_solutions
+        List of individuals used to initialize the population.
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
-    initial_solutions
-        List of individuals used to initialize the population.
     params, optional
         Population parameters. If not provided, a default will be used.
     """
 
     def __init__(
         self,
-        diversity_op: Callable[[Individual, Individual], float],
         initial_solutions: List[Individual],
+        diversity_op: Callable[[Individual, Individual], float],
         params: PopulationParams = PopulationParams(),
     ):
         self._op = diversity_op

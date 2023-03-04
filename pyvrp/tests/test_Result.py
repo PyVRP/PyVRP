@@ -48,7 +48,7 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
-    pop = Population(broken_pairs_distance, [])
+    pop = Population([], broken_pairs_distance)
     stats = Statistics()
 
     for _ in range(num_iterations):

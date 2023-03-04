@@ -103,7 +103,7 @@ def test_add_triggers_purge():
 
     params = PopulationParams()
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(broken_pairs_distance, init, params)
+    pop = Population(init, broken_pairs_distance, params)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -144,7 +144,7 @@ def test_select_returns_same_parents_if_no_other_option():
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population(broken_pairs_distance, [], params=params)
+    pop = Population([], broken_pairs_distance, params=params)
 
     assert_equal(len(pop), 0)
 
@@ -189,7 +189,7 @@ def test_restart_same_initial_solutions():
     params = PopulationParams()
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
 
-    pop = Population(broken_pairs_distance, init, params)
+    pop = Population(init, broken_pairs_distance, params)
 
     old = {individual for individual in pop}
     pop.restart()
@@ -225,7 +225,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
-    pop = Population(broken_pairs_distance, [], params)
+    pop = Population([], broken_pairs_distance, params)
 
     assert_equal(len(pop), 0)
 
@@ -244,7 +244,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
-    pop = Population(broken_pairs_distance, [], params)
+    pop = Population([], broken_pairs_distance, params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
@@ -285,7 +285,7 @@ def test_binary_tournament_ranks_by_fitness():
     params = PopulationParams()
 
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(broken_pairs_distance, init, params)
+    pop = Population(init, broken_pairs_distance, params)
     for _ in range(50):
         pop.add(Individual.make_random(data, pm, rng))
 
@@ -320,7 +320,7 @@ def test_purge_removes_duplicates():
     rng = XorShift128(seed=42)
 
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(broken_pairs_distance, init, params)
+    pop = Population(init, broken_pairs_distance, params)
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make

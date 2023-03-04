@@ -69,7 +69,7 @@ def test_plot_result():
     params = PopulationParams()
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
 
-    pop = Population(broken_pairs_distance, init, params=params)
+    pop = Population(init, broken_pairs_distance, params=params)
     stats = Statistics()
 
     for i in range(num_iterations):

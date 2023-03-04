@@ -10,7 +10,7 @@ def test_csv_serialises_correctly(tmp_path):
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
     init = make_random_initial_solutions(data, pm, rng, 10)
-    pop = Population(broken_pairs_distance, init)
+    pop = Population(init, broken_pairs_distance)
 
     collected_stats = Statistics()
 

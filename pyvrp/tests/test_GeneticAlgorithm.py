@@ -96,7 +96,7 @@ def test_best_solution_improves_with_more_iterations():
     pm = PenaltyManager(data.vehicle_capacity)
     params = PopulationParams()
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
-    pop = Population(bpd, init, params=params)
+    pop = Population(init, bpd, params=params)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
 
     node_op = Exchange10(data, pm)
