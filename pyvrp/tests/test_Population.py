@@ -178,22 +178,18 @@ def test_select_returns_same_parents_if_no_other_option():
 # // TODO test more select() - diversity, feas/infeas pairs
 
 
-def test_restart_same_initial_solutions():
-    """
-    Tests if the restarted population will contain the same individuals as
-    those that were used when constructing the population.
-    """
-    data = read("data/RC208.txt", "solomon", "dimacs")
+def test_same_initial_solutions():
+    data = read("data/E-n22-k4.txt", round_func="round")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=12)
-    params = PopulationParams()
+    params = PopulationParams(min_pop_size=10)
     init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
 
     pop = Population(init, bpd, params)
 
     # Check that the current population individuals have the same routes as the
     # initial solutions. We check for equality here because the population
-    # makes new individuals.
+    # creates new individuals.
     for indiv in pop:
         assert_(np.any(indiv == other for other in init))
 
