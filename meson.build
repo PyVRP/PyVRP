@@ -42,6 +42,10 @@ if get_option('problem') == 'cvrp'
     endif
 endif
 
+if get_option('precision') == 'int'  # default is floats
+    add_project_arguments('-DINT_PRECISION', language: 'cpp')
+endif
+
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
 # installation directories here, as a shorthand.
