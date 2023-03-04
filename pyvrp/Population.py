@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Callable, Generator, List, Tuple
 
 from ._Individual import Individual
-from ._PenaltyManager import PenaltyManager
 from ._ProblemData import ProblemData
 from ._SubPopulation import PopulationParams, SubPopulation
 from ._XorShift128 import XorShift128
@@ -17,8 +16,6 @@ class Population:
     ----------
     data
         Data object describing the problem to be solved.
-    penalty_manager
-        Penalty manager to use.
     rng
         Random number generator.
     diversity_op
@@ -33,14 +30,12 @@ class Population:
     def __init__(
         self,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         rng: XorShift128,
         diversity_op: Callable[[Individual, Individual], float],
         initial_solutions: List[Individual],
         params: PopulationParams = PopulationParams(),
     ):
         self._data = data
-        self._pm = penalty_manager
         self._rng = rng
         self._op = diversity_op
         self._initial_solutions = initial_solutions
