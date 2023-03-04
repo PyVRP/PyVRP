@@ -6,13 +6,14 @@ from pyvrp import (
     GeneticAlgorithmParams,
     PenaltyManager,
     Population,
+    PopulationParams,
     XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.educate import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_random_initial_solutions, read
 
 
 @mark.parametrize(
@@ -92,17 +93,19 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
-    pen_manager = PenaltyManager(data.vehicle_capacity)
-    pop = Population(data, pen_manager, rng, bpd)
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+    pm = PenaltyManager(data.vehicle_capacity)
+    params = PopulationParams()
+    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+    pop = Population(bpd, init, params=params)
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
 
-    node_op = Exchange10(data, pen_manager)
+    node_op = Exchange10(data, pm)
     ls.add_node_operator(node_op)
 
     params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False
     )
-    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, params)
 
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
