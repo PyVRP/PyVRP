@@ -130,11 +130,11 @@ def solve(
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
 
-    initial_sols = [
+    init = [
         Individual.make_random(data, pen_manager, rng)
         for _ in range(pop_params.min_pop_size)
     ]
-    pop = Population(initial_sols, bpd, pop_params)
+    pop = Population(init, bpd, pop_params)
 
     neighbours = compute_neighbours(data, nb_params)
     ls = LocalSearch(data, pen_manager, rng, neighbours)
