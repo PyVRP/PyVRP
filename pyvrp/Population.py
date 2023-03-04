@@ -22,7 +22,7 @@ class Population:
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
     initial_solutions
-        List of individuals to populate the population with.
+        List of individuals used to initialize the population.
     params, optional
         Population parameters. If not provided, a default will be used.
     """
