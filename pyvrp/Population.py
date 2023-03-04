@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Generator, Tuple
+from typing import Callable, Generator, List, Tuple
 
 from ._Individual import Individual
 from ._PenaltyManager import PenaltyManager
@@ -24,6 +24,8 @@ class Population:
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
+    initial_solutions
+        List of individuals to populate the population with.
     params, optional
         Population parameters. If not provided, a default will be used.
     """
@@ -34,19 +36,21 @@ class Population:
         penalty_manager: PenaltyManager,
         rng: XorShift128,
         diversity_op: Callable[[Individual, Individual], float],
+        initial_solutions: List[Individual],
         params: PopulationParams = PopulationParams(),
     ):
         self._data = data
         self._pm = penalty_manager
         self._rng = rng
         self._op = diversity_op
+        self._initial_solutions = initial_solutions
         self._params = params
 
         self._feas = SubPopulation(diversity_op, params)
         self._infeas = SubPopulation(diversity_op, params)
 
-        for _ in range(params.min_pop_size):
-            self.add(Individual.make_random(data, penalty_manager, rng))
+        for indiv in initial_solutions:
+            self.add(indiv)
 
     def __iter__(self) -> Generator[Individual, None, None]:
         """
@@ -138,14 +142,14 @@ class Population:
 
     def restart(self):
         """
-        Restarts the population. All individuals are removed and a new initial
-        population population is generated.
+        Restarts the population. All current individuals are removed and the
+        initial individuals are added back.
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
 
-        for _ in range(self._params.min_pop_size):
-            self.add(Individual.make_random(self._data, self._pm, self._rng))
+        for indiv in self._initial_solutions:
+            self.add(indiv)
 
     def get_binary_tournament(self) -> Individual:
         """
