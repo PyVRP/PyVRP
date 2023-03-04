@@ -1,6 +1,6 @@
 from copy import copy, deepcopy
 
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Individual, PenaltyManager, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
@@ -105,7 +105,7 @@ def test_distance_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(indiv.cost(), dist)
+    assert_allclose(indiv.cost(), dist)
 
 
 def test_capacity_cost_calculation():
@@ -131,7 +131,7 @@ def test_capacity_cost_calculation():
         + data.dist(2, 0)
     )
 
-    assert_equal(indiv.cost(), dist + load_penalty)
+    assert_allclose(indiv.cost(), dist + load_penalty)
 
 
 def test_time_warp_cost_calculation():
@@ -161,7 +161,7 @@ def test_time_warp_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(indiv.cost(), dist + tw_penalty)
+    assert_allclose(indiv.cost(), dist + tw_penalty)
 
 
 def test_time_warp_for_a_very_constrained_problem():
@@ -268,8 +268,8 @@ def test_str_contains_essential_information():
             for client in route:
                 assert_(str(client) in str_route)
 
-        # Last line should contain the cost
-        assert_(str(individual.cost()) in str_representation[-1])
+        # Last line should contain the cost, with no decimals
+        assert_(str(int(individual.cost())) in str_representation[-1])
 
 
 def test_hash():

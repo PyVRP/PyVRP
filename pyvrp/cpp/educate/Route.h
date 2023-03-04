@@ -175,7 +175,7 @@ TDist Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
-    auto const startDist = start == 0 ? static_cast<TDist>(0) : nodes[start - 1]->cumulatedDistance;
+    auto const startDist = start == 0 ? TDist(0) : nodes[start - 1]->cumulatedDistance;
     auto const endDist = nodes[end - 1]->cumulatedDistance;
 
     assert(startDist <= endDist);

@@ -8,7 +8,7 @@ using TWS = TimeWindowSegment;
 PYBIND11_MODULE(_TimeWindowSegment, m)
 {
     py::class_<TWS>(m, "TimeWindowSegment")
-        .def(py::init<int, int, TTime, TTime, TTime, TTime, TTime>(),
+        .def(py::init<int, int, TTime, TTime, TTime, TTime>(),
              py::arg("idx_first"),
              py::arg("idx_last"),
              py::arg("duration"),

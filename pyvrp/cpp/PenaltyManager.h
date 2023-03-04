@@ -125,19 +125,19 @@ public:
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
      */
-    [[nodiscard]] inline unsigned int loadPenalty(unsigned int load) const;
+    [[nodiscard]] inline TCost loadPenalty(unsigned int load) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
      * the part of the load that exceeds the vehicle capacity.
      */
-    [[nodiscard]] inline unsigned int
+    [[nodiscard]] inline TCost
     loadPenaltyExcess(unsigned int excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
      */
-    [[nodiscard]] inline unsigned int twPenalty(TTime timeWarp) const;
+    [[nodiscard]] inline TCost twPenalty(TTime timeWarp) const;
 
     /**
      * Returns a penalty booster that temporarily increases infeasibility

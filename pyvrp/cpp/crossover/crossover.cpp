@@ -20,7 +20,6 @@ TCost deltaCost(Client client, Client prev, Client next, ProblemData const &data
         = std::max(data.dist(0, prev), data.client(prev).twEarly);
     TTime prevEarliestFinish
         = prevEarliestArrival + data.client(prev).serviceDuration;
-    TTime distPrevClient = data.dist(prev, client);
     TTime clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + data.duration(prev, client) >= clientLate)
@@ -30,7 +29,6 @@ TCost deltaCost(Client client, Client prev, Client next, ProblemData const &data
         = std::max(data.dist(0, client), data.client(client).twEarly);
     TTime clientEarliestFinish
         = clientEarliestArrival + data.client(client).serviceDuration;
-    TTime distClientNext = data.dist(client, next);
     TTime nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + data.duration(client, next) >= nextLate)

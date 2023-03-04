@@ -1,6 +1,6 @@
 #include "RelocateStar.h"
 
-int RelocateStar::evaluate(Route *U, Route *V)
+TCost RelocateStar::evaluate(Route *U, Route *V)
 {
     move = {};
 

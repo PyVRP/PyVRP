@@ -24,12 +24,12 @@ class TimeWindowSegment
     TTime twEarly = 0;   // Earliest visit moment of first client
     TTime twLate = 0;    // Latest visit moment of last client
 
-    [[nodiscard]] inline TWS merge(Matrix<int> const &dist,
+    [[nodiscard]] inline TWS merge(Matrix<TDist> const &dist,
                                    TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS merge(Matrix<int> const &dist,
+    [[nodiscard]] inline static TWS merge(Matrix<TDist> const &dist,
                                           TWS const &first,
                                           TWS const &second,
                                           Args... args);
@@ -48,8 +48,9 @@ public:
                              TTime timeWarp,
                              TTime twEarly,
                              TTime twLate);
+};
 
-TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
+TimeWindowSegment TimeWindowSegment::merge(Matrix<TDist> const &dist,
                                            TimeWindowSegment const &other) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
@@ -70,7 +71,7 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
 }
 
 template <typename... Args>
-TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
+TimeWindowSegment TimeWindowSegment::merge(Matrix<TDist> const &dist,
                                            TimeWindowSegment const &first,
                                            TimeWindowSegment const &second,
                                            Args... args)
@@ -87,7 +88,7 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
 #endif
 }
 
-int TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
+TTime TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
 
 TimeWindowSegment::TimeWindowSegment(int idxFirst,
                                      int idxLast,
