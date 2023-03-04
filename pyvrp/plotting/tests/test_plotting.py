@@ -1,12 +1,23 @@
 from matplotlib.testing.decorators import image_comparison as img_comp
 from numpy.testing import assert_, assert_raises
 
-from pyvrp import Individual, PenaltyManager, Population, XorShift128, plotting
+from pyvrp import (
+    Individual,
+    PenaltyManager,
+    Population,
+    PopulationParams,
+    XorShift128,
+    plotting,
+)
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.exceptions import StatisticsNotCollectedError
-from pyvrp.tests.helpers import read, read_solution
+from pyvrp.tests.helpers import (
+    make_random_initial_solutions,
+    read,
+    read_solution,
+)
 
 IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
 
@@ -52,9 +63,13 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
+
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
-    pop = Population(data, pm, rng, broken_pairs_distance)
+    params = PopulationParams()
+    init = make_random_initial_solutions(data, pm, rng, params.min_pop_size)
+
+    pop = Population(broken_pairs_distance, init, params=params)
     stats = Statistics()
 
     for i in range(num_iterations):

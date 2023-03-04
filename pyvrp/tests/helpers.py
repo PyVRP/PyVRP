@@ -2,6 +2,7 @@ import pathlib
 import time
 from functools import lru_cache
 
+from pyvrp import Individual
 from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
@@ -35,6 +36,15 @@ def sleep(duration, get_now=time.perf_counter):
     end = now + duration
     while now < end:
         now = get_now()
+
+
+def make_random_initial_solutions(data, pm, rng, num_individuals):
+    """
+    Returns a list of a ``num_individuals`` random initial solutions.
+    """
+    return [
+        Individual.make_random(data, pm, rng) for _ in range(num_individuals)
+    ]
 
 
 class DummyTarget:
