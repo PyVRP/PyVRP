@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import Callable, Protocol, Tuple
+from typing import Callable, Protocol, Tuple, TypeVar
 
 from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
@@ -18,8 +18,10 @@ CrossoverOperator = Callable[
     [_Parents, ProblemData, PenaltyManager, XorShift128], Individual
 ]
 
+_T = TypeVar("_T", covariant=True)
 
-class SizedIterable(Protocol):
+
+class SizedIterable(Protocol[_T]):
     def __len__(self):
         pass
 
@@ -64,6 +66,8 @@ class GeneticAlgorithm:
         Local search instance to use.
     crossover_op
         Crossover operator to use for generating offspring.
+    initial_solutions
+        Initial solutions to use to initialize the population.
     params
         Genetic algorithm parameters. If not provided, a default will be used.
 
@@ -81,7 +85,7 @@ class GeneticAlgorithm:
         population: Population,
         local_search: LocalSearch,
         crossover_op: CrossoverOperator,
-        initial_solutions: SizedIterable = tuple(),
+        initial_solutions: SizedIterable[Individual],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
         if len(population) == 0 and len(initial_solutions) == 0:
