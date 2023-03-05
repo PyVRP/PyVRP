@@ -42,7 +42,7 @@ if get_option('problem') == 'cvrp'
     endif
 endif
 
-if get_option('precision') == 'int'  # default is floats
+if get_option('precision') == 'integer'  # default is double
     add_project_arguments('-DINT_PRECISION', language: 'cpp')
 endif
 

@@ -9,7 +9,7 @@ option(
 option(
     'precision',
     type: 'combo',
-    value: 'float',
-    choices: ['float', 'int'], 
+    value: 'double',
+    choices: ['integer', 'double'], 
     description: 'Precision type to compile.'
 )
