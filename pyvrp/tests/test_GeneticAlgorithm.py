@@ -91,10 +91,10 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
 
 
-def test_raises_when_too_small_population():
+def test_raises_when_too_small_population_and_no_initial_solutions():
     """
-    Tests that GeneticAlgorithm rejects empty populations, since that is
-    insufficient to do crossover.
+    Tests that GeneticAlgorithm rejects empty populations with no provided
+    initial solutions, since that is insufficient to do crossover.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pen_manager = PenaltyManager(data.vehicle_capacity)
@@ -108,11 +108,69 @@ def test_raises_when_too_small_population():
         # No individuals should raise.
         GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
 
-    pop.add(Individual.make_random(data, pen_manager, rng))
+    individual = Individual.make_random(data, pen_manager, rng)
+
+    # We have provided an initial solution, so this should be OK.
+    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [individual])
+
+    pop.add(individual)
     assert_equal(len(pop), 1)
 
-    # But one should be OK: this shouldn't raise.
+    # One individual in the population without providing initial solutions
+    # should also be OK.
     GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+
+
+def test_initial_solutions():
+    """
+    Tests that GeneticAlgorithm adds initial solutions to the population
+    when running.
+    """
+    data = read("data/E-n22-k4.txt", round_func="round")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    init = [Individual.make_random(data, pm, rng) for _ in range(25)]
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
+
+    algo.run(MaxIterations(0))
+
+    # Check that the initial population individuals have the same routes as the
+    # initial solutions.
+    current = {individual for individual in pop}
+    assert_equal(len(current & set(init)), 25)
+
+
+def test_restart():
+    """
+    Tests that GeneticAlgorithm upon restarting clears the population and
+    adds the initial solutions.
+    """
+    data = read("data/E-n22-k4.txt", round_func="round")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data, pm))
+
+    init = [Individual.make_random(data, pm, rng) for _ in range(25)]
+    params = GeneticAlgorithmParams(
+        repair_probability=0,
+        intensify_probability=0,
+        intensify_on_best=False,
+        nb_iter_no_improvement=100,
+    )
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, params=params)
+
+    algo.run(MaxIterations(100))
+
+    # Check that the population contains the initial solutions, and one more
+    # due to the education step without repair.
+    current = {individual for individual in pop}
+    assert_equal(len(current & set(init)), 25)
+    assert_equal(len(pop), 26)
 
 
 def test_best_solution_improves_with_more_iterations():
@@ -132,7 +190,7 @@ def test_best_solution_improves_with_more_iterations():
     ga_params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False
     )
-    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, ga_params)
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, params=ga_params)
 
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best

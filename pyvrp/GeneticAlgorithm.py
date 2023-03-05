@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import Callable, Tuple
+from typing import Callable, Protocol, Tuple
 
 from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
@@ -17,6 +17,14 @@ _Parents = Tuple[Individual, Individual]
 CrossoverOperator = Callable[
     [_Parents, ProblemData, PenaltyManager, XorShift128], Individual
 ]
+
+
+class SizedIterable(Protocol):
+    def __len__(self):
+        pass
+
+    def __iter__(self):
+        pass
 
 
 @dataclass
@@ -73,10 +81,13 @@ class GeneticAlgorithm:
         population: Population,
         local_search: LocalSearch,
         crossover_op: CrossoverOperator,
+        initial_solutions: SizedIterable = tuple(),
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
-        if len(population) == 0:
-            raise ValueError("Expected non-empty population.")
+        if len(population) == 0 and len(initial_solutions) == 0:
+            raise ValueError(
+                "Expected non-empty population or at least 1 initial solution."
+            )
 
         self._data = data
         self._pm = penalty_manager
@@ -84,6 +95,7 @@ class GeneticAlgorithm:
         self._pop = population
         self._ls = local_search
         self._op = crossover_op
+        self._initial_solutions = initial_solutions
         self._params = params
 
         self._best = Individual.make_random(data, penalty_manager, rng)
@@ -108,12 +120,18 @@ class GeneticAlgorithm:
         iters = 0
         iters_no_improvement = 1
 
+        for individual in self._initial_solutions:
+            self._pop.add(individual)
+
         while not stop(self._best):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
-                self._pop.clear()
                 iters_no_improvement = 1
+                self._pop.clear()
+
+                for individual in self._initial_solutions:
+                    self._pop.add(individual)
 
             curr_best = self._best.cost()
 
