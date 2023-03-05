@@ -106,6 +106,7 @@ extensions = [
     ['TimeWindowSegment', ''],
     ['XorShift128', ''],
     ['Individual', ''],
+    ['precision', ''],
     ['selective_route_exchange', 'crossover'],
     ['broken_pairs_distance', 'diversity'],
     ['LocalSearch', 'educate'],
