@@ -5,6 +5,21 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.tests.helpers import read
 
 
+def test_same_parents_same_offspring():
+    """
+    Tests that SREX produces identical offspring when both parents are the
+    same.
+    """
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    individual = Individual(data, pm, [[1, 2], [3, 4]])
+    offspring = srex((individual, individual), data, pm, rng)
+
+    assert_equal(offspring, individual)
+
+
 def test_srex_move_all_routes():
     """
     Tests if SREX produces an offspring that is identical to the second parent
@@ -18,11 +33,8 @@ def test_srex_move_all_routes():
 
     indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
-    parents = (indiv1, indiv2)
 
-    offspring = srex(parents, data, pm, rng)
-
-    assert_equal(offspring.get_routes(), indiv2.get_routes())
+    assert_equal(srex((indiv1, indiv2), data, pm, rng), indiv2)
 
 
 def test_srex_greedy_repair():
