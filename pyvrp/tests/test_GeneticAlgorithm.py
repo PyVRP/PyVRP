@@ -211,7 +211,9 @@ def test_best_initial_solution():
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     result = algo.run(MaxIterations(0))
-    best_init = min(init, key=lambda indiv: indiv.cost())
+    best_init = min(
+        init, key=lambda indiv: (not indiv.is_feasible(), indiv.cost())
+    )
 
     assert_equal(result.best, best_init)
 

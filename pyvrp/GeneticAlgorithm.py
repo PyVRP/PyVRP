@@ -90,8 +90,11 @@ class GeneticAlgorithm:
         self._initial_solutions = initial_solutions
         self._params = params
 
+        # Initialise best using the feasible initial solution with lowest cost,
+        # or the initial solution with lowest cost if none are feasible.
         self._best = min(
-            self._initial_solutions, key=lambda indiv: indiv.cost()
+            self._initial_solutions,
+            key=lambda indiv: (not indiv.is_feasible(), indiv.cost()),
         )
 
     def run(self, stop: StoppingCriterion):
