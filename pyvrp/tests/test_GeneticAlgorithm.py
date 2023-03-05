@@ -96,13 +96,11 @@ def test_best_solution_improves_with_more_iterations():
     pm = PenaltyManager(data.vehicle_capacity)
 
     pop_params = PopulationParams()
-    init = make_random_solutions(pop_params.min_pop_size, pm, rng, data)
+    init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
     pop = Population(init, bpd, params=pop_params)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-
-    node_op = Exchange10(data, pm)
-    ls.add_node_operator(node_op)
+    ls.add_node_operator(Exchange10(data, pm))
 
     ga_params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False

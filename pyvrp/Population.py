@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Generator, List, Tuple
+from typing import Callable, Generator, Iterable, Tuple
 
 from ._Individual import Individual
 from ._SubPopulation import PopulationParams, SubPopulation
@@ -14,7 +14,7 @@ class Population:
     Parameters
     ----------
     initial_solutions
-        List of individuals used to initialize the population.
+        Individuals used to initialise the population.
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
@@ -24,7 +24,7 @@ class Population:
 
     def __init__(
         self,
-        initial_solutions: List[Individual],
+        initial_solutions: Iterable[Individual],
         diversity_op: Callable[[Individual, Individual], float],
         params: PopulationParams = PopulationParams(),
     ):
@@ -35,8 +35,8 @@ class Population:
         self._feas = SubPopulation(diversity_op, params)
         self._infeas = SubPopulation(diversity_op, params)
 
-        for indiv in initial_solutions:
-            self.add(indiv)
+        for individuals in initial_solutions:
+            self.add(individuals)
 
     def __iter__(self) -> Generator[Individual, None, None]:
         """
@@ -133,15 +133,15 @@ class Population:
 
     def restart(self):
         """
-        Restarts the population. All current individuals are removed and the
-        original initial individuals are used agains to initialize the
-        restarted population.
+        Restarts the population. First, all current individuals are removed.
+        Then the initial solutions that were passed-in at the initialisation
+        of this population instance are added back again.
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
 
-        for indiv in self._initial_solutions:
-            self.add(indiv)
+        for individual in self._initial_solutions:
+            self.add(individual)
 
     def get_binary_tournament(self, rng: XorShift128) -> Individual:
         """

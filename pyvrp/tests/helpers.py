@@ -38,9 +38,9 @@ def sleep(duration, get_now=time.perf_counter):
         now = get_now()
 
 
-def make_random_solutions(num_sols, pm, rng, data):
+def make_random_solutions(num_sols, data, pm, rng):
     """
-    Returns a list of a ``num_sols`` random solutions.
+    Returns a list of ``num_sols`` random solutions.
     """
     return [Individual.make_random(data, pm, rng) for _ in range(num_sols)]
 

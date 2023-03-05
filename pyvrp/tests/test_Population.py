@@ -102,7 +102,7 @@ def test_add_triggers_purge():
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    init = make_random_solutions(params.min_pop_size, pm, rng, data)
+    init = make_random_solutions(params.min_pop_size, data, pm, rng)
     pop = Population(init, bpd, params)
 
     # Population should initialise at least min_pop_size individuals
@@ -184,30 +184,29 @@ def test_same_initial_solutions():
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=10)
-    init = make_random_solutions(params.min_pop_size, pm, rng, data)
+    init = make_random_solutions(params.min_pop_size, data, pm, rng)
     pop = Population(init, bpd, params)
 
     # Check that the initial population individuals have the same routes as the
-    # passed-in initial solutions. We check for equality here because the
-    # population creates new individuals.
-    for indiv in pop:
-        assert_(np.any(indiv == other for other in init))
+    # initial solutions.
+    current = {individual for individual in pop}
+    assert_(len(current & set(init)), params.min_pop_size)
 
     pop.restart()
 
     # Check again for the restarted population.
-    for indiv in pop:
-        assert_(np.any(indiv == other for other in init))
+    new = {individual for individual in pop}
+    assert_(len(new & set(init)), params.min_pop_size)
 
 
 @mark.parametrize("num_init", [1, 15, 21, 30, 100])
 def test_num_initial_solutions(num_init):
-    data = read("data/OkSmallFeasible.txt")
+    data = read("data/E-n22-k4.txt", round_func="round")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=10)
-    init = make_random_solutions(num_init, pm, rng, data)
+    init = make_random_solutions(num_init, data, pm, rng)
     pop = Population(init, bpd, params)
 
     # If there are more initial individuals than the maximal population size
@@ -239,9 +238,9 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
 def test_elite_individuals_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
+    params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
-    params = PopulationParams(nb_elite=nb_elite)
     pop = Population([], bpd, params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
@@ -277,16 +276,17 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
 
 
 def test_binary_tournament_ranks_by_fitness():
-    data = read("data/RC208LessVehicles.txt", "solomon", "dimacs")
+    data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
     rng = XorShift128(seed=42)
-
     params = PopulationParams()
-    init = make_random_solutions(params.min_pop_size, pm, rng, data)
-    pop = Population(init, bpd, params)
 
+    pop = Population([], bpd, params)
     for _ in range(50):
-        pop.add(Individual.make_random(data, pm, rng))
+        individual = Individual.make_random(data, pm, rng)
+
+        if not individual.is_feasible():
+            pop.add(individual)
 
     assert_equal(pop.num_feasible(), 0)
 
@@ -315,12 +315,11 @@ def test_binary_tournament_ranks_by_fitness():
 def test_purge_removes_duplicates():
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
+    params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
-    params = PopulationParams(min_pop_size=20, generation_size=5)
-    init = make_random_solutions(params.min_pop_size, pm, rng, data)
+    init = make_random_solutions(params.min_pop_size, data, pm, rng)
     pop = Population(init, bpd, params)
-
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make

@@ -59,13 +59,13 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
-    params = PopulationParams()
-    init = make_random_solutions(params.min_pop_size, pm, rng, data)
 
+    params = PopulationParams()
+    init = make_random_solutions(params.min_pop_size, data, pm, rng)
     pop = Population(init, broken_pairs_distance, params=params)
+
     stats = Statistics()
 
     for i in range(num_iterations):
