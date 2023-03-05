@@ -93,7 +93,8 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 def test_raises_when_no_initial_solutions():
     """
-    Tests that GeneticAlgorithm raises when no initial solutions are provided.
+    Tests that GeneticAlgorithm raises when no initial solutions are provided,
+    since that is insufficient to do crossover.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pen_manager = PenaltyManager(data.vehicle_capacity)
