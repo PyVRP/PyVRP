@@ -21,7 +21,7 @@ class Route
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
-    TTime timeWarp_;           // Current route time warp.
+    duration_type timeWarp_;   // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
@@ -72,7 +72,7 @@ public:                  // TODO make fields private
     /**
      * @return Total time warp on this route.
      */
-    [[nodiscard]] inline TTime timeWarp() const;
+    [[nodiscard]] inline duration_type timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -93,7 +93,8 @@ public:                  // TODO make fields private
     /**
      * Calculates the distance for segment [start, end].
      */
-    [[nodiscard]] inline TDist distBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline distance_type distBetween(size_t start,
+                                                   size_t end) const;
 
     /**
      * Calculates the load for segment [start, end].
@@ -140,7 +141,7 @@ Node *Route::operator[](size_t position) const
 
 int Route::load() const { return load_; }
 
-TTime Route::timeWarp() const { return timeWarp_; }
+duration_type Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 
@@ -162,12 +163,12 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     return tws;
 }
 
-TDist Route::distBetween(size_t start, size_t end) const
+distance_type Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
     auto const startDist
-        = start == 0 ? TDist(0) : nodes[start - 1]->cumulatedDistance;
+        = start == 0 ? distance_type(0) : nodes[start - 1]->cumulatedDistance;
     auto const endDist = nodes[end - 1]->cumulatedDistance;
 
     assert(startDist <= endDist);

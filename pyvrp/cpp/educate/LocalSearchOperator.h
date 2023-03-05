@@ -29,7 +29,7 @@ public:
      * cannot become negative at all. In that case, the returned (non-negative)
      * cost delta does not constitute a full evaluation.
      */
-    virtual TCost evaluate(Arg *U, Arg *V) { return false; }
+    virtual cost_type evaluate(Arg *U, Arg *V) { return false; }
 
     /**
      * Applies this operator to the given arguments. For improvements, should

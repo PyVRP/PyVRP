@@ -15,16 +15,16 @@ class TwoOpt : public LocalSearchOperator<Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
-    TCost evalWithinRoute(Node *U, Node *V);
+    cost_type evalWithinRoute(Node *U, Node *V);
 
-    TCost evalBetweenRoutes(Node *U, Node *V);
+    cost_type evalBetweenRoutes(Node *U, Node *V);
 
     void applyWithinRoute(Node *U, Node *V);
 
     void applyBetweenRoutes(Node *U, Node *V);
 
 public:
-    TCost evaluate(Node *U, Node *V) override;
+    cost_type evaluate(Node *U, Node *V) override;
 
     void apply(Node *U, Node *V) override;
 };

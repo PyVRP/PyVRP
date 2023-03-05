@@ -13,17 +13,17 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                  // Coordinate X
-        int y;                  // Coordinate Y
-        TTime serviceDuration;  // Service duration
-        int demand;             // Demand
-        TTime twEarly;          // Earliest arrival (when using time windows)
-        TTime twLate;           // Latest arrival (when using time windows)
+        int x;                          // Coordinate X
+        int y;                          // Coordinate Y
+        duration_type serviceDuration;  // Service duration
+        int demand;                     // Demand
+        duration_type twEarly;  // Earliest arrival (when using time windows)
+        duration_type twLate;   // Latest arrival (when using time windows)
     };
 
 private:
-    Matrix<TDist> const dist_;     // Distance matrix (+depot)
-    std::vector<Client> clients_;  // Client (+depot) information
+    Matrix<distance_type> const dist_;  // Distance matrix (+depot)
+    std::vector<Client> clients_;       // Client (+depot) information
 
     size_t const numClients_;
     size_t const numVehicles_;
@@ -48,7 +48,7 @@ public:
      * @param second Second client.
      * @return distance from the first to the second client.
      */
-    [[nodiscard]] inline TDist dist(size_t first, size_t second) const;
+    [[nodiscard]] inline distance_type dist(size_t first, size_t second) const;
 
     /**
      * Returns the travel duration between the indicated two clients.
@@ -57,17 +57,18 @@ public:
      * @param second Second client.
      * @return duration to travel from the first to the second client.
      */
-    [[nodiscard]] inline TTime duration(size_t first, size_t second) const;
+    [[nodiscard]] inline duration_type duration(size_t first,
+                                                size_t second) const;
 
     /**
      * @return The full distance matrix.
      */
-    [[nodiscard]] Matrix<TDist> const &distanceMatrix() const;
+    [[nodiscard]] Matrix<distance_type> const &distanceMatrix() const;
 
     /**
      * @return The full travel duration matrix.
      */
-    [[nodiscard]] Matrix<TTime> const &durationMatrix() const;
+    [[nodiscard]] Matrix<duration_type> const &durationMatrix() const;
 
     /**
      * @return Total number of clients in this instance.
@@ -97,13 +98,14 @@ public:
      * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
      */
-    ProblemData(std::vector<std::pair<int, int>> const &coords,
-                std::vector<int> const &demands,
-                size_t numVehicles,
-                size_t vehicleCap,
-                std::vector<std::pair<TTime, TTime>> const &timeWindows,
-                std::vector<TTime> const &servDurs,
-                std::vector<std::vector<TTime>> const &distMat);
+    ProblemData(
+        std::vector<std::pair<int, int>> const &coords,
+        std::vector<int> const &demands,
+        size_t numVehicles,
+        size_t vehicleCap,
+        std::vector<std::pair<duration_type, duration_type>> const &timeWindows,
+        std::vector<duration_type> const &servDurs,
+        std::vector<std::vector<duration_type>> const &distMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const
@@ -111,12 +113,12 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-TDist ProblemData::dist(size_t first, size_t second) const
+distance_type ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
 }
 
-TTime ProblemData::duration(size_t first, size_t second) const
+duration_type ProblemData::duration(size_t first, size_t second) const
 {
     // TODO separate duration and distance
     return dist_(first, second);

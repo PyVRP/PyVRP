@@ -25,12 +25,12 @@ class SwapStar : public LocalSearchOperator<Route>
     struct ThreeBest  // stores three best SWAP* insertion points
     {
         bool shouldUpdate = true;
-        std::array<TCost, 3> costs = {static_cast<TCost>(INT_MAX),
-                                      static_cast<TCost>(INT_MAX),
-                                      static_cast<TCost>(INT_MAX)};
+        std::array<cost_type, 3> costs = {static_cast<cost_type>(INT_MAX),
+                                          static_cast<cost_type>(INT_MAX),
+                                          static_cast<cost_type>(INT_MAX)};
         std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
 
-        void maybeAdd(TCost costInsert, Node *placeInsert)
+        void maybeAdd(cost_type costInsert, Node *placeInsert)
         {
             if (costInsert >= costs[2])
                 return;
@@ -61,7 +61,7 @@ class SwapStar : public LocalSearchOperator<Route>
 
     struct BestMove  // tracks the best SWAP* move
     {
-        TCost cost = 0;
+        cost_type cost = 0;
 
         Node *U = nullptr;
         Node *UAfter = nullptr;
@@ -79,10 +79,10 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
-    inline std::pair<TCost, Node *> getBestInsertPoint(Node *U, Node *V);
+    inline std::pair<cost_type, Node *> getBestInsertPoint(Node *U, Node *V);
 
     Matrix<ThreeBest> cache;
-    Matrix<TCost> removalCosts;
+    Matrix<cost_type> removalCosts;
     std::vector<bool> updated;
 
     BestMove best;
@@ -90,7 +90,7 @@ class SwapStar : public LocalSearchOperator<Route>
 public:
     void init(Individual const &indiv) override;
 
-    TCost evaluate(Route *U, Route *V) override;
+    cost_type evaluate(Route *U, Route *V) override;
 
     void apply(Route *U, Route *V) override;
 

@@ -17,10 +17,10 @@ class Individual
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;      // Number of routes
-    TDist distance = 0;         // Total distance
-    size_t capacityExcess = 0;  // Total excess load over all routes
-    TTime timeWarp = 0;         // All route time warp of late arrivals
+    size_t numRoutes_ = 0;       // Number of routes
+    distance_type distance = 0;  // Total distance
+    size_t capacityExcess = 0;   // Total excess load over all routes
+    duration_type timeWarp = 0;  // All route time warp of late arrivals
 
     PenaltyManager const *penaltyManager;
 
@@ -37,7 +37,7 @@ public:
     /**
      * Returns this individual's objective (penalized cost).
      */
-    [[nodiscard]] TCost cost() const;
+    [[nodiscard]] cost_type cost() const;
 
     /**
      * Returns the number of non-empty routes in this individual's solution.
@@ -117,9 +117,9 @@ template <> struct hash<Individual>
     {
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
-        res = res * 31 + std::hash<TDist>()(individual.distance);
+        res = res * 31 + std::hash<distance_type>()(individual.distance);
         res = res * 31 + std::hash<size_t>()(individual.capacityExcess);
-        res = res * 31 + std::hash<TTime>()(individual.timeWarp);
+        res = res * 31 + std::hash<duration_type>()(individual.timeWarp);
 
         return res;
     }

@@ -117,18 +117,19 @@ public:
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
      */
-    [[nodiscard]] inline TCost loadPenalty(unsigned int load) const;
+    [[nodiscard]] inline cost_type loadPenalty(unsigned int load) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
      * the part of the load that exceeds the vehicle capacity.
      */
-    [[nodiscard]] inline TCost loadPenaltyExcess(unsigned int excessLoad) const;
+    [[nodiscard]] inline cost_type
+    loadPenaltyExcess(unsigned int excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
      */
-    [[nodiscard]] inline TCost twPenalty(TTime timeWarp) const;
+    [[nodiscard]] inline cost_type twPenalty(duration_type timeWarp) const;
 
     /**
      * Returns a penalty booster that temporarily increases infeasibility
@@ -137,12 +138,12 @@ public:
     [[nodiscard]] PenaltyBooster getPenaltyBooster();
 };
 
-TCost PenaltyManager::loadPenaltyExcess(unsigned int excessLoad) const
+cost_type PenaltyManager::loadPenaltyExcess(unsigned int excessLoad) const
 {
     return excessLoad * capacityPenalty;
 }
 
-TCost PenaltyManager::loadPenalty(unsigned int load) const
+cost_type PenaltyManager::loadPenalty(unsigned int load) const
 {
     // Branchless for performance: when load > capacity we return the excess
     // load penalty; else zero. Note that when load - vehicleCapacity wraps
@@ -151,7 +152,7 @@ TCost PenaltyManager::loadPenalty(unsigned int load) const
     return (load > vehicleCapacity) * loadPenaltyExcess(load - vehicleCapacity);
 }
 
-TCost PenaltyManager::twPenalty(TTime timeWarp) const
+cost_type PenaltyManager::twPenalty(duration_type timeWarp) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return 0;

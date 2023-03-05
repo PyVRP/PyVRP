@@ -16,13 +16,14 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("tw_late", &ProblemData::Client::twLate);
 
     py::class_<ProblemData>(m, "ProblemData")
-        .def(py::init<std::vector<std::pair<int, int>> const &,
-                      std::vector<int> const &,
-                      size_t,
-                      size_t,
-                      std::vector<std::pair<TTime, TTime>> const &,
-                      std::vector<TTime> const &,
-                      std::vector<std::vector<TDist>> const &>(),
+        .def(py::init<
+                 std::vector<std::pair<int, int>> const &,
+                 std::vector<int> const &,
+                 size_t,
+                 size_t,
+                 std::vector<std::pair<duration_type, duration_type>> const &,
+                 std::vector<duration_type> const &,
+                 std::vector<std::vector<distance_type>> const &>(),
              py::arg("coords"),
              py::arg("demands"),
              py::arg("nb_vehicles"),

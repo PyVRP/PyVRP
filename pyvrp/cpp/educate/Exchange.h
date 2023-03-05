@@ -31,13 +31,13 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
     inline bool adjacent(Node *U, Node *V) const;
 
     // Special case that's applied when M == 0
-    TCost evalRelocateMove(Node *U, Node *V) const;
+    cost_type evalRelocateMove(Node *U, Node *V) const;
 
     // Applied when M != 0
-    TCost evalSwapMove(Node *U, Node *V) const;
+    cost_type evalSwapMove(Node *U, Node *V) const;
 
 public:
-    TCost evaluate(Node *U, Node *V) override;
+    cost_type evaluate(Node *U, Node *V) override;
 
     void apply(Node *U, Node *V) override;
 };
@@ -76,7 +76,7 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
+cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -87,15 +87,15 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
     auto const &dist = data.distanceMatrix();
 
-    TDist const current = U->route->distBetween(posU - 1, posU + N)
-                          + dist(V->client, n(V)->client);
+    distance_type const current = U->route->distBetween(posU - 1, posU + N)
+                                  + dist(V->client, n(V)->client);
 
-    TDist const proposed = dist(V->client, U->client)
-                           + U->route->distBetween(posU, posU + N - 1)
-                           + dist(endU->client, n(V)->client)
-                           + dist(p(U)->client, n(endU)->client);
+    distance_type const proposed = dist(V->client, U->client)
+                                   + U->route->distBetween(posU, posU + N - 1)
+                                   + dist(endU->client, n(V)->client)
+                                   + dist(p(U)->client, n(endU)->client);
 
-    TCost deltaCost = proposed - current;
+    cost_type deltaCost = proposed - current;
 
     if (U->route != V->route)
     {
@@ -161,7 +161,7 @@ TCost Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
+cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -173,10 +173,10 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
     auto const &dist = data.distanceMatrix();
 
-    TDist const current = U->route->distBetween(posU - 1, posU + N)
-                          + V->route->distBetween(posV - 1, posV + M);
+    distance_type const current = U->route->distBetween(posU - 1, posU + N)
+                                  + V->route->distBetween(posV - 1, posV + M);
 
-    TDist const proposed
+    distance_type const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
         = dist(p(U)->client, V->client)
@@ -185,7 +185,7 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
           + U->route->distBetween(posU, posU + N - 1)
           + dist(endU->client, n(endV)->client);
 
-    TCost deltaCost = proposed - current;
+    cost_type deltaCost = proposed - current;
 
     if (U->route != V->route)
     {
@@ -254,7 +254,8 @@ TCost Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     return deltaCost;
 }
 
-template <size_t N, size_t M> TCost Exchange<N, M>::evaluate(Node *U, Node *V)
+template <size_t N, size_t M>
+cost_type Exchange<N, M>::evaluate(Node *U, Node *V)
 {
     if (containsDepot(U, N) || overlap(U, V))
         return 0;

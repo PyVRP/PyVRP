@@ -5,14 +5,14 @@
 
 using TWS = TimeWindowSegment;
 
-TCost TwoOpt::evalWithinRoute(Node *U, Node *V)
+cost_type TwoOpt::evalWithinRoute(Node *U, Node *V)
 {
     if (U->position + 1 >= V->position)
         return 0;
 
     auto const &dist = data.distanceMatrix();
 
-    TCost deltaCost
+    cost_type deltaCost
         = dist(U->client, V->client) + dist(n(U)->client, n(V)->client)
           + V->cumulatedReversalDistance - dist(U->client, n(U)->client)
           - dist(V->client, n(V)->client) - n(U)->cumulatedReversalDistance;
@@ -36,16 +36,16 @@ TCost TwoOpt::evalWithinRoute(Node *U, Node *V)
     return deltaCost;
 }
 
-TCost TwoOpt::evalBetweenRoutes(Node *U, Node *V)
+cost_type TwoOpt::evalBetweenRoutes(Node *U, Node *V)
 {
     auto const &dist = data.distanceMatrix();
 
-    TDist const current
+    distance_type const current
         = dist(U->client, n(U)->client) + dist(V->client, n(V)->client);
-    TDist const proposed
+    distance_type const proposed
         = dist(U->client, n(V)->client) + dist(V->client, n(U)->client);
 
-    TCost deltaCost = proposed - current;
+    cost_type deltaCost = proposed - current;
 
     if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
         return deltaCost;
@@ -110,7 +110,7 @@ void TwoOpt::applyBetweenRoutes(Node *U, Node *V)
     }
 }
 
-TCost TwoOpt::evaluate(Node *U, Node *V)
+cost_type TwoOpt::evaluate(Node *U, Node *V)
 {
     if (U->route->idx > V->route->idx)  // will be tackled in a later iteration
         return 0;                       // - no need to process here already

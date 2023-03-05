@@ -9,34 +9,32 @@ namespace
 {
 struct InsertPos  // best insert position, used to plan unplanned clients
 {
-    TCost deltaCost;
+    cost_type deltaCost;
     Route *route;
     size_t offset;
 };
 
 // Evaluates the cost change of inserting client between prev and next.
-TCost deltaCost(Client client,
-                Client prev,
-                Client next,
-                ProblemData const &data)
+cost_type
+deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    TTime prevEarliestArrival
+    duration_type prevEarliestArrival
         = std::max(data.dist(0, prev), data.client(prev).twEarly);
-    TTime prevEarliestFinish
+    duration_type prevEarliestFinish
         = prevEarliestArrival + data.client(prev).serviceDuration;
-    TTime clientLate = data.client(client).twLate;
+    duration_type clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + data.duration(prev, client) >= clientLate)
-        return static_cast<TCost>(INT_MAX);
+        return static_cast<cost_type>(INT_MAX);
 
-    TTime clientEarliestArrival
+    duration_type clientEarliestArrival
         = std::max(data.dist(0, client), data.client(client).twEarly);
-    TTime clientEarliestFinish
+    duration_type clientEarliestFinish
         = clientEarliestArrival + data.client(client).serviceDuration;
-    TTime nextLate = data.client(next).twLate;
+    duration_type nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + data.duration(client, next) >= nextLate)
-        return static_cast<TCost>(INT_MAX);
+        return static_cast<cost_type>(INT_MAX);
 
     return data.dist(prev, client) + data.dist(client, next)
            - data.dist(prev, next);
@@ -54,7 +52,7 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
-        InsertPos best = {static_cast<TCost>(INT_MAX), &routes.front(), 0};
+        InsertPos best = {static_cast<cost_type>(INT_MAX), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {

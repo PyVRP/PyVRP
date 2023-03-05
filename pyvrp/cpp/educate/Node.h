@@ -17,9 +17,11 @@ public:               // TODO make fields private
     Route *route;     // Pointer towards the associated route
 
     // TODO can these data fields be moved to Route?
-    int cumulatedLoad;        // Load from depot to client (inclusive)
-    TDist cumulatedDistance;  // Distance from depot to client (inclusive)
-    TDist cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
+    int cumulatedLoad;  // Load from depot to client (inclusive)
+    distance_type
+        cumulatedDistance;  // Distance from depot to client (inclusive)
+    distance_type
+        cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
 
     TimeWindowSegment tw;        // TWS for individual node (client)
     TimeWindowSegment twBefore;  // TWS for (0...client) including self

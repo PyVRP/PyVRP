@@ -4,7 +4,7 @@
 
 using TWS = TimeWindowSegment;
 
-TCost MoveTwoClientsReversed::evaluate(Node *U, Node *V)
+cost_type MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 {
     if (U == n(V) || n(U) == V || n(U)->isDepot())
         return 0;
@@ -14,13 +14,13 @@ TCost MoveTwoClientsReversed::evaluate(Node *U, Node *V)
 
     auto const &dist = data.distanceMatrix();
 
-    TDist const current = U->route->distBetween(posU - 1, posU + 2)
-                          + dist(V->client, n(V)->client);
-    TDist const proposed
+    distance_type const current = U->route->distBetween(posU - 1, posU + 2)
+                                  + dist(V->client, n(V)->client);
+    distance_type const proposed
         = dist(p(U)->client, n(n(U))->client) + dist(V->client, n(U)->client)
           + dist(n(U)->client, U->client) + dist(U->client, n(V)->client);
 
-    TCost deltaCost = proposed - current;
+    cost_type deltaCost = proposed - current;
 
     if (U->route != V->route)
     {

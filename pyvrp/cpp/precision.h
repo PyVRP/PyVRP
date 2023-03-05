@@ -4,13 +4,13 @@
 #include <cmath>
 
 #ifdef INT_PRECISION
-using TCost = int;
-using TDist = int;
-using TTime = int;
+using cost_type = int;
+using distance_type = int;
+using duration_type = int;
 #else
-using TCost = double;
-using TDist = double;
-using TTime = double;
+using cost_type = double;
+using distance_type = double;
+using duration_type = double;
 #endif
 
 /**

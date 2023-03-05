@@ -23,11 +23,11 @@ void Individual::evaluate(ProblemData const &data)
 
         numRoutes_++;
 
-        TDist routeDist = data.dist(0, route[0]);
-        TTime routeTimeWarp = 0;
+        distance_type routeDist = data.dist(0, route[0]);
+        duration_type routeTimeWarp = 0;
         int routeLoad = data.client(route[0]).demand;
 
-        TTime time = routeDist;
+        duration_type time = routeDist;
 
         if (time < data.client(route[0]).twEarly)
             time = data.client(route[0]).twEarly;
@@ -66,7 +66,7 @@ void Individual::evaluate(ProblemData const &data)
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
-        routeTimeWarp += std::max(time - data.depot().twLate, TTime(0));
+        routeTimeWarp += std::max(time - data.depot().twLate, duration_type(0));
 
         // Whole solution stats
         distance += routeDist;
@@ -77,7 +77,7 @@ void Individual::evaluate(ProblemData const &data)
     }
 }
 
-TCost Individual::cost() const
+cost_type Individual::cost() const
 {
     auto const loadPenalty = penaltyManager->loadPenaltyExcess(capacityExcess);
     auto const twPenalty = penaltyManager->twPenalty(timeWarp);

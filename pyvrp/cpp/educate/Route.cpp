@@ -38,8 +38,8 @@ void Route::setupSector()
 
     sector.initialize(angle);
 
-    TDist cumulatedX = 0;
-    TDist cumulatedY = 0;
+    distance_type cumulatedX = 0;
+    distance_type cumulatedY = 0;
 
     for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
     {
@@ -93,8 +93,8 @@ void Route::update()
     auto const &dist = data.distanceMatrix();
 
     int load = 0;
-    TDist distance = 0;
-    TDist reverseDistance = 0;
+    distance_type distance = 0;
+    distance_type reverseDistance = 0;
     bool foundChange = false;
 
     for (size_t pos = 0; pos != nodes.size(); ++pos)
