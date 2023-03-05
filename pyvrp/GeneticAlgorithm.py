@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import Callable, Tuple
+from typing import Callable, Collection, Tuple
 
 from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
@@ -56,6 +56,8 @@ class GeneticAlgorithm:
         Local search instance to use.
     crossover_op
         Crossover operator to use for generating offspring.
+    initial_solutions
+        Initial solutions to use to initialise the population.
     params
         Genetic algorithm parameters. If not provided, a default will be used.
 
@@ -73,10 +75,11 @@ class GeneticAlgorithm:
         population: Population,
         local_search: LocalSearch,
         crossover_op: CrossoverOperator,
+        initial_solutions: Collection[Individual],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
-        if len(population) == 0:
-            raise ValueError("Expected non-empty population.")
+        if len(initial_solutions) == 0:
+            raise ValueError("Expected at least one initial solution.")
 
         self._data = data
         self._pm = penalty_manager
@@ -84,9 +87,14 @@ class GeneticAlgorithm:
         self._pop = population
         self._ls = local_search
         self._op = crossover_op
+        self._initial_solutions = initial_solutions
         self._params = params
 
-        self._best = Individual.make_random(data, penalty_manager, rng)
+        # Find best feasible initial solution if any exist, else set the best
+        # infeasible solution as the initial best.
+        feas = [indiv for indiv in initial_solutions if indiv.is_feasible()]
+        sols = feas if feas else initial_solutions
+        self._best = min(sols, key=lambda indiv: indiv.cost())
 
     def run(self, stop: StoppingCriterion):
         """
@@ -108,16 +116,22 @@ class GeneticAlgorithm:
         iters = 0
         iters_no_improvement = 1
 
+        for individual in self._initial_solutions:
+            self._pop.add(individual)
+
         while not stop(self._best):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
-                self._pop.restart()
                 iters_no_improvement = 1
+                self._pop.clear()
+
+                for individual in self._initial_solutions:
+                    self._pop.add(individual)
 
             curr_best = self._best.cost()
 
-            parents = self._pop.select()
+            parents = self._pop.select(self._rng)
             offspring = self._op(parents, self._data, self._pm, self._rng)
             self._educate(offspring)
 

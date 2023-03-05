@@ -45,7 +45,7 @@ def plot_route_schedule(
     depot = data.client(0)  # For readability, define variable
     horizon = depot.tw_late - depot.tw_early
 
-    # Initialize tracking variables
+    # Initialise tracking variables
     t = 0
     wait_time = 0
     time_warp = 0
