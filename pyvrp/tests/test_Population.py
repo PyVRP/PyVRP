@@ -144,11 +144,11 @@ def test_select_returns_same_parents_if_no_other_option():
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population(bpd, [], params=params)
+    pop = Population(bpd, params=params)
 
     assert_equal(len(pop), 0)
 
-    pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
+    pop.add(Individual(data, pm, [[3, 2], [1, 4]]))
     assert_equal(len(pop), 1)
 
     # We added a single individual, so we should now get the same parent twice.
@@ -225,7 +225,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
-    pop = Population(bpd, [], params)
+    pop = Population(bpd, params=params)
 
     assert_equal(len(pop), 0)
 
@@ -244,7 +244,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
-    pop = Population(bpd, [], params)
+    pop = Population(bpd, params=params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
@@ -284,7 +284,7 @@ def test_binary_tournament_ranks_by_fitness():
     rng = XorShift128(seed=42)
     params = PopulationParams()
 
-    pop = Population(bpd, [], params)
+    pop = Population(bpd, params=params)
     for _ in range(50):
         individual = Individual.make_random(data, pm, rng)
 
