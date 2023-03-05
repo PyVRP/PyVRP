@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Callable, Generator, Tuple
 
 from ._Individual import Individual
-from ._PenaltyManager import PenaltyManager
-from ._ProblemData import ProblemData
 from ._SubPopulation import PopulationParams, SubPopulation
 from ._XorShift128 import XorShift128
 
@@ -15,12 +13,6 @@ class Population:
 
     Parameters
     ----------
-    data
-        Data object describing the problem to be solved.
-    penalty_manager
-        Penalty manager to use.
-    rng
-        Random number generator.
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
@@ -30,23 +22,14 @@ class Population:
 
     def __init__(
         self,
-        data: ProblemData,
-        penalty_manager: PenaltyManager,
-        rng: XorShift128,
         diversity_op: Callable[[Individual, Individual], float],
         params: PopulationParams = PopulationParams(),
     ):
-        self._data = data
-        self._pm = penalty_manager
-        self._rng = rng
         self._op = diversity_op
         self._params = params
 
         self._feas = SubPopulation(diversity_op, params)
         self._infeas = SubPopulation(diversity_op, params)
-
-        for _ in range(params.min_pop_size):
-            self.add(Individual.make_random(data, penalty_manager, rng))
 
     def __iter__(self) -> Generator[Individual, None, None]:
         """
@@ -111,18 +94,23 @@ class Population:
         else:
             self._infeas.add(individual)
 
-    def select(self) -> Tuple[Individual, Individual]:
+    def select(self, rng: XorShift128) -> Tuple[Individual, Individual]:
         """
         Selects two (if possible non-identical) parents by binary tournament,
         subject to a diversity restriction.
+
+        Parameters
+        ----------
+        rng
+            Random number generator.
 
         Returns
         -------
         tuple
             A pair of individuals (parents).
         """
-        first = self.get_binary_tournament()
-        second = self.get_binary_tournament()
+        first = self.get_binary_tournament(rng)
+        second = self.get_binary_tournament(rng)
 
         diversity = self._op(first, second)
         lb = self._params.lb_diversity
@@ -131,25 +119,27 @@ class Population:
         tries = 1
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
-            second = self.get_binary_tournament()
+            second = self.get_binary_tournament(rng)
             diversity = self._op(first, second)
 
         return first, second
 
-    def restart(self):
+    def clear(self):
         """
-        Restarts the population. All individuals are removed and a new initial
-        population population is generated.
+        Clears the population by removing all individuals currently in the
+        population.
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
 
-        for _ in range(self._params.min_pop_size):
-            self.add(Individual.make_random(self._data, self._pm, self._rng))
-
-    def get_binary_tournament(self) -> Individual:
+    def get_binary_tournament(self, rng: XorShift128) -> Individual:
         """
         Selects an individual from this population by binary tournament.
+
+        Parameters
+        ----------
+        rng
+            Random number generator.
 
         Returns
         -------
@@ -159,7 +149,7 @@ class Population:
 
         def select():
             num_feas = len(self._feas)
-            idx = self._rng.randint(len(self))
+            idx = rng.randint(len(self))
 
             if idx < num_feas:
                 return self._feas[idx]

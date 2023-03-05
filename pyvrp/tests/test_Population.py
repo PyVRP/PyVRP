@@ -9,8 +9,8 @@ from pyvrp import (
     PopulationParams,
     XorShift128,
 )
-from pyvrp.diversity import broken_pairs_distance
-from pyvrp.tests.helpers import read
+from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp.tests.helpers import make_random_solutions, read
 
 
 @mark.parametrize(
@@ -102,7 +102,10 @@ def test_add_triggers_purge():
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(bpd, params=params)
+
+    for indiv in make_random_solutions(params.min_pop_size, data, pm, rng):
+        pop.add(indiv)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -143,15 +146,15 @@ def test_select_returns_same_parents_if_no_other_option():
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(bpd, params=params)
 
     assert_equal(len(pop), 0)
 
-    pop.add(Individual(data, pm, [[3, 2], [1, 4], []]))
+    pop.add(Individual(data, pm, [[3, 2], [1, 4]]))
     assert_equal(len(pop), 1)
 
     # We added a single individual, so we should now get the same parent twice.
-    parents = pop.select()
+    parents = pop.select(rng)
     assert_(parents[0] == parents[1])
 
     # Now we add another, different individual.
@@ -164,7 +167,7 @@ def test_select_returns_same_parents_if_no_other_option():
     # and collect the number of times the parents are different.
     different_parents = 0
     for _ in range(1_000):
-        parents = pop.select()
+        parents = pop.select(rng)
         different_parents += parents[0] != parents[1]
 
     # The probability of selecting different parents is very close to 100%, so
@@ -177,33 +180,13 @@ def test_select_returns_same_parents_if_no_other_option():
 # // TODO test more select() - diversity, feas/infeas pairs
 
 
-def test_restart_generates_min_pop_size_new_individuals():
-    """
-    Tests if restarting the population will generate ``min_pop_size`` new
-    individuals.
-    """
-    data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=12)
-
-    params = PopulationParams()
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
-
-    old = {individual for individual in pop}
-    pop.restart()
-    new = {individual for individual in pop}
-
-    assert_equal(len(pop), params.min_pop_size)
-    assert_equal(len(old & new), 0)  # no old pops survived the restart
-
-
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(bpd, params=params)
 
     assert_equal(len(pop), 0)
 
@@ -222,7 +205,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(bpd, params=params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
@@ -259,13 +242,12 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
 def test_binary_tournament_ranks_by_fitness():
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
-    params = PopulationParams()
     rng = XorShift128(seed=42)
+    pop = Population(bpd)
 
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
-
-    for _ in range(50):
-        pop.add(Individual.make_random(data, pm, rng))
+    for individual in make_random_solutions(50, data, pm, rng):
+        if not individual.is_feasible():
+            pop.add(individual)
 
     assert_equal(pop.num_feasible(), 0)
 
@@ -277,7 +259,7 @@ def test_binary_tournament_ranks_by_fitness():
     infeas_count = np.zeros(len(infeas))
 
     for _ in range(10_000):
-        indiv = pop.get_binary_tournament()
+        indiv = pop.get_binary_tournament(rng)
         infeas_count[infeas[indiv]] += 1
 
     # Now we compare the observed ranking from the binary tournament selection
@@ -297,7 +279,11 @@ def test_purge_removes_duplicates():
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
-    pop = Population(data, pm, rng, broken_pairs_distance, params)
+    pop = Population(bpd, params=params)
+
+    for indiv in make_random_solutions(params.min_pop_size, data, pm, rng):
+        pop.add(indiv)
+
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make
@@ -327,3 +313,18 @@ def test_purge_removes_duplicates():
             duplicates += 1
 
     assert_equal(duplicates, 1)
+
+
+def test_clear():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+
+    for individual in make_random_solutions(10, data, pm, rng):
+        pop.add(individual)
+
+    assert_equal(len(pop), 10)
+
+    pop.clear()
+    assert_equal(len(pop), 0)

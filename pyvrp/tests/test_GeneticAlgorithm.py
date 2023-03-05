@@ -14,7 +14,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.educate import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_random_solutions, read, read_solution
 
 
 @mark.parametrize(
@@ -91,50 +91,135 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
 
 
-def test_raises_when_too_small_population():
+def test_raises_when_no_initial_solutions():
     """
-    Tests that GeneticAlgorithm rejects empty populations, since that is
-    insufficient to do crossover.
+    Tests that GeneticAlgorithm raises when no initial solutions are provided,
+    since that is insufficient to do crossover.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pen_manager = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
     ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
 
-    params = PopulationParams(min_pop_size=0)
-    pop = Population(data, pen_manager, rng, bpd, params)
+    pop = Population(bpd)
     assert_equal(len(pop), 0)
 
     with assert_raises(ValueError):
-        # No individuals should raise.
-        GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+        # No initial solutions should raise.
+        GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [])
 
-    pop.add(Individual.make_random(data, pen_manager, rng))
-    assert_equal(len(pop), 1)
+    individual = Individual.make_random(data, pen_manager, rng)
 
-    # But one should be OK: this shouldn't raise.
-    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+    # One initial solution, so this should be OK.
+    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [individual])
+
+
+def test_initial_solutions_added_when_running():
+    """
+    Tests that GeneticAlgorithm adds initial solutions to the population
+    when running the algorithm.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    init = set(make_random_solutions(25, data, pm, rng))
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
+
+    algo.run(MaxIterations(0))
+
+    # Since we ran the algorithm for zero iterations, the population should
+    # contain only the initial solutions.
+    current = {individual for individual in pop}
+    assert_equal(len(current & init), 25)
+    assert_equal(len(pop), 25)
+
+
+def test_initial_solutions_added_when_restarting():
+    """
+    Tests that GeneticAlgorithm clears the population and adds the initial
+    solutions when restarting.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data, pm))
+
+    # We use the best known solution as one of the initial solutions so that
+    # there are no improving iterations.
+    init = {Individual(data, pm, read_solution("data/RC208.sol"))}
+    init.update(make_random_solutions(24, data, pm, rng))
+
+    params = GeneticAlgorithmParams(
+        repair_probability=0,
+        intensify_probability=0,
+        intensify_on_best=False,
+        nb_iter_no_improvement=100,
+    )
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, params=params)
+
+    algo.run(MaxIterations(100))
+
+    # There are precisely enough non-improving iterations to trigger the
+    # restarting mechanism. GA should have cleared and re-initialised the
+    # population with the initial solutions.
+    current = {individual for individual in pop}
+    assert_equal(len(current & init), 25)
+
+    # The population contains one more individual because of the educate step.
+    assert_equal(len(pop), 26)
 
 
 def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
-    pen_manager = PenaltyManager(data.vehicle_capacity)
-    pop = Population(data, pen_manager, rng, bpd)
+    pm = PenaltyManager(data.vehicle_capacity)
+    pop_params = PopulationParams()
+    pop = Population(bpd, params=pop_params)
+    init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
 
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data, pen_manager))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data, pm))
 
-    params = GeneticAlgorithmParams(
+    ga_params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False
     )
-    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, params)
+    algo = GeneticAlgorithm(
+        data, pm, rng, pop, ls, srex, init, params=ga_params
+    )
 
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
 
     assert_(new_best.cost() < initial_best.cost())
     assert_(new_best.is_feasible())  # best must be feasible
+
+
+def test_best_initial_solution():
+    """
+    Tests that GeneticAlgorithm uses the best initial solution to initialise
+    the best found solution.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    rng = XorShift128(seed=42)
+    pm = PenaltyManager(data.vehicle_capacity)
+    pop = Population(bpd)
+
+    bks = Individual(data, pm, read_solution("data/RC208.sol"))
+    init = [bks] + make_random_solutions(24, data, pm, rng)
+
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
+
+    result = algo.run(MaxIterations(0))
+
+    # The best known solution is the best feasible initial solution. Since
+    # we don't run any iterations, this should be returned as best solution.
+    assert_equal(result.best, bks)
 
 
 # TODO more functional tests

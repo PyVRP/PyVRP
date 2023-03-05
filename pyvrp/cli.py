@@ -16,6 +16,7 @@ import pyvrp.educate
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
+    Individual,
     PenaltyManager,
     PenaltyParams,
     Population,
@@ -128,7 +129,8 @@ def solve(
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
     pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
-    pop = Population(data, pen_manager, rng, bpd, pop_params)
+    pop = Population(bpd, params=pop_params)
+
     neighbours = compute_neighbours(data, nb_params)
     ls = LocalSearch(data, pen_manager, rng, neighbours)
 
@@ -146,7 +148,13 @@ def solve(
     for op in route_ops:
         ls.add_route_operator(op(data, pen_manager))
 
-    algo = GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, gen_params)
+    init = [
+        Individual.make_random(data, pen_manager, rng)
+        for _ in range(pop_params.min_pop_size)
+    ]
+    algo = GeneticAlgorithm(
+        data, pen_manager, rng, pop, ls, srex, init, gen_params
+    )
 
     if max_runtime is not None:
         stop = MaxRuntime(max_runtime)
