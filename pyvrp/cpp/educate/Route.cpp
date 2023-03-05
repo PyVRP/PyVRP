@@ -38,8 +38,8 @@ void Route::setupSector()
 
     sector.initialize(angle);
 
-    distance_type cumulatedX = 0;
-    distance_type cumulatedY = 0;
+    int cumulatedX = 0;
+    int cumulatedY = 0;
 
     for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
     {

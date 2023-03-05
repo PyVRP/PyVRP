@@ -22,8 +22,8 @@ public:               // TODO make fields private
     distance_type cumulatedReversalDistance;  // Reverse distance of (0..client)
 
     TimeWindowSegment tw;        // TWS for individual node (client)
-    TimeWindowSegment twBefore;  // TWS for (0..client) including self
-    TimeWindowSegment twAfter;   // TWS for (client..0) including self
+    TimeWindowSegment twBefore;  // TWS for (0...client) including self
+    TimeWindowSegment twAfter;   // TWS for (client...0) including self
 
     [[nodiscard]] inline bool isDepot() const;
 
