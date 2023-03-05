@@ -4,6 +4,7 @@ from pytest import mark
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
+    Individual,
     PenaltyManager,
     Population,
     PopulationParams,
@@ -88,6 +89,31 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.intensify_probability, intensify_probability)
     assert_equal(params.intensify_on_best, intensify_on_best)
     assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
+
+
+def test_raises_when_too_small_population():
+    """
+    Tests that GeneticAlgorithm rejects empty populations, since that is
+    insufficient to do crossover.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pen_manager = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+
+    params = PopulationParams(min_pop_size=0)
+    pop = Population(data, pen_manager, rng, bpd, params)
+    assert_equal(len(pop), 0)
+
+    with assert_raises(ValueError):
+        # No individuals should raise.
+        GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
+
+    pop.add(Individual.make_random(data, pen_manager, rng))
+    assert_equal(len(pop), 1)
+
+    # But one should be OK: this shouldn't raise.
+    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
 
 
 def test_best_solution_improves_with_more_iterations():

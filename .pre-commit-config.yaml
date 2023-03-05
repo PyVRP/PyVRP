@@ -31,4 +31,3 @@ repos:
     rev: v11.1.0
     hooks:
       - id: clang-format
-        args: [ "-style=file", "--dry-run" ]
