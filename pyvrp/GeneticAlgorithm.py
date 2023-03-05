@@ -62,8 +62,7 @@ class GeneticAlgorithm:
     Raises
     ------
     ValueError
-        When the population does not contain at least two individuals. At least
-        two are needed for crossover to work.
+        When the population is empty.
     """
 
     def __init__(
@@ -76,9 +75,8 @@ class GeneticAlgorithm:
         crossover_op: CrossoverOperator,
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
-        if len(population) < 2:
-            # Cannot do meaningful crossover without at least two individuals.
-            raise ValueError("Expected population size at least two.")
+        if len(population) == 0:
+            raise ValueError("Expected non-empty population.")
 
         self._data = data
         self._pm = penalty_manager

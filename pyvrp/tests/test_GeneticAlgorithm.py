@@ -93,8 +93,8 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 def test_raises_when_too_small_population():
     """
-    Tests that GeneticAlgorithm rejects populations without at least two
-    individuals in them, since that is insufficient to do proper crossovers.
+    Tests that GeneticAlgorithm rejects empty populations, since that is
+    insufficient to do crossover.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pen_manager = PenaltyManager(data.vehicle_capacity)
@@ -106,17 +106,13 @@ def test_raises_when_too_small_population():
     assert_equal(len(pop), 0)
 
     with assert_raises(ValueError):
+        # No individuals should raise.
         GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
 
     pop.add(Individual.make_random(data, pen_manager, rng))
     assert_equal(len(pop), 1)
 
-    with assert_raises(ValueError):
-        GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
-
-    pop.add(Individual.make_random(data, pen_manager, rng))
-    assert_equal(len(pop), 2)
-
+    # But one should be OK: this shouldn't raise.
     GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex)
 
 
