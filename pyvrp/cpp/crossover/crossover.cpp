@@ -1,4 +1,5 @@
 #include "crossover.h"
+#include "precision.h"
 
 using Client = int;
 using Route = std::vector<Client>;

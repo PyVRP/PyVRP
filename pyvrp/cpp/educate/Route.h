@@ -4,21 +4,12 @@
 #include "CircleSector.h"
 #include "Node.h"
 #include "TimeWindowSegment.h"
+#include "precision.h"
 
 #include <array>
 #include <bit>
 #include <cassert>
 #include <iosfwd>
-
-#ifdef INT_PRECISION
-using TCost = int;
-using TDist = int;
-using TTime = int;
-#else
-using TCost = double;
-using TDist = double;
-using TTime = double;
-#endif
 
 class Route
 {

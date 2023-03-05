@@ -2,16 +2,7 @@
 #define TIMEWINDOWDATA_H
 
 #include "Matrix.h"
-
-#ifdef INT_PRECISION
-using TCost = int;
-using TDist = int;
-using TTime = int;
-#else
-using TCost = double;
-using TDist = double;
-using TTime = double;
-#endif
+#include "precision.h"
 
 class TimeWindowSegment
 {

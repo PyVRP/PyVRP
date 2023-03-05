@@ -4,19 +4,10 @@
 #include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
+#include "precision.h"
 
 #include <string>
 #include <vector>
-
-#ifdef INT_PRECISION
-using TCost = int;
-using TDist = int;
-using TTime = int;
-#else
-using TCost = double;
-using TDist = double;
-using TTime = double;
-#endif
 
 class Individual
 {
