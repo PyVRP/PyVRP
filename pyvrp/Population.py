@@ -134,9 +134,9 @@ class Population:
 
     def restart(self):
         """
-        Restarts the population. First, all current individuals are removed.
-        Then the initial solutions that were passed-in at the initialisation
-        of this population instance are added back again.
+        Restarts the population. This method clears the current population
+        and re-initialises it with the initial solutions provided at the
+        creation of this population instance.
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
