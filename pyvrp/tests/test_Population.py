@@ -243,12 +243,9 @@ def test_binary_tournament_ranks_by_fitness():
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
     rng = XorShift128(seed=42)
-    params = PopulationParams()
+    pop = Population(bpd)
 
-    pop = Population(bpd, params=params)
-    for _ in range(50):
-        individual = Individual.make_random(data, pm, rng)
-
+    for individual in make_random_solutions(50, data, pm, rng):
         if not individual.is_feasible():
             pop.add(individual)
 

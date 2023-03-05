@@ -198,7 +198,7 @@ def test_best_solution_improves_with_more_iterations():
 
 def test_best_initial_solution():
     """
-    Tests that GeneticAlgorithm uses the best initial solution to initalize
+    Tests that GeneticAlgorithm uses the best initial solution to initialise
     the best found solution.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
