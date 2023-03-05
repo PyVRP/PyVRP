@@ -162,7 +162,7 @@ def test_initial_solutions_added_when_restarting():
     algo.run(MaxIterations(100))
 
     # There are precisely enough non-improving iterations to trigger the
-    # restarting mechanism. GA should have cleared and re-initialized the
+    # restarting mechanism. GA should have cleared and re-initialised the
     # population with the initial solutions.
     current = {individual for individual in pop}
     assert_equal(len(current & set(init)), 25)

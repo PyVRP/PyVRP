@@ -57,7 +57,7 @@ class GeneticAlgorithm:
     crossover_op
         Crossover operator to use for generating offspring.
     initial_solutions
-        Initial solutions to use to initialize the population.
+        Initial solutions to use to initialise the population.
     params
         Genetic algorithm parameters. If not provided, a default will be used.
 
