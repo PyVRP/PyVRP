@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Generator, Iterable, Tuple
+from typing import Callable, Generator, Tuple
 
 from ._Individual import Individual
 from ._SubPopulation import PopulationParams, SubPopulation
@@ -16,9 +16,6 @@ class Population:
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
-    initial_solutions
-        Iterable of Individual objects that will be used to initialise the
-        population. If not provided, an empty tuple will be used as default.
     params, optional
         Population parameters. If not provided, a default will be used.
     """
@@ -26,18 +23,13 @@ class Population:
     def __init__(
         self,
         diversity_op: Callable[[Individual, Individual], float],
-        initial_solutions: Iterable[Individual] = tuple(),
         params: PopulationParams = PopulationParams(),
     ):
         self._op = diversity_op
-        self._initial_solutions = initial_solutions
         self._params = params
 
         self._feas = SubPopulation(diversity_op, params)
         self._infeas = SubPopulation(diversity_op, params)
-
-        for individuals in initial_solutions:
-            self.add(individuals)
 
     def __iter__(self) -> Generator[Individual, None, None]:
         """
@@ -132,17 +124,12 @@ class Population:
 
         return first, second
 
-    def restart(self):
+    def clear(self):
         """
-        Restarts the population. This method clears the current population
-        and re-initialises it with the initial solutions provided at the
-        creation of this population instance.
+        Clears the population by removing all currnet individuals
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
-
-        for individual in self._initial_solutions:
-            self.add(individual)
 
     def get_binary_tournament(self, rng: XorShift128) -> Individual:
         """

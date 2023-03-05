@@ -102,8 +102,10 @@ def test_add_triggers_purge():
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(bpd, init, params)
+    pop = Population(bpd, params=params)
+
+    for indiv in make_random_solutions(params.min_pop_size, data, pm, rng):
+        pop.add(indiv)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -176,47 +178,6 @@ def test_select_returns_same_parents_if_no_other_option():
 
 
 # // TODO test more select() - diversity, feas/infeas pairs
-
-
-def test_same_initial_solutions():
-    data = read("data/E-n22-k4.txt", round_func="round")
-    pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=12)
-
-    params = PopulationParams(min_pop_size=10)
-    init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(bpd, init, params)
-
-    # Check that the initial population individuals have the same routes as the
-    # initial solutions.
-    current = {individual for individual in pop}
-    assert_(len(current & set(init)), params.min_pop_size)
-
-    pop.restart()
-
-    # Check again for the restarted population.
-    new = {individual for individual in pop}
-    assert_(len(new & set(init)), params.min_pop_size)
-
-
-@mark.parametrize("num_init", [1, 15, 21, 30, 100])
-def test_num_initial_solutions(num_init):
-    data = read("data/E-n22-k4.txt", round_func="round")
-    pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=12)
-
-    params = PopulationParams(min_pop_size=0, generation_size=10)
-    init = make_random_solutions(num_init, data, pm, rng)
-    pop = Population(bpd, init, params)
-
-    # All random solutions used to initialise the population are feasible. If
-    # there are more initial solutions than the maximal feasible subpopulation
-    # size allows, then a purge is triggered. After the purge, the feasible
-    # subpopulation size will be equal to ``num_init`` modulo the number
-    # feasible individuals that need to be added to trigger a purge (11). Since
-    # we do not have infeasible solutions, the population size will be equal to
-    # the feasible subpopulation size.
-    assert_equal(len(pop), num_init % 11)
 
 
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
@@ -321,8 +282,11 @@ def test_purge_removes_duplicates():
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
-    init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(bpd, init, params)
+    pop = Population(bpd, params=params)
+
+    for indiv in make_random_solutions(params.min_pop_size, data, pm, rng):
+        pop.add(indiv)
+
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make
@@ -352,3 +316,18 @@ def test_purge_removes_duplicates():
             duplicates += 1
 
     assert_equal(duplicates, 1)
+
+
+def test_clear():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+
+    for individual in make_random_solutions(10, data, pm, rng):
+        pop.add(individual)
+
+    assert_equal(len(pop), 10)
+
+    pop.clear()
+    assert_equal(len(pop), 0)

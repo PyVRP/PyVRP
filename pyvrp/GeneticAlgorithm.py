@@ -102,7 +102,7 @@ class GeneticAlgorithm:
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
-                self._pop.restart()
+                self._pop.clear()
                 iters_no_improvement = 1
 
             curr_best = self._best.cost()

@@ -9,8 +9,10 @@ def test_csv_serialises_correctly(tmp_path):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
-    init = make_random_solutions(10, data, pm, rng)
-    pop = Population(broken_pairs_distance, init)
+    pop = Population(broken_pairs_distance)
+
+    for individual in make_random_solutions(10, data, pm, rng):
+        pop.add(individual)
 
     collected_stats = Statistics()
 

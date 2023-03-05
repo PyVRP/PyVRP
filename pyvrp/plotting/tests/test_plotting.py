@@ -63,8 +63,10 @@ def test_plot_result():
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
-    init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(broken_pairs_distance, init, params=params)
+    pop = Population(broken_pairs_distance, params=params)
+
+    for indiv in make_random_solutions(params.min_pop_size, data, pm, rng):
+        pop.add(indiv)
 
     stats = Statistics()
 
