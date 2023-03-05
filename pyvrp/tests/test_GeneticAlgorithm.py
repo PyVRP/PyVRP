@@ -205,18 +205,19 @@ def test_best_initial_solution():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
     pm = PenaltyManager(data.vehicle_capacity)
-    pop_params = PopulationParams()
-    pop = Population(bpd, params=pop_params)
-    init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
+    pop = Population(bpd)
+
+    bks = Individual(data, pm, read_solution("data/RC208.sol"))
+    init = [bks] + make_random_solutions(25, data, pm, rng)
+
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     result = algo.run(MaxIterations(0))
-    best_init = min(
-        init, key=lambda indiv: (not indiv.is_feasible(), indiv.cost())
-    )
 
-    assert_equal(result.best, best_init)
+    # The best known solution is the best feasible initial solution. Since
+    # we don't run any iterations, this should be returned as best value.
+    assert_equal(result.best, bks)
 
 
 # TODO more functional tests
