@@ -118,7 +118,7 @@ def test_initial_solutions_added_when_running():
     Tests that GeneticAlgorithm adds initial solutions to the population
     when running the algorithm.
     """
-    data = read("data/E-n22-k4.txt", round_func="round")
+    data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.vehicle_capacity)
     rng = XorShift128(seed=42)
     pop = Population(bpd)
