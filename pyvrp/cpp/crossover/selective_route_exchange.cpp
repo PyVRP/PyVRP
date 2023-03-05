@@ -12,18 +12,12 @@ Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
     PenaltyManager const &penaltyManager,
-    XorShift128 &rng)
+    size_t startA,
+    size_t startB,
+    size_t const nMovedRoutes)
 {
     size_t nRoutesA = parents.first->numRoutes();
     size_t nRoutesB = parents.second->numRoutes();
-
-    // Picking the start index of routes to replace of parent A. We like to
-    // replace routes with a large overlap of tasks, so we choose adjacent
-    // routes (they are sorted on polar angle by the local search/educate step).
-    size_t startA = rng.randint(nRoutesA);
-    size_t minRoutes = std::min(nRoutesA, nRoutesB);
-    size_t nMovedRoutes = rng.randint(minRoutes) + 1;  // at least one
-    size_t startB = startA < nRoutesB ? startA : 0;
 
     auto const &routesA = parents.first->getRoutes();
     auto const &routesB = parents.second->getRoutes();

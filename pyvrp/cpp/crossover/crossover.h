@@ -27,8 +27,7 @@ typedef std::function<Individual(
     CrossoverOperator;
 
 /**
- * Performs two SREX crossovers of the given parents (binary tournament). This
- * was one of ORTEC's DIMACS contributions.
+ * Performs two SREX crossovers of the given parents. # TODO
  * <br />
  * Yuichi Nagata and Shigenobu Kobayashi. "A memetic algorithm for the pickup
  * and delivery problem with time windows using selective route exchange
@@ -39,6 +38,8 @@ Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
     PenaltyManager const &penaltyManager,
-    XorShift128 &rng);
+    size_t startA,
+    size_t startB,
+    size_t const nMovedRoutes);
 
 #endif  // CROSSOVER_H
