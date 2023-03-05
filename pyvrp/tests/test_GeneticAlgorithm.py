@@ -101,8 +101,7 @@ def test_raises_when_too_small_population():
     rng = XorShift128(seed=42)
     ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
 
-    params = PopulationParams(min_pop_size=0)
-    pop = Population(data, pen_manager, rng, bpd, params)
+    pop = Population(bpd)
     assert_equal(len(pop), 0)
 
     with assert_raises(ValueError):
