@@ -78,10 +78,8 @@ class GeneticAlgorithm:
         initial_solutions: Collection[Individual],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
-        if len(population) == 0 and len(initial_solutions) == 0:
-            raise ValueError(
-                "Expected non-empty population or at least 1 initial solution."
-            )
+        if len(initial_solutions) == 0:
+            raise ValueError("Expected at least one initial solution.")
 
         self._data = data
         self._pm = penalty_manager
@@ -92,7 +90,9 @@ class GeneticAlgorithm:
         self._initial_solutions = initial_solutions
         self._params = params
 
-        self._best = Individual.make_random(data, penalty_manager, rng)
+        self._best = min(
+            self._initial_solutions, key=lambda indiv: indiv.cost()
+        )
 
     def run(self, stop: StoppingCriterion):
         """
