@@ -126,7 +126,8 @@ class Population:
 
     def clear(self):
         """
-        Clears the population by removing all currnet individuals
+        Clears the population by removing all individuals currently in the
+        population.
         """
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)

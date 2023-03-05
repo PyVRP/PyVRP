@@ -124,15 +124,16 @@ def test_initial_solutions_added_when_running():
     rng = XorShift128(seed=42)
     pop = Population(bpd)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    init = [Individual.make_random(data, pm, rng) for _ in range(25)]
+    init = set(make_random_solutions(25, data, pm, rng))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     algo.run(MaxIterations(0))
 
-    # Check that the initial population individuals have the same routes as the
-    # initial solutions.
+    # Since we ran the algorithm for zero iterations, the population should
+    # contain only the initial solutions.
     current = {individual for individual in pop}
-    assert_equal(len(current & set(init)), 25)
+    assert_equal(len(current & init), 25)
+    assert_equal(len(pop), 25)
 
 
 def test_initial_solutions_added_when_restarting():
@@ -148,9 +149,10 @@ def test_initial_solutions_added_when_restarting():
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data, pm))
 
-    # We add the best known solution so that there are no improving iterations.
-    best = Individual(data, pm, read_solution("data/RC208.sol"))
-    init = [best] + [Individual.make_random(data, pm, rng) for _ in range(24)]
+    # We use the best known solution as one of the initial solutions so that
+    # there are no improving iterations.
+    init = {Individual(data, pm, read_solution("data/RC208.sol"))}
+    init.update(make_random_solutions(24, data, pm, rng))
 
     params = GeneticAlgorithmParams(
         repair_probability=0,
@@ -166,9 +168,9 @@ def test_initial_solutions_added_when_restarting():
     # restarting mechanism. GA should have cleared and re-initialised the
     # population with the initial solutions.
     current = {individual for individual in pop}
-    assert_equal(len(current & set(init)), 25)
+    assert_equal(len(current & init), 25)
 
-    # The population contains one more element because of the educate step.
+    # The population contains one more individual because of the educate step.
     assert_equal(len(pop), 26)
 
 
@@ -208,7 +210,7 @@ def test_best_initial_solution():
     pop = Population(bpd)
 
     bks = Individual(data, pm, read_solution("data/RC208.sol"))
-    init = [bks] + make_random_solutions(25, data, pm, rng)
+    init = [bks] + make_random_solutions(24, data, pm, rng)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
@@ -216,7 +218,7 @@ def test_best_initial_solution():
     result = algo.run(MaxIterations(0))
 
     # The best known solution is the best feasible initial solution. Since
-    # we don't run any iterations, this should be returned as best value.
+    # we don't run any iterations, this should be returned as best solution.
     assert_equal(result.best, bks)
 
 
