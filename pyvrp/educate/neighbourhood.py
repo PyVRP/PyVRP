@@ -57,7 +57,7 @@ def compute_neighbours(
     ----------
     data
         ProblemData for which to compute the neighbourhood.
-    params
+    params, optional
         Keyword-only argument for neighbourhood parameters. If not provided,
         a default value will be used.
 
