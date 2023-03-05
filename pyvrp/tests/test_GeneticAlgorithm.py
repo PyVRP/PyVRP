@@ -97,7 +97,7 @@ def test_best_solution_improves_with_more_iterations():
 
     pop_params = PopulationParams()
     init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
-    pop = Population(init, bpd, params=pop_params)
+    pop = Population(bpd, init, params=pop_params)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data, pm))

@@ -103,7 +103,7 @@ def test_add_triggers_purge():
 
     params = PopulationParams()
     init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(init, bpd, params)
+    pop = Population(bpd, init, params)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -144,7 +144,7 @@ def test_select_returns_same_parents_if_no_other_option():
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
-    pop = Population([], bpd, params=params)
+    pop = Population(bpd, [], params=params)
 
     assert_equal(len(pop), 0)
 
@@ -185,7 +185,7 @@ def test_same_initial_solutions():
 
     params = PopulationParams(min_pop_size=10)
     init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(init, bpd, params)
+    pop = Population(bpd, init, params)
 
     # Check that the initial population individuals have the same routes as the
     # initial solutions.
@@ -207,12 +207,15 @@ def test_num_initial_solutions(num_init):
 
     params = PopulationParams(min_pop_size=0, generation_size=10)
     init = make_random_solutions(num_init, data, pm, rng)
-    pop = Population(init, bpd, params)
+    pop = Population(bpd, init, params)
 
-    # If there are more initial individuals than the maximal population size
-    # allows, then a purge is triggered. This resulting population size is
-    # equal to ``num_init`` modulo the number individuals that need to
-    # be added to trigger a purge (11).
+    # All random solutions used to initialise the population are feasible. If
+    # there are more initial solutions than the maximal feasible subpopulation
+    # size allows, then a purge is triggered. After the purge, the feasible
+    # subpopulation size will be equal to ``num_init`` modulo the number
+    # feasible individuals that need to be added to trigger a purge (11). Since
+    # we do not have infeasible solutions, the population size will be equal to
+    # the feasible subpopulation size.
     assert_equal(len(pop), num_init % 11)
 
 
@@ -222,7 +225,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
-    pop = Population([], bpd, params)
+    pop = Population(bpd, [], params)
 
     assert_equal(len(pop), 0)
 
@@ -241,7 +244,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
-    pop = Population([], bpd, params)
+    pop = Population(bpd, [], params)
 
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
@@ -281,7 +284,7 @@ def test_binary_tournament_ranks_by_fitness():
     rng = XorShift128(seed=42)
     params = PopulationParams()
 
-    pop = Population([], bpd, params)
+    pop = Population(bpd, [], params)
     for _ in range(50):
         individual = Individual.make_random(data, pm, rng)
 
@@ -319,7 +322,7 @@ def test_purge_removes_duplicates():
     rng = XorShift128(seed=42)
 
     init = make_random_solutions(params.min_pop_size, data, pm, rng)
-    pop = Population(init, bpd, params)
+    pop = Population(bpd, init, params)
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the individual we are going to add a few times. That should make
