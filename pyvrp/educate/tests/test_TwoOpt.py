@@ -17,7 +17,7 @@ def test_OkSmall_instance():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(TwoOpt(data, pm))
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
@@ -40,7 +40,7 @@ def test_RC208_instance(seed: int):
     rng = XorShift128(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(TwoOpt(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))

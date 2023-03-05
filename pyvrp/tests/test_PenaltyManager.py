@@ -45,7 +45,7 @@ def test_constructor_throws_when_arguments_invalid(
 
 def test_load_penalty():
     params = PenaltyParams(2, 1, 1, 1, 1, 1, 1)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.load_penalty(0), 0)  # below capacity
     assert_equal(pm.load_penalty(1), 0)  # at capacity
@@ -56,7 +56,7 @@ def test_load_penalty():
 
     # Penalty per unit excess capacity is 4
     params = PenaltyParams(4, 1, 1, 1, 1, 1, 1)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.load_penalty(2), 4)  # 1 unit above capacity
     assert_equal(pm.load_penalty(3), 8)  # 2 units above capacity
@@ -66,7 +66,7 @@ def test_load_penalty():
 def test_load_penalty_always_zero_when_below_capacity(capacity: int):
     load_penalty = 2
     params = PenaltyParams(load_penalty, 1, 1, 1, 1, 1, 1)
-    pm = PenaltyManager(capacity, params)
+    pm = PenaltyManager(capacity, params=params)
 
     for load in range(capacity):  # all below capacity
         assert_equal(pm.load_penalty(load), 0)
@@ -78,7 +78,7 @@ def test_load_penalty_always_zero_when_below_capacity(capacity: int):
 
 def test_tw_penalty():
     params = PenaltyParams(1, 2, 1, 1, 1, 1, 1)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Penalty per unit time warp is 2
     assert_equal(pm.tw_penalty(0), 0)
@@ -86,7 +86,7 @@ def test_tw_penalty():
     assert_equal(pm.tw_penalty(2), 4)
 
     params = PenaltyParams(1, 4, 1, 1, 1, 1, 1)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Penalty per unit excess capacity is now 4
     assert_equal(pm.tw_penalty(0), 0)
@@ -96,7 +96,7 @@ def test_tw_penalty():
 
 def test_repair_booster():
     params = PenaltyParams(1, 1, 5, 1, 1, 1, 1)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.tw_penalty(1), 1)
     assert_equal(pm.load_penalty(2), 1)  # 1 unit above capacity
@@ -118,7 +118,7 @@ def test_repair_booster():
 def test_capacity_penalty_update_increase():
     num_registerations = 4
     params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.load_penalty(2), 1)
@@ -137,7 +137,7 @@ def test_capacity_penalty_update_increase():
     # penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due to
     # double -> int.
     params = PenaltyParams(100, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.load_penalty(2), 100)
     for feas in [False] * num_registerations:
@@ -146,7 +146,7 @@ def test_capacity_penalty_update_increase():
 
     # Test that the penalty cannot increase beyond 1000, its maximum value.
     params = PenaltyParams(1000, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.load_penalty(2), 1000)
     for feas in [False] * num_registerations:
@@ -157,7 +157,7 @@ def test_capacity_penalty_update_increase():
 def test_capacity_penalty_update_decrease():
     num_registerations = 4
     params = PenaltyParams(4, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.load_penalty(2), 4)
@@ -175,7 +175,7 @@ def test_capacity_penalty_update_decrease():
     # penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due to
     # double -> int.
     params = PenaltyParams(100, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.load_penalty(2), 100)
     for feas in [True] * num_registerations:
@@ -184,7 +184,7 @@ def test_capacity_penalty_update_decrease():
 
     # Test that the penalty cannot decrease beyond 1, its minimum value.
     params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.load_penalty(2), 1)
     for feas in [True] * num_registerations:
@@ -195,7 +195,7 @@ def test_capacity_penalty_update_decrease():
 def test_time_warp_penalty_update_increase():
     num_registerations = 4
     params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.tw_penalty(1), 1)
@@ -214,7 +214,7 @@ def test_time_warp_penalty_update_increase():
     # the penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due
     # to double -> int.
     params = PenaltyParams(1, 100, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.tw_penalty(1), 100)
     for feas in [False] * num_registerations:
@@ -223,7 +223,7 @@ def test_time_warp_penalty_update_increase():
 
     # Test that the penalty cannot increase beyond 1000, its maximum value.
     params = PenaltyParams(1, 1000, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.tw_penalty(1), 1000)
     for feas in [False] * num_registerations:
@@ -234,7 +234,7 @@ def test_time_warp_penalty_update_increase():
 def test_time_warp_penalty_update_decrease():
     num_registerations = 4
     params = PenaltyParams(1, 4, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.tw_penalty(1), 4)
@@ -252,7 +252,7 @@ def test_time_warp_penalty_update_decrease():
     # the penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
     # to double -> int.
     params = PenaltyParams(1, 100, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.tw_penalty(1), 100)
     for feas in [True] * num_registerations:
@@ -261,7 +261,7 @@ def test_time_warp_penalty_update_decrease():
 
     # Test that the penalty cannot decrease beyond 1, its minimum value.
     params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     assert_equal(pm.tw_penalty(1), 1)
     for feas in [True] * num_registerations:
@@ -272,7 +272,7 @@ def test_time_warp_penalty_update_decrease():
 def test_does_not_update_penalties_before_sufficient_registrations():
     num_registerations = 4
     params = PenaltyParams(4, 4, 1, num_registerations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(1, params)
+    pm = PenaltyManager(1, params=params)
 
     # Both have four initial penalty, and vehicle capacity is one.
     assert_equal(pm.tw_penalty(1), 4)

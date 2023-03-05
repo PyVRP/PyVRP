@@ -23,7 +23,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
 
     ls.add_node_operator(Exchange10(data, pm))
     ls.add_route_operator(RelocateStar(data, pm))
@@ -54,7 +54,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
 
     ls.add_node_operator(Exchange10(data, pm))
     ls.add_route_operator(RelocateStar(data, pm))

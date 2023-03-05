@@ -39,7 +39,7 @@ def test_swap_single_route_stays_single_route(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(operator(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))
@@ -69,7 +69,7 @@ def test_relocate_uses_empty_routes(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(operator(data, pm))
 
     single_route = list(range(1, data.num_clients + 1))
@@ -104,7 +104,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(operator(data, pm))
 
     individual = Individual(data, pm, [[1, 2], [3], [4]])
@@ -124,7 +124,7 @@ def test_cannot_exchange_when_segments_overlap(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(operator(data, pm))
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
@@ -143,7 +143,7 @@ def test_cannot_swap_adjacent_segments():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(Exchange22(data, pm))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
@@ -165,7 +165,7 @@ def test_swap_between_routes_OkSmall():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
     ls.add_node_operator(Exchange21(data, pm))
 
     individual = Individual(data, pm, [[1, 2], [3, 4]])

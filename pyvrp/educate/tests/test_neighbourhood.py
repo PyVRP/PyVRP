@@ -105,7 +105,7 @@ def test_compute_neighbours(
         symmetric_proximity,
         symmetric_neighbours,
     )
-    neighbours = compute_neighbours(data, params)
+    neighbours = compute_neighbours(data, params=params)
 
     assert_equal(len(neighbours), data.num_clients + 1)
     assert_equal(len(neighbours[0]), 0)
@@ -123,7 +123,7 @@ def test_compute_neighbours(
 def test_more_neighbours_than_instance_size():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     params = NeighbourhoodParams(nb_granular=data.num_clients)
-    neighbours = compute_neighbours(data, params)
+    neighbours = compute_neighbours(data, params=params)
 
     for neighb in neighbours[1:]:
         assert_equal(len(neighb), data.num_clients - 1)

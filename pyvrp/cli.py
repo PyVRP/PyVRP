@@ -128,10 +128,10 @@ def solve(
 
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
+    pen_manager = PenaltyManager(data.vehicle_capacity, params=pen_params)
     pop = Population(bpd, params=pop_params)
 
-    neighbours = compute_neighbours(data, nb_params)
+    neighbours = compute_neighbours(data, params=nb_params)
     ls = LocalSearch(data, pen_manager, rng, neighbours)
 
     node_ops = NODE_OPERATORS
@@ -153,7 +153,7 @@ def solve(
         for _ in range(pop_params.min_pop_size)
     ]
     algo = GeneticAlgorithm(
-        data, pen_manager, rng, pop, ls, srex, init, gen_params
+        data, pen_manager, rng, pop, ls, srex, init, params=gen_params
     )
 
     if max_runtime is not None:

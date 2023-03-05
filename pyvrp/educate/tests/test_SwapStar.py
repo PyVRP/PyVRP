@@ -26,7 +26,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     # For a fair comparison we should not hamper the node operator with
     # granularity restrictions.
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data, params=nb_params))
 
     ls.add_node_operator(Exchange11(data, pm))
     ls.add_route_operator(SwapStar(data, pm))

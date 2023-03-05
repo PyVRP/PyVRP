@@ -48,7 +48,7 @@ class NeighbourhoodParams:
 
 
 def compute_neighbours(
-    data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
+    data: ProblemData, *, params: NeighbourhoodParams = NeighbourhoodParams()
 ) -> Neighbours:
     """
     Computes neighbours defining the neighbourhood for a problem instance.
@@ -58,7 +58,8 @@ def compute_neighbours(
     data
         ProblemData for which to compute the neighbourhood.
     params
-        NeighbourhoodParams that define how the neighbourhood is computed.
+        Keyword-only argument for neighbourhood parameters. If not provided,
+        a default value will be used.
 
     Returns
     -------

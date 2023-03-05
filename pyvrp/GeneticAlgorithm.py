@@ -59,7 +59,8 @@ class GeneticAlgorithm:
     initial_solutions
         Initial solutions to use to initialise the population.
     params
-        Genetic algorithm parameters. If not provided, a default will be used.
+        Keyword-only argument for genetic algorithm parameters. If not
+        provided, a default will be used.
 
     Raises
     ------
@@ -76,6 +77,7 @@ class GeneticAlgorithm:
         local_search: LocalSearch,
         crossover_op: CrossoverOperator,
         initial_solutions: Collection[Individual],
+        *,
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
         if len(initial_solutions) == 0:

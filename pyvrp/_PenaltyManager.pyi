@@ -15,7 +15,7 @@ class PenaltyBooster:
 class PenaltyManager:
     @overload
     def __init__(
-        self, vehicle_capacity: int, params: PenaltyParams
+        self, vehicle_capacity: int, *, params: PenaltyParams
     ) -> None: ...
     @overload
     def __init__(self, vehicle_capacity: int) -> None: ...

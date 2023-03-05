@@ -96,7 +96,7 @@ def test_local_search_set_get_neighbours(
     pen_manager = PenaltyManager(data.vehicle_capacity)
 
     params = NeighbourhoodParams(nb_granular=1)
-    prev_neighbours = compute_neighbours(data, params)
+    prev_neighbours = compute_neighbours(data, params=params)
     ls = LocalSearch(data, pen_manager, rng, prev_neighbours)
 
     params = NeighbourhoodParams(
@@ -106,7 +106,7 @@ def test_local_search_set_get_neighbours(
         symmetric_proximity,
         symmetric_neighbours,
     )
-    neighbours = compute_neighbours(data, params)
+    neighbours = compute_neighbours(data, params=params)
 
     # Test that before we set neighbours we don't have same
     assert_(ls.get_neighbours() != neighbours)

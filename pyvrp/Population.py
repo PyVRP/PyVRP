@@ -17,12 +17,14 @@ class Population:
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
     params, optional
-        Population parameters. If not provided, a default will be used.
+        Keyword-only argument for population parameters. If not provided,
+        a default will be used.
     """
 
     def __init__(
         self,
         diversity_op: Callable[[Individual, Individual], float],
+        *,
         params: PopulationParams = PopulationParams(),
     ):
         self._op = diversity_op
