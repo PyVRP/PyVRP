@@ -101,6 +101,23 @@ class ProblemData:
         """
     def dist(self, first: int, second: int) -> int:
         """
+        Returns the travel distance between the first and second argument,
+        according to this instance's distance matrix.
+
+        Parameters
+        ----------
+        first
+            Client or depot number.
+        second
+            Client or depot number.
+
+        Returns
+        -------
+        int
+            Distance between the given clients.
+        """
+    def duration(self, first: int, second: int) -> int:
+        """
         Returns the travel duration between the first and second argument,
         according to this instance's travel duration matrix.
 
@@ -118,8 +135,16 @@ class ProblemData:
         """
     def distance_matrix(self) -> Any:
         """
-        Returns the travel duration matrix used for distance/duration
-        computations.
+        Returns the travel distance matrix used for distance computations.
+
+        Returns
+        -------
+        Any
+            Distance matrix.
+        """
+    def duration_matrix(self) -> Any:
+        """
+        Returns the travel duration matrix used for duration computations.
 
         Returns
         -------
