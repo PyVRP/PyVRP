@@ -30,7 +30,7 @@ void Route::setupSector()
         return;
     }
 
-    auto const depotData = data.client(0);
+    auto const depotData = data.depot();
     auto const clientData = data.client(n(depot)->client);
     auto const angle = CircleSector::positive_mod(static_cast<int>(
         32768. * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
@@ -136,7 +136,7 @@ void Route::update()
     isLoadFeasible_ = static_cast<size_t>(load_) <= data.vehicleCapacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
-    isTimeWarpFeasible_ = timeWarp_ == 0;
+    isTimeWarpFeasible_ = equal(timeWarp_, duration_type(0));
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

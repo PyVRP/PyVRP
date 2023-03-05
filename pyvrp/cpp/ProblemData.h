@@ -15,8 +15,8 @@ public:
     {
         int x;                          // Coordinate X
         int y;                          // Coordinate Y
-        duration_type serviceDuration;  // Service duration
         int demand;                     // Demand
+        duration_type serviceDuration;  // Service duration
         duration_type twEarly;  // Earliest arrival (when using time windows)
         duration_type twLate;   // Latest arrival (when using time windows)
     };

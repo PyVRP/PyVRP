@@ -40,9 +40,9 @@ cost_type TwoOpt::evalBetweenRoutes(Node *U, Node *V)
 {
     auto const &dist = data.distanceMatrix();
 
-    distance_type const current
+    auto const current
         = dist(U->client, n(U)->client) + dist(V->client, n(V)->client);
-    distance_type const proposed
+    auto const proposed
         = dist(U->client, n(V)->client) + dist(V->client, n(U)->client);
 
     cost_type deltaCost = proposed - current;

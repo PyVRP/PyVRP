@@ -23,12 +23,12 @@ class Client:
         client's (x, y) location tuple.
     """
 
+    x: int
+    y: int
     demand: int
     service_duration: int
     tw_early: int
     tw_late: int
-    x: int
-    y: int
 
 class ProblemData:
     """

@@ -153,13 +153,13 @@ cost_type SwapStar::evaluate(Route *routeU, Route *routeV)
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
-    distance_type const current = dist(p(best.U)->client, best.U->client)
-                                  + dist(best.U->client, n(best.U)->client)
-                                  + dist(p(best.V)->client, best.V->client)
-                                  + dist(best.V->client, n(best.V)->client);
+    auto const current = dist(p(best.U)->client, best.U->client)
+                         + dist(best.U->client, n(best.U)->client)
+                         + dist(p(best.V)->client, best.V->client)
+                         + dist(best.V->client, n(best.V)->client);
 
-    distance_type const proposed = dist(best.VAfter->client, best.V->client)
-                                   + dist(best.UAfter->client, best.U->client);
+    auto const proposed = dist(best.VAfter->client, best.V->client)
+                          + dist(best.UAfter->client, best.U->client);
 
     cost_type deltaCost = proposed - current;
 

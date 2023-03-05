@@ -69,6 +69,7 @@ bool Exchange<N, M>::overlap(Node *U, Node *V) const
 template <size_t N, size_t M>
 bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 {
+    // TODO faster?
     if (U->route != V->route)
         return false;
 
@@ -87,13 +88,13 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
     auto const &dist = data.distanceMatrix();
 
-    distance_type const current = U->route->distBetween(posU - 1, posU + N)
-                                  + dist(V->client, n(V)->client);
+    auto const current = U->route->distBetween(posU - 1, posU + N)
+                         + dist(V->client, n(V)->client);
 
-    distance_type const proposed = dist(V->client, U->client)
-                                   + U->route->distBetween(posU, posU + N - 1)
-                                   + dist(endU->client, n(V)->client)
-                                   + dist(p(U)->client, n(endU)->client);
+    auto const proposed = dist(V->client, U->client)
+                          + U->route->distBetween(posU, posU + N - 1)
+                          + dist(endU->client, n(V)->client)
+                          + dist(p(U)->client, n(endU)->client);
 
     cost_type deltaCost = proposed - current;
 
@@ -173,10 +174,10 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
     auto const &dist = data.distanceMatrix();
 
-    distance_type const current = U->route->distBetween(posU - 1, posU + N)
-                                  + V->route->distBetween(posV - 1, posV + M);
+    auto const current = U->route->distBetween(posU - 1, posU + N)
+                         + V->route->distBetween(posV - 1, posV + M);
 
-    distance_type const proposed
+    auto const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
         = dist(p(U)->client, V->client)

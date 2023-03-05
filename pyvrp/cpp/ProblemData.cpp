@@ -43,8 +43,8 @@ ProblemData::ProblemData(
     for (size_t idx = 0; idx <= static_cast<size_t>(numClients_); ++idx)
         clients_[idx] = {coords[idx].first,
                          coords[idx].second,
-                         servDurs[idx],
                          demands[idx],
+                         servDurs[idx],
                          timeWindows[idx].first,
                          timeWindows[idx].second};
 }

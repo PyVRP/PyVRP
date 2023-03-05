@@ -18,23 +18,23 @@ struct InsertPos  // best insert position, used to plan unplanned clients
 cost_type
 deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    duration_type prevEarliestArrival
+    duration_type const prevEarliestArrival
         = std::max(data.dist(0, prev), data.client(prev).twEarly);
-    duration_type prevEarliestFinish
+    auto const prevEarliestFinish
         = prevEarliestArrival + data.client(prev).serviceDuration;
-    duration_type clientLate = data.client(client).twLate;
+    auto const clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + data.duration(prev, client) >= clientLate)
-        return static_cast<cost_type>(INT_MAX);
+        return cost_type(INT_MAX);
 
-    duration_type clientEarliestArrival
+    duration_type const clientEarliestArrival
         = std::max(data.dist(0, client), data.client(client).twEarly);
-    duration_type clientEarliestFinish
+    auto const clientEarliestFinish
         = clientEarliestArrival + data.client(client).serviceDuration;
-    duration_type nextLate = data.client(next).twLate;
+    auto const nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + data.duration(client, next) >= nextLate)
-        return static_cast<cost_type>(INT_MAX);
+        return cost_type(INT_MAX);
 
     return data.dist(prev, client) + data.dist(client, next)
            - data.dist(prev, next);
@@ -52,7 +52,7 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
-        InsertPos best = {static_cast<cost_type>(INT_MAX), &routes.front(), 0};
+        InsertPos best = {cost_type(INT_MAX), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {

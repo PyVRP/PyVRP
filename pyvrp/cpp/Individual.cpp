@@ -118,9 +118,7 @@ bool Individual::operator==(Individual const &other) const
 {
     // First compare costs, since that's a quick and cheap check. Only when
     // the costs are the same do we test if the neighbours are all equal.
-    // TODO factor this out to a general "close" method.
-    bool almostEqualCosts = std::abs(cost() - other.cost()) < 0.001;
-    return almostEqualCosts && neighbours == other.neighbours;
+    return equal(cost(), other.cost()) && neighbours == other.neighbours;
 }
 
 Individual::Individual(ProblemData const &data,
