@@ -35,7 +35,7 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
  * @param startA         Start index of consecutive routes in the first parent.
  * @param startB         Start index of consecutive routes in the second parent.
  * @param nMovedRoutes   Number of routes to move.
- * @return An offspring.
+ * @return The produced offspring.
  *
  * <br /> Yuichi Nagata and Shigenobu Kobayashi. "A memetic algorithm for
  * the pickup and delivery problem with time windows using selective route
