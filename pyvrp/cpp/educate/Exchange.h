@@ -2,8 +2,6 @@
 #define EXCHANGE_H
 
 #include "LocalSearchOperator.h"
-#include "Node.h"
-#include "Route.h"
 #include "TimeWindowSegment.h"
 
 #include <cassert>
@@ -31,15 +29,19 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
     inline bool adjacent(Node *U, Node *V) const;
 
     // Special case that's applied when M == 0
-    int evalRelocateMove(Node *U, Node *V) const;
+    int evalRelocateMove(Node *U,
+                         Node *V,
+                         PenaltyManager const &penaltyManager) const;
 
     // Applied when M != 0
-    int evalSwapMove(Node *U, Node *V) const;
+    int
+    evalSwapMove(Node *U, Node *V, PenaltyManager const &penaltyManager) const;
 
 public:
-    int evaluate(Node *U, Node *V) override;
+    int
+    evaluate(Node *U, Node *V, PenaltyManager const &penaltyManager) override;
 
-    void apply(Node *U, Node *V) override;
+    void apply(Node *U, Node *V) const override;
 };
 
 template <size_t N, size_t M>
@@ -76,7 +78,9 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
+int Exchange<N, M>::evalRelocateMove(Node *U,
+                                     Node *V,
+                                     PenaltyManager const &penaltyManager) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -161,7 +165,9 @@ int Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
+int Exchange<N, M>::evalSwapMove(Node *U,
+                                 Node *V,
+                                 PenaltyManager const &penaltyManager) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -254,7 +260,10 @@ int Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     return deltaCost;
 }
 
-template <size_t N, size_t M> int Exchange<N, M>::evaluate(Node *U, Node *V)
+template <size_t N, size_t M>
+int Exchange<N, M>::evaluate(Node *U,
+                             Node *V,
+                             PenaltyManager const &penaltyManager)
 {
     if (containsDepot(U, N) || overlap(U, V))
         return 0;
@@ -268,7 +277,7 @@ template <size_t N, size_t M> int Exchange<N, M>::evaluate(Node *U, Node *V)
         if (U == n(V))
             return 0;
 
-        return evalRelocateMove(U, V);
+        return evalRelocateMove(U, V, penaltyManager);
     }
     else
     {
@@ -279,11 +288,11 @@ template <size_t N, size_t M> int Exchange<N, M>::evaluate(Node *U, Node *V)
         if (adjacent(U, V))
             return 0;
 
-        return evalSwapMove(U, V);
+        return evalSwapMove(U, V, penaltyManager);
     }
 }
 
-template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V)
+template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V) const
 {
     auto *uToInsert = N == 1 ? U : (*U->route)[U->position + N - 1];
     auto *insertUAfter = M == 0 ? V : (*V->route)[V->position + M - 1];

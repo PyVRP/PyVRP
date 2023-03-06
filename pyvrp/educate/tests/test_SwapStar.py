@@ -28,8 +28,8 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
-    ls.add_node_operator(Exchange11(data, pm))
-    ls.add_route_operator(SwapStar(data, pm))
+    ls.add_node_operator(Exchange11(data))
+    ls.add_route_operator(SwapStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
         individual = Individual.make_random(data, pm, rng)
@@ -53,7 +53,7 @@ def test_swap_star_on_RC208_instance(seed: int):
     rng = XorShift128(seed=seed)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    ls.add_route_operator(SwapStar(data, pm))
+    ls.add_route_operator(SwapStar(data))
 
     # Make an initial solution that consists of two routes, by randomly
     # splitting the single-route solution.

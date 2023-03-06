@@ -131,7 +131,7 @@ Individual LocalSearch::intensify(Individual &individual,
 bool LocalSearch::applyNodeOps(Node *U, Node *V)
 {
     for (auto *nodeOp : nodeOps)
-        if (nodeOp->evaluate(U, V) < 0)
+        if (nodeOp->evaluate(U, V, penaltyManager) < 0)
         {
             auto *routeU = U->route;  // copy pointers because the operator can
             auto *routeV = V->route;  // modify the node's route membership
@@ -148,7 +148,7 @@ bool LocalSearch::applyNodeOps(Node *U, Node *V)
 bool LocalSearch::applyRouteOps(Route *U, Route *V)
 {
     for (auto *routeOp : routeOps)
-        if (routeOp->evaluate(U, V) < 0)
+        if (routeOp->evaluate(U, V, penaltyManager) < 0)
         {
             routeOp->apply(U, V);
             update(U, V);

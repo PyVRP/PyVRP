@@ -5,7 +5,9 @@
 
 using TWS = TimeWindowSegment;
 
-int TwoOpt::evalWithinRoute(Node *U, Node *V)
+int TwoOpt::evalWithinRoute(Node *U,
+                            Node *V,
+                            PenaltyManager const &penaltyManager) const
 {
     if (U->position + 1 >= V->position)
         return 0;
@@ -36,7 +38,9 @@ int TwoOpt::evalWithinRoute(Node *U, Node *V)
     return deltaCost;
 }
 
-int TwoOpt::evalBetweenRoutes(Node *U, Node *V)
+int TwoOpt::evalBetweenRoutes(Node *U,
+                              Node *V,
+                              PenaltyManager const &penaltyManager) const
 {
     auto const &dist = data.distanceMatrix();
 
@@ -71,7 +75,7 @@ int TwoOpt::evalBetweenRoutes(Node *U, Node *V)
     return deltaCost;
 }
 
-void TwoOpt::applyWithinRoute(Node *U, Node *V)
+void TwoOpt::applyWithinRoute(Node *U, Node *V) const
 {
     auto *itRoute = V;
     auto *insertionPoint = U;
@@ -86,7 +90,7 @@ void TwoOpt::applyWithinRoute(Node *U, Node *V)
     }
 }
 
-void TwoOpt::applyBetweenRoutes(Node *U, Node *V)
+void TwoOpt::applyBetweenRoutes(Node *U, Node *V) const
 {
     auto *itRouteU = n(U);
     auto *itRouteV = n(V);
@@ -110,16 +114,16 @@ void TwoOpt::applyBetweenRoutes(Node *U, Node *V)
     }
 }
 
-int TwoOpt::evaluate(Node *U, Node *V)
+int TwoOpt::evaluate(Node *U, Node *V, PenaltyManager const &penaltyManager)
 {
     if (U->route->idx > V->route->idx)  // will be tackled in a later iteration
         return 0;                       // - no need to process here already
 
-    return U->route == V->route ? evalWithinRoute(U, V)
-                                : evalBetweenRoutes(U, V);
+    return U->route == V->route ? evalWithinRoute(U, V, penaltyManager)
+                                : evalBetweenRoutes(U, V, penaltyManager);
 }
 
-void TwoOpt::apply(Node *U, Node *V)
+void TwoOpt::apply(Node *U, Node *V) const
 {
     if (U->route == V->route)
         applyWithinRoute(U, V);

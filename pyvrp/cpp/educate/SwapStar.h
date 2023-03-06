@@ -3,8 +3,6 @@
 
 #include "LocalSearchOperator.h"
 #include "Matrix.h"
-#include "Node.h"
-#include "Route.h"
 
 #include <array>
 #include <vector>
@@ -69,15 +67,18 @@ class SwapStar : public LocalSearchOperator<Route>
     };
 
     // Updates the removal costs of clients in the given route
-    void updateRemovalCosts(Route *R1);
+    void updateRemovalCosts(Route *R1, PenaltyManager const &penaltyManager);
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).
-    void updateInsertionCost(Route *R, Node *U);
+    void updateInsertionCost(Route *R,
+                             Node *U,
+                             PenaltyManager const &penaltyManager);
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
-    inline std::pair<int, Node *> getBestInsertPoint(Node *U, Node *V);
+    inline std::pair<int, Node *>
+    getBestInsertPoint(Node *U, Node *V, PenaltyManager const &penaltyManager);
 
     Matrix<ThreeBest> cache;
     Matrix<int> removalCosts;
@@ -88,15 +89,15 @@ class SwapStar : public LocalSearchOperator<Route>
 public:
     void init(Individual const &indiv) override;
 
-    int evaluate(Route *U, Route *V) override;
+    int
+    evaluate(Route *U, Route *V, PenaltyManager const &penaltyManager) override;
 
-    void apply(Route *U, Route *V) override;
+    void apply(Route *U, Route *V) const override;
 
     void update(Route *U) override;
 
-    explicit SwapStar(ProblemData const &data,
-                      PenaltyManager const &penaltyManager)
-        : LocalSearchOperator<Route>(data, penaltyManager),
+    explicit SwapStar(ProblemData const &data)
+        : LocalSearchOperator<Route>(data),
           cache(data.numVehicles(), data.numClients() + 1),
           removalCosts(data.numVehicles(), data.numClients() + 1),
           updated(data.numVehicles(), true)

@@ -2,7 +2,8 @@
 
 using TWS = TimeWindowSegment;
 
-void SwapStar::updateRemovalCosts(Route *R1)
+void SwapStar::updateRemovalCosts(Route *R1,
+                                  PenaltyManager const &penaltyManager)
 {
     auto const &dist = data.distanceMatrix();
     auto const currTimeWarp = penaltyManager.twPenalty(R1->timeWarp());
@@ -17,7 +18,9 @@ void SwapStar::updateRemovalCosts(Route *R1)
     }
 }
 
-void SwapStar::updateInsertionCost(Route *R, Node *U)
+void SwapStar::updateInsertionCost(Route *R,
+                                   Node *U,
+                                   PenaltyManager const &penaltyManager)
 {
     auto const &dist = data.distanceMatrix();
     auto &insertPositions = cache(R->idx, U->client);
@@ -49,13 +52,14 @@ void SwapStar::updateInsertionCost(Route *R, Node *U)
     }
 }
 
-std::pair<int, Node *> SwapStar::getBestInsertPoint(Node *U, Node *V)
+std::pair<int, Node *> SwapStar::getBestInsertPoint(
+    Node *U, Node *V, PenaltyManager const &penaltyManager)
 {
     auto const &dist = data.distanceMatrix();
     auto &best_ = cache(V->route->idx, U->client);
 
     if (best_.shouldUpdate)  // then we first update the insert positions
-        updateInsertionCost(V->route, U);
+        updateInsertionCost(V->route, U, penaltyManager);
 
     for (size_t idx = 0; idx != 3; ++idx)  // only OK if V is not adjacent
         if (best_.locs[idx] && best_.locs[idx] != V && n(best_.locs[idx]) != V)
@@ -78,13 +82,15 @@ void SwapStar::init(Individual const &indiv)
     std::fill(updated.begin(), updated.end(), true);
 }
 
-int SwapStar::evaluate(Route *routeU, Route *routeV)
+int SwapStar::evaluate(Route *routeU,
+                       Route *routeV,
+                       PenaltyManager const &penaltyManager)
 {
     best = {};
 
     if (updated[routeV->idx])
     {
-        updateRemovalCosts(routeV);
+        updateRemovalCosts(routeV, penaltyManager);
         updated[routeV->idx] = false;
 
         for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
@@ -93,7 +99,7 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
 
     if (updated[routeU->idx])
     {
-        updateRemovalCosts(routeU);
+        updateRemovalCosts(routeU, penaltyManager);
         updated[routeV->idx] = false;
 
         for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
@@ -121,13 +127,13 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
             if (deltaCost >= 0)  // an early filter on many moves, before doing
                 continue;        // costly work determining insertion points
 
-            auto [extraV, UAfter] = getBestInsertPoint(U, V);
+            auto [extraV, UAfter] = getBestInsertPoint(U, V, penaltyManager);
             deltaCost += extraV;
 
             if (deltaCost >= 0)  // continuing here avoids evaluating another
                 continue;        // costly insertion point below
 
-            auto [extraU, VAfter] = getBestInsertPoint(V, U);
+            auto [extraU, VAfter] = getBestInsertPoint(V, U, penaltyManager);
             deltaCost += extraU;
 
             if (deltaCost < best.cost)
@@ -261,7 +267,7 @@ int SwapStar::evaluate(Route *routeU, Route *routeV)
     return deltaCost;
 }
 
-void SwapStar::apply(Route *U, Route *V)
+void SwapStar::apply(Route *U, Route *V) const
 {
     if (best.U && best.UAfter && best.V && best.VAfter)
     {

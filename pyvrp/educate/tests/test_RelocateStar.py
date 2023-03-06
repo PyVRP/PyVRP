@@ -25,8 +25,8 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
-    ls.add_node_operator(Exchange10(data, pm))
-    ls.add_route_operator(RelocateStar(data, pm))
+    ls.add_node_operator(Exchange10(data))
+    ls.add_route_operator(RelocateStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
         individual = Individual.make_random(data, pm, rng)
@@ -56,8 +56,8 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     nb_params = NeighbourhoodParams(nb_granular=size)
     ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
 
-    ls.add_node_operator(Exchange10(data, pm))
-    ls.add_route_operator(RelocateStar(data, pm))
+    ls.add_node_operator(Exchange10(data))
+    ls.add_route_operator(RelocateStar(data))
 
     individual = Individual.make_random(data, pm, rng)
     exchange_individual = ls.search(individual)
