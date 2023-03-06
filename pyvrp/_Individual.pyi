@@ -54,7 +54,7 @@ class Individual:
         Individual
             The randomly generated Individual.
         """
-    def cost(self) -> int:
+    def cost(self) -> float:
         """
         Returns the current cost of the individual's solution.
 

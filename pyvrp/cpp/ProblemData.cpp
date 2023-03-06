@@ -31,7 +31,7 @@ ProblemData::ProblemData(
     size_t vehicleCap,
     std::vector<std::pair<duration_type, duration_type>> const &timeWindows,
     std::vector<duration_type> const &servDurs,
-    std::vector<std::vector<duration_type>> const &distMat)
+    std::vector<std::vector<distance_type>> const &distMat)
     : dist_(distMat),
       clients_(coords.size()),
       numClients_(static_cast<int>(coords.size()) - 1),

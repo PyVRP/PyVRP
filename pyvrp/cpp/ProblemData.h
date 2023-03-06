@@ -105,7 +105,7 @@ public:
         size_t vehicleCap,
         std::vector<std::pair<duration_type, duration_type>> const &timeWindows,
         std::vector<duration_type> const &servDurs,
-        std::vector<std::vector<duration_type>> const &distMat);
+        std::vector<std::vector<distance_type>> const &distMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const

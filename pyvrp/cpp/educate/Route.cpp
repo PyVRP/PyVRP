@@ -69,13 +69,13 @@ void Route::setupSector()
 
 void Route::setupRouteTimeWindows()
 {
-    auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
     auto *node = nodes.back();
 
     do  // forward time window segments
     {
         auto *prev = p(node);
-        prev->twAfter = TWS::merge(dist, prev->tw, node->twAfter);
+        prev->twAfter = TWS::merge(duration, prev->tw, node->twAfter);
         node = prev;
     } while (!node->isDepot());
 }
@@ -91,6 +91,7 @@ void Route::update()
     setupNodes();
 
     auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
 
     int load = 0;
     distance_type distance = 0;
@@ -107,9 +108,9 @@ void Route::update()
 
             if (pos > 0)  // change at pos, so everything before is the same
             {             // and we can re-use cumulative calculations
-                load = nodes[pos - 1]->cumulatedLoad;
-                distance = nodes[pos - 1]->cumulatedDistance;
-                reverseDistance = nodes[pos - 1]->cumulatedReversalDistance;
+                load = nodes[pos - 1]->cumLoad;
+                distance = nodes[pos - 1]->cumDist;
+                reverseDistance = nodes[pos - 1]->cumDeltaRevDist;
             }
         }
 
@@ -123,20 +124,20 @@ void Route::update()
         reverseDistance -= dist(p(node)->client, node->client);
 
         node->position = pos + 1;
-        node->cumulatedLoad = load;
-        node->cumulatedDistance = distance;
-        node->cumulatedReversalDistance = reverseDistance;
-        node->twBefore = TWS::merge(dist, p(node)->twBefore, node->tw);
+        node->cumLoad = load;
+        node->cumDist = distance;
+        node->cumDeltaRevDist = reverseDistance;
+        node->twBefore = TWS::merge(duration, p(node)->twBefore, node->tw);
     }
 
     setupSector();
     setupRouteTimeWindows();
 
-    load_ = nodes.back()->cumulatedLoad;
+    load_ = nodes.back()->cumLoad;
     isLoadFeasible_ = static_cast<size_t>(load_) <= data.vehicleCapacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
-    isTimeWarpFeasible_ = equal(timeWarp_, duration_type(0));
+    isTimeWarpFeasible_ = equal(timeWarp_, static_cast<duration_type>(0));
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

@@ -1,6 +1,6 @@
 from typing import overload
 
-from ._Matrix import IntMatrix
+from ._Matrix import DoubleMatrix
 
 class TimeWindowSegment:
     def __init__(
@@ -33,7 +33,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: IntMatrix,
+        dur: DoubleMatrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
     ) -> TimeWindowSegment:
@@ -43,7 +43,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: IntMatrix,
+        dur: DoubleMatrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,
@@ -54,7 +54,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: IntMatrix,
+        dur: DoubleMatrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,

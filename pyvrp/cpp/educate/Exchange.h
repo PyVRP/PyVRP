@@ -87,6 +87,7 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
     auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
 
     auto const current = U->route->distBetween(posU - 1, posU + N)
                          + dist(V->client, n(V)->client);
@@ -103,7 +104,7 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist, p(U)->twBefore, n(endU)->twAfter);
+        auto uTWS = TWS::merge(duration, p(U)->twBefore, n(endU)->twAfter);
 
         deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
@@ -119,7 +120,7 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
         deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
         deltaCost -= penaltyManager.loadPenalty(V->route->load());
 
-        auto vTWS = TWS::merge(dist,
+        auto vTWS = TWS::merge(duration,
                                V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
@@ -136,7 +137,7 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(duration,
                                         p(U)->twBefore,
                                         route->twBetween(posU + N, posV),
                                         route->twBetween(posU, posU + N - 1),
@@ -146,7 +147,7 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
         }
         else
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(duration,
                                         V->twBefore,
                                         route->twBetween(posU, posU + N - 1),
                                         route->twBetween(posV + 1, posU - 1),
@@ -173,6 +174,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
     auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
     auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
 
     auto const current = U->route->distBetween(posU - 1, posU + N)
                          + V->route->distBetween(posV - 1, posV + M);
@@ -193,7 +195,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
         if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist,
+        auto uTWS = TWS::merge(duration,
                                p(U)->twBefore,
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
@@ -201,7 +203,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
         deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
-        auto vTWS = TWS::merge(dist,
+        auto vTWS = TWS::merge(duration,
                                p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
@@ -228,7 +230,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(duration,
                                         p(U)->twBefore,
                                         route->twBetween(posV, posV + M - 1),
                                         route->twBetween(posU + N, posV - 1),
@@ -239,7 +241,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
         }
         else
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(duration,
                                         p(V)->twBefore,
                                         route->twBetween(posU, posU + N - 1),
                                         route->twBetween(posV + M, posU - 1),

@@ -1,6 +1,8 @@
 #include "crossover.h"
 #include "precision.h"
 
+#include <limits>
+
 using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
@@ -25,7 +27,7 @@ deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     auto const clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + data.duration(prev, client) >= clientLate)
-        return cost_type(INT_MAX);
+        return std::numeric_limits<cost_type>::max();
 
     duration_type const clientEarliestArrival
         = std::max(data.dist(0, client), data.client(client).twEarly);
@@ -34,7 +36,7 @@ deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     auto const nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + data.duration(client, next) >= nextLate)
-        return cost_type(INT_MAX);
+        return std::numeric_limits<cost_type>::max();
 
     return data.dist(prev, client) + data.dist(client, next)
            - data.dist(prev, next);

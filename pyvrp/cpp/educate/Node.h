@@ -17,13 +17,13 @@ public:               // TODO make fields private
     Route *route;     // Pointer towards the associated route
 
     // TODO can these data fields be moved to Route?
-    int cumulatedLoad;                // Load from depot to client (incl)
-    distance_type cumulatedDistance;  // Distance from depot to client (incl)
-    distance_type cumulatedReversalDistance;  // Reverse distance of (0..client)
+    int cumLoad;            // Cumulative load of segment [0, .., client]
+    distance_type cumDist;  // Cumulative dist of segment [0, .., client]
+    distance_type cumDeltaRevDist;  // Delta cum dist if segment is reversed
 
-    TimeWindowSegment tw;        // TWS for individual node (client)
-    TimeWindowSegment twBefore;  // TWS for (0...client) including self
-    TimeWindowSegment twAfter;   // TWS for (client...0) including self
+    TimeWindowSegment tw;        // TWS for just this client
+    TimeWindowSegment twBefore;  // TWS for [0, .., client - 1, client]
+    TimeWindowSegment twAfter;   // TWS for [client, client + 1, .., 0]
 
     [[nodiscard]] inline bool isDepot() const;
 

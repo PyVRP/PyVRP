@@ -155,7 +155,7 @@ cost_type PenaltyManager::loadPenalty(unsigned int load) const
 cost_type PenaltyManager::twPenalty(duration_type timeWarp) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
-    return cost_type(0);
+    return static_cast<cost_type>(0);
 #else
     return timeWarp * timeWarpPenalty;
 #endif

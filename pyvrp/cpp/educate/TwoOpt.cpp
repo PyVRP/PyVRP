@@ -11,11 +11,12 @@ cost_type TwoOpt::evalWithinRoute(Node *U, Node *V)
         return 0;
 
     auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
 
     cost_type deltaCost
         = dist(U->client, V->client) + dist(n(U)->client, n(V)->client)
-          + V->cumulatedReversalDistance - dist(U->client, n(U)->client)
-          - dist(V->client, n(V)->client) - n(U)->cumulatedReversalDistance;
+          + V->cumDeltaRevDist - dist(U->client, n(U)->client)
+          - dist(V->client, n(V)->client) - n(U)->cumDeltaRevDist;
 
     if (!U->route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;
@@ -24,11 +25,11 @@ cost_type TwoOpt::evalWithinRoute(Node *U, Node *V)
     auto *itRoute = V;
     while (itRoute != U)
     {
-        tws = TWS::merge(dist, tws, itRoute->tw);
+        tws = TWS::merge(duration, tws, itRoute->tw);
         itRoute = p(itRoute);
     }
 
-    tws = TWS::merge(dist, tws, n(V)->twAfter);
+    tws = TWS::merge(duration, tws, n(V)->twAfter);
 
     deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
     deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
@@ -39,6 +40,7 @@ cost_type TwoOpt::evalWithinRoute(Node *U, Node *V)
 cost_type TwoOpt::evalBetweenRoutes(Node *U, Node *V)
 {
     auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
 
     auto const current
         = dist(U->client, n(U)->client) + dist(V->client, n(V)->client);
@@ -50,17 +52,17 @@ cost_type TwoOpt::evalBetweenRoutes(Node *U, Node *V)
     if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
-    auto const uTWS = TWS::merge(dist, U->twBefore, n(V)->twAfter);
+    auto const uTWS = TWS::merge(duration, U->twBefore, n(V)->twAfter);
 
     deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
 
-    auto const vTWS = TWS::merge(dist, V->twBefore, n(U)->twAfter);
+    auto const vTWS = TWS::merge(duration, V->twBefore, n(U)->twAfter);
 
     deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
 
-    int const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
+    int const deltaLoad = U->cumLoad - V->cumLoad;
 
     deltaCost += penaltyManager.loadPenalty(U->route->load() - deltaLoad);
     deltaCost -= penaltyManager.loadPenalty(U->route->load());

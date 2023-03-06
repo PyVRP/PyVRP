@@ -26,9 +26,9 @@ class Client:
     x: int
     y: int
     demand: int
-    service_duration: int
-    tw_early: int
-    tw_late: int
+    service_duration: float
+    tw_early: float
+    tw_late: float
 
 class ProblemData:
     """
@@ -71,9 +71,9 @@ class ProblemData:
         demands: List[int],
         nb_vehicles: int,
         vehicle_cap: int,
-        time_windows: List[Tuple[int, int]],
-        service_durations: List[int],
-        duration_matrix: List[List[int]],
+        time_windows: List[Tuple[float, float]],
+        service_durations: List[float],
+        duration_matrix: List[List[float]],
     ): ...
     def client(self, client: int) -> Client:
         """
@@ -99,7 +99,7 @@ class ProblemData:
         Client
             A simple data object containing the depot's information.
         """
-    def dist(self, first: int, second: int) -> int:
+    def dist(self, first: int, second: int) -> float:
         """
         Returns the travel distance between the first and second argument,
         according to this instance's distance matrix.
@@ -113,10 +113,10 @@ class ProblemData:
 
         Returns
         -------
-        int
+        float
             Distance between the given clients.
         """
-    def duration(self, first: int, second: int) -> int:
+    def duration(self, first: int, second: int) -> float:
         """
         Returns the travel duration between the first and second argument,
         according to this instance's travel duration matrix.
@@ -130,7 +130,7 @@ class ProblemData:
 
         Returns
         -------
-        int
+        float
             Travel duration between the given clients.
         """
     def distance_matrix(self) -> Any:

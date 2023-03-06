@@ -154,11 +154,11 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
     assert(start <= end);
 
-    auto const &dist = data.distanceMatrix();
+    auto const &duration = data.durationMatrix();
     auto tws = nodes[start - 1]->tw;
 
     for (size_t step = start; step != end; ++step)
-        tws = TimeWindowSegment::merge(dist, tws, nodes[step]->tw);
+        tws = TimeWindowSegment::merge(duration, tws, nodes[step]->tw);
 
     return tws;
 }
@@ -167,9 +167,9 @@ distance_type Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
-    auto const startDist
-        = start == 0 ? distance_type(0) : nodes[start - 1]->cumulatedDistance;
-    auto const endDist = nodes[end - 1]->cumulatedDistance;
+    auto const startDist = start == 0 ? static_cast<distance_type>(0)
+                                      : nodes[start - 1]->cumDist;
+    auto const endDist = nodes[end - 1]->cumDist;
 
     assert(startDist <= endDist);
 
@@ -182,8 +182,8 @@ int Route::loadBetween(size_t start, size_t end) const
 
     auto const *startNode = start == 0 ? depot : nodes[start - 1];
     auto const atStart = data.client(startNode->client).demand;
-    auto const startLoad = startNode->cumulatedLoad;
-    auto const endLoad = nodes[end - 1]->cumulatedLoad;
+    auto const startLoad = startNode->cumLoad;
+    auto const endLoad = nodes[end - 1]->cumLoad;
 
     assert(startLoad <= endLoad);
 

@@ -7,6 +7,7 @@
 #include "Route.h"
 
 #include <array>
+#include <limits>
 #include <vector>
 
 /**
@@ -26,7 +27,9 @@ class SwapStar : public LocalSearchOperator<Route>
     {
         bool shouldUpdate = true;
         std::array<cost_type, 3> costs
-            = {cost_type(INT_MAX), cost_type(INT_MAX), cost_type(INT_MAX)};
+            = {std::numeric_limits<cost_type>::max(),
+               std::numeric_limits<cost_type>::max(),
+               std::numeric_limits<cost_type>::max()};
         std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
 
         void maybeAdd(cost_type costInsert, Node *placeInsert)
