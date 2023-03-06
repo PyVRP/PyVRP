@@ -38,13 +38,13 @@ class RouteStatistics:
         Whether the route is empty.
     """
 
-    distance: int
-    start_time: int
-    end_time: int
-    duration: int
-    timewarp: int
-    wait_time: int
-    service_time: int
+    distance: float
+    start_time: float
+    end_time: float
+    duration: float
+    timewarp: float
+    wait_time: float
+    service_time: float
     num_stops: int
     total_demand: int
     fillrate: float
@@ -77,9 +77,9 @@ def get_route_statistics(
 
     # Interpret depot.service_duration as loading duration, typically 0
     current_time = start_time + depot.service_duration
-    wait_time = 0
-    time_warp = 0
-    distance = 0
+    wait_time = 0.0
+    time_warp = 0.0
+    distance = 0.0
 
     prev_idx = 0  # depot
     for idx in list(route) + [0]:

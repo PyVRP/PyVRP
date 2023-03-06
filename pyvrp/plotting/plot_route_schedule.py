@@ -46,12 +46,12 @@ def plot_route_schedule(
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
-    t = 0
-    wait_time = 0
-    time_warp = 0
-    drive_time = 0
-    serv_time = 0
-    dist = 0
+    t = 0.0
+    wait_time = 0.0
+    time_warp = 0.0
+    drive_time = 0.0
+    serv_time = 0.0
+    dist = 0.0
     load = sum([data.client(idx).demand for idx in route])
     slack = horizon
 
