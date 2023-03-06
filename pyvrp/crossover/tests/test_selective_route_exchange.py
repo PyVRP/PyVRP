@@ -34,7 +34,6 @@ def test_srex_move_all_routes():
     indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
     offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 3)
-    # TODO add argument name
 
     assert_equal(offspring, indiv2)
 
@@ -46,9 +45,6 @@ def test_srex_greedy_repair():
     data = read("data/OkSmallGreedyRepair.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # TODO remove
-    # This RNG seed sets the internal SREX variables ``startA = 0`` and
-    # ``nMovedRoutes = 1``.
     indiv1 = Individual(data, pm, [[1, 2], [3, 4]])
     indiv2 = Individual(data, pm, [[2, 3], [4, 1]])
 
@@ -70,16 +66,12 @@ def test_srex_changed_start_indices():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # TODO remove
-    # This RNG seed sets the internal SREX variables ``startA = 0`` and
-    # ``nMovedRoutes = 1``.
     indiv1 = Individual(data, pm, [[1, 2, 3], [4]])
     indiv2 = Individual(data, pm, [[1, 2, 4], [3]])
 
-    # The start indices at initialization are startA = 0 and startB = 0.
     # The difference for A to move left (= right) is -1. The difference for B
-    # to move left (= right) is 1. The new indices become startA = 1 and
-    # startB = 0. There are no improving moves in this position since the
+    # to move left (= right) is 1. The new indices become idx1 = 1 and
+    # idx2 = 0. There are no improving moves in this position since the
     # difference for A to move is 1 and difference for B to move is 1.
     # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
     # This results in two candidate offspring, [[3], [1, 2, 4]] with cost
@@ -97,10 +89,6 @@ def test_srex_a_left_move():
     """
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
-
-    # TODO remove
-    # This RNG seed sets the internal SREX variables ``startA = 0`` and
-    # ``nMovedRoutes = 1``.
 
     indiv1 = Individual(data, pm, [[1, 3], [2], [4]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
@@ -147,9 +135,6 @@ def test_srex_a_right_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # TODO remove
-    # This RNG seed sets the internal SREX variables ``startA = 0`` and
-    # ``nMovedRoutes = 1``.
     indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
     offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
@@ -165,9 +150,6 @@ def test_srex_b_left_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # TODO remove
-    # This RNG seed sets the internal SREX variables ``startA = 0`` and
-    # ``nMovedRoutes = 1``.
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
     offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
@@ -183,12 +165,8 @@ def test_srex_b_right_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager(data.vehicle_capacity)
 
-    # TODO remove
-    # This RNG seed sets the internal SREX variables ``startA = 0`` and
-    # ``nMovedRoutes = 1``.
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [4, 1], [2]])
-
     offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
