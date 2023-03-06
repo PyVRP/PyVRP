@@ -87,9 +87,8 @@ public:
     Individual search(Individual &individual);
 
     /**
-     * Performs a more intensive local search around the given individual,
-     * using route-based operators and subpath enumeration. Returns a new,
-     * hopefully improved individual.
+     * Performs an intensifying local search around the given individual, using
+     * route-based operators. Returns a new, hopefully improved individual.
      */
     Individual intensify(Individual &individual,
                          int overlapToleranceDegrees = 0);

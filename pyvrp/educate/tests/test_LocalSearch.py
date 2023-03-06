@@ -1,24 +1,9 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import PenaltyManager, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.tests.helpers import read
-
-
-def test_local_search_raises_when_there_are_no_operators():
-    data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=42)
-
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    individual = Individual.make_random(data, pm, rng)
-
-    with assert_raises(RuntimeError):
-        ls.search(individual)
-
-    with assert_raises(RuntimeError):
-        ls.intensify(individual)
 
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():

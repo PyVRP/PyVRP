@@ -8,14 +8,14 @@
 
 Individual LocalSearch::search(Individual &individual)
 {
+    if (nodeOps.empty())  // no-op
+        return individual;
+
     loadIndividual(individual);
 
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-
-    if (nodeOps.empty())
-        throw std::runtime_error("No known node operators.");
 
     // Caches the last time nodes were tested for modification (uses nbMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -76,6 +76,9 @@ Individual LocalSearch::search(Individual &individual)
 Individual LocalSearch::intensify(Individual &individual,
                                   int overlapToleranceDegrees)
 {
+    if (routeOps.empty())  // no-op
+        return individual;
+
     loadIndividual(individual);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
@@ -83,9 +86,6 @@ Individual LocalSearch::intensify(Individual &individual,
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
-
-    if (routeOps.empty())
-        throw std::runtime_error("No known route operators.");
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
