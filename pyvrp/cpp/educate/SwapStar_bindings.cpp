@@ -10,5 +10,8 @@ PYBIND11_MODULE(_SwapStar, m)
         m, "RouteOperator", py::module_local());
 
     py::class_<SwapStar, LocalSearchOperator<Route>>(m, "SwapStar")
-        .def(py::init<ProblemData const &>(), py::arg("data"));
+        .def(py::init<ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
 }
