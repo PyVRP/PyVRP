@@ -19,13 +19,6 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
                   ProblemData const &data);
 }  // namespace crossover
 
-typedef std::function<Individual(
-    std::pair<Individual const *, Individual const *> const &,
-    ProblemData const &,
-    PenaltyManager &,
-    XorShift128 &)>
-    CrossoverOperator;
-
 /**
  * Performs two SREX crossovers of the given parents. # TODO
  * <br />
