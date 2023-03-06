@@ -23,6 +23,11 @@ def test_same_parents_same_offspring():
     assert_equal(offspring, individual)
 
 
+# All tests below use the deterministic C++ implementation of SREX, which
+# takes the start indices and the number of routes to move as arguments,
+# instead of a random number generator that generates those values.
+
+
 def test_srex_move_all_routes():
     """
     Tests if SREX produces an offspring that is identical to the second parent
