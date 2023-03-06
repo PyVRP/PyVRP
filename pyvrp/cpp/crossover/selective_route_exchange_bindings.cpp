@@ -11,7 +11,7 @@ PYBIND11_MODULE(_selective_route_exchange, m)
           py::arg("parents"),
           py::arg("data"),
           py::arg("penalty_manager"),
-          py::arg("idx1"),
-          py::arg("idx2"),
-          py::arg("n_routes_to_move"));
+          py::arg("startA"),
+          py::arg("startB"),
+          py::arg("n_moved_routes"));
 }
