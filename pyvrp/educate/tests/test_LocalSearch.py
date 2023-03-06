@@ -1,9 +1,44 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import PenaltyManager, XorShift128
+from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.tests.helpers import read
+
+
+def test_empty_neighbourhood_search_returns_same_solution():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+
+    neighbourhood = [[] for _ in range(data.num_clients + 1)]  # is empty
+    ls = LocalSearch(data, pm, rng, neighbourhood)
+
+    for _ in range(100):  # repeat a few times to make sure
+        individual = Individual.make_random(data, pm, rng)
+        assert_equal(ls.search(individual), individual)
+
+
+def test_no_node_operators_search_returns_same_solution():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+
+    for _ in range(100):  # repeat a few times to make sure
+        individual = Individual.make_random(data, pm, rng)
+        assert_equal(ls.search(individual), individual)
+
+
+def test_no_route_operators_intensify_returns_same_solution():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+    rng = XorShift128(seed=42)
+    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+
+    for _ in range(100):  # repeat a few times to make sure
+        individual = Individual.make_random(data, pm, rng)
+        assert_equal(ls.intensify(individual), individual)
 
 
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
