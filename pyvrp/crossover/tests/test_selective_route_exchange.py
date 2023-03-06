@@ -3,7 +3,7 @@ from numpy.testing import assert_equal
 from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
-    selective_route_exchange as cpp_srex,
+    selective_route_exchange as _srex,
 )
 from pyvrp.tests.helpers import read
 
@@ -38,12 +38,12 @@ def test_srex_move_all_routes():
 
     indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 3)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 3)
 
     assert_equal(offspring, indiv2)
 
 
-def testcpp_srex_greedy_repair():
+def test_srex_greedy_repair():
     """
     Tests the case where greedy repair is used during SREX crossover.
     """
@@ -59,12 +59,12 @@ def testcpp_srex_greedy_repair():
     # which are both repaired using greedy repair. After repair, we obtain the
     # offspring [[2, 3, 1], [4]] with cost 8735, and [[1, 2], [3, 4]] with
     # cost 9725. The first one is returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 1)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[2, 3, 1], [4], []])
 
 
-def testcpp_srex_changed_start_indices():
+def test_srex_changed_start_indices():
     """
     Tests the case where the initial start indices are changed in SREX.
     """
@@ -82,12 +82,12 @@ def testcpp_srex_changed_start_indices():
     # This results in two candidate offspring, [[3], [1, 2, 4]] with cost
     # 10195, and [[1, 2, 3], [4]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 1)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[3], [1, 2, 4], []])
 
 
-def testcpp_srex_a_left_move():
+def test_srex_a_left_move():
     """
     Tests the case where the initial start indices are changed by moving the
     A index to the left.
@@ -127,12 +127,12 @@ def testcpp_srex_a_left_move():
     # Candidate offspring
     # [1, 3] [2] [4] - cost: 24416
     # [3] [2] [4, 1] - cost: 12699 <-- selected as new offspring
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 1)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[3], [2], [4, 1]])
 
 
-def testcpp_srex_a_right_move():
+def test_srex_a_right_move():
     """
     Tests the case where the initial start indices are changed by moving to
     A index to the right.
@@ -142,12 +142,12 @@ def testcpp_srex_a_right_move():
 
     indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 1)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[3], [4, 1], [2]])
 
 
-def testcpp_srex_b_left_move():
+def test_srex_b_left_move():
     """
     Tests the case where the initial start indices are changed by moving the
     B index to the left.
@@ -157,12 +157,12 @@ def testcpp_srex_b_left_move():
 
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 1)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
 
 
-def testcpp_srex_b_right_move():
+def test_srex_b_right_move():
     """
     Tests the case where the initial start indices are changed by moving the
     B index to the right.
@@ -172,6 +172,6 @@ def testcpp_srex_b_right_move():
 
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [4, 1], [2]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, 0, 0, 1)
+    offspring = _srex((indiv1, indiv2), data, pm, 0, 0, 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
