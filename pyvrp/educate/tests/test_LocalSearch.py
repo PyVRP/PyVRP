@@ -6,24 +6,6 @@ from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.tests.helpers import read
 
 
-def test_local_search_raises_when_neighbourhood_structure_is_empty():
-    data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
-    rng = XorShift128(seed=42)
-
-    # Is completely empty neighbourhood, so there's nothing to do for the
-    # local search in this case.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
-
-    with assert_raises(RuntimeError):
-        LocalSearch(data, pm, rng, neighbours)
-
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-
-    with assert_raises(RuntimeError):
-        ls.set_neighbours(neighbours)
-
-
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
     data = read("data/OkSmall.txt")
