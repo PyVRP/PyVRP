@@ -19,6 +19,16 @@ Individual selectiveRouteExchange(
     size_t nRoutesA = parents.first->numRoutes();
     size_t nRoutesB = parents.second->numRoutes();
 
+    if (startA >= nRoutesA)
+        throw std::invalid_argument("Expected startA < nRoutesA.");
+
+    if (startB >= nRoutesB)
+        throw std::invalid_argument("Expected startB < nRoutesB.");
+
+    if (nMovedRoutes < 1 || nMovedRoutes > std::min(nRoutesA, nRoutesB))
+        throw std::invalid_argument(
+            "Expected nMovedRoutes in [1, min(nRoutesA, nRoutesB)]");
+
     auto const &routesA = parents.first->getRoutes();
     auto const &routesB = parents.second->getRoutes();
 

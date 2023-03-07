@@ -1,4 +1,5 @@
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_raises
+from pytest import mark
 
 from pyvrp import Individual, PenaltyManager, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
@@ -26,6 +27,26 @@ def test_same_parents_same_offspring():
 # All tests below use the deterministic C++ implementation of SREX, which,
 # instead of a random number generator, takes as arguments the first and
 # second start indices and the number of routes to move.
+
+
+@mark.parametrize(
+    "start_a, start_b, n_moved_routes",
+    [
+        (10, 0, 1),  # start_a >= # routes A
+        (0, 10, 1),  # start_b >= # routes B
+        (0, 0, 0),  # n_moved_routes < 1
+        (0, 0, 2),  # n_moved_routes > min(routesA, routesB)
+    ],
+)
+def test_raise_invalid_arguments(start_a, start_b, n_moved_routes):
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager(data.vehicle_capacity)
+
+    indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
+    indiv2 = Individual(data, pm, [[1, 2, 3, 4]])
+
+    with assert_raises(ValueError):
+        _srex((indiv1, indiv2), data, pm, start_a, start_b, n_moved_routes)
 
 
 def test_srex_move_all_routes():
