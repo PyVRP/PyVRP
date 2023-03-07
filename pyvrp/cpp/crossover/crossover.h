@@ -21,8 +21,8 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
 
 /**
  * Performs two SREX crossovers of the given parents. SREX is a method that
- * identifies a set of routes for each parent and replaces the routes of the
- * first parent with those of the second parent. The routes are selected by
+ * selects a set of routes for each parent and replaces the selected routes of
+ * the first parent with those of the second parent. The routes are selected by
  * minimizing the overlap between the two sets of routes. This is achieved
  * through a heuristic that iteratively shifts adjacent routes until no further
  * improvement in minimizing the overlap is observed. Then, two offspring are
@@ -37,7 +37,8 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
  * @param nMovedRoutes   Number of routes to move.
  * @return The produced offspring.
  *
- * <br /> Yuichi Nagata and Shigenobu Kobayashi. "A memetic algorithm for
+ * <br />
+ * Yuichi Nagata and Shigenobu Kobayashi. "A memetic algorithm for
  * the pickup and delivery problem with time windows using selective route
  * exchange crossover". In: International Conference on Parallel Problem Solving
  * from Nature. Springer. 2010, pp. 536–545.
