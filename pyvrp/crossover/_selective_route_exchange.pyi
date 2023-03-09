@@ -8,6 +8,6 @@ def selective_route_exchange(
     parents: Tuple[Individual, Individual],
     data: ProblemData,
     penalty_manager: PenaltyManager,
-    start_indces: Tuple[int, int],
+    start_indices: Tuple[int, int],
     num_moved_routes: int,
 ) -> Individual: ...
