@@ -37,6 +37,9 @@ Individual selectiveRouteExchange(
     ClientSet selectedA;
     ClientSet selectedB;
 
+    // Routes are sorted on polar angle by the local search/educate step, so
+    // selecting adjacent routes in both parents should result in a large
+    // overlap when the start indices are close to each other.
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
         selectedA.insert(routesA[(startA + r) % nRoutesA].begin(),

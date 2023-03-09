@@ -34,7 +34,7 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
  * @param penaltyManager   The penalty manager.
  * @param startIndices     Start indices of routes in parent individuals.
  * @param numMovedRoutes   Number of routes to move.
- * @return The produced offspring.
+ * @return A new offspring.
  *
  * <br />
  * Yuichi Nagata and Shigenobu Kobayashi. "A memetic algorithm for
