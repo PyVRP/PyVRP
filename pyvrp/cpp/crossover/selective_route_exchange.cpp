@@ -12,7 +12,7 @@ Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
     PenaltyManager const &penaltyManager,
-    std::pair<size_t, size_t> startIndices,
+    std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes)
 {
     auto startA = startIndices.first;
