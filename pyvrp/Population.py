@@ -109,8 +109,8 @@ class Population:
         tuple
             A pair of individuals (parents).
         """
-        first = self.get_binary_tournament(rng)
-        second = self.get_binary_tournament(rng)
+        first = self.get_tournament(rng, k=2)
+        second = self.get_tournament(rng, k=2)
 
         diversity = self._op(first, second)
         lb = self._params.lb_diversity
@@ -119,7 +119,7 @@ class Population:
         tries = 1
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
-            second = self.get_binary_tournament(rng)
+            second = self.get_tournament(rng, k=2)
             diversity = self._op(first, second)
 
         return first, second
@@ -132,14 +132,18 @@ class Population:
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
 
-    def get_binary_tournament(self, rng: XorShift128) -> Individual:
+    def get_tournament(self, rng: XorShift128, k: int = 2) -> Individual:
         """
-        Selects an individual from this population by binary tournament.
+        Selects an individual from this population by k-ary tournament, based
+        on the (internal) fitness values of the selected individuals.
 
         Parameters
         ----------
         rng
             Random number generator.
+        k
+            The number of individuals to draw for the tournament. Defaults to
+            two, which results in a binary tournament.
 
         Returns
         -------
@@ -156,10 +160,9 @@ class Population:
 
             return self._infeas[idx - num_feas]
 
-        item1 = select()
-        item2 = select()
+        if k <= 0:
+            raise ValueError(f"Expected k > 0; got k = {k}.")
 
-        if item1.fitness < item2.fitness:
-            return item1.individual
-
-        return item2.individual
+        items = [select() for _ in range(k)]
+        fittest = min(items, key=lambda item: item.fitness)
+        return fittest.individual

@@ -239,7 +239,8 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
         assert_(id(elite_individual) in new_individuals)
 
 
-def test_binary_tournament_ranks_by_fitness():
+@mark.parametrize("k", [2, 3])
+def test_tournament_ranks_by_fitness(k: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager(data.num_vehicles)
     rng = XorShift128(seed=42)
@@ -253,24 +254,37 @@ def test_binary_tournament_ranks_by_fitness():
 
     # Since this test requires the fitness values of the individuals, we have
     # to access the underlying infeasible subpopulation directly.
-    infeas = [item for item in pop._infeas]
-    infeas = sorted(infeas, key=lambda item: item.fitness)
-    infeas = {item.individual: idx for idx, item in enumerate(infeas)}
-    infeas_count = np.zeros(len(infeas))
+    infeas_items = [item for item in pop._infeas]
+    by_fitness = sorted(infeas_items, key=lambda item: item.fitness)
+    indiv2idx = {item.individual: idx for idx, item in enumerate(by_fitness)}
+    infeas_count = np.zeros(len(infeas_items))
 
     for _ in range(10_000):
-        indiv = pop.get_binary_tournament(rng)
-        infeas_count[infeas[indiv]] += 1
+        indiv = pop.get_tournament(rng, k=k)
+        infeas_count[indiv2idx[indiv]] += 1
 
-    # Now we compare the observed ranking from the binary tournament selection
-    # against what we would expect from the actual fitness ranking. We compute
-    # the percentage of times we're incorrect, and test that that number is not
-    # too high.
+    # Now we compare the observed ranking from the tournament selection with
+    # what we expect from the actual fitness ranking. We compute the percentage
+    # of times we're incorrect, and test that that number is not too high.
     actual_rank = np.argsort(-infeas_count)  # higher is better
-    expected_rank = np.arange(len(infeas))
-    pct_off = np.abs((actual_rank - expected_rank) / len(infeas)).mean()
+    expected_rank = np.arange(len(infeas_items))
+    pct_off = np.abs((actual_rank - expected_rank) / len(infeas_items)).mean()
 
     assert_(pct_off < 0.05)
+
+
+@mark.parametrize("k", [-100, -1, 0])  # k must be strictly positive
+def test_tournament_raises_for_invalid_k(k: int):
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    pm = PenaltyManager(data.num_vehicles)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+
+    for individual in make_random_solutions(5, data, pm, rng):
+        pop.add(individual)
+
+    with assert_raises(ValueError):
+        pop.get_tournament(rng, k=k)
 
 
 def test_purge_removes_duplicates():
