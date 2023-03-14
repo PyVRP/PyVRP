@@ -2,7 +2,9 @@
 #define LOCALSEARCHOPERATOR_H
 
 #include "Individual.h"
+#include "Node.h"
 #include "PenaltyManager.h"
+#include "ProblemData.h"
 #include "Route.h"
 
 template <typename Arg> class LocalSearchOperatorBase
@@ -14,7 +16,6 @@ template <typename Arg> class LocalSearchOperatorBase
 
 protected:
     ProblemData const &data;
-    PenaltyManager const &penaltyManager;
 
 public:
     /**
@@ -28,20 +29,18 @@ public:
      * cannot become negative at all. In that case, the returned (non-negative)
      * cost delta does not constitute a full evaluation.
      */
-    virtual int evaluate(Arg *U, Arg *V) { return false; }
+    virtual int evaluate(Arg *U, Arg *V, PenaltyManager const &penaltyManager)
+    {
+        return 0;
+    }
 
     /**
      * Applies this operator to the given arguments. For improvements, should
      * only be called if <code>evaluate()</code> returns a negative delta cost.
      */
-    virtual void apply(Arg *U, Arg *V){};
+    virtual void apply(Arg *U, Arg *V) const {};
 
-    explicit LocalSearchOperatorBase(ProblemData const &data,
-                                     PenaltyManager const &penaltyManager)
-        : data(data), penaltyManager(penaltyManager)
-    {
-    }
-
+    LocalSearchOperatorBase(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperatorBase() = default;
 };
 

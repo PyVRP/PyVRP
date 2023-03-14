@@ -147,7 +147,7 @@ def test_initial_solutions_added_when_restarting():
     pop = Population(bpd)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data, pm))
+    ls.add_node_operator(Exchange10(data))
 
     # We use the best known solution as one of the initial solutions so that
     # there are no improving iterations.
@@ -183,7 +183,7 @@ def test_best_solution_improves_with_more_iterations():
     init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data, pm))
+    ls.add_node_operator(Exchange10(data))
 
     ga_params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False

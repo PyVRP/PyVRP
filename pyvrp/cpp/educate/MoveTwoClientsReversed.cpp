@@ -1,11 +1,12 @@
 #include "MoveTwoClientsReversed.h"
-
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
 using TWS = TimeWindowSegment;
 
-int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
+int MoveTwoClientsReversed::evaluate(Node *U,
+                                     Node *V,
+                                     PenaltyManager const &penaltyManager)
 {
     if (U == n(V) || n(U) == V || n(U)->isDepot())
         return 0;
@@ -86,7 +87,7 @@ int MoveTwoClientsReversed::evaluate(Node *U, Node *V)
     return deltaCost;
 }
 
-void MoveTwoClientsReversed::apply(Node *U, Node *V)
+void MoveTwoClientsReversed::apply(Node *U, Node *V) const
 {
     auto *X = n(U);  // copy since the insert below changes n(U)
 
