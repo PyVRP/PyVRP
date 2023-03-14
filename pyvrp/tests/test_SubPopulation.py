@@ -11,7 +11,7 @@ from pyvrp.tests.helpers import read
 @mark.parametrize("nb_close", [5, 10, 25])
 def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     rng = XorShift128(seed=5)
 
     params = PopulationParams(
@@ -45,7 +45,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
 
 def test_avg_distance_closest_for_single_route_solutions():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     params = PopulationParams(min_pop_size=0, nb_close=10)
 
     subpop = SubPopulation(bpd, params)
@@ -78,7 +78,7 @@ def test_avg_distance_closest_for_single_route_solutions():
 
 def test_fitness_is_purely_based_on_cost_when_only_elites():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     rng = XorShift128(seed=51)
     params = PopulationParams(nb_elite=25, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
@@ -105,7 +105,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
 def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     rng = XorShift128(seed=52)
     params = PopulationParams(nb_elite=0, min_pop_size=25)
     subpop = SubPopulation(bpd, params)

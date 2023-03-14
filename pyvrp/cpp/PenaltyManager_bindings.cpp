@@ -49,17 +49,18 @@ PYBIND11_MODULE(_PenaltyManager, m)
             py::arg("traceback"));
 
     py::class_<PenaltyManager>(m, "PenaltyManager")
-        .def(py::init<unsigned int, PenaltyParams>(),
-             py::arg("vehicle_capacity"),
-             py::arg("params"))
-        .def(py::init<unsigned int>(), py::arg("vehicle_capacity"))
+        .def(py::init<PenaltyParams>(), py::arg("params"))
+        .def(py::init<>())
         .def("register_load_feasible",
              &PenaltyManager::registerLoadFeasible,
              py::arg("is_load_feasible"))
         .def("register_time_feasible",
              &PenaltyManager::registerTimeFeasible,
              py::arg("is_time_feasible"))
-        .def("load_penalty", &PenaltyManager::loadPenalty, py::arg("load"))
+        .def("load_penalty",
+             &PenaltyManager::loadPenalty,
+             py::arg("load"),
+             py::arg("vehicle_capacity"))
         .def("tw_penalty", &PenaltyManager::twPenalty, py::arg("time_warp"))
         .def("get_penalty_booster", &PenaltyManager::getPenaltyBooster);
 }

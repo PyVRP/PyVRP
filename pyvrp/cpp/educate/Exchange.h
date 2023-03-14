@@ -113,14 +113,18 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
 
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
 
-        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(U->route->load());
+        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff,
+                                                data.vehicleCapacity());
+        deltaCost -= penaltyManager.loadPenalty(U->route->load(),
+                                                data.vehicleCapacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(V->route->load());
+        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff,
+                                                data.vehicleCapacity());
+        deltaCost -= penaltyManager.loadPenalty(V->route->load(),
+                                                data.vehicleCapacity());
 
         auto vTWS = TWS::merge(dist,
                                V->twBefore,
@@ -218,11 +222,15 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
 
-        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(U->route->load());
+        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff,
+                                                data.vehicleCapacity());
+        deltaCost -= penaltyManager.loadPenalty(U->route->load(),
+                                                data.vehicleCapacity());
 
-        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(V->route->load());
+        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff,
+                                                data.vehicleCapacity());
+        deltaCost -= penaltyManager.loadPenalty(V->route->load(),
+                                                data.vehicleCapacity());
     }
     else  // within same route
     {

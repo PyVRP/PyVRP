@@ -8,7 +8,7 @@ from pyvrp.tests.helpers import read
 
 def test_route_constructor_sorts_by_empty():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv = Individual(data, pm, [[3, 4], [], [1, 2]])
     routes = indiv.get_routes()
@@ -27,7 +27,7 @@ def test_route_constructor_sorts_by_empty():
 
 def test_route_constructor_raises():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     assert_equal(data.num_vehicles, 3)
 
@@ -46,7 +46,7 @@ def test_route_constructor_raises():
 
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv = Individual(data, pm, [[3, 4], [], [1, 2]])
     neighbours = indiv.get_neighbours()
@@ -67,7 +67,7 @@ def test_get_neighbours():
 
 def test_feasibility():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     # This solution is infeasible due to both load and time window violations.
     indiv = Individual(data, pm, [[1, 2, 3, 4]])
@@ -89,7 +89,7 @@ def test_feasibility():
 
 def test_distance_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv = Individual(data, pm, [[1, 2], [3], [4]])
     assert_(indiv.is_feasible())
@@ -110,7 +110,7 @@ def test_distance_cost_calculation():
 
 def test_capacity_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv = Individual(data, pm, [[4, 3, 1, 2]])
     assert_(indiv.has_excess_capacity())
@@ -119,7 +119,7 @@ def test_capacity_cost_calculation():
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10. This has a non-zero
     # load penalty
-    load_penalty = pm.load_penalty(18)
+    load_penalty = pm.load_penalty(18, data.vehicle_capacity)
     assert_(load_penalty > 0)
 
     # The total costs are now load_penalty + dist
@@ -136,7 +136,7 @@ def test_capacity_cost_calculation():
 
 def test_time_warp_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv = Individual(data, pm, [[1, 3], [2, 4]])
     assert_(not indiv.has_excess_capacity())
@@ -183,7 +183,7 @@ def test_time_warp_for_a_very_constrained_problem():
             [1, 1, 0],
         ],
     )
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     # This solution directly visits the second client from the depot, which is
     # not time window feasible.
@@ -204,7 +204,7 @@ def test_time_warp_for_a_very_constrained_problem():
 
 def test_copy():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv = Individual(data, pm, [[1, 2, 3, 4]])
     copy_indiv = copy(indiv)
@@ -221,7 +221,7 @@ def test_copy():
 
 def test_eq():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1, 2, 3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
@@ -247,7 +247,7 @@ def test_eq():
 
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
@@ -274,7 +274,7 @@ def test_str_contains_essential_information():
 
 def test_hash():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=2)
 
     indiv1 = Individual.make_random(data, pm, rng)

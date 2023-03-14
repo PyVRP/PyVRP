@@ -8,7 +8,7 @@ from pyvrp.tests.helpers import read
 
 def test_local_search_raises_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     ls = LocalSearch(data, pm, rng, compute_neighbours(data))
@@ -23,7 +23,7 @@ def test_local_search_raises_when_there_are_no_operators():
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     # Is completely empty neighbourhood, so there's nothing to do for the
@@ -42,7 +42,7 @@ def test_local_search_raises_when_neighbourhood_structure_is_empty():
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     # Each of the given sizes is either smaller than or bigger than desired.
@@ -59,7 +59,7 @@ def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
 
 def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     neighbours = [[client] for client in range(data.num_clients + 1)]
@@ -93,7 +93,7 @@ def test_local_search_set_get_neighbours(
 
     seed = 42
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity)
+    pen_manager = PenaltyManager()
 
     params = NeighbourhoodParams(nb_granular=1)
     prev_neighbours = compute_neighbours(data, params)

@@ -98,7 +98,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 def test_add_triggers_purge():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
@@ -142,7 +142,7 @@ def test_add_triggers_purge():
 
 def test_select_returns_same_parents_if_no_other_option():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
@@ -182,7 +182,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
@@ -201,7 +201,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
 @mark.parametrize("nb_elite", [5, 25])
 def test_elite_individuals_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
@@ -241,7 +241,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
 
 def test_binary_tournament_ranks_by_fitness():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
@@ -275,7 +275,7 @@ def test_binary_tournament_ranks_by_fitness():
 
 def test_purge_removes_duplicates():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
@@ -317,7 +317,7 @@ def test_purge_removes_duplicates():
 
 def test_clear():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
