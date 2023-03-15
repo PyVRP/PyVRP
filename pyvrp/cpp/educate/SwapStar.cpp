@@ -115,11 +115,15 @@ int SwapStar::evaluate(Route *routeU,
             int const vDemand = data.client(V->client).demand;
             int const loadDiff = uDemand - vDemand;
 
-            deltaCost += penaltyManager.loadPenalty(routeU->load() - loadDiff);
-            deltaCost -= penaltyManager.loadPenalty(routeU->load());
+            deltaCost += penaltyManager.loadPenalty(routeU->load() - loadDiff,
+                                                    data.vehicleCapacity());
+            deltaCost -= penaltyManager.loadPenalty(routeU->load(),
+                                                    data.vehicleCapacity());
 
-            deltaCost += penaltyManager.loadPenalty(routeV->load() + loadDiff);
-            deltaCost -= penaltyManager.loadPenalty(routeV->load());
+            deltaCost += penaltyManager.loadPenalty(routeV->load() + loadDiff,
+                                                    data.vehicleCapacity());
+            deltaCost -= penaltyManager.loadPenalty(routeV->load(),
+                                                    data.vehicleCapacity());
 
             deltaCost += removalCosts(routeU->idx, U->client);
             deltaCost += removalCosts(routeV->idx, V->client);
@@ -258,11 +262,15 @@ int SwapStar::evaluate(Route *routeU,
     auto const uDemand = data.client(best.U->client).demand;
     auto const vDemand = data.client(best.V->client).demand;
 
-    deltaCost += penaltyManager.loadPenalty(routeU->load() - uDemand + vDemand);
-    deltaCost -= penaltyManager.loadPenalty(routeU->load());
+    deltaCost += penaltyManager.loadPenalty(routeU->load() - uDemand + vDemand,
+                                            data.vehicleCapacity());
+    deltaCost
+        -= penaltyManager.loadPenalty(routeU->load(), data.vehicleCapacity());
 
-    deltaCost += penaltyManager.loadPenalty(routeV->load() + uDemand - vDemand);
-    deltaCost -= penaltyManager.loadPenalty(routeV->load());
+    deltaCost += penaltyManager.loadPenalty(routeV->load() + uDemand - vDemand,
+                                            data.vehicleCapacity());
+    deltaCost
+        -= penaltyManager.loadPenalty(routeV->load(), data.vehicleCapacity());
 
     return deltaCost;
 }

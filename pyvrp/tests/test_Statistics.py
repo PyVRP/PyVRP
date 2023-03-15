@@ -7,7 +7,7 @@ from pyvrp.tests.helpers import make_random_solutions, read
 
 def test_csv_serialises_correctly(tmp_path):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
 

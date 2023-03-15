@@ -128,7 +128,7 @@ def solve(
 
     data = read(data_loc, instance_format, round_func)
     rng = XorShift128(seed=seed)
-    pen_manager = PenaltyManager(data.vehicle_capacity, pen_params)
+    pen_manager = PenaltyManager(pen_params)
     pop = Population(bpd, params=pop_params)
 
     neighbours = compute_neighbours(data, nb_params)

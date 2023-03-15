@@ -35,7 +35,7 @@ def test_swap_single_route_stays_single_route(operator):
     more than one route.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -65,7 +65,7 @@ def test_relocate_uses_empty_routes(operator):
     clients to empty routes if that is an improvement.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -100,7 +100,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     then no exchange is possible.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -120,7 +120,7 @@ def test_cannot_exchange_when_segments_overlap(operator):
     single route solution: there's always overlap between the segments.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -139,7 +139,7 @@ def test_cannot_swap_adjacent_segments():
     that's already covered by (2, 0)-exchange.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -161,7 +161,7 @@ def test_swap_between_routes_OkSmall():
     two route solution, resulting in something better.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -181,7 +181,7 @@ def test_relocate_after_depot_should_work():
     action that should insert directly after the depot.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.num_vehicles)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     # This is a non-empty neighbourhood (so LS does not complain), but the only

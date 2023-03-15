@@ -2,10 +2,8 @@
 
 #include <numeric>
 
-PenaltyManager::PenaltyManager(unsigned int vehicleCapacity,
-                               PenaltyParams params)
+PenaltyManager::PenaltyManager(PenaltyParams params)
     : params(params),
-      vehicleCapacity(vehicleCapacity),
       capacityPenalty(params.initCapacityPenalty),
       timeWarpPenalty(params.initTimeWarpPenalty)
 {
