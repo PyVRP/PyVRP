@@ -97,7 +97,7 @@ def test_raises_when_no_initial_solutions():
     since that is insufficient to do crossover.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pen_manager = PenaltyManager(data.vehicle_capacity)
+    pen_manager = PenaltyManager()
     rng = XorShift128(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
 
@@ -120,7 +120,7 @@ def test_initial_solutions_added_when_running():
     when running the algorithm.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
     ls = LocalSearch(data, rng, compute_neighbours(data))
@@ -142,7 +142,7 @@ def test_initial_solutions_added_when_restarting():
     solutions when restarting.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
@@ -177,7 +177,7 @@ def test_initial_solutions_added_when_restarting():
 def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     pop_params = PopulationParams()
     pop = Population(bpd, params=pop_params)
     init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
@@ -206,7 +206,7 @@ def test_best_initial_solution():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     pop = Population(bpd)
 
     bks = Individual(data, pm, read_solution("data/RC208.sol"))

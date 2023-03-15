@@ -20,7 +20,7 @@ IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
 
 def test_plotting_methods_raise_when_no_stats_available():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     individual = Individual(data, pm, [[1, 2, 3, 4]])
     res = Result(individual, Statistics(), 0, 0.0)
 
@@ -45,7 +45,7 @@ def test_plotting_methods_raise_when_no_stats_available():
 def test_plot_solution():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     individual = Individual(data, pm, bks)
 
@@ -59,7 +59,7 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     params = PopulationParams()

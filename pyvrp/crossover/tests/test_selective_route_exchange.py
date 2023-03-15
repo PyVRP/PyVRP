@@ -15,7 +15,7 @@ def test_same_parents_same_offspring():
     same.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     individual = Individual(data, pm, [[1, 2], [3, 4]])
@@ -35,7 +35,7 @@ def test_same_parents_same_offspring():
 )
 def test_raise_invalid_arguments(idx1, idx2, num_moved_routes):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
     indiv2 = Individual(data, pm, [[1, 2, 3, 4]])
@@ -50,7 +50,7 @@ def test_srex_move_all_routes():
     when all routes are replaced during crossover.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
@@ -64,7 +64,7 @@ def test_srex_greedy_repair():
     Tests the case where greedy repair is used during SREX crossover.
     """
     data = read("data/OkSmallGreedyRepair.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1, 2], [3, 4]])
     indiv2 = Individual(data, pm, [[2, 3], [4, 1]])
@@ -85,7 +85,7 @@ def test_srex_changed_start_indices():
     Tests the case where the initial start indices are changed in SREX.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1, 2, 3], [4]])
     indiv2 = Individual(data, pm, [[1, 2, 4], [3]])
@@ -109,7 +109,7 @@ def test_srex_a_left_move():
     A index to the left.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1, 3], [2], [4]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
@@ -154,7 +154,7 @@ def test_srex_a_right_move():
     A index to the right.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
     indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
@@ -169,7 +169,7 @@ def test_srex_b_left_move():
     B index to the left.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
@@ -184,7 +184,7 @@ def test_srex_b_right_move():
     B index to the right.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
     indiv2 = Individual(data, pm, [[3], [4, 1], [2]])

@@ -55,7 +55,6 @@ struct PenaltyParams
 class PenaltyManager
 {
     PenaltyParams const params;
-    unsigned int const vehicleCapacity;
 
     unsigned int capacityPenalty;
     unsigned int timeWarpPenalty;
@@ -97,8 +96,7 @@ public:
         }
     };
 
-    explicit PenaltyManager(unsigned int vehicleCapacity,
-                            PenaltyParams params = PenaltyParams());
+    explicit PenaltyManager(PenaltyParams params = PenaltyParams());
 
     /**
      * Registers another capacity feasibility result. The current load penalty
@@ -115,7 +113,8 @@ public:
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
      */
-    [[nodiscard]] inline unsigned int loadPenalty(unsigned int load) const;
+    [[nodiscard]] inline unsigned int
+    loadPenalty(unsigned int load, unsigned int vehicleCapacity) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
@@ -141,7 +140,8 @@ unsigned int PenaltyManager::loadPenaltyExcess(unsigned int excessLoad) const
     return excessLoad * capacityPenalty;
 }
 
-unsigned int PenaltyManager::loadPenalty(unsigned int load) const
+unsigned int PenaltyManager::loadPenalty(unsigned int load,
+                                         unsigned int vehicleCapacity) const
 {
     // Branchless for performance: when load > capacity we return the excess
     // load penalty; else zero. Note that when load - vehicleCapacity wraps

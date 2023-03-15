@@ -14,7 +14,7 @@ from pyvrp.tests.helpers import read
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     indiv = Individual(data, pm, routes)
 
     res = Result(indiv, Statistics(), num_iterations, runtime)
@@ -34,7 +34,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 )
 def test_init_raises_invalid_arguments(num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     indiv = Individual(data, pm, [[1, 2, 3, 4], [], []])
 
     with assert_raises(ValueError):
@@ -46,7 +46,7 @@ def test_init_raises_invalid_arguments(num_iterations, runtime):
 )
 def test_has_statistics(num_iterations: int, has_statistics: bool):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
@@ -62,7 +62,7 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
 
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     for _ in range(5):  # let's do this a few times to really make sure

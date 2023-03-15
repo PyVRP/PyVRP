@@ -19,7 +19,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     neighbourhood is restricted do these solutions start to differ.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -50,7 +50,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     (1, 0)-Exchange and RELOCATE* should start to differ.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)

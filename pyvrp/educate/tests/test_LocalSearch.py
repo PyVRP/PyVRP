@@ -8,7 +8,7 @@ from pyvrp.tests.helpers import read
 
 def test_local_search_raises_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))

@@ -7,7 +7,7 @@ from pyvrp.tests.helpers import read
 
 def test_broken_pairs_distance():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
 
     indiv1 = Individual(data, pm, [[1, 2, 3, 4], [], []])
     indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
