@@ -21,11 +21,11 @@ def test_single_route_OkSmall():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
     individual = Individual(data, pm, [[1, 4, 2, 3]])
-    improved_individual = ls.search(individual)
+    improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
@@ -50,12 +50,12 @@ def test_RC208_instance(seed: int):
     rng = XorShift128(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    improved_individual = ls.search(individual)
+    improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution.
     assert_(improved_individual.cost() < individual.cost())

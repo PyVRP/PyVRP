@@ -11,7 +11,6 @@ class LocalSearch:
     def __init__(
         self,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         rng: XorShift128,
         neighbours: Neighbours,
     ) -> None: ...
@@ -20,6 +19,11 @@ class LocalSearch:
     def set_neighbours(self, neighbours: Neighbours) -> None: ...
     def get_neighbours(self) -> Neighbours: ...
     def intensify(
-        self, individual: Individual, overlap_tolerance_degrees: int = 0
+        self,
+        individual: Individual,
+        penalty_manager: PenaltyManager,
+        overlap_tolerance_degrees: int = 0,
     ) -> Individual: ...
-    def search(self, individual: Individual) -> Individual: ...
+    def search(
+        self, individual: Individual, penalty_manager: PenaltyManager
+    ) -> Individual: ...

@@ -132,7 +132,7 @@ def solve(
     pop = Population(bpd, params=pop_params)
 
     neighbours = compute_neighbours(data, nb_params)
-    ls = LocalSearch(data, pen_manager, rng, neighbours)
+    ls = LocalSearch(data, rng, neighbours)
 
     node_ops = NODE_OPERATORS
     if "node_ops" in config:

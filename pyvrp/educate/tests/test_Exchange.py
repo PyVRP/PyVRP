@@ -39,12 +39,12 @@ def test_swap_single_route_stays_single_route(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    improved_individual = ls.search(individual)
+    improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
@@ -69,12 +69,12 @@ def test_relocate_uses_empty_routes(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, pm, [single_route])
-    improved_individual = ls.search(individual)
+    improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
@@ -104,11 +104,11 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
     individual = Individual(data, pm, [[1, 2], [3], [4]])
-    new_individual = ls.search(individual)
+    new_individual = ls.search(individual, pm)
 
     assert_equal(new_individual, individual)
 
@@ -124,11 +124,11 @@ def test_cannot_exchange_when_segments_overlap(operator):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    new_individual = ls.search(individual)
+    new_individual = ls.search(individual, pm)
 
     assert_equal(new_individual, individual)
 
@@ -143,14 +143,14 @@ def test_cannot_swap_adjacent_segments():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(Exchange22(data))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
     individual = Individual(data, pm, [[1, 2, 3, 4]])
-    new_individual = ls.search(individual)
+    new_individual = ls.search(individual, pm)
 
     assert_equal(new_individual, individual)
 
@@ -165,11 +165,11 @@ def test_swap_between_routes_OkSmall():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(Exchange21(data))
 
     individual = Individual(data, pm, [[1, 2], [3, 4]])
-    improved_individual = ls.search(individual)
+    improved_individual = ls.search(individual, pm)
 
     assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
     assert_(improved_individual.cost() < individual.cost())
@@ -191,7 +191,7 @@ def test_relocate_after_depot_should_work():
     neighbours = [[] for _ in range(data.num_clients + 1)]
     neighbours[2].append(1)
 
-    ls = LocalSearch(data, pm, rng, neighbours)
+    ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(Exchange10(data))
 
     # This individual can be improved by moving 3 into its own route, that is,
@@ -199,4 +199,4 @@ def test_relocate_after_depot_should_work():
     # (1, 0)-exchange never performed this move.
     individual = Individual(data, pm, [[1, 2, 3], [4]])
     expected = Individual(data, pm, [[1, 2], [3], [4]])
-    assert_equal(ls.search(individual), expected)
+    assert_equal(ls.search(individual, pm), expected)

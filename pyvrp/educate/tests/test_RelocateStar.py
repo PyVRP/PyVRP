@@ -23,16 +23,16 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
 
     ls.add_node_operator(Exchange10(data))
     ls.add_route_operator(RelocateStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
         individual = Individual.make_random(data, pm, rng)
-        exchange_individual = ls.search(individual)
+        exchange_individual = ls.search(individual, pm)
         relocate_individual = ls.intensify(
-            exchange_individual, overlap_tolerance_degrees=360
+            exchange_individual, pm, overlap_tolerance_degrees=360
         )
 
         # RELOCATE* applies the best (1, 0)-exchange moves between routes. But
@@ -54,15 +54,15 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
 
     ls.add_node_operator(Exchange10(data))
     ls.add_route_operator(RelocateStar(data))
 
     individual = Individual.make_random(data, pm, rng)
-    exchange_individual = ls.search(individual)
+    exchange_individual = ls.search(individual, pm)
     relocate_individual = ls.intensify(
-        exchange_individual, overlap_tolerance_degrees=360
+        exchange_individual, pm, overlap_tolerance_degrees=360
     )
 
     # The original individual was not that great, so after (1, 0)-Exchange it
