@@ -108,7 +108,7 @@ def test_raises_when_no_initial_solutions():
         # No initial solutions should raise.
         GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [])
 
-    individual = Individual.make_random(data, pen_manager, rng)
+    individual = Individual.make_random(data, rng)
 
     # One initial solution, so this should be OK.
     GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [individual])
@@ -124,7 +124,7 @@ def test_initial_solutions_added_when_running():
     rng = XorShift128(seed=42)
     pop = Population(bpd)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    init = set(make_random_solutions(25, data, pm, rng))
+    init = set(make_random_solutions(25, data, rng))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     algo.run(MaxIterations(0))
@@ -151,8 +151,8 @@ def test_initial_solutions_added_when_restarting():
 
     # We use the best known solution as one of the initial solutions so that
     # there are no improving iterations.
-    init = {Individual(data, pm, read_solution("data/RC208.sol"))}
-    init.update(make_random_solutions(24, data, pm, rng))
+    init = {Individual(data, read_solution("data/RC208.sol"))}
+    init.update(make_random_solutions(24, data, rng))
 
     params = GeneticAlgorithmParams(
         repair_probability=0,
@@ -180,7 +180,7 @@ def test_best_solution_improves_with_more_iterations():
     pm = PenaltyManager()
     pop_params = PopulationParams()
     pop = Population(bpd, params=pop_params)
-    init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
+    init = make_random_solutions(pop_params.min_pop_size, data, rng)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
@@ -195,7 +195,7 @@ def test_best_solution_improves_with_more_iterations():
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
 
-    assert_(new_best.cost() < initial_best.cost())
+    assert_(new_best.cost(pm) < initial_best.cost(pm))
     assert_(new_best.is_feasible())  # best must be feasible
 
 
@@ -209,8 +209,8 @@ def test_best_initial_solution():
     pm = PenaltyManager()
     pop = Population(bpd)
 
-    bks = Individual(data, pm, read_solution("data/RC208.sol"))
-    init = [bks] + make_random_solutions(24, data, pm, rng)
+    bks = Individual(data, read_solution("data/RC208.sol"))
+    init = [bks] + make_random_solutions(24, data, rng)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)

@@ -1,4 +1,4 @@
-from pyvrp.OptimisationTarget import OptimisationTarget
+from typing import Union
 
 
 class MaxIterations:
@@ -13,7 +13,7 @@ class MaxIterations:
         self._max_iters = max_iterations
         self._curr_iter = 0
 
-    def __call__(self, best: OptimisationTarget) -> bool:
+    def __call__(self, best_cost: Union[int, float]) -> bool:
         self._curr_iter += 1
 
         return self._curr_iter > self._max_iters

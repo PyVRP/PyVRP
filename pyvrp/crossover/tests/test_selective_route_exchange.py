@@ -18,7 +18,7 @@ def test_same_parents_same_offspring():
     pm = PenaltyManager()
     rng = XorShift128(seed=42)
 
-    individual = Individual(data, pm, [[1, 2], [3, 4]])
+    individual = Individual(data, [[1, 2], [3, 4]])
     offspring = srex((individual, individual), data, pm, rng)
 
     assert_equal(offspring, individual)
@@ -37,8 +37,8 @@ def test_raise_invalid_arguments(idx1, idx2, num_moved_routes):
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
-    indiv2 = Individual(data, pm, [[1, 2, 3, 4]])
+    indiv1 = Individual(data, [[1], [2], [3, 4]])
+    indiv2 = Individual(data, [[1, 2, 3, 4]])
 
     with assert_raises(ValueError):
         cpp_srex((indiv1, indiv2), data, pm, (idx1, idx2), num_moved_routes)
@@ -52,8 +52,8 @@ def test_srex_move_all_routes():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
-    indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
+    indiv1 = Individual(data, [[1], [2], [3, 4]])
+    indiv2 = Individual(data, [[1, 2], [3], [4]])
     offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 3)
 
     assert_equal(offspring, indiv2)
@@ -66,8 +66,8 @@ def test_srex_greedy_repair():
     data = read("data/OkSmallGreedyRepair.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[1, 2], [3, 4]])
-    indiv2 = Individual(data, pm, [[2, 3], [4, 1]])
+    indiv1 = Individual(data, [[1, 2], [3, 4]])
+    indiv2 = Individual(data, [[2, 3], [4, 1]])
 
     # The start indices do not change because there are no improving moves.
     # So, indiv1's route [1, 2] will be replaced by indiv2's route [2, 3].
@@ -87,8 +87,8 @@ def test_srex_changed_start_indices():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[1, 2, 3], [4]])
-    indiv2 = Individual(data, pm, [[1, 2, 4], [3]])
+    indiv1 = Individual(data, [[1, 2, 3], [4]])
+    indiv2 = Individual(data, [[1, 2, 4], [3]])
 
     # The difference for A to move left (= right) is -1. The difference for B
     # to move left (= right) is 1. The new indices become idx1 = 1 and
@@ -111,8 +111,8 @@ def test_srex_a_left_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[1, 3], [2], [4]])
-    indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
+    indiv1 = Individual(data, [[1, 3], [2], [4]])
+    indiv2 = Individual(data, [[4, 1], [2], [3]])
 
     # We describe the A-left case here in detail. The tests below for A-right,
     # B-left and B-right can be worked out similarly: note that we only change
@@ -156,8 +156,8 @@ def test_srex_a_right_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
-    indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
+    indiv1 = Individual(data, [[1, 3], [4], [2]])
+    indiv2 = Individual(data, [[4, 1], [2], [3]])
     offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[3], [4, 1], [2]])
@@ -171,8 +171,8 @@ def test_srex_b_left_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
+    indiv1 = Individual(data, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, [[3], [2], [4, 1]])
     offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
@@ -186,8 +186,8 @@ def test_srex_b_right_move():
     data = read("data/OkSmall.txt")
     pm = PenaltyManager()
 
-    indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, pm, [[3], [4, 1], [2]])
+    indiv1 = Individual(data, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, [[3], [4, 1], [2]])
     offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])

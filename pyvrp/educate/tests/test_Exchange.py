@@ -43,12 +43,12 @@ def test_swap_single_route_stays_single_route(operator):
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, pm, [single_route])
+    individual = Individual(data, [single_route])
     improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
-    assert_(improved_individual.cost() < individual.cost())
+    assert_(improved_individual.cost(pm) < individual.cost(pm))
 
 
 @mark.parametrize(
@@ -73,13 +73,13 @@ def test_relocate_uses_empty_routes(operator):
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, pm, [single_route])
+    individual = Individual(data, [single_route])
     improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
     assert_(improved_individual.num_routes() > 1)
-    assert_(improved_individual.cost() < individual.cost())
+    assert_(improved_individual.cost(pm) < individual.cost(pm))
 
 
 @mark.parametrize(
@@ -107,7 +107,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    individual = Individual(data, pm, [[1, 2], [3], [4]])
+    individual = Individual(data, [[1, 2], [3], [4]])
     new_individual = ls.search(individual, pm)
 
     assert_equal(new_individual, individual)
@@ -127,7 +127,7 @@ def test_cannot_exchange_when_segments_overlap(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    individual = Individual(data, pm, [[1, 2, 3, 4]])
+    individual = Individual(data, [[1, 2, 3, 4]])
     new_individual = ls.search(individual, pm)
 
     assert_equal(new_individual, individual)
@@ -149,7 +149,7 @@ def test_cannot_swap_adjacent_segments():
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
-    individual = Individual(data, pm, [[1, 2, 3, 4]])
+    individual = Individual(data, [[1, 2, 3, 4]])
     new_individual = ls.search(individual, pm)
 
     assert_equal(new_individual, individual)
@@ -168,11 +168,11 @@ def test_swap_between_routes_OkSmall():
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(Exchange21(data))
 
-    individual = Individual(data, pm, [[1, 2], [3, 4]])
+    individual = Individual(data, [[1, 2], [3, 4]])
     improved_individual = ls.search(individual, pm)
 
     assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
-    assert_(improved_individual.cost() < individual.cost())
+    assert_(improved_individual.cost(pm) < individual.cost(pm))
 
 
 def test_relocate_after_depot_should_work():
@@ -197,6 +197,6 @@ def test_relocate_after_depot_should_work():
     # This individual can be improved by moving 3 into its own route, that is,
     # inserting it after the depot of an empty route. Before the bug was fixed,
     # (1, 0)-exchange never performed this move.
-    individual = Individual(data, pm, [[1, 2, 3], [4]])
-    expected = Individual(data, pm, [[1, 2], [3], [4]])
+    individual = Individual(data, [[1, 2, 3], [4]])
+    expected = Individual(data, [[1, 2], [3], [4]])
     assert_equal(ls.search(individual, pm), expected)

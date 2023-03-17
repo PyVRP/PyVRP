@@ -94,7 +94,7 @@ class GeneticAlgorithm:
         # infeasible solution as the initial best.
         feas = [indiv for indiv in initial_solutions if indiv.is_feasible()]
         sols = feas if feas else initial_solutions
-        self._best = min(sols, key=lambda indiv: indiv.cost())
+        self._best = min(sols, key=lambda indiv: indiv.cost(self._pm))
 
     def run(self, stop: StoppingCriterion):
         """
@@ -117,9 +117,9 @@ class GeneticAlgorithm:
         iters_no_improvement = 1
 
         for individual in self._initial_solutions:
-            self._pop.add(individual)
+            self._pop.add(individual, self._pm)
 
-        while not stop(self._best):
+        while not stop(self._best.cost(self._pm)):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
@@ -127,15 +127,15 @@ class GeneticAlgorithm:
                 self._pop.clear()
 
                 for individual in self._initial_solutions:
-                    self._pop.add(individual)
+                    self._pop.add(individual, self._pm)
 
-            curr_best = self._best.cost()
+            curr_best = self._best.cost(self._pm)
 
             parents = self._pop.select(self._rng)
             offspring = self._op(parents, self._data, self._pm, self._rng)
             self._educate(offspring)
 
-            new_best = self._best.cost()
+            new_best = self._best.cost(self._pm)
 
             if new_best < curr_best:
                 iters_no_improvement = 1
@@ -143,17 +143,19 @@ class GeneticAlgorithm:
                 iters_no_improvement += 1
 
             if self._params.collect_statistics:
-                stats.collect_from(self._pop)
+                stats.collect_from(self._pop, self._pm)
 
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
         def is_new_best(indiv):
-            return indiv.is_feasible() and indiv.cost() < self._best.cost()
+            return indiv.is_feasible() and indiv.cost(
+                self._pm
+            ) < self._best.cost(self._pm)
 
         def add_and_register(indiv):
-            self._pop.add(indiv)
+            self._pop.add(indiv, self._pm)
             self._pm.register_load_feasible(not indiv.has_excess_capacity())
             self._pm.register_time_feasible(not indiv.has_time_warp())
 

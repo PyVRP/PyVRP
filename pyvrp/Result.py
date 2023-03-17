@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from .Statistics import Statistics
 from ._Individual import Individual
+from ._PenaltyManager import PenaltyManager
 
 
 @dataclass
@@ -40,16 +42,23 @@ class Result:
         if self.runtime < 0:
             raise ValueError("Negative runtime not understood.")
 
-    def cost(self) -> float:
+    def cost(self, penalty_manager: Optional[PenaltyManager] = None) -> float:
         """
         Returns the cost (objective) value of the best solution.
+
+        Parameters
+        ----------
+        PenaltyManager
+            PenaltyManager used to compute cost
 
         Returns
         -------
         float
             Objective value.
         """
-        return self.best.cost()
+        if penalty_manager is None:
+            penalty_manager = PenaltyManager()
+        return self.best.cost(penalty_manager)
 
     def is_feasible(self) -> bool:
         """

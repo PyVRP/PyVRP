@@ -1,6 +1,7 @@
 from typing import Iterator, List, Tuple
 
 from pyvrp._Individual import Individual
+from pyvrp._PenaltyManager import PenaltyManager
 
 class PopulationParams:
     generation_size: int
@@ -40,7 +41,9 @@ class SubPopulation:
         params
             Population parameters.
         """
-    def add(self, individual: Individual) -> None:
+    def add(
+        self, individual: Individual, penalty_manager: PenaltyManager
+    ) -> None:
         """
         Adds the given individual to the subpopulation. Survivor selection is
         automatically triggered when the population reaches its maximum size.
@@ -49,6 +52,10 @@ class SubPopulation:
         ----------
         individual
             Individual to add to the subpopulation.
+        penalty_manager
+            PenaltyManager to use to compute the cost. Required here
+            since adding an individual may trigger a purge which needs to
+            compute the biased fitness which requires computing the cost.
         """
     def purge(self) -> None:
         """

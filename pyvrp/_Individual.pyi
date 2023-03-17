@@ -12,8 +12,6 @@ class Individual:
     ----------
     data
         Data instance.
-    penalty_manager
-        Penalty manager instance.
     routes
         Route list to use.
 
@@ -27,14 +25,12 @@ class Individual:
     def __init__(
         self,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         routes: List[List[int]],
     ) -> None: ...
     @classmethod
     def make_random(
         cls,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         rng: XorShift128,
     ) -> Individual:
         """
@@ -44,8 +40,6 @@ class Individual:
         ----------
         data
             Data instance.
-        penalty_manager
-            Penalty manager instance.
         rng
             Random number generator to use.
 
@@ -54,7 +48,7 @@ class Individual:
         Individual
             The randomly generated Individual.
         """
-    def cost(self) -> int:
+    def cost(self, penalty_manager: PenaltyManager) -> int:
         """
         Returns the current cost of the individual's solution.
 
@@ -63,6 +57,11 @@ class Individual:
            These costs depend on the current penalty values maintained by the
            :class:`~pyvrp._PenaltyManager.PenaltyManager` used to construct the
            individual.
+
+        Parameters
+        ----------
+        penalty_manager
+            PenaltyManager used to compute costs for individuals.
 
         Returns
         -------

@@ -77,10 +77,10 @@ void Individual::evaluate(ProblemData const &data)
     }
 }
 
-size_t Individual::cost() const
+size_t Individual::cost(PenaltyManager const &pm) const
 {
-    auto const loadPenalty = penaltyManager->loadPenaltyExcess(capacityExcess);
-    auto const twPenalty = penaltyManager->twPenalty(timeWarp);
+    auto const loadPenalty = pm.loadPenaltyExcess(capacityExcess);
+    auto const twPenalty = pm.twPenalty(timeWarp);
 
     return distance + loadPenalty + twPenalty;
 }
@@ -118,15 +118,12 @@ bool Individual::operator==(Individual const &other) const
 {
     // First compare costs, since that's a quick and cheap check. Only when
     // the costs are the same do we test if the neighbours are all equal.
-    return cost() == other.cost() && neighbours == other.neighbours;
+    return distance == other.distance && capacityExcess == other.capacityExcess
+           && timeWarp == other.timeWarp && neighbours == other.neighbours;
 }
 
-Individual::Individual(ProblemData const &data,
-                       PenaltyManager const &penaltyManager,
-                       XorShift128 &rng)
-    : penaltyManager(&penaltyManager),
-      routes_(data.numVehicles()),
-      neighbours(data.numClients() + 1)
+Individual::Individual(ProblemData const &data, XorShift128 &rng)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -147,12 +144,8 @@ Individual::Individual(ProblemData const &data,
     evaluate(data);
 }
 
-Individual::Individual(ProblemData const &data,
-                       PenaltyManager const &penaltyManager,
-                       Routes routes)
-    : penaltyManager(&penaltyManager),
-      routes_(std::move(routes)),
-      neighbours(data.numClients() + 1)
+Individual::Individual(ProblemData const &data, Routes routes)
+    : routes_(std::move(routes)), neighbours(data.numClients() + 1)
 {
     if (routes_.size() > data.numVehicles())
     {
@@ -186,6 +179,6 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
         out << '\n';
     }
 
-    out << "Cost: " << indiv.cost() << '\n';
+    out << "Distance: " << indiv.distance << '\n';
     return out;
 }

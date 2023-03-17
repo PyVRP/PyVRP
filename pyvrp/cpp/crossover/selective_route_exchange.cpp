@@ -180,8 +180,9 @@ Individual selectiveRouteExchange(
     crossover::greedyRepair(routes1, unplanned, data);
     crossover::greedyRepair(routes2, unplanned, data);
 
-    Individual indiv1{data, penaltyManager, routes1};
-    Individual indiv2{data, penaltyManager, routes2};
+    Individual indiv1{data, routes1};
+    Individual indiv2{data, routes2};
 
-    return indiv1.cost() < indiv2.cost() ? indiv1 : indiv2;
+    return indiv1.cost(penaltyManager) < indiv2.cost(penaltyManager) ? indiv1
+                                                                     : indiv2;
 }

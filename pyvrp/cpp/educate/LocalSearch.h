@@ -46,7 +46,7 @@ class LocalSearch
     void loadIndividual(Individual const &individual);
 
     // Export the LS solution back into an individual
-    Individual exportIndividual(PenaltyManager const &pm);
+    Individual exportIndividual();
 
     [[nodiscard]] bool applyNodeOps(Node *U, Node *V, PenaltyManager const &pm);
 

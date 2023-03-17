@@ -149,7 +149,7 @@ def solve(
         ls.add_route_operator(op(data))
 
     init = [
-        Individual.make_random(data, pen_manager, rng)
+        Individual.make_random(data, rng)
         for _ in range(pop_params.min_pop_size)
     ]
     algo = GeneticAlgorithm(
