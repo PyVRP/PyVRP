@@ -15,9 +15,8 @@ PYBIND11_MODULE(_LocalSearch, m)
              py::arg("data"),
              py::arg("rng"),
              py::arg("neighbours"),
-             py::keep_alive<1, 2>(),  // keep data, penalty_manager and rng
-             py::keep_alive<1, 3>(),  // alive at least until local search
-             py::keep_alive<1, 4>())  // is freed
+             py::keep_alive<1, 2>(),  // keep data and rng alive at least until
+             py::keep_alive<1, 3>())  // local search is freed
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
              py::arg("op"),
