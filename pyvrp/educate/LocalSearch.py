@@ -146,7 +146,6 @@ class LocalSearch:
         ----------
         individual
             The individual to improve.
-
         penalty_manager
             Penalty manager to use.
         overlap_tolerance_degrees
