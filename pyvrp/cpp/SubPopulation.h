@@ -1,6 +1,7 @@
 #ifndef SUBPOPULATION_H
 #define SUBPOPULATION_H
 
+#include "CostEvaluator.h"
 #include "Individual.h"
 #include "diversity/diversity.h"
 

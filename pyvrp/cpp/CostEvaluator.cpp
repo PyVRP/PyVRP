@@ -7,3 +7,11 @@ CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
     : capacityPenalty(capacityPenalty), timeWarpPenalty(timeWarpPenalty)
 {
 }
+
+unsigned int CostEvaluator::operator()(Individual const &individual) const
+{
+    auto const loadPen = loadPenaltyExcess(individual.excessLoad());
+    auto const twPen = twPenalty(individual.timeWarp());
+
+    return individual.distance() + loadPen + twPen;
+}

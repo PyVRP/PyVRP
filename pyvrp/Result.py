@@ -60,7 +60,7 @@ class Result:
         if cost_evaluator is None:
             # TODO what defaults to use?
             cost_evaluator = PenaltyManager().get_cost_evaluator()
-        return self.best.cost(cost_evaluator)
+        return cost_evaluator(self.best)
 
     def is_feasible(self) -> bool:
         """

@@ -21,7 +21,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
     assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
-    assert_allclose(res.cost(cost_evaluator), indiv.cost(cost_evaluator))
+    assert_allclose(res.cost(cost_evaluator), cost_evaluator(indiv))
     assert_allclose(res.runtime, runtime)
 
 
@@ -70,7 +70,7 @@ def test_str_contains_essential_information():
         str_representation = str(res)
 
         # Test that feasibility status and solution cost are presented.
-        assert_(str(individual.cost(cost_evaluator)) in str_representation)
+        assert_(str(cost_evaluator(individual)) in str_representation)
         assert_(str(individual.is_feasible()) in str_representation)
 
         # And make sure that all non-empty routes are printed as well.

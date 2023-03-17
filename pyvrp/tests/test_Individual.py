@@ -70,7 +70,7 @@ def test_feasibility():
     assert_(not indiv.is_feasible())
 
     # First route has total load 18, but vehicle capacity is only 10.
-    assert_(indiv.has_excess_capacity())
+    assert_(indiv.has_excess_load())
 
     # Client 4 has TW [8400, 15300], but client 2 cannot be visited before
     # 15600, so there must be time warp on the single-route solution.
@@ -79,7 +79,7 @@ def test_feasibility():
     # Let's try another solution that's actually feasible.
     indiv = Individual(data, [[1, 2], [3], [4]])
     assert_(indiv.is_feasible())
-    assert_(not indiv.has_excess_capacity())
+    assert_(not indiv.has_excess_load())
     assert_(not indiv.has_time_warp())
 
 
@@ -101,7 +101,7 @@ def test_distance_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(indiv.cost(cost_evaluator), dist)
+    assert_equal(cost_evaluator(indiv), dist)
 
 
 def test_capacity_cost_calculation():
@@ -109,7 +109,7 @@ def test_capacity_cost_calculation():
     cost_evaluator = PenaltyManager().get_cost_evaluator()
 
     indiv = Individual(data, [[4, 3, 1, 2]])
-    assert_(indiv.has_excess_capacity())
+    assert_(indiv.has_excess_load())
     assert_(not indiv.has_time_warp())
 
     # All clients are visited on the same route/by the same vehicle. The total
@@ -127,7 +127,7 @@ def test_capacity_cost_calculation():
         + data.dist(2, 0)
     )
 
-    assert_equal(indiv.cost(cost_evaluator), dist + load_penalty)
+    assert_equal(cost_evaluator(indiv), dist + load_penalty)
 
 
 def test_time_warp_cost_calculation():
@@ -135,7 +135,7 @@ def test_time_warp_cost_calculation():
     cost_evaluator = PenaltyManager().get_cost_evaluator()
 
     indiv = Individual(data, [[1, 3], [2, 4]])
-    assert_(not indiv.has_excess_capacity())
+    assert_(not indiv.has_excess_load())
     assert_(indiv.has_time_warp())
 
     # There's only time warp on the first route: dist(0, 1) = 1'544, so we
@@ -157,7 +157,7 @@ def test_time_warp_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(indiv.cost(cost_evaluator), dist + tw_penalty)
+    assert_equal(cost_evaluator(indiv), dist + tw_penalty)
 
 
 def test_time_warp_for_a_very_constrained_problem():
@@ -184,13 +184,13 @@ def test_time_warp_for_a_very_constrained_problem():
     # not time window feasible.
     infeasible = Individual(data, [[1], [2]])
     assert_(infeasible.has_time_warp())
-    assert_(not infeasible.has_excess_capacity())
+    assert_(not infeasible.has_excess_load())
     assert_(not infeasible.is_feasible())
 
     # But visiting the second client after the first is feasible.
     feasible = Individual(data, [[1, 2]])
     assert_(not feasible.has_time_warp())
-    assert_(not feasible.has_excess_capacity())
+    assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
 
 
@@ -262,8 +262,7 @@ def test_str_contains_essential_information():
 
         # Last line should contain the cost
         # TODO what do we want with cost in str representation?
-        # assert_(
-        #     str(individual.cost(cost_evaluator)) in str_representation[-1])
+        # assert_(str(cost_evaluator(individual)) in str_representation[-1])
 
 
 def test_hash():

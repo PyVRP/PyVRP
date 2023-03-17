@@ -95,9 +95,7 @@ class GeneticAlgorithm:
         # infeasible solution as the initial best.
         feas = [indiv for indiv in initial_solutions if indiv.is_feasible()]
         sols = feas if feas else initial_solutions
-        self._best = min(
-            sols, key=lambda indiv: indiv.cost(self._cost_evaluator)
-        )
+        self._best = min(sols, key=self._cost_evaluator)
 
     @property
     def _cost_evaluator(self) -> CostEvaluator:
@@ -127,7 +125,7 @@ class GeneticAlgorithm:
         for individual in self._initial_solutions:
             self._pop.add(individual, self._cost_evaluator)
 
-        while not stop(self._best.cost(self._cost_evaluator)):
+        while not stop(self._cost_evaluator(self._best)):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
@@ -137,7 +135,7 @@ class GeneticAlgorithm:
                 for individual in self._initial_solutions:
                     self._pop.add(individual, self._cost_evaluator)
 
-            curr_best = self._best.cost(self._cost_evaluator)
+            curr_best = self._cost_evaluator(self._best)
 
             parents = self._pop.select(self._rng)
             offspring = self._op(
@@ -145,7 +143,7 @@ class GeneticAlgorithm:
             )
             self._educate(offspring)
 
-            new_best = self._best.cost(self._cost_evaluator)
+            new_best = self._cost_evaluator(self._best)
 
             if new_best < curr_best:
                 iters_no_improvement = 1
@@ -160,13 +158,13 @@ class GeneticAlgorithm:
 
     def _educate(self, individual: Individual):
         def is_new_best(indiv):
-            return indiv.is_feasible() and indiv.cost(
-                self._cost_evaluator
-            ) < self._best.cost(self._cost_evaluator)
+            return indiv.is_feasible() and self._cost_evaluator(
+                indiv
+            ) < self._cost_evaluator(self._best)
 
         def add_and_register(indiv):
             self._pop.add(indiv, self._cost_evaluator)
-            self._pm.register_load_feasible(not indiv.has_excess_capacity())
+            self._pm.register_load_feasible(not indiv.has_excess_load())
             self._pm.register_time_feasible(not indiv.has_time_warp())
 
         intensify_prob = self._params.intensify_probability

@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Tuple
 
-from ._CostEvaluator import CostEvaluator
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 
@@ -48,25 +47,6 @@ class Individual:
         Individual
             The randomly generated Individual.
         """
-    def cost(self, cost_evaluator: CostEvaluator) -> int:
-        """
-        Returns the current cost of the individual's solution.
-
-        .. note::
-
-           These costs depend on penalty values which is why a
-           :class:`~pyvrp._CostEvaluator.CostEvaluator` object is required.
-
-        Parameters
-        ----------
-        cost_evaluator
-            CostEvaluator used to compute the cost.
-
-        Returns
-        -------
-        int
-            The current cost of this individual.
-        """
     def get_neighbours(self) -> List[Tuple[int, int]]:
         """
         Returns a list of neighbours for each client, by index. Also includes
@@ -97,7 +77,7 @@ class Individual:
             routes each start and end at the depot (0), but that is implicit:
             the depot is not part of the returned routes.
         """
-    def has_excess_capacity(self) -> bool:
+    def has_excess_load(self) -> bool:
         """
         Returns whether this individual violates capacity constraints.
 
@@ -116,10 +96,37 @@ class Individual:
             True if the individual is not time window feasible, False
             otherwise.
         """
+    def distance(self) -> int:
+        """
+        Returns the total distance over all routes.
+
+        Returns
+        -------
+        int
+            Total distance over all routes.
+        """
+    def excess_load(self) -> int:
+        """
+        Returns the total excess load over all routes.
+
+        Returns
+        -------
+        int
+            Total excess load over all routes.
+        """
+    def time_warp(self) -> int:
+        """
+        Returns the total time warp load over all routes.
+
+        Returns
+        -------
+        int
+            Total time warp over all routes.
+        """
     def is_feasible(self) -> bool:
         """
         Whether this individual is feasible. This is a shorthand for checking
-        :meth:`~has_excess_capacity` and :meth:`~has_time_warp` both return
+        :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
         false.
 
         Returns

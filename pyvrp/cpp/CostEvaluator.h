@@ -1,6 +1,8 @@
 #ifndef HGS_COSTEVALUATOR_H
 #define HGS_COSTEVALUATOR_H
 
+#include "Individual.h"
+
 /**
  * Cost evaluator class that computes penalty values for timewarp and load.
  */
@@ -29,6 +31,11 @@ public:
      * Computes the time warp penalty for the given time warp.
      */
     [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
+
+    /**
+     * Computes the objective (penalized cost) for a given individual.
+     */
+    [[nodiscard]] unsigned int operator()(Individual const &individual) const;
 };
 
 unsigned int CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const

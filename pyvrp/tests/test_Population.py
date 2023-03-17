@@ -220,9 +220,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
         individual for individual in pop if not individual.is_feasible()
     ]
 
-    best_individuals = sorted(
-        curr_individuals, key=lambda indiv: indiv.cost(cost_evaluator)
-    )
+    best_individuals = sorted(curr_individuals, key=cost_evaluator)
     elite_individuals = best_individuals[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
