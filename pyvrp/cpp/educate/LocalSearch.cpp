@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-Individual LocalSearch::search(Individual &individual, PenaltyManager &pm)
+Individual LocalSearch::search(Individual &individual, PenaltyManager const &pm)
 {
     loadIndividual(individual);
 
@@ -74,7 +74,7 @@ Individual LocalSearch::search(Individual &individual, PenaltyManager &pm)
 }
 
 Individual LocalSearch::intensify(Individual &individual,
-                                  PenaltyManager &pm,
+                                  PenaltyManager const &pm,
                                   int overlapToleranceDegrees)
 {
     loadIndividual(individual);
@@ -129,7 +129,7 @@ Individual LocalSearch::intensify(Individual &individual,
     return exportIndividual(pm);
 }
 
-bool LocalSearch::applyNodeOps(Node *U, Node *V, PenaltyManager &pm)
+bool LocalSearch::applyNodeOps(Node *U, Node *V, PenaltyManager const &pm)
 {
     for (auto *nodeOp : nodeOps)
         if (nodeOp->evaluate(U, V, pm) < 0)
@@ -146,7 +146,7 @@ bool LocalSearch::applyNodeOps(Node *U, Node *V, PenaltyManager &pm)
     return false;
 }
 
-bool LocalSearch::applyRouteOps(Route *U, Route *V, PenaltyManager &pm)
+bool LocalSearch::applyRouteOps(Route *U, Route *V, PenaltyManager const &pm)
 {
     for (auto *routeOp : routeOps)
         if (routeOp->evaluate(U, V, pm) < 0)
@@ -244,7 +244,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
         routeOp->init(individual);
 }
 
-Individual LocalSearch::exportIndividual(PenaltyManager &pm)
+Individual LocalSearch::exportIndividual(PenaltyManager const &pm)
 {
     std::vector<std::pair<double, int>> routePolarAngles;
     routePolarAngles.reserve(data.numVehicles());
