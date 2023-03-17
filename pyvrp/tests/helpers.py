@@ -43,15 +43,3 @@ def make_random_solutions(num_sols, data, rng):
     Returns a list of ``num_sols`` random solutions.
     """
     return [Individual.make_random(data, rng) for _ in range(num_sols)]
-
-
-class DummyTarget:
-    """
-    Dummy optimisation target that implements the OptimisationTarget protocol.
-    """
-
-    def __init__(self, cost: float):
-        self._cost = cost
-
-    def cost(self):
-        return self._cost
