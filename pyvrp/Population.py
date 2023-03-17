@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Callable, Generator, Tuple
 
+from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
-from ._PenaltyManager import PenaltyManager
 from ._SubPopulation import PopulationParams, SubPopulation
 from ._XorShift128 import XorShift128
 
@@ -80,7 +80,7 @@ class Population:
         """
         return len(self._infeas)
 
-    def add(self, individual: Individual, penalty_manager: PenaltyManager):
+    def add(self, individual: Individual, cost_evaluator: CostEvaluator):
         """
         Adds the given individual to the population. Survivor selection is
         automatically triggered when the population reaches its maximum size.
@@ -89,17 +89,17 @@ class Population:
         ----------
         individual
             Individual to add to the population.
-        penalty_manager
-            PenaltyManager to use to compute the cost. Required here
+        cost_evaluator
+            CostEvaluator to use to compute the cost. Required here
             since adding an individual may trigger a purge which needs to
             compute the biased fitness which requires computing the cost.
         """
         if individual.is_feasible():
             # Note: the feasible subpopulation actually doet not depend
             # on the penalty values but we use the same implementation.
-            self._feas.add(individual, penalty_manager)
+            self._feas.add(individual, cost_evaluator)
         else:
-            self._infeas.add(individual, penalty_manager)
+            self._infeas.add(individual, cost_evaluator)
 
     def select(self, rng: XorShift128) -> Tuple[Individual, Individual]:
         """

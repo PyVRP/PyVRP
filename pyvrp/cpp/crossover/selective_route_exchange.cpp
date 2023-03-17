@@ -11,7 +11,7 @@ using Routes = std::vector<Route>;
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
-    PenaltyManager const &penaltyManager,
+    CostEvaluator const &costEvaluator,
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes)
 {
@@ -183,6 +183,6 @@ Individual selectiveRouteExchange(
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};
 
-    return indiv1.cost(penaltyManager) < indiv2.cost(penaltyManager) ? indiv1
-                                                                     : indiv2;
+    return indiv1.cost(costEvaluator) < indiv2.cost(costEvaluator) ? indiv1
+                                                                   : indiv2;
 }

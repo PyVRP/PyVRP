@@ -7,17 +7,17 @@ from pyvrp.tests.helpers import make_random_solutions, read
 
 def test_csv_serialises_correctly(tmp_path):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
 
     for individual in make_random_solutions(10, data, rng):
-        pop.add(individual, pm)
+        pop.add(individual, cost_evaluator)
 
     collected_stats = Statistics()
 
     for _ in range(10):  # populate the statistics object
-        collected_stats.collect_from(pop, pm)
+        collected_stats.collect_from(pop, cost_evaluator)
 
     csv_path = tmp_path / "test.csv"
     assert_(not csv_path.exists())

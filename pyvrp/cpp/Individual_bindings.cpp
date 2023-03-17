@@ -25,7 +25,7 @@ PYBIND11_MODULE(_Individual, m)
                     py::arg("data"),
                     py::arg("routes"));
             })
-        .def("cost", &Individual::cost, py::arg("penalty_manager"))
+        .def("cost", &Individual::cost, py::arg("cost_evaluator"))
         .def("num_routes", &Individual::numRoutes)
         .def("get_routes",
              &Individual::getRoutes,

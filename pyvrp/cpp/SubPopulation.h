@@ -75,19 +75,19 @@ private:
 
     // Removes the element at the given iterator location from the items.
     void remove(std::vector<Item>::iterator const &iterator,
-                PenaltyManager const &pm);
+                CostEvaluator const &costEvaluator);
 
     // Recomputes the fitness of all individuals maintained by this population.
     // This is called whenever an individual is added to, or removed from, the
     // population.
-    void updateFitness(PenaltyManager const &pm);
+    void updateFitness(CostEvaluator const &costEvaluator);
 
 public:
     SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
 
     ~SubPopulation();
 
-    void add(Individual const *individual, PenaltyManager const &pm);
+    void add(Individual const *individual, CostEvaluator const &costEvaluator);
 
     std::vector<Item>::const_iterator cbegin() const;
 
@@ -97,7 +97,7 @@ public:
 
     Item const &operator[](size_t idx) const;
 
-    void purge(PenaltyManager const &pm);
+    void purge(CostEvaluator const &costEvaluator);
 };
 
 #endif  // SUBPOPULATION_H

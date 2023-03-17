@@ -34,10 +34,10 @@ PYBIND11_MODULE(_LocalSearch, m)
         .def("search",
              &LocalSearch::search,
              py::arg("individual"),
-             py::arg("penalty_manager"))
+             py::arg("cost_evaluator"))
         .def("intensify",
              &LocalSearch::intensify,
              py::arg("individual"),
-             py::arg("penalty_manager"),
+             py::arg("cost_evaluator"),
              py::arg("overlap_tolerance_degrees") = 0);
 }

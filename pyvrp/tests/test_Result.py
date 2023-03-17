@@ -14,14 +14,14 @@ from pyvrp.tests.helpers import read
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     indiv = Individual(data, routes)
 
     res = Result(indiv, Statistics(), num_iterations, runtime)
 
     assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
-    assert_allclose(res.cost(pm), indiv.cost(pm))
+    assert_allclose(res.cost(cost_evaluator), indiv.cost(cost_evaluator))
     assert_allclose(res.runtime, runtime)
 
 
@@ -45,13 +45,13 @@ def test_init_raises_invalid_arguments(num_iterations, runtime):
 )
 def test_has_statistics(num_iterations: int, has_statistics: bool):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
 
     for _ in range(num_iterations):
-        stats.collect_from(pop, pm)
+        stats.collect_from(pop, cost_evaluator)
 
     best = Individual.make_random(data, rng)
     res = Result(best, stats, num_iterations, 0.0)
@@ -61,7 +61,7 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
 
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
 
     for _ in range(5):  # let's do this a few times to really make sure
@@ -70,7 +70,7 @@ def test_str_contains_essential_information():
         str_representation = str(res)
 
         # Test that feasibility status and solution cost are presented.
-        assert_(str(individual.cost(pm)) in str_representation)
+        assert_(str(individual.cost(cost_evaluator)) in str_representation)
         assert_(str(individual.is_feasible()) in str_representation)
 
         # And make sure that all non-empty routes are printed as well.

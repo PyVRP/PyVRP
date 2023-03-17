@@ -39,7 +39,7 @@ PYBIND11_MODULE(_SubPopulation, m)
         .def("add",
              &SubPopulation::add,
              py::arg("individual"),
-             py::arg("penalty_manager"))
+             py::arg("cost_evaluator"))
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
