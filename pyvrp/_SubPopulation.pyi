@@ -64,11 +64,14 @@ class SubPopulation:
         Purging happens to duplicate solutions first, and then to solutions
         with high biased fitness.
         """
-    def update_fitness(self) -> None:
+    def update_fitness(self, cost_evaluator: CostEvaluator) -> None:
         """
         Updates the biased fitness scores of individuals in the subpopulation.
         This fitness depends on the quality of the solution (based on its cost)
         and the diversity w.r.t. to other individuals in the subpopulation.
+
+        Important: this function must be called before accessing the
+        SubPopulationItem.fitness attribute.
         """
     def __getitem__(self, idx: int) -> SubPopulationItem: ...
     def __iter__(self) -> Iterator[SubPopulationItem]: ...
@@ -85,7 +88,7 @@ class SubPopulationItem:
         to a number of individuals that are most similar to it. This provides a
         measure of the relative 'diversity' of the wrapped individual.
 
-        Returns
+        Returns: ..
         -------
         float
             The average distance/diversity of the wrapped individual.

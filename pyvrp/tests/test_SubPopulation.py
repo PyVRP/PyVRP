@@ -95,6 +95,8 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     rank[by_cost] = np.arange(len(subpop))
 
     expected_fitness = rank / (2 * len(subpop))
+    # We need to call update_fitness before accessing the fitness
+    subpop.update_fitness(cost_evaluator)
     actual_fitness = np.array([item.fitness for item in subpop])
 
     # The fitness terms should all be bounded to [0, 1], and the values should
@@ -126,6 +128,8 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     ranks[cost_rank[div_rank], 1] = np.arange(len(subpop))
 
     expected_fitness = ranks.sum(axis=1) / (2 * len(subpop))
+    # We need to call update_fitness before accessing the fitness
+    subpop.update_fitness(cost_evaluator)
     actual_fitness = np.array([item.fitness for item in subpop])
 
     # The fitness terms should all be bounded to [0, 1], and the values should

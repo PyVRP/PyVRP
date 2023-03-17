@@ -65,6 +65,8 @@ public:
         // item is part of. The SubPopulation remains responsible for managing
         // that memory.
         Individual const *individual;
+        // Fitness should be used carefully: only directly after updateFitness
+        // was called. At any other moment, it will be outdated.
         double fitness;
         Proximity proximity;
 
@@ -77,11 +79,6 @@ private:
     // Removes the element at the given iterator location from the items.
     void remove(std::vector<Item>::iterator const &iterator,
                 CostEvaluator const &costEvaluator);
-
-    // Recomputes the fitness of all individuals maintained by this population.
-    // This is called whenever an individual is added to, or removed from, the
-    // population.
-    void updateFitness(CostEvaluator const &costEvaluator);
 
 public:
     SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
@@ -99,6 +96,11 @@ public:
     Item const &operator[](size_t idx) const;
 
     void purge(CostEvaluator const &costEvaluator);
+
+    // Recomputes the fitness of all individuals maintained by this population.
+    // This is called whenever an individual is added to, or removed from, the
+    // population.
+    void updateFitness(CostEvaluator const &costEvaluator);
 };
 
 #endif  // SUBPOPULATION_H
