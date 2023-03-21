@@ -150,9 +150,9 @@ class GeneticAlgorithm:
 
     def _educate(self, individual: Individual):
         def is_new_best(indiv):
-            return indiv.is_feasible() and indiv.cost(
-                self._pm
-            ) < self._best.cost(self._pm)
+            cost = indiv.cost(self._pm)
+            best_cost = self._best.cost(self._pm)
+            return indiv.is_feasible() and cost < best_cost
 
         def add_and_register(indiv):
             self._pop.add(indiv, self._pm)
