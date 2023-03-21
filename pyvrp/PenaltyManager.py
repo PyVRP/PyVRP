@@ -123,6 +123,19 @@ class PenaltyManager:
         self._time_feas: List[bool] = []  # track recent time feasibility
         self._capacity_penalty = params.init_capacity_penalty
         self._tw_penalty = params.init_tw_penalty
+        self._cost_evaluator: CostEvaluator = CostEvaluator()
+        self._booster_cost_evaluator: CostEvaluator = CostEvaluator()
+
+        self._update_cost_evaluators()
+
+    def _update_cost_evaluators(self):
+        self._cost_evaluator = CostEvaluator(
+            self._capacity_penalty, self._tw_penalty
+        )
+        self._booster_cost_evaluator = CostEvaluator(
+            self._capacity_penalty * self._params.repair_booster,
+            self._tw_penalty * self._params.repair_booster,
+        )
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
         # Computes and returns the new penalty value, given the current value
@@ -159,6 +172,7 @@ class PenaltyManager:
         ):
             avg = fmean(self._load_feas)
             self._capacity_penalty = self._compute(self._capacity_penalty, avg)
+            self._update_cost_evaluators()
             self._load_feas.clear()
 
     def register_time_feasible(self, is_time_feasible: bool):
@@ -179,6 +193,7 @@ class PenaltyManager:
         ):
             avg = fmean(self._time_feas)
             self._tw_penalty = self._compute(self._tw_penalty, avg)
+            self._update_cost_evaluators()
             self._time_feas.clear()
 
     def get_cost_evaluator(self) -> CostEvaluator:
@@ -190,8 +205,7 @@ class PenaltyManager:
         CostEvaluator
             The CostEvaluator instance that uses the current penalty values.
         """
-        # TODO cache this object
-        return CostEvaluator(self._capacity_penalty, self._tw_penalty)
+        return self._cost_evaluator
 
     def get_booster_cost_evaluator(self):
         """
@@ -203,8 +217,4 @@ class PenaltyManager:
         CostEvaluator
             The CostEvaluator instance that uses the booster penalty values.
         """
-        # TODO cache this object
-        return CostEvaluator(
-            self._capacity_penalty * self._params.repair_booster,
-            self._tw_penalty * self._params.repair_booster,
-        )
+        return self._booster_cost_evaluator
