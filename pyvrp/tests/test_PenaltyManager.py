@@ -54,7 +54,7 @@ def test_repair_booster():
 
     # With the booster, the penalty values are multiplied by the
     # repairBooster term (x5 in this case).
-    booster = pm.get_booster()
+    booster = pm.get_booster_cost_evaluator()
     assert_equal(booster.tw_penalty(1), 5)
     assert_equal(booster.tw_penalty(2), 10)
 
