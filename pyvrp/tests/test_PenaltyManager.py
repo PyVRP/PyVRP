@@ -52,18 +52,14 @@ def test_repair_booster():
     assert_equal(cost_evaluator.tw_penalty(1), 1)
     assert_equal(cost_evaluator.load_penalty(2, 1), 1)  # 1 unit above capacity
 
-    booster_cost_evaluator = pm.get_booster_cost_evaluator()
     # With the booster, the penalty values are multiplied by the
     # repairBooster term (x5 in this case).
-    assert_equal(booster_cost_evaluator.tw_penalty(1), 5)
-    assert_equal(booster_cost_evaluator.tw_penalty(2), 10)
+    booster = pm.get_booster_cost_evaluator()
+    assert_equal(booster.tw_penalty(1), 5)
+    assert_equal(booster.tw_penalty(2), 10)
 
-    assert_equal(
-        booster_cost_evaluator.load_penalty(2, 1), 5
-    )  # 1 unit above capacity
-    assert_equal(
-        booster_cost_evaluator.load_penalty(3, 1), 10
-    )  # 2 units above capacity
+    assert_equal(booster.load_penalty(2, 1), 5)  # 1 unit above capacity
+    assert_equal(booster.load_penalty(3, 1), 10)  # 2 units above capacity
 
     # Test that using booster did not affect normal cost_evaluator.
     assert_equal(cost_evaluator.tw_penalty(1), 1)

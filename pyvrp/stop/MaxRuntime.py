@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Union
+from typing import Optional
 
 
 class MaxRuntime:
@@ -14,7 +14,7 @@ class MaxRuntime:
         self._max_runtime = max_runtime
         self._start_runtime: Optional[float] = None
 
-    def __call__(self, best_cost: Union[int, float]) -> bool:
+    def __call__(self, best_cost: float) -> bool:
         if self._start_runtime is None:
             self._start_runtime = time.perf_counter()
 

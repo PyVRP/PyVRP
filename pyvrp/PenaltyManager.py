@@ -7,41 +7,42 @@ from pyvrp._CostEvaluator import CostEvaluator
 
 @dataclass
 class PenaltyParams:
-    """The penalty manager parameters.
+    """
+    The penalty manager parameters.
 
     Parameters
     ----------
-    init_capacity_penalty : int, optional
+    init_capacity_penalty
         Initial penalty on excess capacity. This is the amount by which one
         unit of excess load capacity is penalised in the objective, at the
         start of the search.
-    init_time_warp_penalty : int, optional
+    init_time_warp_penalty
         Initial penalty on time warp. This is the amount by which one unit of
         time warp (time window violations) is penalised in the objective, at
         the start of the search.
-    repair_booster : int, optional
+    repair_booster
         A repair booster value :math:`r \\ge 1`. This value is used to
         temporarily multiply the current penalty terms, to force feasibility.
         See also
         :meth:`~pyvrp._PenaltyManager.PenaltyManager.get_penalty_booster`.
-    num_registrations_between_penalty_updates : int, optional
+    num_registrations_between_penalty_updates
         Number of feasibility registrations between penalty value updates. The
         penalty manager updates the penalty terms every once in a while based
         on recent feasibility registrations. This parameter controls how often
         such updating occurs.
-    penalty_increase : float, optional
+    penalty_increase
         Amount :math:`p_i \\ge 1` by which the current penalties are
         increased when insufficient feasible solutions (see
         :py:attr:`~target_feasible`) have been found amongst the most recent
         registrations. The penalty values :math:`v` are updated as
         :math:`v \\gets p_i v`.
-    penalty_decrease : float, optional
+    penalty_decrease
         Amount :math:`p_d \\in [0, 1]` by which the current penalties are
         decreased when sufficient feasible solutions (see
         :py:attr:`~target_feasible`) have been found amongst the most recent
         registrations. The penalty values :math:`v` are updated as
         :math:`v \\gets p_d v`.
-    target_feasible : float, optional
+    target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
         in the last :py:attr:`~num_registrations_between_penalty_updates`
         registrations. This percentage is used to update the penalty terms:
@@ -53,25 +54,25 @@ class PenaltyParams:
 
     Attributes
     ----------
-    init_capacity_penalty : int
+    init_capacity_penalty
         Initial penalty on excess capacity.
-    init_time_warp_penalty : int
+    init_time_warp_penalty
         Initial penalty on time warp.
-    repair_booster : int
+    repair_booster
         A repair booster value.
-    num_registrations_between_penalty_updates : int
+    num_registrations_between_penalty_updates
         Number of feasibility registrations between penalty value updates.
-    penalty_increase : float
+    penalty_increase
         Amount :math:`p_i \\ge 1` by which the current penalties are
         increased when insufficient feasible solutions (see
         :py:attr:`~target_feasible`) have been found amongst the most recent
         registrations.
-    penalty_decrease : float
+    penalty_decrease
         Amount :math:`p_d \\in [0, 1]` by which the current penalties are
         decreased when sufficient feasible solutions (see
         :py:attr:`~target_feasible`) have been found amongst the most recent
         registrations.
-    target_feasible : float
+    target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
         in the last :py:attr:`~num_registrations_between_penalty_updates`
         registrations.
@@ -145,7 +146,7 @@ class PenaltyManager:
         # Computes and returns the new penalty value, given the current value
         # and the percentage of feasible solutions since the last update.
         diff = self._params.target_feasible - feas_percentage
-
+        # TODO make 0.05 a parameter
         if -0.05 < diff < 0.05:
             return penalty
 
@@ -166,8 +167,8 @@ class PenaltyManager:
         Parameters
         ----------
         is_load_feasible
-            Boolean indicating whether the the last individual was feasible
-            w.r.t the capacity constraint.
+            Boolean indicating whether the last individual was feasible w.r.t
+            the capacity constraint.
         """
         self._load_feas.append(is_load_feasible)
         if (
@@ -186,9 +187,9 @@ class PenaltyManager:
 
         Parameters
         ----------
-        is_load_feasible
-            Boolean indicating whether the the last individual was feasible
-            w.r.t the capacity constraint.
+        is_time_feasible
+            Boolean indicating whether the last individual was feasible w.r.t
+             the time constraint.
         """
         self._time_feas.append(is_time_feasible)
         if (
@@ -202,23 +203,22 @@ class PenaltyManager:
 
     def get_cost_evaluator(self) -> CostEvaluator:
         """
-        Get the cost evaluator for the current penalty values.
+        Get a cost evaluator for the current penalty values.
 
         Returns
         -------
         CostEvaluator
-            The CostEvaluator instance that uses the current penalty values.
+            A CostEvaluator instance that uses the current penalty values.
         """
         return self._cost_evaluator
 
     def get_booster_cost_evaluator(self):
         """
-        Get the cost evaluator for the current penalty values, multiplied by
-        the booster.
+        Get a cost evaluator for the boosted current penalty values.
 
         Returns
         -------
         CostEvaluator
-            The CostEvaluator instance that uses the booster penalty values.
+            A CostEvaluator instance that uses the booster penalty values.
         """
         return self._booster_cost_evaluator

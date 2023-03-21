@@ -58,7 +58,7 @@ PYBIND11_MODULE(_SubPopulation, m)
                 return py::make_iterator(subPop.cbegin(), subPop.cend());
             },
             py::return_value_policy::reference_internal)
-        .def("purge", &SubPopulation::purge)
+        .def("purge", &SubPopulation::purge, py::arg("cost_evaluator"))
         .def("update_fitness",
              &SubPopulation::updateFitness,
              py::arg("cost_evaluator"));

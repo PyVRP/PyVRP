@@ -53,16 +53,19 @@ class SubPopulation:
         individual
             Individual to add to the subpopulation.
         cost_evaluator
-            CostEvaluator to use to compute the cost. Required here
-            since adding an individual may trigger a purge which needs to
-            compute the biased fitness which requires computing the cost.
+            CostEvaluator to use to compute the cost.
         """
-    def purge(self) -> None:
+    def purge(self, cost_evaluator: CostEvaluator) -> None:
         """
         Performs survivor selection: individuals in the subpopulation are
         purged until the population is reduced to the ``min_pop_size``.
         Purging happens to duplicate solutions first, and then to solutions
         with high biased fitness.
+
+        Parameters
+        ----------
+        cost_evaluator
+            CostEvaluator to use to compute the cost.
         """
     def update_fitness(self, cost_evaluator: CostEvaluator) -> None:
         """

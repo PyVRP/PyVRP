@@ -90,10 +90,11 @@ class Population:
         individual
             Individual to add to the population.
         cost_evaluator
-            CostEvaluator to use to compute the cost. Required here
-            since adding an individual may trigger a purge which needs to
-            compute the biased fitness which requires computing the cost.
+            CostEvaluator to use to compute the cost.
         """
+        # Note: the PenaltyManager is required here since adding an individual
+        # may trigger a purge which needs to compute the biased fitness which
+        # requires computing the cost.
         if individual.is_feasible():
             # Note: the feasible subpopulation actually doet not depend
             # on the penalty values but we use the same implementation.

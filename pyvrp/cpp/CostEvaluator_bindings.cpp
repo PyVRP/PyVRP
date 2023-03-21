@@ -7,7 +7,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(_CostEvaluator, m)
 {
     py::class_<CostEvaluator>(m, "CostEvaluator")
-        .def(py::init<int, int>(),
+        .def(py::init<unsigned int, unsigned int>(),
              py::arg("capacity_penalty"),
              py::arg("tw_penalty"))
         .def("load_penalty",
