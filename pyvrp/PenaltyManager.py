@@ -123,12 +123,16 @@ class PenaltyManager:
         self._time_feas: List[bool] = []  # track recent time feasibility
         self._capacity_penalty = params.init_capacity_penalty
         self._tw_penalty = params.init_tw_penalty
-        self._cost_evaluator: CostEvaluator = CostEvaluator()
-        self._booster_cost_evaluator: CostEvaluator = CostEvaluator()
-
-        self._update_cost_evaluators()
+        self._cost_evaluator = CostEvaluator(
+            self._capacity_penalty, self._tw_penalty
+        )
+        self._booster_cost_evaluator = CostEvaluator(
+            self._capacity_penalty * self._params.repair_booster,
+            self._tw_penalty * self._params.repair_booster,
+        )
 
     def _update_cost_evaluators(self):
+        # Updates the cost evaluators given new penalty values
         self._cost_evaluator = CostEvaluator(
             self._capacity_penalty, self._tw_penalty
         )
