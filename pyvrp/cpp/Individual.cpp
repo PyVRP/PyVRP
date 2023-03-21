@@ -114,8 +114,8 @@ void Individual::makeNeighbours()
 
 bool Individual::operator==(Individual const &other) const
 {
-    // First compare costs, since that's a quick and cheap check. Only when
-    // the costs are the same do we test if the neighbours are all equal.
+    // First compare simple attributes, since that's a quick and cheap check.
+    // Only when these are the same we test if the neighbours are all equal.
     // clang-format off
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
