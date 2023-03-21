@@ -11,18 +11,18 @@ def test_load_penalty():
     assert_equal(cost_evaluator.load_penalty(1, 1), 0)  # at capacity
 
     # Penalty per unit excess capacity is 2
-    assert_equal(cost_evaluator.load_penalty(2, 1), 2)  # 1 unit above capacity
-    assert_equal(
-        cost_evaluator.load_penalty(3, 1), 4
-    )  # 2 units above capacity
+    # 1 unit above capacity
+    assert_equal(cost_evaluator.load_penalty(2, 1), 2)
+    # 2 units above capacity
+    assert_equal(cost_evaluator.load_penalty(3, 1), 4)
 
     # Penalty per unit excess capacity is 4
     cost_evaluator = CostEvaluator(4, 1)
 
-    assert_equal(cost_evaluator.load_penalty(2, 1), 4)  # 1 unit above capacity
-    assert_equal(
-        cost_evaluator.load_penalty(3, 1), 8
-    )  # 2 units above capacity
+    # 1 unit above capacity
+    assert_equal(cost_evaluator.load_penalty(2, 1), 4)
+    # 2 units above capacity
+    assert_equal(cost_evaluator.load_penalty(3, 1), 8)
 
 
 @mark.parametrize("capacity", [5, 15, 29, 51, 103])
@@ -33,9 +33,8 @@ def test_load_penalty_always_zero_when_below_capacity(capacity: int):
     for load in range(capacity):  # all below capacity
         assert_equal(cost_evaluator.load_penalty(load, capacity), 0)
 
-    assert_equal(
-        cost_evaluator.load_penalty(capacity, capacity), 0
-    )  # at capacity
+    # at capacity
+    assert_equal(cost_evaluator.load_penalty(capacity, capacity), 0)
     # above capacity
     assert_equal(
         cost_evaluator.load_penalty(capacity + 1, capacity), load_penalty
