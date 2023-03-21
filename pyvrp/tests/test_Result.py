@@ -25,6 +25,28 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
     assert_allclose(res.runtime, runtime)
 
 
+def test_compute_cost_raises_for_infeasible():
+    data = read("data/OkSmall.txt")
+    pm = PenaltyManager()
+
+    # Infeasible
+    indiv = Individual(data, [[1, 2, 3, 4]])
+    res = Result(indiv, Statistics(), 0, 0)
+
+    with assert_raises(ValueError):
+        _ = res.cost()
+
+    # Should not raise if we provide penalty manager
+    assert_allclose(res.cost(pm), indiv.cost(pm))
+
+    # Feasible should not raise
+    indiv = Individual(data, [[1, 2], [3, 4]])
+    res = Result(indiv, Statistics(), 0, 0)
+
+    # Should not raise even though we do not give penalty manager
+    assert_allclose(res.cost(), indiv.cost(pm))
+
+
 @mark.parametrize(
     "num_iterations, runtime",
     [
@@ -70,8 +92,10 @@ def test_str_contains_essential_information():
         str_representation = str(res)
 
         # Test that feasibility status and solution cost are presented.
-        assert_(str(individual.cost(cost_evaluator)) in str_representation)
-        assert_(str(individual.is_feasible()) in str_representation)
+        if individual.is_feasible():
+            assert_(str(individual.cost(cost_evaluator)) in str_representation)
+        else:
+            assert_("INFEASIBLE" in str_representation)
 
         # And make sure that all non-empty routes are printed as well.
         for route in individual.get_routes():

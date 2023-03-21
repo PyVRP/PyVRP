@@ -118,8 +118,13 @@ bool Individual::operator==(Individual const &other) const
 {
     // First compare costs, since that's a quick and cheap check. Only when
     // the costs are the same do we test if the neighbours are all equal.
-    return distance == other.distance && capacityExcess == other.capacityExcess
-           && timeWarp == other.timeWarp && neighbours == other.neighbours;
+    // clang-format off
+    return distance == other.distance
+        && capacityExcess == other.capacityExcess
+        && timeWarp == other.timeWarp
+        && numRoutes_ == other.numRoutes_
+        && neighbours == other.neighbours;
+    // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
