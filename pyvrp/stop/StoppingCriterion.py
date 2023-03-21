@@ -1,4 +1,4 @@
-from typing import Protocol, Union
+from typing import Protocol
 
 
 class StoppingCriterion(Protocol):  # pragma: no cover
@@ -6,7 +6,7 @@ class StoppingCriterion(Protocol):  # pragma: no cover
     Protocol that stopping criteria must implement.
     """
 
-    def __call__(self, best_cost: Union[int, float]) -> bool:
+    def __call__(self, best_cost: float) -> bool:
         """
         When called, this stopping criterion should return True if the
         algorithm should stop, and False otherwise.
