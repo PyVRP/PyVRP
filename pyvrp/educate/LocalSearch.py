@@ -20,8 +20,6 @@ class LocalSearch:
     ----------
     data
         Data object describing the problem to be solved.
-    penalty_manager
-        Penalty manager to use.
     rng
         Random number generator.
     neighbours
@@ -31,11 +29,10 @@ class LocalSearch:
     def __init__(
         self,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         rng: XorShift128,
         neighbours: Neighbours,
     ):
-        self._ls = _LocalSearch(data, penalty_manager, rng, neighbours)
+        self._ls = _LocalSearch(data, rng, neighbours)
 
     def add_node_operator(self, op):
         """
@@ -86,7 +83,10 @@ class LocalSearch:
         return self._ls.get_neighbours()
 
     def run(
-        self, individual: Individual, should_intensify: bool
+        self,
+        individual: Individual,
+        penalty_manager: PenaltyManager,
+        should_intensify: bool,
     ) -> Individual:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -99,6 +99,8 @@ class LocalSearch:
         ----------
         individual
             The individual to improve through local search.
+        penalty_manager
+            Penalty manager to use.
         should_intensify
             Whether to apply :meth:`~intensify`. Intensification can provide
             much better solutions, but is computationally demanding. By default
@@ -115,12 +117,12 @@ class LocalSearch:
         # TODO separate load/export individual from c++ implementation
         # so we only need to do it once
         while True:
-            individual = self.search(individual)
+            individual = self.search(individual, penalty_manager)
 
             if not should_intensify:
                 return individual
 
-            new_individual = self.intensify(individual)
+            new_individual = self.intensify(individual, penalty_manager)
 
             if new_individual.cost() < individual.cost():
                 individual = new_individual
@@ -129,7 +131,10 @@ class LocalSearch:
             return individual
 
     def intensify(
-        self, individual: Individual, overlap_tolerance_degrees: int = 0
+        self,
+        individual: Individual,
+        penalty_manager: PenaltyManager,
+        overlap_tolerance_degrees: int = 0,
     ) -> Individual:
         """
         This method uses the intensifying route operators on this local search
@@ -141,6 +146,8 @@ class LocalSearch:
         ----------
         individual
             The individual to improve.
+        penalty_manager
+            Penalty manager to use.
         overlap_tolerance_degrees
             This method evaluates improving moves between route pairs. To limit
             computational efforts, by default not all route pairs are
@@ -161,9 +168,13 @@ class LocalSearch:
             The improved individual. This is not the same object as the
             individual that was passed in.
         """
-        return self._ls.intensify(individual, overlap_tolerance_degrees)
+        return self._ls.intensify(
+            individual, penalty_manager, overlap_tolerance_degrees
+        )
 
-    def search(self, individual: Individual) -> Individual:
+    def search(
+        self, individual: Individual, penalty_manager: PenaltyManager
+    ) -> Individual:
         """
         This method uses the node operators on this local search object to
         improve the given individual.
@@ -172,6 +183,8 @@ class LocalSearch:
         ----------
         individual
             The individual to improve.
+        penalty_manager
+            Penalty manager to use.
 
         Raises
         ------
@@ -185,4 +198,4 @@ class LocalSearch:
             The improved individual. This is not the same object as the
             individual that was passed in.
         """
-        return self._ls.search(individual)
+        return self._ls.search(individual, penalty_manager)

@@ -99,7 +99,7 @@ def test_raises_when_no_initial_solutions():
     data = read("data/RC208.txt", "solomon", "dimacs")
     pen_manager = PenaltyManager()
     rng = XorShift128(seed=42)
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
 
     pop = Population(bpd)
     assert_equal(len(pop), 0)
@@ -123,7 +123,7 @@ def test_initial_solutions_added_when_running():
     pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     init = set(make_random_solutions(25, data, pm, rng))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
@@ -146,7 +146,7 @@ def test_initial_solutions_added_when_restarting():
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
     # We use the best known solution as one of the initial solutions so that
@@ -182,7 +182,7 @@ def test_best_solution_improves_with_more_iterations():
     pop = Population(bpd, params=pop_params)
     init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
     ga_params = GeneticAlgorithmParams(
@@ -212,7 +212,7 @@ def test_best_initial_solution():
     bks = Individual(data, pm, read_solution("data/RC208.sol"))
     init = [bks] + make_random_solutions(24, data, pm, rng)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     result = algo.run(MaxIterations(0))

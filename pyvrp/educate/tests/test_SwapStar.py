@@ -26,7 +26,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     # For a fair comparison we should not hamper the node operator with
     # granularity restrictions.
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
 
     ls.add_node_operator(Exchange11(data))
     ls.add_route_operator(SwapStar(data))
@@ -34,9 +34,9 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     for _ in range(10):  # repeat a few times to really make sure
         individual = Individual.make_random(data, pm, rng)
 
-        swap_individual = ls.search(individual)
+        swap_individual = ls.search(individual, pm)
         swap_star_individual = ls.intensify(
-            swap_individual, overlap_tolerance_degrees=360
+            swap_individual, pm, overlap_tolerance_degrees=360
         )
 
         # The regular swap operator should have been able to improve the random
@@ -52,7 +52,7 @@ def test_swap_star_on_RC208_instance(seed: int):
     pm = PenaltyManager()
     rng = XorShift128(seed=seed)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_route_operator(SwapStar(data))
 
     # Make an initial solution that consists of two routes, by randomly
@@ -61,7 +61,7 @@ def test_swap_star_on_RC208_instance(seed: int):
     split = rng.randint(data.num_clients)
     individual = Individual(data, pm, [route[:split], route[split:]])
     improved_individual = ls.intensify(
-        individual, overlap_tolerance_degrees=360
+        individual, pm, overlap_tolerance_degrees=360
     )
 
     # The new solution should strictly improve on our original solution, but
