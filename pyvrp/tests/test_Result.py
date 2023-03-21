@@ -27,7 +27,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
 def test_compute_cost_raises_for_infeasible():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
 
     # Infeasible
     indiv = Individual(data, [[1, 2, 3, 4]])
@@ -37,14 +37,14 @@ def test_compute_cost_raises_for_infeasible():
         _ = res.cost()
 
     # Should not raise if we provide penalty manager
-    assert_allclose(res.cost(pm), indiv.cost(pm))
+    assert_allclose(res.cost(cost_evaluator), indiv.cost(cost_evaluator))
 
     # Feasible should not raise
     indiv = Individual(data, [[1, 2], [3, 4]])
     res = Result(indiv, Statistics(), 0, 0)
 
     # Should not raise even though we do not give penalty manager
-    assert_allclose(res.cost(), indiv.cost(pm))
+    assert_allclose(res.cost(), indiv.cost(cost_evaluator))
 
 
 @mark.parametrize(
