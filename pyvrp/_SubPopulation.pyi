@@ -53,16 +53,19 @@ class SubPopulation:
         individual
             Individual to add to the subpopulation.
         penalty_manager
-            PenaltyManager to use to compute the cost. Required here
-            since adding an individual may trigger a purge which needs to
-            compute the biased fitness which requires computing the cost.
+            PenaltyManager to use to compute the cost.
         """
-    def purge(self) -> None:
+    def purge(self, penalty_manager: PenaltyManager) -> None:
         """
         Performs survivor selection: individuals in the subpopulation are
         purged until the population is reduced to the ``min_pop_size``.
         Purging happens to duplicate solutions first, and then to solutions
         with high biased fitness.
+
+        Parameters
+        ----------
+        penalty_manager
+            PenaltyManager to use to compute the cost.
         """
     def update_fitness(self) -> None:
         """
