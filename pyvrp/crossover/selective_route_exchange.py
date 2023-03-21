@@ -28,7 +28,7 @@ def selective_route_exchange(
     data
         The problem instance.
     cost_evaluator
-        The penalty manager instance to be used during the greedy repair step.
+        The cost evaluator to be used during the greedy repair step.
     rng
         The random number generator to use.
 
