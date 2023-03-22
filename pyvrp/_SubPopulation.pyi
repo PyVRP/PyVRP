@@ -91,7 +91,7 @@ class SubPopulationItem:
         to a number of individuals that are most similar to it. This provides a
         measure of the relative 'diversity' of the wrapped individual.
 
-        Returns: ..
+        Returns
         -------
         float
             The average distance/diversity of the wrapped individual.
