@@ -70,7 +70,7 @@ class Result:
                     "penalty_manager argument to compute the cost."
                 )
             cost_evaluator = PenaltyManager().get_cost_evaluator()
-        return cost_evaluator(self.best)
+        return cost_evaluator.penalized_cost(self.best)
 
     def is_feasible(self) -> bool:
         """

@@ -48,7 +48,9 @@ def test_swap_single_route_stays_single_route(operator):
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalized_cost(individual)
+    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 @mark.parametrize(
@@ -79,7 +81,9 @@ def test_relocate_uses_empty_routes(operator):
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
     assert_(improved_individual.num_routes() > 1)
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalized_cost(individual)
+    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 @mark.parametrize(
@@ -172,7 +176,9 @@ def test_swap_between_routes_OkSmall():
     improved_individual = ls.search(individual, cost_evaluator)
 
     assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalized_cost(individual)
+    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 def test_relocate_after_depot_should_work():

@@ -15,5 +15,8 @@ PYBIND11_MODULE(_CostEvaluator, m)
              py::arg("load"),
              py::arg("vehicle_capacity"))
         .def("tw_penalty", &CostEvaluator::twPenalty, py::arg("time_warp"))
-        .def("__call__", &CostEvaluator::operator(), py::arg("individual"));
+        .def("penalized_cost",
+             &CostEvaluator::penalizedCost,
+             py::arg("individual"))
+        .def("cost", &CostEvaluator::penalizedCost, py::arg("individual"));
 }

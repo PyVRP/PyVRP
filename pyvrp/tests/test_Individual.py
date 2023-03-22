@@ -101,7 +101,8 @@ def test_distance_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(cost_evaluator(indiv), dist)
+    assert_equal(cost_evaluator.cost(indiv), dist)
+    assert_equal(cost_evaluator.penalized_cost(indiv), dist)
 
 
 def test_capacity_cost_calculation():
@@ -127,7 +128,7 @@ def test_capacity_cost_calculation():
         + data.dist(2, 0)
     )
 
-    assert_equal(cost_evaluator(indiv), dist + load_penalty)
+    assert_equal(cost_evaluator.penalized_cost(indiv), dist + load_penalty)
 
 
 def test_time_warp_cost_calculation():
@@ -157,7 +158,7 @@ def test_time_warp_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(cost_evaluator(indiv), dist + tw_penalty)
+    assert_equal(cost_evaluator.penalized_cost(indiv), dist + tw_penalty)
 
 
 def test_time_warp_for_a_very_constrained_problem():

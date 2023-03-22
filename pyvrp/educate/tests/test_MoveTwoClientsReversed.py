@@ -29,7 +29,9 @@ def test_single_route_OkSmall():
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalized_cost(individual)
+    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
     # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
     # after 2 as 2 -> 3 -> 1 -> 4.
@@ -40,7 +42,9 @@ def test_single_route_OkSmall():
     # to the returned solution's cost.
     for routes in ([[3, 2], [1, 4]], [[2, 3], [4, 1]], [[2, 4], [1, 3]]):
         other = Individual(data, routes)
-        assert_(cost_evaluator(improved_individual) <= cost_evaluator(other))
+        improved_cost = cost_evaluator.penalized_cost(improved_individual)
+        other_cost = cost_evaluator.penalized_cost(other)
+        assert_(improved_cost <= other_cost)
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
@@ -58,4 +62,6 @@ def test_RC208_instance(seed: int):
     improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalized_cost(individual)
+    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    assert_(improved_cost < current_cost)
