@@ -88,7 +88,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
     # When all individuals are elite the diversity weight term drops out, and
     # fitness rankings are purely based on the cost ranking.
-    cost = np.array([item.individual.cost(cost_evaluator) for item in subpop])
+    cost = np.array([cost_evaluator(item.individual) for item in subpop])
     by_cost = np.argsort(cost, kind="stable")
 
     rank = np.empty(len(subpop))
@@ -115,7 +115,7 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
 
     # When no individuals are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.
-    cost = np.array([item.individual.cost(cost_evaluator) for item in subpop])
+    cost = np.array([cost_evaluator(item.individual) for item in subpop])
     cost_rank = np.argsort(cost, kind="stable")
 
     diversity = np.array([item.avg_distance_closest() for item in subpop])

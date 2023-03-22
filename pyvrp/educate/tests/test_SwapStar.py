@@ -42,13 +42,10 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
         # The regular swap operator should have been able to improve the random
         # individual. After swap gets stuck, SWAP* should still be able to
         # further improve the individual.
+        assert_(cost_evaluator(swap_individual) < cost_evaluator(individual))
         assert_(
-            swap_individual.cost(cost_evaluator)
-            < individual.cost(cost_evaluator)
-        )
-        assert_(
-            swap_star_individual.cost(cost_evaluator)
-            < swap_individual.cost(cost_evaluator)
+            cost_evaluator(swap_star_individual)
+            < cost_evaluator(swap_individual)
         )
 
 
@@ -73,7 +70,4 @@ def test_swap_star_on_RC208_instance(seed: int):
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
     assert_equal(improved_individual.num_routes(), 2)
-    assert_(
-        improved_individual.cost(cost_evaluator)
-        < individual.cost(cost_evaluator)
-    )
+    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))

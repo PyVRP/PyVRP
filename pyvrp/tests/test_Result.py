@@ -21,7 +21,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
     assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
-    assert_allclose(res.cost(cost_evaluator), indiv.cost(cost_evaluator))
+    assert_allclose(res.cost(cost_evaluator), cost_evaluator(indiv))
     assert_allclose(res.runtime, runtime)
 
 
@@ -37,14 +37,14 @@ def test_compute_cost_raises_for_infeasible():
         _ = res.cost()
 
     # Should not raise if we provide penalty manager
-    assert_allclose(res.cost(cost_evaluator), indiv.cost(cost_evaluator))
+    assert_allclose(res.cost(cost_evaluator), cost_evaluator(indiv))
 
     # Feasible should not raise
     indiv = Individual(data, [[1, 2], [3, 4]])
     res = Result(indiv, Statistics(), 0, 0)
 
     # Should not raise even though we do not give penalty manager
-    assert_allclose(res.cost(), indiv.cost(cost_evaluator))
+    assert_allclose(res.cost(), cost_evaluator(indiv))
 
 
 @mark.parametrize(
@@ -93,7 +93,7 @@ def test_str_contains_essential_information():
 
         # Test that feasibility status and solution cost are presented.
         if individual.is_feasible():
-            assert_(str(individual.cost(cost_evaluator)) in str_representation)
+            assert_(str(cost_evaluator(individual)) in str_representation)
         else:
             assert_("INFEASIBLE" in str_representation)
 

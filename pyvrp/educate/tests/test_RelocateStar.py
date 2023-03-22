@@ -70,11 +70,8 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     # granular neighbourhood, which limits the number of operators. RELOCATE*
     # overcomes some of that, and as a result, should be able to improve the
     # solution further.
+    assert_(cost_evaluator(individual) > cost_evaluator(exchange_individual))
     assert_(
-        individual.cost(cost_evaluator)
-        > exchange_individual.cost(cost_evaluator)
-    )
-    assert_(
-        exchange_individual.cost(cost_evaluator)
-        > relocate_individual.cost(cost_evaluator)
+        cost_evaluator(exchange_individual)
+        > cost_evaluator(relocate_individual)
     )

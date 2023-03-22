@@ -25,7 +25,6 @@ PYBIND11_MODULE(_Individual, m)
                     py::arg("data"),
                     py::arg("routes"));
             })
-        .def("cost", &Individual::cost, py::arg("cost_evaluator"))
         .def("num_routes", &Individual::numRoutes)
         .def("get_routes",
              &Individual::getRoutes,
@@ -34,8 +33,11 @@ PYBIND11_MODULE(_Individual, m)
              &Individual::getNeighbours,
              py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)
-        .def("has_excess_capacity", &Individual::hasExcessCapacity)
+        .def("has_excess_load", &Individual::hasExcessLoad)
         .def("has_time_warp", &Individual::hasTimeWarp)
+        .def("distance", &Individual::distance)
+        .def("excess_load", &Individual::excessLoad)
+        .def("time_warp", &Individual::timeWarp)
         .def(
             "__copy__",
             [](Individual const &individual) { return Individual(individual); })

@@ -183,6 +183,5 @@ Individual selectiveRouteExchange(
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};
 
-    return indiv1.cost(costEvaluator) < indiv2.cost(costEvaluator) ? indiv1
-                                                                   : indiv2;
+    return costEvaluator(indiv1) < costEvaluator(indiv2) ? indiv1 : indiv2;
 }
