@@ -20,12 +20,12 @@ def test_OkSmall_instance():
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(TwoOpt(data))
 
-    individual = Individual(data, pm, [[1, 2, 3, 4]])
+    individual = Individual(data, [[1, 2, 3, 4]])
     improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 2)
-    assert_(improved_individual.cost() < individual.cost())
+    assert_(improved_individual.cost(pm) < individual.cost(pm))
 
     # First improving (U, V) node pair is (1, 3), which results in the route
     # [1, 3, 2, 4]. The second improving node pair involves the depot of an
@@ -44,8 +44,8 @@ def test_RC208_instance(seed: int):
     ls.add_node_operator(TwoOpt(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, pm, [single_route])
+    individual = Individual(data, [single_route])
     improved_individual = ls.search(individual, pm)
 
     # The new solution should strictly improve on our original solution.
-    assert_(improved_individual.cost() < individual.cost())
+    assert_(improved_individual.cost(pm) < individual.cost(pm))

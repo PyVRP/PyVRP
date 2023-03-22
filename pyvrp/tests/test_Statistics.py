@@ -11,13 +11,13 @@ def test_csv_serialises_correctly(tmp_path):
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
 
-    for individual in make_random_solutions(10, data, pm, rng):
-        pop.add(individual)
+    for individual in make_random_solutions(10, data, rng):
+        pop.add(individual, pm)
 
     collected_stats = Statistics()
 
     for _ in range(10):  # populate the statistics object
-        collected_stats.collect_from(pop)
+        collected_stats.collect_from(pop, pm)
 
     csv_path = tmp_path / "test.csv"
     assert_(not csv_path.exists())

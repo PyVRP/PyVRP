@@ -22,7 +22,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     assert_equal(len(subpop), 0)
 
     for _ in range(nb_close):
-        subpop.add(Individual.make_random(data, pm, rng))
+        subpop.add(Individual.make_random(data, rng), pm)
 
     # The first nb_close individuals all have each other in their "closest"
     # list. The averages only differ because each individual is themselves not
@@ -34,7 +34,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
 
     # Let's add a significantly larger set of individuals.
     for _ in range(250 - nb_close):
-        subpop.add(Individual.make_random(data, pm, rng))
+        subpop.add(Individual.make_random(data, rng), pm)
 
     # Now the "closest" lists should differ quite a bit between individuals,
     # and the average distances should thus not all be the same any more.
@@ -57,7 +57,7 @@ def test_avg_distance_closest_for_single_route_solutions():
         # This is a single-route solution, but the route is continually shifted
         # (or rotated) around the depot.
         shifted_route = single_route[-offset:] + single_route[:-offset]
-        shifted = Individual(data, pm, [shifted_route])
+        shifted = Individual(data, [shifted_route])
 
         for item in subpop:
             # Every individual already in the subpopulation has exactly two
@@ -66,7 +66,7 @@ def test_avg_distance_closest_for_single_route_solutions():
             # for all of them.
             assert_equal(bpd(item.individual, shifted), 2 / data.num_clients)
 
-        subpop.add(shifted)
+        subpop.add(shifted, pm)
         assert_equal(len(subpop), offset + 1)
 
         # Since the broken pairs distance is the same for all individuals, the
@@ -84,11 +84,11 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Individual.make_random(data, pm, rng))
+        subpop.add(Individual.make_random(data, rng), pm)
 
     # When all individuals are elite the diversity weight term drops out, and
     # fitness rankings are purely based on the cost ranking.
-    cost = np.array([item.individual.cost() for item in subpop])
+    cost = np.array([item.individual.cost(pm) for item in subpop])
     by_cost = np.argsort(cost, kind="stable")
 
     rank = np.empty(len(subpop))
@@ -111,11 +111,11 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Individual.make_random(data, pm, rng))
+        subpop.add(Individual.make_random(data, rng), pm)
 
     # When no individuals are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.
-    cost = np.array([item.individual.cost() for item in subpop])
+    cost = np.array([item.individual.cost(pm) for item in subpop])
     cost_rank = np.argsort(cost, kind="stable")
 
     diversity = np.array([item.avg_distance_closest() for item in subpop])

@@ -7,6 +7,7 @@ from time import perf_counter
 from typing import List, Union
 
 from .Population import Population, SubPopulation
+from ._PenaltyManager import PenaltyManager
 
 _FEAS_CSV_PREFIX = "feas_"
 _INFEAS_CSV_PREFIX = "infeas_"
@@ -41,7 +42,9 @@ class Statistics:
     def __post_init__(self):
         self._clock = perf_counter()
 
-    def collect_from(self, population: Population):
+    def collect_from(
+        self, population: Population, penalty_manager: PenaltyManager
+    ):
         """
         Collects statistics from the given population object.
 
@@ -49,6 +52,8 @@ class Statistics:
         ----------
         population
             Population instance to collect statistics from.
+        penalty_manager
+            PenaltyManager used to compute costs for individuals.
         """
         start = self._clock
         self._clock = perf_counter()
@@ -60,14 +65,18 @@ class Statistics:
         # this case that is mostly OK: we really want to have that access to
         # enable detailed statistics logging.
         feas_subpop = population._feas  # noqa
-        feas_datum = self._collect_from_subpop(feas_subpop)
+        feas_datum = self._collect_from_subpop(feas_subpop, penalty_manager)
         self.feas_stats.append(feas_datum)
 
         infeas_subpop = population._infeas  # noqa
-        infeas_datum = self._collect_from_subpop(infeas_subpop)
+        infeas_datum = self._collect_from_subpop(
+            infeas_subpop, penalty_manager
+        )
         self.infeas_stats.append(infeas_datum)
 
-    def _collect_from_subpop(self, subpop: SubPopulation) -> _Datum:
+    def _collect_from_subpop(
+        self, subpop: SubPopulation, penalty_manager: PenaltyManager
+    ) -> _Datum:
         if not subpop:  # empty, so many statistics cannot be collected
             return _Datum(
                 size=0,
@@ -78,7 +87,7 @@ class Statistics:
             )
 
         size = len(subpop)
-        costs = [item.individual.cost() for item in subpop]
+        costs = [item.individual.cost(penalty_manager) for item in subpop]
         num_routes = [item.individual.num_routes() for item in subpop]
         diversities = [item.avg_distance_closest() for item in subpop]
 

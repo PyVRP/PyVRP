@@ -14,7 +14,7 @@ SubPopulation::~SubPopulation()
         delete item.individual;
 }
 
-void SubPopulation::add(Individual const *individual)
+void SubPopulation::add(Individual const *individual, PenaltyManager const &pm)
 {
     // Copy the given individual into a new memory location, and use that from
     // now on.
@@ -36,10 +36,10 @@ void SubPopulation::add(Individual const *individual)
     }
 
     items.push_back(item);  // add individual and update fitness scores for the
-    updateFitness();        // entire subpopulation.
+    updateFitness(pm);      // entire subpopulation.
 
     if (size() > params.maxPopSize())
-        purge();
+        purge(pm);
 }
 
 size_t SubPopulation::size() const { return items.size(); }
@@ -60,7 +60,8 @@ std::vector<SubPopulation::Item>::const_iterator SubPopulation::cend() const
 }
 
 void SubPopulation::remove(
-    std::vector<SubPopulation::Item>::iterator const &iterator)
+    std::vector<SubPopulation::Item>::iterator const &iterator,
+    PenaltyManager const &pm)
 {
     for (auto &[params, individual, fitness, proximity] : items)
         // Remove individual from other proximities.
@@ -73,10 +74,10 @@ void SubPopulation::remove(
 
     delete iterator->individual;  // dispose of manually allocated memory
     items.erase(iterator);        // before the item is removed. Then update
-    updateFitness();              // the fitness scores.
+    updateFitness(pm);            // the fitness scores.
 }
 
-void SubPopulation::purge()
+void SubPopulation::purge(PenaltyManager const &pm)
 {
     while (size() > params.minPopSize)
     {
@@ -91,7 +92,7 @@ void SubPopulation::purge()
         if (duplicate == items.end())  // there are no more duplicates
             break;
 
-        remove(duplicate);
+        remove(duplicate, pm);
     }
 
     while (size() > params.minPopSize)
@@ -101,13 +102,13 @@ void SubPopulation::purge()
                 return a.fitness < b.fitness;
             });
 
-        remove(worstFitness);
+        remove(worstFitness, pm);
     }
 }
 
 // TODO this function should also be called after updating the penalties, since
 //  in that case the cost rank likely changes.
-void SubPopulation::updateFitness()
+void SubPopulation::updateFitness(PenaltyManager const &pm)
 {
     if (items.empty())
         return;
@@ -116,7 +117,7 @@ void SubPopulation::updateFitness()
     std::iota(byCost.begin(), byCost.end(), 0);
 
     std::stable_sort(byCost.begin(), byCost.end(), [&](size_t a, size_t b) {
-        return items[a].individual->cost() < items[b].individual->cost();
+        return items[a].individual->cost(pm) < items[b].individual->cost(pm);
     });
 
     std::vector<std::pair<double, size_t>> diversity;

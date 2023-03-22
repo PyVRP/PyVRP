@@ -29,7 +29,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     ls.add_route_operator(RelocateStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
-        individual = Individual.make_random(data, pm, rng)
+        individual = Individual.make_random(data, rng)
         exchange_individual = ls.search(individual, pm)
         relocate_individual = ls.intensify(
             exchange_individual, pm, overlap_tolerance_degrees=360
@@ -59,7 +59,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     ls.add_node_operator(Exchange10(data))
     ls.add_route_operator(RelocateStar(data))
 
-    individual = Individual.make_random(data, pm, rng)
+    individual = Individual.make_random(data, rng)
     exchange_individual = ls.search(individual, pm)
     relocate_individual = ls.intensify(
         exchange_individual, pm, overlap_tolerance_degrees=360
@@ -70,5 +70,5 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     # granular neighbourhood, which limits the number of operators. RELOCATE*
     # overcomes some of that, and as a result, should be able to improve the
     # solution further.
-    assert_(individual.cost() > exchange_individual.cost())
-    assert_(exchange_individual.cost() > relocate_individual.cost())
+    assert_(individual.cost(pm) > exchange_individual.cost(pm))
+    assert_(exchange_individual.cost(pm) > relocate_individual.cost(pm))

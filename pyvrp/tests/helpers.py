@@ -38,20 +38,8 @@ def sleep(duration, get_now=time.perf_counter):
         now = get_now()
 
 
-def make_random_solutions(num_sols, data, pm, rng):
+def make_random_solutions(num_sols, data, rng):
     """
     Returns a list of ``num_sols`` random solutions.
     """
-    return [Individual.make_random(data, pm, rng) for _ in range(num_sols)]
-
-
-class DummyTarget:
-    """
-    Dummy optimisation target that implements the OptimisationTarget protocol.
-    """
-
-    def __init__(self, cost: float):
-        self._cost = cost
-
-    def cost(self):
-        return self._cost
+    return [Individual.make_random(data, rng) for _ in range(num_sols)]

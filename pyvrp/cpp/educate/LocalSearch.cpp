@@ -70,7 +70,7 @@ Individual LocalSearch::search(Individual &individual, PenaltyManager const &pm)
         }
     }
 
-    return exportIndividual(pm);
+    return exportIndividual();
 }
 
 Individual LocalSearch::intensify(Individual &individual,
@@ -126,7 +126,7 @@ Individual LocalSearch::intensify(Individual &individual,
         }
     }
 
-    return exportIndividual(pm);
+    return exportIndividual();
 }
 
 bool LocalSearch::applyNodeOps(Node *U, Node *V, PenaltyManager const &pm)
@@ -244,7 +244,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
         routeOp->init(individual);
 }
 
-Individual LocalSearch::exportIndividual(PenaltyManager const &pm)
+Individual LocalSearch::exportIndividual()
 {
     std::vector<std::pair<double, int>> routePolarAngles;
     routePolarAngles.reserve(data.numVehicles());
@@ -268,7 +268,7 @@ Individual LocalSearch::exportIndividual(PenaltyManager const &pm)
         }
     }
 
-    return {data, pm, indivRoutes};
+    return {data, indivRoutes};
 }
 
 void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
