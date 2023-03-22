@@ -39,7 +39,7 @@ PYBIND11_MODULE(_SubPopulation, m)
         .def("add",
              &SubPopulation::add,
              py::arg("individual"),
-             py::arg("penalty_manager"))
+             py::arg("cost_evaluator"))
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
@@ -58,5 +58,5 @@ PYBIND11_MODULE(_SubPopulation, m)
                 return py::make_iterator(subPop.cbegin(), subPop.cend());
             },
             py::return_value_policy::reference_internal)
-        .def("purge", &SubPopulation::purge, py::arg("penalty_manager"));
+        .def("purge", &SubPopulation::purge, py::arg("cost_evaluator"));
 }

@@ -20,7 +20,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     after (1, 1)-exchange gets stuck.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
 
     # For a fair comparison we should not hamper the node operator with
@@ -34,22 +34,28 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     for _ in range(10):  # repeat a few times to really make sure
         individual = Individual.make_random(data, rng)
 
-        swap_individual = ls.search(individual, pm)
+        swap_individual = ls.search(individual, cost_evaluator)
         swap_star_individual = ls.intensify(
-            swap_individual, pm, overlap_tolerance_degrees=360
+            swap_individual, cost_evaluator, overlap_tolerance_degrees=360
         )
 
         # The regular swap operator should have been able to improve the random
         # individual. After swap gets stuck, SWAP* should still be able to
         # further improve the individual.
-        assert_(swap_individual.cost(pm) < individual.cost(pm))
-        assert_(swap_star_individual.cost(pm) < swap_individual.cost(pm))
+        assert_(
+            swap_individual.cost(cost_evaluator)
+            < individual.cost(cost_evaluator)
+        )
+        assert_(
+            swap_star_individual.cost(cost_evaluator)
+            < swap_individual.cost(cost_evaluator)
+        )
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
 def test_swap_star_on_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=seed)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
@@ -61,10 +67,13 @@ def test_swap_star_on_RC208_instance(seed: int):
     split = rng.randint(data.num_clients)
     individual = Individual(data, [route[:split], route[split:]])
     improved_individual = ls.intensify(
-        individual, pm, overlap_tolerance_degrees=360
+        individual, cost_evaluator, overlap_tolerance_degrees=360
     )
 
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
     assert_equal(improved_individual.num_routes(), 2)
-    assert_(improved_individual.cost(pm) < individual.cost(pm))
+    assert_(
+        improved_individual.cost(cost_evaluator)
+        < individual.cost(cost_evaluator)
+    )

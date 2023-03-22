@@ -195,7 +195,8 @@ def test_best_solution_improves_with_more_iterations():
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
 
-    assert_(new_best.cost(pm) < initial_best.cost(pm))
+    cost_evaluator = pm.get_cost_evaluator()
+    assert_(new_best.cost(cost_evaluator) < initial_best.cost(cost_evaluator))
     assert_(new_best.is_feasible())  # best must be feasible
 
 

@@ -8,17 +8,17 @@ from pyvrp.tests.helpers import read
 
 def test_local_search_raises_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     individual = Individual.make_random(data, rng)
 
     with assert_raises(RuntimeError):
-        ls.search(individual, pm)
+        ls.search(individual, cost_evaluator)
 
     with assert_raises(RuntimeError):
-        ls.intensify(individual, pm)
+        ls.intensify(individual, cost_evaluator)
 
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():

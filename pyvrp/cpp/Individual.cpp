@@ -77,10 +77,10 @@ void Individual::evaluate(ProblemData const &data)
     }
 }
 
-size_t Individual::cost(PenaltyManager const &pm) const
+size_t Individual::cost(CostEvaluator const &costEvaluator) const
 {
-    auto const loadPenalty = pm.loadPenaltyExcess(capacityExcess);
-    auto const twPenalty = pm.twPenalty(timeWarp);
+    auto const loadPenalty = costEvaluator.loadPenaltyExcess(capacityExcess);
+    auto const twPenalty = costEvaluator.twPenalty(timeWarp);
 
     return distance + loadPenalty + twPenalty;
 }

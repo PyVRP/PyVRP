@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
-Individual LocalSearch::search(Individual &individual, PenaltyManager const &pm)
+Individual LocalSearch::search(Individual &individual,
+                               CostEvaluator const &costEvaluator)
 {
     loadIndividual(individual);
 
@@ -46,10 +47,10 @@ Individual LocalSearch::search(Individual &individual, PenaltyManager const &pm)
                 if (lastModified[U->route->idx] > lastTestedNode
                     || lastModified[V->route->idx] > lastTestedNode)
                 {
-                    if (applyNodeOps(U, V, pm))
+                    if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), pm))
+                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -64,7 +65,7 @@ Individual LocalSearch::search(Individual &individual, PenaltyManager const &pm)
                 if (empty == routes.end())
                     continue;
 
-                if (applyNodeOps(U, empty->depot, pm))
+                if (applyNodeOps(U, empty->depot, costEvaluator))
                     continue;
             }
         }
@@ -74,7 +75,7 @@ Individual LocalSearch::search(Individual &individual, PenaltyManager const &pm)
 }
 
 Individual LocalSearch::intensify(Individual &individual,
-                                  PenaltyManager const &pm,
+                                  CostEvaluator const &costEvaluator,
                                   int overlapToleranceDegrees)
 {
     loadIndividual(individual);
@@ -120,7 +121,8 @@ Individual LocalSearch::intensify(Individual &individual,
                 auto const lastModifiedRoute
                     = std::max(lastModified[U.idx], lastModified[V.idx]);
 
-                if (lastModifiedRoute > lastTested && applyRouteOps(&U, &V, pm))
+                if (lastModifiedRoute > lastTested
+                    && applyRouteOps(&U, &V, costEvaluator))
                     continue;
             }
         }
@@ -129,10 +131,12 @@ Individual LocalSearch::intensify(Individual &individual,
     return exportIndividual();
 }
 
-bool LocalSearch::applyNodeOps(Node *U, Node *V, PenaltyManager const &pm)
+bool LocalSearch::applyNodeOps(Node *U,
+                               Node *V,
+                               CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
-        if (nodeOp->evaluate(U, V, pm) < 0)
+        if (nodeOp->evaluate(U, V, costEvaluator) < 0)
         {
             auto *routeU = U->route;  // copy pointers because the operator can
             auto *routeV = V->route;  // modify the node's route membership
@@ -146,10 +150,12 @@ bool LocalSearch::applyNodeOps(Node *U, Node *V, PenaltyManager const &pm)
     return false;
 }
 
-bool LocalSearch::applyRouteOps(Route *U, Route *V, PenaltyManager const &pm)
+bool LocalSearch::applyRouteOps(Route *U,
+                                Route *V,
+                                CostEvaluator const &costEvaluator)
 {
     for (auto *routeOp : routeOps)
-        if (routeOp->evaluate(U, V, pm) < 0)
+        if (routeOp->evaluate(U, V, costEvaluator) < 0)
         {
             routeOp->apply(U, V);
             update(U, V);

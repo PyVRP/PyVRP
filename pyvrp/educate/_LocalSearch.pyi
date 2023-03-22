@@ -1,7 +1,7 @@
 from typing import List
 
+from pyvrp._CostEvaluator import CostEvaluator
 from pyvrp._Individual import Individual
-from pyvrp._PenaltyManager import PenaltyManager
 from pyvrp._ProblemData import ProblemData
 from pyvrp._XorShift128 import XorShift128
 
@@ -21,9 +21,9 @@ class LocalSearch:
     def intensify(
         self,
         individual: Individual,
-        penalty_manager: PenaltyManager,
+        cost_evaluator: CostEvaluator,
         overlap_tolerance_degrees: int = 0,
     ) -> Individual: ...
     def search(
-        self, individual: Individual, penalty_manager: PenaltyManager
+        self, individual: Individual, cost_evaluator: CostEvaluator
     ) -> Individual: ...

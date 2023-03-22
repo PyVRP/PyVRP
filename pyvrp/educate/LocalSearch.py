@@ -1,7 +1,7 @@
 from typing import List
 
+from pyvrp._CostEvaluator import CostEvaluator
 from pyvrp._Individual import Individual
-from pyvrp._PenaltyManager import PenaltyManager
 from pyvrp._ProblemData import ProblemData
 from pyvrp._XorShift128 import XorShift128
 
@@ -85,7 +85,7 @@ class LocalSearch:
     def run(
         self,
         individual: Individual,
-        penalty_manager: PenaltyManager,
+        cost_evaluator: CostEvaluator,
         should_intensify: bool,
     ) -> Individual:
         """
@@ -99,8 +99,8 @@ class LocalSearch:
         ----------
         individual
             The individual to improve through local search.
-        penalty_manager
-            Penalty manager to use.
+        cost_evaluator
+            Cost evaluator to use.
         should_intensify
             Whether to apply :meth:`~intensify`. Intensification can provide
             much better solutions, but is computationally demanding. By default
@@ -117,15 +117,15 @@ class LocalSearch:
         # TODO separate load/export individual from c++ implementation
         # so we only need to do it once
         while True:
-            individual = self.search(individual, penalty_manager)
+            individual = self.search(individual, cost_evaluator)
 
             if not should_intensify:
                 return individual
 
-            new_individual = self.intensify(individual, penalty_manager)
+            new_individual = self.intensify(individual, cost_evaluator)
 
-            if new_individual.cost(penalty_manager) < individual.cost(
-                penalty_manager
+            if new_individual.cost(cost_evaluator) < individual.cost(
+                cost_evaluator
             ):
                 individual = new_individual
                 continue
@@ -135,7 +135,7 @@ class LocalSearch:
     def intensify(
         self,
         individual: Individual,
-        penalty_manager: PenaltyManager,
+        cost_evaluator: CostEvaluator,
         overlap_tolerance_degrees: int = 0,
     ) -> Individual:
         """
@@ -148,8 +148,8 @@ class LocalSearch:
         ----------
         individual
             The individual to improve.
-        penalty_manager
-            Penalty manager to use.
+        cost_evaluator
+            Cost evaluator to use.
         overlap_tolerance_degrees
             This method evaluates improving moves between route pairs. To limit
             computational efforts, by default not all route pairs are
@@ -171,11 +171,11 @@ class LocalSearch:
             individual that was passed in.
         """
         return self._ls.intensify(
-            individual, penalty_manager, overlap_tolerance_degrees
+            individual, cost_evaluator, overlap_tolerance_degrees
         )
 
     def search(
-        self, individual: Individual, penalty_manager: PenaltyManager
+        self, individual: Individual, cost_evaluator: CostEvaluator
     ) -> Individual:
         """
         This method uses the node operators on this local search object to
@@ -185,8 +185,8 @@ class LocalSearch:
         ----------
         individual
             The individual to improve.
-        penalty_manager
-            Penalty manager to use.
+        cost_evaluator
+            Cost evaluator to use.
 
         Raises
         ------
@@ -200,4 +200,4 @@ class LocalSearch:
             The improved individual. This is not the same object as the
             individual that was passed in.
         """
-        return self._ls.search(individual, penalty_manager)
+        return self._ls.search(individual, cost_evaluator)

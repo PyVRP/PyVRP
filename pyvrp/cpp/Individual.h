@@ -1,7 +1,7 @@
 #ifndef INDIVIDUAL_H
 #define INDIVIDUAL_H
 
-#include "PenaltyManager.h"
+#include "CostEvaluator.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 
@@ -38,7 +38,7 @@ public:
     /**
      * Returns this individual's objective (penalized cost).
      */
-    [[nodiscard]] size_t cost(PenaltyManager const &pm) const;
+    [[nodiscard]] size_t cost(CostEvaluator const &costEvaluator) const;
 
     /**
      * Returns the number of non-empty routes in this individual's solution.

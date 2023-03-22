@@ -17,7 +17,7 @@ def test_single_route_OkSmall():
     instance where we know what is going on.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -25,11 +25,14 @@ def test_single_route_OkSmall():
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
     individual = Individual(data, [[1, 4, 2, 3]])
-    improved_individual = ls.search(individual, pm)
+    improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
-    assert_(improved_individual.cost(pm) < individual.cost(pm))
+    assert_(
+        improved_individual.cost(cost_evaluator)
+        < individual.cost(cost_evaluator)
+    )
 
     # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
     # after 2 as 2 -> 3 -> 1 -> 4.
@@ -40,13 +43,16 @@ def test_single_route_OkSmall():
     # to the returned solution's cost.
     for routes in ([[3, 2], [1, 4]], [[2, 3], [4, 1]], [[2, 4], [1, 3]]):
         other = Individual(data, routes)
-        assert_(improved_individual.cost(pm) <= other.cost(pm))
+        assert_(
+            improved_individual.cost(cost_evaluator)
+            <= other.cost(cost_evaluator)
+        )
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
 def test_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -55,7 +61,10 @@ def test_RC208_instance(seed: int):
 
     single_route = list(range(1, data.num_clients + 1))
     individual = Individual(data, [single_route])
-    improved_individual = ls.search(individual, pm)
+    improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_(improved_individual.cost(pm) < individual.cost(pm))
+    assert_(
+        improved_individual.cost(cost_evaluator)
+        < individual.cost(cost_evaluator)
+    )

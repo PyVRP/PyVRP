@@ -1,10 +1,10 @@
 #ifndef LOCALSEARCH_H
 #define LOCALSEARCH_H
 
+#include "CostEvaluator.h"
 #include "Individual.h"
 #include "LocalSearchOperator.h"
 #include "Node.h"
-#include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "Route.h"
 #include "XorShift128.h"
@@ -48,10 +48,11 @@ class LocalSearch
     // Export the LS solution back into an individual
     Individual exportIndividual();
 
-    [[nodiscard]] bool applyNodeOps(Node *U, Node *V, PenaltyManager const &pm);
+    [[nodiscard]] bool
+    applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
 
     [[nodiscard]] bool
-    applyRouteOps(Route *U, Route *V, PenaltyManager const &pm);
+    applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move
     void update(Route *U, Route *V);
@@ -84,7 +85,8 @@ public:
      * Performs regular (node-based) local search around the given individual,
      * and returns a new, hopefully improved individual.
      */
-    Individual search(Individual &individual, PenaltyManager const &pm);
+    Individual search(Individual &individual,
+                      CostEvaluator const &costEvaluator);
 
     /**
      * Performs a more intensive local search around the given individual,
@@ -92,7 +94,7 @@ public:
      * hopefully improved individual.
      */
     Individual intensify(Individual &individual,
-                         PenaltyManager const &pm,
+                         CostEvaluator const &costEvaluator,
                          int overlapToleranceDegrees = 0);
 
     LocalSearch(ProblemData &data, XorShift128 &rng, Neighbours neighbours);

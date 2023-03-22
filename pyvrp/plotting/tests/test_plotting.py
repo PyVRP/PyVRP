@@ -57,14 +57,14 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
     pop = Population(broken_pairs_distance, params=params)
 
     for indiv in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(indiv, pm)
+        pop.add(indiv, cost_evaluator)
 
     stats = Statistics()
 
@@ -75,8 +75,8 @@ def test_plot_result():
         else:
             individual = Individual.make_random(data, rng)
 
-        pop.add(individual, pm)
-        stats.collect_from(pop, pm)
+        pop.add(individual, cost_evaluator)
+        stats.collect_from(pop, cost_evaluator)
 
         # Hacky to produce deterministic result
         stats.runtimes[-1] = i % 3

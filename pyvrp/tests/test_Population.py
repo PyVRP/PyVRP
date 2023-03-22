@@ -98,14 +98,14 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 def test_add_triggers_purge():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
     pop = Population(bpd, params=params)
 
     for indiv in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(indiv, pm)
+        pop.add(indiv, cost_evaluator)
 
     # Population should initialise at least min_pop_size individuals
     assert_(len(pop) >= params.min_pop_size)
@@ -118,7 +118,7 @@ def test_add_triggers_purge():
         individual = Individual.make_random(data, rng)
 
         if individual.is_feasible():
-            pop.add(individual, pm)
+            pop.add(individual, cost_evaluator)
             num_feas += 1
 
             assert_equal(len(pop), num_feas + num_infeas)
@@ -135,14 +135,14 @@ def test_add_triggers_purge():
     individual = Individual.make_random(data, rng)
     assert_(individual.is_feasible())
 
-    pop.add(individual, pm)
+    pop.add(individual, cost_evaluator)
     assert_equal(pop.num_feasible(), params.min_pop_size)
     assert_equal(len(pop), num_infeas + params.min_pop_size)
 
 
 def test_select_returns_same_parents_if_no_other_option():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
@@ -150,7 +150,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
     assert_equal(len(pop), 0)
 
-    pop.add(Individual(data, [[3, 2], [1, 4]]), pm)
+    pop.add(Individual(data, [[3, 2], [1, 4]]), cost_evaluator)
     assert_equal(len(pop), 1)
 
     # We added a single individual, so we should now get the same parent twice.
@@ -158,7 +158,7 @@ def test_select_returns_same_parents_if_no_other_option():
     assert_(parents[0] == parents[1])
 
     # Now we add another, different individual.
-    pop.add(Individual(data, [[3, 2], [1], [4]]), pm)
+    pop.add(Individual(data, [[3, 2], [1], [4]]), cost_evaluator)
     assert_equal(len(pop), 2)
 
     # We should now get two different individuals as parents, at least most of
@@ -182,7 +182,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
@@ -194,14 +194,14 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
         # With zero min_pop_size and zero generation_size, every additional
         # individual triggers a purge. So the population size can never grow
         # beyond zero.
-        pop.add(Individual.make_random(data, rng), pm)
+        pop.add(Individual.make_random(data, rng), cost_evaluator)
         assert_equal(len(pop), 0)
 
 
 @mark.parametrize("nb_elite", [5, 25])
 def test_elite_individuals_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
@@ -210,7 +210,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     # Keep adding individuals until the infeasible subpopulation is of maximum
     # size.
     while pop.num_infeasible() != params.max_pop_size:
-        pop.add(Individual.make_random(data, rng), pm)
+        pop.add(Individual.make_random(data, rng), cost_evaluator)
 
     assert_equal(pop.num_infeasible(), params.max_pop_size)
 
@@ -221,13 +221,13 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     ]
 
     best_individuals = sorted(
-        curr_individuals, key=lambda indiv: indiv.cost(pm)
+        curr_individuals, key=lambda indiv: indiv.cost(cost_evaluator)
     )
     elite_individuals = best_individuals[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
     single_route = [client for client in range(1, data.num_clients + 1)]
-    pop.add(Individual(data, [single_route]), pm)
+    pop.add(Individual(data, [single_route]), cost_evaluator)
 
     # After the purge, there should remain min_pop_size infeasible solutions.
     assert_equal(pop.num_infeasible(), params.min_pop_size)
@@ -243,13 +243,13 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
 
 def test_binary_tournament_ranks_by_fitness():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
     for individual in make_random_solutions(50, data, rng):
         if not individual.is_feasible():
-            pop.add(individual, pm)
+            pop.add(individual, cost_evaluator)
 
     assert_equal(pop.num_feasible(), 0)
 
@@ -277,14 +277,14 @@ def test_binary_tournament_ranks_by_fitness():
 
 def test_purge_removes_duplicates():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
     pop = Population(bpd, params=params)
 
     for indiv in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(indiv, pm)
+        pop.add(indiv, cost_evaluator)
 
     assert_equal(len(pop), params.min_pop_size)
 
@@ -294,7 +294,7 @@ def test_purge_removes_duplicates():
     assert_(not individual.is_feasible())
 
     for _ in range(params.generation_size):
-        pop.add(individual, pm)
+        pop.add(individual, cost_evaluator)
 
     # Make sure we have not yet purged, and increase the minimum population
     # size by one to make sure we're definitely not removing *all* of the
@@ -305,7 +305,7 @@ def test_purge_removes_duplicates():
     # Keep adding individuals until we have had a purge, and returned to the
     # minimum population size.
     while pop.num_infeasible() != params.min_pop_size:
-        pop.add(Individual.make_random(data, rng), pm)
+        pop.add(Individual.make_random(data, rng), cost_evaluator)
 
     # Since duplicates are purged first, there should now be only one of them
     # in the subpopulation. There cannot be zero, because we made sure of that.
@@ -319,12 +319,12 @@ def test_purge_removes_duplicates():
 
 def test_clear():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
     for individual in make_random_solutions(10, data, rng):
-        pop.add(individual, pm)
+        pop.add(individual, cost_evaluator)
 
     assert_equal(len(pop), 10)
 

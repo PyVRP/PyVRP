@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
-from ._PenaltyManager import PenaltyManager
+from ._CostEvaluator import CostEvaluator
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 
@@ -48,20 +48,19 @@ class Individual:
         Individual
             The randomly generated Individual.
         """
-    def cost(self, penalty_manager: PenaltyManager) -> int:
+    def cost(self, cost_evaluator: CostEvaluator) -> int:
         """
         Returns the current cost of the individual's solution.
 
         .. note::
 
-           These costs depend on the current penalty values maintained by the
-           :class:`~pyvrp._PenaltyManager.PenaltyManager` used to construct the
-           individual.
+           These costs depend on penalty values which is why a
+           :class:`~pyvrp._CostEvaluator.CostEvaluator` object is required.
 
         Parameters
         ----------
-        penalty_manager
-            PenaltyManager used to compute costs for individuals.
+        cost_evaluator
+            CostEvaluator used to compute the cost.
 
         Returns
         -------

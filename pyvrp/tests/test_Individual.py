@@ -85,7 +85,7 @@ def test_feasibility():
 
 def test_distance_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
 
     indiv = Individual(data, [[1, 2], [3], [4]])
     assert_(indiv.is_feasible())
@@ -101,12 +101,12 @@ def test_distance_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(indiv.cost(pm), dist)
+    assert_equal(indiv.cost(cost_evaluator), dist)
 
 
 def test_capacity_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
 
     indiv = Individual(data, [[4, 3, 1, 2]])
     assert_(indiv.has_excess_capacity())
@@ -115,7 +115,7 @@ def test_capacity_cost_calculation():
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10. This has a non-zero
     # load penalty
-    load_penalty = pm.load_penalty(18, data.vehicle_capacity)
+    load_penalty = cost_evaluator.load_penalty(18, data.vehicle_capacity)
     assert_(load_penalty > 0)
 
     # The total costs are now load_penalty + dist
@@ -127,12 +127,12 @@ def test_capacity_cost_calculation():
         + data.dist(2, 0)
     )
 
-    assert_equal(indiv.cost(pm), dist + load_penalty)
+    assert_equal(indiv.cost(cost_evaluator), dist + load_penalty)
 
 
 def test_time_warp_cost_calculation():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = PenaltyManager().get_cost_evaluator()
 
     indiv = Individual(data, [[1, 3], [2, 4]])
     assert_(not indiv.has_excess_capacity())
@@ -145,7 +145,7 @@ def test_time_warp_cost_calculation():
     # where we incur time warp: we need to 'warp back' to 15'300.
     tw_first_route = 15_600 + 360 + 1_427 - 15_300
     tw_second_route = 0
-    tw_penalty = pm.tw_penalty(tw_first_route + tw_second_route)
+    tw_penalty = cost_evaluator.tw_penalty(tw_first_route + tw_second_route)
 
     # The total costs are now tw_penalty + dist
     dist = (
@@ -157,7 +157,7 @@ def test_time_warp_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(indiv.cost(pm), dist + tw_penalty)
+    assert_equal(indiv.cost(cost_evaluator), dist + tw_penalty)
 
 
 def test_time_warp_for_a_very_constrained_problem():
@@ -262,12 +262,12 @@ def test_str_contains_essential_information():
 
         # Last line should contain the cost
         # TODO what do we want with cost in str representation?
-        # assert_(str(individual.cost(pm)) in str_representation[-1])
+        # assert_(
+        #     str(individual.cost(cost_evaluator)) in str_representation[-1])
 
 
 def test_hash():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
     rng = XorShift128(seed=2)
 
     indiv1 = Individual.make_random(data, rng)
@@ -286,9 +286,3 @@ def test_hash():
     # These two are the same solution, so their hashes should be the same too.
     assert_equal(indiv2, indiv3)
     assert_equal(hash(indiv2), hash(indiv3))
-
-    with pm.get_penalty_booster():
-        # This tests the hash does not depend on obviously changing values,
-        # like the Individual's cost (through the penalty manager).
-        assert_equal(hash(indiv1), hash1)
-        assert_equal(hash(indiv2), hash2)
