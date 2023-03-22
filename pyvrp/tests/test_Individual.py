@@ -250,7 +250,7 @@ def test_str_contains_essential_information():
         num_routes = individual.num_routes()
 
         # There should be no more than num_routes lines (each detailing a
-        # single route), and a final line containing the cost.
+        # single route), and a final line containing the distance.
         assert_equal(len(str_representation), num_routes + 1)
 
         # The first num_routes lines should each contain a route, where each
@@ -260,9 +260,8 @@ def test_str_contains_essential_information():
             for client in route:
                 assert_(str(client) in str_route)
 
-        # Last line should contain the cost
-        # TODO what do we want with cost in str representation?
-        # assert_(str(cost_evaluator(individual)) in str_representation[-1])
+        # Last line should contain the distance (cost).
+        assert_(str(individual.distance()) in str_representation[-1])
 
 
 def test_hash():
