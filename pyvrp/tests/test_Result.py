@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, Population, XorShift128
+from pyvrp import CostEvaluator, Individual, Population, XorShift128
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
@@ -14,7 +14,7 @@ from pyvrp.tests.helpers import read
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     indiv = Individual(data, routes)
 
     res = Result(indiv, Statistics(), num_iterations, runtime)
@@ -28,7 +28,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
 def test_compute_cost_raises_for_infeasible():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     # Infeasible
     indiv = Individual(data, [[1, 2, 3, 4]])
@@ -69,7 +69,7 @@ def test_init_raises_invalid_arguments(num_iterations, runtime):
 )
 def test_has_statistics(num_iterations: int, has_statistics: bool):
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
@@ -85,7 +85,7 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
 
 def test_str_contains_essential_information():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     for _ in range(5):  # let's do this a few times to really make sure

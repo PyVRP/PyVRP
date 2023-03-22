@@ -18,6 +18,16 @@ class CostEvaluator:
     """
 
     def __init__(self, capacity_penalty: int, tw_penalty: int) -> None: ...
+    @classmethod
+    def get_default(cls) -> CostEvaluator:
+        """
+        Creates a default CostEvaluator instance.
+
+        Returns
+        -------
+        CostEvaluator
+            A default CostEvaluator instance.
+        """
     def load_penalty(self, load: int, vehicle_capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
     def penalized_cost(self, individual: Individual) -> int: ...

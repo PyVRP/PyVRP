@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from .PenaltyManager import PenaltyManager
 from .Statistics import Statistics
 from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
@@ -67,9 +66,9 @@ class Result:
             if not self.best.is_feasible():
                 raise ValueError(
                     "Best found solution is infeasible! Provide the "
-                    "penalty_manager argument to compute the cost."
+                    "cost_evaluator argument to compute the cost."
                 )
-            cost_evaluator = PenaltyManager().get_cost_evaluator()
+            cost_evaluator = CostEvaluator.get_default()
         return cost_evaluator.penalized_cost(self.best)
 
     def is_feasible(self) -> bool:

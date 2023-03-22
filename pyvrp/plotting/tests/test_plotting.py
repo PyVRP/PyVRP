@@ -2,8 +2,8 @@ from matplotlib.testing.decorators import image_comparison as img_comp
 from numpy.testing import assert_, assert_raises
 
 from pyvrp import (
+    CostEvaluator,
     Individual,
-    PenaltyManager,
     Population,
     PopulationParams,
     XorShift128,
@@ -57,7 +57,7 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
