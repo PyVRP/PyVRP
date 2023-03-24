@@ -1,4 +1,5 @@
 #include "CostEvaluator.h"
+#include <limits>
 
 CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
                              unsigned int timeWarpPenalty)
@@ -16,5 +17,6 @@ unsigned int CostEvaluator::penalizedCost(Individual const &individual) const
 
 unsigned int CostEvaluator::cost(Individual const &individual) const
 {
-    return individual.isFeasible() ? individual.distance() : UINT32_MAX;
+    return individual.isFeasible() ? individual.distance()
+                                   : std::numeric_limits<unsigned int>::max();
 }

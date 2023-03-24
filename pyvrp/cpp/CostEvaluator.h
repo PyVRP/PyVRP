@@ -39,8 +39,8 @@ public:
     penalizedCost(Individual const &individual) const;
 
     /**
-     * Computes the objective for a given individual. Returns infinity (or some
-     * large value if the individual is infeasible.
+     * Computes the objective for a given individual. Returns the largest
+     * representable cost value if the individual is infeasible.
      */
     [[nodiscard]] unsigned int cost(Individual const &individual) const;
 };

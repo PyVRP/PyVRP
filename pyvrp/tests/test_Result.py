@@ -1,3 +1,5 @@
+import math
+
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
@@ -14,39 +16,17 @@ from pyvrp.tests.helpers import read
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(20, 6)
     indiv = Individual(data, routes)
 
     res = Result(indiv, Statistics(), num_iterations, runtime)
 
     assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
-    cost = cost_evaluator.penalized_cost(indiv)
-    assert_allclose(res.cost(cost_evaluator), cost)
+    if indiv.is_feasible():
+        assert_allclose(res.cost(), CostEvaluator.get_default().cost(indiv))
+    else:
+        assert_equal(res.cost(), math.inf)
     assert_allclose(res.runtime, runtime)
-
-
-def test_compute_cost_raises_for_infeasible():
-    data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(20, 6)
-
-    # Infeasible
-    indiv = Individual(data, [[1, 2, 3, 4]])
-    res = Result(indiv, Statistics(), 0, 0)
-
-    with assert_raises(ValueError):
-        _ = res.cost()
-
-    # Should not raise if we provide penalty manager
-    cost = cost_evaluator.penalized_cost(indiv)
-    assert_allclose(res.cost(cost_evaluator), cost)
-
-    # Feasible should not raise
-    indiv = Individual(data, [[1, 2], [3, 4]])
-    res = Result(indiv, Statistics(), 0, 0)
-
-    # Should not raise even though we do not give penalty manager
-    assert_allclose(res.cost(), cost_evaluator.penalized_cost(indiv))
 
 
 @mark.parametrize(
@@ -83,23 +63,25 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
     assert_equal(res.num_iterations, num_iterations)
 
 
-def test_str_contains_essential_information():
+@mark.parametrize(
+    "routes",
+    [[[1, 2], [3], [4]], [[1, 2, 3, 4]]],
+)
+def test_str_contains_essential_information(routes):
     data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
 
-    for _ in range(5):  # let's do this a few times to really make sure
-        individual = Individual.make_random(data, rng)
-        res = Result(individual, Statistics(), 0, 0.0)
-        str_representation = str(res)
+    individual = Individual(data, routes)
+    res = Result(individual, Statistics(), 0, 0.0)
+    str_representation = str(res)
 
-        # Test that feasibility status and solution cost are presented.
-        if individual.is_feasible():
-            assert_(str(cost_evaluator.cost(individual)) in str_representation)
-        else:
-            assert_("INFEASIBLE" in str_representation)
+    # Test that feasibility status and solution cost are presented.
+    if individual.is_feasible():
+        cost = CostEvaluator.get_default().cost(individual)
+        assert_(str(cost) in str_representation)
+    else:
+        assert_("INFEASIBLE" in str_representation)
 
-        # And make sure that all non-empty routes are printed as well.
-        for route in individual.get_routes():
-            if route:
-                assert_(str(route) in str_representation)
+    # And make sure that all non-empty routes are printed as well.
+    for route in individual.get_routes():
+        if route:
+            assert_(str(route) in str_representation)
