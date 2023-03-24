@@ -154,7 +154,7 @@ def test_select_returns_same_parents_if_no_other_option():
     assert_equal(len(pop), 1)
 
     # We added a single individual, so we should now get the same parent twice.
-    parents = pop.select(rng)
+    parents = pop.select(rng, cost_evaluator)
     assert_(parents[0] == parents[1])
 
     # Now we add another, different individual.
@@ -167,7 +167,7 @@ def test_select_returns_same_parents_if_no_other_option():
     # and collect the number of times the parents are different.
     different_parents = 0
     for _ in range(1_000):
-        parents = pop.select(rng)
+        parents = pop.select(rng, cost_evaluator)
         different_parents += parents[0] != parents[1]
 
     # The probability of selecting different parents is very close to 100%, so
@@ -253,13 +253,15 @@ def test_binary_tournament_ranks_by_fitness():
 
     # Since this test requires the fitness values of the individuals, we have
     # to access the underlying infeasible subpopulation directly.
+    # We must also explicitly trigger to update the fitness first.
+    pop._infeas.update_fitness(cost_evaluator)
     infeas = [item for item in pop._infeas]
     infeas = sorted(infeas, key=lambda item: item.fitness)
     infeas = {item.individual: idx for idx, item in enumerate(infeas)}
     infeas_count = np.zeros(len(infeas))
 
     for _ in range(10_000):
-        indiv = pop.get_binary_tournament(rng)
+        indiv = pop.get_binary_tournament(rng, cost_evaluator)
         infeas_count[infeas[indiv]] += 1
 
     # Now we compare the observed ranking from the binary tournament selection
