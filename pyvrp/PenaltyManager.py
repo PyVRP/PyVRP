@@ -24,7 +24,7 @@ class PenaltyParams:
         A repair booster value :math:`r \\ge 1`. This value is used to
         temporarily multiply the current penalty terms, to force feasibility.
         See also
-        :meth:`~pyvrp._PenaltyManager.PenaltyManager.get_penalty_booster`.
+        :meth:`~pyvrp.PenaltyManager.PenaltyManager.get_booster_cost_evaluator`.
     num_registrations_between_penalty_updates
         Number of feasibility registrations between penalty value updates. The
         penalty manager updates the penalty terms every once in a while based
