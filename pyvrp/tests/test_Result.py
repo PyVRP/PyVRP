@@ -23,7 +23,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
     assert_equal(res.is_feasible(), indiv.is_feasible())
     assert_equal(res.num_iterations, num_iterations)
     if indiv.is_feasible():
-        assert_allclose(res.cost(), CostEvaluator.get_default().cost(indiv))
+        assert_allclose(res.cost(), CostEvaluator().cost(indiv))
     else:
         assert_equal(res.cost(), math.inf)
     assert_allclose(res.runtime, runtime)
@@ -76,7 +76,7 @@ def test_str_contains_essential_information(routes):
 
     # Test that feasibility status and solution cost are presented.
     if individual.is_feasible():
-        cost = CostEvaluator.get_default().cost(individual)
+        cost = CostEvaluator().cost(individual)
         assert_(str(cost) in str_representation)
     else:
         assert_("INFEASIBLE" in str_representation)

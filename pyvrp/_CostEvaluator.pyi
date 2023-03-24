@@ -17,17 +17,9 @@ class CostEvaluator:
         The penalty for each unit of time warp.
     """
 
-    def __init__(self, capacity_penalty: int, tw_penalty: int) -> None: ...
-    @classmethod
-    def get_default(cls) -> CostEvaluator:
-        """
-        Creates a default CostEvaluator instance.
-
-        Returns
-        -------
-        CostEvaluator
-            A default CostEvaluator instance.
-        """
+    def __init__(
+        self, capacity_penalty: int = 0, tw_penalty: int = 0
+    ) -> None: ...
     def load_penalty(self, load: int, vehicle_capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
     def penalised_cost(self, individual: Individual) -> int: ...
