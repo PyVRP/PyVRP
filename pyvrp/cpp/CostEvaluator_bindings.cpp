@@ -18,5 +18,5 @@ PYBIND11_MODULE(_CostEvaluator, m)
         .def("penalised_cost",
              &CostEvaluator::penalisedCost,
              py::arg("individual"))
-        .def("cost", &CostEvaluator::penalisedCost, py::arg("individual"));
+        .def("cost", &CostEvaluator::cost, py::arg("individual"));
 }
