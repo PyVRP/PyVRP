@@ -191,7 +191,7 @@ def benchmark_solve(instance: str, **kwargs):
     return (
         instance_name,
         "Y" if res.is_feasible() else "N",
-        int(res.cost()),
+        round(res.cost(), 2),
         res.num_iterations,
         round(res.runtime, 3),
     )
@@ -224,7 +224,7 @@ def benchmark(instances: List[str], **kwargs):
     dtypes = [
         ("inst", "U37"),
         ("ok", "U1"),
-        ("obj", int),
+        ("obj", float),
         ("iters", int),
         ("time", float),
     ]
