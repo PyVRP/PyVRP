@@ -36,8 +36,7 @@ void SubPopulation::add(Individual const *individual,
         iProx.emplace(place, div, other.individual);
     }
 
-    items.push_back(item);  // add individual and update fitness scores for the
-    updateFitness(costEvaluator);  // entire subpopulation.
+    items.push_back(item);  // add individual
 
     if (size() > params.maxPopSize())
         purge(costEvaluator);
@@ -73,13 +72,13 @@ void SubPopulation::remove(
                 break;
             }
 
-    delete iterator->individual;   // dispose of manually allocated memory
-    items.erase(iterator);         // before the item is removed. Then update
-    updateFitness(costEvaluator);  // the fitness scores.
+    delete iterator->individual;  // dispose of manually allocated memory
+    items.erase(iterator);        // before the item is removed.
 }
 
 void SubPopulation::purge(CostEvaluator const &costEvaluator)
 {
+    // First we remove duplicates. This does not rely on the fitness values.
     while (size() > params.minPopSize)
     {
         // Remove duplicates from the subpopulation (if they exist)
@@ -98,6 +97,8 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
 
     while (size() > params.minPopSize)
     {
+        // Before using fitness, we must update fitness
+        updateFitness(costEvaluator);
         auto const worstFitness = std::max_element(
             items.begin(), items.end(), [](auto const &a, auto const &b) {
                 return a.fitness < b.fitness;
@@ -107,8 +108,6 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
     }
 }
 
-// TODO this function should also be called after updating the penalties, since
-//  in that case the cost rank likely changes.
 void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
 {
     if (items.empty())

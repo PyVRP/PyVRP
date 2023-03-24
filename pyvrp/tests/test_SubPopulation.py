@@ -85,6 +85,8 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
     for _ in range(params.min_pop_size):
         subpop.add(Individual.make_random(data, rng), cost_evaluator)
+    # We need to call update_fitness before accessing the fitness
+    subpop.update_fitness(cost_evaluator)
 
     # When all individuals are elite the diversity weight term drops out, and
     # fitness rankings are purely based on the cost ranking.
@@ -114,6 +116,8 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
 
     for _ in range(params.min_pop_size):
         subpop.add(Individual.make_random(data, rng), cost_evaluator)
+    # We need to call update_fitness before accessing the fitness
+    subpop.update_fitness(cost_evaluator)
 
     # When no individuals are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.
