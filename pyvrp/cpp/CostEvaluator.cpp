@@ -7,7 +7,7 @@ CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
 {
 }
 
-unsigned int CostEvaluator::penalizedCost(Individual const &individual) const
+unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
 {
     auto const loadPen = loadPenaltyExcess(individual.excessLoad());
     auto const twPen = twPenalty(individual.timeWarp());

@@ -183,7 +183,7 @@ Individual selectiveRouteExchange(
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};
 
-    auto const cost1 = costEvaluator.penalizedCost(indiv1);
-    auto const cost2 = costEvaluator.penalizedCost(indiv2);
+    auto const cost1 = costEvaluator.penalisedCost(indiv1);
+    auto const cost2 = costEvaluator.penalisedCost(indiv2);
     return cost1 < cost2 ? indiv1 : indiv2;
 }

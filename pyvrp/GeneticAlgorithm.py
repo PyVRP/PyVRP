@@ -95,7 +95,7 @@ class GeneticAlgorithm:
         # infeasible solution as the initial best.
         feas = [indiv for indiv in initial_solutions if indiv.is_feasible()]
         sols = feas if feas else initial_solutions
-        self._best = min(sols, key=self._cost_evaluator.penalized_cost)
+        self._best = min(sols, key=self._cost_evaluator.penalised_cost)
 
     @property
     def _cost_evaluator(self) -> CostEvaluator:
@@ -125,7 +125,7 @@ class GeneticAlgorithm:
         for individual in self._initial_solutions:
             self._pop.add(individual, self._cost_evaluator)
 
-        while not stop(self._cost_evaluator.penalized_cost(self._best)):
+        while not stop(self._cost_evaluator.penalised_cost(self._best)):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
@@ -135,7 +135,7 @@ class GeneticAlgorithm:
                 for individual in self._initial_solutions:
                     self._pop.add(individual, self._cost_evaluator)
 
-            curr_best = self._cost_evaluator.penalized_cost(self._best)
+            curr_best = self._cost_evaluator.penalised_cost(self._best)
 
             parents = self._pop.select(self._rng)
             offspring = self._op(
@@ -143,7 +143,7 @@ class GeneticAlgorithm:
             )
             self._educate(offspring)
 
-            new_best = self._cost_evaluator.penalized_cost(self._best)
+            new_best = self._cost_evaluator.penalised_cost(self._best)
 
             if new_best < curr_best:
                 iters_no_improvement = 1
@@ -158,8 +158,8 @@ class GeneticAlgorithm:
 
     def _educate(self, individual: Individual):
         def is_new_best(indiv):
-            cost = self._cost_evaluator.penalized_cost(indiv)
-            best_cost = self._cost_evaluator.penalized_cost(self._best)
+            cost = self._cost_evaluator.penalised_cost(indiv)
+            best_cost = self._cost_evaluator.penalised_cost(self._best)
             return indiv.is_feasible() and cost < best_cost
 
         def add_and_register(indiv):

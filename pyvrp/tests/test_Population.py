@@ -221,7 +221,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
     ]
 
     best_individuals = sorted(
-        curr_individuals, key=cost_evaluator.penalized_cost
+        curr_individuals, key=cost_evaluator.penalised_cost
     )
     elite_individuals = best_individuals[:nb_elite]
 

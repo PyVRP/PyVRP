@@ -25,8 +25,8 @@ def test_OkSmall_instance():
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 2)
-    current_cost = cost_evaluator.penalized_cost(individual)
-    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)
 
     # First improving (U, V) node pair is (1, 3), which results in the route
@@ -50,6 +50,6 @@ def test_RC208_instance(seed: int):
     improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    current_cost = cost_evaluator.penalized_cost(individual)
-    improved_cost = cost_evaluator.penalized_cost(improved_individual)
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)

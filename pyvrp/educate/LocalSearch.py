@@ -124,8 +124,8 @@ class LocalSearch:
 
             new_individual = self.intensify(individual, cost_evaluator)
 
-            current_cost = cost_evaluator.penalized_cost(individual)
-            new_cost = cost_evaluator.penalized_cost(new_individual)
+            current_cost = cost_evaluator.penalised_cost(individual)
+            new_cost = cost_evaluator.penalised_cost(new_individual)
             if new_cost < current_cost:
                 individual = new_individual
                 continue
