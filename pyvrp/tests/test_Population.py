@@ -166,8 +166,8 @@ def test_select_returns_same_parents_if_no_other_option():
     # small, but not zero. So let's do an experiment where we do 1000 selects,
     # and collect the number of times the parents are different.
     different_parents = 0
-    for i in range(1_000):
-        parents = pop.select(rng, cost_evaluator, i == 0)
+    for _ in range(1_000):
+        parents = pop.select(rng, cost_evaluator)
         different_parents += parents[0] != parents[1]
 
     # The probability of selecting different parents is very close to 100%, so
@@ -260,8 +260,8 @@ def test_binary_tournament_ranks_by_fitness():
     infeas = {item.individual: idx for idx, item in enumerate(infeas)}
     infeas_count = np.zeros(len(infeas))
 
-    for i in range(10_000):
-        indiv = pop.get_binary_tournament(rng, cost_evaluator, i == 0)
+    for _ in range(10_000):
+        indiv = pop.get_binary_tournament(rng, cost_evaluator)
         infeas_count[infeas[indiv]] += 1
 
     # Now we compare the observed ranking from the binary tournament selection

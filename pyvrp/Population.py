@@ -58,6 +58,18 @@ class Population:
         """
         return len(self._feas) + len(self._infeas)
 
+    def _update_fitness(self, cost_evaluator: CostEvaluator):
+        """
+        Updates the biased fitness values for the subpopulations.
+
+        Parameters
+        ----------
+        cost_evaluator
+            CostEvaluator to use for computing the fitness.
+        """
+        self._feas.update_fitness(cost_evaluator)
+        self._infeas.update_fitness(cost_evaluator)
+
     def num_feasible(self) -> int:
         """
         Returns the number of feasible individuals in the population.
@@ -106,7 +118,6 @@ class Population:
         self,
         rng: XorShift128,
         cost_evaluator: CostEvaluator,
-        update_fitness: bool = True,
     ) -> Tuple[Individual, Individual]:
         """
         Selects two (if possible non-identical) parents by binary tournament,
@@ -118,18 +129,15 @@ class Population:
             Random number generator.
         cost_evaluator
             Cost evaluator to use when computing the fitness.
-        update_fitness
-            Boolean whether to update the fitness values before selecting the
-            parents. Can be set to False for efficiency if it is known that the
-            fitness has not changed, e.g. when calling select repeatedly.
 
         Returns
         -------
         tuple
             A pair of individuals (parents).
         """
-        first = self.get_binary_tournament(rng, cost_evaluator, update_fitness)
-        second = self.get_binary_tournament(rng, cost_evaluator, False)
+        self._update_fitness(cost_evaluator)
+        first = self._get_binary_tournament(rng)
+        second = self._get_binary_tournament(rng)
 
         diversity = self._op(first, second)
         lb = self._params.lb_diversity
@@ -138,7 +146,7 @@ class Population:
         tries = 1
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
-            second = self.get_binary_tournament(rng, cost_evaluator, False)
+            second = self._get_binary_tournament(rng)
             diversity = self._op(first, second)
 
         return first, second
@@ -155,7 +163,6 @@ class Population:
         self,
         rng: XorShift128,
         cost_evaluator: CostEvaluator,
-        update_fitness: bool = True,
     ) -> Individual:
         """
         Selects an individual from this population by binary tournament.
@@ -166,24 +173,33 @@ class Population:
             Random number generator.
         cost_evaluator
             Cost evaluator to use when computing the fitness.
-        update_fitness
-            Boolean whether to update the fitness values before getting the
-            binary tournament. Can be set to False for efficiency if it is
-            known that the fitness has not changed, e.g. when calling this
-            function repeatedly.
 
         Returns
         -------
         Individual
             The selected individual.
         """
+        self._update_fitness(cost_evaluator)
+        return self._get_binary_tournament(rng)
 
-        if update_fitness:
-            # Note: even though the cost does not change, for the feasible
-            # subpopulation, we must always call compute_fitness as it is not
-            # updated when adding individuals
-            self._feas.update_fitness(cost_evaluator)
-            self._infeas.update_fitness(cost_evaluator)
+    def _get_binary_tournament(self, rng: XorShift128) -> Individual:
+        """
+        Selects an individual from this population by binary tournament.
+
+        Parameters
+        ----------
+        rng
+            Random number generator.
+
+        Returns
+        -------
+        Individual
+            The selected individual.
+
+        .. warning::
+            This function assumes self._update_fitness() has been called before
+            using this function unless nothing has changed.
+        """
 
         def select():
             num_feas = len(self._feas)
