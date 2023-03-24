@@ -3,8 +3,8 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
+    CostEvaluator,
     Individual,
-    PenaltyManager,
     Population,
     PopulationParams,
     XorShift128,
@@ -98,7 +98,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 def test_add_triggers_purge():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
@@ -142,7 +142,7 @@ def test_add_triggers_purge():
 
 def test_select_returns_same_parents_if_no_other_option():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
@@ -182,7 +182,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
@@ -201,7 +201,7 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
 @mark.parametrize("nb_elite", [5, 25])
 def test_elite_individuals_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(nb_elite=nb_elite)
     rng = XorShift128(seed=42)
 
@@ -220,7 +220,9 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
         individual for individual in pop if not individual.is_feasible()
     ]
 
-    best_individuals = sorted(curr_individuals, key=cost_evaluator)
+    best_individuals = sorted(
+        curr_individuals, key=cost_evaluator.penalised_cost
+    )
     elite_individuals = best_individuals[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
@@ -241,7 +243,7 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
 
 def test_binary_tournament_ranks_by_fitness():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
@@ -277,7 +279,7 @@ def test_binary_tournament_ranks_by_fitness():
 
 def test_purge_removes_duplicates():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = XorShift128(seed=42)
 
@@ -319,7 +321,7 @@ def test_purge_removes_duplicates():
 
 def test_clear():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 

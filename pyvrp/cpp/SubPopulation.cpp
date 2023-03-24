@@ -117,8 +117,8 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
     std::iota(byCost.begin(), byCost.end(), 0);
 
     std::stable_sort(byCost.begin(), byCost.end(), [&](size_t a, size_t b) {
-        return costEvaluator(*items[a].individual)
-               < costEvaluator(*items[b].individual);
+        return costEvaluator.penalisedCost(*items[a].individual)
+               < costEvaluator.penalisedCost(*items[b].individual);
     });
 
     std::vector<std::pair<double, size_t>> diversity;

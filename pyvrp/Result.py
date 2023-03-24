@@ -1,7 +1,6 @@
+import math
 from dataclasses import dataclass
-from typing import Optional
 
-from .PenaltyManager import PenaltyManager
 from .Statistics import Statistics
 from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
@@ -43,34 +42,19 @@ class Result:
         if self.runtime < 0:
             raise ValueError("Negative runtime not understood.")
 
-    def cost(self, cost_evaluator: Optional[CostEvaluator] = None) -> float:
+    def cost(self) -> float:
         """
-        Returns the cost (objective) value of the best solution.
-
-        Parameters
-        ----------
-        CostEvaluator
-            CostEvaluator used to compute the cost.
+        Returns the cost (objective) value of the best solution. Returns inf
+        if the best solution is infeasible.
 
         Returns
         -------
         float
             Objective value.
-
-        Raises
-        ------
-        ValueError
-            If the best solution found is infeasible and no cost evaluator
-            is provided to compute the cost.
         """
-        if cost_evaluator is None:
-            if not self.best.is_feasible():
-                raise ValueError(
-                    "Best found solution is infeasible! Provide the "
-                    "penalty_manager argument to compute the cost."
-                )
-            cost_evaluator = PenaltyManager().get_cost_evaluator()
-        return cost_evaluator(self.best)
+        if not self.best.is_feasible():
+            return math.inf
+        return CostEvaluator().cost(self.best)
 
     def is_feasible(self) -> bool:
         """

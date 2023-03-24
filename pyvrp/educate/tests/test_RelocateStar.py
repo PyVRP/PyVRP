@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.educate import (
     Exchange10,
     LocalSearch,
@@ -19,7 +19,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     neighbourhood is restricted do these solutions start to differ.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -50,7 +50,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     (1, 0)-Exchange and RELOCATE* should start to differ.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)
@@ -70,8 +70,8 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     # granular neighbourhood, which limits the number of operators. RELOCATE*
     # overcomes some of that, and as a result, should be able to improve the
     # solution further.
-    assert_(cost_evaluator(individual) > cost_evaluator(exchange_individual))
-    assert_(
-        cost_evaluator(exchange_individual)
-        > cost_evaluator(relocate_individual)
-    )
+    current_cost = cost_evaluator.penalised_cost(individual)
+    exchange_cost = cost_evaluator.penalised_cost(exchange_individual)
+    relocate_cost = cost_evaluator.penalised_cost(relocate_individual)
+    assert_(current_cost > exchange_cost)
+    assert_(exchange_cost > relocate_cost)

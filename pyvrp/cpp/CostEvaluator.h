@@ -33,9 +33,16 @@ public:
     [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
 
     /**
-     * Computes the objective (penalized cost) for a given individual.
+     * Computes the objective (penalised cost) for a given individual.
      */
-    [[nodiscard]] unsigned int operator()(Individual const &individual) const;
+    [[nodiscard]] unsigned int
+    penalisedCost(Individual const &individual) const;
+
+    /**
+     * Computes the objective for a given individual. Returns the largest
+     * representable cost value if the individual is infeasible.
+     */
+    [[nodiscard]] unsigned int cost(Individual const &individual) const;
 };
 
 unsigned int CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const

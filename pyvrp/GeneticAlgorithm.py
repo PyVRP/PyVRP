@@ -91,15 +91,12 @@ class GeneticAlgorithm:
         self._initial_solutions = initial_solutions
         self._params = params
 
-        # Find best feasible initial solution if any exist, else set the best
-        # infeasible solution as the initial best.
-        feas = [indiv for indiv in initial_solutions if indiv.is_feasible()]
-        sols = feas if feas else initial_solutions
-        self._best = min(sols, key=self._cost_evaluator)
+        # Find best feasible initial solution if any exist, else set a random
+        # infeasible solution (with infinite cost) as the initial best.
+        self._best = min(initial_solutions, key=self._cost_evaluator.cost)
 
     @property
     def _cost_evaluator(self) -> CostEvaluator:
-        # TODO add some caching here or inside PenaltyManager?
         return self._pm.get_cost_evaluator()
 
     def run(self, stop: StoppingCriterion):
@@ -125,7 +122,7 @@ class GeneticAlgorithm:
         for individual in self._initial_solutions:
             self._pop.add(individual, self._cost_evaluator)
 
-        while not stop(self._cost_evaluator(self._best)):
+        while not stop(self._cost_evaluator.cost(self._best)):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
@@ -135,7 +132,7 @@ class GeneticAlgorithm:
                 for individual in self._initial_solutions:
                     self._pop.add(individual, self._cost_evaluator)
 
-            curr_best = self._cost_evaluator(self._best)
+            curr_best = self._cost_evaluator.cost(self._best)
 
             parents = self._pop.select(self._rng, self._cost_evaluator)
             offspring = self._op(
@@ -143,7 +140,7 @@ class GeneticAlgorithm:
             )
             self._educate(offspring)
 
-            new_best = self._cost_evaluator(self._best)
+            new_best = self._cost_evaluator.cost(self._best)
 
             if new_best < curr_best:
                 iters_no_improvement = 1
@@ -158,9 +155,9 @@ class GeneticAlgorithm:
 
     def _educate(self, individual: Individual):
         def is_new_best(indiv):
-            cost = self._cost_evaluator(indiv)
-            best_cost = self._cost_evaluator(self._best)
-            return indiv.is_feasible() and cost < best_cost
+            cost = self._cost_evaluator.cost(indiv)
+            best_cost = self._cost_evaluator.cost(self._best)
+            return cost < best_cost
 
         def add_and_register(indiv):
             self._pop.add(indiv, self._cost_evaluator)
@@ -208,7 +205,6 @@ class GeneticAlgorithm:
             if is_new_best(individual):
                 self._best = individual
 
-                # TODO Refactor to on_best callback (see issue #111)
                 if self._params.intensify_on_best:
                     individual = self._ls.intensify(
                         individual,

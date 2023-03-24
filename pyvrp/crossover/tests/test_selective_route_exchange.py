@@ -1,7 +1,7 @@
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
     selective_route_exchange as cpp_srex,
@@ -15,7 +15,7 @@ def test_same_parents_same_offspring():
     same.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     individual = Individual(data, [[1, 2], [3, 4]])
@@ -35,7 +35,7 @@ def test_same_parents_same_offspring():
 )
 def test_raise_invalid_arguments(idx1, idx2, num_moved_routes):
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[1], [2], [3, 4]])
     indiv2 = Individual(data, [[1, 2, 3, 4]])
@@ -56,7 +56,7 @@ def test_srex_move_all_routes():
     when all routes are replaced during crossover.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[1], [2], [3, 4]])
     indiv2 = Individual(data, [[1, 2], [3], [4]])
@@ -70,7 +70,7 @@ def test_srex_greedy_repair():
     Tests the case where greedy repair is used during SREX crossover.
     """
     data = read("data/OkSmallGreedyRepair.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[1, 2], [3, 4]])
     indiv2 = Individual(data, [[2, 3], [4, 1]])
@@ -91,7 +91,7 @@ def test_srex_changed_start_indices():
     Tests the case where the initial start indices are changed in SREX.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[1, 2, 3], [4]])
     indiv2 = Individual(data, [[1, 2, 4], [3]])
@@ -115,7 +115,7 @@ def test_srex_a_left_move():
     A index to the left.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[1, 3], [2], [4]])
     indiv2 = Individual(data, [[4, 1], [2], [3]])
@@ -160,7 +160,7 @@ def test_srex_a_right_move():
     A index to the right.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[1, 3], [4], [2]])
     indiv2 = Individual(data, [[4, 1], [2], [3]])
@@ -175,7 +175,7 @@ def test_srex_b_left_move():
     B index to the left.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [2], [4, 1]])
@@ -190,7 +190,7 @@ def test_srex_b_right_move():
     B index to the right.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [4, 1], [2]])

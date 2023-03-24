@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Individual, PenaltyManager, ProblemData, XorShift128
+from pyvrp import CostEvaluator, Individual, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
 
 
@@ -85,7 +85,7 @@ def test_feasibility():
 
 def test_distance_cost_calculation():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv = Individual(data, [[1, 2], [3], [4]])
     assert_(indiv.is_feasible())
@@ -101,12 +101,13 @@ def test_distance_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(cost_evaluator(indiv), dist)
+    assert_equal(cost_evaluator.cost(indiv), dist)
+    assert_equal(cost_evaluator.penalised_cost(indiv), dist)
 
 
 def test_capacity_cost_calculation():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv = Individual(data, [[4, 3, 1, 2]])
     assert_(indiv.has_excess_load())
@@ -127,12 +128,12 @@ def test_capacity_cost_calculation():
         + data.dist(2, 0)
     )
 
-    assert_equal(cost_evaluator(indiv), dist + load_penalty)
+    assert_equal(cost_evaluator.penalised_cost(indiv), dist + load_penalty)
 
 
 def test_time_warp_cost_calculation():
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
 
     indiv = Individual(data, [[1, 3], [2, 4]])
     assert_(not indiv.has_excess_load())
@@ -157,7 +158,7 @@ def test_time_warp_cost_calculation():
         + data.dist(4, 0)
     )
 
-    assert_equal(cost_evaluator(indiv), dist + tw_penalty)
+    assert_equal(cost_evaluator.penalised_cost(indiv), dist + tw_penalty)
 
 
 def test_time_warp_for_a_very_constrained_problem():

@@ -24,7 +24,7 @@ class PenaltyParams:
         A repair booster value :math:`r \\ge 1`. This value is used to
         temporarily multiply the current penalty terms, to force feasibility.
         See also
-        :meth:`~pyvrp._PenaltyManager.PenaltyManager.get_penalty_booster`.
+        :meth:`~pyvrp.PenaltyManager.PenaltyManager.get_booster_cost_evaluator`.
     num_registrations_between_penalty_updates
         Number of feasibility registrations between penalty value updates. The
         penalty manager updates the penalty terms every once in a while based
@@ -79,7 +79,7 @@ class PenaltyParams:
     """
 
     init_capacity_penalty: int = 20
-    init_tw_penalty: int = 6
+    init_time_warp_penalty: int = 6
     repair_booster: int = 12
     num_registrations_between_penalty_updates: int = 50
     penalty_increase: float = 1.34
@@ -123,7 +123,7 @@ class PenaltyManager:
         self._load_feas: List[bool] = []  # tracks recent load feasibility
         self._time_feas: List[bool] = []  # track recent time feasibility
         self._capacity_penalty = params.init_capacity_penalty
-        self._tw_penalty = params.init_tw_penalty
+        self._tw_penalty = params.init_time_warp_penalty
         self._cost_evaluator = CostEvaluator(
             self._capacity_penalty, self._tw_penalty
         )

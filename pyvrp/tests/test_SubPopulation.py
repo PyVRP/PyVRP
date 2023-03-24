@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp._SubPopulation import PopulationParams, SubPopulation
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
@@ -11,7 +11,7 @@ from pyvrp.tests.helpers import read
 @mark.parametrize("nb_close", [5, 10, 25])
 def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=5)
 
     params = PopulationParams(
@@ -45,7 +45,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
 
 def test_avg_distance_closest_for_single_route_solutions():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=0, nb_close=10)
 
     subpop = SubPopulation(bpd, params)
@@ -78,7 +78,7 @@ def test_avg_distance_closest_for_single_route_solutions():
 
 def test_fitness_is_purely_based_on_cost_when_only_elites():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=51)
     params = PopulationParams(nb_elite=25, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
@@ -90,7 +90,9 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
     # When all individuals are elite the diversity weight term drops out, and
     # fitness rankings are purely based on the cost ranking.
-    cost = np.array([cost_evaluator(item.individual) for item in subpop])
+    cost = np.array(
+        [cost_evaluator.penalised_cost(item.individual) for item in subpop]
+    )
     by_cost = np.argsort(cost, kind="stable")
 
     rank = np.empty(len(subpop))
@@ -107,7 +109,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
 def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=52)
     params = PopulationParams(nb_elite=0, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
@@ -119,7 +121,9 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
 
     # When no individuals are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.
-    cost = np.array([cost_evaluator(item.individual) for item in subpop])
+    cost = np.array(
+        [cost_evaluator.penalised_cost(item.individual) for item in subpop]
+    )
     cost_rank = np.argsort(cost, kind="stable")
 
     diversity = np.array([item.avg_distance_closest() for item in subpop])

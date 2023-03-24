@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.educate._Exchange import (
     Exchange10,
@@ -35,7 +35,7 @@ def test_swap_single_route_stays_single_route(operator):
     more than one route.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -48,7 +48,9 @@ def test_swap_single_route_stays_single_route(operator):
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 @mark.parametrize(
@@ -65,7 +67,7 @@ def test_relocate_uses_empty_routes(operator):
     clients to empty routes if that is an improvement.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -79,7 +81,9 @@ def test_relocate_uses_empty_routes(operator):
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
     assert_(improved_individual.num_routes() > 1)
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 @mark.parametrize(
@@ -100,7 +104,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     then no exchange is possible.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -120,7 +124,7 @@ def test_cannot_exchange_when_segments_overlap(operator):
     single route solution: there's always overlap between the segments.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -139,7 +143,7 @@ def test_cannot_swap_adjacent_segments():
     that's already covered by (2, 0)-exchange.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -161,7 +165,7 @@ def test_swap_between_routes_OkSmall():
     two route solution, resulting in something better.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
@@ -172,7 +176,9 @@ def test_swap_between_routes_OkSmall():
     improved_individual = ls.search(individual, cost_evaluator)
 
     assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 def test_relocate_after_depot_should_work():
@@ -181,7 +187,7 @@ def test_relocate_after_depot_should_work():
     action that should insert directly after the depot.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     # This is a non-empty neighbourhood (so LS does not complain), but the only

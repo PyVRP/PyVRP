@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.educate import (
     Exchange11,
     LocalSearch,
@@ -20,7 +20,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     after (1, 1)-exchange gets stuck.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     # For a fair comparison we should not hamper the node operator with
@@ -42,17 +42,17 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
         # The regular swap operator should have been able to improve the random
         # individual. After swap gets stuck, SWAP* should still be able to
         # further improve the individual.
-        assert_(cost_evaluator(swap_individual) < cost_evaluator(individual))
-        assert_(
-            cost_evaluator(swap_star_individual)
-            < cost_evaluator(swap_individual)
-        )
+        current_cost = cost_evaluator.penalised_cost(individual)
+        swap_cost = cost_evaluator.penalised_cost(swap_individual)
+        swap_star_cost = cost_evaluator.penalised_cost(swap_star_individual)
+        assert_(swap_cost < current_cost)
+        assert_(swap_star_cost < swap_cost)
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
 def test_swap_star_on_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
-    cost_evaluator = PenaltyManager().get_cost_evaluator()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=seed)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
@@ -70,4 +70,6 @@ def test_swap_star_on_RC208_instance(seed: int):
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
     assert_equal(improved_individual.num_routes(), 2)
-    assert_(cost_evaluator(improved_individual) < cost_evaluator(individual))
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
