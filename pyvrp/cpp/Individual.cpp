@@ -182,6 +182,6 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
         out << '\n';
     }
 
-    out << "Distance: " << indiv.distance_ << '\n';
+    out << "Distance: " << indiv.distance() << '\n';
     return out;
 }

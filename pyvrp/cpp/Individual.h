@@ -9,10 +9,6 @@
 
 class Individual
 {
-
-    // Outputs an individual into a given ostream in VRPLIB format
-    friend std::ostream &operator<<(std::ostream &out, Individual const &indiv);
-
     friend struct std::hash<Individual>;  // friend struct to enable hashing
 
     using Client = int;
@@ -109,6 +105,9 @@ public:
      */
     Individual(ProblemData const &data, Routes routes);
 };
+
+// Outputs an individual into a given ostream in VRPLIB format
+std::ostream &operator<<(std::ostream &out, Individual const &indiv);
 
 namespace std
 {

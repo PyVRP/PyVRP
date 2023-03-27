@@ -23,7 +23,7 @@ PYBIND11_MODULE(_Individual, m)
                         return Individual(data, rng);
                     },
                     py::arg("data"),
-                    py::arg("routes"));
+                    py::arg("rng"));
             })
         .def("num_routes", &Individual::numRoutes)
         .def("get_routes",
