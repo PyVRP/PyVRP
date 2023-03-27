@@ -62,36 +62,55 @@ def test_tw_penalty():
     assert_equal(cost_evaluator.tw_penalty(2), 8)
 
 
-@mark.parametrize(
-    "routes",
-    [[[1, 2], [3], [4]], [[1, 2, 3, 4]]],
-)
-def test_cost_and_penalized_cost(routes):
+def test_cost():
+    data = read("data/OkSmall.txt")
+    default_cost_evaluator = CostEvaluator()
+    cost_evaluator = CostEvaluator(20, 6)
+
+    # Feasible individual
+    feas_indiv = Individual(data, [[1, 2], [3], [4]])
+    distance = feas_indiv.distance()
+
+    assert_equal(cost_evaluator.cost(feas_indiv), distance)
+    assert_equal(default_cost_evaluator.cost(feas_indiv), distance)
+
+    # Infeasible individual
+    infeas_indiv = Individual(data, [[1, 2, 3, 4]])
+
+    # C++ code represents infinite as max value for unsigned integer
+    INFEAS_COST = np.iinfo(np.uint32).max
+    assert_equal(cost_evaluator.cost(infeas_indiv), INFEAS_COST)
+    assert_equal(default_cost_evaluator.cost(infeas_indiv), INFEAS_COST)
+
+
+def test_penalised_cost():
     data = read("data/OkSmall.txt")
     penalty_capacity = 20
     penalty_tw = 6
     default_cost_evaluator = CostEvaluator()
     cost_evaluator = CostEvaluator(penalty_capacity, penalty_tw)
 
-    individual = Individual(data, routes)
+    # Feasible individual
+    feas_indiv = Individual(data, [[1, 2], [3], [4]])
+    feas_dist = feas_indiv.distance()
 
-    load_penalty_cost = penalty_capacity * individual.excess_load()
-    tw_penalty_cost = penalty_tw * individual.time_warp()
-    distance = individual.distance()
+    # For feasible individual, cost and penalised_cost should equal distance
+    assert_equal(cost_evaluator.penalised_cost(feas_indiv), feas_dist)
+    assert_equal(default_cost_evaluator.penalised_cost(feas_indiv), feas_dist)
+
+    # Infeasible individual
+    infeas_indiv = Individual(data, [[1, 2, 3, 4]])
+
+    # Compute cost associated to violated constraints
+    load_penalty_cost = penalty_capacity * infeas_indiv.excess_load()
+    tw_penalty_cost = penalty_tw * infeas_indiv.time_warp()
+    infeas_dist = infeas_indiv.distance()
 
     # Test penalised cost
-    expected_cost = distance + load_penalty_cost + tw_penalty_cost
-    assert_equal(cost_evaluator.penalised_cost(individual), expected_cost)
+    expected_cost = infeas_dist + load_penalty_cost + tw_penalty_cost
+    assert_equal(cost_evaluator.penalised_cost(infeas_indiv), expected_cost)
 
     # Default cost evaluator has 0 weights and only computes distance as cost
-    assert_equal(default_cost_evaluator.penalised_cost(individual), distance)
-
-    # Test normal cost, should be distance or infinite if infeasible
-    if individual.is_feasible():
-        assert_equal(cost_evaluator.cost(individual), distance)
-        assert_equal(default_cost_evaluator.cost(individual), distance)
-    else:
-        # C++ code represents infinite as max value for unsigned integer
-        INFEAS_COST = np.iinfo(np.uint32).max
-        assert_equal(cost_evaluator.cost(individual), INFEAS_COST)
-        assert_equal(default_cost_evaluator.cost(individual), INFEAS_COST)
+    assert_equal(
+        default_cost_evaluator.penalised_cost(infeas_indiv), infeas_dist
+    )
