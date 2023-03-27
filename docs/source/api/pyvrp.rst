@@ -15,6 +15,11 @@ This object can be used to obtain the best observed solution, and detailed runti
 
    Have a look at the examples to see how these classes relate!
 
+.. automodule:: pyvrp._CostEvaluator
+   
+   .. autoapiclass:: CostEvaluator
+      :members:
+
 .. automodule:: pyvrp.GeneticAlgorithm
 
    .. autoapiclass:: GeneticAlgorithmParams
