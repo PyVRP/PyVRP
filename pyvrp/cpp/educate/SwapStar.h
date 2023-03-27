@@ -67,18 +67,17 @@ class SwapStar : public LocalSearchOperator<Route>
     };
 
     // Updates the removal costs of clients in the given route
-    void updateRemovalCosts(Route *R1, PenaltyManager const &penaltyManager);
+    void updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator);
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).
-    void updateInsertionCost(Route *R,
-                             Node *U,
-                             PenaltyManager const &penaltyManager);
+    void
+    updateInsertionCost(Route *R, Node *U, CostEvaluator const &costEvaluator);
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
     inline std::pair<int, Node *>
-    getBestInsertPoint(Node *U, Node *V, PenaltyManager const &penaltyManager);
+    getBestInsertPoint(Node *U, Node *V, CostEvaluator const &costEvaluator);
 
     Matrix<ThreeBest> cache;
     Matrix<int> removalCosts;
@@ -90,7 +89,7 @@ public:
     void init(Individual const &indiv) override;
 
     int
-    evaluate(Route *U, Route *V, PenaltyManager const &penaltyManager) override;
+    evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Route *U, Route *V) const override;
 

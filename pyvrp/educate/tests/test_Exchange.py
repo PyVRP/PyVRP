@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.educate._Exchange import (
     Exchange10,
@@ -35,20 +35,22 @@ def test_swap_single_route_stays_single_route(operator):
     more than one route.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, pm, [single_route])
-    improved_individual = ls.search(individual)
+    individual = Individual(data, [single_route])
+    improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_individual.num_routes(), 1)
-    assert_(improved_individual.cost() < individual.cost())
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 @mark.parametrize(
@@ -65,21 +67,23 @@ def test_relocate_uses_empty_routes(operator):
     clients to empty routes if that is an improvement.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, pm, [single_route])
-    improved_individual = ls.search(individual)
+    individual = Individual(data, [single_route])
+    improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
     assert_(improved_individual.num_routes() > 1)
-    assert_(improved_individual.cost() < individual.cost())
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 @mark.parametrize(
@@ -100,15 +104,15 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     then no exchange is possible.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    individual = Individual(data, pm, [[1, 2], [3], [4]])
-    new_individual = ls.search(individual)
+    individual = Individual(data, [[1, 2], [3], [4]])
+    new_individual = ls.search(individual, cost_evaluator)
 
     assert_equal(new_individual, individual)
 
@@ -120,15 +124,15 @@ def test_cannot_exchange_when_segments_overlap(operator):
     single route solution: there's always overlap between the segments.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    individual = Individual(data, pm, [[1, 2, 3, 4]])
-    new_individual = ls.search(individual)
+    individual = Individual(data, [[1, 2, 3, 4]])
+    new_individual = ls.search(individual, cost_evaluator)
 
     assert_equal(new_individual, individual)
 
@@ -139,18 +143,18 @@ def test_cannot_swap_adjacent_segments():
     that's already covered by (2, 0)-exchange.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(Exchange22(data))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
-    individual = Individual(data, pm, [[1, 2, 3, 4]])
-    new_individual = ls.search(individual)
+    individual = Individual(data, [[1, 2, 3, 4]])
+    new_individual = ls.search(individual, cost_evaluator)
 
     assert_equal(new_individual, individual)
 
@@ -161,18 +165,20 @@ def test_swap_between_routes_OkSmall():
     two route solution, resulting in something better.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(Exchange21(data))
 
-    individual = Individual(data, pm, [[1, 2], [3, 4]])
-    improved_individual = ls.search(individual)
+    individual = Individual(data, [[1, 2], [3, 4]])
+    improved_individual = ls.search(individual, cost_evaluator)
 
     assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
-    assert_(improved_individual.cost() < individual.cost())
+    current_cost = cost_evaluator.penalised_cost(individual)
+    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_cost < current_cost)
 
 
 def test_relocate_after_depot_should_work():
@@ -181,7 +187,7 @@ def test_relocate_after_depot_should_work():
     action that should insert directly after the depot.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     # This is a non-empty neighbourhood (so LS does not complain), but the only
@@ -191,12 +197,12 @@ def test_relocate_after_depot_should_work():
     neighbours = [[] for _ in range(data.num_clients + 1)]
     neighbours[2].append(1)
 
-    ls = LocalSearch(data, pm, rng, neighbours)
+    ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(Exchange10(data))
 
     # This individual can be improved by moving 3 into its own route, that is,
     # inserting it after the depot of an empty route. Before the bug was fixed,
     # (1, 0)-exchange never performed this move.
-    individual = Individual(data, pm, [[1, 2, 3], [4]])
-    expected = Individual(data, pm, [[1, 2], [3], [4]])
-    assert_equal(ls.search(individual), expected)
+    individual = Individual(data, [[1, 2, 3], [4]])
+    expected = Individual(data, [[1, 2], [3], [4]])
+    assert_equal(ls.search(individual, cost_evaluator), expected)

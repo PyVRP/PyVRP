@@ -1,8 +1,8 @@
 #ifndef CROSSOVER_H
 #define CROSSOVER_H
 
+#include "CostEvaluator.h"
 #include "Individual.h"
-#include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 
@@ -31,7 +31,7 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
  *
  * @param parents          The parent individuals.
  * @param data             The problem data.
- * @param penaltyManager   The penalty manager.
+ * @param costEvaluator    The cost evaluator.
  * @param startIndices     Start indices of routes in parent individuals.
  * @param numMovedRoutes   Number of routes to move.
  * @return A new offspring.
@@ -45,7 +45,7 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
-    PenaltyManager const &penaltyManager,
+    CostEvaluator const &costEvaluator,
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes);
 

@@ -11,7 +11,7 @@ using Routes = std::vector<Route>;
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
     ProblemData const &data,
-    PenaltyManager const &penaltyManager,
+    CostEvaluator const &costEvaluator,
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes)
 {
@@ -180,8 +180,10 @@ Individual selectiveRouteExchange(
     crossover::greedyRepair(routes1, unplanned, data);
     crossover::greedyRepair(routes2, unplanned, data);
 
-    Individual indiv1{data, penaltyManager, routes1};
-    Individual indiv2{data, penaltyManager, routes2};
+    Individual indiv1{data, routes1};
+    Individual indiv2{data, routes2};
 
-    return indiv1.cost() < indiv2.cost() ? indiv1 : indiv2;
+    auto const cost1 = costEvaluator.penalisedCost(indiv1);
+    auto const cost2 = costEvaluator.penalisedCost(indiv2);
+    return cost1 < cost2 ? indiv1 : indiv2;
 }

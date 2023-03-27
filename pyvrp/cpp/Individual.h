@@ -1,7 +1,6 @@
 #ifndef INDIVIDUAL_H
 #define INDIVIDUAL_H
 
-#include "PenaltyManager.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 
@@ -16,12 +15,10 @@ class Individual
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;      // Number of routes
-    size_t distance = 0;        // Total distance
-    size_t capacityExcess = 0;  // Total excess load over all routes
-    size_t timeWarp = 0;        // All route time warp of late arrivals
-
-    PenaltyManager const *penaltyManager;
+    size_t numRoutes_ = 0;   // Number of routes
+    size_t distance_ = 0;    // Total distance
+    size_t excessLoad_ = 0;  // Total excess load over all routes
+    size_t timeWarp_ = 0;    // Total time warp over all routes
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -33,11 +30,6 @@ class Individual
     void evaluate(ProblemData const &data);
 
 public:
-    /**
-     * Returns this individual's objective (penalized cost).
-     */
-    [[nodiscard]] size_t cost() const;
-
     /**
      * Returns the number of non-empty routes in this individual's solution.
      * Such non-empty routes are guaranteed to be in the lower indices of the
@@ -65,12 +57,27 @@ public:
     /**
      * @return True if the solution violates load constraints.
      */
-    [[nodiscard]] bool hasExcessCapacity() const;
+    [[nodiscard]] bool hasExcessLoad() const;
 
     /**
      * @return True if the solution violates time window constraints.
      */
     [[nodiscard]] bool hasTimeWarp() const;
+
+    /**
+     * @return Total distance over all routes.
+     */
+    [[nodiscard]] size_t distance() const;
+
+    /**
+     * @return Total excess load over all routes.
+     */
+    [[nodiscard]] size_t excessLoad() const;
+
+    /**
+     * @return Total time warp over all routes.
+     */
+    [[nodiscard]] size_t timeWarp() const;
 
     bool operator==(Individual const &other) const;
 
@@ -85,24 +92,18 @@ public:
      *
      * @param data           Data instance describing the problem that's being
      *                       solved.
-     * @param penaltyManager Penalty manager, used to compute the objective.
      * @param rng            Random number generator.
      */
-    Individual(ProblemData const &data,
-               PenaltyManager const &penaltyManager,
-               XorShift128 &rng);
+    Individual(ProblemData const &data, XorShift128 &rng);
 
     /**
      * Constructs an individual having the given routes as its solution.
      *
      * @param data           Data instance describing the problem that's being
      *                       solved.
-     * @param penaltyManager Penalty manager, used to compute the objective.
      * @param routes         Solution's route list.
      */
-    Individual(ProblemData const &data,
-               PenaltyManager const &penaltyManager,
-               Routes routes);
+    Individual(ProblemData const &data, Routes routes);
 };
 
 // Outputs an individual into a given ostream in VRPLIB format
@@ -116,9 +117,9 @@ template <> struct hash<Individual>
     {
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
-        res = res * 31 + std::hash<size_t>()(individual.distance);
-        res = res * 31 + std::hash<size_t>()(individual.capacityExcess);
-        res = res * 31 + std::hash<size_t>()(individual.timeWarp);
+        res = res * 31 + std::hash<size_t>()(individual.distance_);
+        res = res * 31 + std::hash<size_t>()(individual.excessLoad_);
+        res = res * 31 + std::hash<size_t>()(individual.timeWarp_);
 
         return res;
     }

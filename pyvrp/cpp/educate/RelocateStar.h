@@ -22,7 +22,7 @@ class RelocateStar : public LocalSearchOperator<Route>
 
 public:
     int
-    evaluate(Route *U, Route *V, PenaltyManager const &penaltyManager) override;
+    evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Route *U, Route *V) const override;
 

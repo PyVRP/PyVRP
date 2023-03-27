@@ -2,7 +2,6 @@ from numpy.testing import assert_, assert_raises
 from pytest import mark
 
 from pyvrp.stop import NoImprovement
-from pyvrp.tests.helpers import DummyTarget
 
 
 @mark.parametrize("max_iterations", [-10, -100, -1000])
@@ -20,8 +19,8 @@ def test_zero_max_iterations():
     """
     stop = NoImprovement(0)
 
-    assert_(stop(DummyTarget(1)))
-    assert_(stop(DummyTarget(1)))
+    assert_(stop(1))
+    assert_(stop(1))
 
 
 def test_one_max_iterations():
@@ -31,9 +30,9 @@ def test_one_max_iterations():
     """
     stop = NoImprovement(1)
 
-    assert_(not stop(DummyTarget(2)))
-    assert_(not stop(DummyTarget(1)))
-    assert_(stop(DummyTarget(1)))
+    assert_(not stop(2))
+    assert_(not stop(1))
+    assert_(stop(1))
 
 
 @mark.parametrize("n", [10, 100, 1000])
@@ -46,10 +45,10 @@ def test_n_max_iterations_non_improving(n):
     stop = NoImprovement(n)
 
     for _ in range(n):
-        assert_(not stop(DummyTarget(1)))
+        assert_(not stop(1))
 
     for _ in range(n):
-        assert_(stop(DummyTarget(1)))
+        assert_(stop(1))
 
 
 @mark.parametrize("n, k", [(10, 2), (100, 20), (1000, 200)])
@@ -63,10 +62,10 @@ def test_n_max_iterations_with_single_improvement(n, k):
     stop = NoImprovement(n)
 
     for _ in range(k):
-        assert_(not stop(DummyTarget(2)))
+        assert_(not stop(2))
 
     for _ in range(n):
-        assert_(not stop(DummyTarget(1)))
+        assert_(not stop(1))
 
     for _ in range(n):
-        assert_(stop(DummyTarget(1)))
+        assert_(stop(1))

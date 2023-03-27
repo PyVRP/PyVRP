@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
-Individual LocalSearch::search(Individual &individual)
+Individual LocalSearch::search(Individual &individual,
+                               CostEvaluator const &costEvaluator)
 {
     loadIndividual(individual);
 
@@ -46,10 +47,10 @@ Individual LocalSearch::search(Individual &individual)
                 if (lastModified[U->route->idx] > lastTestedNode
                     || lastModified[V->route->idx] > lastTestedNode)
                 {
-                    if (applyNodeOps(U, V))
+                    if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V)))
+                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -64,7 +65,7 @@ Individual LocalSearch::search(Individual &individual)
                 if (empty == routes.end())
                     continue;
 
-                if (applyNodeOps(U, empty->depot))
+                if (applyNodeOps(U, empty->depot, costEvaluator))
                     continue;
             }
         }
@@ -74,6 +75,7 @@ Individual LocalSearch::search(Individual &individual)
 }
 
 Individual LocalSearch::intensify(Individual &individual,
+                                  CostEvaluator const &costEvaluator,
                                   int overlapToleranceDegrees)
 {
     loadIndividual(individual);
@@ -119,7 +121,8 @@ Individual LocalSearch::intensify(Individual &individual,
                 auto const lastModifiedRoute
                     = std::max(lastModified[U.idx], lastModified[V.idx]);
 
-                if (lastModifiedRoute > lastTested && applyRouteOps(&U, &V))
+                if (lastModifiedRoute > lastTested
+                    && applyRouteOps(&U, &V, costEvaluator))
                     continue;
             }
         }
@@ -128,10 +131,12 @@ Individual LocalSearch::intensify(Individual &individual,
     return exportIndividual();
 }
 
-bool LocalSearch::applyNodeOps(Node *U, Node *V)
+bool LocalSearch::applyNodeOps(Node *U,
+                               Node *V,
+                               CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
-        if (nodeOp->evaluate(U, V, penaltyManager) < 0)
+        if (nodeOp->evaluate(U, V, costEvaluator) < 0)
         {
             auto *routeU = U->route;  // copy pointers because the operator can
             auto *routeV = V->route;  // modify the node's route membership
@@ -145,10 +150,12 @@ bool LocalSearch::applyNodeOps(Node *U, Node *V)
     return false;
 }
 
-bool LocalSearch::applyRouteOps(Route *U, Route *V)
+bool LocalSearch::applyRouteOps(Route *U,
+                                Route *V,
+                                CostEvaluator const &costEvaluator)
 {
     for (auto *routeOp : routeOps)
-        if (routeOp->evaluate(U, V, penaltyManager) < 0)
+        if (routeOp->evaluate(U, V, costEvaluator) < 0)
         {
             routeOp->apply(U, V);
             update(U, V);
@@ -267,7 +274,7 @@ Individual LocalSearch::exportIndividual()
         }
     }
 
-    return {data, penaltyManager, indivRoutes};
+    return {data, indivRoutes};
 }
 
 void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
@@ -305,11 +312,9 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
 LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
 
 LocalSearch::LocalSearch(ProblemData &data,
-                         PenaltyManager &penaltyManager,
                          XorShift128 &rng,
                          Neighbours neighbours)
     : data(data),
-      penaltyManager(penaltyManager),
       rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),

@@ -132,7 +132,7 @@ def solve(
     pop = Population(bpd, params=pop_params)
 
     neighbours = compute_neighbours(data, nb_params)
-    ls = LocalSearch(data, pen_manager, rng, neighbours)
+    ls = LocalSearch(data, rng, neighbours)
 
     node_ops = NODE_OPERATORS
     if "node_ops" in config:
@@ -149,7 +149,7 @@ def solve(
         ls.add_route_operator(op(data))
 
     init = [
-        Individual.make_random(data, pen_manager, rng)
+        Individual.make_random(data, rng)
         for _ in range(pop_params.min_pop_size)
     ]
     algo = GeneticAlgorithm(
@@ -191,7 +191,7 @@ def benchmark_solve(instance: str, **kwargs):
     return (
         instance_name,
         "Y" if res.is_feasible() else "N",
-        int(res.cost()),
+        round(res.cost(), 2),
         res.num_iterations,
         round(res.runtime, 3),
     )
@@ -224,7 +224,7 @@ def benchmark(instances: List[str], **kwargs):
     dtypes = [
         ("inst", "U37"),
         ("ok", "U1"),
-        ("obj", int),
+        ("obj", float),
         ("iters", int),
         ("time", float),
     ]

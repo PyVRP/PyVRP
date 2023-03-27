@@ -1,7 +1,7 @@
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Individual, PenaltyManager, XorShift128
+from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
     selective_route_exchange as cpp_srex,
@@ -15,11 +15,11 @@ def test_same_parents_same_offspring():
     same.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
-    individual = Individual(data, pm, [[1, 2], [3, 4]])
-    offspring = srex((individual, individual), data, pm, rng)
+    individual = Individual(data, [[1, 2], [3, 4]])
+    offspring = srex((individual, individual), data, cost_evaluator, rng)
 
     assert_equal(offspring, individual)
 
@@ -35,13 +35,19 @@ def test_same_parents_same_offspring():
 )
 def test_raise_invalid_arguments(idx1, idx2, num_moved_routes):
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
-    indiv2 = Individual(data, pm, [[1, 2, 3, 4]])
+    indiv1 = Individual(data, [[1], [2], [3, 4]])
+    indiv2 = Individual(data, [[1, 2, 3, 4]])
 
     with assert_raises(ValueError):
-        cpp_srex((indiv1, indiv2), data, pm, (idx1, idx2), num_moved_routes)
+        cpp_srex(
+            (indiv1, indiv2),
+            data,
+            cost_evaluator,
+            (idx1, idx2),
+            num_moved_routes,
+        )
 
 
 def test_srex_move_all_routes():
@@ -50,11 +56,11 @@ def test_srex_move_all_routes():
     when all routes are replaced during crossover.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[1], [2], [3, 4]])
-    indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 3)
+    indiv1 = Individual(data, [[1], [2], [3, 4]])
+    indiv2 = Individual(data, [[1, 2], [3], [4]])
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 3)
 
     assert_equal(offspring, indiv2)
 
@@ -64,10 +70,10 @@ def test_srex_greedy_repair():
     Tests the case where greedy repair is used during SREX crossover.
     """
     data = read("data/OkSmallGreedyRepair.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[1, 2], [3, 4]])
-    indiv2 = Individual(data, pm, [[2, 3], [4, 1]])
+    indiv1 = Individual(data, [[1, 2], [3, 4]])
+    indiv2 = Individual(data, [[2, 3], [4, 1]])
 
     # The start indices do not change because there are no improving moves.
     # So, indiv1's route [1, 2] will be replaced by indiv2's route [2, 3].
@@ -75,7 +81,7 @@ def test_srex_greedy_repair():
     # which are both repaired using greedy repair. After repair, we obtain the
     # offspring [[2, 3, 1], [4]] with cost 8735, and [[1, 2], [3, 4]] with
     # cost 9725. The first one is returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[2, 3, 1], [4], []])
 
@@ -85,10 +91,10 @@ def test_srex_changed_start_indices():
     Tests the case where the initial start indices are changed in SREX.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[1, 2, 3], [4]])
-    indiv2 = Individual(data, pm, [[1, 2, 4], [3]])
+    indiv1 = Individual(data, [[1, 2, 3], [4]])
+    indiv2 = Individual(data, [[1, 2, 4], [3]])
 
     # The difference for A to move left (= right) is -1. The difference for B
     # to move left (= right) is 1. The new indices become idx1 = 1 and
@@ -98,7 +104,7 @@ def test_srex_changed_start_indices():
     # This results in two candidate offspring, [[3], [1, 2, 4]] with cost
     # 10195, and [[1, 2, 3], [4]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[3], [1, 2, 4], []])
 
@@ -109,10 +115,10 @@ def test_srex_a_left_move():
     A index to the left.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[1, 3], [2], [4]])
-    indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
+    indiv1 = Individual(data, [[1, 3], [2], [4]])
+    indiv2 = Individual(data, [[4, 1], [2], [3]])
 
     # We describe the A-left case here in detail. The tests below for A-right,
     # B-left and B-right can be worked out similarly: note that we only change
@@ -143,7 +149,7 @@ def test_srex_a_left_move():
     # Candidate offspring
     # [1, 3] [2] [4] - cost: 24416
     # [3] [2] [4, 1] - cost: 12699 <-- selected as new offspring
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[3], [2], [4, 1]])
 
@@ -154,11 +160,11 @@ def test_srex_a_right_move():
     A index to the right.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[1, 3], [4], [2]])
-    indiv2 = Individual(data, pm, [[4, 1], [2], [3]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
+    indiv1 = Individual(data, [[1, 3], [4], [2]])
+    indiv2 = Individual(data, [[4, 1], [2], [3]])
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[3], [4, 1], [2]])
 
@@ -169,11 +175,11 @@ def test_srex_b_left_move():
     B index to the left.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, pm, [[3], [2], [4, 1]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
+    indiv1 = Individual(data, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, [[3], [2], [4, 1]])
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
 
@@ -184,10 +190,10 @@ def test_srex_b_right_move():
     B index to the right.
     """
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, pm, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, pm, [[3], [4, 1], [2]])
-    offspring = cpp_srex((indiv1, indiv2), data, pm, (0, 0), 1)
+    indiv1 = Individual(data, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, [[3], [4, 1], [2]])
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
     assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])

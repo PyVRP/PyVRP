@@ -7,7 +7,7 @@ using TWS = TimeWindowSegment;
 
 int TwoOpt::evalWithinRoute(Node *U,
                             Node *V,
-                            PenaltyManager const &penaltyManager) const
+                            CostEvaluator const &costEvaluator) const
 {
     if (U->position + 1 >= V->position)
         return 0;
@@ -32,15 +32,15 @@ int TwoOpt::evalWithinRoute(Node *U,
 
     tws = TWS::merge(dist, tws, n(V)->twAfter);
 
-    deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
-    deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
     return deltaCost;
 }
 
 int TwoOpt::evalBetweenRoutes(Node *U,
                               Node *V,
-                              PenaltyManager const &penaltyManager) const
+                              CostEvaluator const &costEvaluator) const
 {
     auto const &dist = data.distanceMatrix();
 
@@ -56,25 +56,25 @@ int TwoOpt::evalBetweenRoutes(Node *U,
 
     auto const uTWS = TWS::merge(dist, U->twBefore, n(V)->twAfter);
 
-    deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
     auto const vTWS = TWS::merge(dist, V->twBefore, n(U)->twAfter);
 
-    deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
+    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
     int const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
 
-    deltaCost += penaltyManager.loadPenalty(U->route->load() - deltaLoad,
-                                            data.vehicleCapacity());
+    deltaCost += costEvaluator.loadPenalty(U->route->load() - deltaLoad,
+                                           data.vehicleCapacity());
     deltaCost
-        -= penaltyManager.loadPenalty(U->route->load(), data.vehicleCapacity());
+        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
 
-    deltaCost += penaltyManager.loadPenalty(V->route->load() + deltaLoad,
-                                            data.vehicleCapacity());
+    deltaCost += costEvaluator.loadPenalty(V->route->load() + deltaLoad,
+                                           data.vehicleCapacity());
     deltaCost
-        -= penaltyManager.loadPenalty(V->route->load(), data.vehicleCapacity());
+        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
 
     return deltaCost;
 }
@@ -118,13 +118,13 @@ void TwoOpt::applyBetweenRoutes(Node *U, Node *V) const
     }
 }
 
-int TwoOpt::evaluate(Node *U, Node *V, PenaltyManager const &penaltyManager)
+int TwoOpt::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     if (U->route->idx > V->route->idx)  // will be tackled in a later iteration
         return 0;                       // - no need to process here already
 
-    return U->route == V->route ? evalWithinRoute(U, V, penaltyManager)
-                                : evalBetweenRoutes(U, V, penaltyManager);
+    return U->route == V->route ? evalWithinRoute(U, V, costEvaluator)
+                                : evalBetweenRoutes(U, V, costEvaluator);
 }
 
 void TwoOpt::apply(Node *U, Node *V) const

@@ -2,8 +2,8 @@ from matplotlib.testing.decorators import image_comparison as img_comp
 from numpy.testing import assert_, assert_raises
 
 from pyvrp import (
+    CostEvaluator,
     Individual,
-    PenaltyManager,
     Population,
     PopulationParams,
     XorShift128,
@@ -20,8 +20,7 @@ IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
 
 def test_plotting_methods_raise_when_no_stats_available():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager()
-    individual = Individual(data, pm, [[1, 2, 3, 4]])
+    individual = Individual(data, [[1, 2, 3, 4]])
     res = Result(individual, Statistics(), 0, 0.0)
 
     assert_(not res.has_statistics())
@@ -45,9 +44,8 @@ def test_plotting_methods_raise_when_no_stats_available():
 def test_plot_solution():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    pm = PenaltyManager()
 
-    individual = Individual(data, pm, bks)
+    individual = Individual(data, bks)
 
     plotting.plot_solution(individual, data)
     plotting.plot_solution(individual, data, plot_customers=True)
@@ -59,31 +57,31 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    pm = PenaltyManager()
+    cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
     params = PopulationParams()
     pop = Population(broken_pairs_distance, params=params)
 
-    for indiv in make_random_solutions(params.min_pop_size, data, pm, rng):
-        pop.add(indiv)
+    for indiv in make_random_solutions(params.min_pop_size, data, rng):
+        pop.add(indiv, cost_evaluator)
 
     stats = Statistics()
 
     for i in range(num_iterations):
         if i == num_iterations // 2:
             # Make sure we insert a feasible solution
-            individual = Individual(data, pm, bks)
+            individual = Individual(data, bks)
         else:
-            individual = Individual.make_random(data, pm, rng)
+            individual = Individual.make_random(data, rng)
 
-        pop.add(individual)
-        stats.collect_from(pop)
+        pop.add(individual, cost_evaluator)
+        stats.collect_from(pop, cost_evaluator)
 
         # Hacky to produce deterministic result
         stats.runtimes[-1] = i % 3
 
-    res = Result(Individual(data, pm, bks), stats, num_iterations, 0.0)
+    res = Result(Individual(data, bks), stats, num_iterations, 0.0)
     plotting.plot_result(res, data)
 
 
