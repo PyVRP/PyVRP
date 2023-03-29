@@ -1,5 +1,6 @@
 #include "crossover.h"
 
+#include <cmath>
 #include <unordered_set>
 
 using Client = int;
@@ -7,6 +8,58 @@ using Clients = std::vector<Client>;
 using ClientSet = std::unordered_set<Client>;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
+
+namespace
+{
+double _computeRouteAngleCenter(ProblemData const &data, Route const &route)
+{
+    if (route.empty())
+        return 1.e30;
+
+    int cumulatedX = 0;
+    int cumulatedY = 0;
+
+    for (int node : route)
+    {
+        cumulatedX += data.client(node).x;
+        cumulatedY += data.client(node).y;
+    }
+
+    // This computes a pseudo-angle that sorts roughly equivalently to the atan2
+    // angle, but is much faster to compute. See the following post for details:
+    // https://stackoverflow.com/a/16561333/4316405.
+    auto const routeSize = static_cast<double>(route.size());
+    auto const dy = cumulatedY / routeSize - data.depot().y;
+    auto const dx = cumulatedX / routeSize - data.depot().x;
+    return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
+}
+
+Routes _getNonEmptyRoutesSortedByAngleCenter(ProblemData const &data,
+                                             Routes const routes)
+{
+    std::vector<std::pair<double, int>> routePolarAngles;
+    routePolarAngles.reserve(data.numVehicles());
+
+    size_t numNonEmptyRoutes = 0;
+    for (size_t r = 0; r < data.numVehicles(); r++)
+        if (!routes[r].empty())
+        {
+            numNonEmptyRoutes++;
+            routePolarAngles.emplace_back(
+                _computeRouteAngleCenter(data, routes[r]), r);
+        }
+
+    // Empty routes have a large center angle, and thus always sort at the end
+    std::sort(routePolarAngles.begin(), routePolarAngles.end());
+
+    Routes resultRoutes;
+    resultRoutes.reserve(numNonEmptyRoutes);
+    for (size_t r = 0; r < numNonEmptyRoutes; r++)
+        resultRoutes.emplace_back(routes[routePolarAngles[r].second]);
+
+    return resultRoutes;
+}
+}  // namespace
 
 Individual selectiveRouteExchange(
     std::pair<Individual const *, Individual const *> const &parents,
@@ -18,8 +71,15 @@ Individual selectiveRouteExchange(
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
-    size_t nRoutesA = parents.first->numRoutes();
-    size_t nRoutesB = parents.second->numRoutes();
+    // Sort routes according to center angle for both parents
+
+    auto const &routesA = _getNonEmptyRoutesSortedByAngleCenter(
+        data, parents.first->getRoutes());
+    auto const &routesB = _getNonEmptyRoutesSortedByAngleCenter(
+        data, parents.second->getRoutes());
+
+    size_t nRoutesA = routesA.size();
+    size_t nRoutesB = routesB.size();
 
     if (startA >= nRoutesA)
         throw std::invalid_argument("Expected startA < nRoutesA.");
@@ -30,9 +90,6 @@ Individual selectiveRouteExchange(
     if (numMovedRoutes < 1 || numMovedRoutes > std::min(nRoutesA, nRoutesB))
         throw std::invalid_argument(
             "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]");
-
-    auto const &routesA = parents.first->getRoutes();
-    auto const &routesB = parents.second->getRoutes();
 
     ClientSet selectedA;
     ClientSet selectedB;
@@ -49,6 +106,7 @@ Individual selectiveRouteExchange(
                          routesB[(startB + r) % nRoutesB].end());
     }
 
+    // For the selection, we want to minimize |A\B| as these need replanning
     while (true)
     {
         // Difference for moving 'left' in parent A
@@ -138,6 +196,21 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
+    // We create two candidate offsprings, both based on parent A:
+    // Let A and B denote the set of customers selected from parents A and B
+    // Ac and Bc denote the complements: the customers not selected
+    // Let v denote union and ^ intersection
+    // Parent A: A v Ac
+    // Parent B: B v Bc
+
+    // Offspring 1:
+    // B and Ac\B, remainder A\B unplanned
+    // (note B v (Ac\B) v (A\B) = B v ((Ac v A)\B) = B v Bc = all)
+    // Note Ac\B = (A v B)c
+
+    // Offspring 2:
+    // A^B and Ac, remainder A\B unplanned
+    // (note A^B v Ac v A\B = (A^B v A\B) v Ac = A v Ac = all)
     Routes routes1(data.numVehicles());
     Routes routes2(data.numVehicles());
 
@@ -149,10 +222,10 @@ Individual selectiveRouteExchange(
 
         for (Client c : routesB[indexB])
         {
-            routes1[indexA].push_back(c);
+            routes1[indexA].push_back(c);  // c in B
 
             if (!clientsInSelectedBNotA.contains(c))
-                routes2[indexA].push_back(c);
+                routes2[indexA].push_back(c);  // c in A^B
         }
     }
 
@@ -164,9 +237,9 @@ Individual selectiveRouteExchange(
         for (Client c : routesA[indexA])
         {
             if (!clientsInSelectedBNotA.contains(c))
-                routes1[indexA].push_back(c);
+                routes1[indexA].push_back(c);  // Ac\B
 
-            routes2[indexA].push_back(c);
+            routes2[indexA].push_back(c);  // Ac
         }
     }
 

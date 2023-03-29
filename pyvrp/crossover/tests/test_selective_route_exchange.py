@@ -1,3 +1,5 @@
+import itertools
+
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
@@ -62,7 +64,31 @@ def test_srex_move_all_routes():
     indiv2 = Individual(data, [[1, 2], [3], [4]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 3)
 
+    # Note: result will be permuted but equality is invariant to that
     assert_equal(offspring, indiv2)
+
+
+def test_srex_sorts_routes():
+    """
+    Tests if SREX sorts the input before applying the operator.
+    """
+    data = read("data/OkSmall.txt")
+    cost_evaluator = CostEvaluator(20, 6)
+
+    routes1 = [[1], [2], [3, 4]]
+    routes2 = [[1, 2], [3], [4]]
+    indiv1 = Individual(data, routes1)
+    indiv2 = Individual(data, routes2)
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+
+    for permuted_routes1 in itertools.permutations(routes1):
+        for permuted_routes2 in itertools.permutations(routes2):
+            indiv1 = Individual(data, permuted_routes1)
+            indiv2 = Individual(data, permuted_routes2)
+            offspring_permuted = cpp_srex(
+                (indiv1, indiv2), data, cost_evaluator, (0, 0), 1
+            )
+            assert_equal(offspring_permuted, offspring)
 
 
 def test_srex_greedy_repair():
@@ -72,18 +98,20 @@ def test_srex_greedy_repair():
     data = read("data/OkSmallGreedyRepair.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[1, 2], [3, 4]])
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
+    indiv1 = Individual(data, [[3, 4], [1, 2]])
     indiv2 = Individual(data, [[2, 3], [4, 1]])
 
     # The start indices do not change because there are no improving moves.
-    # So, indiv1's route [1, 2] will be replaced by indiv2's route [2, 3].
-    # This results in two incomplete offspring [[2, 3], [4]] and [[2], [3, 4]],
+    # So, indiv1's route [3, 4] will be replaced by indiv2's route [2, 3].
+    # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
     # which are both repaired using greedy repair. After repair, we obtain the
-    # offspring [[2, 3, 1], [4]] with cost 8735, and [[1, 2], [3, 4]] with
+    # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
     # cost 9725. The first one is returned since it has the lowest cost.
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
-    assert_equal(offspring.get_routes(), [[2, 3, 1], [4], []])
+    assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
 
 
 def test_srex_changed_start_indices():
@@ -93,50 +121,55 @@ def test_srex_changed_start_indices():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[1, 2, 3], [4]])
-    indiv2 = Individual(data, [[1, 2, 4], [3]])
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
+    indiv1 = Individual(data, [[4], [1, 2, 3]])
+    indiv2 = Individual(data, [[3], [1, 2, 4]])
 
+    # We will start with idx1 = 1 and idx2 = 1 (1 for both indivs)
     # The difference for A to move left (= right) is -1. The difference for B
-    # to move left (= right) is 1. The new indices become idx1 = 1 and
-    # idx2 = 0. There are no improving moves in this position since the
+    # to move left (= right) is 1. The new indices become idx1 = 0 and
+    # idx2 = 1. There are no improving moves in this position since the
     # difference for A to move is 1 and difference for B to move is 1.
     # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
-    # This results in two candidate offspring, [[3], [1, 2, 4]] with cost
-    # 10195, and [[1, 2, 3], [4]] with cost 31029. The first candidate is
+    # This results in two candidate offspring, [[1, 2, 4], [3]] with cost
+    # 10195, and [[4], [1, 2, 3]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
 
-    assert_equal(offspring.get_routes(), [[3], [1, 2, 4], []])
+    assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
 
 
-def test_srex_a_left_move():
+def test_srex_a_right_move():
     """
     Tests the case where the initial start indices are changed by moving the
-    A index to the left.
+    A index to the right.
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[1, 3], [2], [4]])
-    indiv2 = Individual(data, [[4, 1], [2], [3]])
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
+    indiv1 = Individual(data, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, [[3], [2], [4, 1]])
 
-    # We describe the A-left case here in detail. The tests below for A-right,
+    # We describe the A-right case here in detail. The tests below for A-left,
     # B-left and B-right can be worked out similarly: note that we only change
     # the ordering of the routes.
     #
-    # Initial start indices (indicated by **)
-    # *[1, 3]* [2] [4]
-    # *[4, 1]* [2] [3]
+    # Initial start indices (indicated by **) A\B = {1,3} \ {1, 4} = {3}, # = 1
+    # [4] [2] *[1, 3]*
+    # [3] [2] *[4, 1]*
     #
     # Differences
-    # A-left:   0 - 1 = -1
-    # A-right:  1 - 1 =  0
-    # B-left:   1 - 1 =  0
-    # B-right:  1 - 0 =  1
+    # A-left:   1 - 1 =  0
+    # A-right:  0 - 1 = -1
+    # B-left:   1 - 0 =  1
+    # B-right:  1 - 1 =  0
     #
-    # New start indices
-    # [1, 3] [2] *[4]*
-    # *[4, 1]* [2] [3]
+    # New start indices A\B = {4} \ {1, 4} = {} # = 0
+    # *[4]* [2] [1, 3]
+    # [3] [2] *[4, 1]*
     #
     # Differences
     # A-left:   1 - 0 = 1
@@ -147,26 +180,28 @@ def test_srex_a_left_move():
     # No more improving moves.
     #
     # Candidate offspring
-    # [1, 3] [2] [4] - cost: 24416
-    # [3] [2] [4, 1] - cost: 12699 <-- selected as new offspring
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    # [4, 1] [2] [3] - cost: 12699 <-- selected as new offspring
+    # [4] [2] [1, 3] - cost: 24416
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
 
-    assert_equal(offspring.get_routes(), [[3], [2], [4, 1]])
+    assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
 
 
-def test_srex_a_right_move():
+def test_srex_a_left_move():
     """
     Tests the case where the initial start indices are changed by moving to
-    A index to the right.
+    A index to the left.
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[1, 3], [4], [2]])
-    indiv2 = Individual(data, [[4, 1], [2], [3]])
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
+    indiv1 = Individual(data, [[4], [2], [1, 3]])
+    indiv2 = Individual(data, [[3], [4], [2, 1]])
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
 
-    assert_equal(offspring.get_routes(), [[3], [4, 1], [2]])
+    assert_equal(offspring.get_routes(), [[4], [2, 1], [3]])
 
 
 def test_srex_b_left_move():
@@ -177,6 +212,8 @@ def test_srex_b_left_move():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [2], [4, 1]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
@@ -192,8 +229,10 @@ def test_srex_b_right_move():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
     indiv1 = Individual(data, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, [[3], [4, 1], [2]])
+    indiv2 = Individual(data, [[3], [4], [2, 1]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
 
-    assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
+    assert_equal(offspring.get_routes(), [[4], [2], [1, 3]])
