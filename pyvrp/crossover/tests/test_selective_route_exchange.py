@@ -154,8 +154,8 @@ def test_srex_a_right_move():
     indiv2 = Individual(data, [[3], [2], [4, 1]])
 
     # We describe the A-right case here in detail. The tests below for A-left,
-    # B-left and B-right can be worked out similarly: note that we only change
-    # the ordering of the routes.
+    # B-left and B-right can be worked out similarly. Note that the test cases
+    # are somewhat contrived since the input routes must be sorted by angle.
     #
     # Initial start indices (indicated by **) A\B = {1,3} \ {1, 4} = {3}, # = 1
     # [4] [2] *[1, 3]*
