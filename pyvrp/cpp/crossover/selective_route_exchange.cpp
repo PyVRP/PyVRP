@@ -13,9 +13,7 @@ namespace
 {
 double _computeRouteAngleCenter(ProblemData const &data, Route const &route)
 {
-    if (route.empty())
-        return 1.e30;
-
+    // Computes the route angle center. Assumes that the route is non-empty.
     int cumulatedX = 0;
     int cumulatedY = 0;
 
@@ -49,8 +47,9 @@ Routes _getNonEmptyRoutesSortedByAngleCenter(ProblemData const &data,
                 _computeRouteAngleCenter(data, routes[r]), r);
         }
 
-    // Empty routes have a large center angle, and thus always sort at the end
-    std::sort(routePolarAngles.begin(), routePolarAngles.end());
+    // Sort angles of non-empty routes
+    std::sort(routePolarAngles.begin(),
+              routePolarAngles.begin() + numNonEmptyRoutes);
 
     Routes resultRoutes;
     resultRoutes.reserve(numNonEmptyRoutes);
