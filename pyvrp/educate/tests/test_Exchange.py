@@ -14,7 +14,7 @@ from pyvrp.educate._Exchange import (
     Exchange32,
     Exchange33,
 )
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 @mark.parametrize(
@@ -205,4 +205,35 @@ def test_relocate_after_depot_should_work():
     # (1, 0)-exchange never performed this move.
     individual = Individual(data, [[1, 2, 3], [4]])
     expected = Individual(data, [[1, 2], [3], [4]])
+    assert_equal(ls.search(individual, cost_evaluator), expected)
+
+
+def test_relocate_to_heterogeneous_empty_route():
+    """
+    This test asserts that a customer will be relocated to a non-empty route
+    with a different vehicle capacity even if there is another empty route in
+    between.
+    """
+
+    data = make_heterogeneous(read("data/OkSmall.txt"), [12, 5, 1, 3])
+    # Use a huge cost for load penalties to make other aspects irrelevant
+    cost_evaluator = CostEvaluator(100_000, 6)
+    rng = XorShift128(seed=42)
+
+    # This is a non-empty neighbourhood (so LS does not complain), but the only
+    # client moves allowed by it will not improve the initial solution created
+    # below. So the only improvements (1, 0)-exchange can make must come from
+    # moving clients behind the depot of a route.
+    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours[2].append(1)
+
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_node_operator(Exchange10(data))
+
+    # The initial solution has routes with loads [13, 5, 0, 0]
+    # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all
+    # load penalties, but other moves would increase load penalties.
+    # Therefore, this requires moving to an empty route which is not the first.
+    individual = Individual(data, [[1, 2, 3], [4], [], []])
+    expected = Individual(data, [[1, 2], [4], [], [3]])
     assert_equal(ls.search(individual, cost_evaluator), expected)

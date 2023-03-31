@@ -22,9 +22,10 @@ class Individual
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
+    std::vector<size_t> assignments;  // type of assigned vehicle per client
 
-    // Determines the [pred, succ] pairs for each client.
-    void makeNeighbours();
+    // Determines the [pred, succ] pairs and vehicle assignment for each client.
+    void makeNeighboursAndAssignments(ProblemData const &data);
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);

@@ -40,7 +40,6 @@ class Route:
         Capacity of the vehicle for this route.
     """
 
-    depot: int
     vehicle_capacity: int
 
 class ProblemData:

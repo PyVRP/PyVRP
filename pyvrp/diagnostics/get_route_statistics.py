@@ -47,13 +47,14 @@ class RouteStatistics:
     service_time: int
     num_stops: int
     total_demand: int
+    capacity: int
     fillrate: float
     is_feasible: bool
     is_empty: bool
 
 
 def get_route_statistics(
-    data: ProblemData, route: List[int]
+    data: ProblemData, route: List[int], route_idx: int = 0
 ) -> RouteStatistics:
     """
     Returns statistics for a route.
@@ -64,6 +65,9 @@ def get_route_statistics(
         Data instance corresponding to the route.
     route
         Route (list of indices) to compute statistics for.
+    route_idx, optional
+        Route idx of the route to get statistics for. Use to get the correct
+        capacity with a heteregeneous fleet. Defaults to 0 (first route).
 
     Returns
     -------
@@ -103,6 +107,7 @@ def get_route_statistics(
     demand = sum([data.client(idx).demand for idx in route])
     serv_dur = sum([data.client(idx).service_duration for idx in route])
 
+    vehicle_capacity = data.route(route_idx).vehicle_capacity
     return RouteStatistics(
         distance=distance,
         start_time=start_time,
@@ -113,8 +118,9 @@ def get_route_statistics(
         service_time=serv_dur,
         num_stops=len(route),
         total_demand=demand,
-        fillrate=demand / data.vehicle_capacity,
-        is_feasible=time_warp == 0 and demand <= data.vehicle_capacity,
+        capacity=vehicle_capacity,
+        fillrate=demand / vehicle_capacity,
+        is_feasible=time_warp == 0 and demand <= vehicle_capacity,
         is_empty=len(route) == 0,
     )
 
@@ -138,7 +144,7 @@ def get_all_route_statistics(
         List of RouteStatistic objects with statistics for each route.
     """
     return [
-        get_route_statistics(data, route)
-        for route in solution.get_routes()
+        get_route_statistics(data, route, idx)
+        for idx, route in enumerate(solution.get_routes())
         if route  # skip empty routes
     ]

@@ -66,9 +66,10 @@ class Individual:
 
            This list is of length
            :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`, but there
-           could be a number of empty routes. These empty routes are all in the
-           higher indices (guarantee). Use :meth:`~num_routes` to determine
-           which of the lower indices contain non-empty routes.
+           could be a number of empty routes. For groups of routes with the
+           same vehicle capacity, non-empty routes come before empty routes,
+           but there may be empty routes in between non-empty routes for
+           heterogeneous vehicle capacities.
 
         Returns
         -------

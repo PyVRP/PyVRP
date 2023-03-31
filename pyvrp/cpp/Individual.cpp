@@ -103,34 +103,47 @@ size_t Individual::excessLoad() const { return excessLoad_; }
 
 size_t Individual::timeWarp() const { return timeWarp_; }
 
-void Individual::makeNeighbours()
+void Individual::makeNeighboursAndAssignments(ProblemData const &data)
 {
     neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
 
-    for (auto const &route : routes_)
+    size_t routeTypeIdx = 0;
+    for (size_t rIdx = 0; rIdx != data.numVehicles(); ++rIdx)
+    {
+        // Increase routeTypeIdx if route (vehicle) is different than previous
+        routeTypeIdx += rIdx > 0 && data.route(rIdx) != data.route(rIdx - 1);
+        auto const route = routes_[rIdx];
         for (size_t idx = 0; idx != route.size(); ++idx)
+        {
             neighbours[route[idx]]
                 = {idx == 0 ? 0 : route[idx - 1],                  // pred
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
+            assignments[route[idx]] = routeTypeIdx;
+        }
+    }
 }
 
 bool Individual::operator==(Individual const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the neighbours are all equal.
-    // TODO we should also test that all individuals
-    // Are assigned to the same route types
+    // Only when that is also the case, we check if the assigned vehicle types
+    // (capacities) are equal for the heterogeneous case.
+
     // clang-format off
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
         && numRoutes_ == other.numRoutes_
-        && neighbours == other.neighbours;
+        && neighbours == other.neighbours
+        && assignments == other.assignments;
     // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
+    : routes_(data.numVehicles()),
+      neighbours(data.numClients() + 1),
+      assignments(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -147,12 +160,14 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     for (size_t idx = 0; idx != numClients; ++idx)
         routes_[idx / perRoute].push_back(clients[idx]);
 
-    makeNeighbours();
+    makeNeighboursAndAssignments(data);
     evaluate(data);
 }
 
 Individual::Individual(ProblemData const &data, Routes routes)
-    : routes_(std::move(routes)), neighbours(data.numClients() + 1)
+    : routes_(std::move(routes)),
+      neighbours(data.numClients() + 1),
+      assignments(data.numClients() + 1)
 {
     if (routes_.size() > data.numVehicles())
     {
@@ -189,16 +204,22 @@ Individual::Individual(ProblemData const &data, Routes routes)
     // will be empty.
     routes_.resize(data.numVehicles());
 
-    makeNeighbours();
+    makeNeighboursAndAssignments(data);
     evaluate(data);
 }
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
+    // Since non-empty routes are guaranteed to come before empty routes
+    // this will print consecutive route numbers for homogeneous problem
+    // instances, but there may be gaps in the route indices corresponding
+    // to different vehicle capacities.
     auto const &routes = indiv.getRoutes();
 
-    for (size_t rIdx = 0; rIdx != indiv.numRoutes(); ++rIdx)
+    for (size_t rIdx = 0; rIdx != routes.size(); ++rIdx)
     {
+        if (routes[rIdx].empty())
+            continue;
         out << "Route #" << rIdx + 1 << ":";  // route number
         for (int cIdx : routes[rIdx])
             out << " " << cIdx;  // client index

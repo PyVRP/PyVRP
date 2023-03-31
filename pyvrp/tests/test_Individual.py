@@ -1,9 +1,20 @@
 from copy import copy, deepcopy
 
 from numpy.testing import assert_, assert_equal, assert_raises
+from pytest import fixture, mark
 
 from pyvrp import Individual, ProblemData, XorShift128
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_heterogeneous, read
+
+
+@fixture
+def data_small():
+    return read("data/OkSmall.txt")
+
+
+@fixture
+def data_heterogeneous(data_small):
+    return make_heterogeneous(data_small, vehicle_capacities=[10, 10, 20])
 
 
 def test_route_constructor_sorts_by_empty():
@@ -22,6 +33,19 @@ def test_route_constructor_sorts_by_empty():
     assert_equal(len(routes[0]), 2)
     assert_equal(len(routes[1]), 2)
     assert_equal(len(routes[2]), 0)
+
+    # Test heterogeneous case
+    data = make_heterogeneous(data, [10, 10, 10, 20, 20])
+    indiv = Individual(data, [[], [3, 4], [], [], [1, 2]])
+
+    # num_routes() should show two non-empty routes.
+
+    # We expect Individual to sort the routes such that all non-empty routes
+    # are in the lower indices for each group of equal vehicle capacities.
+    assert_equal(
+        indiv.get_routes(),
+        [[3, 4], [], [], [1, 2], []],
+    )
 
 
 def test_route_constructor_raises():
@@ -110,9 +134,28 @@ def test_excess_load_calculation():
     assert_(not indiv.has_time_warp())
 
     # All clients are visited on the same route/by the same vehicle. The total
-    # demand is 18, but the vehicle capacity is only 10. This has a non-zero
-    # load penalty
+    # demand is 18, but the vehicle capacity is only 10.
     assert_equal(indiv.excess_load(), 18 - data.route(0).vehicle_capacity)
+
+
+def test_heterogeneous_capacity_excess_load_calculation(data_heterogeneous):
+    data = data_heterogeneous
+
+    # This instance has capacities [10, 10, 20] and total demand of 18
+    indiv = Individual(data, [[1, 2, 3, 4]])
+    assert_(indiv.has_excess_load())
+    assert_equal(indiv.excess_load(), 18 - data.route(0).vehicle_capacity)
+
+    # Note that individual will sort the routes because the first two have the
+    # same vehicle capacity
+    indiv = Individual(data, [[], [1, 2, 3, 4]])
+    assert_(indiv.has_excess_load())
+    assert_equal(indiv.excess_load(), 18 - data.route(1).vehicle_capacity)
+
+    # Third route is larger capacity so feasible
+    indiv = Individual(data, [[], [], [1, 2, 3, 4]])
+    assert_(not indiv.has_excess_load())
+    assert_equal(indiv.excess_load(), 0)
 
 
 def test_time_warp_calculation():
@@ -166,9 +209,28 @@ def test_time_warp_for_a_very_constrained_problem():
 
 
 # TODO test all time warp cases
-def test_num_routes_calculation():
-    # TODO test if empty routes are not consequtive
-    assert_(False)
+
+
+def test_num_routes_calculation(data_heterogeneous):
+    data = data_heterogeneous
+
+    indiv = Individual(data, [[1, 2, 3, 4]])
+    assert_equal(indiv.num_routes(), 1)
+
+    indiv = Individual(data, [[], [1, 2, 3, 4]])
+    assert_equal(indiv.num_routes(), 1)
+
+    indiv = Individual(data, [[], [], [1, 2, 3, 4]])
+    assert_equal(indiv.num_routes(), 1)
+
+    indiv = Individual(data, [[1, 2], [3, 4]])
+    assert_equal(indiv.num_routes(), 2)
+
+    indiv = Individual(data, [[1, 2], [], [3, 4]])
+    assert_equal(indiv.num_routes(), 2)
+
+    indiv = Individual(data, [[1], [2], [3, 4]])
+    assert_equal(indiv.num_routes(), 3)
 
 
 def test_copy():
@@ -212,27 +274,50 @@ def test_eq():
     assert_(indiv5 != "cd")
 
 
-def test_same_routes_different_vehicle_not_eq():
-    data = ProblemData(
-        coords=[(0, 0), (1, 0), (2, 0)],
-        demands=[2, 3, 4],
-        vehicle_capacities=[10, 20],
-        time_windows=[(0, 10), (0, 5), (0, 5)],
-        service_durations=[0, 0, 0],
-        duration_matrix=[
-            [0, 1, 10],  # cannot get to 2 from depot within 2's time window
-            [1, 0, 1],
-            [1, 1, 0],
-        ],
-    )
+def test_same_routes_different_vehicle_not_eq(data_heterogeneous):
+    """
+    Tests that two individuals are not considered equal if they have the same
+    routes (orders of clients) but served by vehicles with different
+    capacities.
+    """
+    data = data_heterogeneous
 
-    indiv1 = Individual(data, [[1, 2, 3], []])
-    indiv2 = Individual(data, [[], [1, 2, 3]])
+    indiv1 = Individual(data, [[1, 2, 3, 4]])
+    indiv2 = Individual(data, [[], [1, 2, 3, 4]])
+    indiv3 = Individual(data, [[], [], [1, 2, 3, 4]])
 
-    assert_(indiv1 != indiv2)
+    # First two vehicles have same capacity, so order does not matter
+    assert_(indiv1 == indiv2)
+    # Third vehicle has different capacity, so this solution is different
+    assert_(indiv1 != indiv3)
 
 
-def test_str_contains_essential_information():
+def test_heterogeneous_route_sorting(data_heterogeneous):
+    """
+    Tests that two individuals sorts non-emtpy routes per group of same
+    capacities.
+    """
+    data = data_heterogeneous
+
+    # Vehicle capacites are [10, 10, 20]
+    indiv1 = Individual(data, [[1, 2, 3, 4]])
+    indiv2 = Individual(data, [[], [1, 2, 3, 4]])
+    indiv3 = Individual(data, [[], [], [1, 2, 3, 4]])
+
+    # First two vehicles have same capacity, so order does not matter
+    expected = [[1, 2, 3, 4], [], []]
+    assert_equal(indiv1.get_routes(), expected)
+    assert_equal(indiv2.get_routes(), expected)
+
+    # Third vehicle is different capacity, should not be moved forward
+    assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
+
+
+@mark.parametrize(
+    "data",
+    [data_small, data_heterogeneous],
+)
+def test_str_contains_essential_information(data):
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=2)
 
