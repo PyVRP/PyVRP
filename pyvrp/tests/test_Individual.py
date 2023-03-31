@@ -112,7 +112,7 @@ def test_excess_load_calculation():
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10. This has a non-zero
     # load penalty
-    assert_equal(indiv.excess_load(), 18 - data.vehicle_capacity)
+    assert_equal(indiv.excess_load(), 18 - data.route(0).vehicle_capacity)
 
 
 def test_time_warp_calculation():
@@ -141,8 +141,7 @@ def test_time_warp_for_a_very_constrained_problem():
     data = ProblemData(
         coords=[(0, 0), (1, 0), (2, 0)],
         demands=[0, 0, 0],
-        nb_vehicles=2,
-        vehicle_cap=0,
+        vehicle_capacities=[0, 0],
         time_windows=[(0, 10), (0, 5), (0, 5)],
         service_durations=[0, 0, 0],
         duration_matrix=[
@@ -167,6 +166,9 @@ def test_time_warp_for_a_very_constrained_problem():
 
 
 # TODO test all time warp cases
+def test_num_routes_calculation():
+    # TODO test if empty routes are not consequtive
+    assert_(False)
 
 
 def test_copy():
@@ -208,6 +210,26 @@ def test_eq():
     assert_(indiv4 != "abc")
     assert_(indiv5 != 5)
     assert_(indiv5 != "cd")
+
+
+def test_same_routes_different_vehicle_not_eq():
+    data = ProblemData(
+        coords=[(0, 0), (1, 0), (2, 0)],
+        demands=[2, 3, 4],
+        vehicle_capacities=[10, 20],
+        time_windows=[(0, 10), (0, 5), (0, 5)],
+        service_durations=[0, 0, 0],
+        duration_matrix=[
+            [0, 1, 10],  # cannot get to 2 from depot within 2's time window
+            [1, 0, 1],
+            [1, 1, 0],
+        ],
+    )
+
+    indiv1 = Individual(data, [[1, 2, 3], []])
+    indiv2 = Individual(data, [[], [1, 2, 3]])
+
+    assert_(indiv1 != indiv2)
 
 
 def test_str_contains_essential_information():

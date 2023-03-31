@@ -67,14 +67,14 @@ int TwoOpt::evalBetweenRoutes(Node *U,
     int const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
 
     deltaCost += costEvaluator.loadPenalty(U->route->load() - deltaLoad,
-                                           data.vehicleCapacity());
-    deltaCost
-        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
+                                           U->route->vehicleCapacity());
+    deltaCost -= costEvaluator.loadPenalty(U->route->load(),
+                                           U->route->vehicleCapacity());
 
     deltaCost += costEvaluator.loadPenalty(V->route->load() + deltaLoad,
-                                           data.vehicleCapacity());
-    deltaCost
-        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
+                                           V->route->vehicleCapacity());
+    deltaCost -= costEvaluator.loadPenalty(V->route->load(),
+                                           V->route->vehicleCapacity());
 
     return deltaCost;
 }

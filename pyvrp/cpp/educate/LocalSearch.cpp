@@ -57,17 +57,8 @@ Individual LocalSearch::search(Individual &individual,
 
             // Empty route moves are not tested in the first iteration to avoid
             // increasing the fleet size too much.
-            if (step > 0)
-            {
-                auto pred = [](auto const &route) { return route.empty(); };
-                auto empty = std::find_if(routes.begin(), routes.end(), pred);
-
-                if (empty == routes.end())
-                    continue;
-
-                if (applyNodeOps(U, empty->depot, costEvaluator))
-                    continue;
-            }
+            if (step > 0 && applyNodeOpsWithEmptyRoutes(U, costEvaluator))
+                continue;
         }
     }
 
@@ -129,6 +120,30 @@ Individual LocalSearch::intensify(Individual &individual,
     }
 
     return exportIndividual();
+}
+
+bool LocalSearch::applyNodeOpsWithEmptyRoutes(
+    Node *U, CostEvaluator const &costEvaluator)
+{
+    // Loop over all empty routes that are not exchangable with the previous
+    // empty route (assuming routes are grouped) and try the operator
+    int prev_r = -1;
+    bool success = false;
+    for (size_t r = 0; r < routes.size(); r++)
+    {
+        if (routes[r].empty()
+            && (prev_r == -1 || (data.route(r) != data.route(prev_r))))
+        {
+            prev_r = r;
+            // Node: if the operation is succesful, we still continue
+            // checking operations with other empty routes, similar to
+            // how a move involving U, V will still check U, V' afterwards
+            if (applyNodeOps(U, routes[r].depot, costEvaluator))
+                success = true;
+            // TODO break for loop if data.isHomogeneousFleet()?
+        }
+    }
+    return success;
 }
 
 bool LocalSearch::applyNodeOps(Node *U,
@@ -312,7 +327,7 @@ LocalSearch::LocalSearch(ProblemData &data,
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1),
       clients(data.numClients() + 1),
-      routes(data.numVehicles(), data),
+      routes(),
       startDepots(data.numVehicles()),
       endDepots(data.numVehicles())
 {
@@ -324,8 +339,10 @@ LocalSearch::LocalSearch(ProblemData &data,
     for (size_t i = 0; i <= data.numClients(); i++)
         clients[i].client = i;
 
+    routes.reserve(data.numVehicles());
     for (size_t i = 0; i < data.numVehicles(); i++)
     {
+        routes.emplace_back(data, i);
         routes[i].idx = i;
         routes[i].depot = &startDepots[i];
 

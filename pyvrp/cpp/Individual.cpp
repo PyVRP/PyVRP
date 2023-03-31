@@ -16,10 +16,12 @@ void Individual::evaluate(ProblemData const &data)
     excessLoad_ = 0;
     timeWarp_ = 0;
 
-    for (auto const &route : routes_)
+    for (size_t idx = 0; idx < data.numVehicles(); idx++)
     {
-        if (route.empty())  // First empty route. All subsequent routes are
-            break;          // empty as well.
+        auto const &route = routes_[idx];
+        auto const &routeData = data.route(idx);
+        if (route.empty())
+            continue;
 
         numRoutes_++;
 
@@ -72,8 +74,8 @@ void Individual::evaluate(ProblemData const &data)
         distance_ += routeDist;
         timeWarp_ += routeTimeWarp;
 
-        if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
-            excessLoad_ += routeLoad - data.vehicleCapacity();
+        if (static_cast<size_t>(routeLoad) > routeData.vehicleCapacity)
+            excessLoad_ += routeLoad - routeData.vehicleCapacity;
     }
 }
 
@@ -116,6 +118,8 @@ bool Individual::operator==(Individual const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the neighbours are all equal.
+    // TODO we should also test that all individuals
+    // Are assigned to the same route types
     // clang-format off
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
@@ -156,15 +160,34 @@ Individual::Individual(ProblemData const &data, Routes routes)
         throw std::runtime_error(msg);
     }
 
+    // Shift routes forward as much as possible within exchangable groups
+    size_t j = 0;  // Index of next position to put non-empty route
+    for (size_t i = 0; i < routes_.size(); i++)
+    {
+        // In order to shift forward, routes must be exchangable
+        // so the route data must be equal (same depot and capacity)
+        // Note that this assumes exchangable routes are grouped together
+        if (data.route(i) != data.route(j))
+        {
+            // Move to next group
+            j = i;
+        }
+        // Note that it holds that i >= j
+        if (!routes_[i].empty())
+        {
+            // Only shift the route if i != j (which means i > j)
+            if (i != j)
+            {
+                routes_[j] = routes_[i];
+                routes_[i].clear();
+            }
+            j++;
+        }
+    }
+
     // Expand to at least numVehicles routes, where any newly inserted routes
     // will be empty.
     routes_.resize(data.numVehicles());
-
-    // a precedes b only when a is not empty and b is. Combined with a stable
-    // sort, this ensures we keep the original sorting as much as possible, but
-    // also make sure all empty routes are at the end of routes_.
-    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
-    std::stable_sort(routes_.begin(), routes_.end(), comp);
 
     makeNeighbours();
     evaluate(data);

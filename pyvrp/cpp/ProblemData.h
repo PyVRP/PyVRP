@@ -20,13 +20,26 @@ public:
         int twLate;           // Latest arrival (when using time windows)
     };
 
+    struct Route
+    {
+        size_t vehicleCapacity;  // Vehicle capacity
+        inline bool operator==(const Route &other) const
+        {
+            return vehicleCapacity == other.vehicleCapacity;
+        }
+        inline bool operator!=(const Route &other) const
+        {
+            return !(*this == other);
+        }
+    };
+
 private:
-    Matrix<int> const dist_;       // Distance matrix (+depot)
+    Matrix<int> const dist_;       // Distance matrix (+depots)
     std::vector<Client> clients_;  // Client (+depot) information
+    std::vector<Route> routes_;    // Routes information
 
     size_t const numClients_;
-    size_t const numVehicles_;
-    size_t const vehicleCapacity_;
+    size_t const numRoutes_;
 
 public:
     /**
@@ -39,6 +52,12 @@ public:
      * @return A struct containing the depot's information.
      */
     [[nodiscard]] Client const &depot() const;
+
+    /**
+     * @param route Route whose data to return.
+     * @return A struct containing the indicated route's information.
+     */
+    [[nodiscard]] inline Route const &route(size_t route) const;
 
     /**
      * Returns the distance between the indicated two clients.
@@ -65,27 +84,20 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
-     * @return Capacity of each vehicle in this instance.
-     */
-    [[nodiscard]] size_t vehicleCapacity() const;
-
-    /**
      * Constructs a ProblemData object with the given data. Assumes the data
      * contains the depot, such that each vector is one longer than the number
      * of clients.
      *
      * @param coords       Coordinates as pairs of [x, y].
      * @param demands      Client demands.
-     * @param numVehicles  Number of vehicles.
-     * @param vehicleCap   Vehicle capacity.
+     * @param vehicleCapacities     Vehicle capacity for each route.
      * @param timeWindows  Time windows as pairs of [early, late].
      * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
      */
     ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
-                size_t numVehicles,
-                size_t vehicleCap,
+                std::vector<size_t> const &vehicleCapacities,
                 std::vector<std::pair<int, int>> const &timeWindows,
                 std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat);
@@ -94,6 +106,11 @@ public:
 ProblemData::Client const &ProblemData::client(size_t client) const
 {
     return clients_[client];
+}
+
+ProblemData::Route const &ProblemData::route(size_t route) const
+{
+    return routes_[route];
 }
 
 int ProblemData::dist(size_t first, size_t second) const

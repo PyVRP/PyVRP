@@ -115,14 +115,14 @@ int SwapStar::evaluate(Route *routeU,
             int const loadDiff = uDemand - vDemand;
 
             deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
-                                                   data.vehicleCapacity());
+                                                   U->route->vehicleCapacity());
             deltaCost -= costEvaluator.loadPenalty(routeU->load(),
-                                                   data.vehicleCapacity());
+                                                   U->route->vehicleCapacity());
 
             deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
-                                                   data.vehicleCapacity());
+                                                   V->route->vehicleCapacity());
             deltaCost -= costEvaluator.loadPenalty(routeV->load(),
-                                                   data.vehicleCapacity());
+                                                   V->route->vehicleCapacity());
 
             deltaCost += removalCosts(routeU->idx, U->client);
             deltaCost += removalCosts(routeV->idx, V->client);
@@ -262,14 +262,14 @@ int SwapStar::evaluate(Route *routeU,
     auto const vDemand = data.client(best.V->client).demand;
 
     deltaCost += costEvaluator.loadPenalty(routeU->load() - uDemand + vDemand,
-                                           data.vehicleCapacity());
+                                           routeU->vehicleCapacity());
     deltaCost
-        -= costEvaluator.loadPenalty(routeU->load(), data.vehicleCapacity());
+        -= costEvaluator.loadPenalty(routeU->load(), routeU->vehicleCapacity());
 
     deltaCost += costEvaluator.loadPenalty(routeV->load() + uDemand - vDemand,
-                                           data.vehicleCapacity());
+                                           routeV->vehicleCapacity());
     deltaCost
-        -= costEvaluator.loadPenalty(routeV->load(), data.vehicleCapacity());
+        -= costEvaluator.loadPenalty(routeV->load(), routeV->vehicleCapacity());
 
     return deltaCost;
 }

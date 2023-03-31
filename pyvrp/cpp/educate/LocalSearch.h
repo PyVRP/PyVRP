@@ -49,6 +49,9 @@ class LocalSearch
     Individual exportIndividual();
 
     [[nodiscard]] bool
+    applyNodeOpsWithEmptyRoutes(Node *U, CostEvaluator const &costEvaluator);
+
+    [[nodiscard]] bool
     applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
 
     [[nodiscard]] bool

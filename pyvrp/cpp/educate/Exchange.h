@@ -113,17 +113,17 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
 
         deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               data.vehicleCapacity());
+                                               U->route->vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               data.vehicleCapacity());
+                                               U->route->vehicleCapacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               data.vehicleCapacity());
+                                               V->route->vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               data.vehicleCapacity());
+                                               V->route->vehicleCapacity());
 
         auto vTWS = TWS::merge(dist,
                                V->twBefore,
@@ -222,14 +222,14 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         auto const loadDiff = loadU - loadV;
 
         deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               data.vehicleCapacity());
+                                               U->route->vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               data.vehicleCapacity());
+                                               U->route->vehicleCapacity());
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               data.vehicleCapacity());
+                                               V->route->vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               data.vehicleCapacity());
+                                               V->route->vehicleCapacity());
     }
     else  // within same route
     {

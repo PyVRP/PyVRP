@@ -5,6 +5,8 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
+from pyvrp._Matrix import IntMatrix  # noqa
+
 from ._ProblemData import ProblemData
 
 _Routes = List[List[int]]
@@ -119,6 +121,8 @@ def read(
         bound = min(bound, _INT_MAX)
         time_windows = np.repeat([[0, bound]], num_clients, axis=0)
 
+    vehicle_capacities = [capacity for _ in range(num_vehicles)]
+
     # Checks
     if len(depots) != 1 or depots[0] != 0:
         raise ValueError(
@@ -141,8 +145,7 @@ def read(
     return ProblemData(
         coords,
         demands,
-        num_vehicles,
-        capacity,
+        vehicle_capacities,
         time_windows,
         service_times,
         edge_weight,

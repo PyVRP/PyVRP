@@ -13,6 +13,7 @@
 class Route
 {
     ProblemData const &data;
+    ProblemData::Route const &routeData;
 
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
@@ -78,6 +79,11 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool empty() const;
 
     /**
+     * @return the vehicle capacity for this route.
+     */
+    [[nodiscard]] inline size_t vehicleCapacity() const;
+
+    /**
      * @return Number of clients in this route.
      */
     [[nodiscard]] inline size_t size() const;
@@ -111,7 +117,7 @@ public:           // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data);
+    Route(ProblemData const &data, size_t const idx);
 };
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
@@ -138,6 +144,8 @@ int Route::load() const { return load_; }
 int Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
+
+size_t Route::vehicleCapacity() const { return routeData.vehicleCapacity; }
 
 size_t Route::size() const
 {

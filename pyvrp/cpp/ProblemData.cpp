@@ -12,22 +12,19 @@ Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
-size_t ProblemData::numVehicles() const { return numVehicles_; }
-
-size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+size_t ProblemData::numVehicles() const { return numRoutes_; }
 
 ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          std::vector<int> const &demands,
-                         size_t numVehicles,
-                         size_t vehicleCap,
+                         std::vector<size_t> const &vehicleCapacities,
                          std::vector<std::pair<int, int>> const &timeWindows,
                          std::vector<int> const &servDurs,
                          std::vector<std::vector<int>> const &distMat)
     : dist_(distMat),
       clients_(coords.size()),
+      routes_(vehicleCapacities.size()),
       numClients_(static_cast<int>(coords.size()) - 1),
-      numVehicles_(numVehicles),
-      vehicleCapacity_(vehicleCap)
+      numRoutes_(static_cast<int>(vehicleCapacities.size()))
 {
     // TODO argument checks
 
@@ -38,4 +35,7 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          demands[idx],
                          timeWindows[idx].first,
                          timeWindows[idx].second};
+
+    for (size_t idx = 0; idx < static_cast<size_t>(numRoutes_); ++idx)
+        routes_[idx] = {vehicleCapacities[idx]};
 }

@@ -30,6 +30,19 @@ class Client:
     x: int
     y: int
 
+class Route:
+    """
+    Simple data object storing all route data as properties.
+
+    Attributes
+    ----------
+    vehicle_capacity
+        Capacity of the vehicle for this route.
+    """
+
+    depot: int
+    vehicle_capacity: int
+
 class ProblemData:
     """
     Creates a problem data instance. This instance contains all information
@@ -43,10 +56,8 @@ class ProblemData:
     demands
         Array of client demands. The demand at index 0 is assumed to be the
         depot's demand, and should be zero.
-    nb_vehicles
-        The number of vehicles in this problem instance.
-    vehicle_cap
-        Homogenous vehicle capacity for all vehicles in the problem instance.
+    vehicle_capacities
+        List of vehicle capacities for all routes in the problem instance.
     time_windows
         Array of (early, late) time windows. The time window at index 0 is
         assumed to be the depot's time window, and describes the overall time
@@ -69,8 +80,7 @@ class ProblemData:
         self,
         coords: List[Tuple[int, int]],
         demands: List[int],
-        nb_vehicles: int,
-        vehicle_cap: int,
+        vehicle_capacities: List[int],
         time_windows: List[Tuple[int, int]],
         service_durations: List[int],
         duration_matrix: List[List[int]],
@@ -98,6 +108,20 @@ class ProblemData:
         -------
         Client
             A simple data object containing the depot's information.
+        """
+    def route(self, route: int) -> Route:
+        """
+        Returns route data for the given route idx.
+
+        Parameters
+        ----------
+        route
+            Route number whose information to retrieve.
+
+        Returns
+        -------
+        Route
+            A simple data object containing the requested route's information.
         """
     def dist(self, first: int, second: int) -> int:
         """
@@ -145,15 +169,4 @@ class ProblemData:
         -------
         int
             Number of vehicles in the instance.
-        """
-    @property
-    def vehicle_capacity(self) -> int:
-        """
-        Returns the homogenous vehicle capacities of all vehicles in this
-        problem data instance.
-
-        Returns
-        -------
-        int
-            Capacity of each vehicle in the instance.
         """
