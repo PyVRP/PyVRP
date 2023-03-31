@@ -24,7 +24,7 @@ void Route::setupNodes()
 
 void Route::setupSector()
 {
-    if (empty())  // Note: sector is undefined for empty routes
+    if (empty())  // Note: sector has no meaning for empty routes, don't use
         return;
 
     auto const depotData = data.client(0);

@@ -71,6 +71,11 @@ def test_srex_move_all_routes():
 def test_srex_sorts_routes():
     """
     Tests if SREX sorts the input before applying the operator.
+
+    Internally, SREX first sorts the given routes by angle w.r.t. the depot.
+    Since that always results in the same route order for the same set of
+    routes, SREX should be invariant to route permutations and always produce
+    the exact same offspring.
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
