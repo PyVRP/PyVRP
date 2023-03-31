@@ -11,7 +11,7 @@ using Routes = std::vector<Route>;
 
 namespace
 {
-double _computeRouteAngleCenter(ProblemData const &data, Route const &route)
+double routeAngle(ProblemData const &data, Route const &route)
 {
     // Computes the route angle center. Assumes that the route is non-empty.
     int cumulatedX = 0;
@@ -32,31 +32,23 @@ double _computeRouteAngleCenter(ProblemData const &data, Route const &route)
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
-Routes _getNonEmptyRoutesSortedByAngleCenter(ProblemData const &data,
-                                             Routes const routes)
+Routes getNonEmptyRoutesByAscendingAngle(ProblemData const &data, Routes routes)
 {
-    std::vector<std::pair<double, int>> routePolarAngles;
-    routePolarAngles.reserve(data.numVehicles());
+    auto cmp = [&data](Route a, Route b) {
+        return (a.empty() || b.empty())
+                   ? !a.empty() && b.empty()
+                   : routeAngle(data, a) < routeAngle(data, b);
+    };
 
-    size_t numNonEmptyRoutes = 0;
-    for (size_t r = 0; r < data.numVehicles(); r++)
-        if (!routes[r].empty())
-        {
-            numNonEmptyRoutes++;
-            routePolarAngles.emplace_back(
-                _computeRouteAngleCenter(data, routes[r]), r);
-        }
+    std::sort(routes.begin(), routes.end(), cmp);
 
-    // Sort angles of non-empty routes
-    std::sort(routePolarAngles.begin(),
-              routePolarAngles.begin() + numNonEmptyRoutes);
+    size_t empty = 0;
+    for (; empty != routes.size(); ++empty)
+        if (routes[empty].empty())
+            break;
 
-    Routes resultRoutes;
-    resultRoutes.reserve(numNonEmptyRoutes);
-    for (size_t r = 0; r < numNonEmptyRoutes; r++)
-        resultRoutes.emplace_back(routes[routePolarAngles[r].second]);
-
-    return resultRoutes;
+    routes.resize(empty);
+    return routes;
 }
 }  // namespace
 
@@ -67,15 +59,30 @@ Individual selectiveRouteExchange(
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes)
 {
+    // We create two candidate offsprings, both based on parent A:
+    // Let A and B denote the set of customers selected from parents A and B
+    // Ac and Bc denote the complements: the customers not selected
+    // Let v denote union and ^ intersection
+    // Parent A: A v Ac
+    // Parent B: B v Bc
+
+    // Offspring 1:
+    // B and Ac\B, remainder A\B unplanned
+    // (note B v (Ac\B) v (A\B) = B v ((Ac v A)\B) = B v Bc = all)
+    // Note Ac\B = (A v B)c
+
+    // Offspring 2:
+    // A^B and Ac, remainder A\B unplanned
+    // (note A^B v Ac v A\B = (A^B v A\B) v Ac = A v Ac = all)
+
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
     // Sort routes according to center angle for both parents
-
-    auto const &routesA = _getNonEmptyRoutesSortedByAngleCenter(
-        data, parents.first->getRoutes());
-    auto const &routesB = _getNonEmptyRoutesSortedByAngleCenter(
-        data, parents.second->getRoutes());
+    auto const routesA
+        = getNonEmptyRoutesByAscendingAngle(data, parents.first->getRoutes());
+    auto const routesB
+        = getNonEmptyRoutesByAscendingAngle(data, parents.second->getRoutes());
 
     size_t nRoutesA = routesA.size();
     size_t nRoutesB = routesB.size();
@@ -93,9 +100,9 @@ Individual selectiveRouteExchange(
     ClientSet selectedA;
     ClientSet selectedB;
 
-    // Routes are sorted on polar angle by the local search/educate step, so
-    // selecting adjacent routes in both parents should result in a large
-    // overlap when the start indices are close to each other.
+    // Routes are sorted on polar angle, so selecting adjacent routes in both
+    // parents should result in a large overlap when the start indices are
+    // close to each other.
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
         selectedA.insert(routesA[(startA + r) % nRoutesA].begin(),
@@ -195,21 +202,6 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    // We create two candidate offsprings, both based on parent A:
-    // Let A and B denote the set of customers selected from parents A and B
-    // Ac and Bc denote the complements: the customers not selected
-    // Let v denote union and ^ intersection
-    // Parent A: A v Ac
-    // Parent B: B v Bc
-
-    // Offspring 1:
-    // B and Ac\B, remainder A\B unplanned
-    // (note B v (Ac\B) v (A\B) = B v ((Ac v A)\B) = B v Bc = all)
-    // Note Ac\B = (A v B)c
-
-    // Offspring 2:
-    // A^B and Ac, remainder A\B unplanned
-    // (note A^B v Ac v A\B = (A^B v A\B) v Ac = A v Ac = all)
     Routes routes1(data.numVehicles());
     Routes routes2(data.numVehicles());
 
@@ -236,9 +228,9 @@ Individual selectiveRouteExchange(
         for (Client c : routesA[indexA])
         {
             if (!clientsInSelectedBNotA.contains(c))
-                routes1[indexA].push_back(c);  // Ac\B
+                routes1[indexA].push_back(c);  // c in Ac\B
 
-            routes2[indexA].push_back(c);  // Ac
+            routes2[indexA].push_back(c);  // c in Ac
         }
     }
 
