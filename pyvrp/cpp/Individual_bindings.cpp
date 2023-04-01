@@ -11,29 +11,20 @@ namespace py = pybind11;
 PYBIND11_MODULE(_Individual, m)
 {
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData const &,
-                      PenaltyManager const &,
-                      std::vector<std::vector<int>>>(),
+        .def(py::init<ProblemData const &, std::vector<std::vector<int>>>(),
              py::arg("data"),
-             py::arg("penalty_manager"),
-             py::arg("routes"),
-             py::keep_alive<1, 3>())  // keep penalty_manager alive
+             py::arg("routes"))
         .def_property_readonly_static(
             "make_random",                // this is a bit of a workaround for
             [](py::object)                // classmethods, because pybind does
             {                             // not yet support those natively.
                 return py::cpp_function(  // See issue 1693 in the pybind repo.
-                    [](ProblemData const &data,
-                       PenaltyManager const &penaltyManager,
-                       XorShift128 &rng) {
-                        return Individual(data, penaltyManager, rng);
+                    [](ProblemData const &data, XorShift128 &rng) {
+                        return Individual(data, rng);
                     },
                     py::arg("data"),
-                    py::arg("penalty_manager"),
-                    py::arg("routes"),
-                    py::keep_alive<0, 2>());  // keep penalty_manager alive
+                    py::arg("rng"));
             })
-        .def("cost", &Individual::cost)
         .def("num_routes", &Individual::numRoutes)
         .def("get_routes",
              &Individual::getRoutes,
@@ -42,8 +33,11 @@ PYBIND11_MODULE(_Individual, m)
              &Individual::getNeighbours,
              py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)
-        .def("has_excess_capacity", &Individual::hasExcessCapacity)
+        .def("has_excess_load", &Individual::hasExcessLoad)
         .def("has_time_warp", &Individual::hasTimeWarp)
+        .def("distance", &Individual::distance)
+        .def("excess_load", &Individual::excessLoad)
+        .def("time_warp", &Individual::timeWarp)
         .def(
             "__copy__",
             [](Individual const &individual) { return Individual(individual); })

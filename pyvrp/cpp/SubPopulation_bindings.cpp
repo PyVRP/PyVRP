@@ -36,7 +36,10 @@ PYBIND11_MODULE(_SubPopulation, m)
              py::arg("diversity_op"),
              py::arg("params"),
              py::keep_alive<1, 3>())  // keep params alive
-        .def("add", &SubPopulation::add, py::arg("individual"))
+        .def("add",
+             &SubPopulation::add,
+             py::arg("individual"),
+             py::arg("cost_evaluator"))
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
@@ -55,5 +58,8 @@ PYBIND11_MODULE(_SubPopulation, m)
                 return py::make_iterator(subPop.cbegin(), subPop.cend());
             },
             py::return_value_policy::reference_internal)
-        .def("purge", &SubPopulation::purge);
+        .def("purge", &SubPopulation::purge, py::arg("cost_evaluator"))
+        .def("update_fitness",
+             &SubPopulation::updateFitness,
+             py::arg("cost_evaluator"));
 }

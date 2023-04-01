@@ -2,8 +2,6 @@
 #define EXCHANGE_H
 
 #include "LocalSearchOperator.h"
-#include "Node.h"
-#include "Route.h"
 #include "TimeWindowSegment.h"
 
 #include <cassert>
@@ -31,15 +29,19 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
     inline bool adjacent(Node *U, Node *V) const;
 
     // Special case that's applied when M == 0
-    cost_type evalRelocateMove(Node *U, Node *V) const;
+    cost_type evalRelocateMove(Node *U,
+                               Node *V,
+                               CostEvaluator const &costEvaluator) const;
 
     // Applied when M != 0
-    cost_type evalSwapMove(Node *U, Node *V) const;
+    cost_type
+    evalSwapMove(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
 
 public:
-    cost_type evaluate(Node *U, Node *V) override;
+    cost_type
+    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
-    void apply(Node *U, Node *V) override;
+    void apply(Node *U, Node *V) const override;
 };
 
 template <size_t N, size_t M>
@@ -77,7 +79,8 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
+cost_type Exchange<N, M>::evalRelocateMove(
+    Node *U, Node *V, CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -106,27 +109,31 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
 
         auto uTWS = TWS::merge(duration, p(U)->twBefore, n(endU)->twAfter);
 
-        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
 
-        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(U->route->load());
+        deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
+                                               data.vehicleCapacity());
+        deltaCost -= costEvaluator.loadPenalty(U->route->load(),
+                                               data.vehicleCapacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(V->route->load());
+        deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
+                                               data.vehicleCapacity());
+        deltaCost -= costEvaluator.loadPenalty(V->route->load(),
+                                               data.vehicleCapacity());
 
         auto vTWS = TWS::merge(duration,
                                V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
 
-        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
     }
     else  // within same route
     {
@@ -143,7 +150,7 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
                                         route->twBetween(posU, posU + N - 1),
                                         n(V)->twAfter);
 
-            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
         else
         {
@@ -153,17 +160,19 @@ cost_type Exchange<N, M>::evalRelocateMove(Node *U, Node *V) const
                                         route->twBetween(posV + 1, posU - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
 
-        deltaCost -= penaltyManager.twPenalty(route->timeWarp());
+        deltaCost -= costEvaluator.twPenalty(route->timeWarp());
     }
 
     return deltaCost;
 }
 
 template <size_t N, size_t M>
-cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
+cost_type Exchange<N, M>::evalSwapMove(Node *U,
+                                       Node *V,
+                                       CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -200,26 +209,30 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
 
-        deltaCost += penaltyManager.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
         auto vTWS = TWS::merge(duration,
                                p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
 
-        deltaCost += penaltyManager.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= penaltyManager.twPenalty(V->route->timeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
 
-        deltaCost += penaltyManager.loadPenalty(U->route->load() - loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(U->route->load());
+        deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
+                                               data.vehicleCapacity());
+        deltaCost -= costEvaluator.loadPenalty(U->route->load(),
+                                               data.vehicleCapacity());
 
-        deltaCost += penaltyManager.loadPenalty(V->route->load() + loadDiff);
-        deltaCost -= penaltyManager.loadPenalty(V->route->load());
+        deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
+                                               data.vehicleCapacity());
+        deltaCost -= costEvaluator.loadPenalty(V->route->load(),
+                                               data.vehicleCapacity());
     }
     else  // within same route
     {
@@ -237,7 +250,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                         route->twBetween(posU, posU + N - 1),
                                         n(endV)->twAfter);
 
-            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
         else
         {
@@ -248,17 +261,18 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U, Node *V) const
                                         route->twBetween(posV, posV + M - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += penaltyManager.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
 
-        deltaCost -= penaltyManager.twPenalty(U->route->timeWarp());
+        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
     }
 
     return deltaCost;
 }
 
 template <size_t N, size_t M>
-cost_type Exchange<N, M>::evaluate(Node *U, Node *V)
+cost_type
+Exchange<N, M>::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     if (containsDepot(U, N) || overlap(U, V))
         return 0;
@@ -272,7 +286,7 @@ cost_type Exchange<N, M>::evaluate(Node *U, Node *V)
         if (U == n(V))
             return 0;
 
-        return evalRelocateMove(U, V);
+        return evalRelocateMove(U, V, costEvaluator);
     }
     else
     {
@@ -283,11 +297,11 @@ cost_type Exchange<N, M>::evaluate(Node *U, Node *V)
         if (adjacent(U, V))
             return 0;
 
-        return evalSwapMove(U, V);
+        return evalSwapMove(U, V, costEvaluator);
     }
 }
 
-template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V)
+template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V) const
 {
     auto *uToInsert = N == 1 ? U : (*U->route)[U->position + N - 1];
     auto *insertUAfter = M == 0 ? V : (*V->route)[V->position + M - 1];

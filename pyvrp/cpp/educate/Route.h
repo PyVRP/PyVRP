@@ -55,7 +55,7 @@ public:                  // TODO make fields private
      *
      * @return true if the route exceeds the vehicle capacity, false otherwise.
      */
-    [[nodiscard]] inline bool hasExcessCapacity() const;
+    [[nodiscard]] inline bool hasExcessLoad() const;
 
     /**
      * Determines whether this route is time-feasible.
@@ -117,12 +117,9 @@ public:                  // TODO make fields private
     Route(ProblemData const &data);
 };
 
-bool Route::isFeasible() const
-{
-    return !hasExcessCapacity() && !hasTimeWarp();
-}
+bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
+bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
 
 bool Route::hasTimeWarp() const
 {

@@ -56,7 +56,7 @@ INCLUDES = [include_directories(SRC_DIR)]
 libcommon = static_library(
     'common',
     [
-        SRC_DIR / 'PenaltyManager.cpp',
+        SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'XorShift128.cpp',
         SRC_DIR / 'Individual.cpp',
@@ -100,7 +100,7 @@ dependencies = [py.dependency(), pybind11]
 # the source and installation directories (relative to SRC_DIR and INST_DIR).
 extensions = [
     ['Matrix', ''],
-    ['PenaltyManager', ''],
+    ['CostEvaluator', ''],
     ['ProblemData', ''],
     ['SubPopulation', ''],
     ['TimeWindowSegment', ''],

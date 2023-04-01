@@ -97,9 +97,9 @@ def test_raises_when_no_initial_solutions():
     since that is insufficient to do crossover.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pen_manager = PenaltyManager(data.vehicle_capacity)
+    pen_manager = PenaltyManager()
     rng = XorShift128(seed=42)
-    ls = LocalSearch(data, pen_manager, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
 
     pop = Population(bpd)
     assert_equal(len(pop), 0)
@@ -108,7 +108,7 @@ def test_raises_when_no_initial_solutions():
         # No initial solutions should raise.
         GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [])
 
-    individual = Individual.make_random(data, pen_manager, rng)
+    individual = Individual.make_random(data, rng)
 
     # One initial solution, so this should be OK.
     GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [individual])
@@ -120,11 +120,11 @@ def test_initial_solutions_added_when_running():
     when running the algorithm.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    init = set(make_random_solutions(25, data, pm, rng))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    init = set(make_random_solutions(25, data, rng))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     algo.run(MaxIterations(0))
@@ -142,17 +142,17 @@ def test_initial_solutions_added_when_restarting():
     solutions when restarting.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data, pm))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
 
     # We use the best known solution as one of the initial solutions so that
     # there are no improving iterations.
-    init = {Individual(data, pm, read_solution("data/RC208.sol"))}
-    init.update(make_random_solutions(24, data, pm, rng))
+    init = {Individual(data, read_solution("data/RC208.sol"))}
+    init.update(make_random_solutions(24, data, rng))
 
     params = GeneticAlgorithmParams(
         repair_probability=0,
@@ -177,13 +177,13 @@ def test_initial_solutions_added_when_restarting():
 def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     pop_params = PopulationParams()
     pop = Population(bpd, params=pop_params)
-    init = make_random_solutions(pop_params.min_pop_size, data, pm, rng)
+    init = make_random_solutions(pop_params.min_pop_size, data, rng)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data, pm))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
 
     ga_params = GeneticAlgorithmParams(
         intensify_probability=0, intensify_on_best=False
@@ -195,7 +195,10 @@ def test_best_solution_improves_with_more_iterations():
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
 
-    assert_(new_best.cost() < initial_best.cost())
+    cost_evaluator = pm.get_cost_evaluator()
+    new_best_cost = cost_evaluator.penalised_cost(new_best)
+    initial_best_cost = cost_evaluator.penalised_cost(initial_best)
+    assert_(new_best_cost < initial_best_cost)
     assert_(new_best.is_feasible())  # best must be feasible
 
 
@@ -206,13 +209,13 @@ def test_best_initial_solution():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = XorShift128(seed=42)
-    pm = PenaltyManager(data.vehicle_capacity)
+    pm = PenaltyManager()
     pop = Population(bpd)
 
-    bks = Individual(data, pm, read_solution("data/RC208.sol"))
-    init = [bks] + make_random_solutions(24, data, pm, rng)
+    bks = Individual(data, read_solution("data/RC208.sol"))
+    init = [bks] + make_random_solutions(24, data, rng)
 
-    ls = LocalSearch(data, pm, rng, compute_neighbours(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     result = algo.run(MaxIterations(0))

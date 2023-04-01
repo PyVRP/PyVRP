@@ -12,9 +12,9 @@ using Routes = std::vector<Route>;
 void Individual::evaluate(ProblemData const &data)
 {
     numRoutes_ = 0;
-    distance = 0;
-    capacityExcess = 0;
-    timeWarp = 0;
+    distance_ = 0;
+    excessLoad_ = 0;
+    timeWarp_ = 0;
 
     for (auto const &route : routes_)
     {
@@ -69,20 +69,12 @@ void Individual::evaluate(ProblemData const &data)
                                   static_cast<duration_type>(0));
 
         // Whole solution stats
-        distance += routeDist;
-        timeWarp += routeTimeWarp;
+        distance_ += routeDist;
+        timeWarp_ += routeTimeWarp;
 
         if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
-            capacityExcess += routeLoad - data.vehicleCapacity();
+            excessLoad_ += routeLoad - data.vehicleCapacity();
     }
-}
-
-cost_type Individual::cost() const
-{
-    auto const loadPenalty = penaltyManager->loadPenaltyExcess(capacityExcess);
-    auto const twPenalty = penaltyManager->twPenalty(timeWarp);
-
-    return distance + loadPenalty + twPenalty;
 }
 
 size_t Individual::numRoutes() const { return numRoutes_; }
@@ -96,12 +88,18 @@ std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
 
 bool Individual::isFeasible() const
 {
-    return !hasExcessCapacity() && !hasTimeWarp();
+    return !hasExcessLoad() && !hasTimeWarp();
 }
 
-bool Individual::hasExcessCapacity() const { return capacityExcess > 0; }
+bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Individual::hasTimeWarp() const { return timeWarp > 0; }
+bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
+
+size_t Individual::distance() const { return distance_; }
+
+size_t Individual::excessLoad() const { return excessLoad_; }
+
+size_t Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours()
 {
@@ -116,17 +114,19 @@ void Individual::makeNeighbours()
 
 bool Individual::operator==(Individual const &other) const
 {
-    // First compare costs, since that's a quick and cheap check. Only when
-    // the costs are the same do we test if the neighbours are all equal.
-    return equal(cost(), other.cost()) && neighbours == other.neighbours;
+    // First compare simple attributes, since that's a quick and cheap check.
+    // Only when these are the same we test if the neighbours are all equal.
+    // clang-format off
+    return equal(distance_, other.distance_)
+        && excessLoad_ == other.excessLoad_
+        && equal(timeWarp_, other.timeWarp_)
+        && numRoutes_ == other.numRoutes_
+        && neighbours == other.neighbours;
+    // clang-format on
 }
 
-Individual::Individual(ProblemData const &data,
-                       PenaltyManager const &penaltyManager,
-                       XorShift128 &rng)
-    : penaltyManager(&penaltyManager),
-      routes_(data.numVehicles()),
-      neighbours(data.numClients() + 1)
+Individual::Individual(ProblemData const &data, XorShift128 &rng)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -147,12 +147,8 @@ Individual::Individual(ProblemData const &data,
     evaluate(data);
 }
 
-Individual::Individual(ProblemData const &data,
-                       PenaltyManager const &penaltyManager,
-                       Routes routes)
-    : penaltyManager(&penaltyManager),
-      routes_(std::move(routes)),
-      neighbours(data.numClients() + 1)
+Individual::Individual(ProblemData const &data, Routes routes)
+    : routes_(std::move(routes)), neighbours(data.numClients() + 1)
 {
     if (routes_.size() > data.numVehicles())
     {
@@ -186,6 +182,6 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
         out << '\n';
     }
 
-    out << "Cost: " << indiv.cost() << '\n';
+    out << "Distance: " << indiv.distance() << '\n';
     return out;
 }

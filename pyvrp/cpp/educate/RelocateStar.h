@@ -3,8 +3,6 @@
 
 #include "Exchange.h"
 #include "LocalSearchOperator.h"
-#include "Node.h"
-#include "Route.h"
 
 /**
  * Performs the best (1, 0)-exchange move between routes U and V. Tests both
@@ -23,14 +21,13 @@ class RelocateStar : public LocalSearchOperator<Route>
     Move move;
 
 public:
-    cost_type evaluate(Route *U, Route *V) override;
+    cost_type
+    evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;
 
-    void apply(Route *U, Route *V) override;
+    void apply(Route *U, Route *V) const override;
 
-    explicit RelocateStar(ProblemData const &data,
-                          PenaltyManager const &penaltyManager)
-        : LocalSearchOperator<Route>(data, penaltyManager),
-          relocate(data, penaltyManager)
+    RelocateStar(ProblemData const &data)
+        : LocalSearchOperator<Route>(data), relocate(data)
     {
     }
 };

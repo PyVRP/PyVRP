@@ -2,7 +2,6 @@
 #define TWOOPT_H
 
 #include "LocalSearchOperator.h"
-#include "Node.h"
 
 /**
  * 2-OPT moves.
@@ -15,18 +14,22 @@ class TwoOpt : public LocalSearchOperator<Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
-    cost_type evalWithinRoute(Node *U, Node *V);
+    cost_type
+    evalWithinRoute(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
 
-    cost_type evalBetweenRoutes(Node *U, Node *V);
+    cost_type evalBetweenRoutes(Node *U,
+                                Node *V,
+                                CostEvaluator const &costEvaluator) const;
 
-    void applyWithinRoute(Node *U, Node *V);
+    void applyWithinRoute(Node *U, Node *V) const;
 
-    void applyBetweenRoutes(Node *U, Node *V);
+    void applyBetweenRoutes(Node *U, Node *V) const;
 
 public:
-    cost_type evaluate(Node *U, Node *V) override;
+    cost_type
+    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
-    void apply(Node *U, Node *V) override;
+    void apply(Node *U, Node *V) const override;
 };
 
 #endif  // TWOOPT_H

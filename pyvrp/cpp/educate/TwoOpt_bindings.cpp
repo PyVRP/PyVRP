@@ -10,9 +10,8 @@ PYBIND11_MODULE(_TwoOpt, m)
         m, "NodeOperator", py::module_local());
 
     py::class_<TwoOpt, LocalSearchOperator<Node>>(m, "TwoOpt")
-        .def(py::init<ProblemData const &, PenaltyManager const &>(),
+        .def(py::init<ProblemData const &>(),
              py::arg("data"),
-             py::arg("penalty_manager"),
-             py::keep_alive<1, 2>(),   // keep data and penalty_manager alive
-             py::keep_alive<1, 3>());  // at least until operator is freed
+             py::keep_alive<1, 2>()  // keep data alive
+        );
 }

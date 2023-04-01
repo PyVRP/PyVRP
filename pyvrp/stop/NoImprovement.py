@@ -1,6 +1,4 @@
-from typing import Optional, Union
-
-from pyvrp.OptimisationTarget import OptimisationTarget
+from typing import Optional
 
 
 class NoImprovement:
@@ -19,12 +17,12 @@ class NoImprovement:
             raise ValueError("max_iterations < 0 not understood.")
 
         self._max_iterations = max_iterations
-        self._target: Optional[Union[int, float]] = None
+        self._target: Optional[float] = None
         self._counter = 0
 
-    def __call__(self, best: OptimisationTarget) -> bool:
-        if self._target is None or best.cost() < self._target:
-            self._target = best.cost()
+    def __call__(self, best_cost: float) -> bool:
+        if self._target is None or best_cost < self._target:
+            self._target = best_cost
             self._counter = 0
         else:
             self._counter += 1
