@@ -8,7 +8,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
     selective_route_exchange as cpp_srex,
 )
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 def test_same_parents_same_offspring():
@@ -119,6 +119,46 @@ def test_srex_greedy_repair():
     assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
 
 
+def test_srex_heterogeneous_greedy_repair():
+    """
+    Tests the case where greedy repair is used during SREX crossover for
+    heterogeneous routes.
+    """
+    data = read("data/OkSmallGreedyRepair.txt")
+    data = make_heterogeneous(data, [10, 10, 20])
+    cost_evaluator = CostEvaluator(20, 6)
+
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them, and create a heterogeneous version for each
+    indiv1 = Individual(data, [[3, 4], [1, 2]])
+    indiv1h = Individual(data, [[3, 4], [], [1, 2]])
+    indiv2 = Individual(data, [[2, 3], [4, 1]])
+    indiv2h = Individual(data, [[2, 3], [], [4, 1]])
+
+    # The start indices do not change because there are no improving moves.
+    # So, indiv1's route [3, 4] will be replaced by indiv2's route [2, 3].
+    # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
+    # which are both repaired using greedy repair. After repair, we obtain the
+    # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
+    # cost 9725. The first one is returned since it has the lowest cost.
+
+    # The offspring solution should have the routes according to indiv1
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
+
+    # Even if indiv2 is heterogeneous
+    offspring = cpp_srex((indiv1, indiv2h), data, cost_evaluator, (0, 0), 1)
+    assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
+
+    # If indiv1 is heterogeneous, the result should be so too
+    offspring = cpp_srex((indiv1h, indiv2), data, cost_evaluator, (0, 0), 1)
+    assert_equal(offspring.get_routes(), [[2, 3, 4], [], [1]])
+
+    # Same if indiv2 is also heterogeneous
+    offspring = cpp_srex((indiv1h, indiv2h), data, cost_evaluator, (0, 0), 1)
+    assert_equal(offspring.get_routes(), [[2, 3, 4], [], [1]])
+
+
 def test_srex_changed_start_indices():
     """
     Tests the case where the initial start indices are changed in SREX.
@@ -143,6 +183,45 @@ def test_srex_changed_start_indices():
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
 
     assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
+
+
+def test_srex_heterogeneous_changed_start_indices():
+    """
+    Tests the case where the initial start indices are changed in SREX for
+    heterogeneous routes.
+    """
+    data = make_heterogeneous(read("data/OkSmall.txt"), [10, 10, 20])
+    cost_evaluator = CostEvaluator(20, 6)
+
+    # We create the routes sorted by angle such that SREX sorting doesn't
+    # affect them
+    indiv1 = Individual(data, [[4], [1, 2, 3]])
+    indiv1h = Individual(data, [[4], [], [1, 2, 3]])
+    indiv2 = Individual(data, [[3], [1, 2, 4]])
+    indiv2h = Individual(data, [[3], [], [1, 2, 4]])
+
+    # We will start with idx1 = 1 and idx2 = 1 (1 for both indivs)
+    # Note that the indices relate to the indices of the non-empty routes!
+    # The difference for A to move left (= right) is -1. The difference for B
+    # to move left (= right) is 1. The new indices become idx1 = 0 and
+    # idx2 = 1. There are no improving moves in this position since the
+    # difference for A to move is 1 and difference for B to move is 1.
+    # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
+    # This results in two candidate offspring, [[1, 2, 4], [3]] with cost
+    # 10195, and [[4], [1, 2, 3]] with cost 31029. The first candidate is
+    # returned since it has the lowest cost.
+
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
+    assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
+
+    offspring = cpp_srex((indiv1, indiv2h), data, cost_evaluator, (1, 1), 1)
+    assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
+
+    offspring = cpp_srex((indiv1h, indiv2), data, cost_evaluator, (1, 1), 1)
+    assert_equal(offspring.get_routes(), [[1, 2, 4], [], [3]])
+
+    offspring = cpp_srex((indiv1h, indiv2h), data, cost_evaluator, (1, 1), 1)
+    assert_equal(offspring.get_routes(), [[1, 2, 4], [], [3]])
 
 
 def test_srex_a_right_move():
