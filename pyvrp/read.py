@@ -14,6 +14,14 @@ _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 _INT_MAX = np.iinfo(np.int32).max
 
 
+def _safe_convert_to_int(vals: np.ndarray) -> np.ndarray:
+    # Convert to integer and check that we don't lose precision
+    vals_int = vals.astype(int)
+    if not np.allclose(vals, vals_int):
+        raise ValueError("Data is not integral, please use rounding.")
+    return vals_int
+
+
 def trunc(vals: np.ndarray, decimals: int = 0) -> np.ndarray:
     return (vals * (10**decimals)) / (10**decimals)
 
@@ -81,7 +89,7 @@ def read(
         round_func = "trunc"
 
     if isinstance(round_func, str) and round_func in ROUND_FUNCS:
-        round_func = ROUND_FUNCS[round_func]
+        inner_round_func = ROUND_FUNCS[round_func]
     elif not callable(round_func):
         raise ValueError(
             f"round_func = {round_func} is not understood. Can be a function,"
@@ -91,17 +99,8 @@ def read(
     def apply_rounding(vals: np.ndarray) -> np.ndarray:
         if scale is not None:
             vals = vals * scale
-        vals = round_func(vals)
-        if PRECISION == "double":
-            return vals
-        # Convert to integer and check that we don't lose precision
-        vals_int = vals.astype(int)
-        if not np.allclose(vals, vals_int):
-            raise ValueError(
-                "PyVRP was compiled in integer mode, use a round function that"
-                " results in integer values."
-            )
-        return vals_int
+        vals = inner_round_func(vals)
+        return vals if PRECISION == "double" else _safe_convert_to_int(vals)
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
