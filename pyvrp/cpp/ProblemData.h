@@ -34,7 +34,7 @@ public:
     };
 
 private:
-    Matrix<int> const dist_;       // Distance matrix (+depots)
+    Matrix<int> const dist_;       // Distance matrix (+depot)
     std::vector<Client> clients_;  // Client (+depot) information
     std::vector<Route> routes_;    // Routes information
 
