@@ -99,7 +99,7 @@ def test_reading_OkSmall_instance():
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB
-    data = read("data/E-n22-k4.txt", round_func="trunc1")
+    data = read("data/E-n22-k4.txt", round_func="trunc", scale=10)
 
     assert_equal(data.num_clients, 21)
     assert_equal(data.vehicle_capacity, 6_000)

@@ -23,7 +23,7 @@ def _safe_convert_to_int(vals: np.ndarray) -> np.ndarray:
 
 
 def trunc(vals: np.ndarray, decimals: int = 0) -> np.ndarray:
-    return (vals * (10**decimals)) / (10**decimals)
+    return np.trunc(vals * (10**decimals)) / (10**decimals)
 
 
 def no_rounding(vals):
@@ -89,7 +89,7 @@ def read(
         round_func = "trunc"
 
     if isinstance(round_func, str) and round_func in ROUND_FUNCS:
-        inner_round_func = ROUND_FUNCS[round_func]
+        round_func = ROUND_FUNCS[round_func]
     elif not callable(round_func):
         raise ValueError(
             f"round_func = {round_func} is not understood. Can be a function,"
@@ -99,7 +99,7 @@ def read(
     def apply_rounding(vals: np.ndarray) -> np.ndarray:
         if scale is not None:
             vals = vals * scale
-        vals = inner_round_func(vals)
+        vals = round_func(vals)  # type: ignore
         return vals if PRECISION == "double" else _safe_convert_to_int(vals)
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
