@@ -68,7 +68,7 @@ public:
     /**
      * @return Total distance over all routes.
      */
-    [[nodiscard]] size_t distance() const;
+    [[nodiscard]] distance_type distance() const;
 
     /**
      * @return Total excess load over all routes.
@@ -78,7 +78,7 @@ public:
     /**
      * @return Total time warp over all routes.
      */
-    [[nodiscard]] size_t timeWarp() const;
+    [[nodiscard]] duration_type timeWarp() const;
 
     bool operator==(Individual const &other) const;
 

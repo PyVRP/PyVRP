@@ -95,11 +95,11 @@ bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
 
-size_t Individual::distance() const { return distance_; }
+distance_type Individual::distance() const { return distance_; }
 
 size_t Individual::excessLoad() const { return excessLoad_; }
 
-size_t Individual::timeWarp() const { return timeWarp_; }
+duration_type Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours()
 {
