@@ -54,7 +54,8 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
-        InsertPos best = {cost_type(INT_MAX), &routes.front(), 0};
+        InsertPos best
+            = {std::numeric_limits<cost_type>::max(), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
