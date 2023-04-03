@@ -39,6 +39,7 @@ ROUND_FUNCS: Dict[str, _RoundingFunc] = {
     "trunc1": functools.partial(trunc, decimals=1),
     "trunc2": functools.partial(trunc, decimals=2),
     "none": no_rounding,
+    "dimacs": trunc,  # Special option, scaling by 10 will be done by read(...)
 }
 
 
@@ -86,7 +87,6 @@ def read(
         if scale is not None and scale != 10:
             raise ValueError("Cannot use scale with 'dimacs' round func.")
         scale = 10
-        round_func = "trunc"
 
     if isinstance(round_func, str) and round_func in ROUND_FUNCS:
         round_func = ROUND_FUNCS[round_func]
