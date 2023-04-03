@@ -14,8 +14,8 @@ namespace
 double routeAngle(ProblemData const &data, Route const &route)
 {
     // Computes the route angle center. Assumes that the route is non-empty.
-    int cumulatedX = 0;
-    int cumulatedY = 0;
+    distance_type cumulatedX = 0;
+    distance_type cumulatedY = 0;
 
     for (int node : route)
     {
