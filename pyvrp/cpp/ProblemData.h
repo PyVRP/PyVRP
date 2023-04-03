@@ -13,8 +13,8 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                          // Coordinate X
-        int y;                          // Coordinate Y
+        distance_type x;                // Coordinate X (distance from origin)
+        distance_type y;                // Coordinate Y (distance from origin)
         int demand;                     // Demand
         duration_type serviceDuration;  // Service duration
         duration_type twEarly;  // Earliest arrival (when using time windows)
@@ -99,7 +99,7 @@ public:
      * @param distMat      Distance matrix.
      */
     ProblemData(
-        std::vector<std::pair<int, int>> const &coords,
+        std::vector<std::pair<distance_type, distance_type>> const &coords,
         std::vector<int> const &demands,
         size_t numVehicles,
         size_t vehicleCap,

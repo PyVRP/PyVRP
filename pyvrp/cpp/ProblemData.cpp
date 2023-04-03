@@ -25,7 +25,7 @@ size_t ProblemData::numVehicles() const { return numVehicles_; }
 size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
 ProblemData::ProblemData(
-    std::vector<std::pair<int, int>> const &coords,
+    std::vector<std::pair<distance_type, distance_type>> const &coords,
     std::vector<int> const &demands,
     size_t numVehicles,
     size_t vehicleCap,

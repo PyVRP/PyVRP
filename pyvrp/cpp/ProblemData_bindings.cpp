@@ -17,7 +17,7 @@ PYBIND11_MODULE(_ProblemData, m)
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<
-                 std::vector<std::pair<int, int>> const &,
+                 std::vector<std::pair<distance_type, distance_type>> const &,
                  std::vector<int> const &,
                  size_t,
                  size_t,

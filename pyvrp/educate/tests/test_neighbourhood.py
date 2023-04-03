@@ -97,7 +97,7 @@ def test_compute_neighbours(
     idx_check: int,
     expected_neighbours_check: List[int],
 ):
-    data = read("data/RC208.txt", "solomon", "trunc1")
+    data = read("data/RC208.txt", "solomon", "trunc", scale=10)
     params = NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,

@@ -1,11 +1,12 @@
 import functools
 import pathlib
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import numpy as np
 import vrplib
 
 from ._ProblemData import ProblemData
+from ._precision import PRECISION
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -13,16 +14,8 @@ _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 _INT_MAX = np.iinfo(np.int32).max
 
 
-def round_nearest(vals: np.ndarray):
-    return np.round(vals).astype(int)
-
-
-def convert_to_int(vals: np.ndarray):
-    return vals.astype(int)
-
-
-def scale_and_truncate_to_decimals(vals: np.ndarray, decimals: int = 0):
-    return (vals * (10**decimals)).astype(int)
+def trunc(vals: np.ndarray, decimals: int = 0) -> np.ndarray:
+    return (vals * (10**decimals)) / (10**decimals)
 
 
 def no_rounding(vals):
@@ -31,10 +24,12 @@ def no_rounding(vals):
 
 INSTANCE_FORMATS = ["vrplib", "solomon"]
 ROUND_FUNCS: Dict[str, _RoundingFunc] = {
-    "round": round_nearest,
-    "trunc": convert_to_int,
-    "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
-    "dimacs": functools.partial(scale_and_truncate_to_decimals, decimals=1),
+    "round": np.round,
+    "round1": functools.partial(np.round, decimals=1),
+    "round2": functools.partial(np.round, decimals=2),
+    "trunc": trunc,
+    "trunc1": functools.partial(trunc, decimals=1),
+    "trunc2": functools.partial(trunc, decimals=2),
     "none": no_rounding,
 }
 
@@ -43,6 +38,7 @@ def read(
     where: Union[str, pathlib.Path],
     instance_format: str = "vrplib",
     round_func: Union[str, _RoundingFunc] = no_rounding,
+    scale: Optional[float] = None,
 ) -> ProblemData:
     """
     Reads the VRPLIB file at the given location, and returns a ProblemData
@@ -61,16 +57,29 @@ def read(
         is not already integer. This can either be a function or a string:
 
             * ``'round'`` rounds the values to the nearest integer;
+            * ``'round1'`` rounds the value to 1 decimal place;
+            * ``'round2'`` rounds the value to 2 decimal places;
             * ``'trunc'`` truncates the values to be integral;
-            * ``'trunc1'`` or ``'dimacs'`` scale and truncate to the nearest
-              decimal;
+            * ``'trunc1'`` truncates the values to 1 decimal place;
+            * ``'trunc2'`` truncates the values to 2 decimal place;
+            * ``'dimacs'`` special value to set `scale` = 10 and truncate;
             * ``'none'`` does no rounding. This is the default.
+    scale, optional
+        Scale by which to multiply distances, durations and coordinates before
+        rounding. By default, distances are not scaled.
 
     Returns
     -------
     ProblemData
         Data instance constructed from the read data.
     """
+
+    if round_func == "dimacs":
+        if scale is not None and scale != 10:
+            raise ValueError("Cannot use scale with 'dimacs' round func.")
+        scale = 10
+        round_func = "trunc"
+
     if isinstance(round_func, str) and round_func in ROUND_FUNCS:
         round_func = ROUND_FUNCS[round_func]
     elif not callable(round_func):
@@ -78,6 +87,21 @@ def read(
             f"round_func = {round_func} is not understood. Can be a function,"
             f" or one of {ROUND_FUNCS.keys()}."
         )
+
+    def apply_rounding(vals: np.ndarray) -> np.ndarray:
+        if scale is not None:
+            vals = vals * scale
+        vals = round_func(vals)
+        if PRECISION == "double":
+            return vals
+        # Convert to integer and check that we don't lose precision
+        vals_int = vals.astype(int)
+        if not np.allclose(vals, vals_int):
+            raise ValueError(
+                "PyVRP was compiled in integer mode, use a round function that"
+                " results in integer values."
+            )
+        return vals_int
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
@@ -92,7 +116,7 @@ def read(
     depots = instance.get("depot", np.array([0]))
     num_vehicles = instance.get("vehicles", num_clients - 1)
     capacity = instance.get("capacity", _INT_MAX)
-    edge_weight = round_func(instance["edge_weight"])
+    edge_weight = apply_rounding(instance["edge_weight"])
 
     if "demand" in instance:
         demands = instance["demand"]
@@ -100,17 +124,17 @@ def read(
         demands = np.zeros(num_clients, dtype=int)
 
     if "node_coord" in instance:
-        coords = round_func(instance["node_coord"])
+        coords = apply_rounding(instance["node_coord"])
     else:
         coords = np.zeros((num_clients, 2), dtype=int)
 
     if "service_time" in instance:
-        service_times = round_func(instance["service_time"])
+        service_times = apply_rounding(instance["service_time"])
     else:
         service_times = np.zeros(num_clients, dtype=int)
 
     if "time_window" in instance:
-        time_windows = round_func(instance["time_window"])
+        time_windows = apply_rounding(instance["time_window"])
     else:
         # The default value for the latest time window based on the maximum
         # route duration. This ensures that the time window constraints are

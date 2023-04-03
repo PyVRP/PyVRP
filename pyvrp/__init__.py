@@ -7,5 +7,6 @@ from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
+from ._precision import PRECISION
 from .read import read, read_solution
 from .show_versions import show_versions

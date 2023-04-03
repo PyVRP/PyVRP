@@ -67,7 +67,7 @@ class ProblemData:
 
     def __init__(
         self,
-        coords: List[Tuple[int, int]],
+        coords: List[Tuple[float, float]],
         demands: List[int],
         nb_vehicles: int,
         vehicle_cap: int,

@@ -139,7 +139,10 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
 
 def test_reading_RC208_instance():  # Solomon style instance
     data = read(
-        "data/RC208.txt", instance_format="solomon", round_func="trunc1"
+        "data/RC208.txt",
+        instance_format="solomon",
+        round_func="trunc",
+        scale=10,
     )
 
     assert_equal(data.num_clients, 100)  # Excl. depot
