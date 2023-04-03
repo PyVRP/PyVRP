@@ -24,11 +24,8 @@ void Route::setupNodes()
 
 void Route::setupSector()
 {
-    if (empty())
-    {
-        angleCenter = 1.e30;
+    if (empty())  // Note: sector has no meaning for empty routes, don't use
         return;
-    }
 
     auto const depotData = data.depot();
     auto const clientData = data.client(n(depot)->client);
@@ -38,16 +35,10 @@ void Route::setupSector()
 
     sector.initialize(angle);
 
-    int cumulatedX = 0;
-    int cumulatedY = 0;
-
     for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
     {
         auto const *node = *it;
         assert(!node->isDepot());
-
-        cumulatedX += data.client(node->client).x;
-        cumulatedY += data.client(node->client).y;
 
         auto const clientData = data.client(node->client);
         auto const angle = CircleSector::positive_mod(static_cast<int>(
@@ -57,14 +48,6 @@ void Route::setupSector()
 
         sector.extend(angle);
     }
-
-    // This computes a pseudo-angle that sorts roughly equivalently to the atan2
-    // angle, but is much faster to compute. See the following post for details:
-    // https://stackoverflow.com/a/16561333/4316405.
-    auto const routeSize = static_cast<double>(size());
-    auto const dy = cumulatedY / routeSize - data.depot().y;
-    auto const dx = cumulatedX / routeSize - data.depot().x;
-    angleCenter = std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
 void Route::setupRouteTimeWindows()

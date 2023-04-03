@@ -255,20 +255,11 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
 Individual LocalSearch::exportIndividual()
 {
-    std::vector<std::pair<double, int>> routePolarAngles;
-    routePolarAngles.reserve(data.numVehicles());
-
-    for (size_t r = 0; r < data.numVehicles(); r++)
-        routePolarAngles.emplace_back(routes[r].angleCenter, r);
-
-    // Empty routes have a large center angle, and thus always sort at the end
-    std::sort(routePolarAngles.begin(), routePolarAngles.end());
-
     std::vector<std::vector<int>> indivRoutes(data.numVehicles());
 
     for (size_t r = 0; r < data.numVehicles(); r++)
     {
-        Node *node = startDepots[routePolarAngles[r].second].next;
+        Node *node = startDepots[r].next;
 
         while (!node->isDepot())
         {
