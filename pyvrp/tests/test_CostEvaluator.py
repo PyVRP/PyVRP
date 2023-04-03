@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual
+from pyvrp import PRECISION, CostEvaluator, Individual
 from pyvrp.tests.helpers import read
 
 
@@ -77,8 +77,11 @@ def test_cost():
     # Infeasible individual
     infeas_indiv = Individual(data, [[1, 2, 3, 4]])
 
-    # C++ code represents infinite as max value for unsigned integer
-    INFEAS_COST = np.iinfo(np.uint32).max
+    # C++ code represents infinite as max value for cost type
+    if PRECISION == "integer":
+        INFEAS_COST = np.iinfo(np.uint32).max
+    else:
+        INFEAS_COST = np.finfo(np.double).max
     assert_equal(cost_evaluator.cost(infeas_indiv), INFEAS_COST)
     assert_equal(default_cost_evaluator.cost(infeas_indiv), INFEAS_COST)
 
