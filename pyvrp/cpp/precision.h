@@ -24,12 +24,42 @@ using duration_type = double;
  * integral, approximate for floating point values.
  */
 template <typename T>
-[[nodiscard]] inline bool equal(T a, T b, double tol = 1e-6)
+[[nodiscard]] inline bool
+equal(T a, T b, double rtol = 1e-6, double atol = 1e-9)
 {
     if constexpr (std::is_integral_v<T>)
         return a == b;
     else
-        return std::abs(a - b) <= std::max(std::abs(a), std::abs(b)) * tol;
+        return std::abs(a - b)
+               <= std::max(std::abs(a), std::abs(b)) * rtol + atol;
+}
+
+/**
+ * Quick check whether a < b, so a != b with a given tolerance. Exact when the
+ * types are integral, approximate for floating point values.
+ */
+template <typename T>
+[[nodiscard]] inline bool
+smaller(T a, T b, double rtol = 1e-6, double atol = 1e-9)
+{
+    if constexpr (std::is_integral_v<T>)
+        return a < b;
+    else
+        return a < b && !equal(a, b, rtol, atol);
+}
+
+/**
+ * Quick check whether a < b, so a != b with a given tolerance. Exact when the
+ * types are integral, approximate for floating point values.
+ */
+template <typename T>
+[[nodiscard]] inline bool
+greater(T a, T b, double rtol = 1e-6, double atol = 1e-9)
+{
+    if constexpr (std::is_integral_v<T>)
+        return a > b;
+    else
+        return a > b && !equal(a, b, rtol, atol);
 }
 
 #endif  // PRECISION_H

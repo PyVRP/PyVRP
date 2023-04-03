@@ -1,4 +1,5 @@
 #include "LocalSearch.h"
+#include "precision.h"
 
 #include <algorithm>
 #include <numeric>
@@ -136,7 +137,8 @@ bool LocalSearch::applyNodeOps(Node *U,
                                CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
-        if (nodeOp->evaluate(U, V, costEvaluator) < 0)
+        if (smaller(nodeOp->evaluate(U, V, costEvaluator),
+                    static_cast<cost_type>(0)))
         {
             auto *routeU = U->route;  // copy pointers because the operator can
             auto *routeV = V->route;  // modify the node's route membership
@@ -155,7 +157,8 @@ bool LocalSearch::applyRouteOps(Route *U,
                                 CostEvaluator const &costEvaluator)
 {
     for (auto *routeOp : routeOps)
-        if (routeOp->evaluate(U, V, costEvaluator) < 0)
+        if (smaller(routeOp->evaluate(U, V, costEvaluator),
+                    static_cast<cost_type>(0)))
         {
             routeOp->apply(U, V);
             update(U, V);

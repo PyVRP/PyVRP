@@ -15,10 +15,36 @@ PYBIND11_MODULE(_precision, m)
           &equal<double>,
           py::arg("a"),
           py::arg("b"),
-          py::arg("tol") = 1e-6);
+          py::arg("rtol") = 1e-6,
+          py::arg("atol") = 1e-8);
     m.def("equal_int",
           &equal<int>,
           py::arg("a"),
           py::arg("b"),
-          py::arg("tol") = 1e-6);
+          py::arg("rtol") = 1e-6,
+          py::arg("atol") = 1e-6);
+    m.def("smaller_float",
+          &smaller<double>,
+          py::arg("a"),
+          py::arg("b"),
+          py::arg("rtol") = 1e-6,
+          py::arg("atol") = 1e-8);
+    m.def("smaller_int",
+          &smaller<int>,
+          py::arg("a"),
+          py::arg("b"),
+          py::arg("rtol") = 1e-6,
+          py::arg("atol") = 1e-6);
+    m.def("greater_float",
+          &greater<double>,
+          py::arg("a"),
+          py::arg("b"),
+          py::arg("rtol") = 1e-6,
+          py::arg("atol") = 1e-8);
+    m.def("greater_int",
+          &greater<int>,
+          py::arg("a"),
+          py::arg("b"),
+          py::arg("rtol") = 1e-6,
+          py::arg("atol") = 1e-6);
 }

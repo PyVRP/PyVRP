@@ -1,13 +1,13 @@
 #include "CostEvaluator.h"
 #include <limits>
 
-CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
-                             unsigned int timeWarpPenalty)
+CostEvaluator::CostEvaluator(cost_type capacityPenalty,
+                             cost_type timeWarpPenalty)
     : capacityPenalty(capacityPenalty), timeWarpPenalty(timeWarpPenalty)
 {
 }
 
-unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
+cost_type CostEvaluator::penalisedCost(Individual const &individual) const
 {
     auto const loadPen = loadPenaltyExcess(individual.excessLoad());
     auto const twPen = twPenalty(individual.timeWarp());
@@ -15,8 +15,8 @@ unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
     return individual.distance() + loadPen + twPen;
 }
 
-unsigned int CostEvaluator::cost(Individual const &individual) const
+cost_type CostEvaluator::cost(Individual const &individual) const
 {
     return individual.isFeasible() ? individual.distance()
-                                   : std::numeric_limits<unsigned int>::max();
+                                   : std::numeric_limits<cost_type>::max();
 }
