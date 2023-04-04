@@ -115,7 +115,7 @@ class ProblemData:
         Parameters
         ----------
         route
-            Route number whose information to retrieve.
+            Route number for which to retrieve information.
 
         Returns
         -------
