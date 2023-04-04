@@ -110,7 +110,7 @@ class ProblemData:
         """
     def route(self, route: int) -> Route:
         """
-        Returns route data for the given route idx.
+        Returns route data for the given route index.
 
         Parameters
         ----------
