@@ -175,7 +175,8 @@ Individual::Individual(ProblemData const &data, Routes routes)
         throw std::runtime_error(msg);
     }
 
-    // Shift routes forward as much as possible within exchangable groups
+    // Shift routes to the front as much as possible among routes of the same
+    // type (vehicle capacity)
     size_t j = 0;  // Index of next position to put non-empty route
     for (size_t i = 0; i < routes_.size(); i++)
     {
