@@ -29,6 +29,7 @@ def test_route_constructor_sorts_by_empty():
     indiv = Individual(data, [[], [3, 4], [], [], [1, 2]])
 
     # num_routes() should show two non-empty routes.
+    assert_equal(indiv.num_routes(), 2)
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices for each group of equal vehicle capacities.
