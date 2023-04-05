@@ -8,6 +8,13 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
+        .def(py::init<int, int, int, int, int, int>(),
+             py::arg("x"),
+             py::arg("y"),
+             py::arg("demand") = 0,
+             py::arg("service_duration") = 0,
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = 0)
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
@@ -16,19 +23,13 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("tw_late", &ProblemData::Client::twLate);
 
     py::class_<ProblemData>(m, "ProblemData")
-        .def(py::init<std::vector<std::pair<int, int>> const &,
-                      std::vector<int> const &,
+        .def(py::init<std::vector<ProblemData::Client> const &,
                       int,
                       int,
-                      std::vector<std::pair<int, int>> const &,
-                      std::vector<int> const &,
                       std::vector<std::vector<int>> const &>(),
-             py::arg("coords"),
-             py::arg("demands"),
+             py::arg("clients"),
              py::arg("nb_vehicles"),
              py::arg("vehicle_cap"),
-             py::arg("time_windows"),
-             py::arg("service_durations"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)

@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
-from ._ProblemData import ProblemData
+from ._ProblemData import Client, ProblemData
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -138,13 +138,24 @@ def read(
     if (time_windows[:, 0] > time_windows[:, 1]).any():
         raise ValueError("Time window cannot start after end")
 
+    clients = [
+        Client(
+            x=x,
+            y=y,
+            demand=demand,
+            service_duration=service_duration,
+            tw_early=tw_early,
+            tw_late=tw_late,
+        )
+        for (x, y), demand, service_duration, (tw_early, tw_late) in zip(
+            coords, demands, service_times, time_windows
+        )
+    ]
+
     return ProblemData(
-        coords,
-        demands,
+        clients,
         num_vehicles,
         capacity,
-        time_windows,
-        service_times,
         edge_weight,
     )
 

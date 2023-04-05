@@ -14,8 +14,8 @@ public:
     {
         int x;                // Coordinate X
         int y;                // Coordinate Y
-        int serviceDuration;  // Service duration
         int demand;           // Demand
+        int serviceDuration;  // Service duration
         int twEarly;          // Earliest arrival (when using time windows)
         int twLate;           // Latest arrival (when using time windows)
     };
@@ -82,12 +82,9 @@ public:
      * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
      */
-    ProblemData(std::vector<std::pair<int, int>> const &coords,
-                std::vector<int> const &demands,
+    ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
                 size_t vehicleCap,
-                std::vector<std::pair<int, int>> const &timeWindows,
-                std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat);
 };
 

@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Individual, ProblemData, XorShift128
+from pyvrp import Client, Individual, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
 
 
@@ -139,12 +139,13 @@ def test_time_warp_for_a_very_constrained_problem():
     client.
     """
     data = ProblemData(
-        coords=[(0, 0), (1, 0), (2, 0)],
-        demands=[0, 0, 0],
+        clients=[
+            Client(x=0, y=0, tw_late=10),
+            Client(x=1, y=0, tw_late=5),
+            Client(x=2, y=0, tw_late=5),
+        ],
         nb_vehicles=2,
         vehicle_cap=0,
-        time_windows=[(0, 10), (0, 5), (0, 5)],
-        service_durations=[0, 0, 0],
         duration_matrix=[
             [0, 1, 10],  # cannot get to 2 from depot within 2's time window
             [1, 0, 1],
