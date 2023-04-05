@@ -294,7 +294,7 @@ def test_same_routes_different_vehicle_not_eq(data_heterogeneous):
 
 def test_heterogeneous_route_sorting(data_heterogeneous):
     """
-    Tests that two individuals sorts non-emtpy routes per group of same
+    Tests that two individuals sorts non-empty routes per group of same
     capacities.
     """
     data = data_heterogeneous
