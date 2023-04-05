@@ -1,20 +1,10 @@
 from copy import copy, deepcopy
 
 from numpy.testing import assert_, assert_equal, assert_raises
-from pytest import fixture, mark
+from pytest import mark
 
 from pyvrp import Individual, ProblemData, XorShift128
 from pyvrp.tests.helpers import make_heterogeneous, read
-
-
-@fixture
-def data_small():
-    return read("data/OkSmall.txt")
-
-
-@fixture
-def data_heterogeneous(data_small):
-    return make_heterogeneous(data_small, vehicle_capacities=[10, 10, 20])
 
 
 def test_route_constructor_sorts_by_empty():
@@ -42,10 +32,7 @@ def test_route_constructor_sorts_by_empty():
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices for each group of equal vehicle capacities.
-    assert_equal(
-        indiv.get_routes(),
-        [[3, 4], [], [], [1, 2], []],
-    )
+    assert_equal(indiv.get_routes(), [[3, 4], [], [], [1, 2], []])
 
 
 def test_route_constructor_raises():
@@ -138,8 +125,9 @@ def test_excess_load_calculation():
     assert_equal(indiv.excess_load(), 18 - data.route(0).vehicle_capacity)
 
 
-def test_heterogeneous_capacity_excess_load_calculation(data_heterogeneous):
-    data = data_heterogeneous
+def test_heterogeneous_capacity_excess_load_calculation():
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
     # This instance has capacities [10, 10, 20] and total demand of 18
     indiv = Individual(data, [[1, 2, 3, 4]])
@@ -152,7 +140,7 @@ def test_heterogeneous_capacity_excess_load_calculation(data_heterogeneous):
     assert_(indiv.has_excess_load())
     assert_equal(indiv.excess_load(), 18 - data.route(1).vehicle_capacity)
 
-    # Third route is larger capacity so feasible
+    # Third route has larger capacity than demand, so there is no excess load.
     indiv = Individual(data, [[], [], [1, 2, 3, 4]])
     assert_(not indiv.has_excess_load())
     assert_equal(indiv.excess_load(), 0)
@@ -211,8 +199,9 @@ def test_time_warp_for_a_very_constrained_problem():
 # TODO test all time warp cases
 
 
-def test_num_routes_calculation(data_heterogeneous):
-    data = data_heterogeneous
+def test_num_routes_calculation():
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
     indiv = Individual(data, [[1, 2, 3, 4]])
     assert_equal(indiv.num_routes(), 1)
@@ -274,13 +263,14 @@ def test_eq():
     assert_(indiv5 != "cd")
 
 
-def test_same_routes_different_vehicle_not_eq(data_heterogeneous):
+def test_same_routes_different_vehicle_not_eq():
     """
     Tests that two individuals are not considered equal if they have the same
     routes (orders of clients) but served by vehicles with different
     capacities.
     """
-    data = data_heterogeneous
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -292,12 +282,13 @@ def test_same_routes_different_vehicle_not_eq(data_heterogeneous):
     assert_(indiv1 != indiv3)
 
 
-def test_heterogeneous_route_sorting(data_heterogeneous):
+def test_heterogeneous_route_sorting():
     """
     Tests that two individuals sorts non-emtpy routes per group of same
     capacities.
     """
-    data = data_heterogeneous
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
     # Vehicle capacites are [10, 10, 20]
     indiv1 = Individual(data, [[1, 2, 3, 4]])
@@ -314,11 +305,13 @@ def test_heterogeneous_route_sorting(data_heterogeneous):
 
 
 @mark.parametrize(
-    "data_fixture",
-    ["data_small", "data_heterogeneous"],
+    "capacities",
+    [[10, 10, 10], [10, 10, 20]],
 )
-def test_str_contains_essential_information(data_fixture, request):
-    data = request.getfixturevalue(data_fixture)
+def test_str_contains_essential_information(capacities):
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_capacities=capacities)
+
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
