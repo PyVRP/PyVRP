@@ -38,7 +38,7 @@ def plot_demands(
             [data.route(i).vehicle_capacity for i in range(data.num_vehicles)]
         )
         title = (
-            f"Demands (cap = {vehicle_caps.mean()}, "
+            f"Demands (avg. cap = {vehicle_caps.mean()}, "
             + f"{vehicle_caps.mean() / demand.mean():.2f} stops/route)"
         )
 
