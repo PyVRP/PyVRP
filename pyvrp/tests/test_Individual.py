@@ -284,13 +284,11 @@ def test_same_routes_different_vehicle_not_eq():
 
 def test_heterogeneous_route_sorting():
     """
-    Tests that two individuals sorts non-empty routes per group of same
-    capacities.
+    Tests that individual sorts non-empty routes per group of same capacities.
     """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
-    # Vehicle capacites are [10, 10, 20]
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
     indiv3 = Individual(data, [[], [], [1, 2, 3, 4]])
@@ -300,7 +298,29 @@ def test_heterogeneous_route_sorting():
     assert_equal(indiv1.get_routes(), expected)
     assert_equal(indiv2.get_routes(), expected)
 
-    # Third vehicle is different capacity, should not be moved forward
+    # Third vehicle has a different capacity, so should not be moved forward
+    assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
+
+
+def test_unsorted_heterogeneous_route_sorting():
+    """
+    Tests that if routes/vehicles with the same capacities are not sorted in
+    ProblemData, their routes also won't be sorted. Hence, we don't require
+    routes to be sorted but it is more efficient to have them sorted.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_capacities=[10, 20, 10])
+
+    indiv1 = Individual(data, [[1, 2, 3, 4]])
+    indiv2 = Individual(data, [[], [1, 2, 3, 4]])
+    indiv3 = Individual(data, [[], [], [1, 2, 3, 4]])
+
+    # First two vehicles have different capacities, so order does matter
+    assert_equal(indiv1.get_routes(), [[1, 2, 3, 4], [], []])
+    assert_equal(indiv2.get_routes(), [[], [1, 2, 3, 4], []])
+
+    # Third vehicle has a different capacity than the second, so should not be
+    # moved forward even though it has the same capacity as the first vehicle.
     assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
 
 
