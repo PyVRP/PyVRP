@@ -36,7 +36,7 @@ def plot_demands(
     if title is None:
         vehicle_caps = np.array(
             [
-                data.route(i).vehicle_capacity
+                data.route_data(i).vehicle_capacity
                 for i in range(data.max_num_routes)
             ]
         )

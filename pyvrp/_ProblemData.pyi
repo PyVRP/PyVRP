@@ -108,7 +108,7 @@ class ProblemData:
         Client
             A simple data object containing the depot's information.
         """
-    def route(self, route: int) -> Route:
+    def route_data(self, route: int) -> Route:
         """
         Returns route data for the given route index.
 
@@ -119,7 +119,7 @@ class ProblemData:
 
         Returns
         -------
-        Route
+        RouteData
             A simple data object containing the requested route's information.
         """
     def dist(self, first: int, second: int) -> int:

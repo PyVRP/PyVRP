@@ -20,7 +20,7 @@ void Individual::evaluate(ProblemData const &data)
     for (size_t idx = 0; idx < data.maxNumRoutes(); idx++)
     {
         auto const &route = routes_[idx];
-        auto const &routeData = data.route(idx);
+        auto const &routeData = data.routeData(idx);
         if (route.empty())
             continue;
 

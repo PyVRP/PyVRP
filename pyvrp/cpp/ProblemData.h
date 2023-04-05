@@ -20,14 +20,14 @@ public:
         int twLate;           // Latest arrival (when using time windows)
     };
 
-    struct Route
+    struct RouteData
     {
         size_t vehicleCapacity;  // Vehicle capacity
-        inline bool operator==(const Route &other) const
+        inline bool operator==(const RouteData &other) const
         {
             return vehicleCapacity == other.vehicleCapacity;
         }
-        inline bool operator!=(const Route &other) const
+        inline bool operator!=(const RouteData &other) const
         {
             return !(*this == other);
         }
@@ -36,7 +36,7 @@ public:
 private:
     Matrix<int> const dist_;          // Distance matrix (+depot)
     std::vector<Client> clients_;     // Client (+depot) information
-    std::vector<Route> routes_;       // Routes information per route
+    std::vector<RouteData> routes_;   // Routes information per route
     std::vector<size_t> routeTypes_;  // Type idx per route
 
     size_t const numClients_;
@@ -58,7 +58,7 @@ public:
      * @param route Route for which to return the data.
      * @return A struct containing the indicated route's information.
      */
-    [[nodiscard]] inline Route const &route(size_t route) const;
+    [[nodiscard]] inline RouteData const &routeData(size_t route) const;
 
     /**
      * @param route Route for which to return the route type.
@@ -115,7 +115,7 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-ProblemData::Route const &ProblemData::route(size_t route) const
+ProblemData::RouteData const &ProblemData::routeData(size_t route) const
 {
     return routes_[route];
 }

@@ -13,7 +13,7 @@
 class Route
 {
     ProblemData const &data;
-    ProblemData::Route const &routeData;
+    ProblemData::RouteData const &routeData;
 
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients

@@ -123,7 +123,7 @@ def test_excess_load_calculation():
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10.
-    assert_equal(indiv.excess_load(), 18 - data.route(0).vehicle_capacity)
+    assert_equal(indiv.excess_load(), 18 - data.route_data(0).vehicle_capacity)
 
 
 def test_heterogeneous_capacity_excess_load_calculation():

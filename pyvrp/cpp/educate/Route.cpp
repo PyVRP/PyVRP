@@ -9,7 +9,7 @@
 using TWS = TimeWindowSegment;
 
 Route::Route(ProblemData const &data, size_t const idx)
-    : data(data), routeData(data.route(idx)), idx(idx)
+    : data(data), routeData(data.routeData(idx)), idx(idx)
 {
 }
 

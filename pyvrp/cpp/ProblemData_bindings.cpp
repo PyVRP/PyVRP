@@ -15,9 +15,10 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate);
 
-    py::class_<ProblemData::Route>(m, "Route")
+    py::class_<ProblemData::RouteData>(m, "RouteData")
         .def(py::init<size_t>(), py::arg("vehicle_capacity"))
-        .def_readonly("vehicle_capacity", &ProblemData::Route::vehicleCapacity);
+        .def_readonly("vehicle_capacity",
+                      &ProblemData::RouteData::vehicleCapacity);
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<std::vector<std::pair<int, int>> const &,
@@ -39,8 +40,8 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("client"),
              py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
-        .def("route",
-             &ProblemData::route,
+        .def("route_data",
+             &ProblemData::routeData,
              py::arg("route"),
              py::return_value_policy::reference)
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
