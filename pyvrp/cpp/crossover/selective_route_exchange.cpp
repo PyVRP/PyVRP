@@ -86,15 +86,15 @@ Individual selectiveRouteExchange(
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
-    auto const routesA = parents.first->getRoutes();
-    auto const routesB = parents.second->getRoutes();
+    auto const &routesA = parents.first->getRoutes();
+    auto const &routesB = parents.second->getRoutes();
 
     // Get indices of non-empty routes sorted according to center angle.
     // By using indices we can put the resulting routes after the exchange
     // in the right positions so they get the right vehicle types, and this
     // avoids creating copies of the routes to filter non-empty routes.
-    auto const idxA = getNonEmptyRouteIndicesByAscendingAngle(data, routesA);
-    auto const idxB = getNonEmptyRouteIndicesByAscendingAngle(data, routesB);
+    auto const &idxA = getNonEmptyRouteIndicesByAscendingAngle(data, routesA);
+    auto const &idxB = getNonEmptyRouteIndicesByAscendingAngle(data, routesB);
 
     size_t nRoutesA = idxA.size();
     size_t nRoutesB = idxB.size();
