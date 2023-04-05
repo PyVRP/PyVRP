@@ -10,7 +10,8 @@ from pyvrp.read import read_solution as _read_solution
 
 def make_heterogeneous(data: ProblemData, vehicle_capacities: List[int]):
     """
-    Function to convert ProblemData to heteregeneous vehicle capacity instance.
+    Creates a new ProblemData instance by replacing the vehicle capacities
+    data. All other data are kept identical.
     """
     clients = [data.client(i) for i in range(data.num_clients + 1)]
     return ProblemData(
