@@ -32,7 +32,7 @@ PYBIND11_MODULE(_Individual, m)
         .def("get_neighbours",
              &Individual::getNeighbours,
              py::return_value_policy::reference_internal)
-        .def("get_assignments",
+        .def("get_assigned_route_types",
              &Individual::getAssignments,
              py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)

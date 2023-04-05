@@ -91,7 +91,7 @@ std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
 
 std::vector<RouteType> const &Individual::getAssignments() const
 {
-    return assignments;
+    return assignedRouteTypes;
 }
 
 bool Individual::isFeasible() const
@@ -109,21 +109,29 @@ size_t Individual::excessLoad() const { return excessLoad_; }
 
 size_t Individual::timeWarp() const { return timeWarp_; }
 
-void Individual::makeNeighboursAndAssignments(ProblemData const &data)
+void Individual::makeNeighbours(ProblemData const &data)
 {
     neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
-    assignments[0] = -1;     // unassigned
 
     for (size_t rIdx = 0; rIdx != data.maxNumRoutes(); ++rIdx)
     {
         auto const route = routes_[rIdx];
         for (size_t idx = 0; idx != route.size(); ++idx)
-        {
             neighbours[route[idx]]
                 = {idx == 0 ? 0 : route[idx - 1],                  // pred
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
-            assignments[route[idx]] = data.routeType(rIdx);
-        }
+    }
+}
+
+void Individual::makeAssignedRouteTypes(ProblemData const &data)
+{
+    assignedRouteTypes[0] = -1;  // unassigned
+
+    for (size_t rIdx = 0; rIdx != data.maxNumRoutes(); ++rIdx)
+    {
+        auto const route = routes_[rIdx];
+        for (size_t idx = 0; idx != route.size(); ++idx)
+            assignedRouteTypes[route[idx]] = data.routeType(rIdx);
     }
 }
 
@@ -140,14 +148,14 @@ bool Individual::operator==(Individual const &other) const
         && timeWarp_ == other.timeWarp_
         && numNonEmptyRoutes_ == other.numNonEmptyRoutes_
         && neighbours == other.neighbours
-        && assignments == other.assignments;
+        && assignedRouteTypes == other.assignedRouteTypes;
     // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
     : routes_(data.maxNumRoutes()),
       neighbours(data.numClients() + 1),
-      assignments(data.numClients() + 1)
+      assignedRouteTypes(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -164,14 +172,15 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     for (size_t idx = 0; idx != numClients; ++idx)
         routes_[idx / perRoute].push_back(clients[idx]);
 
-    makeNeighboursAndAssignments(data);
+    makeNeighbours(data);
+    makeAssignedRouteTypes(data);
     evaluate(data);
 }
 
 Individual::Individual(ProblemData const &data, Routes routes)
     : routes_(std::move(routes)),
       neighbours(data.numClients() + 1),
-      assignments(data.numClients() + 1)
+      assignedRouteTypes(data.numClients() + 1)
 {
     if (routes_.size() > data.maxNumRoutes())
     {
@@ -209,7 +218,8 @@ Individual::Individual(ProblemData const &data, Routes routes)
     // will be empty.
     routes_.resize(data.maxNumRoutes());
 
-    makeNeighboursAndAssignments(data);
+    makeNeighbours(data);
+    makeAssignedRouteTypes(data);
     evaluate(data);
 }
 

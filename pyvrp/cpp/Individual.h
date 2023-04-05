@@ -23,10 +23,13 @@ class Individual
 
     Routes routes_;  // Routes - some routes may be non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
-    std::vector<RouteType> assignments;  // type of assigned route per client
+    std::vector<RouteType> assignedRouteTypes;  // assigned route per client
 
-    // Determines the [pred, succ] pairs and route assignment for each client.
-    void makeNeighboursAndAssignments(ProblemData const &data);
+    // Determines the [pred, succ] pairs for each client.
+    void makeNeighbours(ProblemData const &data);
+
+    // Determines assigned route types for each client.
+    void makeAssignedRouteTypes(ProblemData const &data);
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);

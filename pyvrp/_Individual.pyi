@@ -58,7 +58,7 @@ class Individual:
             A list of ``(pred, succ)`` tuples that encode for each client their
             predecessor and successors in this individual's routes.
         """
-    def get_assignments(self) -> List[int]:
+    def get_assigned_route_types(self) -> List[int]:
         """
         Returns a list of route type assignments for each client, by index.
         Also includes the depot at index 0, which gets value -1 (unassigned).
