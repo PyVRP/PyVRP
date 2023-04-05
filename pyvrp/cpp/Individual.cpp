@@ -12,19 +12,19 @@ using RouteType = int;
 
 void Individual::evaluate(ProblemData const &data)
 {
-    numRoutes_ = 0;
+    numNonEmptyRoutes_ = 0;
     distance_ = 0;
     excessLoad_ = 0;
     timeWarp_ = 0;
 
-    for (size_t idx = 0; idx < data.numVehicles(); idx++)
+    for (size_t idx = 0; idx < data.maxNumRoutes(); idx++)
     {
         auto const &route = routes_[idx];
         auto const &routeData = data.route(idx);
         if (route.empty())
             continue;
 
-        numRoutes_++;
+        numNonEmptyRoutes_++;
 
         int routeDist = data.dist(0, route[0]);
         int routeTimeWarp = 0;
@@ -80,7 +80,7 @@ void Individual::evaluate(ProblemData const &data)
     }
 }
 
-size_t Individual::numRoutes() const { return numRoutes_; }
+size_t Individual::numNonEmptyRoutes() const { return numNonEmptyRoutes_; }
 
 Routes const &Individual::getRoutes() const { return routes_; }
 
@@ -114,7 +114,7 @@ void Individual::makeNeighboursAndAssignments(ProblemData const &data)
     neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
     assignments[0] = -1;     // unassigned
 
-    for (size_t rIdx = 0; rIdx != data.numVehicles(); ++rIdx)
+    for (size_t rIdx = 0; rIdx != data.maxNumRoutes(); ++rIdx)
     {
         auto const route = routes_[rIdx];
         for (size_t idx = 0; idx != route.size(); ++idx)
@@ -138,14 +138,14 @@ bool Individual::operator==(Individual const &other) const
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
-        && numRoutes_ == other.numRoutes_
+        && numNonEmptyRoutes_ == other.numNonEmptyRoutes_
         && neighbours == other.neighbours
         && assignments == other.assignments;
     // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()),
+    : routes_(data.maxNumRoutes()),
       neighbours(data.numClients() + 1),
       assignments(data.numClients() + 1)
 {
@@ -156,10 +156,10 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
     // Distribute clients evenly over the routes: the total number of clients
     // per vehicle, with an adjustment in case the division is not perfect.
-    auto const numVehicles = data.numVehicles();
+    auto const maxNumRoutes = data.maxNumRoutes();
     auto const numClients = data.numClients();
-    auto const perVehicle = std::max(numClients / numVehicles, size_t(1));
-    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const perRouteFloor = std::max(numClients / maxNumRoutes, size_t(1));
+    auto const perRoute = perRouteFloor + (numClients % maxNumRoutes != 0);
 
     for (size_t idx = 0; idx != numClients; ++idx)
         routes_[idx / perRoute].push_back(clients[idx]);
@@ -173,7 +173,7 @@ Individual::Individual(ProblemData const &data, Routes routes)
       neighbours(data.numClients() + 1),
       assignments(data.numClients() + 1)
 {
-    if (routes_.size() > data.numVehicles())
+    if (routes_.size() > data.maxNumRoutes())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
@@ -207,7 +207,7 @@ Individual::Individual(ProblemData const &data, Routes routes)
 
     // Expand to at least numVehicles routes, where any newly inserted routes
     // will be empty.
-    routes_.resize(data.numVehicles());
+    routes_.resize(data.maxNumRoutes());
 
     makeNeighboursAndAssignments(data);
     evaluate(data);

@@ -40,7 +40,7 @@ private:
     std::vector<size_t> routeTypes_;  // Type idx per route
 
     size_t const numClients_;
-    size_t const numRoutes_;
+    size_t const numAvailableRoutes_;
 
 public:
     /**
@@ -86,9 +86,9 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
-     * @return Total number of vehicles available in this instance.
+     * @return Total number of routes available in this instance.
      */
-    [[nodiscard]] size_t numVehicles() const;
+    [[nodiscard]] size_t maxNumRoutes() const;
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the data

@@ -28,7 +28,7 @@ def test_single_route_OkSmall():
     improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(improved_individual.num_routes(), 1)
+    assert_equal(improved_individual.num_non_empty_routes(), 1)
     current_cost = cost_evaluator.penalised_cost(individual)
     improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)

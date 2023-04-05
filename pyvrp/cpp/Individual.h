@@ -16,12 +16,12 @@ class Individual
     using Routes = std::vector<Route>;
     using RouteType = int;
 
-    size_t numRoutes_ = 0;   // Number of routes
-    size_t distance_ = 0;    // Total distance
-    size_t excessLoad_ = 0;  // Total excess load over all routes
-    size_t timeWarp_ = 0;    // Total time warp over all routes
+    size_t numNonEmptyRoutes_ = 0;  // Number of non-empty routes
+    size_t distance_ = 0;           // Total distance
+    size_t excessLoad_ = 0;         // Total excess load over all routes
+    size_t timeWarp_ = 0;           // Total time warp over all routes
 
-    Routes routes_;  // Routes - only the first numRoutes_ are non-empty
+    Routes routes_;  // Routes - some routes may be non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
     std::vector<RouteType> assignments;  // type of assigned route per client
 
@@ -37,7 +37,7 @@ public:
      * Such non-empty routes are guaranteed to be in the lower indices of the
      * routes returned by ``getRoutes``.
      */
-    [[nodiscard]] size_t numRoutes() const;
+    [[nodiscard]] size_t numNonEmptyRoutes() const;
 
     /**
      * Returns this individual's routing decisions.
@@ -124,7 +124,7 @@ template <> struct hash<Individual>
     std::size_t operator()(Individual const &individual) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
+        res = res * 31 + std::hash<size_t>()(individual.numNonEmptyRoutes_);
         res = res * 31 + std::hash<size_t>()(individual.distance_);
         res = res * 31 + std::hash<size_t>()(individual.excessLoad_);
         res = res * 31 + std::hash<size_t>()(individual.timeWarp_);

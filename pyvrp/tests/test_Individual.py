@@ -13,9 +13,9 @@ def test_route_constructor_sorts_by_empty():
     indiv = Individual(data, [[3, 4], [], [1, 2]])
     routes = indiv.get_routes()
 
-    # num_routes() should show two non-empty routes. However, we passed in
-    # three routes, so len(routes) should not have changed.
-    assert_equal(indiv.num_routes(), 2)
+    # num_non_empty_routes() should show two non-empty routes. However, we
+    # passed in three routes, so len(routes) should not have changed.
+    assert_equal(indiv.num_non_empty_routes(), 2)
     assert_equal(len(routes), 3)
 
     # We expect Individual to sort the routes such that all non-empty routes
@@ -28,8 +28,8 @@ def test_route_constructor_sorts_by_empty():
     data = make_heterogeneous(data, [10, 10, 10, 20, 20])
     indiv = Individual(data, [[], [3, 4], [], [], [1, 2]])
 
-    # num_routes() should show two non-empty routes.
-    assert_equal(indiv.num_routes(), 2)
+    # num_non_empty_routes() should show two non-empty routes.
+    assert_equal(indiv.num_non_empty_routes(), 2)
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices for each group of equal vehicle capacities.
@@ -39,12 +39,12 @@ def test_route_constructor_sorts_by_empty():
 def test_route_constructor_raises():
     data = read("data/OkSmall.txt")
 
-    assert_equal(data.num_vehicles, 3)
+    assert_equal(data.max_num_routes, 3)
 
-    # Only two routes should not raise. But we should always get num_vehicles
+    # Only two routes should not raise. But we should always get max_num_routes
     # routes back.
     individual = Individual(data, [[1, 2], [4, 2]])
-    assert_equal(len(individual.get_routes()), data.num_vehicles)
+    assert_equal(len(individual.get_routes()), data.max_num_routes)
 
     # Empty third route should not raise.
     Individual(data, [[1, 2], [4, 2], []])
@@ -200,27 +200,27 @@ def test_time_warp_for_a_very_constrained_problem():
 # TODO test all time warp cases
 
 
-def test_num_routes_calculation():
+def test_num_non_empty_routes_calculation():
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
     indiv = Individual(data, [[1, 2, 3, 4]])
-    assert_equal(indiv.num_routes(), 1)
+    assert_equal(indiv.num_non_empty_routes(), 1)
 
     indiv = Individual(data, [[], [1, 2, 3, 4]])
-    assert_equal(indiv.num_routes(), 1)
+    assert_equal(indiv.num_non_empty_routes(), 1)
 
     indiv = Individual(data, [[], [], [1, 2, 3, 4]])
-    assert_equal(indiv.num_routes(), 1)
+    assert_equal(indiv.num_non_empty_routes(), 1)
 
     indiv = Individual(data, [[1, 2], [3, 4]])
-    assert_equal(indiv.num_routes(), 2)
+    assert_equal(indiv.num_non_empty_routes(), 2)
 
     indiv = Individual(data, [[1, 2], [], [3, 4]])
-    assert_equal(indiv.num_routes(), 2)
+    assert_equal(indiv.num_non_empty_routes(), 2)
 
     indiv = Individual(data, [[1], [2], [3, 4]])
-    assert_equal(indiv.num_routes(), 3)
+    assert_equal(indiv.num_non_empty_routes(), 3)
 
 
 def test_copy():
@@ -343,16 +343,18 @@ def test_str_contains_essential_information(capacities):
         str_representation = str(individual).splitlines()
 
         routes = individual.get_routes()
-        num_routes = individual.num_routes()
+        num_non_empty_routes = individual.num_non_empty_routes()
 
-        # There should be no more than num_routes lines (each detailing a
-        # single route), and a final line containing the distance.
-        assert_equal(len(str_representation), num_routes + 1)
+        # There should be no more than num_non_empty_routes lines (each
+        # detailing a single route), and a final line containing the distance.
+        assert_equal(len(str_representation), num_non_empty_routes + 1)
 
-        # The first num_routes lines should each contain a route, where each
-        # route should contain every client that is in the route as returned
-        # by get_routes().
-        for route, str_route in zip(routes[:num_routes], str_representation):
+        # The first num_non_empty_routes lines should each contain a route,
+        # where each route should contain every client that is in the route as
+        # returned by get_routes().
+        for route, str_route in zip(
+            routes[:num_non_empty_routes], str_representation
+        ):
             for client in route:
                 assert_(str(client) in str_route)
 

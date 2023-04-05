@@ -25,7 +25,7 @@ PYBIND11_MODULE(_Individual, m)
                     py::arg("data"),
                     py::arg("rng"));
             })
-        .def("num_routes", &Individual::numRoutes)
+        .def("num_non_empty_routes", &Individual::numNonEmptyRoutes)
         .def("get_routes",
              &Individual::getRoutes,
              py::return_value_policy::reference_internal)

@@ -18,7 +18,7 @@ class Individual:
     ------
     RuntimeError
         When the number of routes in the ``routes`` argument exceeds
-        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
+        :py:attr:`~pyvrp._ProblemData.ProblemData.max_num_routes`.
     """
 
     def __init__(
@@ -76,7 +76,7 @@ class Individual:
         .. note::
 
            This list is of length
-           :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`, but there
+           :py:attr:`~pyvrp._ProblemData.ProblemData.max_num_routes`, but there
            could be a number of empty routes. For groups of routes with the
            same vehicle capacity, non-empty routes come before empty routes,
            but there may be empty routes in between non-empty routes for
@@ -147,7 +147,7 @@ class Individual:
             Whether the solution of this individual is feasible with respect to
             capacity and time window constraints.
         """
-    def num_routes(self) -> int:
+    def num_non_empty_routes(self) -> int:
         """
         Number of non-empty routes in this solution.
 

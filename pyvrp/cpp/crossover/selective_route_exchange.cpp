@@ -37,10 +37,10 @@ getNonEmptyRouteIndicesByAscendingAngle(ProblemData const &data,
                                         Routes const &routes)
 {
     std::vector<std::pair<double, int>> routePolarAngles;
-    routePolarAngles.reserve(data.numVehicles());
+    routePolarAngles.reserve(data.maxNumRoutes());
 
     size_t numNonEmptyRoutes = 0;
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t r = 0; r < data.maxNumRoutes(); r++)
         if (!routes[r].empty())
         {
             numNonEmptyRoutes++;
@@ -220,8 +220,8 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    Routes routes1(data.numVehicles());
-    Routes routes2(data.numVehicles());
+    Routes routes1(data.maxNumRoutes());
+    Routes routes2(data.maxNumRoutes());
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)

@@ -160,12 +160,12 @@ class ProblemData:
             Number of clients in the instance.
         """
     @property
-    def num_vehicles(self) -> int:
+    def max_num_routes(self) -> int:
         """
-        Number of vehicles in this problem instance.
+        Maximum number of routes in this problem instance.
 
         Returns
         -------
         int
-            Number of vehicles in the instance.
+            Maximum number of routes in the instance.
         """

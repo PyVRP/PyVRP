@@ -44,16 +44,16 @@ void crossover::greedyRepair(Routes &routes,
                              std::vector<Client> const &unplanned,
                              ProblemData const &data)
 {
-    size_t numRoutes = 0;  // points just after the last non-empty route
+    size_t lastNonEmptryRoute = 0;  // points to the last non-empty route
     for (size_t rIdx = 0; rIdx != routes.size(); ++rIdx)
         if (!routes[rIdx].empty())
-            numRoutes = rIdx + 1;
+            lastNonEmptryRoute = rIdx;
 
     for (Client client : unplanned)
     {
         InsertPos best = {INT_MAX, &routes.front(), 0};
 
-        for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
+        for (size_t rIdx = 0; rIdx <= lastNonEmptryRoute; ++rIdx)
         {
             auto &route = routes[rIdx];
 

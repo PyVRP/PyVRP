@@ -12,7 +12,7 @@ Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
-size_t ProblemData::numVehicles() const { return numRoutes_; }
+size_t ProblemData::maxNumRoutes() const { return numAvailableRoutes_; }
 
 ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          std::vector<int> const &demands,
@@ -25,7 +25,7 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
       routes_(vehicleCapacities.size()),
       routeTypes_(vehicleCapacities.size()),
       numClients_(coords.size() - 1),
-      numRoutes_(vehicleCapacities.size())
+      numAvailableRoutes_(vehicleCapacities.size())
 {
     // TODO argument checks
 
@@ -38,7 +38,7 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          timeWindows[idx].second};
 
     size_t routeType = 0;
-    for (size_t idx = 0; idx < static_cast<size_t>(numRoutes_); ++idx)
+    for (size_t idx = 0; idx < static_cast<size_t>(numAvailableRoutes_); ++idx)
     {
         routes_[idx] = {vehicleCapacities[idx]};
         if (idx > 0 && routes_[idx] != routes_[idx - 1])

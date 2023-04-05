@@ -22,7 +22,7 @@ Individual LocalSearch::search(Individual &individual,
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
     std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
-    lastModified = std::vector<int>(data.numVehicles(), 0);
+    lastModified = std::vector<int>(data.maxNumRoutes(), 0);
 
     searchCompleted = false;
     nbMoves = 0;
@@ -80,8 +80,8 @@ Individual LocalSearch::intensify(Individual &individual,
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
 
-    std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
-    lastModified = std::vector<int>(data.numVehicles(), 0);
+    std::vector<int> lastTestedRoutes(data.maxNumRoutes(), -1);
+    lastModified = std::vector<int>(data.maxNumRoutes(), 0);
 
     searchCompleted = false;
     nbMoves = 0;
@@ -214,7 +214,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
     auto const &routesIndiv = individual.getRoutes();
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t r = 0; r < data.maxNumRoutes(); r++)
     {
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -267,9 +267,9 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
 Individual LocalSearch::exportIndividual()
 {
-    std::vector<std::vector<int>> indivRoutes(data.numVehicles());
+    std::vector<std::vector<int>> indivRoutes(data.maxNumRoutes());
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t r = 0; r < data.maxNumRoutes(); r++)
     {
         Node *node = startDepots[r].next;
 
@@ -324,12 +324,12 @@ LocalSearch::LocalSearch(ProblemData &data,
       rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
-      orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1),
+      orderRoutes(data.maxNumRoutes()),
+      lastModified(data.maxNumRoutes(), -1),
       clients(data.numClients() + 1),
       routes(),
-      startDepots(data.numVehicles()),
-      endDepots(data.numVehicles())
+      startDepots(data.maxNumRoutes()),
+      endDepots(data.maxNumRoutes())
 {
     setNeighbours(neighbours);
 
@@ -339,8 +339,8 @@ LocalSearch::LocalSearch(ProblemData &data,
     for (size_t i = 0; i <= data.numClients(); i++)
         clients[i].client = i;
 
-    routes.reserve(data.numVehicles());
-    for (size_t i = 0; i < data.numVehicles(); i++)
+    routes.reserve(data.maxNumRoutes());
+    for (size_t i = 0; i < data.maxNumRoutes(); i++)
     {
         routes.emplace_back(data, i);
         routes[i].idx = i;

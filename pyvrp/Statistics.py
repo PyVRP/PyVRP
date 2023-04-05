@@ -23,7 +23,7 @@ class _Datum:
     avg_diversity: float
     best_cost: float
     avg_cost: float
-    avg_num_routes: float
+    avg_num_non_empty_routes: float
 
 
 @dataclass
@@ -81,14 +81,16 @@ class Statistics:
                 avg_diversity=nan,
                 best_cost=nan,
                 avg_cost=nan,
-                avg_num_routes=nan,
+                avg_num_non_empty_routes=nan,
             )
 
         size = len(subpop)
         costs = [
             cost_evaluator.penalised_cost(item.individual) for item in subpop
         ]
-        num_routes = [item.individual.num_routes() for item in subpop]
+        num_non_empty_routes = [
+            item.individual.num_non_empty_routes() for item in subpop
+        ]
         diversities = [item.avg_distance_closest() for item in subpop]
 
         return _Datum(
@@ -96,7 +98,7 @@ class Statistics:
             avg_diversity=fmean(diversities),
             best_cost=min(costs),
             avg_cost=fmean(costs),
-            avg_num_routes=fmean(num_routes),
+            avg_num_non_empty_routes=fmean(num_non_empty_routes),
         )
 
     @classmethod

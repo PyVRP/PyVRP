@@ -33,7 +33,7 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("service_durations"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
-        .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
+        .def_property_readonly("max_num_routes", &ProblemData::maxNumRoutes)
         .def("client",
              &ProblemData::client,
              py::arg("client"),
