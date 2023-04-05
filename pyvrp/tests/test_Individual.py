@@ -284,7 +284,7 @@ def test_same_routes_different_vehicle_not_eq():
 
 def test_heterogeneous_route_sorting():
     """
-    Tests that two individuals sorts non-emtpy routes per group of same
+    Tests that two individuals sorts non-empty routes per group of same
     capacities.
     """
     data = read("data/OkSmall.txt")
