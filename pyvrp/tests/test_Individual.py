@@ -129,16 +129,16 @@ def test_heterogeneous_capacity_excess_load_calculation():
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
 
-    # This instance has capacities [10, 10, 20] and total demand of 18
+    # This instance has capacities [10, 10, 20] and total demand of 18 so if
+    # all demand is put in the first route the excess_load is 18 - 10 = 8.
     indiv = Individual(data, [[1, 2, 3, 4]])
     assert_(indiv.has_excess_load())
-    assert_equal(indiv.excess_load(), 18 - data.route(0).vehicle_capacity)
+    assert_equal(indiv.excess_load(), 8)
 
-    # Note that individual will sort the routes because the first two have the
-    # same vehicle capacity
+    # Same for the second route
     indiv = Individual(data, [[], [1, 2, 3, 4]])
     assert_(indiv.has_excess_load())
-    assert_equal(indiv.excess_load(), 18 - data.route(1).vehicle_capacity)
+    assert_equal(indiv.excess_load(), 8)
 
     # Third route has larger capacity than demand, so there is no excess load.
     indiv = Individual(data, [[], [], [1, 2, 3, 4]])
