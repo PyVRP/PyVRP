@@ -314,11 +314,11 @@ def test_heterogeneous_route_sorting(data_heterogeneous):
 
 
 @mark.parametrize(
-    "data",
-    [data_small, data_heterogeneous],
+    "data_fixture",
+    ["data_small", "data_heterogeneous"],
 )
-def test_str_contains_essential_information(data):
-    data = read("data/OkSmall.txt")
+def test_str_contains_essential_information(data_fixture, request):
+    data = request.getfixturevalue(data_fixture)
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
