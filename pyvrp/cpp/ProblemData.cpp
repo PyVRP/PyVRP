@@ -23,6 +23,7 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
     : dist_(distMat),
       clients_(coords.size()),
       routes_(vehicleCapacities.size()),
+      routeTypes_(vehicleCapacities.size()),
       numClients_(coords.size() - 1),
       numRoutes_(vehicleCapacities.size())
 {
@@ -36,6 +37,12 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          timeWindows[idx].first,
                          timeWindows[idx].second};
 
+    size_t routeType = 0;
     for (size_t idx = 0; idx < static_cast<size_t>(numRoutes_); ++idx)
+    {
         routes_[idx] = {vehicleCapacities[idx]};
+        if (idx > 0 && routes_[idx] != routes_[idx - 1])
+            routeType++;
+        routeTypes_[idx] = routeType;
+    }
 }

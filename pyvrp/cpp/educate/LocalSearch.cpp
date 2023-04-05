@@ -132,7 +132,7 @@ bool LocalSearch::applyNodeOpsWithEmptyRoutes(
     for (size_t r = 0; r < routes.size(); r++)
     {
         if (routes[r].empty()
-            && (prev_r == -1 || (data.route(r) != data.route(prev_r))))
+            && (prev_r == -1 || (data.routeType(r) != data.routeType(prev_r))))
         {
             prev_r = r;
             // Note: if the operation is succesful, we still continue

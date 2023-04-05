@@ -271,7 +271,10 @@ def test_same_routes_different_vehicle_not_eq():
     capacities.
     """
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
+    # Make sure capacities are different but large enough (>18) to have no
+    # violations so have the same attributes, such that we actually test if the
+    # assignments are used for the equality comparison.
+    data = make_heterogeneous(data, vehicle_capacities=[20, 20, 30])
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])

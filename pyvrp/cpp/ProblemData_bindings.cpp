@@ -16,6 +16,7 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("tw_late", &ProblemData::Client::twLate);
 
     py::class_<ProblemData::Route>(m, "Route")
+        .def(py::init<size_t>(), py::arg("vehicle_capacity"))
         .def_readonly("vehicle_capacity", &ProblemData::Route::vehicleCapacity);
 
     py::class_<ProblemData>(m, "ProblemData")

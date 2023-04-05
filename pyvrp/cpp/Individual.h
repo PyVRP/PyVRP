@@ -14,6 +14,7 @@ class Individual
     using Client = int;
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
+    using RouteType = int;
 
     size_t numRoutes_ = 0;   // Number of routes
     size_t distance_ = 0;    // Total distance
@@ -22,9 +23,9 @@ class Individual
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
-    std::vector<size_t> assignments;  // type of assigned vehicle per client
+    std::vector<RouteType> assignments;  // type of assigned route per client
 
-    // Determines the [pred, succ] pairs and vehicle assignment for each client.
+    // Determines the [pred, succ] pairs and route assignment for each client.
     void makeNeighboursAndAssignments(ProblemData const &data);
 
     // Evaluates this solution's characteristics.
@@ -49,6 +50,12 @@ public:
      */
     [[nodiscard]] std::vector<std::pair<Client, Client>> const &
     getNeighbours() const;
+
+    /**
+     * Returns a vector of route types for each client (index) in this
+     * individual's routes. Includes the depot at index 0.
+     */
+    [[nodiscard]] std::vector<RouteType> const &getAssignments() const;
 
     /**
      * @return True when this solution is feasible; false otherwise.

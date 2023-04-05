@@ -34,9 +34,10 @@ public:
     };
 
 private:
-    Matrix<int> const dist_;       // Distance matrix (+depot)
-    std::vector<Client> clients_;  // Client (+depot) information
-    std::vector<Route> routes_;    // Routes information
+    Matrix<int> const dist_;          // Distance matrix (+depot)
+    std::vector<Client> clients_;     // Client (+depot) information
+    std::vector<Route> routes_;       // Routes information per route
+    std::vector<size_t> routeTypes_;  // Type idx per route
 
     size_t const numClients_;
     size_t const numRoutes_;
@@ -58,6 +59,12 @@ public:
      * @return A struct containing the indicated route's information.
      */
     [[nodiscard]] inline Route const &route(size_t route) const;
+
+    /**
+     * @param route Route for which to return the route type.
+     * @return RouteType index of the route type of the route.
+     */
+    [[nodiscard]] inline size_t const &routeType(size_t route) const;
 
     /**
      * Returns the distance between the indicated two clients.
@@ -111,6 +118,11 @@ ProblemData::Client const &ProblemData::client(size_t client) const
 ProblemData::Route const &ProblemData::route(size_t route) const
 {
     return routes_[route];
+}
+
+size_t const &ProblemData::routeType(size_t route) const
+{
+    return routeTypes_[route];
 }
 
 int ProblemData::dist(size_t first, size_t second) const

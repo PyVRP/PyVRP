@@ -8,6 +8,7 @@
 using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
+using RouteType = int;
 
 void Individual::evaluate(ProblemData const &data)
 {
@@ -88,6 +89,11 @@ std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
     return neighbours;
 }
 
+std::vector<RouteType> const &Individual::getAssignments() const
+{
+    return assignments;
+}
+
 bool Individual::isFeasible() const
 {
     return !hasExcessLoad() && !hasTimeWarp();
@@ -106,19 +112,17 @@ size_t Individual::timeWarp() const { return timeWarp_; }
 void Individual::makeNeighboursAndAssignments(ProblemData const &data)
 {
     neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
+    assignments[0] = -1;     // unassigned
 
-    size_t routeTypeIdx = 0;
     for (size_t rIdx = 0; rIdx != data.numVehicles(); ++rIdx)
     {
-        // Increase routeTypeIdx if route (vehicle) is different than previous
-        routeTypeIdx += rIdx > 0 && data.route(rIdx) != data.route(rIdx - 1);
         auto const route = routes_[rIdx];
         for (size_t idx = 0; idx != route.size(); ++idx)
         {
             neighbours[route[idx]]
                 = {idx == 0 ? 0 : route[idx - 1],                  // pred
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
-            assignments[route[idx]] = routeTypeIdx;
+            assignments[route[idx]] = data.routeType(rIdx);
         }
     }
 }
@@ -183,7 +187,7 @@ Individual::Individual(ProblemData const &data, Routes routes)
         // In order to shift forward, routes must be exchangable
         // so the route data must be equal (same depot and capacity)
         // Note that this assumes exchangable routes are grouped together
-        if (data.route(i) != data.route(j))
+        if (data.routeType(i) != data.routeType(j))
         {
             // Move to next group
             j = i;
