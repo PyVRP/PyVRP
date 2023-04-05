@@ -23,8 +23,8 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
     : dist_(distMat),
       clients_(coords.size()),
       routes_(vehicleCapacities.size()),
-      numClients_(static_cast<int>(coords.size()) - 1),
-      numRoutes_(static_cast<int>(vehicleCapacities.size()))
+      numClients_(coords.size() - 1),
+      numRoutes_(vehicleCapacities.size())
 {
     // TODO argument checks
 
