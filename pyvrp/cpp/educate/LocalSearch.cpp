@@ -135,7 +135,7 @@ bool LocalSearch::applyNodeOpsWithEmptyRoutes(
             && (prev_r == -1 || (data.route(r) != data.route(prev_r))))
         {
             prev_r = r;
-            // Node: if the operation is succesful, we still continue
+            // Note: if the operation is succesful, we still continue
             // checking operations with other empty routes, similar to
             // how a move involving U, V will still check U, V' afterwards
             if (applyNodeOps(U, routes[r].depot, costEvaluator))
