@@ -2,13 +2,6 @@
 
 double brokenPairsDistance(Individual const &first, Individual const &second)
 {
-    // TODO should brokenPairsDistance also take into account vehicle
-    // assignments in the heterogeneous case, or should we make a seperate
-    // brokenAssignmentsDistance and possibly
-    // weightedBrokenPairsAndAssignmentsDistance such that the user can choose
-    // how to measure diversity?
-
-    // TODO should brokenPairsDistance be undirected for CVRP?
     auto const &fNeighbours = first.getNeighbours();
     auto const &sNeighbours = second.getNeighbours();
 
