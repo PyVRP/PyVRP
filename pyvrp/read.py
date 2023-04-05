@@ -5,8 +5,6 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
-from pyvrp._Matrix import IntMatrix  # noqa
-
 from ._ProblemData import ProblemData
 
 _Routes = List[List[int]]
