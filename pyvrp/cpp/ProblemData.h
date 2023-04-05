@@ -54,7 +54,7 @@ public:
     [[nodiscard]] Client const &depot() const;
 
     /**
-     * @param route Route whose data to return.
+     * @param route Route for which to return the data.
      * @return A struct containing the indicated route's information.
      */
     [[nodiscard]] inline Route const &route(size_t route) const;
