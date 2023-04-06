@@ -75,8 +75,8 @@ void Individual::evaluate(ProblemData const &data)
         distance_ += routeDist;
         timeWarp_ += routeTimeWarp;
 
-        if (static_cast<size_t>(routeLoad) > routeData.vehicleCapacity)
-            excessLoad_ += routeLoad - routeData.vehicleCapacity;
+        if (static_cast<size_t>(routeLoad) > routeData.capacity)
+            excessLoad_ += routeLoad - routeData.capacity;
     }
 }
 

@@ -123,12 +123,12 @@ def test_excess_load_calculation():
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10.
-    assert_equal(indiv.excess_load(), 18 - data.route_data(0).vehicle_capacity)
+    assert_equal(indiv.excess_load(), 18 - data.route_data(0).capacity)
 
 
 def test_heterogeneous_capacity_excess_load_calculation():
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
+    data = make_heterogeneous(data, capacities=[10, 10, 20])
 
     # This instance has capacities [10, 10, 20] and total demand of 18 so if
     # all demand is put in the first route the excess_load is 18 - 10 = 8.
@@ -173,7 +173,7 @@ def test_time_warp_for_a_very_constrained_problem():
     data = ProblemData(
         coords=[(0, 0), (1, 0), (2, 0)],
         demands=[0, 0, 0],
-        vehicle_capacities=[0, 0],
+        capacities=[0, 0],
         time_windows=[(0, 10), (0, 5), (0, 5)],
         service_durations=[0, 0, 0],
         duration_matrix=[
@@ -202,7 +202,7 @@ def test_time_warp_for_a_very_constrained_problem():
 
 def test_num_non_empty_routes_calculation():
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
+    data = make_heterogeneous(data, capacities=[10, 10, 20])
 
     indiv = Individual(data, [[1, 2, 3, 4]])
     assert_equal(indiv.num_non_empty_routes(), 1)
@@ -274,7 +274,7 @@ def test_same_routes_different_vehicle_not_eq():
     # Make sure capacities are different but large enough (>18) to have no
     # violations so have the same attributes, such that we actually test if the
     # assignments are used for the equality comparison.
-    data = make_heterogeneous(data, vehicle_capacities=[20, 20, 30])
+    data = make_heterogeneous(data, capacities=[20, 20, 30])
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -291,7 +291,7 @@ def test_heterogeneous_route_sorting():
     Tests that individual sorts non-empty routes per group of same capacities.
     """
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_capacities=[10, 10, 20])
+    data = make_heterogeneous(data, capacities=[10, 10, 20])
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -313,7 +313,7 @@ def test_unsorted_heterogeneous_route_sorting():
     routes to be sorted but it is more efficient to have them sorted.
     """
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_capacities=[10, 20, 10])
+    data = make_heterogeneous(data, capacities=[10, 20, 10])
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -334,7 +334,7 @@ def test_unsorted_heterogeneous_route_sorting():
 )
 def test_str_contains_essential_information(capacities):
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_capacities=capacities)
+    data = make_heterogeneous(data, capacities=capacities)
 
     rng = XorShift128(seed=2)
 

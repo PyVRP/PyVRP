@@ -107,7 +107,7 @@ def get_route_statistics(
     demand = sum([data.client(idx).demand for idx in route])
     serv_dur = sum([data.client(idx).service_duration for idx in route])
 
-    vehicle_capacity = data.route(route_idx).vehicle_capacity
+    capacity = data.route_data(route_idx).capacity
     return RouteStatistics(
         distance=distance,
         start_time=start_time,
@@ -118,9 +118,9 @@ def get_route_statistics(
         service_time=serv_dur,
         num_stops=len(route),
         total_demand=demand,
-        capacity=vehicle_capacity,
-        fillrate=demand / vehicle_capacity,
-        is_feasible=time_warp == 0 and demand <= vehicle_capacity,
+        capacity=capacity,
+        fillrate=demand / capacity,
+        is_feasible=time_warp == 0 and demand <= capacity,
         is_empty=len(route) == 0,
     )
 

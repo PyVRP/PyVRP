@@ -11,7 +11,7 @@ def test_depot_is_first_client():
     data = ProblemData(
         coords=[(0, 0), (0, 1)],
         demands=[0, 0],
-        vehicle_capacities=[1, 1],
+        capacities=[1, 1],
         time_windows=[(0, 10), (0, 10)],
         service_durations=[0, 0],
         duration_matrix=[[0, 1], [1, 0]],

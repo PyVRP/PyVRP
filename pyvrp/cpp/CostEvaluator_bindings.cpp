@@ -13,7 +13,7 @@ PYBIND11_MODULE(_CostEvaluator, m)
         .def("load_penalty",
              &CostEvaluator::loadPenalty,
              py::arg("load"),
-             py::arg("vehicle_capacity"))
+             py::arg("capacity"))
         .def("tw_penalty", &CostEvaluator::twPenalty, py::arg("time_warp"))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost,

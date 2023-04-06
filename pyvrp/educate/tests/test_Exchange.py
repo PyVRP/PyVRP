@@ -211,8 +211,7 @@ def test_relocate_after_depot_should_work():
 def test_relocate_to_heterogeneous_empty_route():
     """
     This test asserts that a customer will be relocated to a non-empty route
-    with a different vehicle capacity even if there is another empty route in
-    between.
+    with a different capacity even if there is another empty route in between.
     """
 
     data = make_heterogeneous(read("data/OkSmall.txt"), [12, 5, 1, 3])

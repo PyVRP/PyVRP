@@ -16,9 +16,8 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("tw_late", &ProblemData::Client::twLate);
 
     py::class_<ProblemData::RouteData>(m, "RouteData")
-        .def(py::init<size_t>(), py::arg("vehicle_capacity"))
-        .def_readonly("vehicle_capacity",
-                      &ProblemData::RouteData::vehicleCapacity);
+        .def(py::init<size_t>(), py::arg("capacity"))
+        .def_readonly("capacity", &ProblemData::RouteData::capacity);
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<std::vector<std::pair<int, int>> const &,
@@ -29,7 +28,7 @@ PYBIND11_MODULE(_ProblemData, m)
                       std::vector<std::vector<int>> const &>(),
              py::arg("coords"),
              py::arg("demands"),
-             py::arg("vehicle_capacities"),
+             py::arg("capacities"),
              py::arg("time_windows"),
              py::arg("service_durations"),
              py::arg("duration_matrix"))

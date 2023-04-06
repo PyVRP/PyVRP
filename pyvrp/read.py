@@ -119,7 +119,7 @@ def read(
         bound = min(bound, _INT_MAX)
         time_windows = np.repeat([[0, bound]], num_clients, axis=0)
 
-    vehicle_capacities = [capacity for _ in range(num_vehicles)]
+    capacities = [capacity for _ in range(num_vehicles)]
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:
@@ -143,7 +143,7 @@ def read(
     return ProblemData(
         coords,
         demands,
-        vehicle_capacities,
+        capacities,
         time_windows,
         service_times,
         edge_weight,

@@ -22,7 +22,7 @@ public:
 
     struct RouteData
     {
-        size_t vehicleCapacity;  // Vehicle capacity
+        size_t capacity;  // Capacity (max total demand) of the route
         inline bool operator==(RouteData const &other) const;
         inline bool operator!=(RouteData const &other) const;
     };
@@ -91,14 +91,14 @@ public:
      *
      * @param coords       Coordinates as pairs of [x, y].
      * @param demands      Client demands.
-     * @param vehicleCapacities     Vehicle capacity for each route.
+     * @param capacities   Capacity (max total demand) for each route.
      * @param timeWindows  Time windows as pairs of [early, late].
      * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
      */
     ProblemData(std::vector<std::pair<int, int>> const &coords,
                 std::vector<int> const &demands,
-                std::vector<size_t> const &vehicleCapacities,
+                std::vector<size_t> const &capacities,
                 std::vector<std::pair<int, int>> const &timeWindows,
                 std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat);
@@ -106,7 +106,7 @@ public:
 
 inline bool ProblemData::RouteData::operator==(RouteData const &other) const
 {
-    return vehicleCapacity == other.vehicleCapacity;
+    return capacity == other.capacity;
 }
 
 inline bool ProblemData::RouteData::operator!=(RouteData const &other) const

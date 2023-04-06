@@ -52,7 +52,7 @@ public:           // TODO make fields private
     /**
      * Determines whether this route is load-feasible.
      *
-     * @return true if the route exceeds the vehicle capacity, false otherwise.
+     * @return true if the route exceeds the capacity, false otherwise.
      */
     [[nodiscard]] inline bool hasExcessLoad() const;
 
@@ -79,9 +79,9 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * @return the vehicle capacity for this route.
+     * @return the capacity for this route.
      */
-    [[nodiscard]] inline size_t vehicleCapacity() const;
+    [[nodiscard]] inline size_t capacity() const;
 
     /**
      * @return Number of clients in this route.
@@ -145,7 +145,7 @@ int Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 
-size_t Route::vehicleCapacity() const { return routeData.vehicleCapacity; }
+size_t Route::capacity() const { return routeData.capacity; }
 
 size_t Route::size() const
 {

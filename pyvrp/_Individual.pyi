@@ -78,9 +78,9 @@ class Individual:
            This list is of length
            :py:attr:`~pyvrp._ProblemData.ProblemData.max_num_routes`, but there
            could be a number of empty routes. For groups of routes with the
-           same vehicle capacity, non-empty routes come before empty routes,
-           but there may be empty routes in between non-empty routes for
-           heterogeneous vehicle capacities.
+           same capacity, non-empty routes come before empty routes, but there
+           may be empty routes in between non-empty routes for heterogeneous
+           capacities.
 
         Returns
         -------

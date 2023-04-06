@@ -42,7 +42,7 @@ def test_reading_OkSmall_instance():
     assert_equal(data.num_clients, 4)
     assert_equal(data.max_num_routes, 3)
     for i in range(data.max_num_routes):
-        assert_equal(data.route_data(i).vehicle_capacity, 10)
+        assert_equal(data.route_data(i).capacity, 10)
 
     # From the NODE_COORD_SECTION in the file
     expected = [
@@ -104,7 +104,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
 
     assert_equal(data.num_clients, 21)
     for i in range(data.max_num_routes):
-        assert_equal(data.route_data(i).vehicle_capacity, 6_000)
+        assert_equal(data.route_data(i).capacity, 6_000)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
     assert_equal(data.depot().x, 1450)  # depot [x, y] location
@@ -146,7 +146,7 @@ def test_reading_RC208_instance():  # Solomon style instance
 
     assert_equal(data.num_clients, 100)  # Excl. depot
     for i in range(data.max_num_routes):
-        assert_equal(data.route_data(i).vehicle_capacity, 1_000)
+        assert_equal(data.route_data(i).capacity, 1_000)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision
     assert_equal(data.depot().x, 400)  # depot [x, y] location

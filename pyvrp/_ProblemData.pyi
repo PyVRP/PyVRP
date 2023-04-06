@@ -36,11 +36,11 @@ class Route:
 
     Attributes
     ----------
-    vehicle_capacity
-        Capacity of the vehicle for this route.
+    capacity
+        Capacity of this route (maximum total demand that can be served).
     """
 
-    vehicle_capacity: int
+    capacity: int
 
 class ProblemData:
     """
@@ -55,8 +55,8 @@ class ProblemData:
     demands
         Array of client demands. The demand at index 0 is assumed to be the
         depot's demand, and should be zero.
-    vehicle_capacities
-        List of vehicle capacities for all routes in the problem instance.
+    capacities
+        List of capacities for all routes in the problem instance.
     time_windows
         Array of (early, late) time windows. The time window at index 0 is
         assumed to be the depot's time window, and describes the overall time
@@ -79,7 +79,7 @@ class ProblemData:
         self,
         coords: List[Tuple[int, int]],
         demands: List[int],
-        vehicle_capacities: List[int],
+        capacities: List[int],
         time_windows: List[Tuple[int, int]],
         service_durations: List[int],
         duration_matrix: List[List[int]],

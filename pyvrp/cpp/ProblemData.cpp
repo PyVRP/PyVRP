@@ -16,16 +16,16 @@ size_t ProblemData::maxNumRoutes() const { return numAvailableRoutes_; }
 
 ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          std::vector<int> const &demands,
-                         std::vector<size_t> const &vehicleCapacities,
+                         std::vector<size_t> const &capacities,
                          std::vector<std::pair<int, int>> const &timeWindows,
                          std::vector<int> const &servDurs,
                          std::vector<std::vector<int>> const &distMat)
     : dist_(distMat),
       clients_(coords.size()),
-      routes_(vehicleCapacities.size()),
-      routeTypes_(vehicleCapacities.size()),
+      routes_(capacities.size()),
+      routeTypes_(capacities.size()),
       numClients_(coords.size() - 1),
-      numAvailableRoutes_(vehicleCapacities.size())
+      numAvailableRoutes_(capacities.size())
 {
     // TODO argument checks
 
@@ -40,7 +40,7 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
     size_t routeType = 0;
     for (size_t idx = 0; idx < static_cast<size_t>(numAvailableRoutes_); ++idx)
     {
-        routes_[idx] = {vehicleCapacities[idx]};
+        routes_[idx] = {capacities[idx]};
         if (idx > 0 && routes_[idx] != routes_[idx - 1])
             routeType++;
         routeTypes_[idx] = routeType;

@@ -15,14 +15,14 @@ public:
     CostEvaluator(unsigned int capacityPenalty, unsigned int timeWarpPenalty);
 
     /**
-     * Computes the total excess capacity penalty for the given vehicle load.
+     * Computes the total excess capacity penalty for the given load.
      */
-    [[nodiscard]] inline unsigned int
-    loadPenalty(unsigned int load, unsigned int vehicleCapacity) const;
+    [[nodiscard]] inline unsigned int loadPenalty(unsigned int load,
+                                                  unsigned int capacity) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
-     * the part of the load that exceeds the vehicle capacity.
+     * the part of the load that exceeds the capacity.
      */
     [[nodiscard]] inline unsigned int
     loadPenaltyExcess(unsigned int excessLoad) const;
@@ -51,13 +51,13 @@ unsigned int CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const
 }
 
 unsigned int CostEvaluator::loadPenalty(unsigned int load,
-                                        unsigned int vehicleCapacity) const
+                                        unsigned int capacity) const
 {
     // Branchless for performance: when load > capacity we return the excess
-    // load penalty; else zero. Note that when load - vehicleCapacity wraps
-    // around, we return zero because load > vehicleCapacity evaluates as zero
+    // load penalty; else zero. Note that when load - capacity wraps
+    // around, we return zero because load > capacity evaluates as zero
     // (so there is no issue here due to unsignedness).
-    return (load > vehicleCapacity) * loadPenaltyExcess(load - vehicleCapacity);
+    return (load > capacity) * loadPenaltyExcess(load - capacity);
 }
 
 unsigned int CostEvaluator::twPenalty(unsigned int timeWarp) const
