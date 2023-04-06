@@ -22,7 +22,7 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<std::vector<int>> const &distMat)
     : dist_(distMat),
       clients_(clients),
-      numClients_(clients.size() - 1),
+      numClients_(std::max(clients.size(), static_cast<size_t>(1)) - 1),
       numVehicles_(numVehicles),
       vehicleCapacity_(vehicleCap)
 {

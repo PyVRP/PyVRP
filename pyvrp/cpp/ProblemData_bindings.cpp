@@ -14,7 +14,7 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("demand") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
-             py::arg("tw_late") = 0)
+             py::arg("tw_late") = static_cast<int>(1e9))
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
