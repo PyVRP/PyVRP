@@ -36,6 +36,12 @@ std::vector<int>
 getNonEmptyRouteIndicesByAscendingAngle(ProblemData const &data,
                                         Routes const &routes)
 {
+    // This function performs a customized argsort of the routes by the angle
+    // of each route (avg. angle to depot of customers in route). It is custom
+    // since it filters empty routes but keeps the original indices.
+
+    // First we create a vector of (angle, idx) pairs for non-empty routes,
+    // which we sort normally, so by angle (first item of pair).
     std::vector<std::pair<double, int>> routePolarAngles;
     routePolarAngles.reserve(data.maxNumRoutes());
 
@@ -51,6 +57,7 @@ getNonEmptyRouteIndicesByAscendingAngle(ProblemData const &data,
     std::sort(routePolarAngles.begin(),
               routePolarAngles.begin() + numNonEmptyRoutes);
 
+    // Copy the result keeping to return only the second item (route index)
     std::vector<int> result;
     result.reserve(numNonEmptyRoutes);
     for (size_t r = 0; r < numNonEmptyRoutes; r++)
