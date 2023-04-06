@@ -23,14 +23,8 @@ public:
     struct RouteData
     {
         size_t vehicleCapacity;  // Vehicle capacity
-        inline bool operator==(const RouteData &other) const
-        {
-            return vehicleCapacity == other.vehicleCapacity;
-        }
-        inline bool operator!=(const RouteData &other) const
-        {
-            return !(*this == other);
-        }
+        inline bool operator==(RouteData const &other) const;
+        inline bool operator!=(RouteData const &other) const;
     };
 
 private:
@@ -109,6 +103,16 @@ public:
                 std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat);
 };
+
+inline bool ProblemData::RouteData::operator==(RouteData const &other) const
+{
+    return vehicleCapacity == other.vehicleCapacity;
+}
+
+inline bool ProblemData::RouteData::operator!=(RouteData const &other) const
+{
+    return !(*this == other);
+}
 
 ProblemData::Client const &ProblemData::client(size_t client) const
 {
