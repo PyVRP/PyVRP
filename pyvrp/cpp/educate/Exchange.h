@@ -146,7 +146,7 @@ cost_type Exchange<N, M>::evalRelocateMove(
 
         // First compute bound based on dist and load
         auto const lbCost = costEvaluator.penalisedRouteCost(
-            dist, U->route->load(), 0, data.vehicleCapacity());
+            dist, route->load(), 0, data.vehicleCapacity());
         if (lbCost >= route->penalisedCost())
             return 0;
 
@@ -163,11 +163,8 @@ cost_type Exchange<N, M>::evalRelocateMove(
                                           route->twBetween(posV + 1, posU - 1),
                                           n(endU)->twAfter);
 
-        auto const cost
-            = costEvaluator.penalisedRouteCost(dist,
-                                               U->route->load(),
-                                               tws.totalTimeWarp(),
-                                               data.vehicleCapacity());
+        auto const cost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), tws.totalTimeWarp(), data.vehicleCapacity());
         return cost - route->penalisedCost();
     }
 }
@@ -253,7 +250,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
 
         // First compute bound based on dist and load
         auto const lbCost = costEvaluator.penalisedRouteCost(
-            dist, U->route->load(), 0, data.vehicleCapacity());
+            dist, route->load(), 0, data.vehicleCapacity());
         if (lbCost >= route->penalisedCost())
             return 0;
 
@@ -271,11 +268,8 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
                                           route->twBetween(posV, posV + M - 1),
                                           n(endU)->twAfter);
 
-        auto const cost
-            = costEvaluator.penalisedRouteCost(dist,
-                                               U->route->load(),
-                                               tws.totalTimeWarp(),
-                                               data.vehicleCapacity());
+        auto const cost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), tws.totalTimeWarp(), data.vehicleCapacity());
         return cost - route->penalisedCost();
     }
 }

@@ -17,79 +17,81 @@ cost_type MoveTwoClientsReversed::evaluate(Node *U,
     auto const &dist = data.distanceMatrix();
     auto const &duration = data.durationMatrix();
 
-    auto const current = U->route->distBetween(posU - 1, posU + 2)
-                         + dist(V->client, n(V)->client);
-    auto const proposed
-        = dist(p(U)->client, n(n(U))->client) + dist(V->client, n(U)->client)
-          + dist(n(U)->client, U->client) + dist(U->client, n(V)->client);
-
-    cost_type deltaCost = proposed - current;
+    auto const deltaDistU = dist(p(U)->client, n(n(U))->client)
+                            - U->route->distBetween(posU - 1, posU + 2);
+    auto const deltaDistV
+        = dist(V->client, n(U)->client) + dist(n(U)->client, U->client)
+          + dist(U->client, n(V)->client) - dist(V->client, n(V)->client);
 
     if (U->route != V->route)
     {
-        if (U->route->isFeasible() && deltaCost >= 0)
-            return deltaCost;
+        auto const currentCost
+            = U->route->penalisedCost() + V->route->penalisedCost();
 
-        auto uTWS = TWS::merge(duration, p(U)->twBefore, n(n(U))->twAfter);
-
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+        // Compute lower bound for new cost based on distance and load
+        auto const distU = U->route->dist() + deltaDistU;
+        auto const distV = V->route->dist() + deltaDistV;
 
         auto const loadDiff = U->route->loadBetween(posU, posU + 1);
+        auto const loadU = U->route->load() - loadDiff;
+        auto const loadV = V->route->load() + loadDiff;
 
-        deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               data.vehicleCapacity());
-        deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               data.vehicleCapacity());
+        auto const lbCostU = costEvaluator.penalisedRouteCost(
+            distU, loadU, 0, data.vehicleCapacity());
+        auto const lbCostV = costEvaluator.penalisedRouteCost(
+            distV, loadV, 0, data.vehicleCapacity());
 
-        if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good
+        if (lbCostU + lbCostV >= currentCost)
+            return 0;
 
-        deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               data.vehicleCapacity());
-        deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               data.vehicleCapacity());
+        // Add time warp for route U to get actual cost
+        auto uTWS = TWS::merge(duration, p(U)->twBefore, n(n(U))->twAfter);
+        auto const costU = costEvaluator.penalisedRouteCost(
+            distU, loadU, uTWS.totalTimeWarp(), data.vehicleCapacity());
 
+        // Small optimization, check intermediate bound
+        if (costU + lbCostV >= currentCost)
+            return 0;
+
+        // Add time warp for route V to get actual cost
         auto vTWS
             = TWS::merge(duration, V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
+        auto const costV = costEvaluator.penalisedRouteCost(
+            distV, loadV, vTWS.totalTimeWarp(), data.vehicleCapacity());
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
+        return costU + costV - currentCost;
     }
     else  // within same route
     {
+        // U == V
+        auto const dist = U->route->dist() + deltaDistU + deltaDistV;
         auto const *route = U->route;
 
-        if (!route->hasTimeWarp() && deltaCost >= 0)
-            return deltaCost;
+        // First compute bound based on dist and load
+        auto const lbCost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), 0, data.vehicleCapacity());
+        if (lbCost >= route->penalisedCost())
+            return 0;
 
-        if (posU < posV)
-        {
-            auto const uTWS = TWS::merge(duration,
-                                         p(U)->twBefore,
-                                         route->twBetween(posU + 2, posV),
-                                         n(U)->tw,
-                                         U->tw,
-                                         n(V)->twAfter);
+        // Compute time warp for route to get actual cost
+        auto const tws = (posU < posV)
+                             ? TWS::merge(duration,
+                                          p(U)->twBefore,
+                                          route->twBetween(posU + 2, posV),
+                                          n(U)->tw,
+                                          U->tw,
+                                          n(V)->twAfter)
+                             : TWS::merge(duration,
+                                          V->twBefore,
+                                          n(U)->tw,
+                                          U->tw,
+                                          route->twBetween(posV + 1, posU - 1),
+                                          n(n(U))->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-        }
-        else
-        {
-            auto const uTWS = TWS::merge(duration,
-                                         V->twBefore,
-                                         n(U)->tw,
-                                         U->tw,
-                                         route->twBetween(posV + 1, posU - 1),
-                                         n(n(U))->twAfter);
-
-            deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-        }
-
-        deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+        auto const cost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), tws.totalTimeWarp(), data.vehicleCapacity());
+        return cost - route->penalisedCost();
     }
-
-    return deltaCost;
 }
 
 void MoveTwoClientsReversed::apply(Node *U, Node *V) const
