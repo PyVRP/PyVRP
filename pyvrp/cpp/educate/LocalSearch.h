@@ -43,7 +43,8 @@ class LocalSearch
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve
-    void loadIndividual(Individual const &individual);
+    void loadIndividual(Individual const &individual,
+                        CostEvaluator const &costEvaluator);
 
     // Export the LS solution back into an individual
     Individual exportIndividual();
@@ -55,7 +56,7 @@ class LocalSearch
     applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move
-    void update(Route *U, Route *V);
+    void update(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
 public:
     /**

@@ -33,6 +33,16 @@ public:
     [[nodiscard]] inline cost_type twPenalty(duration_type timeWarp) const;
 
     /**
+     * Computes the objective (penalised cost) for a route given set of
+     * properties.
+     */
+    [[nodiscard]] inline cost_type
+    penalisedRouteCost(distance_type const distance,
+                       unsigned int load,
+                       duration_type time_warp,
+                       unsigned int vehicleCapacity) const;
+
+    /**
      * Computes the objective (penalised cost) for a given individual.
      */
     [[nodiscard]] cost_type penalisedCost(Individual const &individual) const;
@@ -66,6 +76,17 @@ cost_type CostEvaluator::twPenalty(duration_type timeWarp) const
 #else
     return timeWarp * timeWarpPenalty;
 #endif
+}
+
+cost_type CostEvaluator::penalisedRouteCost(distance_type const distance,
+                                            unsigned int load,
+                                            duration_type time_warp,
+                                            unsigned int vehicleCapacity) const
+{
+    auto const loadPen = loadPenalty(load, vehicleCapacity);
+    auto const twPen = twPenalty(time_warp);
+
+    return distance + loadPen + twPen;
 }
 
 #endif  // HGS_COSTEVALUATOR_H

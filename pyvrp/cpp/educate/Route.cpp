@@ -68,7 +68,7 @@ bool Route::overlapsWith(Route const &other, int const tolerance) const
     return CircleSector::overlap(sector, other.sector, tolerance);
 }
 
-void Route::update()
+void Route::update(CostEvaluator const &costEvaluator)
 {
     auto const oldNodes = nodes;
     setupNodes();
@@ -116,11 +116,15 @@ void Route::update()
     setupSector();
     setupRouteTimeWindows();
 
+    dist_ = nodes.back()->cumDist;
     load_ = nodes.back()->cumLoad;
     isLoadFeasible_ = static_cast<size_t>(load_) <= data.vehicleCapacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = equal(timeWarp_, static_cast<duration_type>(0));
+
+    penalisedCost_ = costEvaluator.penalisedRouteCost(
+        dist_, load_, timeWarp_, data.vehicleCapacity());
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

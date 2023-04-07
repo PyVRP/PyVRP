@@ -10,7 +10,7 @@
 Individual LocalSearch::search(Individual &individual,
                                CostEvaluator const &costEvaluator)
 {
-    loadIndividual(individual);
+    loadIndividual(individual, costEvaluator);
 
     // Shuffling the order beforehand adds diversity to the search
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
@@ -79,7 +79,7 @@ Individual LocalSearch::intensify(Individual &individual,
                                   CostEvaluator const &costEvaluator,
                                   int overlapToleranceDegrees)
 {
-    loadIndividual(individual);
+    loadIndividual(individual, costEvaluator);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
@@ -144,7 +144,7 @@ bool LocalSearch::applyNodeOps(Node *U,
             auto *routeV = V->route;  // modify the node's route membership
 
             nodeOp->apply(U, V);
-            update(routeU, routeV);
+            update(routeU, routeV, costEvaluator);
 
             return true;
         }
@@ -161,7 +161,7 @@ bool LocalSearch::applyRouteOps(Route *U,
                     static_cast<cost_type>(0)))
         {
             routeOp->apply(U, V);
-            update(U, V);
+            update(U, V, costEvaluator);
 
             for (auto *op : routeOps)  // this is used by some route operators
             {                          // (particularly SWAP*) to keep caches
@@ -175,22 +175,23 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-void LocalSearch::update(Route *U, Route *V)
+void LocalSearch::update(Route *U, Route *V, CostEvaluator const &costEvaluator)
 {
     nbMoves++;
     searchCompleted = false;
 
-    U->update();
+    U->update(costEvaluator);
     lastModified[U->idx] = nbMoves;
 
     if (U != V)
     {
-        V->update();
+        V->update(costEvaluator);
         lastModified[V->idx] = nbMoves;
     }
 }
 
-void LocalSearch::loadIndividual(Individual const &individual)
+void LocalSearch::loadIndividual(Individual const &individual,
+                                 CostEvaluator const &costEvaluator)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
         clients[client].tw = {static_cast<int>(client),  // TODO cast
@@ -246,7 +247,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
             endDepot->prev = client;
         }
 
-        route->update();
+        route->update(costEvaluator);
     }
 
     for (auto *routeOp : routeOps)

@@ -2,6 +2,7 @@
 #define HGS_VRPTW_ROUTE_H
 
 #include "CircleSector.h"
+#include "CostEvaluator.h"
 #include "Node.h"
 #include "TimeWindowSegment.h"
 #include "precision.h"
@@ -18,11 +19,14 @@ class Route
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
 
+    distance_type dist_;   // Current route dist.
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
     duration_type timeWarp_;   // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
+
+    cost_type penalisedCost_;  // Current route penalised cost.
 
     // Populates the nodes vector.
     void setupNodes();
@@ -64,6 +68,11 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
+     * @return Total distance of this route.
+     */
+    [[nodiscard]] inline distance_type dist() const;
+
+    /**
      * @return Total load on this route.
      */
     [[nodiscard]] inline int load() const;
@@ -72,6 +81,11 @@ public:           // TODO make fields private
      * @return Total time warp on this route.
      */
     [[nodiscard]] inline duration_type timeWarp() const;
+
+    /**
+     * @return Total penalised cost of this route.
+     */
+    [[nodiscard]] inline cost_type penalisedCost() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -111,7 +125,7 @@ public:           // TODO make fields private
      * Updates this route. To be called after swapping nodes/changing the
      * solution.
      */
-    void update();
+    void update(CostEvaluator const &costEvaluator);
 
     Route(ProblemData const &data);
 };
@@ -135,9 +149,13 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
+distance_type Route::dist() const { return dist_; }
+
 int Route::load() const { return load_; }
 
 duration_type Route::timeWarp() const { return timeWarp_; }
+
+cost_type Route::penalisedCost() const { return penalisedCost_; }
 
 bool Route::empty() const { return size() == 0; }
 
