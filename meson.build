@@ -30,6 +30,12 @@ if compiler.has_argument('-Wno-unused-parameter')
     add_project_arguments('-Wno-unused-parameter', language: 'cpp')
 endif
 
+if compiler.has_argument('-Wno-unused-but-set-parameter')
+    # Ignore unused but set parameters, because equal for integer precision
+    # does not use the tolerance that is set (and that's OK).
+    add_project_arguments('-Wno-unused-but-set-parameter', language: 'cpp')
+endif
+
 if get_option('problem') == 'cvrp'
     # CVRP does not have time windows, so we set a flag that compiles time 
     # window stuff out of the extension modules.
