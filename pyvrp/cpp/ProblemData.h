@@ -22,8 +22,9 @@ public:
     };
 
 private:
-    Matrix<distance_type> const dist_;  // Distance matrix (+depot)
-    std::vector<Client> clients_;       // Client (+depot) information
+    Matrix<distance_type> const dist_;      // Distance matrix (+depot)
+    Matrix<distance_type> const duration_;  // Duration matrix (+depot)
+    std::vector<Client> clients_;           // Client (+depot) information
 
     size_t const numClients_;
     size_t const numVehicles_;
@@ -90,13 +91,14 @@ public:
      * contains the depot, such that each vector is one longer than the number
      * of clients.
      *
-     * @param coords       Coordinates as pairs of [x, y].
-     * @param demands      Client demands.
-     * @param numVehicles  Number of vehicles.
-     * @param vehicleCap   Vehicle capacity.
-     * @param timeWindows  Time windows as pairs of [early, late].
-     * @param servDurs     Service durations.
-     * @param distMat      Distance matrix.
+     * @param coords         Coordinates as pairs of [x, y].
+     * @param demands        Client demands.
+     * @param numVehicles    Number of vehicles.
+     * @param vehicleCap     Vehicle capacity.
+     * @param timeWindows    Time windows as pairs of [early, late].
+     * @param servDurs       Service durations.
+     * @param distanceMatrix Distance matrix.
+     * @param durationMatrix Duration matrix.
      */
     ProblemData(
         std::vector<std::pair<distance_type, distance_type>> const &coords,
@@ -105,7 +107,8 @@ public:
         size_t vehicleCap,
         std::vector<std::pair<duration_type, duration_type>> const &timeWindows,
         std::vector<duration_type> const &servDurs,
-        std::vector<std::vector<distance_type>> const &distMat);
+        std::vector<std::vector<distance_type>> const &distanceMatrix,
+        std::vector<std::vector<distance_type>> const &durationMatrix);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const
@@ -120,8 +123,7 @@ distance_type ProblemData::dist(size_t first, size_t second) const
 
 duration_type ProblemData::duration(size_t first, size_t second) const
 {
-    // TODO separate duration and distance
-    return dist_(first, second);
+    return duration_(first, second);
 }
 
 #endif  // HGS_PROBLEMDATA_H

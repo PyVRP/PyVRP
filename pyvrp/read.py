@@ -168,7 +168,8 @@ def read(
         capacity,
         time_windows,
         service_times,
-        edge_weight,
+        distance_matrix=edge_weight,
+        duration_matrix=edge_weight,
     )
 
 

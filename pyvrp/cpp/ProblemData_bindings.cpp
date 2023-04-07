@@ -23,13 +23,15 @@ PYBIND11_MODULE(_ProblemData, m)
                  size_t,
                  std::vector<std::pair<duration_type, duration_type>> const &,
                  std::vector<duration_type> const &,
-                 std::vector<std::vector<distance_type>> const &>(),
+                 std::vector<std::vector<distance_type>> const &,
+                 std::vector<std::vector<duration_type>> const &>(),
              py::arg("coords"),
              py::arg("demands"),
              py::arg("nb_vehicles"),
              py::arg("vehicle_cap"),
              py::arg("time_windows"),
              py::arg("service_durations"),
+             py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)

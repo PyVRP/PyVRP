@@ -15,7 +15,7 @@ Matrix<distance_type> const &ProblemData::distanceMatrix() const
 
 Matrix<duration_type> const &ProblemData::durationMatrix() const
 {
-    return dist_;
+    return duration_;
 }
 
 size_t ProblemData::numClients() const { return numClients_; }
@@ -31,8 +31,10 @@ ProblemData::ProblemData(
     size_t vehicleCap,
     std::vector<std::pair<duration_type, duration_type>> const &timeWindows,
     std::vector<duration_type> const &servDurs,
-    std::vector<std::vector<distance_type>> const &distMat)
-    : dist_(distMat),
+    std::vector<std::vector<distance_type>> const &distanceMatrix,
+    std::vector<std::vector<duration_type>> const &durationMatrix)
+    : dist_(distanceMatrix),
+      duration_(durationMatrix),
       clients_(coords.size()),
       numClients_(static_cast<int>(coords.size()) - 1),
       numVehicles_(numVehicles),

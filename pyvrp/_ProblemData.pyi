@@ -55,6 +55,9 @@ class ProblemData:
         Array of service durations, that is, the length of time needed to
         service a customer upon visiting. The service duration at index 0 is
         assumed to be the depot's service time, and should be zero.
+    distance_matrix
+        A matrix that gives the travel distances between clients (and the depot
+        at index 0). Does not have to be symmetric.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0). Does not have to be symmetric.
@@ -73,6 +76,7 @@ class ProblemData:
         vehicle_cap: int,
         time_windows: List[Tuple[float, float]],
         service_durations: List[float],
+        distance_matrix: List[List[float]],
         duration_matrix: List[List[float]],
     ): ...
     def client(self, client: int) -> Client:

@@ -15,6 +15,7 @@ def test_depot_is_first_client():
         vehicle_cap=1,
         time_windows=[(0, 10), (0, 10)],
         service_durations=[0, 0],
+        distance_matrix=[[0, 1], [1, 0]],
         duration_matrix=[[0, 1], [1, 0]],
     )
 
@@ -33,7 +34,8 @@ def test_matrix_access():
         vehicle_cap=1,
         time_windows=[(0, 10), (0, 10)],
         service_durations=[0, 0],
-        duration_matrix=[[8, 2], [3, 17]],
+        distance_matrix=[[8, 2], [3, 17]],
+        duration_matrix=[[4, 1], [5, 12]],
     )
 
     dist_matrix = data.distance_matrix()
@@ -45,8 +47,18 @@ def test_matrix_access():
     assert_equal(dist_matrix[1, 0], 3)
     assert_equal(dist_matrix[1, 1], 17)
 
+    assert_equal(data.dist(0, 0), 8)
+    assert_equal(data.dist(0, 1), 2)
+    assert_equal(data.dist(1, 0), 3)
+    assert_equal(data.dist(1, 1), 17)
+
     # Tests if the duration matrix equals the distance matrix (for now).
-    assert_equal(dur_matrix[0, 0], dist_matrix[0, 0])
-    assert_equal(dur_matrix[0, 1], dist_matrix[0, 1])
-    assert_equal(dur_matrix[1, 0], dist_matrix[1, 0])
-    assert_equal(dur_matrix[1, 1], dist_matrix[1, 1])
+    assert_equal(dur_matrix[0, 0], 4)
+    assert_equal(dur_matrix[0, 1], 1)
+    assert_equal(dur_matrix[1, 0], 5)
+    assert_equal(dur_matrix[1, 1], 12)
+
+    assert_equal(data.duration(0, 0), 4)
+    assert_equal(data.duration(0, 1), 1)
+    assert_equal(data.duration(1, 0), 5)
+    assert_equal(data.duration(1, 1), 12)
