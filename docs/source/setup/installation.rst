@@ -15,7 +15,7 @@ To install the latest version of ``pyvrp`` directly from the GitHub repository, 
 
 .. code-block:: shell
 
-   pip install 'pyvrp @ git+https://github.com/N-Wouda/PyVRP'
+   pip install 'pyvrp @ git+https://github.com/PyVRP/PyVRP'
 
 This can be useful to get updates that have not yet made it to the Python package index.
 
@@ -29,7 +29,7 @@ To run the example notebooks locally, first clone the repository:
 
 .. code-block:: shell
 
-   git clone https://github.com/N-Wouda/PyVRP.git
+   git clone https://github.com/PyVRP/PyVRP.git
 
 Then, make sure your Python version has ``poetry``:
 

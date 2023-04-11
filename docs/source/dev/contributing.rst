@@ -1,7 +1,7 @@
 Contributing
 ============
 
-Conversations about development and issues take place in the `GitHub repository <https://github.com/N-Wouda/PyVRP/>`_.
+Conversations about development and issues take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
 Feel free to open a new issue if you have something to discuss.
 
 
@@ -10,7 +10,7 @@ Setting up a local installation
 
 Make sure you have a reasonably modern C++ compiler.
 Any recent version that supports (most of) the C++20 standard should do.
-Once you have a compiler installed, you can proceed by forking the ``pyvrp`` repository from the `GitHub website <https://github.com/N-Wouda/PyVRP/fork>`_.
+Once you have a compiler installed, you can proceed by forking the ``pyvrp`` repository from the `GitHub website <https://github.com/PyVRP/PyVRP/fork>`_.
 Then, clone your new fork to some local environment:
 
 .. code-block:: shell
