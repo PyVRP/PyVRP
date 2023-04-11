@@ -89,14 +89,15 @@ cost_type Exchange<N, M>::evalRelocateMove(
 
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    auto const &dist = data.distanceMatrix();
-    auto const &duration = data.durationMatrix();
+    auto const &distMat = data.distanceMatrix();
+    auto const &durMat = data.durationMatrix();
 
-    auto const deltaDistU = dist(p(U)->client, n(endU)->client)
+    auto const deltaDistU = distMat(p(U)->client, n(endU)->client)
                             - U->route->distBetween(posU - 1, posU + N);
-    auto const deltaDistV
-        = dist(V->client, U->client) + U->route->distBetween(posU, posU + N - 1)
-          + dist(endU->client, n(V)->client) - dist(V->client, n(V)->client);
+    auto const deltaDistV = distMat(V->client, U->client)
+                            + U->route->distBetween(posU, posU + N - 1)
+                            + distMat(endU->client, n(V)->client)
+                            - distMat(V->client, n(V)->client);
 
     if (U->route != V->route)
     {
@@ -107,9 +108,9 @@ cost_type Exchange<N, M>::evalRelocateMove(
         auto const distU = U->route->dist() + deltaDistU;
         auto const distV = V->route->dist() + deltaDistV;
 
-        auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
-        auto const loadU = U->route->load() - loadDiff;
-        auto const loadV = V->route->load() + loadDiff;
+        auto const deltaLoad = U->route->loadBetween(posU, posU + N - 1);
+        auto const loadU = U->route->load() - deltaLoad;
+        auto const loadV = V->route->load() + deltaLoad;
 
         auto const lbCostU = costEvaluator.penalisedRouteCost(
             distU, loadU, 0, data.vehicleCapacity());
@@ -120,7 +121,7 @@ cost_type Exchange<N, M>::evalRelocateMove(
             return 0;
 
         // Add time warp for route U to get actual cost
-        auto uTWS = TWS::merge(duration, p(U)->twBefore, n(endU)->twAfter);
+        auto uTWS = TWS::merge(durMat, p(U)->twBefore, n(endU)->twAfter);
         auto const costU = costEvaluator.penalisedRouteCost(
             distU, loadU, uTWS.totalTimeWarp(), data.vehicleCapacity());
 
@@ -129,7 +130,7 @@ cost_type Exchange<N, M>::evalRelocateMove(
             return 0;
 
         // Add time warp for route V to get actual cost
-        auto vTWS = TWS::merge(duration,
+        auto vTWS = TWS::merge(durMat,
                                V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
@@ -141,9 +142,9 @@ cost_type Exchange<N, M>::evalRelocateMove(
     else  // within same route
     {
         // U == V
-        auto const dist = U->route->dist() + deltaDistU + deltaDistV;
         auto const *route = U->route;
         auto const currentCost = route->penalisedCost(costEvaluator);
+        auto const dist = route->dist() + deltaDistU + deltaDistV;
 
         // First compute bound based on dist and load
         auto const lbCost = costEvaluator.penalisedRouteCost(
@@ -153,12 +154,12 @@ cost_type Exchange<N, M>::evalRelocateMove(
 
         // Compute time warp for route to get actual cost
         auto const tws = (posU < posV)
-                             ? TWS::merge(duration,
+                             ? TWS::merge(durMat,
                                           p(U)->twBefore,
                                           route->twBetween(posU + N, posV),
                                           route->twBetween(posU, posU + N - 1),
                                           n(V)->twAfter)
-                             : TWS::merge(duration,
+                             : TWS::merge(durMat,
                                           V->twBefore,
                                           route->twBetween(posU, posU + N - 1),
                                           route->twBetween(posV + 1, posU - 1),
@@ -183,21 +184,21 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
     auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
-    auto const &dist = data.distanceMatrix();
-    auto const &duration = data.durationMatrix();
+    auto const &distMat = data.distanceMatrix();
+    auto const &durMat = data.durationMatrix();
 
     //   p(U) -> V -> ... -> endV -> n(endU)
     // - p(U) -> ... -> n(endU)
-    auto const deltaDistU = dist(p(U)->client, V->client)
+    auto const deltaDistU = distMat(p(U)->client, V->client)
                             + V->route->distBetween(posV, posV + M - 1)
-                            + dist(endV->client, n(endU)->client)
+                            + distMat(endV->client, n(endU)->client)
                             - U->route->distBetween(posU - 1, posU + N);
 
     // + p(V) -> U -> ... -> endU -> n(endV)
     // - p(V) -> ... -> n(endV)
-    auto const deltaDistV = dist(p(V)->client, U->client)
+    auto const deltaDistV = distMat(p(V)->client, U->client)
                             + U->route->distBetween(posU, posU + N - 1)
-                            + dist(endU->client, n(endV)->client)
+                            + distMat(endU->client, n(endV)->client)
                             - V->route->distBetween(posV - 1, posV + M);
 
     if (U->route != V->route)
@@ -223,7 +224,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
             return 0;
 
         // Add time warp for route U to get actual cost
-        auto uTWS = TWS::merge(duration,
+        auto uTWS = TWS::merge(durMat,
                                p(U)->twBefore,
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
@@ -234,7 +235,7 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
             return 0;
 
         // Add time warp for route V to get actual cost
-        auto vTWS = TWS::merge(duration,
+        auto vTWS = TWS::merge(durMat,
                                p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
@@ -246,9 +247,9 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
     else  // within same route
     {
         // U == V
-        auto const dist = U->route->dist() + deltaDistU + deltaDistV;
         auto const *route = U->route;
         auto const currentCost = route->penalisedCost(costEvaluator);
+        auto const dist = route->dist() + deltaDistU + deltaDistV;
 
         // First compute bound based on dist and load
         auto const lbCost = costEvaluator.penalisedRouteCost(
@@ -257,13 +258,13 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
             return 0;
 
         auto const tws = (posU < posV)
-                             ? TWS::merge(duration,
+                             ? TWS::merge(durMat,
                                           p(U)->twBefore,
                                           route->twBetween(posV, posV + M - 1),
                                           route->twBetween(posU + N, posV - 1),
                                           route->twBetween(posU, posU + N - 1),
                                           n(endV)->twAfter)
-                             : TWS::merge(duration,
+                             : TWS::merge(durMat,
                                           p(V)->twBefore,
                                           route->twBetween(posU, posU + N - 1),
                                           route->twBetween(posV + M, posU - 1),
