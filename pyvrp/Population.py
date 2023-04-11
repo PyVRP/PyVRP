@@ -114,6 +114,14 @@ class Population:
         else:
             self._infeas.add(individual, cost_evaluator)
 
+    def clear(self):
+        """
+        Clears the population by removing all individuals currently in the
+        population.
+        """
+        self._feas = SubPopulation(self._op, self._params)
+        self._infeas = SubPopulation(self._op, self._params)
+
     def select(
         self,
         rng: XorShift128,
@@ -155,14 +163,6 @@ class Population:
             diversity = self._op(first, second)
 
         return first, second
-
-    def clear(self):
-        """
-        Clears the population by removing all individuals currently in the
-        population.
-        """
-        self._feas = SubPopulation(self._op, self._params)
-        self._infeas = SubPopulation(self._op, self._params)
 
     def get_tournament(
         self, rng: XorShift128, cost_evaluator: CostEvaluator, k: int = 2
