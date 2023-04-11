@@ -85,7 +85,8 @@ public:           // TODO make fields private
     /**
      * @return Total penalised cost of this route.
      */
-    [[nodiscard]] inline cost_type penalisedCost() const;
+    [[nodiscard]] inline cost_type
+    penalisedCost(CostEvaluator costEvaluator) const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -155,7 +156,12 @@ int Route::load() const { return load_; }
 
 duration_type Route::timeWarp() const { return timeWarp_; }
 
-cost_type Route::penalisedCost() const { return penalisedCost_; }
+cost_type Route::penalisedCost(CostEvaluator costEvaluator) const
+{
+    // return penalisedCost_;
+    return costEvaluator.penalisedRouteCost(
+        dist_, load_, timeWarp_, data.vehicleCapacity());
+}
 
 bool Route::empty() const { return size() == 0; }
 

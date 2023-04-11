@@ -25,8 +25,8 @@ cost_type MoveTwoClientsReversed::evaluate(Node *U,
 
     if (U->route != V->route)
     {
-        auto const currentCost
-            = U->route->penalisedCost() + V->route->penalisedCost();
+        auto const currentCost = U->route->penalisedCost(costEvaluator)
+                                 + V->route->penalisedCost(costEvaluator);
 
         // Compute lower bound for new cost based on distance and load
         auto const distU = U->route->dist() + deltaDistU;
@@ -66,11 +66,12 @@ cost_type MoveTwoClientsReversed::evaluate(Node *U,
         // U == V
         auto const dist = U->route->dist() + deltaDistU + deltaDistV;
         auto const *route = U->route;
+        auto const currentCost = route->penalisedCost(costEvaluator);
 
         // First compute bound based on dist and load
         auto const lbCost = costEvaluator.penalisedRouteCost(
             dist, route->load(), 0, data.vehicleCapacity());
-        if (lbCost >= route->penalisedCost())
+        if (lbCost >= currentCost)
             return 0;
 
         // Compute time warp for route to get actual cost
@@ -90,7 +91,7 @@ cost_type MoveTwoClientsReversed::evaluate(Node *U,
 
         auto const cost = costEvaluator.penalisedRouteCost(
             dist, route->load(), tws.totalTimeWarp(), data.vehicleCapacity());
-        return cost - route->penalisedCost();
+        return cost - currentCost;
     }
 }
 
