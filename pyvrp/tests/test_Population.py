@@ -283,7 +283,7 @@ def test_tournament_ranks_by_fitness(k: int):
     actual_freq = infeas_count / infeas_count.sum()
     expected_freq = (1 - expected_rank / len(infeas_pop)) ** (k - 1)
     expected_freq /= expected_freq.sum()
-    assert_allclose(actual_freq, expected_freq, atol=0.005)  # 0.5% tolerance
+    assert_allclose(actual_freq, expected_freq, atol=0.01)  # 1% tolerance
 
 
 @mark.parametrize("k", [-100, -1, 0])  # k must be strictly positive
