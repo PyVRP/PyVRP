@@ -256,10 +256,13 @@ def test_tournament_ranks_by_fitness(k: int):
 
     # Since this test requires the fitness values of the individuals, we have
     # to access the underlying infeasible subpopulation directly.
-    infeas_items = [item for item in pop._infeas]
-    by_fitness = sorted(infeas_items, key=lambda item: item.fitness)
+    infeas_pop = pop._infeas
+    infeas_pop.update_fitness(cost_evaluator)
+
+    items = [item for item in pop._infeas]
+    by_fitness = sorted(items, key=lambda item: item.fitness)
     indiv2idx = {item.individual: idx for idx, item in enumerate(by_fitness)}
-    infeas_count = np.zeros(len(infeas_items))
+    infeas_count = np.zeros(len(infeas_pop))
 
     for _ in range(10_000):
         indiv = pop.get_tournament(rng, cost_evaluator, k=k)
@@ -268,11 +271,19 @@ def test_tournament_ranks_by_fitness(k: int):
     # Now we compare the observed ranking from the tournament selection with
     # what we expect from the actual fitness ranking. We compute the percentage
     # of times we're incorrect, and test that that number is not too high.
-    actual_rank = np.argsort(-infeas_count)  # higher is better
-    expected_rank = np.arange(len(infeas_items))
-    pct_off = np.abs((actual_rank - expected_rank) / len(infeas_items)).mean()
-
+    actual_rank = 1 + np.argsort(-infeas_count)  # higher is better
+    expected_rank = 1 + np.arange(len(infeas_pop))
+    pct_off = np.abs((actual_rank - expected_rank) / len(infeas_pop)).mean()
     assert_(pct_off < 0.05)
+
+    # Previous test compared just rank. Now we compare expected frequency. An
+    # item at rank i wins only when the other k - 1 items have a rank lower
+    # than i. That happens with probability roughly proportional to
+    #   (1 - i / #pop) ** (k - 1)
+    actual_freq = infeas_count / infeas_count.sum()
+    expected_freq = (1 - expected_rank / len(infeas_pop)) ** (k - 1)
+    expected_freq /= expected_freq.sum()
+    assert_allclose(actual_freq, expected_freq, atol=0.005)  # 0.5% tolerance
 
 
 @mark.parametrize("k", [-100, -1, 0])  # k must be strictly positive
