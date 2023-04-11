@@ -1,18 +1,17 @@
 from numpy.testing import assert_allclose
 
-from pyvrp import Individual, PenaltyManager
+from pyvrp import Individual
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
 
 
 def test_broken_pairs_distance():
     data = read("data/OkSmall.txt")
-    pm = PenaltyManager(data.vehicle_capacity)
 
-    indiv1 = Individual(data, pm, [[1, 2, 3, 4], [], []])
-    indiv2 = Individual(data, pm, [[1, 2], [3], [4]])
-    indiv3 = Individual(data, pm, [[3], [4, 1, 2], []])
-    indiv4 = Individual(data, pm, [[4, 3, 2, 1], [], []])
+    indiv1 = Individual(data, [[1, 2, 3, 4], [], []])
+    indiv2 = Individual(data, [[1, 2], [3], [4]])
+    indiv3 = Individual(data, [[3], [4, 1, 2], []])
+    indiv4 = Individual(data, [[4, 3, 2, 1], [], []])
 
     # BPD of an individual and itself should be zero.
     for indiv in [indiv1, indiv2, indiv3, indiv4]:

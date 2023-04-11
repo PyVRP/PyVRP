@@ -1,6 +1,8 @@
+import math
 from dataclasses import dataclass
 
 from .Statistics import Statistics
+from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
 
 
@@ -42,14 +44,17 @@ class Result:
 
     def cost(self) -> float:
         """
-        Returns the cost (objective) value of the best solution.
+        Returns the cost (objective) value of the best solution. Returns inf
+        if the best solution is infeasible.
 
         Returns
         -------
         float
             Objective value.
         """
-        return self.best.cost()
+        if not self.best.is_feasible():
+            return math.inf
+        return CostEvaluator().cost(self.best)
 
     def is_feasible(self) -> bool:
         """
@@ -78,12 +83,12 @@ class Result:
         )
 
     def __str__(self) -> str:
+        obj_str = f"{self.cost():.2f}" if self.is_feasible() else "INFEASIBLE"
         summary = [
             "Solution results",
             "================",
             f"    # routes: {self.best.num_routes()}",
-            f"   objective: {self.cost():.2f}",
-            f"    feasible? {self.is_feasible()}",
+            f"   objective: {obj_str}",
             f"# iterations: {self.num_iterations}",
             f"    run-time: {self.runtime:.2f} seconds",
             "",

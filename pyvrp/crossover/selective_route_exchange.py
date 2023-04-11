@@ -1,7 +1,7 @@
 from typing import Tuple
 
+from pyvrp._CostEvaluator import CostEvaluator
 from pyvrp._Individual import Individual
-from pyvrp._PenaltyManager import PenaltyManager
 from pyvrp._ProblemData import ProblemData
 from pyvrp._XorShift128 import XorShift128
 
@@ -11,7 +11,7 @@ from ._selective_route_exchange import selective_route_exchange as _srex
 def selective_route_exchange(
     parents: Tuple[Individual, Individual],
     data: ProblemData,
-    penalty_manager: PenaltyManager,
+    cost_evaluator: CostEvaluator,
     rng: XorShift128,
 ) -> Individual:
     """
@@ -27,8 +27,8 @@ def selective_route_exchange(
         The two parent solutions to create an offspring from.
     data
         The problem instance.
-    penalty_manager
-        The penalty manager instance to be used during the greedy repair step.
+    cost_evaluator
+        The cost evaluator to be used during the greedy repair step.
     rng
         The random number generator to use.
 
@@ -53,5 +53,5 @@ def selective_route_exchange(
     num_routes_to_move = rng.randint(max_routes_to_move) + 1  # at least one
 
     return _srex(
-        parents, data, penalty_manager, (idx1, idx2), num_routes_to_move
+        parents, data, cost_evaluator, (idx1, idx2), num_routes_to_move
     )

@@ -5,17 +5,18 @@ from typing import Callable, Collection, Tuple
 from pyvrp.educate.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
+from .PenaltyManager import PenaltyManager
 from .Population import Population
 from .Result import Result
 from .Statistics import Statistics
+from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
-from ._PenaltyManager import PenaltyManager
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 
 _Parents = Tuple[Individual, Individual]
 CrossoverOperator = Callable[
-    [_Parents, ProblemData, PenaltyManager, XorShift128], Individual
+    [_Parents, ProblemData, CostEvaluator, XorShift128], Individual
 ]
 
 
@@ -90,11 +91,13 @@ class GeneticAlgorithm:
         self._initial_solutions = initial_solutions
         self._params = params
 
-        # Find best feasible initial solution if any exist, else set the best
-        # infeasible solution as the initial best.
-        feas = [indiv for indiv in initial_solutions if indiv.is_feasible()]
-        sols = feas if feas else initial_solutions
-        self._best = min(sols, key=lambda indiv: indiv.cost())
+        # Find best feasible initial solution if any exist, else set a random
+        # infeasible solution (with infinite cost) as the initial best.
+        self._best = min(initial_solutions, key=self._cost_evaluator.cost)
+
+    @property
+    def _cost_evaluator(self) -> CostEvaluator:
+        return self._pm.get_cost_evaluator()
 
     def run(self, stop: StoppingCriterion):
         """
@@ -117,9 +120,9 @@ class GeneticAlgorithm:
         iters_no_improvement = 1
 
         for individual in self._initial_solutions:
-            self._pop.add(individual)
+            self._pop.add(individual, self._cost_evaluator)
 
-        while not stop(self._best):
+        while not stop(self._cost_evaluator.cost(self._best)):
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
@@ -127,15 +130,17 @@ class GeneticAlgorithm:
                 self._pop.clear()
 
                 for individual in self._initial_solutions:
-                    self._pop.add(individual)
+                    self._pop.add(individual, self._cost_evaluator)
 
-            curr_best = self._best.cost()
+            curr_best = self._cost_evaluator.cost(self._best)
 
-            parents = self._pop.select(self._rng)
-            offspring = self._op(parents, self._data, self._pm, self._rng)
+            parents = self._pop.select(self._rng, self._cost_evaluator)
+            offspring = self._op(
+                parents, self._data, self._cost_evaluator, self._rng
+            )
             self._educate(offspring)
 
-            new_best = self._best.cost()
+            new_best = self._cost_evaluator.cost(self._best)
 
             if new_best < curr_best:
                 iters_no_improvement = 1
@@ -143,24 +148,28 @@ class GeneticAlgorithm:
                 iters_no_improvement += 1
 
             if self._params.collect_statistics:
-                stats.collect_from(self._pop)
+                stats.collect_from(self._pop, self._cost_evaluator)
 
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
 
     def _educate(self, individual: Individual):
         def is_new_best(indiv):
-            return indiv.is_feasible() and indiv.cost() < self._best.cost()
+            cost = self._cost_evaluator.cost(indiv)
+            best_cost = self._cost_evaluator.cost(self._best)
+            return cost < best_cost
 
         def add_and_register(indiv):
-            self._pop.add(indiv)
-            self._pm.register_load_feasible(not indiv.has_excess_capacity())
+            self._pop.add(indiv, self._cost_evaluator)
+            self._pm.register_load_feasible(not indiv.has_excess_load())
             self._pm.register_time_feasible(not indiv.has_time_warp())
 
         intensify_prob = self._params.intensify_probability
         should_intensify = self._rng.rand() < intensify_prob
 
-        individual = self._ls.run(individual, should_intensify)
+        individual = self._ls.run(
+            individual, self._cost_evaluator, should_intensify
+        )
 
         if is_new_best(individual):
             self._best = individual
@@ -169,7 +178,9 @@ class GeneticAlgorithm:
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
                 individual = self._ls.intensify(
-                    individual, overlap_tolerance_degrees=360
+                    individual,
+                    self._cost_evaluator,
+                    overlap_tolerance_degrees=360,
                 )
 
                 if is_new_best(individual):
@@ -183,21 +194,26 @@ class GeneticAlgorithm:
             not individual.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            with self._pm.get_penalty_booster():
-                should_intensify = self._rng.rand() < intensify_prob
-                individual = self._ls.run(individual, should_intensify)
 
-                if is_new_best(individual):
-                    self._best = individual
+            should_intensify = self._rng.rand() < intensify_prob
+            individual = self._ls.run(
+                individual,
+                self._pm.get_booster_cost_evaluator(),
+                should_intensify,
+            )
 
-                    # TODO Refactor to on_best callback (see issue #111)
-                    if self._params.intensify_on_best:
-                        individual = self._ls.intensify(
-                            individual, overlap_tolerance_degrees=360
-                        )
+            if is_new_best(individual):
+                self._best = individual
 
-                        if is_new_best(individual):
-                            self._best = individual
+                if self._params.intensify_on_best:
+                    individual = self._ls.intensify(
+                        individual,
+                        self._pm.get_booster_cost_evaluator(),
+                        overlap_tolerance_degrees=360,
+                    )
 
-                if individual.is_feasible():
-                    add_and_register(individual)
+                    if is_new_best(individual):
+                        self._best = individual
+
+            if individual.is_feasible():
+                add_and_register(individual)

@@ -1,5 +1,6 @@
 from typing import Iterator, List, Tuple
 
+from pyvrp._CostEvaluator import CostEvaluator
 from pyvrp._Individual import Individual
 
 class PopulationParams:
@@ -40,7 +41,9 @@ class SubPopulation:
         params
             Population parameters.
         """
-    def add(self, individual: Individual) -> None:
+    def add(
+        self, individual: Individual, cost_evaluator: CostEvaluator
+    ) -> None:
         """
         Adds the given individual to the subpopulation. Survivor selection is
         automatically triggered when the population reaches its maximum size.
@@ -49,19 +52,30 @@ class SubPopulation:
         ----------
         individual
             Individual to add to the subpopulation.
+        cost_evaluator
+            CostEvaluator to use to compute the cost.
         """
-    def purge(self) -> None:
+    def purge(self, cost_evaluator: CostEvaluator) -> None:
         """
         Performs survivor selection: individuals in the subpopulation are
         purged until the population is reduced to the ``min_pop_size``.
         Purging happens to duplicate solutions first, and then to solutions
         with high biased fitness.
+
+        Parameters
+        ----------
+        cost_evaluator
+            CostEvaluator to use to compute the cost.
         """
-    def update_fitness(self) -> None:
+    def update_fitness(self, cost_evaluator: CostEvaluator) -> None:
         """
         Updates the biased fitness scores of individuals in the subpopulation.
         This fitness depends on the quality of the solution (based on its cost)
         and the diversity w.r.t. to other individuals in the subpopulation.
+
+        .. warning::
+            This function must be called before accessing the
+            SubPopulationItem.fitness attribute.
         """
     def __getitem__(self, idx: int) -> SubPopulationItem: ...
     def __iter__(self) -> Iterator[SubPopulationItem]: ...
@@ -70,8 +84,29 @@ class SubPopulation:
 class SubPopulationItem:
     @property
     def fitness(self) -> float: ...
+    """
+    Fitness value for this SubPopulationItem.
+
+    Returns
+    -------
+    float
+        Fitness value for this SubPopulationItem.
+
+    .. warning::
+        This is a cached property that is not automatically updated. Before
+        accessing the property, `SubPopulation.update_fitness` should be called
+        unless the population has not changed since the last call.
+    """
     @property
     def individual(self) -> Individual: ...
+    """
+    Individual for this SubPopulationItem.
+
+    Returns
+    -------
+    Individual
+        Individual for this SubPopulationItem.
+    """
     def avg_distance_closest(self) -> float:
         """
         Determines the average distance of the individual wrapped by this item

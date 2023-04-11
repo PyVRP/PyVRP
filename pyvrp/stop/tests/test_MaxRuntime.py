@@ -2,7 +2,7 @@ from numpy.testing import assert_, assert_raises
 from pytest import mark
 
 from pyvrp.stop import MaxRuntime
-from pyvrp.tests.helpers import DummyTarget, sleep
+from pyvrp.tests.helpers import sleep
 
 
 @mark.parametrize("max_runtime", [-0.001, -1, -10.1])
@@ -27,15 +27,15 @@ def test_before_max_runtime(max_runtime):
     stop = MaxRuntime(max_runtime)
 
     for _ in range(100):
-        assert_(not stop(DummyTarget(1)))
+        assert_(not stop(1))
 
 
 @mark.parametrize("max_runtime", [0.01, 0.05, 0.10])
 def test_after_max_runtime(max_runtime):
     stop = MaxRuntime(max_runtime)
-    assert_(not stop(DummyTarget(1)))  # trigger the first time measurement
+    assert_(not stop(1))  # trigger the first time measurement
 
     sleep(max_runtime)
 
     for _ in range(100):
-        assert_(stop(DummyTarget(1)))
+        assert_(stop(1))

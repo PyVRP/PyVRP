@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Tuple
 
-from ._PenaltyManager import PenaltyManager
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 
@@ -12,8 +11,6 @@ class Individual:
     ----------
     data
         Data instance.
-    penalty_manager
-        Penalty manager instance.
     routes
         Route list to use.
 
@@ -27,14 +24,12 @@ class Individual:
     def __init__(
         self,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         routes: List[List[int]],
     ) -> None: ...
     @classmethod
     def make_random(
         cls,
         data: ProblemData,
-        penalty_manager: PenaltyManager,
         rng: XorShift128,
     ) -> Individual:
         """
@@ -44,8 +39,6 @@ class Individual:
         ----------
         data
             Data instance.
-        penalty_manager
-            Penalty manager instance.
         rng
             Random number generator to use.
 
@@ -53,21 +46,6 @@ class Individual:
         -------
         Individual
             The randomly generated Individual.
-        """
-    def cost(self) -> int:
-        """
-        Returns the current cost of the individual's solution.
-
-        .. note::
-
-           These costs depend on the current penalty values maintained by the
-           :class:`~pyvrp._PenaltyManager.PenaltyManager` used to construct the
-           individual.
-
-        Returns
-        -------
-        int
-            The current cost of this individual.
         """
     def get_neighbours(self) -> List[Tuple[int, int]]:
         """
@@ -99,7 +77,7 @@ class Individual:
             routes each start and end at the depot (0), but that is implicit:
             the depot is not part of the returned routes.
         """
-    def has_excess_capacity(self) -> bool:
+    def has_excess_load(self) -> bool:
         """
         Returns whether this individual violates capacity constraints.
 
@@ -118,10 +96,37 @@ class Individual:
             True if the individual is not time window feasible, False
             otherwise.
         """
+    def distance(self) -> int:
+        """
+        Returns the total distance over all routes.
+
+        Returns
+        -------
+        int
+            Total distance over all routes.
+        """
+    def excess_load(self) -> int:
+        """
+        Returns the total excess load over all routes.
+
+        Returns
+        -------
+        int
+            Total excess load over all routes.
+        """
+    def time_warp(self) -> int:
+        """
+        Returns the total time warp load over all routes.
+
+        Returns
+        -------
+        int
+            Total time warp over all routes.
+        """
     def is_feasible(self) -> bool:
         """
         Whether this individual is feasible. This is a shorthand for checking
-        :meth:`~has_excess_capacity` and :meth:`~has_time_warp` both return
+        :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
         false.
 
         Returns

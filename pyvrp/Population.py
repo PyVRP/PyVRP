@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Generator, Tuple
 
+from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
 from ._SubPopulation import PopulationParams, SubPopulation
 from ._XorShift128 import XorShift128
@@ -57,6 +58,18 @@ class Population:
         """
         return len(self._feas) + len(self._infeas)
 
+    def _update_fitness(self, cost_evaluator: CostEvaluator):
+        """
+        Updates the biased fitness values for the subpopulations.
+
+        Parameters
+        ----------
+        cost_evaluator
+            CostEvaluator to use for computing the fitness.
+        """
+        self._feas.update_fitness(cost_evaluator)
+        self._infeas.update_fitness(cost_evaluator)
+
     def num_feasible(self) -> int:
         """
         Returns the number of feasible individuals in the population.
@@ -79,7 +92,7 @@ class Population:
         """
         return len(self._infeas)
 
-    def add(self, individual: Individual):
+    def add(self, individual: Individual, cost_evaluator: CostEvaluator):
         """
         Adds the given individual to the population. Survivor selection is
         automatically triggered when the population reaches its maximum size.
@@ -88,29 +101,48 @@ class Population:
         ----------
         individual
             Individual to add to the population.
+        cost_evaluator
+            CostEvaluator to use to compute the cost.
         """
+        # Note: the PenaltyManager is required here since adding an individual
+        # may trigger a purge which needs to compute the biased fitness which
+        # requires computing the cost.
         if individual.is_feasible():
-            self._feas.add(individual)
+            # Note: the feasible subpopulation actually doet not depend
+            # on the penalty values but we use the same implementation.
+            self._feas.add(individual, cost_evaluator)
         else:
-            self._infeas.add(individual)
+            self._infeas.add(individual, cost_evaluator)
 
-    def select(self, rng: XorShift128) -> Tuple[Individual, Individual]:
+    def select(
+        self,
+        rng: XorShift128,
+        cost_evaluator: CostEvaluator,
+        k: int = 2,
+    ) -> Tuple[Individual, Individual]:
         """
-        Selects two (if possible non-identical) parents by binary tournament,
-        subject to a diversity restriction.
+        Selects two (if possible non-identical) parents by tournament, subject
+        to a diversity restriction.
 
         Parameters
         ----------
         rng
             Random number generator.
+        cost_evaluator
+            Cost evaluator to use when computing the fitness.
+        k
+            The number of individuals to draw for the tournament. Defaults to
+            two, which results in a binary tournament.
 
         Returns
         -------
         tuple
             A pair of individuals (parents).
         """
-        first = self.get_tournament(rng, k=2)
-        second = self.get_tournament(rng, k=2)
+        self._update_fitness(cost_evaluator)
+
+        first = self._get_tournament(rng, k)
+        second = self._get_tournament(rng, k)
 
         diversity = self._op(first, second)
         lb = self._params.lb_diversity
@@ -119,7 +151,7 @@ class Population:
         tries = 1
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
-            second = self.get_tournament(rng, k=2)
+            second = self._get_tournament(rng, k)
             diversity = self._op(first, second)
 
         return first, second
@@ -132,7 +164,9 @@ class Population:
         self._feas = SubPopulation(self._op, self._params)
         self._infeas = SubPopulation(self._op, self._params)
 
-    def get_tournament(self, rng: XorShift128, k: int = 2) -> Individual:
+    def get_tournament(
+        self, rng: XorShift128, cost_evaluator: CostEvaluator, k: int = 2
+    ) -> Individual:
         """
         Selects an individual from this population by k-ary tournament, based
         on the (internal) fitness values of the selected individuals.
@@ -141,6 +175,8 @@ class Population:
         ----------
         rng
             Random number generator.
+        cost_evaluator
+            Cost evaluator to use when computing the fitness.
         k
             The number of individuals to draw for the tournament. Defaults to
             two, which results in a binary tournament.
@@ -150,6 +186,12 @@ class Population:
         Individual
             The selected individual.
         """
+        self._update_fitness(cost_evaluator)
+        return self._get_tournament(rng, k)
+
+    def _get_tournament(self, rng: XorShift128, k: int) -> Individual:
+        if k <= 0:
+            raise ValueError(f"Expected k > 0; got k = {k}.")
 
         def select():
             num_feas = len(self._feas)
@@ -159,9 +201,6 @@ class Population:
                 return self._feas[idx]
 
             return self._infeas[idx - num_feas]
-
-        if k <= 0:
-            raise ValueError(f"Expected k > 0; got k = {k}.")
 
         items = [select() for _ in range(k)]
         fittest = min(items, key=lambda item: item.fitness)

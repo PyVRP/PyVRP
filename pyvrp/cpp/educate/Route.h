@@ -26,16 +26,15 @@ class Route
     // Populates the nodes vector.
     void setupNodes();
 
-    // Sets the angle and sector data.
+    // Sets the sector data.
     void setupSector();
 
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:                  // TODO make fields private
-    int idx;             // Route index
-    Node *depot;         // Pointer to the associated depot
-    double angleCenter;  // Angle of the barycenter of the route
+public:           // TODO make fields private
+    int idx;      // Route index
+    Node *depot;  // Pointer to the associated depot
 
     /**
      * @return The client or depot node at the given position.
@@ -54,7 +53,7 @@ public:                  // TODO make fields private
      *
      * @return true if the route exceeds the vehicle capacity, false otherwise.
      */
-    [[nodiscard]] inline bool hasExcessCapacity() const;
+    [[nodiscard]] inline bool hasExcessLoad() const;
 
     /**
      * Determines whether this route is time-feasible.
@@ -115,12 +114,9 @@ public:                  // TODO make fields private
     Route(ProblemData const &data);
 };
 
-bool Route::isFeasible() const
-{
-    return !hasExcessCapacity() && !hasTimeWarp();
-}
+bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessCapacity() const { return !isLoadFeasible_; }
+bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
 
 bool Route::hasTimeWarp() const
 {
