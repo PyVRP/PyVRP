@@ -4,17 +4,20 @@ using TWS = TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 {
-    auto const &dist = data.distanceMatrix();
-    auto const &duration = data.durationMatrix();
-    auto const currTWPenalty = costEvaluator.twPenalty(R1->timeWarp());
+    auto const &distMat = data.distanceMatrix();
+    auto const &durMat = data.durationMatrix();
 
+    auto const currentCost = R1->penalisedCost(costEvaluator);
     for (Node *U = n(R1->depot); !U->isDepot(); U = n(U))
     {
-        auto twData = TWS::merge(duration, p(U)->twBefore, n(U)->twAfter);
-        removalCosts(R1->idx, U->client)
-            = dist(p(U)->client, n(U)->client) - dist(p(U)->client, U->client)
-              - dist(U->client, n(U)->client)
-              + costEvaluator.twPenalty(twData.totalTimeWarp()) - currTWPenalty;
+        auto twData = TWS::merge(durMat, p(U)->twBefore, n(U)->twAfter);
+        auto const dist = R1->dist() + distMat(p(U)->client, n(U)->client)
+                          - distMat(p(U)->client, U->client)
+                          - distMat(U->client, n(U)->client);
+
+        auto const cost = costEvaluator.penalisedRouteCost(
+            dist, R1->load(), twData.totalTimeWarp(), data.vehicleCapacity());
+        removalCosts(R1->idx, U->client) = cost - currentCost;
     }
 }
 
@@ -22,42 +25,44 @@ void SwapStar::updateInsertionCost(Route *R,
                                    Node *U,
                                    CostEvaluator const &costEvaluator)
 {
-    auto const &dist = data.distanceMatrix();
-    auto const &duration = data.durationMatrix();
+    auto const &distMat = data.distanceMatrix();
+    auto const &durMat = data.durationMatrix();
     auto &insertPositions = cache(R->idx, U->client);
 
     insertPositions = {};
     insertPositions.shouldUpdate = false;
 
+    auto const currentCost = R->penalisedCost(costEvaluator);
+
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData
-        = TWS::merge(duration, R->depot->twBefore, U->tw, n(R->depot)->twAfter);
-    cost_type cost = dist(0, U->client) + dist(U->client, n(R->depot)->client)
-                     - dist(0, n(R->depot)->client)
-                     + costEvaluator.twPenalty(twData.totalTimeWarp())
-                     - costEvaluator.twPenalty(R->timeWarp());
+        = TWS::merge(durMat, R->depot->twBefore, U->tw, n(R->depot)->twAfter);
+    auto dist = R->dist() + distMat(0, U->client)
+                + distMat(U->client, n(R->depot)->client)
+                - distMat(0, n(R->depot)->client);
+    auto cost = costEvaluator.penalisedRouteCost(
+        dist, R->load(), twData.totalTimeWarp(), data.vehicleCapacity());
 
-    insertPositions.maybeAdd(cost, R->depot);
+    insertPositions.maybeAdd(cost - currentCost, R->depot);
 
     for (Node *V = n(R->depot); !V->isDepot(); V = n(V))
     {
         // Insert cost of U just after V (V -> U -> ...)
-        twData = TWS::merge(duration, V->twBefore, U->tw, n(V)->twAfter);
-        cost_type deltaCost = dist(V->client, U->client)
-                              + dist(U->client, n(V)->client)
-                              - dist(V->client, n(V)->client)
-                              + costEvaluator.twPenalty(twData.totalTimeWarp())
-                              - costEvaluator.twPenalty(R->timeWarp());
-
-        insertPositions.maybeAdd(deltaCost, V);
+        twData = TWS::merge(durMat, V->twBefore, U->tw, n(V)->twAfter);
+        dist = R->dist() + distMat(V->client, U->client)
+               + distMat(U->client, n(V)->client)
+               - distMat(V->client, n(V)->client);
+        cost = costEvaluator.penalisedRouteCost(
+            dist, R->load(), twData.totalTimeWarp(), data.vehicleCapacity());
+        insertPositions.maybeAdd(cost - currentCost, V);
     }
 }
 
 std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
     Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
-    auto const &dist = data.distanceMatrix();
-    auto const &duration = data.durationMatrix();
+    auto const &distMat = data.distanceMatrix();
+    auto const &durMat = data.durationMatrix();
     auto &best_ = cache(V->route->idx, U->client);
 
     if (best_.shouldUpdate)  // then we first update the insert positions
@@ -68,15 +73,16 @@ std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
             return std::make_pair(best_.costs[idx], best_.locs[idx]);
 
     // As a fallback option, we consider inserting in the place of V
+    auto const currentCost = V->route->penalisedCost(costEvaluator);
     auto const twData
-        = TWS::merge(duration, p(V)->twBefore, U->tw, n(V)->twAfter);
-    cost_type deltaCost = dist(p(V)->client, U->client)
-                          + dist(U->client, n(V)->client)
-                          - dist(p(V)->client, n(V)->client)
-                          + costEvaluator.twPenalty(twData.totalTimeWarp())
-                          - costEvaluator.twPenalty(V->route->timeWarp());
+        = TWS::merge(durMat, p(V)->twBefore, U->tw, n(V)->twAfter);
+    auto const dist = V->route->dist() + distMat(p(V)->client, U->client)
+                      + distMat(U->client, n(V)->client)
+                      - distMat(p(V)->client, n(V)->client);
+    auto const cost = costEvaluator.penalisedRouteCost(
+        dist, V->route->load(), twData.totalTimeWarp(), data.vehicleCapacity());
 
-    return std::make_pair(deltaCost, p(V));
+    return std::make_pair(cost - currentCost, p(V));
 }
 
 void SwapStar::init(Individual const &indiv)
@@ -116,18 +122,21 @@ cost_type SwapStar::evaluate(Route *routeU,
 
             int const uDemand = data.client(U->client).demand;
             int const vDemand = data.client(V->client).demand;
-            int const loadDiff = uDemand - vDemand;
+            int const deltaLoad = uDemand - vDemand;
 
-            deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
+            deltaCost += costEvaluator.loadPenalty(routeU->load() - deltaLoad,
                                                    data.vehicleCapacity());
             deltaCost -= costEvaluator.loadPenalty(routeU->load(),
                                                    data.vehicleCapacity());
 
-            deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
+            deltaCost += costEvaluator.loadPenalty(routeV->load() + deltaLoad,
                                                    data.vehicleCapacity());
             deltaCost -= costEvaluator.loadPenalty(routeV->load(),
                                                    data.vehicleCapacity());
 
+            // Note: the removalCosts excludes the change in loadPenalty when
+            // removing U, it only considers distance/timewarp
+            // which is why we added it here
             deltaCost += removalCosts(routeU->idx, U->client);
             deltaCost += removalCosts(routeV->idx, V->client);
 
@@ -161,40 +170,40 @@ cost_type SwapStar::evaluate(Route *routeU,
     if (best.cost >= 0)
         return best.cost;
 
-    auto const &dist = data.distanceMatrix();
-    auto const &duration = data.durationMatrix();
+    auto const &distMat = data.distanceMatrix();
+    auto const &durMat = data.durationMatrix();
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
-    auto const current = dist(p(best.U)->client, best.U->client)
-                         + dist(best.U->client, n(best.U)->client)
-                         + dist(p(best.V)->client, best.V->client)
-                         + dist(best.V->client, n(best.V)->client);
+    auto const current = distMat(p(best.U)->client, best.U->client)
+                         + distMat(best.U->client, n(best.U)->client)
+                         + distMat(p(best.V)->client, best.V->client)
+                         + distMat(best.V->client, n(best.V)->client);
 
-    auto const proposed = dist(best.VAfter->client, best.V->client)
-                          + dist(best.UAfter->client, best.U->client);
+    auto const proposed = distMat(best.VAfter->client, best.V->client)
+                          + distMat(best.UAfter->client, best.U->client);
 
     cost_type deltaCost = proposed - current;
 
     if (best.VAfter == p(best.U))
     {
         // Insert in place of U
-        deltaCost += dist(best.V->client, n(best.U)->client);
+        deltaCost += distMat(best.V->client, n(best.U)->client);
     }
     else
     {
-        deltaCost += dist(best.V->client, n(best.VAfter)->client)
-                     + dist(p(best.U)->client, n(best.U)->client)
-                     - dist(best.VAfter->client, n(best.VAfter)->client);
+        deltaCost += distMat(best.V->client, n(best.VAfter)->client)
+                     + distMat(p(best.U)->client, n(best.U)->client)
+                     - distMat(best.VAfter->client, n(best.VAfter)->client);
     }
 
     if (best.UAfter == p(best.V))
         // Insert in place of V
-        deltaCost += dist(best.U->client, n(best.V)->client);
+        deltaCost += distMat(best.U->client, n(best.V)->client);
     else
-        deltaCost += dist(best.U->client, n(best.UAfter)->client)
-                     + dist(p(best.V)->client, n(best.V)->client)
-                     - dist(best.UAfter->client, n(best.UAfter)->client);
+        deltaCost += distMat(best.U->client, n(best.UAfter)->client)
+                     + distMat(p(best.V)->client, n(best.V)->client)
+                     - distMat(best.UAfter->client, n(best.UAfter)->client);
 
     // It is not possible to have UAfter == V or VAfter == U, so the positions
     // are always strictly different
@@ -202,14 +211,14 @@ cost_type SwapStar::evaluate(Route *routeU,
     {
         // Special case
         auto uTWS = TWS::merge(
-            duration, best.VAfter->twBefore, best.V->tw, n(best.U)->twAfter);
+            durMat, best.VAfter->twBefore, best.V->tw, n(best.U)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     }
     else if (best.VAfter->position < best.U->position)
     {
         auto uTWS = TWS::merge(
-            duration,
+            durMat,
             best.VAfter->twBefore,
             best.V->tw,
             routeU->twBetween(best.VAfter->position + 1, best.U->position - 1),
@@ -220,7 +229,7 @@ cost_type SwapStar::evaluate(Route *routeU,
     else
     {
         auto uTWS = TWS::merge(
-            duration,
+            durMat,
             p(best.U)->twBefore,
             routeU->twBetween(best.U->position + 1, best.VAfter->position),
             best.V->tw,
@@ -233,14 +242,14 @@ cost_type SwapStar::evaluate(Route *routeU,
     {
         // Special case
         auto vTWS = TWS::merge(
-            duration, best.UAfter->twBefore, best.U->tw, n(best.V)->twAfter);
+            durMat, best.UAfter->twBefore, best.U->tw, n(best.V)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     }
     else if (best.UAfter->position < best.V->position)
     {
         auto vTWS = TWS::merge(
-            duration,
+            durMat,
             best.UAfter->twBefore,
             best.U->tw,
             routeV->twBetween(best.UAfter->position + 1, best.V->position - 1),
@@ -251,7 +260,7 @@ cost_type SwapStar::evaluate(Route *routeU,
     else
     {
         auto vTWS = TWS::merge(
-            duration,
+            durMat,
             p(best.V)->twBefore,
             routeV->twBetween(best.V->position + 1, best.UAfter->position),
             best.U->tw,

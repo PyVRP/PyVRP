@@ -64,10 +64,10 @@ class SwapStar : public LocalSearchOperator<Route>
         cost_type cost = 0;
 
         Node *U = nullptr;
-        Node *UAfter = nullptr;
+        Node *UAfter = nullptr;  // Node in route V after which to insert U
 
         Node *V = nullptr;
-        Node *VAfter = nullptr;
+        Node *VAfter = nullptr;  // Node in route U after which to insert V
     };
 
     // Updates the removal costs of clients in the given route
