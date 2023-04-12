@@ -89,6 +89,13 @@ class SwapStar : public LocalSearchOperator<Route>
 
     BestMove best;
 
+    // Evaluates the route V, when inserting U after UAfter while simultaneously
+    // removing V
+    cost_type evaluateRouteCost(Node *V,
+                                Node *U,
+                                Node *UAfter,
+                                CostEvaluator const &costEvaluator);
+
 public:
     void init(Individual const &indiv) override;
 
