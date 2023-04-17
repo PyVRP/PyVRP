@@ -2,6 +2,7 @@
 #define TIMEWINDOWDATA_H
 
 #include "Matrix.h"
+#include "ProblemData.h"
 #include "precision.h"
 
 class TimeWindowSegment
@@ -15,12 +16,12 @@ class TimeWindowSegment
     duration_type twEarly = 0;   // Earliest visit moment of first client
     duration_type twLate = 0;    // Latest visit moment of last client
 
-    [[nodiscard]] inline TWS merge(Matrix<duration_type> const &dur,
+    [[nodiscard]] inline TWS merge(Matrix<duration_type> const &durMat,
                                    TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS merge(Matrix<duration_type> const &dur,
+    [[nodiscard]] inline static TWS merge(Matrix<duration_type> const &durMat,
                                           TWS const &first,
                                           TWS const &second,
                                           Args... args);
@@ -39,16 +40,18 @@ public:
                              duration_type timeWarp,
                              duration_type twEarly,
                              duration_type twLate);
+
+    inline TimeWindowSegment(int idx, ProblemData::Client client);
 };
 
-TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &dur,
+TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &durMat,
                                            TimeWindowSegment const &other) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
 #else
-    auto const distance = dur(idxLast, other.idxFirst);
-    auto const delta = duration - timeWarp + distance;
+    auto const travelDur = durMat(idxLast, other.idxFirst);
+    auto const delta = duration - timeWarp + travelDur;
     auto const deltaWaitTime = std::max(other.twEarly - delta - twLate,
                                         static_cast<duration_type>(0));
     auto const deltaTimeWarp = std::max(twEarly + delta - other.twLate,
@@ -56,7 +59,7 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &dur,
 
     return {idxFirst,
             other.idxLast,
-            duration + other.duration + distance + deltaWaitTime,
+            duration + other.duration + travelDur + deltaWaitTime,
             timeWarp + other.timeWarp + deltaTimeWarp,
             std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
             std::min(other.twLate - delta, twLate) + deltaTimeWarp};
@@ -64,7 +67,7 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &dur,
 }
 
 template <typename... Args>
-TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &dur,
+TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &durMat,
                                            TimeWindowSegment const &first,
                                            TimeWindowSegment const &second,
                                            Args... args)
@@ -72,12 +75,12 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<duration_type> const &dur,
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
 #else
-    auto const res = first.merge(dur, second);
+    auto const res = first.merge(durMat, second);
 
     if constexpr (sizeof...(args) == 0)
         return res;
     else
-        return merge(dur, res, args...);
+        return merge(durMat, res, args...);
 #endif
 }
 
@@ -95,6 +98,16 @@ TimeWindowSegment::TimeWindowSegment(int idxFirst,
       timeWarp(timeWarp),
       twEarly(twEarly),
       twLate(twLate)
+{
+}
+
+TimeWindowSegment::TimeWindowSegment(int idx, ProblemData::Client client)
+    : idxFirst(idx),
+      idxLast(idx),
+      duration(client.serviceDuration),
+      timeWarp(0),
+      twEarly(client.twEarly),
+      twLate(client.twLate)
 {
 }
 
