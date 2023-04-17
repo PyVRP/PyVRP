@@ -78,10 +78,11 @@ def test_cost():
     infeas_indiv = Individual(data, [[1, 2, 3, 4]])
 
     # C++ code represents infinite as max value for cost type
-    if PRECISION == "integer":
-        INFEAS_COST = np.iinfo(np.uint32).max
-    else:
+    if PRECISION == "double":
         INFEAS_COST = np.finfo(np.double).max
+    else:
+        INFEAS_COST = np.iinfo(np.int32).max
+
     assert_equal(cost_evaluator.cost(infeas_indiv), INFEAS_COST)
     assert_equal(default_cost_evaluator.cost(infeas_indiv), INFEAS_COST)
 
