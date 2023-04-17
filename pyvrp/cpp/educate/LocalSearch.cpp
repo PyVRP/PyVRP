@@ -194,11 +194,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
         clients[client].tw = {static_cast<int>(client),  // TODO cast
-                              static_cast<int>(client),  // TODO cast
-                              data.client(client).serviceDuration,
-                              0,
-                              data.client(client).twEarly,
-                              data.client(client).twLate};
+                              data.client(client)};
 
     auto const &routesIndiv = individual.getRoutes();
 

@@ -1,5 +1,6 @@
 #include "Individual.h"
 #include "ProblemData.h"
+#include "TimeWindowSegment.h"
 
 #include <fstream>
 #include <numeric>
@@ -25,52 +26,28 @@ void Individual::evaluate(ProblemData const &data)
 
         int routeLoad = data.client(route[0]).demand;
         distance_type routeDist = data.dist(0, route[0]);
-        duration_type routeTimeWarp = 0;
-        duration_type time = data.depot().twEarly + data.duration(0, route[0]);
 
-        if (time < data.client(route[0]).twEarly)
-            time = data.client(route[0]).twEarly;
+        auto const depot = data.depot();
+        auto const durMat = data.durationMatrix();
+        auto tws = TimeWindowSegment(0, 0, 0, 0, depot.twEarly, depot.twLate);
 
-        if (time > data.client(route[0]).twLate)
-        {
-            routeTimeWarp += time - data.client(route[0]).twLate;
-            time = data.client(route[0]).twLate;
-        }
+        for (size_t c : route)
+            tws = TimeWindowSegment::merge(
+                durMat, tws, TimeWindowSegment(c, data.client(c)));
 
         for (size_t idx = 1; idx < route.size(); idx++)
         {
             routeDist += data.dist(route[idx - 1], route[idx]);
             routeLoad += data.client(route[idx]).demand;
-
-            time += data.client(route[idx - 1]).serviceDuration
-                    + data.duration(route[idx - 1], route[idx]);
-
-            // Add possible waiting time
-            if (time < data.client(route[idx]).twEarly)
-                time = data.client(route[idx]).twEarly;
-
-            // Add possible time warp
-            if (time > data.client(route[idx]).twLate)
-            {
-                routeTimeWarp += time - data.client(route[idx]).twLate;
-                time = data.client(route[idx]).twLate;
-            }
         }
 
         // For the last client, the successors is the depot. Also update the
-        // rDist and time
+        // rDist
         routeDist += data.dist(route.back(), 0);
-        time += data.client(route.back()).serviceDuration
-                + data.duration(route.back(), 0);
-
-        // For the depot, we only need to check the end of the time window
-        // (add possible time warp)
-        routeTimeWarp += std::max(time - data.depot().twLate,
-                                  static_cast<duration_type>(0));
 
         // Whole solution stats
         distance_ += routeDist;
-        timeWarp_ += routeTimeWarp;
+        timeWarp_ += tws.totalTimeWarp();
 
         if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
             excessLoad_ += routeLoad - data.vehicleCapacity();
