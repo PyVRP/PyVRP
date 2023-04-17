@@ -23,8 +23,8 @@ class Client:
         client's (x, y) location tuple.
     """
 
-    x: int
-    y: int
+    x: float
+    y: float
     demand: int
     service_duration: float
     tw_early: float
