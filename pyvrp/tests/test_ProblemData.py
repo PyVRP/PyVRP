@@ -8,6 +8,7 @@ def test_depot_is_first_client():
     The ``depot()`` helper should return the first client, that is,
     ``client(0)``.
     """
+    mat = [[0, 1], [1, 0]]
     data = ProblemData(
         coords=[(0, 0), (0, 1)],
         demands=[0, 0],
@@ -15,7 +16,8 @@ def test_depot_is_first_client():
         vehicle_cap=1,
         time_windows=[(0, 10), (0, 10)],
         service_durations=[0, 0],
-        duration_matrix=[[0, 1], [1, 0]],
+        distance_matrix=mat,
+        duration_matrix=mat,
     )
 
     assert_(data.depot() is data.client(0))

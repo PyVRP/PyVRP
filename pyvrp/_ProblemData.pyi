@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 from pyvrp._Matrix import Matrix
 
@@ -57,9 +57,12 @@ class ProblemData:
         Array of service durations, that is, the length of time needed to
         service a customer upon visiting. The service duration at index 0 is
         assumed to be the depot's service time, and should be zero.
+    distance_matrix
+        A matrix that gives the distances between clients (and the depot at
+        index 0).
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
-        index 0). Does not have to be symmetric.
+        index 0).
 
     Notes
     -----
@@ -75,6 +78,7 @@ class ProblemData:
         vehicle_cap: int,
         time_windows: List[Tuple[int, int]],
         service_durations: List[int],
+        distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
     def client(self, client: int) -> Client:
@@ -120,8 +124,16 @@ class ProblemData:
         """
     def distance_matrix(self) -> Matrix:
         """
-        Returns the travel duration matrix used for distance/duration
-        computations.
+        Returns the travel distance matrix used for distance computations.
+
+        Returns
+        -------
+        Matrix
+            Travel distance matrix.
+        """
+    def duration_matrix(self) -> Matrix:
+        """
+        Returns the travel duration matrix used for duration computations.
 
         Returns
         -------

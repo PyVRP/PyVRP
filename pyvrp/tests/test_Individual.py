@@ -138,6 +138,12 @@ def test_time_warp_for_a_very_constrained_problem():
     directly from the depot in a feasible solution, but only after the first
     client.
     """
+    mat = [
+        [0, 1, 10],  # cannot get to 2 from depot within 2's time window
+        [1, 0, 1],
+        [1, 1, 0],
+    ]
+
     data = ProblemData(
         coords=[(0, 0), (1, 0), (2, 0)],
         demands=[0, 0, 0],
@@ -145,11 +151,8 @@ def test_time_warp_for_a_very_constrained_problem():
         vehicle_cap=0,
         time_windows=[(0, 10), (0, 5), (0, 5)],
         service_durations=[0, 0, 0],
-        duration_matrix=[
-            [0, 1, 10],  # cannot get to 2 from depot within 2's time window
-            [1, 0, 1],
-            [1, 1, 0],
-        ],
+        distance_matrix=mat,
+        duration_matrix=mat,
     )
 
     # This solution directly visits the second client from the depot, which is
