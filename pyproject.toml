@@ -37,7 +37,7 @@ classifiers = [
 
 
 [tool.poetry.urls]
-"Tracker" = "https://github.com/N-Wouda/PyVRP/issues"
+"Tracker" = "https://github.com/PyVRP/PyVRP/issues"
 
 
 [tool.poetry.dependencies]
