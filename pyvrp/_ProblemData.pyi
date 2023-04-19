@@ -116,6 +116,16 @@ class ProblemData:
         int
             Travel duration between the given clients.
         """
+    def distance_matrix(self) -> Any:
+        """
+        Returns the travel duration matrix used for distance/duration
+        computations.
+
+        Returns
+        -------
+        Any
+            Travel duration matrix.
+        """
     @property
     def num_clients(self) -> int:
         """
