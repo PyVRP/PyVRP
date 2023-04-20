@@ -27,7 +27,7 @@ void Individual::evaluate(ProblemData const &data)
         int routeTimeWarp = 0;
         int routeLoad = data.client(route[0]).demand;
 
-        int time = routeDist;
+        int time = data.dur(0, route[0]);
 
         if (time < data.client(route[0]).twEarly)
             time = data.client(route[0]).twEarly;
@@ -44,7 +44,7 @@ void Individual::evaluate(ProblemData const &data)
             routeLoad += data.client(route[idx]).demand;
 
             time += data.client(route[idx - 1]).serviceDuration
-                    + data.dist(route[idx - 1], route[idx]);
+                    + data.dur(route[idx - 1], route[idx]);
 
             // Add possible waiting time
             if (time < data.client(route[idx]).twEarly)
@@ -62,7 +62,7 @@ void Individual::evaluate(ProblemData const &data)
         // rDist and time
         routeDist += data.dist(route.back(), 0);
         time += data.client(route.back()).serviceDuration
-                + data.dist(route.back(), 0);
+                + data.dur(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)

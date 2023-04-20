@@ -33,7 +33,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: Matrix,
+        dur: Matrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
     ) -> TimeWindowSegment:
@@ -43,7 +43,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: Matrix,
+        dur: Matrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,
@@ -54,7 +54,7 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: Matrix,
+        dur: Matrix,
         arg0: TimeWindowSegment,
         arg1: TimeWindowSegment,
         arg2: TimeWindowSegment,

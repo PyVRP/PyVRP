@@ -84,9 +84,8 @@ def get_route_statistics(
     prev_idx = 0  # depot
     for idx in list(route) + [0]:
         stop = data.client(idx)
-        delta = data.dist(prev_idx, idx)
-        current_time += delta
-        distance += delta
+        current_time += data.dur(prev_idx, idx)
+        distance += data.dist(prev_idx, idx)
 
         if current_time < stop.tw_early:
             wait_time += stop.tw_early - current_time

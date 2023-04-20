@@ -79,8 +79,8 @@ def plot_route_schedule(
     prev_idx = 0  # depot
     for idx in list(route) + [0]:
         stop = data.client(idx)
-        # Currently time = distance (i.e. assume speed of 1)
-        delta_time = delta_dist = data.dist(prev_idx, idx)
+        delta_time = data.dur(prev_idx, idx)
+        delta_dist = data.dist(prev_idx, idx)
         t += delta_time
         drive_time += delta_time
         dist += delta_dist

@@ -5,11 +5,12 @@ using TWS = TimeWindowSegment;
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 {
     auto const &dist = data.distanceMatrix();
+    auto const &dur = data.durationMatrix();
     auto const currTimeWarp = costEvaluator.twPenalty(R1->timeWarp());
 
     for (Node *U = n(R1->depot); !U->isDepot(); U = n(U))
     {
-        auto twData = TWS::merge(dist, p(U)->twBefore, n(U)->twAfter);
+        auto twData = TWS::merge(dur, p(U)->twBefore, n(U)->twAfter);
         removalCosts(R1->idx, U->client)
             = dist(p(U)->client, n(U)->client) - dist(p(U)->client, U->client)
               - dist(U->client, n(U)->client)
@@ -22,6 +23,7 @@ void SwapStar::updateInsertionCost(Route *R,
                                    CostEvaluator const &costEvaluator)
 {
     auto const &dist = data.distanceMatrix();
+    auto const &dur = data.durationMatrix();
     auto &insertPositions = cache(R->idx, U->client);
 
     insertPositions = {};
@@ -29,7 +31,7 @@ void SwapStar::updateInsertionCost(Route *R,
 
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData
-        = TWS::merge(dist, R->depot->twBefore, U->tw, n(R->depot)->twAfter);
+        = TWS::merge(dur, R->depot->twBefore, U->tw, n(R->depot)->twAfter);
     int cost = dist(0, U->client) + dist(U->client, n(R->depot)->client)
                - dist(0, n(R->depot)->client)
                + costEvaluator.twPenalty(twData.totalTimeWarp())
@@ -40,7 +42,7 @@ void SwapStar::updateInsertionCost(Route *R,
     for (Node *V = n(R->depot); !V->isDepot(); V = n(V))
     {
         // Insert cost of U just after V (V -> U -> ...)
-        twData = TWS::merge(dist, V->twBefore, U->tw, n(V)->twAfter);
+        twData = TWS::merge(dur, V->twBefore, U->tw, n(V)->twAfter);
         int deltaCost = dist(V->client, U->client)
                         + dist(U->client, n(V)->client)
                         - dist(V->client, n(V)->client)
@@ -55,6 +57,7 @@ std::pair<int, Node *> SwapStar::getBestInsertPoint(
     Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     auto const &dist = data.distanceMatrix();
+    auto const &dur = data.durationMatrix();
     auto &best_ = cache(V->route->idx, U->client);
 
     if (best_.shouldUpdate)  // then we first update the insert positions
@@ -65,7 +68,7 @@ std::pair<int, Node *> SwapStar::getBestInsertPoint(
             return std::make_pair(best_.costs[idx], best_.locs[idx]);
 
     // As a fallback option, we consider inserting in the place of V
-    auto const twData = TWS::merge(dist, p(V)->twBefore, U->tw, n(V)->twAfter);
+    auto const twData = TWS::merge(dur, p(V)->twBefore, U->tw, n(V)->twAfter);
     int deltaCost = dist(p(V)->client, U->client)
                     + dist(U->client, n(V)->client)
                     - dist(p(V)->client, n(V)->client)
@@ -158,6 +161,7 @@ int SwapStar::evaluate(Route *routeU,
         return best.cost;
 
     auto const &dist = data.distanceMatrix();
+    auto const &dur = data.durationMatrix();
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
@@ -197,14 +201,14 @@ int SwapStar::evaluate(Route *routeU,
     {
         // Special case
         auto uTWS = TWS::merge(
-            dist, best.VAfter->twBefore, best.V->tw, n(best.U)->twAfter);
+            dur, best.VAfter->twBefore, best.V->tw, n(best.U)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     }
     else if (best.VAfter->position < best.U->position)
     {
         auto uTWS = TWS::merge(
-            dist,
+            dur,
             best.VAfter->twBefore,
             best.V->tw,
             routeU->twBetween(best.VAfter->position + 1, best.U->position - 1),
@@ -215,7 +219,7 @@ int SwapStar::evaluate(Route *routeU,
     else
     {
         auto uTWS = TWS::merge(
-            dist,
+            dur,
             p(best.U)->twBefore,
             routeU->twBetween(best.U->position + 1, best.VAfter->position),
             best.V->tw,
@@ -228,14 +232,14 @@ int SwapStar::evaluate(Route *routeU,
     {
         // Special case
         auto vTWS = TWS::merge(
-            dist, best.UAfter->twBefore, best.U->tw, n(best.V)->twAfter);
+            dur, best.UAfter->twBefore, best.U->tw, n(best.V)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     }
     else if (best.UAfter->position < best.V->position)
     {
         auto vTWS = TWS::merge(
-            dist,
+            dur,
             best.UAfter->twBefore,
             best.U->tw,
             routeV->twBetween(best.UAfter->position + 1, best.V->position - 1),
@@ -246,7 +250,7 @@ int SwapStar::evaluate(Route *routeU,
     else
     {
         auto vTWS = TWS::merge(
-            dist,
+            dur,
             p(best.V)->twBefore,
             routeV->twBetween(best.V->position + 1, best.UAfter->position),
             best.U->tw,

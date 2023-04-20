@@ -122,7 +122,7 @@ def _compute_proximity(
     latest = np.array([cli.tw_late for cli in clients])
     service = np.array([cli.service_duration for cli in clients])
     durations = np.array(
-        [[data.dist(i, j) for j in range(dim)] for i in range(dim)],
+        [[data.dur(i, j) for j in range(dim)] for i in range(dim)],
         dtype=float,
     )
 
@@ -134,8 +134,13 @@ def _compute_proximity(
         0,
     )
 
+    distances = np.array(
+        [[data.dist(i, j) for j in range(dim)] for i in range(dim)],
+        dtype=float,
+    )
+
     prox = (
-        durations
+        distances
         + params.weight_wait_time * min_wait_time
         + params.weight_time_warp * min_time_warp
     )

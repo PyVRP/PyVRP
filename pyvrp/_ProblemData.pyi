@@ -107,6 +107,23 @@ class ProblemData:
         """
     def dist(self, first: int, second: int) -> int:
         """
+        Returns the travel distance between the first and second argument,
+        according to this instance's travel distance matrix.
+
+        Parameters
+        ----------
+        first
+            Client or depot number.
+        second
+            Client or depot number.
+
+        Returns
+        -------
+        int
+            Travel distance between the given clients.
+        """
+    def dur(self, first: int, second: int) -> int:
+        """
         Returns the travel duration between the first and second argument,
         according to this instance's travel duration matrix.
 

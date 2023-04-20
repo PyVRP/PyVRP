@@ -14,12 +14,12 @@ class TimeWindowSegment
     int twEarly = 0;   // Earliest visit moment of first client
     int twLate = 0;    // Latest visit moment of last client
 
-    [[nodiscard]] inline TWS merge(Matrix<int> const &dist,
+    [[nodiscard]] inline TWS merge(Matrix<int> const &dur,
                                    TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS merge(Matrix<int> const &dist,
+    [[nodiscard]] inline static TWS merge(Matrix<int> const &dur,
                                           TWS const &first,
                                           TWS const &second,
                                           Args... args);
@@ -40,20 +40,20 @@ public:
                              int twLate);
 };
 
-TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
+TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dur,
                                            TimeWindowSegment const &other) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
 #else
-    auto const distance = dist(idxLast, other.idxFirst);
-    auto const delta = duration - timeWarp + distance;
+    auto const legDuration = dur(idxLast, other.idxFirst);
+    auto const delta = duration - timeWarp + legDuration;
     auto const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
     auto const deltaTimeWarp = std::max(twEarly + delta - other.twLate, 0);
 
     return {idxFirst,
             other.idxLast,
-            duration + other.duration + distance + deltaWaitTime,
+            duration + other.duration + legDuration + deltaWaitTime,
             timeWarp + other.timeWarp + deltaTimeWarp,
             std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
             std::min(other.twLate - delta, twLate) + deltaTimeWarp};
@@ -61,7 +61,7 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
 }
 
 template <typename... Args>
-TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
+TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dur,
                                            TimeWindowSegment const &first,
                                            TimeWindowSegment const &second,
                                            Args... args)
@@ -69,12 +69,12 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &dist,
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
 #else
-    auto const res = first.merge(dist, second);
+    auto const res = first.merge(dur, second);
 
     if constexpr (sizeof...(args) == 0)
         return res;
     else
-        return merge(dist, res, args...);
+        return merge(dur, res, args...);
 #endif
 }
 

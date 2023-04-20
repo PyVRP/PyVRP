@@ -15,6 +15,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
     auto const posV = V->position;
 
     auto const &dist = data.distanceMatrix();
+    auto const &dur = data.durationMatrix();
 
     int const current = U->route->distBetween(posU - 1, posU + 2)
                         + dist(V->client, n(V)->client);
@@ -29,7 +30,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist, p(U)->twBefore, n(n(U))->twAfter);
+        auto uTWS = TWS::merge(dur, p(U)->twBefore, n(n(U))->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
@@ -50,7 +51,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
                                                data.vehicleCapacity());
 
         auto vTWS
-            = TWS::merge(dist, V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
+            = TWS::merge(dur, V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
@@ -64,7 +65,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
 
         if (posU < posV)
         {
-            auto const uTWS = TWS::merge(dist,
+            auto const uTWS = TWS::merge(dur,
                                          p(U)->twBefore,
                                          route->twBetween(posU + 2, posV),
                                          n(U)->tw,
@@ -75,7 +76,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
         }
         else
         {
-            auto const uTWS = TWS::merge(dist,
+            auto const uTWS = TWS::merge(dur,
                                          V->twBefore,
                                          n(U)->tw,
                                          U->tw,
