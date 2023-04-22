@@ -1,6 +1,8 @@
 from copy import copy, deepcopy
 
+import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
+from pytest import mark
 
 from pyvrp import Individual, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
@@ -132,13 +134,21 @@ def test_time_warp_calculation():
     assert_equal(indiv.time_warp(), tw_first_route + tw_second_route)
 
 
-def test_time_warp_for_a_very_constrained_problem():
+@mark.parametrize(
+    "dist_mat",
+    [
+        np.full((3, 3), fill_value=100, dtype=int),
+        np.full((3, 3), fill_value=1, dtype=int),
+        np.full((3, 3), fill_value=1000, dtype=int),
+    ],
+)
+def test_time_warp_for_a_very_constrained_problem(dist_mat):
     """
     This tests an artificial instance where the second client cannot be reached
     directly from the depot in a feasible solution, but only after the first
     client.
     """
-    mat = [
+    dur_mat = [
         [0, 1, 10],  # cannot get to 2 from depot within 2's time window
         [1, 0, 1],
         [1, 1, 0],
@@ -151,8 +161,8 @@ def test_time_warp_for_a_very_constrained_problem():
         vehicle_cap=0,
         time_windows=[(0, 10), (0, 5), (0, 5)],
         service_durations=[0, 0, 0],
-        distance_matrix=mat,
-        duration_matrix=mat,
+        distance_matrix=dist_mat,
+        duration_matrix=dur_mat,
     )
 
     # This solution directly visits the second client from the depot, which is
@@ -167,6 +177,11 @@ def test_time_warp_for_a_very_constrained_problem():
     assert_(not feasible.has_time_warp())
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
+
+    assert_equal(
+        feasible.distance(),
+        dist_mat[0, 1] + dist_mat[1, 2] + dist_mat[2, 0],
+    )
 
 
 # TODO test all time warp cases

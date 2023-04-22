@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
+from pyvrp import CostEvaluator, Individual, ProblemData, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.educate._Exchange import (
     Exchange10,
@@ -206,3 +206,47 @@ def test_relocate_after_depot_should_work():
     individual = Individual(data, [[1, 2, 3], [4]])
     expected = Individual(data, [[1, 2], [3], [4]])
     assert_equal(ls.search(individual, cost_evaluator), expected)
+
+
+def test_relocate_only_happens_when_distance_and_duration_allow_it():
+    """
+    Tests that (1, 0)-exchange checks the duration matrix for time-window
+    feasibility before applying a move that improves the traveled distance.
+    """
+    data = ProblemData(
+        coords=[(0, 0), (1, 0), (2, 0)],
+        demands=[0, 0, 0],
+        nb_vehicles=1,
+        vehicle_cap=0,
+        time_windows=[(0, 10), (0, 5), (0, 5)],
+        service_durations=[0, 0, 0],
+        distance_matrix=[  # distance-wise, the best route is 0 -> 1 -> 2 -> 0.
+            [0, 1, 5],
+            [5, 0, 1],
+            [1, 5, 0],
+        ],
+        duration_matrix=[  # duration-wise, the best route is 0 -> 2 -> 1 -> 0.
+            [0, 100, 2],
+            [1, 0, 100],
+            [100, 2, 0],
+        ],
+    )
+
+    # We consider two solutions. The first is duration optimal, and overall the
+    # only feasible solution. This solution can thus not be improved further.
+    # We also consider a distance-optimal solution that is not feasible. Since
+    # we have non-zero time warp penalty, this solution should be improved into
+    # the duration optimal solution.
+    duration_optimal = Individual(data, [[2, 1]])
+    distance_optimal = Individual(data, [[1, 2]])
+
+    assert_(distance_optimal.distance() < duration_optimal.distance())
+    assert_(duration_optimal.time_warp() < distance_optimal.time_warp())
+
+    cost_evaluator = CostEvaluator(1, 1)
+    rng = XorShift128(seed=42)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    assert_equal(ls.search(duration_optimal, cost_evaluator), duration_optimal)
+    assert_equal(ls.search(distance_optimal, cost_evaluator), duration_optimal)
