@@ -33,7 +33,7 @@ public:
     // its value to value_type.
     template <typename T,
               std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    Measure(T const value = 0) : value(static_cast<value_type>(value))
+    Measure(T const value) : value(static_cast<value_type>(value))
     {
     }
 
