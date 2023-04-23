@@ -8,9 +8,9 @@ namespace py = pybind11;
 PYBIND11_MODULE(_Measure, m)
 {
 #ifdef INT_PRECISION
-    m.attr("has_integer_precision") = false;
-#else
     m.attr("has_integer_precision") = true;
+#else
+    m.attr("has_integer_precision") = false;
 #endif
 
     py::class_<distance_type>(m, "distance_type")
