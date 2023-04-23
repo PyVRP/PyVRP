@@ -96,6 +96,7 @@ dependencies = [py.dependency(), pybind11]
 # the source and installation directories (relative to SRC_DIR and INST_DIR).
 extensions = [
     ['Matrix', ''],
+    ['Measure', ''],
     ['CostEvaluator', ''],
     ['ProblemData', ''],
     ['SubPopulation', ''],
