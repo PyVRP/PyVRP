@@ -5,3 +5,11 @@ option(
     choices: ['cvrp', 'vrptw'], 
     description: 'Problem configuration to compile.'
 )
+
+option(
+    'precision',
+    type: 'combo',
+    value: 'double',
+    choices: ['integer', 'double'], 
+    description: 'Precision type to compile.'
+)
