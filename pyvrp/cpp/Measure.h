@@ -24,7 +24,7 @@ template <MeasureType _> class Measure
 public:
     Measure(ValueType const value) : value(value){};
 
-    // Explicit conversion from/to different measure types.
+    // Explicit conversions to other measures.
     explicit operator Measure<DISTANCE>() const { return {value}; }
     explicit operator Measure<DURATION>() const { return {value}; }
     explicit operator Measure<COST>() const { return {value}; }
