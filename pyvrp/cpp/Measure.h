@@ -1,12 +1,12 @@
 #include <compare>
 
 #ifdef INT_PRECISION
-using ValueType = int;
+using value_type = int;
 #else
-using ValueType = double;
+using value_type = double;
 #endif
 
-enum MeasureType
+enum class MeasureType
 {
     DISTANCE,
     DURATION,
@@ -15,22 +15,22 @@ enum MeasureType
 
 template <MeasureType _> class Measure
 {
-    friend class Measure<DISTANCE>;
-    friend class Measure<DURATION>;
-    friend class Measure<COST>;
+    friend class Measure<MeasureType::DISTANCE>;
+    friend class Measure<MeasureType::DURATION>;
+    friend class Measure<MeasureType::COST>;
 
-    ValueType const value;
+    value_type const value;
 
 public:
-    Measure(ValueType const value) : value(value){};
+    Measure(value_type const value) : value(value){};
 
     // Explicit conversions to other measures.
-    explicit operator Measure<DISTANCE>() const { return {value}; }
-    explicit operator Measure<DURATION>() const { return {value}; }
-    explicit operator Measure<COST>() const { return {value}; }
+    explicit operator Measure<MeasureType::DISTANCE>() const { return {value}; }
+    explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
+    explicit operator Measure<MeasureType::COST>() const { return {value}; }
 
     // Explicit conversion to the underlying value.
-    explicit operator ValueType() const { return value; }
+    explicit operator value_type() const { return value; }
 
     // Arithmetic operators.
     Measure operator+(Measure const &other) { return {value + other.value}; }
@@ -43,6 +43,6 @@ public:
     auto operator<=>(Measure const &other) { return value <=> other.value; }
 };
 
-using distance_type = Measure<DISTANCE>;
-using duration_type = Measure<DURATION>;
-using cost_type = Measure<COST>;
+using distance_type = Measure<MeasureType::DISTANCE>;
+using duration_type = Measure<MeasureType::DURATION>;
+using cost_type = Measure<MeasureType::COST>;
