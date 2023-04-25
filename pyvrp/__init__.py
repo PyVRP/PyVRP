@@ -6,6 +6,7 @@ from .Statistics import Statistics
 from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
 from ._Matrix import Matrix
+from ._Measure import cost_type, distance_type, duration_type
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 from .read import read, read_solution

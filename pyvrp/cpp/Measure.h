@@ -57,6 +57,12 @@ public:
         return *this;
     }
 
+    Measure &operator*=(Measure const &rhs)
+    {
+        this->value *= rhs.value;
+        return *this;
+    }
+
     // Explicit conversions to other measures.
     explicit operator Measure<MeasureType::DISTANCE>() const { return {value}; }
     explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
@@ -76,10 +82,20 @@ Measure<Type> operator+(Measure<Type> const lhs, Measure<Type> const rhs)
     return static_cast<value_type>(lhs) + static_cast<value_type>(rhs);
 }
 
+template <MeasureType Type> Measure<Type> operator+(Measure<Type> const lhs)
+{
+    return +static_cast<value_type>(lhs);
+}
+
 template <MeasureType Type>
 Measure<Type> operator-(Measure<Type> const lhs, Measure<Type> const rhs)
 {
     return static_cast<value_type>(lhs) - static_cast<value_type>(rhs);
+}
+
+template <MeasureType Type> Measure<Type> operator-(Measure<Type> const lhs)
+{
+    return -static_cast<value_type>(lhs);
 }
 
 template <MeasureType Type>
