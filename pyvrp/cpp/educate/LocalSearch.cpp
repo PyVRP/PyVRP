@@ -212,10 +212,8 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         startDepot->tw = clients[0].tw;
         startDepot->twBefore = clients[0].tw;
-        startDepot->twAfter = clients[0].tw;
 
         endDepot->tw = clients[0].tw;
-        endDepot->twBefore = clients[0].tw;
         endDepot->twAfter = clients[0].tw;
 
         Route *route = &routes[r];

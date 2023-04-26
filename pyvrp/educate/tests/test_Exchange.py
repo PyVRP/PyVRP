@@ -2,7 +2,12 @@ from numpy.testing import assert_, assert_equal
 from pytest import mark
 
 from pyvrp import CostEvaluator, Individual, XorShift128
-from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
+from pyvrp.educate import (
+    LocalSearch,
+    NeighbourhoodParams,
+    Neighbours,
+    compute_neighbours,
+)
 from pyvrp.educate._Exchange import (
     Exchange10,
     Exchange11,
@@ -206,3 +211,41 @@ def test_relocate_after_depot_should_work():
     individual = Individual(data, [[1, 2, 3], [4]])
     expected = Individual(data, [[1, 2], [3], [4]])
     assert_equal(ls.search(individual, cost_evaluator), expected)
+
+
+def test_reoptimize_changed_objective_timewarp_OkSmall():
+    """
+    This test reproduces a bug where loadIndividual in LocalSearch.cpp would
+    reset the timewarp for a route to 0 if the route was not changed. This
+    would cause improving moves with a smaller timewarp not to be considered
+    because the current cost doesn't count the current time warp.
+    """
+    data = read("data/OkSmall.txt")
+    rng = XorShift128(seed=42)
+
+    individual = Individual(data, [[1, 2, 3, 4]])
+
+    # We make neighbours only contain 1 -> 2, so the only feasible move
+    # is changing [1, 2, 3, 4] into [2, 1, 3, 4] or moving one of the nodes
+    # into its own route. Since those solutions have larger distance but
+    # smaller time warp, they are considered improving moves with a
+    # sufficiently large time warp penalty.
+    neighbours: Neighbours = [[], [2], [], [], []]  # 1 -> 2 only
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_node_operator(Exchange10(data))
+
+    # With 0 timewarp penalty, the individual should not change since
+    # the solution [2, 1, 3, 4] has larger distance
+    improved_indiv = ls.search(individual, CostEvaluator(0, 0))
+    assert_equal(individual, improved_indiv)
+
+    # Now doing it again with a large TW penalty, we must find the alternative
+    # solution
+    # (previously this was not the case since due to caching the current TW was
+    # computed as being zero, causing the move to be evaluated as worse)
+    cost_evaluator_tw = CostEvaluator(0, 1000)
+    improved_indiv = ls.search(individual, cost_evaluator_tw)
+    # expected_indiv = Individual(data, [[2, 1, 3, 4]])
+    # assert_equal(improved_indiv, expected_indiv)
+    improved_cost = cost_evaluator_tw.penalised_cost(improved_indiv)
+    assert improved_cost < cost_evaluator_tw.penalised_cost(individual)
