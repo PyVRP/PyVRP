@@ -18,6 +18,27 @@ public:
         int serviceDuration;  // Service duration
         int twEarly;          // Earliest arrival (when using time windows)
         int twLate;           // Latest arrival (when using time windows)
+
+        Client(int x,
+               int y,
+               int demand,
+               int serviceDuration,
+               int twEarly,
+               int twLate)
+            : x(x),
+              y(y),
+              demand(demand),
+              serviceDuration(serviceDuration),
+              twEarly(twEarly),
+              twLate(twLate)
+        {
+            if (demand < 0)
+                throw std::invalid_argument("demand must be >= 0");
+            if (serviceDuration < 0)
+                throw std::invalid_argument("service_duration must be >= 0");
+            if (twEarly > twLate)
+                throw std::invalid_argument("tw_early must be <= tw_late");
+        }
     };
 
 private:
