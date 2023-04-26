@@ -64,14 +64,14 @@ int TwoOpt::evalBetweenRoutes(Node *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
-    int const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
-
-    deltaCost += costEvaluator.loadPenalty(U->route->load() - deltaLoad,
+    deltaCost += costEvaluator.loadPenalty(U->cumulatedLoad + V->route->load()
+                                               - V->cumulatedLoad,
                                            U->route->vehicleCapacity());
     deltaCost -= costEvaluator.loadPenalty(U->route->load(),
                                            U->route->vehicleCapacity());
 
-    deltaCost += costEvaluator.loadPenalty(V->route->load() + deltaLoad,
+    deltaCost += costEvaluator.loadPenalty(V->cumulatedLoad + U->route->load()
+                                               - U->cumulatedLoad,
                                            V->route->vehicleCapacity());
     deltaCost -= costEvaluator.loadPenalty(V->route->load(),
                                            V->route->vehicleCapacity());
