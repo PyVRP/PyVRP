@@ -13,10 +13,14 @@
 using cost_type = int;
 using distance_type = int;
 using duration_type = int;
+using matrix_type = int;
 #else
 using cost_type = double;
 using distance_type = double;
 using duration_type = double;
+// Currently we don't support different distance/duration types and have a
+// single matrix type.
+using matrix_type = double;
 #endif
 
 /**

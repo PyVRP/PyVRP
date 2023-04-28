@@ -1,4 +1,5 @@
 #include "Matrix.h"
+#include "precision.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -7,23 +8,22 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(_Matrix, m)
 {
-    py::class_<Matrix<int>>(m, "Matrix")
+    py::class_<Matrix<matrix_type>>(m, "Matrix")
         .def(py::init<size_t>(), py::arg("dimension"))
         .def(py::init<size_t, size_t>(), py::arg("n_rows"), py::arg("n_cols"))
-        .def(py::init<std::vector<std::vector<int>>>(), py::arg("data"))
+        .def(py::init<std::vector<std::vector<matrix_type>>>(), py::arg("data"))
         .def(
             "__getitem__",
-            [](Matrix<int> &m, std::pair<size_t, size_t> idx) -> int {
-                return m(idx.first, idx.second);
-            },
+            [](Matrix<matrix_type> &m, std::pair<size_t, size_t> idx)
+                -> matrix_type { return m(idx.first, idx.second); },
             py::arg("idx"))
         .def(
             "__setitem__",
-            [](Matrix<int> &m, std::pair<size_t, size_t> idx, int value) {
-                m(idx.first, idx.second) = value;
-            },
+            [](Matrix<matrix_type> &m,
+               std::pair<size_t, size_t> idx,
+               matrix_type value) { m(idx.first, idx.second) = value; },
             py::arg("idx"),
             py::arg("value"))
-        .def("max", &Matrix<int>::max)
-        .def("size", &Matrix<int>::size);
+        .def("max", &Matrix<matrix_type>::max)
+        .def("size", &Matrix<matrix_type>::size);
 }
