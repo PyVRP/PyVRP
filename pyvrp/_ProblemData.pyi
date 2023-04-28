@@ -1,5 +1,7 @@
 from typing import Any, List, Tuple
 
+from pyvrp._Matrix import Matrix
+
 class Client:
     """
     Simple data object storing all client data as properties.
@@ -133,7 +135,7 @@ class ProblemData:
         float
             Travel duration between the given clients.
         """
-    def distance_matrix(self) -> Any:
+    def distance_matrix(self) -> Matrix:
         """
         Returns the travel distance matrix used for distance computations.
 
@@ -148,7 +150,7 @@ class ProblemData:
 
         Returns
         -------
-        Any
+        Matrix
             Travel duration matrix.
         """
     @property

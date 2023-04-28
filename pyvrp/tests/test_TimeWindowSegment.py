@@ -1,11 +1,10 @@
 from numpy.testing import assert_equal
 from pytest import mark
 
-from pyvrp._Matrix import DoubleMatrix, IntMatrix
+from pyvrp._Matrix import Matrix
 from pyvrp._TimeWindowSegment import TimeWindowSegment
-from pyvrp._precision import PRECISION
 
-DistanceMatrix = DoubleMatrix if PRECISION == "double" else IntMatrix
+DistanceMatrix = Matrix
 
 
 @mark.parametrize("existing_time_warp", [2, 5, 10])
