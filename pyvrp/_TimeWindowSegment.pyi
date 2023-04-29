@@ -33,9 +33,9 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: Matrix,
-        arg0: TimeWindowSegment,
-        arg1: TimeWindowSegment,
+        duration_matrix: Matrix,
+        first: TimeWindowSegment,
+        second: TimeWindowSegment,
     ) -> TimeWindowSegment:
         """
         Merges two time window segments, in order.
@@ -43,10 +43,10 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: Matrix,
-        arg0: TimeWindowSegment,
-        arg1: TimeWindowSegment,
-        arg2: TimeWindowSegment,
+        duration_matrix: Matrix,
+        first: TimeWindowSegment,
+        second: TimeWindowSegment,
+        third: TimeWindowSegment,
     ) -> TimeWindowSegment:
         """
         Merges three time window segments, in order.
@@ -54,11 +54,11 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        dist: Matrix,
-        arg0: TimeWindowSegment,
-        arg1: TimeWindowSegment,
-        arg2: TimeWindowSegment,
-        arg3: TimeWindowSegment,
+        duration_matrix: Matrix,
+        first: TimeWindowSegment,
+        second: TimeWindowSegment,
+        third: TimeWindowSegment,
+        fourth: TimeWindowSegment,
     ) -> TimeWindowSegment:
         """
         Merges four time window segments, in order.

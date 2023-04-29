@@ -10,6 +10,8 @@ ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
 Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
 
+Matrix<int> const &ProblemData::durationMatrix() const { return dur_; }
+
 size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
@@ -22,8 +24,10 @@ ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
                          size_t vehicleCap,
                          std::vector<std::pair<int, int>> const &timeWindows,
                          std::vector<int> const &servDurs,
-                         std::vector<std::vector<int>> const &distMat)
+                         std::vector<std::vector<int>> const &distMat,
+                         std::vector<std::vector<int>> const &durMat)
     : dist_(distMat),
+      dur_(durMat),
       clients_(coords.size()),
       numClients_(static_cast<int>(coords.size()) - 1),
       numVehicles_(numVehicles),
