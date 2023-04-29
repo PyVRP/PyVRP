@@ -52,13 +52,13 @@ void Route::setupSector()
 
 void Route::setupRouteTimeWindows()
 {
-    auto const &dur = data.durationMatrix();
     auto *node = nodes.back();
 
     do  // forward time window segments
     {
         auto *prev = p(node);
-        prev->twAfter = TWS::merge(dur, prev->tw, node->twAfter);
+        prev->twAfter
+            = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
         node = prev;
     } while (!node->isDepot());
 }
@@ -72,9 +72,6 @@ void Route::update()
 {
     auto const oldNodes = nodes;
     setupNodes();
-
-    auto const &dist = data.distanceMatrix();
-    auto const &dur = data.durationMatrix();
 
     int load = 0;
     int distance = 0;
@@ -101,16 +98,17 @@ void Route::update()
             continue;
 
         load += data.client(node->client).demand;
-        distance += dist(p(node)->client, node->client);
+        distance += data.dist(p(node)->client, node->client);
 
-        reverseDistance += dist(node->client, p(node)->client);
-        reverseDistance -= dist(p(node)->client, node->client);
+        reverseDistance += data.dist(node->client, p(node)->client);
+        reverseDistance -= data.dist(p(node)->client, node->client);
 
         node->position = pos + 1;
         node->cumulatedLoad = load;
         node->cumulatedDistance = distance;
         node->cumulatedReversalDistance = reverseDistance;
-        node->twBefore = TWS::merge(dur, p(node)->twBefore, node->tw);
+        node->twBefore
+            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
     }
 
     setupSector();
