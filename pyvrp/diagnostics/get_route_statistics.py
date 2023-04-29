@@ -84,9 +84,8 @@ def get_route_statistics(
     prev_idx = 0  # depot
     for idx in list(route) + [0]:
         stop = data.client(idx)
-        delta = data.dist(prev_idx, idx)
-        current_time += delta
-        distance += delta
+        current_time += data.duration(prev_idx, idx)
+        distance += data.dist(prev_idx, idx)
 
         if current_time < stop.tw_early:
             wait_time += stop.tw_early - current_time
@@ -101,7 +100,7 @@ def get_route_statistics(
         prev_idx = idx
 
     demand = sum([data.client(idx).demand for idx in route])
-    serv_dur = sum([data.client(idx).service_duration for idx in route])
+    serv_duration = sum([data.client(idx).service_duration for idx in route])
 
     return RouteStatistics(
         distance=distance,
@@ -110,7 +109,7 @@ def get_route_statistics(
         duration=current_time - start_time,
         timewarp=time_warp,
         wait_time=wait_time,
-        service_time=serv_dur,
+        service_time=serv_duration,
         num_stops=len(route),
         total_demand=demand,
         fillrate=demand / data.vehicle_capacity,

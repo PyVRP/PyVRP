@@ -145,7 +145,8 @@ def read(
         capacity,
         time_windows,
         service_times,
-        edge_weight,
+        edge_weight,  # distance and duration are assumed to be the same in
+        edge_weight,  # the VRPLIB instances we read here.
     )
 
 
