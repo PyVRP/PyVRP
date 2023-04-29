@@ -122,7 +122,7 @@ class ProblemData:
         int
             Travel distance between the given clients.
         """
-    def dur(self, first: int, second: int) -> int:
+    def duration(self, first: int, second: int) -> int:
         """
         Returns the travel duration between the first and second argument,
         according to this instance's travel duration matrix.

@@ -75,7 +75,7 @@ def test_reading_OkSmall_instance():
             assert_equal(data.dist(frm, to), expected[frm][to])
             assert_equal(dist_mat[frm, to], expected[frm][to])
 
-            assert_equal(data.dur(frm, to), expected[frm][to])
+            assert_equal(data.duration(frm, to), expected[frm][to])
             assert_equal(dur_mat[frm, to], expected[frm][to])
 
     # From the DEMAND_SECTION in the file

@@ -57,7 +57,7 @@ public:
      * @param second Second client.
      * @return Travel duration from the first to the second client.
      */
-    [[nodiscard]] inline int dur(size_t first, size_t second) const;
+    [[nodiscard]] inline int duration(size_t first, size_t second) const;
 
     /**
      * @return The full travel distance matrix.
@@ -118,7 +118,7 @@ int ProblemData::dist(size_t first, size_t second) const
     return dist_(first, second);
 }
 
-int ProblemData::dur(size_t first, size_t second) const
+int ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }

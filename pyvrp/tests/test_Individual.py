@@ -124,11 +124,11 @@ def test_time_warp_calculation():
     assert_(not indiv.has_excess_load())
     assert_(indiv.has_time_warp())
 
-    # There's only time warp on the first route: dur(0, 1) = 1'544, so we
+    # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
-    # starts at 15'600, and completes at 15'600 + 360. Then we drive dur(1, 3)
-    # = 1'427, where we arrive after 15'300 (its closing time window). This is
-    # where we incur time warp: we need to 'warp back' to 15'300.
+    # starts at 15'600, and completes at 15'600 + 360. Then we drive for
+    # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
+    # window). This is where we incur time warp: we need to 'warp' to 15'300.
     tw_first_route = 15_600 + 360 + 1_427 - 15_300
     tw_second_route = 0
     assert_equal(indiv.time_warp(), tw_first_route + tw_second_route)

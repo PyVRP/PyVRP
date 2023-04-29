@@ -148,11 +148,11 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
     assert(start <= end);
 
-    auto const &dur = data.durationMatrix();
     auto tws = nodes[start - 1]->tw;
 
     for (size_t step = start; step != end; ++step)
-        tws = TimeWindowSegment::merge(dur, tws, nodes[step]->tw);
+        tws = TimeWindowSegment::merge(
+            data.durationMatrix(), tws, nodes[step]->tw);
 
     return tws;
 }

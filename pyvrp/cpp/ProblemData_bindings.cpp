@@ -42,7 +42,10 @@ PYBIND11_MODULE(_ProblemData, m)
              py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
-        .def("dur", &ProblemData::dur, py::arg("first"), py::arg("second"))
+        .def("duration",
+             &ProblemData::duration,
+             py::arg("first"),
+             py::arg("second"))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
              py::return_value_policy::reference)

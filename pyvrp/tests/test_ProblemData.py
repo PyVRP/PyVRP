@@ -27,7 +27,7 @@ def test_depot_is_first_client():
 
 def test_matrix_access():
     """
-    Tests that the ``dur()``, ``duration_matrix()``, ``dist()``, and
+    Tests that the ``duration()``, ``duration_matrix()``, ``dist()``, and
     ``distance_matrix()`` methods correctly index the underlying duration
     and distance matrices.
     """
@@ -54,7 +54,7 @@ def test_matrix_access():
 
     for frm in range(size):
         for to in range(size):
-            assert_equal(dur_mat[frm, to], data.dur(frm, to))
+            assert_equal(dur_mat[frm, to], data.duration(frm, to))
             assert_equal(dist_mat[frm, to], data.dist(frm, to))
 
             assert_equal(dur_mat_data[frm, to], dur_mat[frm, to])
