@@ -7,16 +7,16 @@ CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
 {
 }
 
-unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
+int CostEvaluator::penalisedCost(Individual const &individual) const
 {
     auto const loadPen = loadPenaltyExcess(individual.excessLoad());
     auto const twPen = twPenalty(individual.timeWarp());
 
-    return individual.distance() + loadPen + twPen;
+    return individual.distance() + loadPen + twPen - individual.prize();
 }
 
-unsigned int CostEvaluator::cost(Individual const &individual) const
+int CostEvaluator::cost(Individual const &individual) const
 {
-    return individual.isFeasible() ? individual.distance()
-                                   : std::numeric_limits<unsigned int>::max();
+    return individual.isFeasible() ? individual.distance() - individual.prize()
+                                   : std::numeric_limits<int>::max();
 }

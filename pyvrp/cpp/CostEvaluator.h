@@ -30,19 +30,18 @@ public:
     /**
      * Computes the time warp penalty for the given time warp.
      */
-    [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
+    [[nodiscard]] inline int twPenalty(unsigned int timeWarp) const;
 
     /**
-     * Computes the objective (penalised cost) for a given individual.
+     * Computes a smoothed objective (penalised cost) for a given individual.
      */
-    [[nodiscard]] unsigned int
-    penalisedCost(Individual const &individual) const;
+    [[nodiscard]] int penalisedCost(Individual const &individual) const;
 
     /**
      * Computes the objective for a given individual. Returns the largest
      * representable cost value if the individual is infeasible.
      */
-    [[nodiscard]] unsigned int cost(Individual const &individual) const;
+    [[nodiscard]] int cost(Individual const &individual) const;
 };
 
 unsigned int CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const

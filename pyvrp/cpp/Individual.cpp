@@ -14,6 +14,7 @@ void Individual::evaluate(ProblemData const &data)
     numRoutes_ = 0;
     distance_ = 0;
     excessLoad_ = 0;
+    prize_ = 0;
     timeWarp_ = 0;
 
     for (auto const &route : routes_)
@@ -26,6 +27,7 @@ void Individual::evaluate(ProblemData const &data)
         int routeDist = data.dist(0, route[0]);
         int routeTimeWarp = 0;
         int routeLoad = data.client(route[0]).demand;
+        int routePrize = data.client(route[0]).prize;
 
         int time = data.duration(0, route[0]);
 
@@ -42,6 +44,7 @@ void Individual::evaluate(ProblemData const &data)
         {
             routeDist += data.dist(route[idx - 1], route[idx]);
             routeLoad += data.client(route[idx]).demand;
+            routePrize += data.client(route[idx]).prize;
 
             time += data.client(route[idx - 1]).serviceDuration
                     + data.duration(route[idx - 1], route[idx]);
@@ -64,6 +67,8 @@ void Individual::evaluate(ProblemData const &data)
         time += data.client(route.back()).serviceDuration
                 + data.duration(route.back(), 0);
 
+        routePrize += data.client(route.back()).prize;
+
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
         routeTimeWarp += std::max(time - data.depot().twLate, 0);
@@ -74,6 +79,8 @@ void Individual::evaluate(ProblemData const &data)
 
         if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
             excessLoad_ += routeLoad - data.vehicleCapacity();
+
+        prize_ += routePrize;
     }
 }
 
@@ -98,6 +105,8 @@ bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
 size_t Individual::distance() const { return distance_; }
 
 size_t Individual::excessLoad() const { return excessLoad_; }
+
+size_t Individual::prize() const { return prize_; }
 
 size_t Individual::timeWarp() const { return timeWarp_; }
 
