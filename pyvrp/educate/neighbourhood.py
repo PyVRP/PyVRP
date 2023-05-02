@@ -18,17 +18,21 @@ class NeighbourhoodParams:
     Attributes
     ----------
     weight_wait_time
-        TODO
+        Weight given to the minimum wait time aspect of the proximity
+        calculation. A large wait time indicates the clients are far apart
+        in duration/time.
     weight_time_warp
-        TODO
+        Weight given to the minimum time warp aspect of the proximity
+        calculation. A large time warp indicates the clients are far apart in
+        duration/time.
     nb_granular
         Number of other clients that are in each client's granular
         neighbourhood. This parameter determines the size of the overall
         neighbourhood.
     symmetric_proximity
-        TODO
-    symmetric_neighbours
-        TODO
+        Whether to calculate a symmetric proximity matrix. A symmetric matrix
+        ensures the granular neighbourhood is symmetric as well: if
+        :math:`(i, j)` is in the neighbourhood, then so is :math:`(j, i)`.
 
     Raises
     ------
@@ -40,7 +44,6 @@ class NeighbourhoodParams:
     weight_time_warp: float = 1.0
     nb_granular: int = 40
     symmetric_proximity: bool = True
-    symmetric_neighbours: bool = False
 
     def __post_init__(self):
         if self.nb_granular <= 0:
@@ -66,39 +69,32 @@ def compute_neighbours(
         A list of list of integers representing the neighbours for each client.
         The first element represents the depot and is an empty list.
     """
+    proximity = _compute_proximity(
+        data,
+        params.weight_wait_time,
+        params.weight_time_warp,
+    )
 
-    proximity = _compute_proximity(data, params)
+    if params.symmetric_proximity:
+        proximity = np.minimum(proximity, proximity.T)
 
-    # Mask self from proximities by adding a large constant
-    # and add the index with a very small weight as tie-breaker (to mimic
-    # original c++ version)
     n = len(proximity)
-    k = min(params.nb_granular, n - 1)
-    idcs = np.arange(n)
-    jitter = 1e-6 * idcs  # add a bit of jitter to break ties
-    proximity = proximity + jitter[None, :]
-    np.fill_diagonal(proximity, np.inf)  # exclude self from neighbourhood
-    idx_topk = np.argpartition(proximity, k, axis=-1)[:, :k]
+    k = min(params.nb_granular, n - 2)  # excl. depot and self
 
-    if params.symmetric_neighbours:
-        # Convert into adjacency matrix that can be symmetrized
-        adj = np.zeros_like(proximity, dtype=bool)
-        adj[idcs[:, None], idx_topk] = True
+    np.fill_diagonal(proximity, np.inf)  # cannot be in own neighbourhood
+    proximity[0, :] = np.inf  # depot has no neighbours
+    proximity[:, 0] = np.inf  # clients do not neighbour depot
 
-        # Add correlated vertex if correlated in one of two directions
-        adj = adj | adj.transpose()
-
-        # Append empty neighbours for depot and add 1 to offset depot indexing
-        return [[]] + [(np.flatnonzero(row) + 1).tolist() for row in adj]
-    else:
-        return [[]] + (np.sort(idx_topk, -1) + 1).tolist()
+    topk = np.argsort(proximity, axis=1, kind="stable")[1:, :k]
+    return [[]] + topk.tolist()
 
 
 def _compute_proximity(
-    data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
+    data: ProblemData, weight_wait_time: float, weight_time_warp: float
 ) -> np.ndarray[float]:
     """
-    Computes proximity for neighborhood.
+    Computes proximity for neighborhood. Proximity is based on Vidal et al.
+    (2012).
 
     Parameters
     ----------
@@ -112,10 +108,15 @@ def _compute_proximity(
     np.ndarray[float]
         A numpy array of size n x n where n = data.num_clients containing
         the proximities values between all clients (depot excluded).
+
+    References
+    ----------
+    .. [1] Vidal, T., Crainic, T. G., Gendreau, M., and Prins, C. (2013). A
+           hybrid genetic algorithm with adaptive diversity management for a
+           large class of vehicle routing problems with time-windows.
+           *Computers & Operations Research*, 40(1), 475 - 489.
     """
-
     dim = data.num_clients + 1
-
     clients = [data.client(idx) for idx in range(dim)]
 
     earliest = np.array([cli.tw_early for cli in clients])
@@ -129,6 +130,7 @@ def _compute_proximity(
     min_wait_time = np.maximum(
         earliest[None, :] - durations - service[:, None] - latest[:, None], 0
     )
+
     min_time_warp = np.maximum(
         earliest[:, None] + service[:, None] + durations - latest[None, :],
         0,
@@ -139,12 +141,8 @@ def _compute_proximity(
         dtype=float,
     )
 
-    prox = (
+    return (
         distances
-        + params.weight_wait_time * min_wait_time
-        + params.weight_time_warp * min_time_warp
+        + weight_wait_time * min_wait_time
+        + weight_time_warp * min_time_warp
     )
-
-    if params.symmetric_proximity:
-        prox = np.minimum(prox, prox.T)
-    return prox[1:, 1:]  # Skip depot
