@@ -18,14 +18,14 @@ Individual LocalSearch::search(Individual &individual,
     if (nodeOps.empty())
         throw std::runtime_error("No known node operators.");
 
-    // Caches the last time nodes were tested for modification (uses nbMoves to
+    // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
     std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
-    nbMoves = 0;
+    numMoves = 0;
 
     for (int step = 0; !searchCompleted; ++step)
     {
@@ -38,7 +38,7 @@ Individual LocalSearch::search(Individual &individual,
 
             auto *U = &clients[uClient];
             auto const lastTestedNode = lastTestedNodes[uClient];
-            lastTestedNodes[uClient] = nbMoves;
+            lastTestedNodes[uClient] = numMoves;
 
             // Shuffling the neighbours in this loop should not matter much as
             // we are already randomizing the nodes U.
@@ -100,7 +100,7 @@ Individual LocalSearch::intensify(Individual &individual,
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
-    nbMoves = 0;
+    numMoves = 0;
 
     while (!searchCompleted)
     {
@@ -114,7 +114,7 @@ Individual LocalSearch::intensify(Individual &individual,
                 continue;
 
             auto const lastTested = lastTestedRoutes[U.idx];
-            lastTestedRoutes[U.idx] = nbMoves;
+            lastTestedRoutes[U.idx] = numMoves;
 
             // Shuffling in this loop should not matter much as we are
             // already randomizing the routes U.
@@ -181,16 +181,16 @@ bool LocalSearch::applyRouteOps(Route *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
-    nbMoves++;
+    numMoves++;
     searchCompleted = false;
 
     U->update();
-    lastModified[U->idx] = nbMoves;
+    lastModified[U->idx] = numMoves;
 
     if (U != V)
     {
         V->update();
-        lastModified[V->idx] = nbMoves;
+        lastModified[V->idx] = numMoves;
     }
 }
 
