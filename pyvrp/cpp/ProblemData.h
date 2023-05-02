@@ -43,6 +43,7 @@ public:
 
 private:
     Matrix<int> const dist_;       // Distance matrix (+depot)
+    Matrix<int> const dur_;        // Duration matrix (+depot)
     std::vector<Client> clients_;  // Client (+depot) information
 
     size_t const numClients_;
@@ -64,16 +65,30 @@ public:
     /**
      * Returns the distance between the indicated two clients.
      *
-     * @param first First client.
+     * @param first  First client.
      * @param second Second client.
      * @return distance from the first to the second client.
      */
     [[nodiscard]] inline int dist(size_t first, size_t second) const;
 
     /**
-     * @return The full distance matrix.
+     * Returns the travel duration between the indicated two clients.
+     *
+     * @param first  First client.
+     * @param second Second client.
+     * @return Travel duration from the first to the second client.
+     */
+    [[nodiscard]] inline int duration(size_t first, size_t second) const;
+
+    /**
+     * @return The full travel distance matrix.
      */
     [[nodiscard]] Matrix<int> const &distanceMatrix() const;
+
+    /**
+     * @return The full travel duration matrix.
+     */
+    [[nodiscard]] Matrix<int> const &durationMatrix() const;
 
     /**
      * @return Total number of clients in this instance.
@@ -99,11 +114,13 @@ public:
      * @param numVehicles  Number of vehicles.
      * @param vehicleCap   Vehicle capacity.
      * @param distMat      Distance matrix.
+     * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
                 size_t vehicleCap,
-                std::vector<std::vector<int>> const &distMat);
+                std::vector<std::vector<int>> const &distMat,
+                std::vector<std::vector<int>> const &durMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const
@@ -114,6 +131,11 @@ ProblemData::Client const &ProblemData::client(size_t client) const
 int ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
+}
+
+int ProblemData::duration(size_t first, size_t second) const
+{
+    return dur_(first, second);
 }
 
 #endif  // HGS_PROBLEMDATA_H

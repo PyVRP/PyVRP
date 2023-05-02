@@ -1,4 +1,6 @@
-from typing import Any, List
+from typing import List, Tuple
+
+from pyvrp._Matrix import Matrix
 
 class Client:
     """
@@ -62,7 +64,7 @@ class ProblemData:
         Homogenous vehicle capacity for all vehicles in the problem instance.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
-        index 0). Does not have to be symmetric.
+        index 0).
 
     """
 
@@ -71,6 +73,7 @@ class ProblemData:
         clients: List[Client],
         nb_vehicles: int,
         vehicle_cap: int,
+        distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
     def client(self, client: int) -> Client:
@@ -99,6 +102,23 @@ class ProblemData:
         """
     def dist(self, first: int, second: int) -> int:
         """
+        Returns the travel distance between the first and second argument,
+        according to this instance's travel distance matrix.
+
+        Parameters
+        ----------
+        first
+            Client or depot number.
+        second
+            Client or depot number.
+
+        Returns
+        -------
+        int
+            Travel distance between the given clients.
+        """
+    def duration(self, first: int, second: int) -> int:
+        """
         Returns the travel duration between the first and second argument,
         according to this instance's travel duration matrix.
 
@@ -114,14 +134,22 @@ class ProblemData:
         int
             Travel duration between the given clients.
         """
-    def distance_matrix(self) -> Any:
+    def distance_matrix(self) -> Matrix:
         """
-        Returns the travel duration matrix used for distance/duration
-        computations.
+        Returns the travel distance matrix used for distance computations.
 
         Returns
         -------
-        Any
+        Matrix
+            Travel distance matrix.
+        """
+    def duration_matrix(self) -> Matrix:
+        """
+        Returns the travel duration matrix used for duration computations.
+
+        Returns
+        -------
+        Matrix
             Travel duration matrix.
         """
     @property

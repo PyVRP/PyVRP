@@ -7,10 +7,10 @@ See the :doc:`benchmarking instructions <../dev/benchmarking>` for how these ben
 v0.1.0 (1 March 2023)
 ---------------------
 
-This benchmark concerns commit `e1b1ac7 <https://github.com/N-Wouda/PyVRP/tree/e1b1ac72bc1246cc51d252bf72df71fc43dc422b>`_, the version used to obtain the results of the initial submission.
+This benchmark concerns commit `e1b1ac7 <https://github.com/PyVRP/PyVRP/tree/e1b1ac72bc1246cc51d252bf72df71fc43dc422b>`_, the version used to obtain the results of the initial submission.
 The gaps below are computed against best-known solutions obtained from CVRPLIB on 28 February 2023.
 The parameter values were changed somewhat from the defaults in that commit.
-The relevant configuration files can be found in `3c26fab <https://github.com/N-Wouda/PyVRP/tree/3c26fab44ba612bae4a225daa099aefc1e618d9e>`_, under ``configs/``.
+The relevant configuration files can be found in `3c26fab <https://github.com/PyVRP/PyVRP/tree/3c26fab44ba612bae4a225daa099aefc1e618d9e>`_, under ``configs/``.
 
 CVRP
 ^^^^

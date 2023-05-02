@@ -26,10 +26,12 @@ PYBIND11_MODULE(_ProblemData, m)
         .def(py::init<std::vector<ProblemData::Client> const &,
                       int,
                       int,
+                      std::vector<std::vector<int>> const &,
                       std::vector<std::vector<int>> const &>(),
              py::arg("clients"),
              py::arg("nb_vehicles"),
              py::arg("vehicle_cap"),
+             py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
@@ -41,7 +43,14 @@ PYBIND11_MODULE(_ProblemData, m)
              py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
+        .def("duration",
+             &ProblemData::duration,
+             py::arg("first"),
+             py::arg("second"))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
+             py::return_value_policy::reference)
+        .def("duration_matrix",
+             &ProblemData::durationMatrix,
              py::return_value_policy::reference);
 }

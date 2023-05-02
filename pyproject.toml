@@ -9,7 +9,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/N-Wouda/PyVRP"
+repository = "https://github.com/PyVRP/PyVRP"
 include = [
     { path = "LICENSE.md" },
     { path = "meson.build", format = "sdist" },
@@ -37,7 +37,7 @@ classifiers = [
 
 
 [tool.poetry.urls]
-"Tracker" = "https://github.com/N-Wouda/PyVRP/issues"
+"Tracker" = "https://github.com/PyVRP/PyVRP/issues"
 
 
 [tool.poetry.dependencies]

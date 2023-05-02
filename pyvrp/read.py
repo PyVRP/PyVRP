@@ -156,7 +156,8 @@ def read(
         clients,
         num_vehicles,
         capacity,
-        edge_weight,
+        edge_weight,  # distance and duration are assumed to be the same in
+        edge_weight,  # the VRPLIB instances we read here.
     )
 
 
