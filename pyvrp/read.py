@@ -139,17 +139,13 @@ def read(
         raise ValueError("Time window cannot start after end")
 
     clients = [
-        Client(
-            x=x,
-            y=y,
-            demand=demand,
-            service_duration=service_duration,
-            tw_early=tw_early,
-            tw_late=tw_late,
+        Client(  # type: ignore
+            *coords[idx],
+            demands[idx],
+            service_times[idx],
+            *time_windows[idx],
         )
-        for (x, y), demand, service_duration, (tw_early, tw_late) in zip(
-            coords, demands, service_times, time_windows
-        )
+        for idx in range(len(coords))
     ]
 
     return ProblemData(
