@@ -6,9 +6,8 @@
 
 class Route;
 
-class Node
+struct Node
 {
-public:               // TODO make fields private
     int client;       // Client represented with this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
@@ -26,8 +25,6 @@ public:               // TODO make fields private
 
     [[nodiscard]] inline bool isDepot() const;
 
-    [[nodiscard]] inline bool isRouted() const;
-
     /**
      * Inserts this node after the other and updates the solution.
      */
@@ -40,8 +37,6 @@ public:               // TODO make fields private
 };
 
 bool Node::isDepot() const { return client == 0; }
-
-bool Node::isRouted() const { return !route->isVirtual; }
 
 /**
  * Convenience method accessing the node directly before the argument.

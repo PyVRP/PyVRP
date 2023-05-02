@@ -60,7 +60,7 @@ Individual LocalSearch::search(Individual &individual,
             // Test inserting U into the virtual route. U is then no longer
             // visited. This can only be done when U is not required.
             if (!data.client(uClient).required)
-                if (applyNodeOps(U, routes.back()->depot, costEvaluator))
+                if (applyNodeOps(U, routes.back().depot, costEvaluator))
                     continue;
 
             // Empty route moves are not tested in the first iteration to avoid
