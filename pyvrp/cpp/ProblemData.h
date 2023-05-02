@@ -21,10 +21,10 @@ public:
 
         Client(int x,
                int y,
-               int demand,
-               int serviceDuration,
-               int twEarly,
-               int twLate);
+               int demand = 0,
+               int serviceDuration = 0,
+               int twEarly = 0,
+               int twLate = 0);
     };
 
 private:

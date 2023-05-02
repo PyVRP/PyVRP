@@ -15,24 +15,24 @@ class Client:
         Vertical coordinate of this client, that is, the 'y' part of the
         client's (x, y) location tuple.
     demand
-        The amount this client's demanding.
+        The amount this client's demanding. Default 0.
     service_duration
         This client's service duration, that is, the amount of time we need to
-        visit the client for.
+        visit the client for. Default 0.
     tw_early
-        Earliest time at which we can visit this client.
+        Earliest time at which we can visit this client. Default 0.
     tw_late
-        Latest time at which we can visit this client.
+        Latest time at which we can visit this client. Default 0.
     """
 
     def __init__(
         self,
         x: int,
         y: int,
-        demand: int,
-        service_duration: int,
-        tw_early: int,
-        tw_late: int,
+        demand: int = 0,
+        service_duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
     ) -> None: ...
     @property
     def x(self) -> int: ...

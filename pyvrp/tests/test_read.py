@@ -128,19 +128,11 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     assert_equal(data.dist(0, 1), 493)
     assert_equal(data.dist(1, 0), 493)
 
-    # These fields are not present in the data file, and should thus retain
-    # their default values.
-    max_distance = max(
-        data.dist(i, j)
-        for i in range(data.num_clients + 1)
-        for j in range(data.num_clients + 1)
-    )
-    bound = (data.num_clients + 1) * max_distance
-
+    # This is a CVRP instance, so time window data should all be zeroed out.
     for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(data.client(client).service_duration, 0)
         assert_equal(data.client(client).tw_early, 0)
-        assert_equal(data.client(client).tw_late, bound)
+        assert_equal(data.client(client).tw_late, 0)
 
 
 def test_reading_RC208_instance():  # Solomon style instance
