@@ -14,7 +14,6 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("demand", &ProblemData::Client::demand)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
-        .def_readonly("required", &ProblemData::Client::required)
         .def_readonly("prize", &ProblemData::Client::prize);
 
     py::class_<ProblemData>(m, "ProblemData")

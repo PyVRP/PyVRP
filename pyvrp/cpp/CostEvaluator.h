@@ -30,7 +30,7 @@ public:
     /**
      * Computes the time warp penalty for the given time warp.
      */
-    [[nodiscard]] inline int twPenalty(unsigned int timeWarp) const;
+    [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
 
     /**
      * Computes a smoothed objective (penalised cost) for a given individual.

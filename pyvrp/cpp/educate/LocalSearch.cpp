@@ -58,10 +58,9 @@ Individual LocalSearch::search(Individual &individual,
             }
 
             // Test inserting U into the virtual route. U is then no longer
-            // visited. This can only be done when U is not required.
-            if (!data.client(uClient).required)
-                if (applyNodeOps(U, routes.back().depot, costEvaluator))
-                    continue;
+            // visited.
+            if (applyNodeOps(U, routes.back().depot, costEvaluator))
+                continue;
 
             // Empty route moves are not tested in the first iteration to avoid
             // increasing the fleet size too much.
@@ -211,7 +210,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
     auto const &routesIndiv = individual.getRoutes();
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t r = 0; r <= data.numVehicles(); r++)
     {
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -370,7 +369,7 @@ LocalSearch::LocalSearch(ProblemData &data,
     for (size_t i = 0; i <= data.numClients(); i++)
         clients[i].client = i;
 
-    for (size_t i = 0; i < data.numVehicles() + 1; i++)
+    for (size_t i = 0; i <= data.numVehicles(); i++)
     {
         routes[i].idx = i;
         routes[i].depot = &startDepots[i];

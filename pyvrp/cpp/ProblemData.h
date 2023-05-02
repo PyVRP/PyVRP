@@ -12,14 +12,13 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                 // Coordinate X
-        int y;                 // Coordinate Y
-        int serviceDuration;   // Service duration
-        int demand;            // Demand
-        int twEarly;           // Earliest arrival (when using time windows)
-        int twLate;            // Latest arrival (when using time windows)
-        bool required = true;  // Must this client be visited?
-        int prize = 0;         // Prize collected when visiting this client
+        int x;                // Coordinate X
+        int y;                // Coordinate Y
+        int serviceDuration;  // Service duration
+        int demand;           // Demand
+        int twEarly;          // Earliest arrival (when using time windows)
+        int twLate;           // Latest arrival (when using time windows)
+        int prize = 0;        // Prize collected when visiting this client
     };
 
 private:

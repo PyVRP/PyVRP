@@ -104,7 +104,7 @@ class Population:
         cost_evaluator
             CostEvaluator to use to compute the cost.
         """
-        # Note: the PenaltyManager is required here since adding an individual
+        # Note: the CostEvaluator is required here since adding an individual
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
         if individual.is_feasible():
