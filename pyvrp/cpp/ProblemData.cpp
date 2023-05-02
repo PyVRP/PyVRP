@@ -6,6 +6,25 @@
 #include <string>
 #include <vector>
 
+ProblemData::Client::Client(
+    int x, int y, int demand, int serviceDuration, int twEarly, int twLate)
+    : x(x),
+      y(y),
+      demand(demand),
+      serviceDuration(serviceDuration),
+      twEarly(twEarly),
+      twLate(twLate)
+{
+    if (demand < 0)
+        throw std::invalid_argument("demand must be >= 0");
+
+    if (serviceDuration < 0)
+        throw std::invalid_argument("service_duration must be >= 0");
+
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late");
+}
+
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
 Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
