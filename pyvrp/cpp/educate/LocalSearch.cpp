@@ -34,6 +34,8 @@ Individual LocalSearch::search(Individual &individual,
         // Node operators are evaluated at neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
+            // TODO only loop over U that are not currently in virtual route?
+
             auto *U = &clients[uClient];
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = nbMoves;
@@ -54,6 +56,12 @@ Individual LocalSearch::search(Individual &individual,
                         continue;
                 }
             }
+
+            // Test inserting U into the virtual route. U is then no longer
+            // visited. This can only be done when U is not required.
+            if (!data.client(uClient).required)
+                if (applyNodeOps(U, routes.back()->depot, costEvaluator))
+                    continue;
 
             // Empty route moves are not tested in the first iteration to avoid
             // increasing the fleet size too much.
@@ -190,12 +198,16 @@ void LocalSearch::update(Route *U, Route *V)
 void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
+    {
         clients[client].tw = {static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).serviceDuration,
                               0,
                               data.client(client).twEarly,
                               data.client(client).twLate};
+
+        clients[client].route = nullptr;
+    }
 
     auto const &routesIndiv = individual.getRoutes();
 
@@ -218,27 +230,63 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         Route *route = &routes[r];
 
-        if (!routesIndiv[r].empty())
+        if (r < data.numVehicles())
         {
-            Node *client = &clients[routesIndiv[r][0]];
-            client->route = route;
+            route->isVirtual = false;
 
-            client->prev = startDepot;
-            startDepot->next = client;
-
-            for (int i = 1; i < static_cast<int>(routesIndiv[r].size()); i++)
+            if (!routesIndiv[r].empty())
             {
-                Node *prev = client;
-
-                client = &clients[routesIndiv[r][i]];
+                Node *client = &clients[routesIndiv[r][0]];
                 client->route = route;
 
-                client->prev = prev;
-                prev->next = client;
-            }
+                client->prev = startDepot;
+                startDepot->next = client;
 
-            client->next = endDepot;
-            endDepot->prev = client;
+                for (size_t idx = 1; idx < routesIndiv[r].size(); idx++)
+                {
+                    Node *prev = client;
+
+                    client = &clients[routesIndiv[r][idx]];
+                    client->route = route;
+
+                    client->prev = prev;
+                    prev->next = client;
+                }
+
+                client->next = endDepot;
+                endDepot->prev = client;
+            }
+        }
+        else
+        {
+            // Insert unrouted clients into special route
+            route->isVirtual = true;
+            Node *prev = nullptr;
+
+            for (auto &client : clients)
+                if (!client.route)
+                {
+                    client.route = route;
+
+                    if (!prev)
+                    {
+                        client.prev = startDepot;
+                        startDepot->next = &client;
+                    }
+                    else
+                    {
+                        client.prev = prev;
+                        prev->next = &client;
+                    }
+
+                    prev = &client;
+                }
+
+            if (prev)
+            {
+                prev->next = endDepot;
+                endDepot->prev = prev;
+            }
         }
 
         route->update();
@@ -310,9 +358,9 @@ LocalSearch::LocalSearch(ProblemData &data,
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1),
       clients(data.numClients() + 1),
-      routes(data.numVehicles(), data),
-      startDepots(data.numVehicles()),
-      endDepots(data.numVehicles())
+      routes(data.numVehicles() + 1, data),  // +1 for special route
+      startDepots(data.numVehicles() + 1),
+      endDepots(data.numVehicles() + 1)
 {
     setNeighbours(neighbours);
 
@@ -322,7 +370,7 @@ LocalSearch::LocalSearch(ProblemData &data,
     for (size_t i = 0; i <= data.numClients(); i++)
         clients[i].client = i;
 
-    for (size_t i = 0; i < data.numVehicles(); i++)
+    for (size_t i = 0; i < data.numVehicles() + 1; i++)
     {
         routes[i].idx = i;
         routes[i].depot = &startDepots[i];

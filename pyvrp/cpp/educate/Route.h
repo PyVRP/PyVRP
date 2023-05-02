@@ -32,9 +32,10 @@ class Route
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:           // TODO make fields private
-    int idx;      // Route index
-    Node *depot;  // Pointer to the associated depot
+public:                      // TODO make fields private
+    int idx;                 // Route index
+    Node *depot;             // Pointer to the associated depot
+    bool isVirtual = false;  // Is this route virtual?
 
     /**
      * @return The client or depot node at the given position.
