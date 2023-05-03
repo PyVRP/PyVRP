@@ -146,7 +146,7 @@ def test_symmetric_neighbours():
     params = NeighbourhoodParams(symmetric_neighbours=True)
     sym_neighbours = [set(n) for n in compute_neighbours(data, params)]
 
-    for client in range(1, data.num_clients + 1):
+    for client in range(data.num_clients + 1):
         for neighbour in sym_neighbours[client]:
             assert_(client in sym_neighbours[neighbour])
 
