@@ -1,12 +1,12 @@
-from typing import List, Tuple
+from typing import List
 
 from pyvrp._Matrix import Matrix
 
 class Client:
     """
-    Simple data object storing all client data as properties.
+    Simple data object storing all client data as (read-only) properties.
 
-    Attributes
+    Parameters
     ----------
     x
         Horizontal coordinate of this client, that is, the 'x' part of the
@@ -18,12 +18,21 @@ class Client:
         The amount this client's demanding. Default 0.
     service_duration
         This client's service duration, that is, the amount of time we need to
-        visit the client for. Default 0.
+        visit the client for. Service should start (but not necessarily end)
+        within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
+        Default 0.
     tw_early
         Earliest time at which we can visit this client. Default 0.
     tw_late
         Latest time at which we can visit this client. Default 0.
     """
+
+    x: int
+    y: int
+    demand: int
+    service_duration: int
+    tw_early: int
+    tw_late: int
 
     def __init__(
         self,
@@ -34,18 +43,6 @@ class Client:
         tw_early: int = 0,
         tw_late: int = 0,
     ) -> None: ...
-    @property
-    def x(self) -> int: ...
-    @property
-    def y(self) -> int: ...
-    @property
-    def demand(self) -> int: ...
-    @property
-    def service_duration(self) -> int: ...
-    @property
-    def tw_early(self) -> int: ...
-    @property
-    def tw_late(self) -> int: ...
 
 class ProblemData:
     """
@@ -55,9 +52,9 @@ class ProblemData:
     Parameters
     ----------
     clients
-        The first client (at index 0) is assumed to be the depot. The time
-        window for the depot is assumed to describe the overall time horizon.
-        The depot should have 0 demand and 0 service duration.
+        List of clients. The first client (at index 0) is assumed to be the
+        depot. The time window for the depot is assumed to describe the overall
+        time horizon. The depot should have 0 demand and 0 service duration.
     nb_vehicles
         The number of vehicles in this problem instance.
     vehicle_cap
@@ -65,7 +62,6 @@ class ProblemData:
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0).
-
     """
 
     def __init__(

@@ -94,9 +94,7 @@ def read(
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
 
-    edge_weight: np.ndarray = round_func(instance["edge_weight"])
-    distances = edge_weight  # distance and duration are assumed to be the same
-    durations = edge_weight  # in the VRPLIB instances we read here.
+    distances: np.ndarray = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
@@ -114,13 +112,16 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
 
     if "time_window" in instance:
+        # VRPLIB instances typically do not have a duration data field, so we
+        # assume duration == distance if the instance has time windows.
+        durations = distances
         time_windows: np.ndarray = round_func(instance["time_window"])
     else:
         # No time window data. So the time window component is not relevant,
         # and we set all time-related fields to zero.
+        durations = np.zeros_like(distances)
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
-        durations = np.zeros_like(durations)
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:
