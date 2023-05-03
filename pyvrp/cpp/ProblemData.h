@@ -14,10 +14,17 @@ public:
     {
         int x;                // Coordinate X
         int y;                // Coordinate Y
-        int serviceDuration;  // Service duration
         int demand;           // Demand
+        int serviceDuration;  // Service duration
         int twEarly;          // Earliest arrival (when using time windows)
         int twLate;           // Latest arrival (when using time windows)
+
+        Client(int x,
+               int y,
+               int demand = 0,
+               int serviceDuration = 0,
+               int twEarly = 0,
+               int twLate = 0);
     };
 
 private:
@@ -85,25 +92,19 @@ public:
     [[nodiscard]] size_t vehicleCapacity() const;
 
     /**
-     * Constructs a ProblemData object with the given data. Assumes the data
-     * contains the depot, such that each vector is one longer than the number
-     * of clients.
+     * Constructs a ProblemData object with the given data. Assumes the list of
+     * clients contains the depot, such that each vector is one longer than the
+     * number of clients.
      *
-     * @param coords       Coordinates as pairs of [x, y].
-     * @param demands      Client demands.
+     * @param clients      List of clients (including depot at index 0).
      * @param numVehicles  Number of vehicles.
      * @param vehicleCap   Vehicle capacity.
-     * @param timeWindows  Time windows as pairs of [early, late].
-     * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
      * @param durMat       Duration matrix.
      */
-    ProblemData(std::vector<std::pair<int, int>> const &coords,
-                std::vector<int> const &demands,
+    ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
                 size_t vehicleCap,
-                std::vector<std::pair<int, int>> const &timeWindows,
-                std::vector<int> const &servDurs,
                 std::vector<std::vector<int>> const &distMat,
                 std::vector<std::vector<int>> const &durMat);
 };
