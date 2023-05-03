@@ -100,6 +100,11 @@ public:                      // TODO make fields private
     [[nodiscard]] inline int loadBetween(size_t start, size_t end) const;
 
     /**
+     * Calculates the total value of prizes collected in segment [start, end].
+     */
+    [[nodiscard]] inline int prizeBetween(size_t start, size_t end) const;
+
+    /**
      * Tests if this route overlaps with the other route, that is, whether
      * their circle sectors overlap with a given tolerance.
      */
@@ -115,7 +120,13 @@ public:                      // TODO make fields private
     Route(ProblemData const &data);
 };
 
-bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
+bool Route::isFeasible() const
+{
+    if (isVirtual)
+        return true;
+    else
+        return !hasExcessLoad() && !hasTimeWarp();
+}
 
 bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
 
@@ -147,7 +158,7 @@ size_t Route::size() const
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
-    assert(start <= end);
+    assert(0 < start && start <= end && end <= nodes.size());
 
     auto tws = nodes[start - 1]->tw;
 
@@ -182,6 +193,16 @@ int Route::loadBetween(size_t start, size_t end) const
     assert(startLoad <= endLoad);
 
     return endLoad - startLoad + atStart;
+}
+
+int Route::prizeBetween(size_t start, size_t end) const
+{
+    assert(start <= end && end <= nodes.size());
+
+    auto prize = 0;
+    for (size_t step = start; step != end; ++step)
+        prize += data.client(nodes[step]->client).prize;
+    return prize;
 }
 
 // Outputs a route into a given ostream in CVRPLib format

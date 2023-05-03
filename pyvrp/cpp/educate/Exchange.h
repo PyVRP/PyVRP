@@ -87,15 +87,29 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
     assert(posU > 0);
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    int const current = U->route->distBetween(posU - 1, posU + N)
-                        + data.dist(V->client, n(V)->client);
+    int deltaCost;
 
-    int const proposed = data.dist(V->client, U->client)
-                         + U->route->distBetween(posU, posU + N - 1)
-                         + data.dist(endU->client, n(V)->client)
-                         + data.dist(p(U)->client, n(endU)->client);
+    if (V->route->isVirtual)  // then we move everything from U into V. This
+    {                         // costs us the prizes in U, but saves distance.
+        int const current = U->route->distBetween(posU - 1, posU + N)
+                            - U->route->prizeBetween(posU - 1, posU + N);
 
-    int deltaCost = proposed - current;
+        int const proposed = data.dist(p(U)->client, n(endU)->client);
+
+        deltaCost = proposed - current;
+    }
+    else
+    {
+        int const current = U->route->distBetween(posU - 1, posU + N)
+                            + data.dist(V->client, n(V)->client);
+
+        int const proposed = data.dist(V->client, U->client)
+                             + U->route->distBetween(posU, posU + N - 1)
+                             + data.dist(endU->client, n(V)->client)
+                             + data.dist(p(U)->client, n(endU)->client);
+
+        deltaCost = proposed - current;
+    }
 
     if (U->route != V->route)
     {
@@ -115,8 +129,11 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
                                                data.vehicleCapacity());
 
-        if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good
+        // If V is virtual V's cost contribution is 0. If V is not virtual and
+        // the delta cost of just U's route is not enough even without V, the
+        // move will never be good.
+        if (V->route->isVirtual || deltaCost >= 0)
+            return deltaCost;
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
                                                data.vehicleCapacity());
@@ -133,6 +150,7 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
     }
     else  // within same route
     {
+        assert(!U->route->isVirtual);
         auto const *route = U->route;
 
         if (!route->hasTimeWarp() && deltaCost >= 0)
@@ -177,20 +195,43 @@ int Exchange<N, M>::evalSwapMove(Node *U,
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
     auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
-    int const current = U->route->distBetween(posU - 1, posU + N)
-                        + V->route->distBetween(posV - 1, posV + M);
+    int deltaCost;
 
-    int const proposed
-        //   p(U) -> V -> ... -> endV -> n(endU)
-        // + p(V) -> U -> ... -> endU -> n(endV)
-        = data.dist(p(U)->client, V->client)
-          + V->route->distBetween(posV, posV + M - 1)
-          + data.dist(endV->client, n(endU)->client)
-          + data.dist(p(V)->client, U->client)
-          + U->route->distBetween(posU, posU + N - 1)
-          + data.dist(endU->client, n(endV)->client);
+    if (V->route->isVirtual)
+    {
+        int const current = U->route->distBetween(posU - 1, posU + N)
+                            - U->route->prizeBetween(posU - 1, posU + N);
 
-    int deltaCost = proposed - current;
+        int const proposed =
+            //   p(U) -> V -> ... -> endV -> n(endU)
+            // + p(V) -> U -> ... -> endU -> n(endV)
+            // - prizes(V, endV)
+            // + prizes(U, endU)
+            = data.dist(p(U)->client, V->client)
+              + V->route->distBetween(posV, posV + M - 1)
+              + data.dist(endV->client, n(endU)->client)
+              - V->route->prizeBetween(posV, posV + M - 1)
+              + U->route->prizeBetween(posU - 1, posU + N);
+
+        deltaCost = proposed - current;
+    }
+    else
+    {
+        int const current = U->route->distBetween(posU - 1, posU + N)
+                            + V->route->distBetween(posV - 1, posV + M);
+
+        int const proposed
+            //   p(U) -> V -> ... -> endV -> n(endU)
+            // + p(V) -> U -> ... -> endU -> n(endV)
+            = data.dist(p(U)->client, V->client)
+              + V->route->distBetween(posV, posV + M - 1)
+              + data.dist(endV->client, n(endU)->client)
+              + data.dist(p(V)->client, U->client)
+              + U->route->distBetween(posU, posU + N - 1)
+              + data.dist(endU->client, n(endV)->client);
+
+        deltaCost = proposed - current;
+    }
 
     if (U->route != V->route)
     {
@@ -205,14 +246,6 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
-        auto vTWS = TWS::merge(data.durationMatrix(),
-                               p(V)->twBefore,
-                               U->route->twBetween(posU, posU + N - 1),
-                               n(endV)->twAfter);
-
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
-
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
@@ -222,6 +255,17 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
                                                data.vehicleCapacity());
 
+        if (V->route->isVirtual)  // no need to evaluate impact on virtual
+            return deltaCost;     // routes - they do not contribute to cost.
+
+        auto vTWS = TWS::merge(data.durationMatrix(),
+                               p(V)->twBefore,
+                               U->route->twBetween(posU, posU + N - 1),
+                               n(endV)->twAfter);
+
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
+
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
                                                data.vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
@@ -229,6 +273,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
     }
     else  // within same route
     {
+        assert(!U->route->isVirtual);
         auto const *route = U->route;
 
         if (!route->hasTimeWarp() && deltaCost >= 0)

@@ -34,9 +34,11 @@ Individual LocalSearch::search(Individual &individual,
         // Node operators are evaluated at neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
-            // TODO only loop over U that are not currently in virtual route?
-
             auto *U = &clients[uClient];
+
+            if (U->route->isVirtual)  // only process clients that are not in a
+                continue;             // virtual route.
+
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
 
