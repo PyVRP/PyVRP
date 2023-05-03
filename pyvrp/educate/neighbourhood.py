@@ -89,16 +89,16 @@ def compute_neighbours(
     proximity[0, :] = np.inf  # depot has no neighbours
     proximity[:, 0] = np.inf  # clients do not neighbour depot
 
-    topk = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
+    top_k = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
 
     if not params.symmetric_neighbours:
-        return [[]] + topk.tolist()
+        return [[]] + top_k.tolist()
 
     # Construct a symmetric adjacency matrix and return the adjacent clients
     # as the neighbourhood structure.
     adj = np.zeros_like(proximity, dtype=bool)
     rows = np.expand_dims(np.arange(1, n), axis=1)
-    adj[rows, topk] = True
+    adj[rows, top_k] = True
     adj = adj | adj.transpose()
 
     return [np.flatnonzero(row).tolist() for row in adj]
@@ -109,7 +109,7 @@ def _compute_proximity(
 ) -> np.ndarray[float]:
     """
     Computes proximity for neighborhood. Proximity is based on Vidal et al.
-    (2012).
+    (2013).
 
     Parameters
     ----------
