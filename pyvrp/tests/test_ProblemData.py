@@ -1,8 +1,55 @@
-import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_raises
+from pytest import mark
 
-from pyvrp import ProblemData
+from pyvrp import Client, ProblemData
+
+
+@mark.parametrize(
+    "x,y,demand,service_duration,tw_early,tw_late",
+    [
+        (1, 1, 1, 1, 0, 1),  # normal
+        (1, 1, 1, 0, 0, 1),  # zero duration
+        (1, 1, 0, 1, 0, 1),  # zero demand
+        (1, 1, 1, 1, 0, 0),  # zero length time interval
+        (-1, -1, 1, 1, 0, 1),  # negative coordinates
+    ],
+)
+def test_client_constructor_initialises_data_fields_correctly(
+    x: int,
+    y: int,
+    demand: int,
+    service_duration: int,
+    tw_early: int,
+    tw_late: int,
+):
+    client = Client(x, y, demand, service_duration, tw_early, tw_late)
+    assert_allclose(client.x, x)
+    assert_allclose(client.y, y)
+    assert_allclose(client.demand, demand)
+    assert_allclose(client.service_duration, service_duration)
+    assert_allclose(client.tw_early, tw_early)
+    assert_allclose(client.tw_late, tw_late)
+
+
+@mark.parametrize(
+    "x,y,demand,service_duration,tw_early,tw_late",
+    [
+        (1, 1, 1, 1, 1, 0),  # late < early
+        (1, 1, 1, -1, 0, 1),  # negative duration
+        (1, 1, -1, 1, 0, 1),  # negative demand
+    ],
+)
+def test_raises_for_invalid_client_data(
+    x: int,
+    y: int,
+    demand: int,
+    service_duration: int,
+    tw_early: int,
+    tw_late: int,
+):
+    with assert_raises(ValueError):
+        Client(x, y, demand, service_duration, tw_early, tw_late)
 
 
 def test_depot_is_first_client():
@@ -11,13 +58,11 @@ def test_depot_is_first_client():
     ``client(0)``.
     """
     mat = [[0, 1], [1, 0]]
+
     data = ProblemData(
-        coords=[(0, 0), (0, 1)],
-        demands=[0, 0],
+        clients=[Client(x=0, y=0), Client(x=0, y=1)],
         nb_vehicles=1,
         vehicle_cap=1,
-        time_windows=[(0, 10), (0, 10)],
-        service_durations=[0, 0],
         distance_matrix=mat,
         duration_matrix=mat,
     )
@@ -31,20 +76,20 @@ def test_matrix_access():
     ``distance_matrix()`` methods correctly index the underlying duration
     and distance matrices.
     """
-    size = 6
     gen = default_rng(seed=42)
+    size = 6
+
     dist_mat = gen.integers(500, size=(size, size))
     dur_mat = gen.integers(500, size=(size, size))
-
-    assert_(not np.allclose(dist_mat, dur_mat))
+    clients = [
+        Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10)
+        for _ in range(size)
+    ]
 
     data = ProblemData(
-        coords=[(0, 0)] * size,
-        demands=[0] * size,
+        clients=clients,
         nb_vehicles=1,
         vehicle_cap=1,
-        time_windows=[(0, 10)] * size,
-        service_durations=[0] * size,
         distance_matrix=dist_mat,  # type: ignore
         duration_matrix=dur_mat,  # type: ignore
     )
@@ -54,8 +99,8 @@ def test_matrix_access():
 
     for frm in range(size):
         for to in range(size):
-            assert_equal(dur_mat[frm, to], data.duration(frm, to))
-            assert_equal(dist_mat[frm, to], data.dist(frm, to))
+            assert_allclose(dur_mat[frm, to], data.duration(frm, to))
+            assert_allclose(dist_mat[frm, to], data.dist(frm, to))
 
-            assert_equal(dur_mat_data[frm, to], dur_mat[frm, to])
-            assert_equal(dist_mat_data[frm, to], dist_mat[frm, to])
+            assert_allclose(dur_mat_data[frm, to], dur_mat[frm, to])
+            assert_allclose(dist_mat_data[frm, to], dist_mat[frm, to])

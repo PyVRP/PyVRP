@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, ProblemData, XorShift128
+from pyvrp import Client, CostEvaluator, Individual, ProblemData, XorShift128
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.educate._Exchange import (
     Exchange10,
@@ -213,13 +213,16 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     Tests that (1, 0)-exchange checks the duration matrix for time-window
     feasibility before applying a move that improves the traveled distance.
     """
+    clients = [
+        Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10),
+        Client(x=1, y=0, demand=0, service_duration=0, tw_early=0, tw_late=5),
+        Client(x=2, y=0, demand=0, service_duration=0, tw_early=0, tw_late=5),
+    ]
+
     data = ProblemData(
-        coords=[(0, 0), (1, 0), (2, 0)],
-        demands=[0, 0, 0],
+        clients=clients,
         nb_vehicles=1,
         vehicle_cap=0,
-        time_windows=[(0, 10), (0, 5), (0, 5)],
-        service_durations=[0, 0, 0],
         distance_matrix=[  # distance-wise, the best route is 0 -> 1 -> 2 -> 0.
             [0, 1, 5],
             [5, 0, 1],

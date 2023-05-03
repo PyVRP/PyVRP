@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
-from ._ProblemData import ProblemData
+from ._ProblemData import Client, ProblemData
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -71,9 +71,10 @@ def read(
     ProblemData
         Data instance constructed from the read data.
     """
-    if isinstance(round_func, str) and round_func in ROUND_FUNCS:
-        round_func = ROUND_FUNCS[round_func]
-    elif not callable(round_func):
+    if (key := str(round_func)) in ROUND_FUNCS:
+        round_func = ROUND_FUNCS[key]
+
+    if not callable(round_func):
         raise ValueError(
             f"round_func = {round_func} is not understood. Can be a function,"
             f" or one of {ROUND_FUNCS.keys()}."
@@ -83,41 +84,44 @@ def read(
 
     # A priori checks
     if "dimension" in instance:
-        num_clients = instance["dimension"]
+        dimension: int = instance["dimension"]
     else:
         if "demand" not in instance:
             raise ValueError("File should either contain dimension or demands")
-        num_clients = len(instance["demand"])
+        dimension = len(instance["demand"])
 
-    depots = instance.get("depot", np.array([0]))
-    num_vehicles = instance.get("vehicles", num_clients - 1)
-    capacity = instance.get("capacity", _INT_MAX)
-    edge_weight = round_func(instance["edge_weight"])
+    depots: np.ndarray = instance.get("depot", np.array([0]))
+    num_vehicles: int = instance.get("vehicles", dimension - 1)
+    capacity: int = instance.get("capacity", _INT_MAX)
+
+    distances: np.ndarray = round_func(instance["edge_weight"])
 
     if "demand" in instance:
-        demands = instance["demand"]
+        demands: np.ndarray = instance["demand"]
     else:
-        demands = np.zeros(num_clients, dtype=int)
+        demands = np.zeros(dimension, dtype=int)
 
     if "node_coord" in instance:
-        coords = round_func(instance["node_coord"])
+        coords: np.ndarray = round_func(instance["node_coord"])
     else:
-        coords = np.zeros((num_clients, 2), dtype=int)
+        coords = np.zeros((dimension, 2), dtype=int)
 
     if "service_time" in instance:
-        service_times = round_func(instance["service_time"])
+        service_times: np.ndarray = round_func(instance["service_time"])
     else:
-        service_times = np.zeros(num_clients, dtype=int)
+        service_times = np.zeros(dimension, dtype=int)
 
     if "time_window" in instance:
-        time_windows = round_func(instance["time_window"])
+        # VRPLIB instances typically do not have a duration data field, so we
+        # assume duration == distance if the instance has time windows.
+        durations = distances
+        time_windows: np.ndarray = round_func(instance["time_window"])
     else:
-        # The default value for the latest time window based on the maximum
-        # route duration. This ensures that the time window constraints are
-        # always satisfied.
-        bound = num_clients * (edge_weight.max() + service_times.max())
-        bound = min(bound, _INT_MAX)
-        time_windows = np.repeat([[0, bound]], num_clients, axis=0)
+        # No time window data. So the time window component is not relevant,
+        # and we set all time-related fields to zero.
+        durations = np.zeros_like(distances)
+        service_times = np.zeros(dimension, dtype=int)
+        time_windows = np.zeros((dimension, 2), dtype=int)
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:
@@ -138,15 +142,24 @@ def read(
     if (time_windows[:, 0] > time_windows[:, 1]).any():
         raise ValueError("Time window cannot start after end")
 
+    clients = [
+        Client(
+            coords[idx][0],  # x
+            coords[idx][1],  # y
+            demands[idx],
+            service_times[idx],
+            time_windows[idx][0],  # TW early
+            time_windows[idx][1],  # TW late
+        )
+        for idx in range(dimension)
+    ]
+
     return ProblemData(
-        coords,
-        demands,
+        clients,
         num_vehicles,
         capacity,
-        time_windows,
-        service_times,
-        edge_weight,  # distance and duration are assumed to be the same in
-        edge_weight,  # the VRPLIB instances we read here.
+        distances,
+        durations,
     )
 
 
