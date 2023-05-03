@@ -25,7 +25,8 @@ public:
                int demand = 0,
                int serviceDuration = 0,
                int twEarly = 0,
-               int twLate = 0);
+               int twLate = 0,
+               int prize = 0);
     };
 
 private:

@@ -8,13 +8,14 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<int, int, int, int, int, int>(),
+        .def(py::init<int, int, int, int, int, int, int>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
-             py::arg("tw_late") = 0)
+             py::arg("tw_late") = 0,
+             py::arg("prize") = 0)
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
