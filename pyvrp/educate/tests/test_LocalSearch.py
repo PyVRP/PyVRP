@@ -75,12 +75,14 @@ def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
     "weight_wait_time,"
     "weight_time_warp,"
     "nb_granular,"
-    "symmetric_proximity",
+    "symmetric_proximity,"
+    "symmetric_neighbours",
     [
-        (20, 20, 10, True),
-        (20, 20, 10, True),
+        (20, 20, 10, True, False),
+        (20, 20, 10, True, True),
         # From original c++ implementation
-        (18, 20, 34, True),
+        # (18, 20, 34, False),
+        (18, 20, 34, True, True),
     ],
 )
 def test_local_search_set_get_neighbours(
@@ -88,6 +90,7 @@ def test_local_search_set_get_neighbours(
     weight_time_warp: int,
     nb_granular: int,
     symmetric_proximity: bool,
+    symmetric_neighbours: bool,
 ):
     data = read("data/RC208.txt", "solomon", round_func="trunc")
 
@@ -103,6 +106,7 @@ def test_local_search_set_get_neighbours(
         weight_time_warp,
         nb_granular,
         symmetric_proximity,
+        symmetric_neighbours,
     )
     neighbours = compute_neighbours(data, params)
 

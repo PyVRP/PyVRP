@@ -30,9 +30,12 @@ class NeighbourhoodParams:
         neighbourhood. This parameter determines the size of the overall
         neighbourhood.
     symmetric_proximity
-        Whether to calculate a symmetric proximity matrix. A symmetric matrix
-        ensures the granular neighbourhood is symmetric as well: if
-        :math:`(i, j)` is in the neighbourhood, then so is :math:`(j, i)`.
+        Whether to calculate a symmetric proximity matrix. This ensures edge
+        :math:`(i, j)` is given the same weight as :math:`(j, i)`.
+    symmetric_neighbours
+        Whether to symmetrise the neighbourhood structure. This ensures that
+        when edge :math:`(i, j)` is in, then so is :math:`(j, i)`. Note that
+        this is *not* the same as ``symmetric_proximity``.
 
     Raises
     ------
@@ -44,6 +47,7 @@ class NeighbourhoodParams:
     weight_time_warp: float = 1.0
     nb_granular: int = 40
     symmetric_proximity: bool = True
+    symmetric_neighbours: bool = False
 
     def __post_init__(self):
         if self.nb_granular <= 0:
@@ -85,8 +89,19 @@ def compute_neighbours(
     proximity[0, :] = np.inf  # depot has no neighbours
     proximity[:, 0] = np.inf  # clients do not neighbour depot
 
-    topk = np.argsort(proximity, axis=1, kind="stable")[1:, :k]
-    return [[]] + topk.tolist()
+    topk = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
+
+    if not params.symmetric_neighbours:
+        return [[]] + topk.tolist()
+
+    # Construct a symmetric adjacency matrix and return the adjacent clients
+    # as the neighbourhood structure.
+    adj = np.zeros_like(proximity, dtype=bool)
+    rows = np.expand_dims(np.arange(1, n), axis=1)
+    adj[rows, topk] = True
+    adj = adj | adj.transpose()
+
+    return [np.flatnonzero(row).tolist() for row in adj]
 
 
 def _compute_proximity(
