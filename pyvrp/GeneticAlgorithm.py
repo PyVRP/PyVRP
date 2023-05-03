@@ -26,7 +26,7 @@ class GeneticAlgorithmParams:
     collect_statistics: bool = False
     intensify_probability: float = 0.15
     intensify_on_best: bool = True
-    nb_iter_no_improvement: int = 20_000
+    nb_iter_no_improvement: int = 10_000
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
