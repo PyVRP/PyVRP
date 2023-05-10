@@ -22,4 +22,4 @@ To get these instance sets quickly, the ``PyVRP/Instances`` repository may be in
 
    git submodule init instances
 
-After running this comamnd, the instances will be available in ``instances/``.
+After running this command, the instances will be available in ``instances/``.
