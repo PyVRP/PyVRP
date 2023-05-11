@@ -202,7 +202,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         int const current = U->route->distBetween(posU - 1, posU + N)
                             - U->route->prizeBetween(posU - 1, posU + N);
 
-        int const proposed =
+        int const proposed
             //   p(U) -> V -> ... -> endV -> n(endU)
             // + p(V) -> U -> ... -> endU -> n(endV)
             // - prizes(V, endV)
