@@ -39,7 +39,7 @@ class LocalSearch
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
-    int nbMoves = 0;               // Operator counter
+    int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve

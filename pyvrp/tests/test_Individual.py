@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Individual, ProblemData, XorShift128
+from pyvrp import Client, Individual, ProblemData, XorShift128
 from pyvrp.tests.helpers import read
 
 
@@ -155,12 +155,13 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     ]
 
     data = ProblemData(
-        coords=[(0, 0), (1, 0), (2, 0)],
-        demands=[0, 0, 0],
+        clients=[
+            Client(x=0, y=0, tw_late=10),
+            Client(x=1, y=0, tw_late=5),
+            Client(x=2, y=0, tw_late=5),
+        ],
         nb_vehicles=2,
         vehicle_cap=0,
-        time_windows=[(0, 10), (0, 5), (0, 5)],
-        service_durations=[0, 0, 0],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
     )
