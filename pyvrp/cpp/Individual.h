@@ -15,11 +15,11 @@ class Individual
     using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;   // Number of routes
-    size_t distance_ = 0;    // Total distance
-    size_t excessLoad_ = 0;  // Total excess load over all routes
-    size_t prize_ = 0;       // Value of all collected prizes
-    size_t timeWarp_ = 0;    // Total time warp over all routes
+    size_t numRoutes_ = 0;    // Number of routes
+    size_t distance_ = 0;     // Total distance
+    size_t excessLoad_ = 0;   // Total excess load over all routes
+    size_t uncollected_ = 0;  // Prizes of unvisited clients
+    size_t timeWarp_ = 0;     // Total time warp over all routes
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -76,9 +76,10 @@ public:
     [[nodiscard]] size_t excessLoad() const;
 
     /**
-     * @return Value of collected prizes in all routes.
+     * @return Value of all uncollected prizes, that is, the prizes of clients
+     *         not visited by the routes in this solution.
      */
-    [[nodiscard]] size_t prize() const;
+    [[nodiscard]] size_t uncollected() const;
 
     /**
      * @return Total time warp over all routes.

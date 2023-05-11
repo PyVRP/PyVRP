@@ -38,6 +38,7 @@ PYBIND11_MODULE(_Individual, m)
         .def("distance", &Individual::distance)
         .def("excess_load", &Individual::excessLoad)
         .def("time_warp", &Individual::timeWarp)
+        .def("uncollected", &Individual::uncollected)
         .def(
             "__copy__",
             [](Individual const &individual) { return Individual(individual); })

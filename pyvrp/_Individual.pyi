@@ -123,6 +123,16 @@ class Individual:
         int
             Total time warp over all routes.
         """
+    def uncollected(self) -> int:
+        """
+        Returns the value of all uncollected prizes, that is, the prizes of
+        clients not visited by the routes in this solution.
+
+        Returns
+        -------
+        int
+            Value of uncollected prizes.
+        """
     def is_feasible(self) -> bool:
         """
         Whether this individual is feasible. This is a shorthand for checking

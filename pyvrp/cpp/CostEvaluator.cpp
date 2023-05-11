@@ -12,11 +12,12 @@ int CostEvaluator::penalisedCost(Individual const &individual) const
     auto const loadPen = loadPenaltyExcess(individual.excessLoad());
     auto const twPen = twPenalty(individual.timeWarp());
 
-    return individual.distance() + loadPen + twPen - individual.prize();
+    return individual.distance() + loadPen + twPen + individual.uncollected();
 }
 
 int CostEvaluator::cost(Individual const &individual) const
 {
-    return individual.isFeasible() ? individual.distance() - individual.prize()
-                                   : std::numeric_limits<int>::max();
+    return individual.isFeasible()
+               ? individual.distance() + individual.uncollected()
+               : std::numeric_limits<int>::max();
 }

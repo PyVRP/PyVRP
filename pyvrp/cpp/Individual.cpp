@@ -11,10 +11,13 @@ using Routes = std::vector<Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
+    uncollected_ = 0;
+    for (size_t client = 0; client != data.numClients(); ++client)
+        uncollected_ += data.client(client).prize;
+
     numRoutes_ = 0;
     distance_ = 0;
     excessLoad_ = 0;
-    prize_ = 0;
     timeWarp_ = 0;
 
     for (auto const &route : routes_)
@@ -80,7 +83,7 @@ void Individual::evaluate(ProblemData const &data)
         if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
             excessLoad_ += routeLoad - data.vehicleCapacity();
 
-        prize_ += routePrize;
+        uncollected_ -= routePrize;
     }
 }
 
@@ -106,7 +109,7 @@ size_t Individual::distance() const { return distance_; }
 
 size_t Individual::excessLoad() const { return excessLoad_; }
 
-size_t Individual::prize() const { return prize_; }
+size_t Individual::uncollected() const { return uncollected_; }
 
 size_t Individual::timeWarp() const { return timeWarp_; }
 
