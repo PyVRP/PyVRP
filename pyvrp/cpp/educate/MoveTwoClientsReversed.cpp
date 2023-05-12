@@ -2,6 +2,8 @@
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
+#include <cassert>
+
 using TWS = TimeWindowSegment;
 
 int MoveTwoClientsReversed::evaluate(Node *U,
@@ -13,6 +15,63 @@ int MoveTwoClientsReversed::evaluate(Node *U,
 
     auto const posU = U->position;
     auto const posV = V->position;
+
+    if (!U->route->isVirtual && V->route->isVirtual)
+    {
+        int const current = U->route->distBetween(posU - 1, posU + 2)
+                            + data.dist(V->client, n(V)->client)
+                            - U->route->prizeBetween(posU - 1, posU + 2);
+
+        int const proposed = data.dist(p(U)->client, n(n(U))->client);
+
+        int deltaCost = proposed - current;
+
+        if (U->route->isFeasible() && deltaCost >= 0)
+            return deltaCost;
+
+        auto uTWS = TWS::merge(
+            data.durationMatrix(), p(U)->twBefore, n(n(U))->twAfter);
+
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+
+        auto const loadDiff = U->route->loadBetween(posU, posU + 1);
+
+        deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
+                                               data.vehicleCapacity());
+        deltaCost -= costEvaluator.loadPenalty(U->route->load(),
+                                               data.vehicleCapacity());
+
+        return deltaCost;
+    }
+    else if (U->route->isVirtual && !V->route->isVirtual)
+    {
+        int const current = data.dist(V->client, n(V)->client);
+        int const proposed = data.dist(p(U)->client, n(n(U))->client)
+                             + data.dist(V->client, n(U)->client)
+                             + data.dist(n(U)->client, U->client)
+                             + data.dist(U->client, n(V)->client)
+                             - U->route->prizeBetween(posU - 1, posU + 2);
+
+        int deltaCost = proposed - current;
+
+        auto const loadDiff = U->route->loadBetween(posU, posU + 1);
+
+        deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
+                                               data.vehicleCapacity());
+        deltaCost -= costEvaluator.loadPenalty(V->route->load(),
+                                               data.vehicleCapacity());
+
+        auto vTWS = TWS::merge(
+            data.durationMatrix(), V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
+
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
+
+        return deltaCost;
+    }
+
+    assert(!U->route->isVirtual && !V->route->isVirtual);
 
     int const current = U->route->distBetween(posU - 1, posU + 2)
                         + data.dist(V->client, n(V)->client);

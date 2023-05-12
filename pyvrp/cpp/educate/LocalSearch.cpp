@@ -36,9 +36,6 @@ Individual LocalSearch::search(Individual &individual,
         {
             auto *U = &clients[uClient];
 
-            if (U->route->isVirtual)  // only process clients that are not in a
-                continue;             // virtual route.
-
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
 
@@ -47,6 +44,11 @@ Individual LocalSearch::search(Individual &individual,
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
+
+                // Moves between virtual routes are not evaluated as virtual
+                // routes do not contribute to the objective.
+                if (U->route->isVirtual && V->route->isVirtual)
+                    continue;
 
                 if (lastModified[U->route->idx] > lastTestedNode
                     || lastModified[V->route->idx] > lastTestedNode)
@@ -59,15 +61,12 @@ Individual LocalSearch::search(Individual &individual,
                 }
             }
 
-            // Test inserting U into the virtual route. U is then no longer
-            // visited.
-            if (applyNodeOps(U, routes.back().depot, costEvaluator))
-                continue;
+            if (!U->route->isVirtual)  // then test U against the virtual route
+                if (applyNodeOps(U, routes.back().depot, costEvaluator))
+                    continue;
 
-            // Empty route moves are not tested in the first iteration to avoid
-            // increasing the fleet size too much.
-            if (step > 0)
-            {
+            if (step > 0)  // empty route moves are not tested in the first
+            {              // iteration to avoid using too many routes.
                 auto pred = [](auto const &route) { return route.empty(); };
                 auto empty = std::find_if(routes.begin(), routes.end(), pred);
 

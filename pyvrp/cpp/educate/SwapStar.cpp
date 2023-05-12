@@ -87,6 +87,9 @@ int SwapStar::evaluate(Route *routeU,
                        Route *routeV,
                        CostEvaluator const &costEvaluator)
 {
+    if (routeU->isVirtual || routeV->isVirtual)
+        return 0;  // TODO implement SWAP* for virtual routes
+
     best = {};
 
     if (updated[routeV->idx])
