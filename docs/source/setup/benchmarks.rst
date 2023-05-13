@@ -1,7 +1,7 @@
 Benchmarks
 ==========
 
-This page lists benchmark results obtained by recent versions of the PyVRP package.
+This page lists benchmark results obtained with recent versions of the PyVRP package.
 See the :doc:`benchmarking instructions <../dev/benchmarking>` for how these benchmarks are run.
 
 
@@ -34,7 +34,6 @@ Average gaps over ten seeds on the Gehring and Homberger instances with 1000 cus
 
           Mean gap  0.43%       0.32%
    Gap of the mean  0.52%       0.37%
-
 
 
 v0.1.0 (1 March 2023)
