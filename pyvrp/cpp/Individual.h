@@ -4,32 +4,20 @@
 #include "ProblemData.h"
 #include "XorShift128.h"
 
-#include <string>
+#include <iosfwd>
 #include <vector>
 
 class Individual
 {
     friend struct std::hash<Individual>;  // friend struct to enable hashing
-    struct Route;                         // forward declaration
 
     using Client = int;
-    using Routes = std::vector<Route>;
-
-    size_t numRoutes_ = 0;   // Number of routes
-    size_t distance_ = 0;    // Total distance
-    size_t excessLoad_ = 0;  // Total excess load over all routes
-    size_t timeWarp_ = 0;    // Total time warp over all routes
-
-    Routes routes_;  // Routes - only the first numRoutes_ are non-empty
-    std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
-
-    // Determines the [pred, succ] pairs for each client.
-    void makeNeighbours();
-
-    // Evaluates this solution's characteristics.
-    void evaluate(ProblemData const &data);
 
 public:
+    /**
+     * A simple Route structure that contains the route plan (as a vector), and
+     * some route statistics.
+     */
     struct Route
     {
         std::vector<Client> plan;
@@ -47,11 +35,29 @@ public:
 
         void push_back(Client client) { plan.push_back(client); };
 
-        auto begin() const { return plan.cbegin(); };
-        auto end() const { return plan.cend(); };
+        auto begin() const { return plan.begin(); };
+        auto end() const { return plan.end(); };
         auto back() const { return plan.back(); };
     };
 
+private:
+    using Routes = std::vector<Route>;
+
+    size_t numRoutes_ = 0;   // Number of routes
+    size_t distance_ = 0;    // Total distance
+    size_t excessLoad_ = 0;  // Total excess load over all routes
+    size_t timeWarp_ = 0;    // Total time warp over all routes
+
+    Routes routes_;  // Routes - only the first numRoutes_ are non-empty
+    std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
+
+    // Determines the [pred, succ] pairs for each client.
+    void makeNeighbours();
+
+    // Evaluates this solution's characteristics.
+    void evaluate(ProblemData const &data);
+
+public:
     /**
      * Returns the number of non-empty routes in this individual's solution.
      * Such non-empty routes are guaranteed to be in the lower indices of the

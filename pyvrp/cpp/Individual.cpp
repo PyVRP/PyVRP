@@ -3,7 +3,6 @@
 
 #include <fstream>
 #include <numeric>
-#include <vector>
 
 using Client = int;
 using Routes = std::vector<Individual::Route>;
