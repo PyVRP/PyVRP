@@ -22,13 +22,19 @@ void Individual::evaluate(ProblemData const &data)
 
         numRoutes_++;
         route.distance = data.dist(0, route[0]);
+        route.duration = data.duration(0, route[0]);
+        route.demand = data.client(route[0]).demand;
         route.timeWarp = 0;
-        route.load = data.client(route[0]).demand;
+        route.wait = 0;
 
-        int time = data.duration(0, route[0]);
+        int startTime = data.depot().twEarly + data.depot().serviceDuration;
+        int time = startTime + data.duration(0, route[0]);
 
         if (time < data.client(route[0]).twEarly)
+        {
+            route.wait += data.client(route[0]).twEarly - time;
             time = data.client(route[0]).twEarly;
+        }
 
         if (time > data.client(route[0]).twLate)
         {
@@ -39,14 +45,18 @@ void Individual::evaluate(ProblemData const &data)
         for (size_t idx = 1; idx < route.size(); idx++)
         {
             route.distance += data.dist(route[idx - 1], route[idx]);
-            route.load += data.client(route[idx]).demand;
+            route.duration += data.duration(route[idx - 1], route[idx]);
+            route.demand += data.client(route[idx]).demand;
 
             time += data.client(route[idx - 1]).serviceDuration
                     + data.duration(route[idx - 1], route[idx]);
 
             // Add possible waiting time
             if (time < data.client(route[idx]).twEarly)
+            {
+                route.wait += data.client(route[idx]).twEarly - time;
                 time = data.client(route[idx]).twEarly;
+            }
 
             // Add possible time warp
             if (time > data.client(route[idx]).twLate)
@@ -56,22 +66,21 @@ void Individual::evaluate(ProblemData const &data)
             }
         }
 
-        // For the last client, the successors is the depot. Also update the
-        // rDist and time
+        // Last client has depot as successor.
         route.distance += data.dist(route.back(), 0);
+        route.duration += data.duration(route.back(), 0);
         time += data.client(route.back()).serviceDuration
                 + data.duration(route.back(), 0);
 
-        // For the depot, we only need to check the end of the time window
-        // (add possible time warp)
+        // For the depot, we only need to check the end of the time window.
         route.timeWarp += std::max(time - data.depot().twLate, 0);
 
         // Whole solution stats
         distance_ += route.distance;
         timeWarp_ += route.timeWarp;
 
-        if (static_cast<size_t>(route.load) > data.vehicleCapacity())
-            excessLoad_ += route.load - data.vehicleCapacity();
+        if (static_cast<size_t>(route.demand) > data.vehicleCapacity())
+            excessLoad_ += route.demand - data.vehicleCapacity();
     }
 }
 

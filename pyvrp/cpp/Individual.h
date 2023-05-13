@@ -34,9 +34,12 @@ public:
     {
         std::vector<Client> plan;
 
-        size_t distance;
-        size_t load;
-        size_t timeWarp;
+        size_t distance;  // Total travel distance on this route
+        size_t demand;    // Total demand served on this route
+        size_t duration;  // Total travel duration on this route
+        size_t service;   // Total service duration on this route
+        size_t timeWarp;  // Total time warp on this route
+        size_t wait;      // Total waiting time on this route
 
         bool empty() const { return plan.empty(); };
         size_t size() const { return plan.size(); };
