@@ -6,8 +6,7 @@
 #include <vector>
 
 using Client = int;
-using Route = std::vector<Client>;
-using Routes = std::vector<Route>;
+using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
@@ -16,16 +15,15 @@ void Individual::evaluate(ProblemData const &data)
     excessLoad_ = 0;
     timeWarp_ = 0;
 
-    for (auto const &route : routes_)
+    for (auto &route : routes_)
     {
         if (route.empty())  // First empty route. All subsequent routes are
             break;          // empty as well.
 
         numRoutes_++;
-
-        int routeDist = data.dist(0, route[0]);
-        int routeTimeWarp = 0;
-        int routeLoad = data.client(route[0]).demand;
+        route.distance = data.dist(0, route[0]);
+        route.timeWarp = 0;
+        route.load = data.client(route[0]).demand;
 
         int time = data.duration(0, route[0]);
 
@@ -34,14 +32,14 @@ void Individual::evaluate(ProblemData const &data)
 
         if (time > data.client(route[0]).twLate)
         {
-            routeTimeWarp += time - data.client(route[0]).twLate;
+            route.timeWarp += time - data.client(route[0]).twLate;
             time = data.client(route[0]).twLate;
         }
 
         for (size_t idx = 1; idx < route.size(); idx++)
         {
-            routeDist += data.dist(route[idx - 1], route[idx]);
-            routeLoad += data.client(route[idx]).demand;
+            route.distance += data.dist(route[idx - 1], route[idx]);
+            route.load += data.client(route[idx]).demand;
 
             time += data.client(route[idx - 1]).serviceDuration
                     + data.duration(route[idx - 1], route[idx]);
@@ -53,27 +51,27 @@ void Individual::evaluate(ProblemData const &data)
             // Add possible time warp
             if (time > data.client(route[idx]).twLate)
             {
-                routeTimeWarp += time - data.client(route[idx]).twLate;
+                route.timeWarp += time - data.client(route[idx]).twLate;
                 time = data.client(route[idx]).twLate;
             }
         }
 
         // For the last client, the successors is the depot. Also update the
         // rDist and time
-        routeDist += data.dist(route.back(), 0);
+        route.distance += data.dist(route.back(), 0);
         time += data.client(route.back()).serviceDuration
                 + data.duration(route.back(), 0);
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
-        routeTimeWarp += std::max(time - data.depot().twLate, 0);
+        route.timeWarp += std::max(time - data.depot().twLate, 0);
 
         // Whole solution stats
-        distance_ += routeDist;
-        timeWarp_ += routeTimeWarp;
+        distance_ += route.distance;
+        timeWarp_ += route.timeWarp;
 
-        if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
-            excessLoad_ += routeLoad - data.vehicleCapacity();
+        if (static_cast<size_t>(route.load) > data.vehicleCapacity())
+            excessLoad_ += route.load - data.vehicleCapacity();
     }
 }
 

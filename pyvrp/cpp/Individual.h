@@ -10,9 +10,9 @@
 class Individual
 {
     friend struct std::hash<Individual>;  // friend struct to enable hashing
+    struct Route;                         // forward declaration
 
     using Client = int;
-    using Route = std::vector<Client>;
     using Routes = std::vector<Route>;
 
     size_t numRoutes_ = 0;   // Number of routes
@@ -30,6 +30,25 @@ class Individual
     void evaluate(ProblemData const &data);
 
 public:
+    struct Route
+    {
+        std::vector<Client> plan;
+
+        size_t distance;
+        size_t load;
+        size_t timeWarp;
+
+        bool empty() const { return plan.empty(); };
+        size_t size() const { return plan.size(); };
+        Client operator[](size_t idx) const { return plan[idx]; };
+
+        void push_back(Client client) { plan.push_back(client); };
+
+        auto begin() const { return plan.cbegin(); };
+        auto end() const { return plan.cend(); };
+        auto back() const { return plan.back(); };
+    };
+
     /**
      * Returns the number of non-empty routes in this individual's solution.
      * Such non-empty routes are guaranteed to be in the lower indices of the
