@@ -17,16 +17,17 @@ void Individual::evaluate(ProblemData const &data)
 
     for (auto &route : routes_)
     {
+        route.distance = 0;
+        route.duration = 0;
+        route.demand = 0;
+        route.service = 0;
+        route.timeWarp = 0;
+        route.wait = 0;
+
         if (route.empty())  // First empty route. All subsequent routes are
             break;          // empty as well.
 
         numRoutes_++;
-
-        route.distance = 0;
-        route.duration = 0;
-        route.demand = 0;
-        route.timeWarp = 0;
-        route.wait = 0;
 
         int time = data.depot().twEarly;
         int prevClient = 0;
