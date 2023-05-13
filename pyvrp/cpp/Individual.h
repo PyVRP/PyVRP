@@ -39,7 +39,7 @@ public:
         size_t duration;  // Total travel duration on this route
         size_t service;   // Total service duration on this route
         size_t timeWarp;  // Total time warp on this route
-        size_t wait;      // Total waiting time on this route
+        size_t wait;      // Total waiting duration on this route
 
         bool empty() const { return plan.empty(); };
         size_t size() const { return plan.size(); };

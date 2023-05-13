@@ -21,45 +21,32 @@ void Individual::evaluate(ProblemData const &data)
             break;          // empty as well.
 
         numRoutes_++;
-        route.distance = data.dist(0, route[0]);
-        route.duration = data.duration(0, route[0]);
-        route.demand = data.client(route[0]).demand;
+
+        route.distance = 0;
+        route.duration = 0;
+        route.demand = 0;
         route.timeWarp = 0;
         route.wait = 0;
 
-        int startTime = data.depot().twEarly + data.depot().serviceDuration;
-        int time = startTime + data.duration(0, route[0]);
+        int time = data.depot().twEarly;
+        int prevClient = 0;
 
-        if (time < data.client(route[0]).twEarly)
+        for (size_t idx = 0; idx != route.size(); idx++)
         {
-            route.wait += data.client(route[0]).twEarly - time;
-            time = data.client(route[0]).twEarly;
-        }
-
-        if (time > data.client(route[0]).twLate)
-        {
-            route.timeWarp += time - data.client(route[0]).twLate;
-            time = data.client(route[0]).twLate;
-        }
-
-        for (size_t idx = 1; idx < route.size(); idx++)
-        {
-            route.distance += data.dist(route[idx - 1], route[idx]);
-            route.duration += data.duration(route[idx - 1], route[idx]);
+            route.distance += data.dist(prevClient, route[idx]);
+            route.duration += data.duration(prevClient, route[idx]);
             route.demand += data.client(route[idx]).demand;
 
-            time += data.client(route[idx - 1]).serviceDuration
-                    + data.duration(route[idx - 1], route[idx]);
+            time += data.client(prevClient).serviceDuration
+                    + data.duration(prevClient, route[idx]);
 
-            // Add possible waiting time
-            if (time < data.client(route[idx]).twEarly)
+            if (time < data.client(route[idx]).twEarly)  // add wait duration
             {
                 route.wait += data.client(route[idx]).twEarly - time;
                 time = data.client(route[idx]).twEarly;
             }
 
-            // Add possible time warp
-            if (time > data.client(route[idx]).twLate)
+            if (time > data.client(route[idx]).twLate)  // add time warp
             {
                 route.timeWarp += time - data.client(route[idx]).twLate;
                 time = data.client(route[idx]).twLate;
@@ -72,10 +59,10 @@ void Individual::evaluate(ProblemData const &data)
         time += data.client(route.back()).serviceDuration
                 + data.duration(route.back(), 0);
 
-        // For the depot, we only need to check the end of the time window.
+        // For the depot we only need to check the end of the time window.
         route.timeWarp += std::max(time - data.depot().twLate, 0);
 
-        // Whole solution stats
+        // Whole solution statistics.
         distance_ += route.distance;
         timeWarp_ += route.timeWarp;
 
