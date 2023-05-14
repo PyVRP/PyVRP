@@ -26,6 +26,23 @@ def test_route_constructor_sorts_by_empty():
     assert_equal(len(routes[2]), 0)
 
 
+def test_random_constructor_cycles_over_routes():
+    # This instance has four clients and three vehicles. Since 1 client per
+    # vehicle would not work (insufficient vehicles), each route is given two
+    # clients (and the last route should be empty).
+    data = read("data/OkSmall.txt")
+    rng = XorShift128(seed=42)
+
+    indiv = Individual.make_random(data, rng)
+    routes = indiv.get_routes()
+
+    assert_equal(indiv.num_routes(), 2)
+    assert_equal(len(routes), 3)
+
+    for idx, size in enumerate([2, 2, 0]):
+        assert_equal(len(routes[idx]), size)
+
+
 def test_route_constructor_raises():
     data = read("data/OkSmall.txt")
 
