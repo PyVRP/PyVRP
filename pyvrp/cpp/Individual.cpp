@@ -201,11 +201,11 @@ size_t Individual::Route::excessLoad() const { return excessLoad_; }
 
 size_t Individual::Route::duration() const { return duration_; }
 
-size_t Individual::Route::service() const { return service_; }
+size_t Individual::Route::serviceDuration() const { return service_; }
 
 size_t Individual::Route::timeWarp() const { return timeWarp_; }
 
-size_t Individual::Route::wait() const { return wait_; }
+size_t Individual::Route::waitDuration() const { return wait_; }
 
 bool Individual::Route::isFeasible() const
 {

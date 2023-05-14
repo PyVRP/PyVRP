@@ -46,9 +46,9 @@ public:
         size_t demand() const;
         size_t excessLoad() const;
         size_t duration() const;
-        size_t service() const;
+        size_t serviceDuration() const;
         size_t timeWarp() const;
-        size_t wait() const;
+        size_t waitDuration() const;
 
         bool isFeasible() const;
         bool hasExcessLoad() const;

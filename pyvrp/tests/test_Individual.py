@@ -165,8 +165,8 @@ def test_route_access_methods():
         data.client(idx).service_duration
         for idx in range(data.num_clients + 1)
     ]
-    assert_allclose(routes[0].service(), services[1] + services[3])
-    assert_allclose(routes[1].service(), services[2] + services[4])
+    assert_allclose(routes[0].service_duration(), services[1] + services[3])
+    assert_allclose(routes[1].service_duration(), services[2] + services[4])
 
 
 @mark.parametrize(

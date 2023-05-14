@@ -35,7 +35,7 @@ class Route:
         """
         Route plan, as a list of clients.
         """
-    def service(self) -> int:
+    def service_duration(self) -> int:
         """
         Total duration of service on the route.
         """
@@ -43,7 +43,7 @@ class Route:
         """
         Any time warp incurred along the route.
         """
-    def wait(self) -> int:
+    def wait_duration(self) -> int:
         """
         Total waiting duration on this route.
         """
