@@ -32,30 +32,30 @@ public:
         size_t wait_ = 0;        // Total waiting duration on this route
 
     public:
-        bool empty() const;
-        size_t size() const;
-        Client operator[](size_t idx) const;
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] Client operator[](size_t idx) const;
 
         Plan::const_iterator begin() const;
         Plan::const_iterator end() const;
         Plan::const_iterator cbegin() const;
         Plan::const_iterator cend() const;
 
-        Plan const &plan() const;
-        size_t distance() const;
-        size_t demand() const;
-        size_t excessLoad() const;
-        size_t duration() const;
-        size_t serviceDuration() const;
-        size_t timeWarp() const;
-        size_t waitDuration() const;
+        [[nodiscard]] Plan const &plan() const;
+        [[nodiscard]] size_t distance() const;
+        [[nodiscard]] size_t demand() const;
+        [[nodiscard]] size_t excessLoad() const;
+        [[nodiscard]] size_t duration() const;
+        [[nodiscard]] size_t serviceDuration() const;
+        [[nodiscard]] size_t timeWarp() const;
+        [[nodiscard]] size_t waitDuration() const;
 
-        bool isFeasible() const;
-        bool hasExcessLoad() const;
-        bool hasTimeWarp() const;
+        [[nodiscard]] bool isFeasible() const;
+        [[nodiscard]] bool hasExcessLoad() const;
+        [[nodiscard]] bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Plan const &plan);
+        Route(ProblemData const &data, Plan const plan);
     };
 
 private:
@@ -150,7 +150,7 @@ public:
      * @param routes         Solution's route list.
      */
     Individual(ProblemData const &data,
-               std::vector<std::vector<Client>> routes);
+               std::vector<std::vector<Client>> const &routes);
 };
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);

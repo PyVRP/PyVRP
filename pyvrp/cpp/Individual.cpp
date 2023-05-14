@@ -98,7 +98,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 }
 
 Individual::Individual(ProblemData const &data,
-                       std::vector<std::vector<Client>> routes)
+                       std::vector<std::vector<Client>> const &routes)
     : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
 {
     if (routes.size() > data.numVehicles())
@@ -120,10 +120,10 @@ Individual::Individual(ProblemData const &data,
     evaluate(data);
 }
 
-Individual::Route::Route(ProblemData const &data, Plan const &plan)
-    : plan_(plan)
+Individual::Route::Route(ProblemData const &data, Plan const plan)
+    : plan_(std::move(plan))
 {
-    if (plan.empty())
+    if (plan_.empty())
         return;
 
     int time = data.depot().twEarly;
@@ -131,34 +131,34 @@ Individual::Route::Route(ProblemData const &data, Plan const &plan)
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
-        distance_ += data.dist(prevClient, plan[idx]);
-        duration_ += data.duration(prevClient, plan[idx]);
-        demand_ += data.client(plan[idx]).demand;
-        service_ += data.client(plan[idx]).serviceDuration;
+        distance_ += data.dist(prevClient, plan_[idx]);
+        duration_ += data.duration(prevClient, plan_[idx]);
+        demand_ += data.client(plan_[idx]).demand;
+        service_ += data.client(plan_[idx]).serviceDuration;
 
         time += data.client(prevClient).serviceDuration
-                + data.duration(prevClient, plan[idx]);
+                + data.duration(prevClient, plan_[idx]);
 
-        if (time < data.client(plan[idx]).twEarly)  // add wait duration
+        if (time < data.client(plan_[idx]).twEarly)  // add wait duration
         {
-            wait_ += data.client(plan[idx]).twEarly - time;
-            time = data.client(plan[idx]).twEarly;
+            wait_ += data.client(plan_[idx]).twEarly - time;
+            time = data.client(plan_[idx]).twEarly;
         }
 
-        if (time > data.client(plan[idx]).twLate)  // add time warp
+        if (time > data.client(plan_[idx]).twLate)  // add time warp
         {
-            timeWarp_ += time - data.client(plan[idx]).twLate;
-            time = data.client(plan[idx]).twLate;
+            timeWarp_ += time - data.client(plan_[idx]).twLate;
+            time = data.client(plan_[idx]).twLate;
         }
 
-        prevClient = plan[idx];
+        prevClient = plan_[idx];
     }
 
     // Last client has depot as successor.
-    distance_ += data.dist(plan.back(), 0);
-    duration_ += data.duration(plan.back(), 0);
-    time += data.client(plan.back()).serviceDuration
-            + data.duration(plan.back(), 0);
+    distance_ += data.dist(plan_.back(), 0);
+    duration_ += data.duration(plan_.back(), 0);
+    time += data.client(plan_.back()).serviceDuration
+            + data.duration(plan_.back(), 0);
 
     excessLoad_ = data.vehicleCapacity() < demand_
                       ? demand_ - data.vehicleCapacity()

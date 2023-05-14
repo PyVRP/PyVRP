@@ -51,7 +51,8 @@ PYBIND11_MODULE(_Individual, m)
         });
 
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData const &, std::vector<std::vector<int>>>(),
+        .def(py::init<ProblemData const &,
+                      std::vector<std::vector<int>> const &>(),
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(
