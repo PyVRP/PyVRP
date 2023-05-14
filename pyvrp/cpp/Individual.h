@@ -15,34 +15,39 @@ class Individual
 
 public:
     /**
-     * A simple Route structure that contains the route plan (as a vector), and
+     * A simple Route class that contains the route plan (as a vector), and
      * some route statistics.
      */
-    struct Route
+    class Route
     {
         using Plan = std::vector<Client>;
 
-        Plan plan = {};       // Route plan (list of clients).
-        size_t distance = 0;  // Total travel distance on this route
-        size_t demand = 0;    // Total demand served on this route
-        size_t duration = 0;  // Total travel duration on this route
-        size_t service = 0;   // Total service duration on this route
-        size_t timeWarp = 0;  // Total time warp on this route
-        size_t wait = 0;      // Total waiting duration on this route
+        Plan plan_ = {};       // Route plan (list of clients).
+        size_t distance_ = 0;  // Total travel distance on this route
+        size_t demand_ = 0;    // Total demand served on this route
+        size_t duration_ = 0;  // Total travel duration on this route
+        size_t service_ = 0;   // Total service duration on this route
+        size_t timeWarp_ = 0;  // Total time warp on this route
+        size_t wait_ = 0;      // Total waiting duration on this route
 
-        bool empty() const { return plan.empty(); };
-        size_t size() const { return plan.size(); };
-        Client operator[](size_t idx) const { return plan[idx]; };
+    public:
+        bool empty() const { return plan_.empty(); };
+        size_t size() const { return plan_.size(); };
+        Client operator[](size_t idx) const { return plan_[idx]; };
 
-        void insert(auto idx, Client client) { plan.insert(idx, client); };
-        void push_back(Client client) { plan.push_back(client); };
+        auto begin() const { return plan_.begin(); };
+        auto end() const { return plan_.end(); };
 
-        auto begin() const { return plan.begin(); };
-        auto end() const { return plan.end(); };
-        auto back() const { return plan.back(); };
+        Plan const &plan() const { return plan_; };
+        size_t distance() const { return distance_; };
+        size_t demand() const { return demand_; };
+        size_t duration() const { return duration_; };
+        size_t service() const { return service_; };
+        size_t timeWarp() const { return timeWarp_; };
+        size_t wait() const { return wait_; };
 
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Plan const &plan) : plan(plan)
+        Route(ProblemData const &data, Plan const &plan) : plan_(plan)
         {
             if (plan.empty())
                 return;
@@ -52,34 +57,34 @@ public:
 
             for (size_t idx = 0; idx != size(); ++idx)
             {
-                distance += data.dist(prevClient, plan[idx]);
-                duration += data.duration(prevClient, plan[idx]);
-                demand += data.client(plan[idx]).demand;
+                distance_ += data.dist(prevClient, plan[idx]);
+                duration_ += data.duration(prevClient, plan[idx]);
+                demand_ += data.client(plan[idx]).demand;
 
                 time += data.client(prevClient).serviceDuration
                         + data.duration(prevClient, plan[idx]);
 
                 if (time < data.client(plan[idx]).twEarly)  // add wait duration
                 {
-                    wait += data.client(plan[idx]).twEarly - time;
+                    wait_ += data.client(plan[idx]).twEarly - time;
                     time = data.client(plan[idx]).twEarly;
                 }
 
                 if (time > data.client(plan[idx]).twLate)  // add time warp
                 {
-                    timeWarp += time - data.client(plan[idx]).twLate;
+                    timeWarp_ += time - data.client(plan[idx]).twLate;
                     time = data.client(plan[idx]).twLate;
                 }
             }
 
             // Last client has depot as successor.
-            distance += data.dist(plan.back(), 0);
-            duration += data.duration(plan.back(), 0);
+            distance_ += data.dist(plan.back(), 0);
+            duration_ += data.duration(plan.back(), 0);
             time += data.client(plan.back()).serviceDuration
                     + data.duration(plan.back(), 0);
 
             // For the depot we only need to check the end of the time window.
-            timeWarp += std::max(time - data.depot().twLate, 0);
+            timeWarp_ += std::max(time - data.depot().twLate, 0);
         };
     };
 

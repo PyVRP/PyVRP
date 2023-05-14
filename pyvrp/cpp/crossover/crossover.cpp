@@ -1,7 +1,7 @@
 #include "crossover.h"
 
 using Client = int;
-using Route = Individual::Route;
+using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
 
 namespace

@@ -16,11 +16,11 @@ void Individual::evaluate(ProblemData const &data)
 
         // Whole solution statistics.
         numRoutes_++;
-        distance_ += route.distance;
-        timeWarp_ += route.timeWarp;
+        distance_ += route.distance();
+        timeWarp_ += route.timeWarp();
 
-        if (static_cast<size_t>(route.demand) > data.vehicleCapacity())
-            excessLoad_ += route.demand - data.vehicleCapacity();
+        if (static_cast<size_t>(route.demand()) > data.vehicleCapacity())
+            excessLoad_ += route.demand() - data.vehicleCapacity();
     }
 }
 

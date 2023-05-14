@@ -14,7 +14,7 @@ namespace crossover
 /**
  * Greedily inserts the unplanned clients into non-empty routes.
  */
-void greedyRepair(std::vector<Individual::Route> &routes,
+void greedyRepair(std::vector<std::vector<int>> &routes,
                   std::vector<int> const &unplanned,
                   ProblemData const &data);
 }  // namespace crossover
