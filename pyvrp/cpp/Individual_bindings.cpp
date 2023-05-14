@@ -14,9 +14,9 @@ PYBIND11_MODULE(_Individual, m)
         .def(py::init<ProblemData const &, std::vector<int>>(),
              py::arg("data"),
              py::arg("plan"))
-        .def_property_readonly("plan",
-                               &Individual::Route::plan,
-                               py::return_value_policy::reference_internal)
+        .def("plan",
+             &Individual::Route::plan,
+             py::return_value_policy::reference_internal)
         .def("distance", &Individual::Route::distance)
         .def("demand", &Individual::Route::demand)
         .def("excess_load", &Individual::Route::excessLoad)

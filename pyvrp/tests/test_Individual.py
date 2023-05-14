@@ -1,7 +1,7 @@
 from copy import copy, deepcopy
 
 import numpy as np
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import Client, Individual, ProblemData, XorShift128
@@ -117,21 +117,41 @@ def test_excess_load_calculation():
     assert_equal(indiv.excess_load(), 18 - data.vehicle_capacity)
 
 
-def test_time_warp_calculation():
+def test_route_access_methods():
     data = read("data/OkSmall.txt")
-
     indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
+
+    # Test route acces: getting the route plan should return a simple list, as
+    # given to the individual above.
+    assert_equal(routes[0].plan(), [1, 3])
+    assert_equal(routes[1].plan(), [2, 4])
+
+    # There's no excess load, so all excess load should be zero.
     assert_(not indiv.has_excess_load())
-    assert_(indiv.has_time_warp())
+    assert_allclose(routes[0].excess_load(), 0)
+    assert_allclose(routes[1].excess_load(), 0)
+
+    # Total route demand.
+    demands = [data.client(idx).demand for idx in range(data.num_clients + 1)]
+    assert_allclose(routes[0].demand(), demands[1] + demands[3])
+    assert_allclose(routes[1].demand(), demands[2] + demands[4])
 
     # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
     # starts at 15'600, and completes at 15'600 + 360. Then we drive for
     # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
     # window). This is where we incur time warp: we need to 'warp' to 15'300.
-    tw_first_route = 15_600 + 360 + 1_427 - 15_300
-    tw_second_route = 0
-    assert_equal(indiv.time_warp(), tw_first_route + tw_second_route)
+    assert_(indiv.has_time_warp())
+    assert_(routes[0].has_time_warp())
+    assert_(not routes[1].has_time_warp())
+    assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
+    assert_allclose(routes[1].time_warp(), 0)
+    assert_allclose(indiv.time_warp(), routes[0].time_warp())
+
+    # The first route is not feasible due to time warp, but the second one is.
+    assert_(not routes[0].is_feasible())
+    assert_(routes[1].is_feasible())
 
 
 @mark.parametrize(
