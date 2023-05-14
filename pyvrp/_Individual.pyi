@@ -5,7 +5,7 @@ from ._XorShift128 import XorShift128
 
 class Route:
     """
-    A simple Route class that contains the route plan and some statistics.
+    A simple class that stores the route plan and some statistics.
     """
 
     def __init__(self, data: ProblemData, plan: List[int]) -> None: ...
@@ -118,8 +118,9 @@ class Individual:
         Returns
         -------
         list
-            A list of routes. The routes each start and end at the depot (0),
-            but that is implicit: the depot is not part of the returned routes.
+            A list of routes. Each :class:`~pyvrp._Individual.Route` starts and
+            ends at the depot (0), but that is implicit: the depot is not part
+            of the returned routes.
         """
     def has_excess_load(self) -> bool:
         """
