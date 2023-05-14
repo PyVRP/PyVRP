@@ -19,5 +19,5 @@ unsigned int CostEvaluator::cost(Individual const &individual) const
 {
     return individual.isFeasible()
                ? individual.distance() + individual.uncollected()
-               : std::numeric_limits<int>::max();
+               : std::numeric_limits<unsigned int>::max();
 }

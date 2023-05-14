@@ -42,7 +42,7 @@ public:
      * Computes the objective for a given individual. Returns the largest
      * representable cost value if the individual is infeasible.
      */
-    [[nodiscard]] unsiged int cost(Individual const &individual) const;
+    [[nodiscard]] unsigned int cost(Individual const &individual) const;
 };
 
 unsigned int CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const
