@@ -123,6 +123,8 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
 
+    prizes = instance.get("prize", np.zeros(dimension, dtype=int))
+
     # Checks
     if len(depots) != 1 or depots[0] != 0:
         raise ValueError(
@@ -150,6 +152,8 @@ def read(
             service_times[idx],
             time_windows[idx][0],  # TW early
             time_windows[idx][1],  # TW late
+            prizes[idx],
+            np.isclose(prizes[idx], 0),  # required only when prize is zero
         )
         for idx in range(dimension)
     ]
