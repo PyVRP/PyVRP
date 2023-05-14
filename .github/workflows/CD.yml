@@ -22,7 +22,7 @@ jobs:
         run: |
           # mingw-w64. This is what scipy uses to update the build toolchain
           # on Windows systems; also works fine for us.
-          choco install rtools --no-progress
+          choco install rtools -y --no-progress --force --version=4.0.0.20220206
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.0
