@@ -161,6 +161,25 @@ def test_route_access_methods():
     assert_allclose(routes[0].demand(), demands[1] + demands[3])
     assert_allclose(routes[1].demand(), demands[2] + demands[4])
 
+    # The first route is not feasible due to time warp, but the second one is.
+    # See also the tests below.
+    assert_(not routes[0].is_feasible())
+    assert_(routes[1].is_feasible())
+
+    # Total service duration.
+    services = [
+        data.client(idx).service_duration
+        for idx in range(data.num_clients + 1)
+    ]
+    assert_allclose(routes[0].service_duration(), services[1] + services[3])
+    assert_allclose(routes[1].service_duration(), services[2] + services[4])
+
+
+def test_route_time_warp_and_wait_duration():
+    data = read("data/OkSmall.txt")
+    indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
+
     # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
     # starts at 15'600, and completes at 15'600 + 360. Then we drive for
@@ -173,17 +192,12 @@ def test_route_access_methods():
     assert_allclose(routes[1].time_warp(), 0)
     assert_allclose(indiv.time_warp(), routes[0].time_warp())
 
-    # The first route is not feasible due to time warp, but the second one is.
-    assert_(not routes[0].is_feasible())
-    assert_(routes[1].is_feasible())
-
-    # Total service duration.
-    services = [
-        data.client(idx).service_duration
-        for idx in range(data.num_clients + 1)
-    ]
-    assert_allclose(routes[0].service_duration(), services[1] + services[3])
-    assert_allclose(routes[1].service_duration(), services[2] + services[4])
+    # On the first route, we have to wait at the first client, where we arrive
+    # at 1'544, but cannot start service until 15'600. On the second route, we
+    # also have to wait at the first client, where we arrive at 1'944, but
+    # cannot start service until 12'000.
+    assert_equal(routes[0].wait_duration(), 15_600 - 1_544)
+    assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
 
 
 @mark.parametrize(
