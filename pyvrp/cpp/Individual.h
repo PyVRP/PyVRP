@@ -44,6 +44,9 @@ public:
         Route() = default;  // default is empty
         Route(ProblemData const &data, Plan const &plan) : plan(plan)
         {
+            if (plan.empty())
+                return;
+
             int time = data.depot().twEarly;
             int prevClient = 0;
 
