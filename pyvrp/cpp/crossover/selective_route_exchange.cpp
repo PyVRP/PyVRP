@@ -202,8 +202,8 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    std::vector<std::vector<int>> routes1(data.numVehicles());
-    std::vector<std::vector<int>> routes2(data.numVehicles());
+    std::vector<std::vector<Client>> routes1(data.numVehicles());
+    std::vector<std::vector<Client>> routes2(data.numVehicles());
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)

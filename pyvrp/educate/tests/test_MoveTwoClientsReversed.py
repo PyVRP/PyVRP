@@ -35,7 +35,7 @@ def test_single_route_OkSmall():
 
     # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
     # after 4 as 2 -> 4 -> 3 -> 1.
-    expected = Individual(data, [[2, 4, 3, 1], [], []])
+    expected = Individual(data, [[2, 4, 3, 1]])
     assert_equal(improved_individual, expected)
 
     # These two-route solutions can all be created by MoveTwoClientsReversed

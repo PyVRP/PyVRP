@@ -115,7 +115,7 @@ def test_srex_greedy_repair():
     # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
     # cost 9725. The first one is returned since it has the lowest cost.
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
-    expected = Individual(data, [[2, 3, 4], [1], []])
+    expected = Individual(data, [[2, 3, 4], [1]])
     assert_equal(offspring, expected)
 
 
@@ -141,7 +141,7 @@ def test_srex_changed_start_indices():
     # 10195, and [[4], [1, 2, 3]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
-    expected = Individual(data, [[1, 2, 4], [3], []])
+    expected = Individual(data, [[1, 2, 4], [3]])
     assert_equal(offspring, expected)
 
 

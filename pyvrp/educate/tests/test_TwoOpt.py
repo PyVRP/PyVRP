@@ -32,7 +32,7 @@ def test_OkSmall_instance():
     # First improving (U, V) node pair is (1, 3), which results in the route
     # [1, 3, 2, 4]. The second improving node pair involves the depot of an
     # empty route: (1, 0). This results in routes [1] and [3, 2, 4].
-    expected = Individual(data, [[1], [3, 2, 4], []])
+    expected = Individual(data, [[1], [3, 2, 4]])
     assert_equal(improved_individual, expected)
 
 
