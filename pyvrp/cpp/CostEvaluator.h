@@ -35,13 +35,14 @@ public:
     /**
      * Computes a smoothed objective (penalised cost) for a given individual.
      */
-    [[nodiscard]] int penalisedCost(Individual const &individual) const;
+    [[nodiscard]] unsigned int
+    penalisedCost(Individual const &individual) const;
 
     /**
      * Computes the objective for a given individual. Returns the largest
      * representable cost value if the individual is infeasible.
      */
-    [[nodiscard]] int cost(Individual const &individual) const;
+    [[nodiscard]] unsiged int cost(Individual const &individual) const;
 };
 
 unsigned int CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const

@@ -99,11 +99,6 @@ public:           // TODO make fields private
     [[nodiscard]] inline int loadBetween(size_t start, size_t end) const;
 
     /**
-     * Calculates the total value of prizes collected in segment [start, end].
-     */
-    [[nodiscard]] inline int prizeBetween(size_t start, size_t end) const;
-
-    /**
      * Tests if this route overlaps with the other route, that is, whether
      * their circle sectors overlap with a given tolerance.
      */
@@ -186,16 +181,6 @@ int Route::loadBetween(size_t start, size_t end) const
     assert(startLoad <= endLoad);
 
     return endLoad - startLoad + atStart;
-}
-
-int Route::prizeBetween(size_t start, size_t end) const
-{
-    assert(start <= end && end <= nodes.size());
-
-    auto prize = 0;
-    for (size_t step = start; step != end; ++step)
-        prize += data.client(nodes[step]->client).prize;
-    return prize;
 }
 
 // Outputs a route into a given ostream in CVRPLib format

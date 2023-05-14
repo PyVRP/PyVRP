@@ -16,7 +16,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
     auto const posU = U->position;
     auto const posV = V->position;
 
-    assert(U->route || V->route);
+    assert(U->route && V->route);
 
     int const current = U->route->distBetween(posU - 1, posU + 2)
                         + data.dist(V->client, n(V)->client);

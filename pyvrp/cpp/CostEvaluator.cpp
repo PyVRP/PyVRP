@@ -7,7 +7,7 @@ CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
 {
 }
 
-int CostEvaluator::penalisedCost(Individual const &individual) const
+unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
 {
     auto const loadPen = loadPenaltyExcess(individual.excessLoad());
     auto const twPen = twPenalty(individual.timeWarp());
@@ -15,7 +15,7 @@ int CostEvaluator::penalisedCost(Individual const &individual) const
     return individual.distance() + loadPen + twPen + individual.uncollected();
 }
 
-int CostEvaluator::cost(Individual const &individual) const
+unsigned int CostEvaluator::cost(Individual const &individual) const
 {
     return individual.isFeasible()
                ? individual.distance() + individual.uncollected()

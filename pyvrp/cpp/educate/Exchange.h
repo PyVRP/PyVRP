@@ -177,7 +177,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
     auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
-    assert(U->route || V->route);
+    assert(U->route && V->route);
 
     int const current = U->route->distBetween(posU - 1, posU + N)
                         + V->route->distBetween(posV - 1, posV + M);

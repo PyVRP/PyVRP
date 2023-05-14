@@ -6,7 +6,7 @@ from pyvrp import Client, ProblemData
 
 
 @mark.parametrize(
-    "x,y,demand,service_duration,tw_early,tw_late, prize",
+    "x,y,demand,service_duration,tw_early,tw_late,prize",
     [
         (1, 1, 1, 1, 0, 1, 0),  # normal
         (1, 1, 1, 0, 0, 1, 0),  # zero duration
