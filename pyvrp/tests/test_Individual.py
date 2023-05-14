@@ -89,19 +89,24 @@ def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
     indiv = Individual(data, [[1, 2], [3], [4]])
-    assert_(indiv.is_feasible())
+    routes = indiv.get_routes()
 
-    # Feasible individual, so cost should equal total distance travelled.
-    dist = (
-        data.dist(0, 1)
-        + data.dist(1, 2)
-        + data.dist(2, 0)
-        + data.dist(0, 3)
-        + data.dist(3, 0)
-        + data.dist(0, 4)
-        + data.dist(4, 0)
-    )
-    assert_equal(indiv.distance(), dist)
+    # Solution is feasible, so all its routes should also be feasible.
+    assert_(indiv.is_feasible())
+    assert_(all(r.is_feasible() for r in routes))
+
+    # Solution distance should be equal to all routes' distances. These we
+    # check separately.
+    assert_allclose(indiv.distance(), sum(r.distance() for r in routes))
+
+    expected = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
+    assert_allclose(routes[0].distance(), expected)
+
+    expected = data.dist(0, 3) + data.dist(3, 0)
+    assert_allclose(routes[1].distance(), expected)
+
+    expected = data.dist(0, 4) + data.dist(4, 0)
+    assert_allclose(routes[2].distance(), expected)
 
 
 def test_excess_load_calculation():
@@ -152,6 +157,14 @@ def test_route_access_methods():
     # The first route is not feasible due to time warp, but the second one is.
     assert_(not routes[0].is_feasible())
     assert_(routes[1].is_feasible())
+
+    # Total service duration.
+    services = [
+        data.client(idx).service_duration
+        for idx in range(data.num_clients + 1)
+    ]
+    assert_allclose(routes[0].service(), services[1] + services[3])
+    assert_allclose(routes[1].service(), services[2] + services[4])
 
 
 @mark.parametrize(

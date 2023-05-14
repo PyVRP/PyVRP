@@ -140,6 +140,7 @@ Individual::Route::Route(ProblemData const &data, Plan const &plan)
         distance_ += data.dist(prevClient, plan[idx]);
         duration_ += data.duration(prevClient, plan[idx]);
         demand_ += data.client(plan[idx]).demand;
+        service_ += data.client(plan[idx]).serviceDuration;
 
         time += data.client(prevClient).serviceDuration
                 + data.duration(prevClient, plan[idx]);
