@@ -220,8 +220,8 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
     auto const &routes = indiv.getRoutes();
 
-    for (size_t rIdx = 0; rIdx != indiv.numRoutes(); ++rIdx)
-        out << "Route #" << rIdx + 1 << ":" << routes[rIdx] << '\n';
+    for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
+        out << "Route #" << idx + 1 << ":" << routes[idx] << '\n';
 
     out << "Distance: " << indiv.distance() << '\n';
     return out;
