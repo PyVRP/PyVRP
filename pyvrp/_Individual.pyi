@@ -13,19 +13,40 @@ class Route:
     def __iter__(self) -> Iterator[int]: ...
     def __len__(self) -> int: ...
     @property
-    def demand(self) -> int: ...
+    def demand(self) -> int:
+        """
+        Total client demand on this route.
+        """
     @property
-    def distance(self) -> int: ...
+    def distance(self) -> int:
+        """
+        Total distance travelled on this route.
+        """
     @property
-    def duration(self) -> int: ...
+    def duration(self) -> int:
+        """
+        Total route duration, including waiting time.
+        """
     @property
-    def plan(self) -> List[int]: ...
+    def plan(self) -> List[int]:
+        """
+        Route plan, as a list of clients.
+        """
     @property
-    def service(self) -> int: ...
+    def service(self) -> int:
+        """
+        Total duration of service on the route.
+        """
     @property
-    def time_warp(self) -> int: ...
+    def time_warp(self) -> int:
+        """
+        Any time warp incurred along the route.
+        """
     @property
-    def wait(self) -> int: ...
+    def wait(self) -> int:
+        """
+        Total waiting duration on this route.
+        """
 
 class Individual:
     """

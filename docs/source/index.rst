@@ -43,7 +43,6 @@ It can be installed through *pip* via
 
    api/pyvrp
    api/crossover
-   api/diagnostics
    api/diversity
    api/educate
    api/plotting
