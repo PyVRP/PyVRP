@@ -12,13 +12,14 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                // Coordinate X
-        int y;                // Coordinate Y
-        int demand;           // Demand
-        int serviceDuration;  // Service duration
-        int twEarly;          // Earliest arrival (when using time windows)
-        int twLate;           // Latest arrival (when using time windows)
-        int prize = 0;        // Prize collected when visiting this client
+        int x;                 // Coordinate X
+        int y;                 // Coordinate Y
+        int demand;            // Demand
+        int serviceDuration;   // Service duration
+        int twEarly;           // Earliest arrival (when using time windows)
+        int twLate;            // Latest arrival (when using time windows)
+        int prize = 0;         // Prize collected when visiting this client
+        bool required = true;  // Must this client be part of a solution?
 
         Client(int x,
                int y,
@@ -26,7 +27,8 @@ public:
                int serviceDuration = 0,
                int twEarly = 0,
                int twLate = 0,
-               int prize = 0);
+               int prize = 0,
+               bool required = true);
     };
 
 private:

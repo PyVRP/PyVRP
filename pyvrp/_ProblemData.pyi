@@ -27,6 +27,8 @@ class Client:
         Latest time at which we can visit this client. Default 0.
     prize
         Prize collected by visiting this client. Default 0.
+    required
+        Whether this client must be part of a feasible solution. Default True.
     """
 
     x: int
@@ -36,6 +38,7 @@ class Client:
     tw_early: int
     tw_late: int
     prize: int
+    required: bool
 
     def __init__(
         self,
@@ -46,6 +49,7 @@ class Client:
         tw_early: int = 0,
         tw_late: int = 0,
         prize: int = 0,
+        required: bool = True,
     ) -> None: ...
 
 class ProblemData:

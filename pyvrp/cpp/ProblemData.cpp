@@ -12,14 +12,16 @@ ProblemData::Client::Client(int x,
                             int serviceDuration,
                             int twEarly,
                             int twLate,
-                            int prize)
+                            int prize,
+                            bool required)
     : x(x),
       y(y),
       demand(demand),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
-      prize(prize)
+      prize(prize),
+      required(required)
 {
     if (demand < 0)
         throw std::invalid_argument("demand must be >= 0");

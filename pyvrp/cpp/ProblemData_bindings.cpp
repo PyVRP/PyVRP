@@ -8,21 +8,23 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<int, int, int, int, int, int, int>(),
+        .def(py::init<int, int, int, int, int, int, int, bool>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = 0,
-             py::arg("prize") = 0)
+             py::arg("prize") = 0,
+             py::arg("required") = true)
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("demand", &ProblemData::Client::demand)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
-        .def_readonly("prize", &ProblemData::Client::prize);
+        .def_readonly("prize", &ProblemData::Client::prize)
+        .def_readonly("required", &ProblemData::Client::required);
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<std::vector<ProblemData::Client> const &,

@@ -32,10 +32,9 @@ class Route
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:                      // TODO make fields private
-    int idx;                 // Route index
-    Node *depot;             // Pointer to the associated depot
-    bool isVirtual = false;  // Is this route virtual?
+public:           // TODO make fields private
+    int idx;      // Route index
+    Node *depot;  // Pointer to the associated depot
 
     /**
      * @return The client or depot node at the given position.
@@ -120,13 +119,7 @@ public:                      // TODO make fields private
     Route(ProblemData const &data);
 };
 
-bool Route::isFeasible() const
-{
-    if (isVirtual)
-        return true;
-    else
-        return !hasExcessLoad() && !hasTimeWarp();
-}
+bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
 bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
 

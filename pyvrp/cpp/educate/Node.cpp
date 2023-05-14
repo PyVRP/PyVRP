@@ -34,3 +34,16 @@ void Node::swapWith(Node *other)
     route = routeV;
     other->route = routeU;
 }
+
+void Node::remove()
+{
+    auto *UPred = prev;
+    auto *USucc = next;
+
+    UPred->next = USucc;
+    USucc->prev = UPred;
+
+    prev = nullptr;
+    next = nullptr;
+    route = nullptr;
+}
