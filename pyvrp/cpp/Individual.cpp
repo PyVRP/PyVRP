@@ -12,8 +12,8 @@ void Individual::evaluate(ProblemData const &data)
 {
     for (auto const &route : routes_)
     {
-        if (route.empty())
-            break;
+        if (route.empty())  // First empty route. All subsequent routes are
+            break;          // empty as well.
 
         // Whole solution statistics.
         numRoutes_++;
