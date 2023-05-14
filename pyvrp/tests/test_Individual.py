@@ -93,11 +93,13 @@ def test_distance_calculation():
 
     # Solution is feasible, so all its routes should also be feasible.
     assert_(indiv.is_feasible())
-    assert_(all(r.is_feasible() for r in routes))
+    assert_(all(route.is_feasible() for route in routes))
 
     # Solution distance should be equal to all routes' distances. These we
     # check separately.
-    assert_allclose(indiv.distance(), sum(r.distance() for r in routes))
+    assert_allclose(
+        indiv.distance(), sum(route.distance() for route in routes)
+    )
 
     expected = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
     assert_allclose(routes[0].distance(), expected)
