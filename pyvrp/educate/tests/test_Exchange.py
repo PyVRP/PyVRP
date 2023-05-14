@@ -174,8 +174,9 @@ def test_swap_between_routes_OkSmall():
 
     individual = Individual(data, [[1, 2], [3, 4]])
     improved_individual = ls.search(individual, cost_evaluator)
+    expected = Individual(data, [[3, 4, 2], [1], []])
+    assert_equal(improved_individual, expected)
 
-    assert_equal(improved_individual.get_routes(), [[3, 4, 2], [1], []])
     current_cost = cost_evaluator.penalised_cost(individual)
     improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)

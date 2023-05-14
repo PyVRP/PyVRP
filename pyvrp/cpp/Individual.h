@@ -75,6 +75,8 @@ public:
                     timeWarp_ += time - data.client(plan[idx]).twLate;
                     time = data.client(plan[idx]).twLate;
                 }
+
+                prevClient = plan[idx];
             }
 
             // Last client has depot as successor.
