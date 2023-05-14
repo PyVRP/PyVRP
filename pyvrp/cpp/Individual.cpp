@@ -9,60 +9,13 @@ using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
-    numRoutes_ = 0;
-    distance_ = 0;
-    excessLoad_ = 0;
-    timeWarp_ = 0;
-
-    for (auto &route : routes_)
+    for (auto const &route : routes_)
     {
-        route.distance = 0;
-        route.duration = 0;
-        route.demand = 0;
-        route.service = 0;
-        route.timeWarp = 0;
-        route.wait = 0;
-
-        if (route.empty())  // First empty route. All subsequent routes are
-            break;          // empty as well.
-
-        numRoutes_++;
-
-        int time = data.depot().twEarly;
-        int prevClient = 0;
-
-        for (size_t idx = 0; idx != route.size(); idx++)
-        {
-            route.distance += data.dist(prevClient, route[idx]);
-            route.duration += data.duration(prevClient, route[idx]);
-            route.demand += data.client(route[idx]).demand;
-
-            time += data.client(prevClient).serviceDuration
-                    + data.duration(prevClient, route[idx]);
-
-            if (time < data.client(route[idx]).twEarly)  // add wait duration
-            {
-                route.wait += data.client(route[idx]).twEarly - time;
-                time = data.client(route[idx]).twEarly;
-            }
-
-            if (time > data.client(route[idx]).twLate)  // add time warp
-            {
-                route.timeWarp += time - data.client(route[idx]).twLate;
-                time = data.client(route[idx]).twLate;
-            }
-        }
-
-        // Last client has depot as successor.
-        route.distance += data.dist(route.back(), 0);
-        route.duration += data.duration(route.back(), 0);
-        time += data.client(route.back()).serviceDuration
-                + data.duration(route.back(), 0);
-
-        // For the depot we only need to check the end of the time window.
-        route.timeWarp += std::max(time - data.depot().twLate, 0);
+        if (route.empty())
+            break;
 
         // Whole solution statistics.
+        numRoutes_++;
         distance_ += route.distance;
         timeWarp_ += route.timeWarp;
 
@@ -141,8 +94,35 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     evaluate(data);
 }
 
+Individual::Individual(ProblemData const &data,
+                       std::vector<std::vector<Client>> routes)
+    : routes_(routes.size()), neighbours(data.numClients() + 1)
+{
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        routes_[idx] = Route(data, routes[idx]);
+
+    if (routes_.size() > data.numVehicles())
+    {
+        auto const msg = "Number of routes must not exceed number of vehicles.";
+        throw std::runtime_error(msg);
+    }
+
+    // Expand to at least numVehicles routes, where any newly inserted routes
+    // will be empty.
+    routes_.resize(data.numVehicles());
+
+    // a precedes b only when a is not empty and b is. Combined with a stable
+    // sort, this ensures we keep the original sorting as much as possible, but
+    // also make sure all empty routes are at the end of routes_.
+    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
+    std::stable_sort(routes_.begin(), routes_.end(), comp);
+
+    makeNeighbours();
+    evaluate(data);
+}
+
 Individual::Individual(ProblemData const &data, Routes routes)
-    : routes_(std::move(routes)), neighbours(data.numClients() + 1)
+    : routes_(routes), neighbours(data.numClients() + 1)
 {
     if (routes_.size() > data.numVehicles())
     {

@@ -3,6 +3,29 @@ from typing import Any, Dict, List, Tuple
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
 
+class Route:
+    """
+    A simple Route structure that contains the route plan and some statistics.
+    """
+
+    def __init__(self, data: ProblemData, plan: List[int]) -> None: ...
+    def __getitem__(self, idx: int) -> int: ...
+    def __len__(self) -> int: ...
+    @property
+    def demand(self) -> int: ...
+    @property
+    def distance(self) -> int: ...
+    @property
+    def duration(self) -> int: ...
+    @property
+    def plan(self) -> List[int]: ...
+    @property
+    def service(self) -> int: ...
+    @property
+    def timeWarp(self) -> int: ...
+    @property
+    def wait(self) -> int: ...
+
 class Individual:
     """
     The Individual class encodes VRP solutions.
@@ -58,7 +81,7 @@ class Individual:
             A list of ``(pred, succ)`` tuples that encode for each client their
             predecessor and successors in this individual's routes.
         """
-    def get_routes(self) -> List[List[int]]:
+    def get_routes(self) -> List[Route]:
         """
         The solution this individual encodes, as a list of routes.
 
@@ -73,9 +96,8 @@ class Individual:
         Returns
         -------
         list
-            A list of routes, where each route is a list of client numbers. The
-            routes each start and end at the depot (0), but that is implicit:
-            the depot is not part of the returned routes.
+            A list of routes. The routes each start and end at the depot (0),
+            but that is implicit: the depot is not part of the returned routes.
         """
     def has_excess_load(self) -> bool:
         """

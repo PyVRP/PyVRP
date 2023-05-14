@@ -6,7 +6,7 @@
 using Client = int;
 using Clients = std::vector<Client>;
 using ClientSet = std::unordered_set<Client>;
-using Route = std::vector<Client>;
+using Route = Individual::Route;
 using Routes = std::vector<Route>;
 
 namespace

@@ -20,24 +20,64 @@ public:
      */
     struct Route
     {
-        std::vector<Client> plan;
+        using Plan = std::vector<Client>;
 
-        size_t distance;  // Total travel distance on this route
-        size_t demand;    // Total demand served on this route
-        size_t duration;  // Total travel duration on this route
-        size_t service;   // Total service duration on this route
-        size_t timeWarp;  // Total time warp on this route
-        size_t wait;      // Total waiting duration on this route
+        Plan plan = {};       // Route plan (list of clients).
+        size_t distance = 0;  // Total travel distance on this route
+        size_t demand = 0;    // Total demand served on this route
+        size_t duration = 0;  // Total travel duration on this route
+        size_t service = 0;   // Total service duration on this route
+        size_t timeWarp = 0;  // Total time warp on this route
+        size_t wait = 0;      // Total waiting duration on this route
 
         bool empty() const { return plan.empty(); };
         size_t size() const { return plan.size(); };
         Client operator[](size_t idx) const { return plan[idx]; };
 
+        void insert(auto idx, Client client) { plan.insert(idx, client); };
         void push_back(Client client) { plan.push_back(client); };
 
         auto begin() const { return plan.begin(); };
         auto end() const { return plan.end(); };
         auto back() const { return plan.back(); };
+
+        Route() = default;  // default is empty
+        Route(ProblemData const &data, Plan const &plan) : plan(plan)
+        {
+            int time = data.depot().twEarly;
+            int prevClient = 0;
+
+            for (size_t idx = 0; idx != size(); ++idx)
+            {
+                distance += data.dist(prevClient, plan[idx]);
+                duration += data.duration(prevClient, plan[idx]);
+                demand += data.client(plan[idx]).demand;
+
+                time += data.client(prevClient).serviceDuration
+                        + data.duration(prevClient, plan[idx]);
+
+                if (time < data.client(plan[idx]).twEarly)  // add wait duration
+                {
+                    wait += data.client(plan[idx]).twEarly - time;
+                    time = data.client(plan[idx]).twEarly;
+                }
+
+                if (time > data.client(plan[idx]).twLate)  // add time warp
+                {
+                    timeWarp += time - data.client(plan[idx]).twLate;
+                    time = data.client(plan[idx]).twLate;
+                }
+            }
+
+            // Last client has depot as successor.
+            distance += data.dist(plan.back(), 0);
+            duration += data.duration(plan.back(), 0);
+            time += data.client(plan.back()).serviceDuration
+                    + data.duration(plan.back(), 0);
+
+            // For the depot we only need to check the end of the time window.
+            timeWarp += std::max(time - data.depot().twLate, 0);
+        };
     };
 
 private:
@@ -123,6 +163,16 @@ public:
      * @param rng            Random number generator.
      */
     Individual(ProblemData const &data, XorShift128 &rng);
+
+    /**
+     * Constructs an individual having the given routes as its solution.
+     *
+     * @param data           Data instance describing the problem that's being
+     *                       solved.
+     * @param routes         Solution's route list.
+     */
+    Individual(ProblemData const &data,
+               std::vector<std::vector<Client>> routes);
 
     /**
      * Constructs an individual having the given routes as its solution.

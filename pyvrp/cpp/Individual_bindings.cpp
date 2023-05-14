@@ -10,6 +10,29 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(_Individual, m)
 {
+    py::class_<Individual::Route>(m, "Route")
+        .def(py::init<ProblemData const &, std::vector<int>>(),
+             py::arg("data"),
+             py::arg("plan"))
+        .def_readonly("plan", &Individual::Route::plan)
+        .def_readonly("distance", &Individual::Route::distance)
+        .def_readonly("demand", &Individual::Route::demand)
+        .def_readonly("duration", &Individual::Route::duration)
+        .def_readonly("service", &Individual::Route::service)
+        .def_readonly("timeWarp", &Individual::Route::timeWarp)
+        .def_readonly("wait", &Individual::Route::wait)
+        .def("__len__", &Individual::Route::size)
+        .def(
+            "__getitem__",
+            [](Individual::Route const &route, int idx) {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? route.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
+                    throw py::index_error();
+                return route[idx];
+            },
+            py::arg("idx"));
+
     py::class_<Individual>(m, "Individual")
         .def(py::init<ProblemData const &, std::vector<std::vector<int>>>(),
              py::arg("data"),
