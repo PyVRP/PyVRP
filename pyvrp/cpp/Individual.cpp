@@ -5,7 +5,7 @@
 #include <numeric>
 
 using Client = int;
-using Plan = std::vector<int>;
+using Plan = std::vector<Client>;
 using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
