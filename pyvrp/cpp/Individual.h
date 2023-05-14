@@ -31,63 +31,25 @@ public:
         size_t wait_ = 0;      // Total waiting duration on this route
 
     public:
-        bool empty() const { return plan_.empty(); };
-        size_t size() const { return plan_.size(); };
-        Client operator[](size_t idx) const { return plan_[idx]; };
+        bool empty() const;
+        size_t size() const;
+        Client operator[](size_t idx) const;
 
-        auto begin() const { return plan_.begin(); };
-        auto end() const { return plan_.end(); };
+        Plan::const_iterator begin() const;
+        Plan::const_iterator end() const;
+        Plan::const_iterator cbegin() const;
+        Plan::const_iterator cend() const;
 
-        Plan const &plan() const { return plan_; };
-        size_t distance() const { return distance_; };
-        size_t demand() const { return demand_; };
-        size_t duration() const { return duration_; };
-        size_t service() const { return service_; };
-        size_t timeWarp() const { return timeWarp_; };
-        size_t wait() const { return wait_; };
+        Plan const &plan() const;
+        size_t distance() const;
+        size_t demand() const;
+        size_t duration() const;
+        size_t service() const;
+        size_t timeWarp() const;
+        size_t wait() const;
 
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Plan const &plan) : plan_(plan)
-        {
-            if (plan.empty())
-                return;
-
-            int time = data.depot().twEarly;
-            int prevClient = 0;
-
-            for (size_t idx = 0; idx != size(); ++idx)
-            {
-                distance_ += data.dist(prevClient, plan[idx]);
-                duration_ += data.duration(prevClient, plan[idx]);
-                demand_ += data.client(plan[idx]).demand;
-
-                time += data.client(prevClient).serviceDuration
-                        + data.duration(prevClient, plan[idx]);
-
-                if (time < data.client(plan[idx]).twEarly)  // add wait duration
-                {
-                    wait_ += data.client(plan[idx]).twEarly - time;
-                    time = data.client(plan[idx]).twEarly;
-                }
-
-                if (time > data.client(plan[idx]).twLate)  // add time warp
-                {
-                    timeWarp_ += time - data.client(plan[idx]).twLate;
-                    time = data.client(plan[idx]).twLate;
-                }
-
-                prevClient = plan[idx];
-            }
-
-            // Last client has depot as successor.
-            distance_ += data.dist(plan.back(), 0);
-            duration_ += data.duration(plan.back(), 0);
-            time += data.client(plan.back()).serviceDuration
-                    + data.duration(plan.back(), 0);
-
-            // For the depot we only need to check the end of the time window.
-            timeWarp_ += std::max(time - data.depot().twLate, 0);
-        };
+        Route(ProblemData const &data, Plan const &plan);
     };
 
 private:

@@ -14,7 +14,9 @@ PYBIND11_MODULE(_Individual, m)
         .def(py::init<ProblemData const &, std::vector<int>>(),
              py::arg("data"),
              py::arg("plan"))
-        .def_property_readonly("plan", &Individual::Route::plan)
+        .def_property_readonly("plan",
+                               &Individual::Route::plan,
+                               py::return_value_policy::reference_internal)
         .def_property_readonly("distance", &Individual::Route::distance)
         .def_property_readonly("demand", &Individual::Route::demand)
         .def_property_readonly("duration", &Individual::Route::duration)
@@ -22,10 +24,12 @@ PYBIND11_MODULE(_Individual, m)
         .def_property_readonly("time_warp", &Individual::Route::timeWarp)
         .def_property_readonly("wait", &Individual::Route::wait)
         .def("__len__", &Individual::Route::size)
-        .def("__iter__",
-             [](Individual::Route const &route) {
-                 return py::make_iterator(route.begin(), route.end());
-             })
+        .def(
+            "__iter__",
+            [](Individual::Route const &route) {
+                return py::make_iterator(route.cbegin(), route.cend());
+            },
+            py::return_value_policy::reference_internal)
         .def(
             "__getitem__",
             [](Individual::Route const &route, int idx) {
