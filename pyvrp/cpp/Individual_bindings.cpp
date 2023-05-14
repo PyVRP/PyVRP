@@ -17,12 +17,16 @@ PYBIND11_MODULE(_Individual, m)
         .def_property_readonly("plan",
                                &Individual::Route::plan,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("distance", &Individual::Route::distance)
-        .def_property_readonly("demand", &Individual::Route::demand)
-        .def_property_readonly("duration", &Individual::Route::duration)
-        .def_property_readonly("service", &Individual::Route::service)
-        .def_property_readonly("time_warp", &Individual::Route::timeWarp)
-        .def_property_readonly("wait", &Individual::Route::wait)
+        .def("distance", &Individual::Route::distance)
+        .def("demand", &Individual::Route::demand)
+        .def("excess_load", &Individual::Route::excessLoad)
+        .def("duration", &Individual::Route::duration)
+        .def("service", &Individual::Route::service)
+        .def("time_warp", &Individual::Route::timeWarp)
+        .def("wait", &Individual::Route::wait)
+        .def("is_feasible", &Individual::Route::isFeasible)
+        .def("has_excess_load", &Individual::Route::hasExcessLoad)
+        .def("has_time_warp", &Individual::Route::hasTimeWarp)
         .def("__len__", &Individual::Route::size)
         .def(
             "__iter__",

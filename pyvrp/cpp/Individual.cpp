@@ -19,9 +19,7 @@ void Individual::evaluate(ProblemData const &data)
         numRoutes_++;
         distance_ += route.distance();
         timeWarp_ += route.timeWarp();
-
-        if (static_cast<size_t>(route.demand()) > data.vehicleCapacity())
-            excessLoad_ += route.demand() - data.vehicleCapacity();
+        excessLoad_ += route.excessLoad();
     }
 }
 
@@ -191,29 +189,55 @@ Individual::Route::Route(ProblemData const &data, Plan const &plan)
     time += data.client(plan.back()).serviceDuration
             + data.duration(plan.back(), 0);
 
+    excessLoad_ = data.vehicleCapacity() < demand_
+                      ? demand_ - data.vehicleCapacity()
+                      : 0;
+
     // For the depot we only need to check the end of the time window.
     timeWarp_ += std::max(time - data.depot().twLate, 0);
 }
 
 bool Individual::Route::empty() const { return plan_.empty(); }
+
 size_t Individual::Route::size() const { return plan_.size(); }
+
 Client Individual::Route::operator[](size_t idx) const { return plan_[idx]; }
 
 Plan::const_iterator Individual::Route::begin() const { return plan_.cbegin(); }
+
 Plan::const_iterator Individual::Route::end() const { return plan_.cend(); }
+
 Plan::const_iterator Individual::Route::cbegin() const
 {
     return plan_.cbegin();
 }
+
 Plan::const_iterator Individual::Route::cend() const { return plan_.cend(); }
 
 std::vector<Client> const &Individual::Route::plan() const { return plan_; }
+
 size_t Individual::Route::distance() const { return distance_; }
+
 size_t Individual::Route::demand() const { return demand_; }
+
+size_t Individual::Route::excessLoad() const { return excessLoad_; }
+
 size_t Individual::Route::duration() const { return duration_; }
+
 size_t Individual::Route::service() const { return service_; }
+
 size_t Individual::Route::timeWarp() const { return timeWarp_; }
+
 size_t Individual::Route::wait() const { return wait_; }
+
+bool Individual::Route::isFeasible() const
+{
+    return !hasExcessLoad() && !hasTimeWarp();
+}
+
+bool Individual::Route::hasExcessLoad() const { return excessLoad_ > 0; }
+
+bool Individual::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {

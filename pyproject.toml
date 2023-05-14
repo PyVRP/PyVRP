@@ -69,7 +69,6 @@ optional = true
 
 [tool.poetry.group.examples.dependencies]
 jupyter = ">=1.0.0"
-pandas = ">=1.5.0"
 
 
 [tool.poetry.group.dev.dependencies]

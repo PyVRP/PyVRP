@@ -12,37 +12,34 @@ class Route:
     def __getitem__(self, idx: int) -> int: ...
     def __iter__(self) -> Iterator[int]: ...
     def __len__(self) -> int: ...
-    @property
     def demand(self) -> int:
         """
         Total client demand on this route.
         """
-    @property
+    def excess_load(self) -> int:
+        """
+        Demand in excess of the vehicle's capacity
+        """
     def distance(self) -> int:
         """
         Total distance travelled on this route.
         """
-    @property
     def duration(self) -> int:
         """
         Total route duration, including waiting time.
         """
-    @property
     def plan(self) -> List[int]:
         """
         Route plan, as a list of clients.
         """
-    @property
     def service(self) -> int:
         """
         Total duration of service on the route.
         """
-    @property
     def time_warp(self) -> int:
         """
         Any time warp incurred along the route.
         """
-    @property
     def wait(self) -> int:
         """
         Total waiting duration on this route.

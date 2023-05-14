@@ -22,13 +22,14 @@ public:
     {
         using Plan = std::vector<Client>;
 
-        Plan plan_ = {};       // Route plan (list of clients).
-        size_t distance_ = 0;  // Total travel distance on this route
-        size_t demand_ = 0;    // Total demand served on this route
-        size_t duration_ = 0;  // Total travel duration on this route
-        size_t service_ = 0;   // Total service duration on this route
-        size_t timeWarp_ = 0;  // Total time warp on this route
-        size_t wait_ = 0;      // Total waiting duration on this route
+        Plan plan_ = {};         // Route plan (list of clients).
+        size_t distance_ = 0;    // Total travel distance on this route
+        size_t demand_ = 0;      // Total demand served on this route
+        size_t excessLoad_ = 0;  // Demand in excess of the vehicle's capacity
+        size_t duration_ = 0;    // Total travel duration on this route
+        size_t service_ = 0;     // Total service duration on this route
+        size_t timeWarp_ = 0;    // Total time warp on this route
+        size_t wait_ = 0;        // Total waiting duration on this route
 
     public:
         bool empty() const;
@@ -43,10 +44,15 @@ public:
         Plan const &plan() const;
         size_t distance() const;
         size_t demand() const;
+        size_t excessLoad() const;
         size_t duration() const;
         size_t service() const;
         size_t timeWarp() const;
         size_t wait() const;
+
+        bool isFeasible() const;
+        bool hasExcessLoad() const;
+        bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
         Route(ProblemData const &data, Plan const &plan);
