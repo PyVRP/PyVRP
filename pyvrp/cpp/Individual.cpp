@@ -87,8 +87,19 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     auto const perVehicle = std::max(numClients / numVehicles, size_t(1));
     auto const perRoute = perVehicle + (numClients % numVehicles != 0);
 
+    std::vector<std::vector<Client>> routes(data.numVehicles());
+
     for (size_t idx = 0; idx != numClients; ++idx)
-        routes_[idx / perRoute].push_back(clients[idx]);
+        routes[idx / perRoute].push_back(clients[idx]);
+
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        routes_[idx] = Route(data, routes[idx]);
+
+    // a precedes b only when a is not empty and b is. Combined with a stable
+    // sort, this ensures we keep the original sorting as much as possible, but
+    // also make sure all empty routes are at the end of routes_.
+    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
+    std::stable_sort(routes_.begin(), routes_.end(), comp);
 
     makeNeighbours();
     evaluate(data);
@@ -96,20 +107,16 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> routes)
-    : routes_(routes.size()), neighbours(data.numClients() + 1)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
 {
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
-
-    if (routes_.size() > data.numVehicles())
+    if (routes.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
     }
 
-    // Expand to at least numVehicles routes, where any newly inserted routes
-    // will be empty.
-    routes_.resize(data.numVehicles());
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        routes_[idx] = Route(data, routes[idx]);
 
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but
@@ -149,13 +156,15 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     auto const &routes = indiv.getRoutes();
 
     for (size_t rIdx = 0; rIdx != indiv.numRoutes(); ++rIdx)
-    {
-        out << "Route #" << rIdx + 1 << ":";  // route number
-        for (int cIdx : routes[rIdx])
-            out << " " << cIdx;  // client index
-        out << '\n';
-    }
+        out << "Route #" << rIdx + 1 << ":" << routes[rIdx] << '\n';
 
     out << "Distance: " << indiv.distance() << '\n';
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, Individual::Route const &route)
+{
+    for (Client const client : route)
+        out << client << ' ';
     return out;
 }

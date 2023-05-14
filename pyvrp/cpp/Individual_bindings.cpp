@@ -31,7 +31,12 @@ PYBIND11_MODULE(_Individual, m)
                     throw py::index_error();
                 return route[idx];
             },
-            py::arg("idx"));
+            py::arg("idx"))
+        .def("__str__", [](Individual::Route const &route) {
+            std::stringstream stream;
+            stream << route;
+            return stream.str();
+        });
 
     py::class_<Individual>(m, "Individual")
         .def(py::init<ProblemData const &, std::vector<std::vector<int>>>(),

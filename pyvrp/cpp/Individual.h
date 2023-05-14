@@ -187,8 +187,8 @@ public:
     Individual(ProblemData const &data, Routes routes);
 };
 
-// Outputs an individual into a given ostream in VRPLIB format
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
+std::ostream &operator<<(std::ostream &out, Individual::Route const &route);
 
 namespace std
 {
