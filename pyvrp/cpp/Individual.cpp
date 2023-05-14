@@ -93,12 +93,6 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     for (size_t idx = 0; idx != routes.size(); ++idx)
         routes_[idx] = Route(data, routes[idx]);
 
-    // a precedes b only when a is not empty and b is. Combined with a stable
-    // sort, this ensures we keep the original sorting as much as possible, but
-    // also make sure all empty routes are at the end of routes_.
-    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
-    std::stable_sort(routes_.begin(), routes_.end(), comp);
-
     makeNeighbours();
     evaluate(data);
 }

@@ -22,7 +22,7 @@ public:
     {
         using Plan = std::vector<Client>;
 
-        Plan plan_ = {};         // Route plan (list of clients).
+        Plan plan_ = {};         // Route plan (list of clients)
         size_t distance_ = 0;    // Total travel distance on this route
         size_t demand_ = 0;      // Total demand served on this route
         size_t excessLoad_ = 0;  // Demand in excess of the vehicle's capacity

@@ -21,7 +21,7 @@ class Route:
         """
     def excess_load(self) -> int:
         """
-        Demand in excess of the vehicle's capacity
+        Demand in excess of the vehicle's capacity.
         """
     def distance(self) -> int:
         """
