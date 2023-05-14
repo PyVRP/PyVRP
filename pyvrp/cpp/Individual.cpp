@@ -87,7 +87,6 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     auto const perRoute = perVehicle + (numClients % numVehicles != 0);
 
     std::vector<std::vector<Client>> routes(data.numVehicles());
-
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
@@ -116,29 +115,6 @@ Individual::Individual(ProblemData const &data,
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
         routes_[idx] = Route(data, routes[idx]);
-
-    // a precedes b only when a is not empty and b is. Combined with a stable
-    // sort, this ensures we keep the original sorting as much as possible, but
-    // also make sure all empty routes are at the end of routes_.
-    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
-    std::stable_sort(routes_.begin(), routes_.end(), comp);
-
-    makeNeighbours();
-    evaluate(data);
-}
-
-Individual::Individual(ProblemData const &data, Routes routes)
-    : routes_(routes), neighbours(data.numClients() + 1)
-{
-    if (routes_.size() > data.numVehicles())
-    {
-        auto const msg = "Number of routes must not exceed number of vehicles.";
-        throw std::runtime_error(msg);
-    }
-
-    // Expand to at least numVehicles routes, where any newly inserted routes
-    // will be empty.
-    routes_.resize(data.numVehicles());
 
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but

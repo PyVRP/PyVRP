@@ -151,15 +151,6 @@ public:
      */
     Individual(ProblemData const &data,
                std::vector<std::vector<Client>> routes);
-
-    /**
-     * Constructs an individual having the given routes as its solution.
-     *
-     * @param data           Data instance describing the problem that's being
-     *                       solved.
-     * @param routes         Solution's route list.
-     */
-    Individual(ProblemData const &data, Routes routes);
 };
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
