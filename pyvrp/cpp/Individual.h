@@ -15,14 +15,13 @@ class Individual
 
 public:
     /**
-     * A simple Route class that contains the route plan (as a vector), and
-     * some route statistics.
+     * A simple Route class that contains the route plan and some statistics.
      */
     class Route
     {
-        using Plan = std::vector<Client>;
+        using Visits = std::vector<Client>;
 
-        Plan plan_ = {};         // Route plan (list of clients)
+        Visits visits_ = {};     // Client visits on this route
         size_t distance_ = 0;    // Total travel distance on this route
         size_t demand_ = 0;      // Total demand served on this route
         size_t excessLoad_ = 0;  // Demand in excess of the vehicle's capacity
@@ -36,12 +35,12 @@ public:
         [[nodiscard]] size_t size() const;
         [[nodiscard]] Client operator[](size_t idx) const;
 
-        Plan::const_iterator begin() const;
-        Plan::const_iterator end() const;
-        Plan::const_iterator cbegin() const;
-        Plan::const_iterator cend() const;
+        Visits::const_iterator begin() const;
+        Visits::const_iterator end() const;
+        Visits::const_iterator cbegin() const;
+        Visits::const_iterator cend() const;
 
-        [[nodiscard]] Plan const &plan() const;
+        [[nodiscard]] Visits const &visits() const;
         [[nodiscard]] size_t distance() const;
         [[nodiscard]] size_t demand() const;
         [[nodiscard]] size_t excessLoad() const;
@@ -55,7 +54,7 @@ public:
         [[nodiscard]] bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Plan const plan);
+        Route(ProblemData const &data, Visits const visits);
     };
 
 private:

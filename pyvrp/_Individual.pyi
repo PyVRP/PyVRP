@@ -8,7 +8,7 @@ class Route:
     A simple class that stores the route plan and some statistics.
     """
 
-    def __init__(self, data: ProblemData, plan: List[int]) -> None: ...
+    def __init__(self, data: ProblemData, visits: List[int]) -> None: ...
     def __getitem__(self, idx: int) -> int: ...
     def __iter__(self) -> Iterator[int]: ...
     def __len__(self) -> int: ...
@@ -31,9 +31,9 @@ class Route:
         """
         Total route duration, including waiting time.
         """
-    def plan(self) -> List[int]:
+    def visits(self) -> List[int]:
         """
-        Route plan, as a list of clients.
+        Route visits, as a list of clients.
         """
     def service_duration(self) -> int:
         """

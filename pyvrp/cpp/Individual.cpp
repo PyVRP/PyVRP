@@ -5,7 +5,7 @@
 #include <numeric>
 
 using Client = int;
-using Plan = std::vector<Client>;
+using Visits = std::vector<Client>;
 using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
@@ -120,10 +120,10 @@ Individual::Individual(ProblemData const &data,
     evaluate(data);
 }
 
-Individual::Route::Route(ProblemData const &data, Plan const plan)
-    : plan_(std::move(plan))
+Individual::Route::Route(ProblemData const &data, Visits const visits)
+    : visits_(std::move(visits))
 {
-    if (plan_.empty())
+    if (visits_.empty())
         return;
 
     int time = data.depot().twEarly;
@@ -131,61 +131,63 @@ Individual::Route::Route(ProblemData const &data, Plan const plan)
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
-        distance_ += data.dist(prevClient, plan_[idx]);
-        duration_ += data.duration(prevClient, plan_[idx]);
-        demand_ += data.client(plan_[idx]).demand;
-        service_ += data.client(plan_[idx]).serviceDuration;
+        distance_ += data.dist(prevClient, visits_[idx]);
+        duration_ += data.duration(prevClient, visits_[idx]);
+        demand_ += data.client(visits_[idx]).demand;
+        service_ += data.client(visits_[idx]).serviceDuration;
 
         time += data.client(prevClient).serviceDuration
-                + data.duration(prevClient, plan_[idx]);
+                + data.duration(prevClient, visits_[idx]);
 
-        if (time < data.client(plan_[idx]).twEarly)  // add wait duration
+        if (time < data.client(visits_[idx]).twEarly)  // add wait duration
         {
-            wait_ += data.client(plan_[idx]).twEarly - time;
-            time = data.client(plan_[idx]).twEarly;
+            wait_ += data.client(visits_[idx]).twEarly - time;
+            time = data.client(visits_[idx]).twEarly;
         }
 
-        if (time > data.client(plan_[idx]).twLate)  // add time warp
+        if (time > data.client(visits_[idx]).twLate)  // add time warp
         {
-            timeWarp_ += time - data.client(plan_[idx]).twLate;
-            time = data.client(plan_[idx]).twLate;
+            timeWarp_ += time - data.client(visits_[idx]).twLate;
+            time = data.client(visits_[idx]).twLate;
         }
 
-        prevClient = plan_[idx];
+        prevClient = visits_[idx];
     }
 
-    // Last client has depot as successor.
-    distance_ += data.dist(plan_.back(), 0);
-    duration_ += data.duration(plan_.back(), 0);
-    time += data.client(plan_.back()).serviceDuration
-            + data.duration(plan_.back(), 0);
-
+    Client const last = visits_.back();  // lLast client has depot as successor
+    distance_ += data.dist(last, 0);
+    duration_ += data.duration(last, 0);
+    time += data.client(last).serviceDuration + data.duration(last, 0);
+    timeWarp_ += std::max(time - data.depot().twLate, 0);  // depot closing tw
     excessLoad_ = data.vehicleCapacity() < demand_
                       ? demand_ - data.vehicleCapacity()
                       : 0;
-
-    // For the depot we only need to check the end of the time window.
-    timeWarp_ += std::max(time - data.depot().twLate, 0);
 }
 
-bool Individual::Route::empty() const { return plan_.empty(); }
+bool Individual::Route::empty() const { return visits_.empty(); }
 
-size_t Individual::Route::size() const { return plan_.size(); }
+size_t Individual::Route::size() const { return visits_.size(); }
 
-Client Individual::Route::operator[](size_t idx) const { return plan_[idx]; }
+Client Individual::Route::operator[](size_t idx) const { return visits_[idx]; }
 
-Plan::const_iterator Individual::Route::begin() const { return plan_.cbegin(); }
-
-Plan::const_iterator Individual::Route::end() const { return plan_.cend(); }
-
-Plan::const_iterator Individual::Route::cbegin() const
+Visits::const_iterator Individual::Route::begin() const
 {
-    return plan_.cbegin();
+    return visits_.cbegin();
 }
 
-Plan::const_iterator Individual::Route::cend() const { return plan_.cend(); }
+Visits::const_iterator Individual::Route::end() const { return visits_.cend(); }
 
-std::vector<Client> const &Individual::Route::plan() const { return plan_; }
+Visits::const_iterator Individual::Route::cbegin() const
+{
+    return visits_.cbegin();
+}
+
+Visits::const_iterator Individual::Route::cend() const
+{
+    return visits_.cend();
+}
+
+Visits const &Individual::Route::visits() const { return visits_; }
 
 size_t Individual::Route::distance() const { return distance_; }
 

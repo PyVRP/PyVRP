@@ -146,10 +146,10 @@ def test_route_access_methods():
     indiv = Individual(data, [[1, 3], [2, 4]])
     routes = indiv.get_routes()
 
-    # Test route acces: getting the route plan should return a simple list, as
+    # Test route access: getting the route plan should return a simple list, as
     # given to the individual above.
-    assert_equal(routes[0].plan(), [1, 3])
-    assert_equal(routes[1].plan(), [2, 4])
+    assert_equal(routes[0].visits(), [1, 3])
+    assert_equal(routes[1].visits(), [2, 4])
 
     # There's no excess load, so all excess load should be zero.
     assert_(not indiv.has_excess_load())
