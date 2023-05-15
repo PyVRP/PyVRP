@@ -16,6 +16,7 @@ void Individual::evaluate(ProblemData const &data)
         uncollected_ += data.client(client).prize;
 
     numRoutes_ = 0;
+    size_ = 0;
     distance_ = 0;
     excessLoad_ = 0;
     timeWarp_ = 0;
@@ -26,6 +27,7 @@ void Individual::evaluate(ProblemData const &data)
             break;          // empty as well.
 
         numRoutes_++;
+        size_ += route.size();
 
         int routeDist = data.dist(0, route[0]);
         int routeTimeWarp = 0;
@@ -88,6 +90,8 @@ void Individual::evaluate(ProblemData const &data)
 }
 
 size_t Individual::numRoutes() const { return numRoutes_; }
+
+size_t Individual::size() const { return size_; }
 
 Routes const &Individual::getRoutes() const { return routes_; }
 

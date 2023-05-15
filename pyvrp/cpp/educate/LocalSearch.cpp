@@ -69,16 +69,18 @@ Individual LocalSearch::search(Individual &individual,
                 }
             }
 
-            if (U->route && step > 0)  // empty moves are not tested initially
-            {                          // to avoid using too many routes.
+            if (step > 0)  // empty moves are not tested initially to avoid
+            {              // using too many routes.
                 auto pred = [](auto const &route) { return route.empty(); };
                 auto empty = std::find_if(routes.begin(), routes.end(), pred);
 
                 if (empty == routes.end())
                     continue;
 
-                if (applyNodeOps(U, empty->depot, costEvaluator))
-                    continue;
+                if (U->route)  // try inserting U into the empty route.
+                    applyNodeOps(U, empty->depot, costEvaluator);
+                else  // U is not in the solution, so again try inserting.
+                    maybeInsert(U, empty->depot, costEvaluator);
             }
         }
     }
@@ -242,8 +244,8 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 
     if (deltaCost < 0)
     {
-        auto *route = U->route;  // We remove U from its route, so after the
-        U->remove();             // remove call U->route is a nullptr.
+        auto *route = U->route;  // after U->remove(), U->route is a nullptr
+        U->remove();
         update(route, route);
     }
 }

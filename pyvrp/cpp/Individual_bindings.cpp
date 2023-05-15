@@ -53,6 +53,7 @@ PYBIND11_MODULE(_Individual, m)
                  return std::hash<Individual>()(individual);
              })
         .def(pybind11::self == pybind11::self)  // this is __eq__
+        .def("__len__", &Individual::size)
         .def("__str__", [](Individual const &individual) {
             std::stringstream stream;
             stream << individual;

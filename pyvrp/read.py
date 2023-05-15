@@ -123,7 +123,7 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
 
-    prizes = instance.get("prize", np.zeros(dimension, dtype=int))
+    prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:
