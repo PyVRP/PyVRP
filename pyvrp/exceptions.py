@@ -5,3 +5,12 @@ class StatisticsNotCollectedError(Exception):
     """
 
     pass
+
+
+class EmptySolutionWarning(UserWarning):
+    """
+    Raised when an empty solution is being added to the Population. This is not
+    forbidden, per se, but very odd.
+    """
+
+    pass
