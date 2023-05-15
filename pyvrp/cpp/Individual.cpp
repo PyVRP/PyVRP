@@ -119,8 +119,6 @@ size_t Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours()
 {
-    neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
-
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
             neighbours[route[idx]]
@@ -142,7 +140,7 @@ bool Individual::operator==(Individual const &other) const
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -164,7 +162,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 }
 
 Individual::Individual(ProblemData const &data, Routes routes)
-    : routes_(std::move(routes)), neighbours(data.numClients() + 1)
+    : routes_(std::move(routes)), neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes_.size() > data.numVehicles())
     {
