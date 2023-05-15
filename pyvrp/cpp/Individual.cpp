@@ -12,7 +12,7 @@ using Routes = std::vector<Route>;
 void Individual::evaluate(ProblemData const &data)
 {
     uncollected_ = 0;
-    for (size_t client = 0; client != data.numClients(); ++client)
+    for (size_t client = 0; client <= data.numClients(); ++client)
         uncollected_ += data.client(client).prize;
 
     numRoutes_ = 0;
@@ -71,8 +71,6 @@ void Individual::evaluate(ProblemData const &data)
         routeDist += data.dist(route.back(), 0);
         time += data.client(route.back()).serviceDuration
                 + data.duration(route.back(), 0);
-
-        routePrize += data.client(route.back()).prize;
 
         // For the depot, we only need to check the end of the time window
         // (add possible time warp)
