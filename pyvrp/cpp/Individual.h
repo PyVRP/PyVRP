@@ -4,7 +4,7 @@
 #include "ProblemData.h"
 #include "XorShift128.h"
 
-#include <string>
+#include <iosfwd>
 #include <vector>
 
 class Individual
@@ -12,7 +12,52 @@ class Individual
     friend struct std::hash<Individual>;  // friend struct to enable hashing
 
     using Client = int;
-    using Route = std::vector<Client>;
+
+public:
+    /**
+     * A simple Route class that contains the route plan and some statistics.
+     */
+    class Route
+    {
+        using Visits = std::vector<Client>;
+
+        Visits visits_ = {};     // Client visits on this route
+        size_t distance_ = 0;    // Total travel distance on this route
+        size_t demand_ = 0;      // Total demand served on this route
+        size_t excessLoad_ = 0;  // Demand in excess of the vehicle's capacity
+        size_t duration_ = 0;    // Total travel duration on this route
+        size_t service_ = 0;     // Total service duration on this route
+        size_t timeWarp_ = 0;    // Total time warp on this route
+        size_t wait_ = 0;        // Total waiting duration on this route
+
+    public:
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] Client operator[](size_t idx) const;
+
+        Visits::const_iterator begin() const;
+        Visits::const_iterator end() const;
+        Visits::const_iterator cbegin() const;
+        Visits::const_iterator cend() const;
+
+        [[nodiscard]] Visits const &visits() const;
+        [[nodiscard]] size_t distance() const;
+        [[nodiscard]] size_t demand() const;
+        [[nodiscard]] size_t excessLoad() const;
+        [[nodiscard]] size_t duration() const;
+        [[nodiscard]] size_t serviceDuration() const;
+        [[nodiscard]] size_t timeWarp() const;
+        [[nodiscard]] size_t waitDuration() const;
+
+        [[nodiscard]] bool isFeasible() const;
+        [[nodiscard]] bool hasExcessLoad() const;
+        [[nodiscard]] bool hasTimeWarp() const;
+
+        Route() = default;  // default is empty
+        Route(ProblemData const &data, Visits const visits);
+    };
+
+private:
     using Routes = std::vector<Route>;
 
     size_t numRoutes_ = 0;   // Number of routes
@@ -103,11 +148,12 @@ public:
      *                       solved.
      * @param routes         Solution's route list.
      */
-    Individual(ProblemData const &data, Routes routes);
+    Individual(ProblemData const &data,
+               std::vector<std::vector<Client>> const &routes);
 };
 
-// Outputs an individual into a given ostream in VRPLIB format
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
+std::ostream &operator<<(std::ostream &out, Individual::Route const &route);
 
 namespace std
 {
