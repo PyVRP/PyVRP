@@ -205,6 +205,9 @@ void LocalSearch::maybeInsert(Node *U,
     deltaCost
         -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
 
+    if (deltaCost >= V->route->timeWarp())  // adding U will likely not lower
+        return;                             // time warp, so we can stop here.
+
     auto vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
 
