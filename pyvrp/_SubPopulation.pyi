@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Callable, Iterator
 
 from pyvrp._CostEvaluator import CostEvaluator
 from pyvrp._Individual import Individual
@@ -23,7 +23,11 @@ class PopulationParams:
     def max_pop_size(self) -> int: ...
 
 class SubPopulation:
-    def __init__(self, diversity_op, params: PopulationParams) -> None:
+    def __init__(
+        self,
+        diversity_op: Callable[[Individual, Individual], float],
+        params: PopulationParams,
+    ) -> None:
         """
         Creates a SubPopulation instance.
 

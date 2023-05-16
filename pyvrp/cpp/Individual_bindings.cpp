@@ -10,8 +10,50 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(_Individual, m)
 {
+    py::class_<Individual::Route>(m, "Route")
+        .def(py::init<ProblemData const &, std::vector<int>>(),
+             py::arg("data"),
+             py::arg("visits"))
+        .def("visits",
+             &Individual::Route::visits,
+             py::return_value_policy::reference_internal)
+        .def("distance", &Individual::Route::distance)
+        .def("demand", &Individual::Route::demand)
+        .def("excess_load", &Individual::Route::excessLoad)
+        .def("duration", &Individual::Route::duration)
+        .def("service_duration", &Individual::Route::serviceDuration)
+        .def("time_warp", &Individual::Route::timeWarp)
+        .def("wait_duration", &Individual::Route::waitDuration)
+        .def("prize", &Individual::Route::prize)
+        .def("is_feasible", &Individual::Route::isFeasible)
+        .def("has_excess_load", &Individual::Route::hasExcessLoad)
+        .def("has_time_warp", &Individual::Route::hasTimeWarp)
+        .def("__len__", &Individual::Route::size)
+        .def(
+            "__iter__",
+            [](Individual::Route const &route) {
+                return py::make_iterator(route.cbegin(), route.cend());
+            },
+            py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Individual::Route const &route, int idx) {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? route.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
+                    throw py::index_error();
+                return route[idx];
+            },
+            py::arg("idx"))
+        .def("__str__", [](Individual::Route const &route) {
+            std::stringstream stream;
+            stream << route;
+            return stream.str();
+        });
+
     py::class_<Individual>(m, "Individual")
-        .def(py::init<ProblemData const &, std::vector<std::vector<int>>>(),
+        .def(py::init<ProblemData const &,
+                      std::vector<std::vector<int>> const &>(),
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(

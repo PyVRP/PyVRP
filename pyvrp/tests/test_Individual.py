@@ -1,7 +1,7 @@
 from copy import copy, deepcopy
 
 import numpy as np
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import Client, Individual, ProblemData, XorShift128
@@ -24,6 +24,23 @@ def test_route_constructor_sorts_by_empty():
     assert_equal(len(routes[0]), 2)
     assert_equal(len(routes[1]), 2)
     assert_equal(len(routes[2]), 0)
+
+
+def test_random_constructor_cycles_over_routes():
+    # This instance has four clients and three vehicles. Since 1 client per
+    # vehicle would not work (insufficient vehicles), each route is given two
+    # clients (and the last route should be empty).
+    data = read("data/OkSmall.txt")
+    rng = XorShift128(seed=42)
+
+    indiv = Individual.make_random(data, rng)
+    routes = indiv.get_routes()
+
+    assert_equal(indiv.num_routes(), 2)
+    assert_equal(len(routes), 3)
+
+    for idx, size in enumerate([2, 2, 0]):
+        assert_equal(len(routes[idx]), size)
 
 
 def test_route_constructor_raises():
@@ -89,19 +106,26 @@ def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
     indiv = Individual(data, [[1, 2], [3], [4]])
-    assert_(indiv.is_feasible())
+    routes = indiv.get_routes()
 
-    # Feasible individual, so cost should equal total distance travelled.
-    dist = (
-        data.dist(0, 1)
-        + data.dist(1, 2)
-        + data.dist(2, 0)
-        + data.dist(0, 3)
-        + data.dist(3, 0)
-        + data.dist(0, 4)
-        + data.dist(4, 0)
+    # Solution is feasible, so all its routes should also be feasible.
+    assert_(indiv.is_feasible())
+    assert_(all(route.is_feasible() for route in routes))
+
+    # Solution distance should be equal to all routes' distances. These we
+    # check separately.
+    assert_allclose(
+        indiv.distance(), sum(route.distance() for route in routes)
     )
-    assert_equal(indiv.distance(), dist)
+
+    expected = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
+    assert_allclose(routes[0].distance(), expected)
+
+    expected = data.dist(0, 3) + data.dist(3, 0)
+    assert_allclose(routes[1].distance(), expected)
+
+    expected = data.dist(0, 4) + data.dist(4, 0)
+    assert_allclose(routes[2].distance(), expected)
 
 
 def test_excess_load_calculation():
@@ -117,21 +141,63 @@ def test_excess_load_calculation():
     assert_equal(indiv.excess_load(), 18 - data.vehicle_capacity)
 
 
-def test_time_warp_calculation():
+def test_route_access_methods():
     data = read("data/OkSmall.txt")
-
     indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
+
+    # Test route access: getting the route plan should return a simple list, as
+    # given to the individual above.
+    assert_equal(routes[0].visits(), [1, 3])
+    assert_equal(routes[1].visits(), [2, 4])
+
+    # There's no excess load, so all excess load should be zero.
     assert_(not indiv.has_excess_load())
-    assert_(indiv.has_time_warp())
+    assert_allclose(routes[0].excess_load(), 0)
+    assert_allclose(routes[1].excess_load(), 0)
+
+    # Total route demand.
+    demands = [data.client(idx).demand for idx in range(data.num_clients + 1)]
+    assert_allclose(routes[0].demand(), demands[1] + demands[3])
+    assert_allclose(routes[1].demand(), demands[2] + demands[4])
+
+    # The first route is not feasible due to time warp, but the second one is.
+    # See also the tests below.
+    assert_(not routes[0].is_feasible())
+    assert_(routes[1].is_feasible())
+
+    # Total service duration.
+    services = [
+        data.client(idx).service_duration
+        for idx in range(data.num_clients + 1)
+    ]
+    assert_allclose(routes[0].service_duration(), services[1] + services[3])
+    assert_allclose(routes[1].service_duration(), services[2] + services[4])
+
+
+def test_route_time_warp_and_wait_duration():
+    data = read("data/OkSmall.txt")
+    indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
 
     # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
     # starts at 15'600, and completes at 15'600 + 360. Then we drive for
     # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
     # window). This is where we incur time warp: we need to 'warp' to 15'300.
-    tw_first_route = 15_600 + 360 + 1_427 - 15_300
-    tw_second_route = 0
-    assert_equal(indiv.time_warp(), tw_first_route + tw_second_route)
+    assert_(indiv.has_time_warp())
+    assert_(routes[0].has_time_warp())
+    assert_(not routes[1].has_time_warp())
+    assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
+    assert_allclose(routes[1].time_warp(), 0)
+    assert_allclose(indiv.time_warp(), routes[0].time_warp())
+
+    # On the first route, we have to wait at the first client, where we arrive
+    # at 1'544, but cannot start service until 15'600. On the second route, we
+    # also have to wait at the first client, where we arrive at 1'944, but
+    # cannot start service until 12'000.
+    assert_equal(routes[0].wait_duration(), 15_600 - 1_544)
+    assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
 
 
 @mark.parametrize(

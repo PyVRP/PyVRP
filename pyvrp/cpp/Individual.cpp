@@ -3,11 +3,10 @@
 
 #include <fstream>
 #include <numeric>
-#include <vector>
 
 using Client = int;
-using Route = std::vector<Client>;
-using Routes = std::vector<Route>;
+using Visits = std::vector<Client>;
+using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
@@ -15,75 +14,17 @@ void Individual::evaluate(ProblemData const &data)
     for (size_t client = 0; client <= data.numClients(); ++client)
         uncollected_ += data.client(client).prize;
 
-    numRoutes_ = 0;
-    size_ = 0;
-    distance_ = 0;
-    excessLoad_ = 0;
-    timeWarp_ = 0;
-
     for (auto const &route : routes_)
     {
         if (route.empty())  // First empty route. All subsequent routes are
             break;          // empty as well.
 
+        // Whole solution statistics.
         numRoutes_++;
-        size_ += route.size();
-
-        int routeDist = data.dist(0, route[0]);
-        int routeTimeWarp = 0;
-        int routeLoad = data.client(route[0]).demand;
-        int routePrize = data.client(route[0]).prize;
-
-        int time = data.duration(0, route[0]);
-
-        if (time < data.client(route[0]).twEarly)
-            time = data.client(route[0]).twEarly;
-
-        if (time > data.client(route[0]).twLate)
-        {
-            routeTimeWarp += time - data.client(route[0]).twLate;
-            time = data.client(route[0]).twLate;
-        }
-
-        for (size_t idx = 1; idx < route.size(); idx++)
-        {
-            routeDist += data.dist(route[idx - 1], route[idx]);
-            routeLoad += data.client(route[idx]).demand;
-            routePrize += data.client(route[idx]).prize;
-
-            time += data.client(route[idx - 1]).serviceDuration
-                    + data.duration(route[idx - 1], route[idx]);
-
-            // Add possible waiting time
-            if (time < data.client(route[idx]).twEarly)
-                time = data.client(route[idx]).twEarly;
-
-            // Add possible time warp
-            if (time > data.client(route[idx]).twLate)
-            {
-                routeTimeWarp += time - data.client(route[idx]).twLate;
-                time = data.client(route[idx]).twLate;
-            }
-        }
-
-        // For the last client, the successors is the depot. Also update the
-        // rDist and time
-        routeDist += data.dist(route.back(), 0);
-        time += data.client(route.back()).serviceDuration
-                + data.duration(route.back(), 0);
-
-        // For the depot, we only need to check the end of the time window
-        // (add possible time warp)
-        routeTimeWarp += std::max(time - data.depot().twLate, 0);
-
-        // Whole solution stats
-        distance_ += routeDist;
-        timeWarp_ += routeTimeWarp;
-
-        if (static_cast<size_t>(routeLoad) > data.vehicleCapacity())
-            excessLoad_ += routeLoad - data.vehicleCapacity();
-
-        uncollected_ -= routePrize;
+        uncollected_ -= route.prize();
+        distance_ += route.distance();
+        timeWarp_ += route.timeWarp();
+        excessLoad_ += route.excessLoad();
     }
 }
 
@@ -152,25 +93,29 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     auto const perVehicle = std::max(numClients / numVehicles, size_t(1));
     auto const perRoute = perVehicle + (numClients % numVehicles != 0);
 
+    std::vector<std::vector<Client>> routes(data.numVehicles());
     for (size_t idx = 0; idx != numClients; ++idx)
-        routes_[idx / perRoute].push_back(clients[idx]);
+        routes[idx / perRoute].push_back(clients[idx]);
+
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        routes_[idx] = Route(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
 }
 
-Individual::Individual(ProblemData const &data, Routes routes)
-    : routes_(std::move(routes)), neighbours(data.numClients() + 1, {0, 0})
+Individual::Individual(ProblemData const &data,
+                       std::vector<std::vector<Client>> const &routes)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
 {
-    if (routes_.size() > data.numVehicles())
+    if (routes.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
     }
 
-    // Expand to at least numVehicles routes, where any newly inserted routes
-    // will be empty.
-    routes_.resize(data.numVehicles());
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        routes_[idx] = Route(data, routes[idx]);
 
     // a precedes b only when a is not empty and b is. Combined with a stable
     // sort, this ensures we keep the original sorting as much as possible, but
@@ -182,18 +127,115 @@ Individual::Individual(ProblemData const &data, Routes routes)
     evaluate(data);
 }
 
+Individual::Route::Route(ProblemData const &data, Visits const visits)
+    : visits_(std::move(visits))
+{
+    if (visits_.empty())
+        return;
+
+    int time = data.depot().twEarly;
+    int prevClient = 0;
+
+    for (size_t idx = 0; idx != size(); ++idx)
+    {
+        auto const &clientData = data.client(visits_[idx]);
+
+        distance_ += data.dist(prevClient, visits_[idx]);
+        duration_ += data.duration(prevClient, visits_[idx]);
+        demand_ += clientData.demand;
+        service_ += clientData.serviceDuration;
+        prize_ += clientData.prize;
+
+        time += data.client(prevClient).serviceDuration
+                + data.duration(prevClient, visits_[idx]);
+
+        if (time < clientData.twEarly)  // add wait duration
+        {
+            wait_ += clientData.twEarly - time;
+            time = clientData.twEarly;
+        }
+
+        if (time > clientData.twLate)  // add time warp
+        {
+            timeWarp_ += time - clientData.twLate;
+            time = clientData.twLate;
+        }
+
+        prevClient = visits_[idx];
+    }
+
+    Client const last = visits_.back();  // lLast client has depot as successor
+    distance_ += data.dist(last, 0);
+    duration_ += data.duration(last, 0);
+    time += data.client(last).serviceDuration + data.duration(last, 0);
+    timeWarp_ += std::max(time - data.depot().twLate, 0);  // depot closing tw
+    excessLoad_ = data.vehicleCapacity() < demand_
+                      ? demand_ - data.vehicleCapacity()
+                      : 0;
+}
+
+bool Individual::Route::empty() const { return visits_.empty(); }
+
+size_t Individual::Route::size() const { return visits_.size(); }
+
+Client Individual::Route::operator[](size_t idx) const { return visits_[idx]; }
+
+Visits::const_iterator Individual::Route::begin() const
+{
+    return visits_.cbegin();
+}
+
+Visits::const_iterator Individual::Route::end() const { return visits_.cend(); }
+
+Visits::const_iterator Individual::Route::cbegin() const
+{
+    return visits_.cbegin();
+}
+
+Visits::const_iterator Individual::Route::cend() const
+{
+    return visits_.cend();
+}
+
+Visits const &Individual::Route::visits() const { return visits_; }
+
+size_t Individual::Route::distance() const { return distance_; }
+
+size_t Individual::Route::demand() const { return demand_; }
+
+size_t Individual::Route::excessLoad() const { return excessLoad_; }
+
+size_t Individual::Route::duration() const { return duration_; }
+
+size_t Individual::Route::serviceDuration() const { return service_; }
+
+size_t Individual::Route::timeWarp() const { return timeWarp_; }
+
+size_t Individual::Route::waitDuration() const { return wait_; }
+
+bool Individual::Route::isFeasible() const
+{
+    return !hasExcessLoad() && !hasTimeWarp();
+}
+
+bool Individual::Route::hasExcessLoad() const { return excessLoad_ > 0; }
+
+bool Individual::Route::hasTimeWarp() const { return timeWarp_ > 0; }
+
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
     auto const &routes = indiv.getRoutes();
 
-    for (size_t rIdx = 0; rIdx != indiv.numRoutes(); ++rIdx)
-    {
-        out << "Route #" << rIdx + 1 << ":";  // route number
-        for (int cIdx : routes[rIdx])
-            out << " " << cIdx;  // client index
-        out << '\n';
-    }
+    for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
+        out << "Route #" << idx + 1 << ":" << routes[idx] << '\n';
 
     out << "Distance: " << indiv.distance() << '\n';
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, Individual::Route const &route)
+{
+    for (Client const client : route)
+        out << client << ' ';
     return out;
 }

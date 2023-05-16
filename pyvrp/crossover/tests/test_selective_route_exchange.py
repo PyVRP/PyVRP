@@ -115,8 +115,8 @@ def test_srex_greedy_repair():
     # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
     # cost 9725. The first one is returned since it has the lowest cost.
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
-
-    assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
+    expected = Individual(data, [[2, 3, 4], [1]])
+    assert_equal(offspring, expected)
 
 
 def test_srex_changed_start_indices():
@@ -141,8 +141,8 @@ def test_srex_changed_start_indices():
     # 10195, and [[4], [1, 2, 3]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
-
-    assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
+    expected = Individual(data, [[1, 2, 4], [3]])
+    assert_equal(offspring, expected)
 
 
 def test_srex_a_right_move():
@@ -188,8 +188,8 @@ def test_srex_a_right_move():
     # [4, 1] [2] [3] - cost: 12699 <-- selected as new offspring
     # [4] [2] [1, 3] - cost: 24416
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
-
-    assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
+    expected = Individual(data, [[4, 1], [2], [3]])
+    assert_equal(offspring, expected)
 
 
 def test_srex_a_left_move():
@@ -205,8 +205,8 @@ def test_srex_a_left_move():
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [4], [2, 1]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
-
-    assert_equal(offspring.get_routes(), [[4], [2, 1], [3]])
+    expected = Individual(data, [[4], [2, 1], [3]])
+    assert_equal(offspring, expected)
 
 
 def test_srex_b_left_move():
@@ -222,8 +222,8 @@ def test_srex_b_left_move():
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [2], [4, 1]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
-
-    assert_equal(offspring.get_routes(), [[4, 1], [2], [3]])
+    expected = Individual(data, [[4, 1], [2], [3]])
+    assert_equal(offspring, expected)
 
 
 def test_srex_b_right_move():
@@ -239,5 +239,5 @@ def test_srex_b_right_move():
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [4], [2, 1]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
-
-    assert_equal(offspring.get_routes(), [[4], [2], [1, 3]])
+    expected = Individual(data, [[4], [2], [1, 3]])
+    assert_equal(offspring, expected)
