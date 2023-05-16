@@ -213,6 +213,8 @@ size_t Individual::Route::timeWarp() const { return timeWarp_; }
 
 size_t Individual::Route::waitDuration() const { return wait_; }
 
+size_t Individual::Route::prize() const { return prize_; }
+
 bool Individual::Route::isFeasible() const
 {
     return !hasExcessLoad() && !hasTimeWarp();
