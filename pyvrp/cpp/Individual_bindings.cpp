@@ -13,7 +13,7 @@ PYBIND11_MODULE(_Individual, m)
     py::class_<Individual::Route>(m, "Route")
         .def(py::init<ProblemData const &, std::vector<int>>(),
              py::arg("data"),
-             py::arg("plan"))
+             py::arg("visits"))
         .def("visits",
              &Individual::Route::visits,
              py::return_value_policy::reference_internal)
