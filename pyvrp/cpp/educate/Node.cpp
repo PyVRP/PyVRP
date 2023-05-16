@@ -43,11 +43,8 @@ void Node::swapWith(Node *other)
 
 void Node::remove()
 {
-    auto *UPred = prev;
-    auto *USucc = next;
-
-    UPred->next = USucc;
-    USucc->prev = UPred;
+    UPred->next = prev;
+    USucc->prev = next;
 
     prev = nullptr;
     next = nullptr;

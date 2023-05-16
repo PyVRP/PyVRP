@@ -10,9 +10,9 @@ using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
-    uncollected_ = 0;
-    for (size_t client = 0; client <= data.numClients(); ++client)
-        uncollected_ += data.client(client).prize;
+    size_t allPrizes = 0;
+    for (size_t client = 1; client <= data.numClients(); ++client)
+        allPrizes += data.client(client).prize;
 
     for (auto const &route : routes_)
     {
@@ -21,11 +21,14 @@ void Individual::evaluate(ProblemData const &data)
 
         // Whole solution statistics.
         numRoutes_++;
-        uncollected_ -= route.prize();
+        size_ += route.size();
+        prizes_ += route.prizes();
         distance_ += route.distance();
         timeWarp_ += route.timeWarp();
         excessLoad_ += route.excessLoad();
     }
+
+    uncollectedPrizes_ = allPrizes - prizes_;
 }
 
 size_t Individual::numRoutes() const { return numRoutes_; }
@@ -52,7 +55,9 @@ size_t Individual::distance() const { return distance_; }
 
 size_t Individual::excessLoad() const { return excessLoad_; }
 
-size_t Individual::uncollected() const { return uncollected_; }
+size_t Individual::prizes() const { return prizes_; }
+
+size_t Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 size_t Individual::timeWarp() const { return timeWarp_; }
 
@@ -144,7 +149,7 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
         duration_ += data.duration(prevClient, visits_[idx]);
         demand_ += clientData.demand;
         service_ += clientData.serviceDuration;
-        prize_ += clientData.prize;
+        prizes_ += clientData.prize;
 
         time += data.client(prevClient).serviceDuration
                 + data.duration(prevClient, visits_[idx]);
@@ -164,7 +169,7 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
         prevClient = visits_[idx];
     }
 
-    Client const last = visits_.back();  // lLast client has depot as successor
+    Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, 0);
     duration_ += data.duration(last, 0);
     time += data.client(last).serviceDuration + data.duration(last, 0);
@@ -213,7 +218,7 @@ size_t Individual::Route::timeWarp() const { return timeWarp_; }
 
 size_t Individual::Route::waitDuration() const { return wait_; }
 
-size_t Individual::Route::prize() const { return prize_; }
+size_t Individual::Route::prizes() const { return prizes_; }
 
 bool Individual::Route::isFeasible() const
 {

@@ -47,6 +47,10 @@ class Route:
         """
         Total waiting duration on this route.
         """
+    def prizes(self) -> int:
+        """
+        Total prize value collected on this route.
+        """
 
 class Individual:
     """
@@ -168,14 +172,21 @@ class Individual:
         int
             Total time warp over all routes.
         """
-    def uncollected(self) -> int:
+    def prizes(self) -> int:
         """
-        Returns the value of all uncollected prizes, that is, the prizes of
-        clients not visited by the routes in this solution.
+        Returns the total collected prize value over all routes.
 
         Returns
         -------
         int
+            Value of collected prizes.
+        """
+    def uncollected_prizes(self) -> int:
+        """
+        Total prize value of all clients not visited in this solution.
+
+        Returns
+        -------
             Value of uncollected prizes.
         """
     def is_feasible(self) -> bool:

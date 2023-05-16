@@ -92,11 +92,13 @@ def test_cost_with_prizes():
     assert_(indiv.is_feasible())
 
     prizes = [data.client(idx).prize for idx in range(data.num_clients + 1)]
-    uncollected = sum(prizes) - sum(prizes[:6])
+    collected = sum(prizes[:6])
+    uncollected = sum(prizes) - collected
 
     assert_allclose(prizes[0], 0)
-    assert_allclose(indiv.uncollected(), uncollected)
-    assert_allclose(indiv.distance() + indiv.uncollected(), cost)
+    assert_allclose(indiv.prizes(), collected)
+    assert_allclose(indiv.uncollected_prizes(), uncollected)
+    assert_allclose(indiv.distance() + indiv.uncollected_prizes(), cost)
 
 
 def test_penalised_cost():

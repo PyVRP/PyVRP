@@ -1,4 +1,5 @@
 #include "CostEvaluator.h"
+
 #include <limits>
 
 CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
@@ -9,15 +10,16 @@ CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
 
 unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
 {
-    auto const loadPen = loadPenaltyExcess(individual.excessLoad());
-    auto const twPen = twPenalty(individual.timeWarp());
-
-    return individual.distance() + loadPen + twPen + individual.uncollected();
+    // Standard objective plus penalty terms for capacity- and time-related
+    // infeasibilities.
+    return individual.distance() + individual.uncollectedPrizes()
+           + loadPenaltyExcess(individual.excessLoad())
+           + twPenalty(individual.timeWarp());
 }
 
 unsigned int CostEvaluator::cost(Individual const &individual) const
 {
     return individual.isFeasible()
-               ? individual.distance() + individual.uncollected()
+               ? individual.distance() + individual.uncollectedPrizes()
                : std::numeric_limits<unsigned int>::max();
 }
