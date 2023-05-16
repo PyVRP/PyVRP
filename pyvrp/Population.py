@@ -106,7 +106,7 @@ class Population:
         cost_evaluator
             CostEvaluator to use to compute the cost.
         """
-        if len(individual) == 0:
+        if individual.num_clients() == 0:
             msg = """
             An empty solution is being added to the population. This typically
             indicates that there is a significant difference between the values

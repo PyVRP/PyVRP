@@ -22,7 +22,7 @@ void Individual::evaluate(ProblemData const &data)
 
         // Whole solution statistics.
         numRoutes_++;
-        size_ += route.size();
+        numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
         timeWarp_ += route.timeWarp();
@@ -34,7 +34,7 @@ void Individual::evaluate(ProblemData const &data)
 
 size_t Individual::numRoutes() const { return numRoutes_; }
 
-size_t Individual::size() const { return size_; }
+size_t Individual::numClients() const { return numClients_; }
 
 Routes const &Individual::getRoutes() const { return routes_; }
 

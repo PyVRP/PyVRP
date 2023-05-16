@@ -176,7 +176,7 @@ def test_prize_collecting():
     individual_cost = cost_evaluator.penalised_cost(individual)
 
     # Random solutions are complete...
-    assert_equal(len(individual), data.num_clients)
+    assert_equal(individual.num_clients(), data.num_clients)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))  # relocate
@@ -186,5 +186,5 @@ def test_prize_collecting():
     improved_cost = cost_evaluator.penalised_cost(improved)
 
     # ...but an optimised prize-collecting solution is likely not complete.
-    assert_(len(improved) < len(individual))
+    assert_(improved.num_clients() < individual.num_clients())
     assert_(improved_cost < individual_cost)

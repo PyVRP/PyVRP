@@ -88,7 +88,7 @@ class Result:
             "Solution results",
             "================",
             f"    # routes: {self.best.num_routes()}",
-            f"   # clients: {len(self.best)}",
+            f"   # clients: {self.best.num_clients()}",
             f"   objective: {obj_str}",
             f"# iterations: {self.num_iterations}",
             f"    run-time: {self.runtime:.2f} seconds",
