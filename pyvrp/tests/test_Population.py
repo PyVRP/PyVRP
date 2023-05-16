@@ -365,7 +365,7 @@ def test_clear():
 
 
 def test_add_emits_warning_when_solution_is_empty():
-    data = read("data/RC208.txt", "solomon", "dimacs")
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     pop = Population(bpd)
 

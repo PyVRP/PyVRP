@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <numeric>
+#include <sstream>
 
 using Client = int;
 using Visits = std::vector<Client>;
@@ -117,6 +118,28 @@ Individual::Individual(ProblemData const &data,
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
+    }
+
+    std::vector<size_t> visits(data.numClients() + 1, 0);
+    for (auto const &route : routes)
+        for (auto const client : route)
+            visits[client]++;
+
+    for (size_t client = 1; client <= data.numClients(); ++client)
+    {
+        if (data.client(client).required && visits[client] == 0)
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is required but not present.";
+            throw std::runtime_error(msg.str());
+        }
+
+        if (visits[client] > 1)
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is visited more than once.";
+            throw std::runtime_error(msg.str());
+        }
     }
 
     for (size_t idx = 0; idx != routes.size(); ++idx)

@@ -43,22 +43,32 @@ def test_random_constructor_cycles_over_routes():
         assert_equal(len(routes[idx]), size)
 
 
-def test_route_constructor_raises():
+def test_route_constructor_raises_too_many_vehicles():
     data = read("data/OkSmall.txt")
 
     assert_equal(data.num_vehicles, 3)
 
     # Only two routes should not raise. But we should always get num_vehicles
     # routes back.
-    individual = Individual(data, [[1, 2], [4, 2]])
+    individual = Individual(data, [[1, 2], [4, 3]])
     assert_equal(len(individual.get_routes()), data.num_vehicles)
 
     # Empty third route should not raise.
-    Individual(data, [[1, 2], [4, 2], []])
+    Individual(data, [[1, 2], [4, 3], []])
 
     # More than three routes should raise, since we only have three vehicles.
     with assert_raises(RuntimeError):
         Individual(data, [[1], [2], [3], [4]])
+
+
+def test_route_constructor_raises_for_invalid_routes():
+    data = read("data/OkSmall.txt")
+    with assert_raises(RuntimeError):
+        Individual(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
+
+    data = read("data/OkSmallPrizes.txt")
+    with assert_raises(RuntimeError):
+        Individual(data, [[2], [3, 4]])  # 1 is required but not visited
 
 
 def test_get_neighbours():
