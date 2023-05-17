@@ -84,12 +84,7 @@ void crossover::greedyRepair(Routes &routes,
             }
         }
 
-        auto const &clientData = data.client(client);
-        auto const [deltaCost, route, offset] = best;
-
-        // Only insert if the client is required or the insertion cost is worth
-        // the prize we obtain.
-        if (clientData.required || deltaCost < clientData.prize)
-            route->insert(route->begin() + static_cast<long>(offset), client);
+        auto const [_, route, offset] = best;
+        route->insert(route->begin() + static_cast<long>(offset), client);
     }
 }
