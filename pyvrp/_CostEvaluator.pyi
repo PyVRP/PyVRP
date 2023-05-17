@@ -26,9 +26,9 @@ class CostEvaluator:
     def cost(self, individual: Individual) -> int:
         """
         Evaluates and returns the cost/objective of the given individual.
-        Hand-waiving some details, let :math:`x_{ij} \\in \\{ 0, 1 \\}`
-        indicate if edge :math:`(i, j)` is used in the solution encoded by the
-        given individual, and :math:`y_i \\in \\{ 0, 1 \\}` indicate if client
+        Hand-waving some details, let :math:`x_{ij} \\in \\{ 0, 1 \\}` indicate
+        if edge :math:`(i, j)` is used in the solution encoded by the given
+        individual, and :math:`y_i \\in \\{ 0, 1 \\}` indicate if client
         :math:`i` is visited. The objective is then given by
 
         .. math::

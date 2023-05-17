@@ -187,6 +187,7 @@ class Individual:
 
         Returns
         -------
+        int
             Value of uncollected prizes.
         """
     def is_feasible(self) -> bool:
