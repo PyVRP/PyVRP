@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <numeric>
+#include <sstream>
 
 using Client = int;
 using Visits = std::vector<Client>;
@@ -10,6 +11,10 @@ using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
+    size_t allPrizes = 0;
+    for (size_t client = 1; client <= data.numClients(); ++client)
+        allPrizes += data.client(client).prize;
+
     for (auto const &route : routes_)
     {
         if (route.empty())  // First empty route. All subsequent routes are
@@ -17,13 +22,19 @@ void Individual::evaluate(ProblemData const &data)
 
         // Whole solution statistics.
         numRoutes_++;
+        numClients_ += route.size();
+        prizes_ += route.prizes();
         distance_ += route.distance();
         timeWarp_ += route.timeWarp();
         excessLoad_ += route.excessLoad();
     }
+
+    uncollectedPrizes_ = allPrizes - prizes_;
 }
 
 size_t Individual::numRoutes() const { return numRoutes_; }
+
+size_t Individual::numClients() const { return numClients_; }
 
 Routes const &Individual::getRoutes() const { return routes_; }
 
@@ -45,12 +56,14 @@ size_t Individual::distance() const { return distance_; }
 
 size_t Individual::excessLoad() const { return excessLoad_; }
 
+size_t Individual::prizes() const { return prizes_; }
+
+size_t Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
+
 size_t Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours()
 {
-    neighbours[0] = {0, 0};  // note that depot neighbours have no meaning
-
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
             neighbours[route[idx]]
@@ -72,7 +85,7 @@ bool Individual::operator==(Individual const &other) const
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -99,12 +112,34 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1)
+    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
+    }
+
+    std::vector<size_t> visits(data.numClients() + 1, 0);
+    for (auto const &route : routes)
+        for (auto const client : route)
+            visits[client]++;
+
+    for (size_t client = 1; client <= data.numClients(); ++client)
+    {
+        if (data.client(client).required && visits[client] == 0)
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is required but not present.";
+            throw std::runtime_error(msg.str());
+        }
+
+        if (visits[client] > 1)
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is visited more than once.";
+            throw std::runtime_error(msg.str());
+        }
     }
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
@@ -131,30 +166,33 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
+        auto const &clientData = data.client(visits_[idx]);
+
         distance_ += data.dist(prevClient, visits_[idx]);
         duration_ += data.duration(prevClient, visits_[idx]);
-        demand_ += data.client(visits_[idx]).demand;
-        service_ += data.client(visits_[idx]).serviceDuration;
+        demand_ += clientData.demand;
+        service_ += clientData.serviceDuration;
+        prizes_ += clientData.prize;
 
         time += data.client(prevClient).serviceDuration
                 + data.duration(prevClient, visits_[idx]);
 
-        if (time < data.client(visits_[idx]).twEarly)  // add wait duration
+        if (time < clientData.twEarly)  // add wait duration
         {
-            wait_ += data.client(visits_[idx]).twEarly - time;
-            time = data.client(visits_[idx]).twEarly;
+            wait_ += clientData.twEarly - time;
+            time = clientData.twEarly;
         }
 
-        if (time > data.client(visits_[idx]).twLate)  // add time warp
+        if (time > clientData.twLate)  // add time warp
         {
-            timeWarp_ += time - data.client(visits_[idx]).twLate;
-            time = data.client(visits_[idx]).twLate;
+            timeWarp_ += time - clientData.twLate;
+            time = clientData.twLate;
         }
 
         prevClient = visits_[idx];
     }
 
-    Client const last = visits_.back();  // lLast client has depot as successor
+    Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, 0);
     duration_ += data.duration(last, 0);
     time += data.client(last).serviceDuration + data.duration(last, 0);
@@ -203,6 +241,8 @@ size_t Individual::Route::timeWarp() const { return timeWarp_; }
 
 size_t Individual::Route::waitDuration() const { return wait_; }
 
+size_t Individual::Route::prizes() const { return prizes_; }
+
 bool Individual::Route::isFeasible() const
 {
     return !hasExcessLoad() && !hasTimeWarp();
@@ -217,7 +257,7 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     auto const &routes = indiv.getRoutes();
 
     for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
-        out << "Route #" << idx + 1 << ":" << routes[idx] << '\n';
+        out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
     out << "Distance: " << indiv.distance() << '\n';
     return out;

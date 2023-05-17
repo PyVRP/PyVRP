@@ -47,6 +47,10 @@ class Route:
         """
         Total waiting duration on this route.
         """
+    def prizes(self) -> int:
+        """
+        Total prize value collected on this route.
+        """
 
 class Individual:
     """
@@ -168,6 +172,24 @@ class Individual:
         int
             Total time warp over all routes.
         """
+    def prizes(self) -> int:
+        """
+        Returns the total collected prize value over all routes.
+
+        Returns
+        -------
+        int
+            Value of collected prizes.
+        """
+    def uncollected_prizes(self) -> int:
+        """
+        Total prize value of all clients not visited in this solution.
+
+        Returns
+        -------
+        int
+            Value of uncollected prizes.
+        """
     def is_feasible(self) -> bool:
         """
         Whether this individual is feasible. This is a shorthand for checking
@@ -188,6 +210,15 @@ class Individual:
         -------
         int
             Number of non-empty routes.
+        """
+    def num_clients(self) -> int:
+        """
+        Number of clients in this solution.
+
+        Returns
+        -------
+        int
+            Number of clients in this solution.
         """
     def __copy__(self) -> Individual: ...
     def __deepcopy__(self, memo: Dict) -> Individual: ...

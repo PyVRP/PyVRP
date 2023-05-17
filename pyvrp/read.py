@@ -1,5 +1,6 @@
 import functools
 import pathlib
+from numbers import Number
 from typing import Callable, Dict, List, Union
 
 import numpy as np
@@ -107,7 +108,13 @@ def read(
         coords = np.zeros((dimension, 2), dtype=int)
 
     if "service_time" in instance:
-        service_times: np.ndarray = round_func(instance["service_time"])
+        if isinstance(instance["service_time"], Number):
+            # Some instances describe a uniform service time as a single value
+            # that applies to all clients.
+            service_times = np.full(dimension, instance["service_time"], int)
+            service_times[0] = 0
+        else:
+            service_times = round_func(instance["service_time"])
     else:
         service_times = np.zeros(dimension, dtype=int)
 
@@ -122,6 +129,8 @@ def read(
         durations = np.zeros_like(distances)
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
+
+    prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
     if len(depots) != 1 or depots[0] != 0:
@@ -150,6 +159,8 @@ def read(
             service_times[idx],
             time_windows[idx][0],  # TW early
             time_windows[idx][1],  # TW late
+            prizes[idx],
+            np.isclose(prizes[idx], 0),  # required only when prize is zero
         )
         for idx in range(dimension)
     ]

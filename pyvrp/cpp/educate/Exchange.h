@@ -116,7 +116,7 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
                                                data.vehicleCapacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good
+            return deltaCost;  // even without V, the move will never be good.
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
                                                data.vehicleCapacity());
@@ -177,6 +177,8 @@ int Exchange<N, M>::evalSwapMove(Node *U,
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
     auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
+    assert(U->route && V->route);
+
     int const current = U->route->distBetween(posU - 1, posU + N)
                         + V->route->distBetween(posV - 1, posV + M);
 
@@ -205,14 +207,6 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
-        auto vTWS = TWS::merge(data.durationMatrix(),
-                               p(V)->twBefore,
-                               U->route->twBetween(posU, posU + N - 1),
-                               n(endV)->twAfter);
-
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
-
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
         auto const loadDiff = loadU - loadV;
@@ -221,6 +215,14 @@ int Exchange<N, M>::evalSwapMove(Node *U,
                                                data.vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
                                                data.vehicleCapacity());
+
+        auto vTWS = TWS::merge(data.durationMatrix(),
+                               p(V)->twBefore,
+                               U->route->twBetween(posU, posU + N - 1),
+                               n(endV)->twAfter);
+
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
                                                data.vehicleCapacity());

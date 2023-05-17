@@ -29,6 +29,7 @@ public:
         size_t service_ = 0;     // Total service duration on this route
         size_t timeWarp_ = 0;    // Total time warp on this route
         size_t wait_ = 0;        // Total waiting duration on this route
+        size_t prizes_ = 0;      // Total prize value collected on this route
 
     public:
         [[nodiscard]] bool empty() const;
@@ -48,6 +49,7 @@ public:
         [[nodiscard]] size_t serviceDuration() const;
         [[nodiscard]] size_t timeWarp() const;
         [[nodiscard]] size_t waitDuration() const;
+        [[nodiscard]] size_t prizes() const;
 
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
@@ -60,10 +62,13 @@ public:
 private:
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;   // Number of routes
-    size_t distance_ = 0;    // Total distance
-    size_t excessLoad_ = 0;  // Total excess load over all routes
-    size_t timeWarp_ = 0;    // Total time warp over all routes
+    size_t numRoutes_ = 0;          // Number of routes
+    size_t numClients_ = 0;         // Number of clients in the solution
+    size_t distance_ = 0;           // Total distance
+    size_t excessLoad_ = 0;         // Total excess load over all routes
+    size_t prizes_ = 0;             // Total collected prize value
+    size_t uncollectedPrizes_ = 0;  // Total uncollected prize value
+    size_t timeWarp_ = 0;           // Total time warp over all routes
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -81,6 +86,11 @@ public:
      * routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
+
+    /**
+     * Number of clients in the solution.
+     */
+    [[nodiscard]] size_t numClients() const;
 
     /**
      * Returns this individual's routing decisions.
@@ -118,6 +128,16 @@ public:
      * @return Total excess load over all routes.
      */
     [[nodiscard]] size_t excessLoad() const;
+
+    /**
+     * @return Total collected prize value over all routes.
+     */
+    [[nodiscard]] size_t prizes() const;
+
+    /**
+     * @return Total prize value of all unvisited clients.
+     */
+    [[nodiscard]] size_t uncollectedPrizes() const;
 
     /**
      * @return Total time warp over all routes.

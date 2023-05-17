@@ -146,7 +146,7 @@ size_t Route::size() const
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
-    assert(start <= end);
+    assert(0 < start && start <= end && end <= nodes.size());
 
     auto tws = nodes[start - 1]->tw;
 

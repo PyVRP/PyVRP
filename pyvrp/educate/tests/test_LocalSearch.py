@@ -3,12 +3,13 @@ from pytest import mark
 
 from pyvrp import CostEvaluator, Individual, XorShift128
 from pyvrp.educate import (
+    Exchange10,
+    Exchange11,
     LocalSearch,
     NeighbourhoodParams,
     Neighbours,
     compute_neighbours,
 )
-from pyvrp.educate._Exchange import Exchange10
 from pyvrp.tests.helpers import read
 
 
@@ -161,3 +162,29 @@ def test_reoptimize_changed_objective_timewarp_OkSmall():
     improved_indiv = ls.search(individual, cost_evaluator_tw)
     improved_cost = cost_evaluator_tw.penalised_cost(improved_indiv)
     assert_(improved_cost < cost_evaluator_tw.penalised_cost(individual))
+
+
+def test_prize_collecting():
+    """
+    Tests that local search works on a small prize-collecting instance.
+    """
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    rng = XorShift128(seed=42)
+    cost_evaluator = CostEvaluator(1, 1)
+
+    individual = Individual.make_random(data, rng)
+    individual_cost = cost_evaluator.penalised_cost(individual)
+
+    # Random solutions are complete...
+    assert_equal(individual.num_clients(), data.num_clients)
+
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))  # relocate
+    ls.add_node_operator(Exchange11(data))  # swap
+
+    improved = ls.search(individual, cost_evaluator)
+    improved_cost = cost_evaluator.penalised_cost(improved)
+
+    # ...but an optimised prize-collecting solution is likely not complete.
+    assert_(improved.num_clients() < individual.num_clients())
+    assert_(improved_cost < individual_cost)

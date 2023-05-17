@@ -1,5 +1,11 @@
 import numpy as np
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import (
+    assert_,
+    assert_allclose,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 from pytest import mark
 
 from pyvrp import (
@@ -10,6 +16,7 @@ from pyvrp import (
     XorShift128,
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp.exceptions import EmptySolutionWarning
 from pyvrp.tests.helpers import make_random_solutions, read
 
 
@@ -355,3 +362,12 @@ def test_clear():
 
     pop.clear()
     assert_equal(len(pop), 0)
+
+
+def test_add_emits_warning_when_solution_is_empty():
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    cost_evaluator = CostEvaluator(20, 6)
+    pop = Population(bpd)
+
+    with assert_warns(EmptySolutionWarning):
+        pop.add(Individual(data, []), cost_evaluator)

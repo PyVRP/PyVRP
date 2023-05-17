@@ -24,6 +24,7 @@ PYBIND11_MODULE(_Individual, m)
         .def("service_duration", &Individual::Route::serviceDuration)
         .def("time_warp", &Individual::Route::timeWarp)
         .def("wait_duration", &Individual::Route::waitDuration)
+        .def("prizes", &Individual::Route::prizes)
         .def("is_feasible", &Individual::Route::isFeasible)
         .def("has_excess_load", &Individual::Route::hasExcessLoad)
         .def("has_time_warp", &Individual::Route::hasTimeWarp)
@@ -67,6 +68,7 @@ PYBIND11_MODULE(_Individual, m)
                     py::arg("rng"));
             })
         .def("num_routes", &Individual::numRoutes)
+        .def("num_clients", &Individual::numClients)
         .def("get_routes",
              &Individual::getRoutes,
              py::return_value_policy::reference_internal)
@@ -79,6 +81,8 @@ PYBIND11_MODULE(_Individual, m)
         .def("distance", &Individual::distance)
         .def("excess_load", &Individual::excessLoad)
         .def("time_warp", &Individual::timeWarp)
+        .def("prizes", &Individual::prizes)
+        .def("uncollected_prizes", &Individual::uncollectedPrizes)
         .def(
             "__copy__",
             [](Individual const &individual) { return Individual(individual); })
