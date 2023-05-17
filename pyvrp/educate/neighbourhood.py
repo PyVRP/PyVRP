@@ -161,7 +161,8 @@ def _compute_proximity(
     if not required.all() and not np.isclose(prizes.max(), 0):
         # Not all clients are required, so this instance has prize-collecting.
         # We take these prizes into account to determine the proximity weights.
-        prize_scaling = 1 - prizes[:, None] / prizes.max()
+        normalised_prizes = prizes[None, :] / prizes.max()
+        prize_scaling = np.ones_like(distances) - normalised_prizes
     else:
         prize_scaling = 1  # default no-op
 
