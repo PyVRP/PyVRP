@@ -163,3 +163,19 @@ def test_more_neighbours_than_instance_size():
 
     for neighb in neighbours[1:]:
         assert_equal(len(neighb), data.num_clients - 1)
+
+
+def test_proximity_with_prizes():
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    params = NeighbourhoodParams(0, 0, nb_granular=10)
+    neighbours = compute_neighbours(data, params)
+
+    # We compare the number of times clients 20 and 36 are in other clients'
+    # neighbourhoods. Client 20 is at location (57, 58), client 36 at (63, 69).
+    # They're fairly close to each other, in one corner of the plane. The
+    # biggest difference is in prizes: client 20 has a prize of 33, whereas
+    # client 36 only yields 8. As a consequence, 36 should be in many fewer
+    # neigbhourhoods than 20.
+    count_20 = sum(20 in n for n in neighbours)
+    count_36 = sum(36 in n for n in neighbours)
+    assert_(count_20 > count_36)
