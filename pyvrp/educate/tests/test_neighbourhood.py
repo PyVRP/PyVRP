@@ -175,7 +175,7 @@ def test_proximity_with_prizes():
     # They're fairly close to each other, in one corner of the plane. The
     # biggest difference is in prizes: client 20 has a prize of 33, whereas
     # client 36 only yields 8. As a consequence, 36 should be in many fewer
-    # neigbhourhoods than 20.
+    # neighbourhoods than 20.
     count_20 = sum(20 in n for n in neighbours)
     count_36 = sum(36 in n for n in neighbours)
     assert_(count_20 > count_36)
