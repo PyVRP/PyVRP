@@ -138,7 +138,6 @@ def _compute_proximity(
     latest = np.array([client.tw_late for client in clients])
     service = np.array([client.service_duration for client in clients])
     prizes = np.array([client.prize for client in clients])
-    required = np.array([client.required for client in clients])
     durations = np.array(
         [[data.duration(i, j) for j in range(dim)] for i in range(dim)],
         dtype=float,
@@ -158,16 +157,9 @@ def _compute_proximity(
         dtype=float,
     )
 
-    if not required.all() and not np.isclose(prizes.max(), 0):
-        # Not all clients are required, so this instance has prize-collecting.
-        # We take these prizes into account to determine the proximity weights.
-        normalised_prizes = prizes[None, :] / prizes.max()
-        prize_scaling = np.ones_like(distances) - normalised_prizes
-    else:
-        prize_scaling = 1  # default no-op
-
-    return prize_scaling * (
+    return (
         distances
         + weight_wait_time * min_wait_time
         + weight_time_warp * min_time_warp
+        - prizes[None, :]
     )
