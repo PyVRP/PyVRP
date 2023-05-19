@@ -260,6 +260,7 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
     out << "Distance: " << indiv.distance() << '\n';
+    out << "Prizes: " << indiv.prizes() << '\n';
     return out;
 }
 
