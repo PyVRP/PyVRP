@@ -317,8 +317,8 @@ def test_str_contains_essential_information():
         num_routes = individual.num_routes()
 
         # There should be no more than num_routes lines (each detailing a
-        # single route), and a final line containing the distance.
-        assert_equal(len(str_representation), num_routes + 1)
+        # single route), and two final lines containing distance and prizes.
+        assert_equal(len(str_representation), num_routes + 2)
 
         # The first num_routes lines should each contain a route, where each
         # route should contain every client that is in the route as returned
