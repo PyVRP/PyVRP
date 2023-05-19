@@ -317,8 +317,8 @@ def test_str_contains_essential_information():
         num_routes = individual.num_routes()
 
         # There should be no more than num_routes lines (each detailing a
-        # single route), and a final line containing the distance.
-        assert_equal(len(str_representation), num_routes + 1)
+        # single route), and two final lines containing distance and prizes.
+        assert_equal(len(str_representation), num_routes + 2)
 
         # The first num_routes lines should each contain a route, where each
         # route should contain every client that is in the route as returned
@@ -327,8 +327,9 @@ def test_str_contains_essential_information():
             for client in route:
                 assert_(str(client) in str_route)
 
-        # Last line should contain the distance (cost).
-        assert_(str(individual.distance()) in str_representation[-1])
+        # Last lines should contain the travel distance and collected prizes.
+        assert_(str(individual.distance()) in str_representation[-2])
+        assert_(str(individual.prizes()) in str_representation[-1])
 
 
 def test_hash():
