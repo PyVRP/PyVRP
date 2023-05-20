@@ -1,5 +1,4 @@
-PyVRP
-=====
+.. image:: images/pyvrp_rtd.png
 
 PyVRP is a Python package that offers a high-performance implementation of the hybrid genetic search algorithm for vehicle routing problems (VRPs).
 PyVRP currently supports two well-known VRP variants: the Capacitated VRP (CVRP) and the Vehicle Routing Problem with Time Windows (VRPTW). 
