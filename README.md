@@ -1,4 +1,4 @@
-![Logo](docs/source/images/pyvrp_readme.png)
+![PyVRP logo](docs/source/assets/images/PyVRP.svg)
 
 [![PyPI version](https://badge.fury.io/py/pyvrp.svg)](https://badge.fury.io/py/pyvrp)
 [![CI](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
