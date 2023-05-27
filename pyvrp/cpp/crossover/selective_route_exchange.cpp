@@ -28,9 +28,8 @@ double routeAngle(ProblemData const &data, Route const &route)
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
-    auto const [midX, midY] = data.midPoint();
-    auto const dx = routeX / route.size() - midX;
-    auto const dy = routeY / route.size() - midY;
+    auto const dx = routeX / route.size() - data.depot().x;
+    auto const dy = routeY / route.size() - data.depot().y;
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
@@ -88,7 +87,7 @@ Individual selectiveRouteExchange(
         throw std::invalid_argument(msg);
     }
 
-    // Sort parents' routes by (ascending) center angle
+    // Sort parents' routes by (ascending) polar angle.
     auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
     auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
@@ -100,11 +99,11 @@ Individual selectiveRouteExchange(
     // close to each other.
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
-        selectedA.insert(routesA[(startA + r) % nRoutesA].begin(),
-                         routesA[(startA + r) % nRoutesA].end());
+        auto const &routeA = routesA[(startA + r) % nRoutesA];
+        selectedA.insert(routeA.begin(), routeA.end());
 
-        selectedB.insert(routesB[(startB + r) % nRoutesB].begin(),
-                         routesB[(startB + r) % nRoutesB].end());
+        auto const &routeB = routesB[(startB + r) % nRoutesB];
+        selectedB.insert(routeB.begin(), routeB.end());
     }
 
     // For the selection, we want to minimize |A\B| as these need replanning
