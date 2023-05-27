@@ -46,6 +46,11 @@ size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
+std::pair<double, double> const &ProblemData::midPoint() const
+{
+    return midPoint_;
+}
+
 size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
@@ -56,8 +61,14 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
     : dist_(distMat),
       dur_(durMat),
       clients_(clients),
+      midPoint_({0, 0}),
       numClients_(std::max(clients.size(), static_cast<size_t>(1)) - 1),
       numVehicles_(numVehicles),
       vehicleCapacity_(vehicleCap)
 {
+    for (size_t client = 1; client <= numClients(); ++client)
+    {
+        midPoint_.first += clients_[client].x / numClients();
+        midPoint_.second += clients_[client].y / numClients();
+    }
 }

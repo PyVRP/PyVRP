@@ -36,6 +36,7 @@ private:
     Matrix<int> const dur_;        // Duration matrix (+depot)
     std::vector<Client> clients_;  // Client (+depot) information
 
+    std::pair<double, double> midPoint_;  // (x, y) client midpoint
     size_t const numClients_;
     size_t const numVehicles_;
     size_t const vehicleCapacity_;
@@ -89,6 +90,12 @@ public:
      * @return Total number of vehicles available in this instance.
      */
     [[nodiscard]] size_t numVehicles() const;
+
+    /**
+     * @return Midpoint of all client locations (on the graph). Midpoint does
+     *         not include the depot.
+     */
+    [[nodiscard]] std::pair<double, double> const &midPoint() const;
 
     /**
      * @return Capacity of each vehicle in this instance.

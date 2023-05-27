@@ -1,5 +1,6 @@
 #include "crossover.h"
 
+#include <cassert>
 #include <cmath>
 #include <unordered_set>
 
@@ -13,22 +14,23 @@ namespace
 {
 double routeAngle(ProblemData const &data, Route const &route)
 {
-    // Computes the route angle center. Assumes that the route is non-empty.
-    int cumulatedX = 0;
-    int cumulatedY = 0;
+    assert(!route.empty());
 
-    for (int node : route)
+    double routeX = 0;
+    double routeY = 0;
+
+    for (Client client : route)
     {
-        cumulatedX += data.client(node).x;
-        cumulatedY += data.client(node).y;
+        routeX += data.client(client).x;
+        routeY += data.client(client).y;
     }
 
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
-    auto const routeSize = static_cast<double>(route.size());
-    auto const dy = cumulatedY / routeSize - data.depot().y;
-    auto const dx = cumulatedX / routeSize - data.depot().x;
+    auto const [midX, midY] = data.midPoint();
+    auto const dx = routeX / route.size() - midX;
+    auto const dy = routeY / route.size() - midY;
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
