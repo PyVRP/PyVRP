@@ -32,7 +32,7 @@ double routeAngle(ProblemData const &data, Route const &route)
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
-Routes getNonEmptyRoutesByAscendingAngle(ProblemData const &data, Routes routes)
+Routes sortByAscAngle(ProblemData const &data, Routes routes)
 {
     auto cmp = [&data](Route a, Route b) {
         return (a.empty() || b.empty())
@@ -41,13 +41,6 @@ Routes getNonEmptyRoutesByAscendingAngle(ProblemData const &data, Routes routes)
     };
 
     std::sort(routes.begin(), routes.end(), cmp);
-
-    size_t empty = 0;
-    for (; empty != routes.size(); ++empty)
-        if (routes[empty].empty())
-            break;
-
-    routes.resize(empty);
     return routes;
 }
 }  // namespace
@@ -78,14 +71,8 @@ Individual selectiveRouteExchange(
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
-    // Sort routes according to center angle for both parents
-    auto const routesA
-        = getNonEmptyRoutesByAscendingAngle(data, parents.first->getRoutes());
-    auto const routesB
-        = getNonEmptyRoutesByAscendingAngle(data, parents.second->getRoutes());
-
-    size_t nRoutesA = routesA.size();
-    size_t nRoutesB = routesB.size();
+    size_t nRoutesA = parents.first->numRoutes();
+    size_t nRoutesB = parents.second->numRoutes();
 
     if (startA >= nRoutesA)
         throw std::invalid_argument("Expected startA < nRoutesA.");
@@ -94,8 +81,14 @@ Individual selectiveRouteExchange(
         throw std::invalid_argument("Expected startB < nRoutesB.");
 
     if (numMovedRoutes < 1 || numMovedRoutes > std::min(nRoutesA, nRoutesB))
-        throw std::invalid_argument(
-            "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]");
+    {
+        auto msg = "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]";
+        throw std::invalid_argument(msg);
+    }
+
+    // Sort parents' routes by (ascending) center angle
+    auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
+    auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
     ClientSet selectedA;
     ClientSet selectedB;
