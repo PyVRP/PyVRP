@@ -12,12 +12,14 @@ cost_type TwoOpt::evalWithinRoute(Node *U,
     if (U->position + 1 >= V->position)
         return 0;
 
-    cost_type deltaCost = data.dist(U->client, V->client)
-                          + data.dist(n(U)->client, n(V)->client)
-                          + V->cumulatedReversalDistance
-                          - data.dist(U->client, n(U)->client)
-                          - data.dist(V->client, n(V)->client)
-                          - n(U)->cumulatedReversalDistance;
+    distance_type const deltaDist = data.dist(U->client, V->client)
+                                    + data.dist(n(U)->client, n(V)->client)
+                                    + V->cumulatedReversalDistance
+                                    - data.dist(U->client, n(U)->client)
+                                    - data.dist(V->client, n(V)->client)
+                                    - n(U)->cumulatedReversalDistance;
+
+    cost_type deltaCost = static_cast<cost_type>(deltaDist);
 
     if (!U->route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;

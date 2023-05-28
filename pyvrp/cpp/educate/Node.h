@@ -15,9 +15,9 @@ struct Node
     Route *route;     // Pointer towards the associated route
 
     // TODO can these data fields be moved to Route?
-    int cumulatedLoad;              // Load from depot to client (inclusive)
-    int cumulatedDistance;          // Distance from depot to client (inclusive)
-    int cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
+    int cumulatedLoad;                        // Load depot -> client (incl)
+    distance_type cumulatedDistance;          // Dist depot -> client (incl)
+    distance_type cumulatedReversalDistance;  // Dist if (0..client) is reversed
 
     TimeWindowSegment tw;        // TWS for individual node (client)
     TimeWindowSegment twBefore;  // TWS for (0...client) including self

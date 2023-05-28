@@ -2,6 +2,7 @@
 #define HGS_PROBLEMDATA_H
 
 #include "Matrix.h"
+#include "Measure.h"
 #include "XorShift128.h"
 
 #include <iosfwd>
@@ -12,14 +13,14 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                 // Coordinate X
-        int y;                 // Coordinate Y
-        int demand;            // Demand
-        int serviceDuration;   // Service duration
-        int twEarly;           // Earliest arrival (when using time windows)
-        int twLate;            // Latest arrival (when using time windows)
-        int prize = 0;         // Prize collected when visiting this client
-        bool required = true;  // Must this client be part of a solution?
+        int const x;                          // Coordinate X
+        int const y;                          // Coordinate Y
+        int const demand;                     // Demand
+        duration_type const serviceDuration;  // Service duration
+        duration_type const twEarly;          // Earliest possible arrival
+        duration_type const twLate;           // Latest possible arrival
+        cost_type const prize = 0;            // Prize for visiting this client
+        bool const required = true;           // Must client be in solution?
 
         Client(int x,
                int y,
@@ -32,9 +33,9 @@ public:
     };
 
 private:
-    Matrix<int> const dist_;       // Distance matrix (+depot)
-    Matrix<int> const dur_;        // Duration matrix (+depot)
-    std::vector<Client> clients_;  // Client (+depot) information
+    Matrix<distance_type> const dist_;  // Distance matrix (+depot)
+    Matrix<duration_type> const dur_;   // Duration matrix (+depot)
+    std::vector<Client> clients_;       // Client (+depot) information
 
     size_t const numClients_;
     size_t const numVehicles_;
@@ -59,7 +60,7 @@ public:
      * @param second Second client.
      * @return distance from the first to the second client.
      */
-    [[nodiscard]] inline int dist(size_t first, size_t second) const;
+    [[nodiscard]] inline distance_type dist(size_t first, size_t second) const;
 
     /**
      * Returns the travel duration between the indicated two clients.
@@ -68,17 +69,18 @@ public:
      * @param second Second client.
      * @return Travel duration from the first to the second client.
      */
-    [[nodiscard]] inline int duration(size_t first, size_t second) const;
+    [[nodiscard]] inline duration_type duration(size_t first,
+                                                size_t second) const;
 
     /**
      * @return The full travel distance matrix.
      */
-    [[nodiscard]] Matrix<int> const &distanceMatrix() const;
+    [[nodiscard]] Matrix<distance_type> const &distanceMatrix() const;
 
     /**
      * @return The full travel duration matrix.
      */
-    [[nodiscard]] Matrix<int> const &durationMatrix() const;
+    [[nodiscard]] Matrix<duration_type> const &durationMatrix() const;
 
     /**
      * @return Total number of clients in this instance.
@@ -109,8 +111,8 @@ public:
     ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
                 size_t vehicleCap,
-                std::vector<std::vector<int>> const &distMat,
-                std::vector<std::vector<int>> const &durMat);
+                Matrix<distance_type> const distMat,
+                Matrix<duration_type> const durMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const
@@ -118,12 +120,12 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-int ProblemData::dist(size_t first, size_t second) const
+distance_type ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
 }
 
-int ProblemData::duration(size_t first, size_t second) const
+duration_type ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }

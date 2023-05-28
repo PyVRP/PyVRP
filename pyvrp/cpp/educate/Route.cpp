@@ -74,8 +74,8 @@ void Route::update()
     setupNodes();
 
     int load = 0;
-    int distance = 0;
-    int reverseDistance = 0;
+    distance_type distance = 0;
+    distance_type reverseDistance = 0;
     bool foundChange = false;
 
     for (size_t pos = 0; pos != nodes.size(); ++pos)

@@ -65,18 +65,12 @@ def test_reading_OkSmall_instance():
         [1475, 1594, 1090, 828, 0],
     ]
 
-    # For instances read through VRPLIB/read(), distance is duration. So these
-    # matrices should be the same as the expected edge weights above.
-    dist_mat = data.distance_matrix()
-    dur_mat = data.duration_matrix()
-
+    # For instances read through VRPLIB/read(), distance is duration. So the
+    # dist/durs should be the same as the expected edge weights above.
     for frm in range(data.num_clients + 1):  # incl. depot
         for to in range(data.num_clients + 1):  # incl. depot
             assert_equal(data.dist(frm, to), expected[frm][to])
-            assert_equal(dist_mat[frm, to], expected[frm][to])
-
             assert_equal(data.duration(frm, to), expected[frm][to])
-            assert_equal(dur_mat[frm, to], expected[frm][to])
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]

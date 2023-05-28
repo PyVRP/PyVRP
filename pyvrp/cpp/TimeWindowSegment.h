@@ -8,22 +8,23 @@ class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    int idxFirst = 0;  // Index of the first client in the segment
-    int idxLast = 0;   // Index of the last client in the segment
-    int duration = 0;  // Total duration, incl. waiting and servicing
-    int timeWarp = 0;  // Cumulative time warp
-    int twEarly = 0;   // Earliest visit moment of first client
-    int twLate = 0;    // Latest visit moment of last client
+    int idxFirst = 0;            // Index of the first client in the segment
+    int idxLast = 0;             // Index of the last client in the segment
+    duration_type duration = 0;  // Total duration, incl. waiting and servicing
+    duration_type timeWarp = 0;  // Cumulative time warp
+    duration_type twEarly = 0;   // Earliest visit moment of first client
+    duration_type twLate = 0;    // Latest visit moment of last client
 
-    [[nodiscard]] inline TWS merge(Matrix<int> const &durationMatrix,
+    [[nodiscard]] inline TWS merge(Matrix<duration_type> const &durationMatrix,
                                    TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS merge(Matrix<int> const &durationMatrix,
-                                          TWS const &first,
-                                          TWS const &second,
-                                          Args... args);
+    [[nodiscard]] inline static TWS
+    merge(Matrix<duration_type> const &durationMatrix,
+          TWS const &first,
+          TWS const &second,
+          Args... args);
 
     /**
      * Total time warp, that is, the time warp along the the segment, and
@@ -31,41 +32,45 @@ public:
      */
     [[nodiscard]] inline duration_type totalTimeWarp() const;
 
-    TimeWindowSegment() = default;
+    TimeWindowSegment() = default;  // TODO at least require client index
 
     inline TimeWindowSegment(int idxFirst,
                              int idxLast,
-                             int duration,
-                             int timeWarp,
-                             int twEarly,
-                             int twLate);
+                             duration_type duration,
+                             duration_type timeWarp,
+                             duration_type twEarly,
+                             duration_type twLate);
 };
 
-TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &durationMatrix,
-                                           TimeWindowSegment const &other) const
+TimeWindowSegment
+TimeWindowSegment::merge(Matrix<duration_type> const &durationMatrix,
+                         TimeWindowSegment const &other) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
 #else
     auto const arcDuration = durationMatrix(idxLast, other.idxFirst);
     auto const delta = duration - timeWarp + arcDuration;
-    auto const deltaWaitTime = std::max(other.twEarly - delta - twLate, 0);
-    auto const deltaTimeWarp = std::max(twEarly + delta - other.twLate, 0);
+
+    auto const zero = duration_type(0);
+    auto const deltaWait = std::max(other.twEarly - delta - twLate, zero);
+    auto const deltaTw = std::max(twEarly + delta - other.twLate, zero);
 
     return {idxFirst,
             other.idxLast,
-            duration + other.duration + arcDuration + deltaWaitTime,
-            timeWarp + other.timeWarp + deltaTimeWarp,
-            std::max(other.twEarly - delta, twEarly) - deltaWaitTime,
-            std::min(other.twLate - delta, twLate) + deltaTimeWarp};
+            duration + other.duration + arcDuration + deltaWait,
+            timeWarp + other.timeWarp + deltaTw,
+            std::max(other.twEarly - delta, twEarly) - deltaWait,
+            std::min(other.twLate - delta, twLate) + deltaTw};
 #endif
 }
 
 template <typename... Args>
-TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &durationMatrix,
-                                           TimeWindowSegment const &first,
-                                           TimeWindowSegment const &second,
-                                           Args... args)
+TimeWindowSegment
+TimeWindowSegment::merge(Matrix<duration_type> const &durationMatrix,
+                         TimeWindowSegment const &first,
+                         TimeWindowSegment const &second,
+                         Args... args)
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
@@ -83,10 +88,10 @@ duration_type TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
 
 TimeWindowSegment::TimeWindowSegment(int idxFirst,
                                      int idxLast,
-                                     int duration,
-                                     int timeWarp,
-                                     int twEarly,
-                                     int twLate)
+                                     duration_type duration,
+                                     duration_type timeWarp,
+                                     duration_type twEarly,
+                                     duration_type twLate)
     : idxFirst(idxFirst),
       idxLast(idxLast),
       duration(duration),

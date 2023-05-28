@@ -1,4 +1,5 @@
 #include "crossover.h"
+#include "Measure.h"
 
 using Client = int;
 using Route = std::vector<Client>;
@@ -8,36 +9,38 @@ namespace
 {
 struct InsertPos  // best insert position, used to plan unplanned clients
 {
-    int deltaCost;
+    cost_type deltaCost;
     Route *route;
     size_t offset;
 };
 
 // Evaluates the cost change of inserting client between prev and next.
-int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
+cost_type
+deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    int prevEarliestArrival
+    duration_type prevEarliestArrival
         = std::max(data.duration(0, prev), data.client(prev).twEarly);
-    int prevEarliestFinish
+    duration_type prevEarliestFinish
         = prevEarliestArrival + data.client(prev).serviceDuration;
-    int durPrevClient = data.duration(prev, client);
-    int clientLate = data.client(client).twLate;
+    duration_type durPrevClient = data.duration(prev, client);
+    duration_type clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + durPrevClient >= clientLate)
         return INT_MAX;
 
-    int clientEarliestArrival
+    duration_type clientEarliestArrival
         = std::max(data.duration(0, client), data.client(client).twEarly);
-    int clientEarliestFinish
+    duration_type clientEarliestFinish
         = clientEarliestArrival + data.client(client).serviceDuration;
-    int durClientNext = data.duration(client, next);
-    int nextLate = data.client(next).twLate;
+    duration_type durClientNext = data.duration(client, next);
+    duration_type nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + durClientNext >= nextLate)
         return INT_MAX;
 
-    return data.dist(prev, client) + data.dist(client, next)
-           - data.dist(prev, next);
+    return static_cast<cost_type>(data.dist(prev, client)
+                                  + data.dist(client, next)
+                                  - data.dist(prev, next));
 }
 }  // namespace
 

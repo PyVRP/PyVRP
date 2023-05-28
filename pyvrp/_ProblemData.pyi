@@ -1,7 +1,5 @@
 from typing import List
 
-from pyvrp._Matrix import Matrix
-
 class Client:
     """
     Simple data object storing all client data as (read-only) properties.
@@ -63,7 +61,7 @@ class ProblemData:
         List of clients. The first client (at index 0) is assumed to be the
         depot. The time window for the depot is assumed to describe the overall
         time horizon. The depot should have 0 demand and 0 service duration.
-    nb_vehicles
+    num_vehicles
         The number of vehicles in this problem instance.
     vehicle_cap
         Homogenous vehicle capacity for all vehicles in the problem instance.
@@ -75,7 +73,7 @@ class ProblemData:
     def __init__(
         self,
         clients: List[Client],
-        nb_vehicles: int,
+        num_vehicles: int,
         vehicle_cap: int,
         distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
@@ -137,24 +135,6 @@ class ProblemData:
         -------
         int
             Travel duration between the given clients.
-        """
-    def distance_matrix(self) -> Matrix:
-        """
-        Returns the travel distance matrix used for distance computations.
-
-        Returns
-        -------
-        Matrix
-            Travel distance matrix.
-        """
-    def duration_matrix(self) -> Matrix:
-        """
-        Returns the travel duration matrix used for duration computations.
-
-        Returns
-        -------
-        Matrix
-            Travel duration matrix.
         """
     @property
     def num_clients(self) -> int:

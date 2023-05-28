@@ -11,7 +11,7 @@ using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
-    size_t allPrizes = 0;
+    cost_type allPrizes = 0;
     for (size_t client = 1; client <= data.numClients(); ++client)
         allPrizes += data.client(client).prize;
 
@@ -52,15 +52,15 @@ bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
 
-size_t Individual::distance() const { return distance_; }
+distance_type Individual::distance() const { return distance_; }
 
 size_t Individual::excessLoad() const { return excessLoad_; }
 
-size_t Individual::prizes() const { return prizes_; }
+cost_type Individual::prizes() const { return prizes_; }
 
-size_t Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
+cost_type Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
 
-size_t Individual::timeWarp() const { return timeWarp_; }
+duration_type Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours()
 {
@@ -161,7 +161,7 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     if (visits_.empty())
         return;
 
-    int time = data.depot().twEarly;
+    duration_type time = data.depot().twEarly;
     int prevClient = 0;
 
     for (size_t idx = 0; idx != size(); ++idx)
@@ -198,8 +198,11 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, 0);
     duration_ += data.duration(last, 0);
+
+    auto const zero = duration_type(0);
     time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max(time - data.depot().twLate, 0);  // depot closing tw
+    timeWarp_ += std::max(time - data.depot().twLate, zero);  // depot tw close
+
     excessLoad_ = data.vehicleCapacity() < demand_
                       ? demand_ - data.vehicleCapacity()
                       : 0;
@@ -230,21 +233,21 @@ Visits::const_iterator Individual::Route::cend() const
 
 Visits const &Individual::Route::visits() const { return visits_; }
 
-size_t Individual::Route::distance() const { return distance_; }
+distance_type Individual::Route::distance() const { return distance_; }
 
 size_t Individual::Route::demand() const { return demand_; }
 
 size_t Individual::Route::excessLoad() const { return excessLoad_; }
 
-size_t Individual::Route::duration() const { return duration_; }
+duration_type Individual::Route::duration() const { return duration_; }
 
-size_t Individual::Route::serviceDuration() const { return service_; }
+duration_type Individual::Route::serviceDuration() const { return service_; }
 
-size_t Individual::Route::timeWarp() const { return timeWarp_; }
+duration_type Individual::Route::timeWarp() const { return timeWarp_; }
 
-size_t Individual::Route::waitDuration() const { return wait_; }
+duration_type Individual::Route::waitDuration() const { return wait_; }
 
-size_t Individual::Route::prizes() const { return prizes_; }
+cost_type Individual::Route::prizes() const { return prizes_; }
 
 std::pair<double, double> const &Individual::Route::centroid() const
 {
@@ -267,8 +270,8 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
-    out << "Distance: " << indiv.distance() << '\n';
-    out << "Prizes: " << indiv.prizes() << '\n';
+    out << "Distance: " << static_cast<value_type>(indiv.distance()) << '\n';
+    out << "Prizes: " << static_cast<value_type>(indiv.prizes()) << '\n';
     return out;
 }
 
