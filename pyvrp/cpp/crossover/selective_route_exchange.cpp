@@ -16,18 +16,10 @@ double routeAngle(ProblemData const &data, Route const &route)
 {
     assert(!route.empty());
 
-    double routeX = 0;
-    double routeY = 0;
-
-    for (Client client : route)
-    {
-        routeX += data.client(client).x;
-        routeY += data.client(client).y;
-    }
-
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
+    auto const [routeX, routeY] = route.centroid();
     auto const dx = routeX / route.size() - data.depot().x;
     auto const dy = routeY / route.size() - data.depot().y;
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
