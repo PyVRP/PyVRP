@@ -109,12 +109,7 @@ def main():
         # the CI. Else only do so when expressly asked.
         clean(build_dir, install_dir)
 
-    build(
-        build_dir,
-        args.build_type,
-        args.problem,
-        args.additional,
-    )
+    build(build_dir, args.build_type, args.problem, args.additional)
 
     if args.regenerate_type_stubs:
         regenerate_stubs(install_dir)

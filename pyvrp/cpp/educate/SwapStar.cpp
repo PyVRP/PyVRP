@@ -53,7 +53,7 @@ void SwapStar::updateInsertionCost(Route *R,
     }
 }
 
-std::pair<int, Node *> SwapStar::getBestInsertPoint(
+std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
     Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     auto &best_ = cache(V->route->idx, U->client);
@@ -83,9 +83,9 @@ void SwapStar::init(Individual const &indiv)
     std::fill(updated.begin(), updated.end(), true);
 }
 
-int SwapStar::evaluate(Route *routeU,
-                       Route *routeV,
-                       CostEvaluator const &costEvaluator)
+cost_type SwapStar::evaluate(Route *routeU,
+                             Route *routeV,
+                             CostEvaluator const &costEvaluator)
 {
     best = {};
 
@@ -110,7 +110,7 @@ int SwapStar::evaluate(Route *routeU,
     for (Node *U = n(routeU->depot); !U->isDepot(); U = n(U))
         for (Node *V = n(routeV->depot); !V->isDepot(); V = n(V))
         {
-            int deltaCost = 0;
+            cost_type deltaCost = 0;
 
             int const uDemand = data.client(U->client).demand;
             int const vDemand = data.client(V->client).demand;
@@ -161,15 +161,17 @@ int SwapStar::evaluate(Route *routeU,
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
-    int const current = data.dist(p(best.U)->client, best.U->client)
-                        + data.dist(best.U->client, n(best.U)->client)
-                        + data.dist(p(best.V)->client, best.V->client)
-                        + data.dist(best.V->client, n(best.V)->client);
+    distance_type const current
+        = data.dist(p(best.U)->client, best.U->client)
+          + data.dist(best.U->client, n(best.U)->client)
+          + data.dist(p(best.V)->client, best.V->client)
+          + data.dist(best.V->client, n(best.V)->client);
 
-    int const proposed = data.dist(best.VAfter->client, best.V->client)
-                         + data.dist(best.UAfter->client, best.U->client);
+    distance_type const proposed
+        = data.dist(best.VAfter->client, best.V->client)
+          + data.dist(best.UAfter->client, best.U->client);
 
-    int deltaCost = proposed - current;
+    cost_type deltaCost = static_cast<cost_type>(proposed - current);
 
     if (best.VAfter == p(best.U))
     {

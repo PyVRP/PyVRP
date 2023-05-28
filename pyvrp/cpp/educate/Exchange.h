@@ -29,16 +29,17 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
     inline bool adjacent(Node *U, Node *V) const;
 
     // Special case that's applied when M == 0
-    int evalRelocateMove(Node *U,
-                         Node *V,
-                         CostEvaluator const &costEvaluator) const;
+    cost_type evalRelocateMove(Node *U,
+                               Node *V,
+                               CostEvaluator const &costEvaluator) const;
 
     // Applied when M != 0
-    int
+    cost_type
     evalSwapMove(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
 
 public:
-    int evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
+    cost_type
+    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Node *U, Node *V) const override;
 };
@@ -77,9 +78,8 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evalRelocateMove(Node *U,
-                                     Node *V,
-                                     CostEvaluator const &costEvaluator) const
+cost_type Exchange<N, M>::evalRelocateMove(
+    Node *U, Node *V, CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -87,15 +87,15 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
     assert(posU > 0);
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    int const current = U->route->distBetween(posU - 1, posU + N)
-                        + data.dist(V->client, n(V)->client);
+    distance_type const current = U->route->distBetween(posU - 1, posU + N)
+                                  + data.dist(V->client, n(V)->client);
 
-    int const proposed = data.dist(V->client, U->client)
-                         + U->route->distBetween(posU, posU + N - 1)
-                         + data.dist(endU->client, n(V)->client)
-                         + data.dist(p(U)->client, n(endU)->client);
+    distance_type const proposed = data.dist(V->client, U->client)
+                                   + U->route->distBetween(posU, posU + N - 1)
+                                   + data.dist(endU->client, n(V)->client)
+                                   + data.dist(p(U)->client, n(endU)->client);
 
-    int deltaCost = proposed - current;
+    cost_type deltaCost = static_cast<cost_type>(proposed - current);
 
     if (U->route != V->route)
     {
@@ -166,9 +166,9 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evalSwapMove(Node *U,
-                                 Node *V,
-                                 CostEvaluator const &costEvaluator) const
+cost_type Exchange<N, M>::evalSwapMove(Node *U,
+                                       Node *V,
+                                       CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -179,10 +179,10 @@ int Exchange<N, M>::evalSwapMove(Node *U,
 
     assert(U->route && V->route);
 
-    int const current = U->route->distBetween(posU - 1, posU + N)
-                        + V->route->distBetween(posV - 1, posV + M);
+    distance_type const current = U->route->distBetween(posU - 1, posU + N)
+                                  + V->route->distBetween(posV - 1, posV + M);
 
-    int const proposed
+    distance_type const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
         = data.dist(p(U)->client, V->client)
@@ -192,7 +192,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
           + U->route->distBetween(posU, posU + N - 1)
           + data.dist(endU->client, n(endV)->client);
 
-    int deltaCost = proposed - current;
+    cost_type deltaCost = static_cast<cost_type>(proposed - current);
 
     if (U->route != V->route)
     {
@@ -266,9 +266,8 @@ int Exchange<N, M>::evalSwapMove(Node *U,
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evaluate(Node *U,
-                             Node *V,
-                             CostEvaluator const &costEvaluator)
+cost_type
+Exchange<N, M>::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     if (containsDepot(U, N) || overlap(U, V))
         return 0;

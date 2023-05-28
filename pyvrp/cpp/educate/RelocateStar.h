@@ -12,7 +12,7 @@ class RelocateStar : public LocalSearchOperator<Route>
 {
     struct Move
     {
-        int deltaCost = 0;
+        cost_type deltaCost = 0;
         Node *from = nullptr;
         Node *to = nullptr;
     };
@@ -21,7 +21,7 @@ class RelocateStar : public LocalSearchOperator<Route>
     Move move;
 
 public:
-    int
+    cost_type
     evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Route *U, Route *V) const override;

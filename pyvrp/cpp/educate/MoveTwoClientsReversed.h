@@ -11,7 +11,8 @@ class MoveTwoClientsReversed : public LocalSearchOperator<Node>
     using LocalSearchOperator::LocalSearchOperator;
 
 public:
-    int evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
+    cost_type
+    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Node *U, Node *V) const override;
 };

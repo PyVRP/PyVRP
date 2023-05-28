@@ -1,15 +1,14 @@
 #include "RelocateStar.h"
 
-int RelocateStar::evaluate(Route *U,
-                           Route *V,
-                           CostEvaluator const &costEvaluator)
+cost_type
+RelocateStar::evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator)
 {
     move = {};
 
     for (auto *nodeU = n(U->depot); !nodeU->isDepot(); nodeU = n(nodeU))
     {
         // Test inserting U after V's depot
-        int deltaCost = relocate.evaluate(nodeU, V->depot, costEvaluator);
+        cost_type deltaCost = relocate.evaluate(nodeU, V->depot, costEvaluator);
 
         if (deltaCost < move.deltaCost)
             move = {deltaCost, nodeU, V->depot};
