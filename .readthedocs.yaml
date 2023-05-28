@@ -6,7 +6,7 @@ build:
     python: "3.9"
   commands:
     - pip install poetry
-    - poetry install --no-root --with docs
+    - poetry install --with docs
     - poetry run make html --directory=docs
     - mkdir _readthedocs/
     - mv docs/build/html _readthedocs/ 
