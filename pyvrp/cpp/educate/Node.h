@@ -6,9 +6,8 @@
 
 class Route;
 
-class Node
+struct Node
 {
-public:               // TODO make fields private
     int client;       // Client represented with this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
@@ -27,14 +26,19 @@ public:               // TODO make fields private
     [[nodiscard]] inline bool isDepot() const;
 
     /**
-     * Inserts this node after the other and updates the solution.
+     * Inserts this node after the other and updates the relevant links.
      */
     void insertAfter(Node *other);
 
     /**
-     * Swaps this node with the other and updates the solution.
+     * Swaps this node with the other and updates the relevant links.
      */
     void swapWith(Node *other);
+
+    /**
+     * Removes this node and updates the relevant links.
+     */
+    void remove();
 };
 
 bool Node::isDepot() const { return client == 0; }

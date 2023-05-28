@@ -29,7 +29,10 @@ This object can be used to obtain the best observed solution, and detailed runti
       :members:
 
 .. automodule:: pyvrp._Individual
-   
+
+   .. autoapiclass:: Route
+      :members:
+
    .. autoapiclass:: Individual
       :members:
 

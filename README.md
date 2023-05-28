@@ -1,9 +1,9 @@
-[![PyPI version](https://badge.fury.io/py/pyvrp.svg)](https://badge.fury.io/py/pyvrp)
-[![CI](https://github.com/N-Wouda/pyvrp/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/N-Wouda/pyvrp/actions/workflows/CI.yml)
-[![Documentation Status](https://readthedocs.org/projects/pyvrp/badge/?version=latest)](https://pyvrp.readthedocs.io/en/latest/?badge=latest)
-[![codecov](https://codecov.io/gh/N-Wouda/pyvrp/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/N-Wouda/pyvrp)
+![PyVRP logo](docs/source/assets/images/PyVRP.svg)
 
-# PyVRP
+[![PyPI version](https://badge.fury.io/py/pyvrp.svg)](https://badge.fury.io/py/pyvrp)
+[![CI](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
+[![Documentation Status](https://readthedocs.org/projects/pyvrp/badge/?version=latest)](https://pyvrp.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/PyVRP/PyVRP/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/PyVRP/PyVRP)
 
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem solver.
 
@@ -23,7 +23,7 @@ These include:
 
 - The vehicle routing problem with time windows (VRPTW), [here][4].
   We solve several instances from the literature, including a large 1000 customer instance.
-- The capacitated vehicle routing problem, [here][5].
+- The capacitated vehicle routing problem (CVRP), [here][5].
   We solve an instance with 439 customers to near optimality within 30 seconds.
 
 ### Contributing

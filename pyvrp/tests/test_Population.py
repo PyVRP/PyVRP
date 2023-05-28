@@ -1,5 +1,11 @@
 import numpy as np
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import (
+    assert_,
+    assert_allclose,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 from pytest import mark
 
 from pyvrp import (
@@ -10,6 +16,7 @@ from pyvrp import (
     XorShift128,
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp.exceptions import EmptySolutionWarning
 from pyvrp.tests.helpers import make_random_solutions, read
 
 
@@ -241,7 +248,8 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
         assert_(id(elite_individual) in new_individuals)
 
 
-def test_binary_tournament_ranks_by_fitness():
+@mark.parametrize("k", [2, 3])
+def test_tournament_ranks_by_fitness(k: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
@@ -255,26 +263,48 @@ def test_binary_tournament_ranks_by_fitness():
 
     # Since this test requires the fitness values of the individuals, we have
     # to access the underlying infeasible subpopulation directly.
-    # We must also explicitly trigger to update the fitness first.
-    pop._infeas.update_fitness(cost_evaluator)
-    infeas = [item for item in pop._infeas]
-    infeas = sorted(infeas, key=lambda item: item.fitness)
-    infeas = {item.individual: idx for idx, item in enumerate(infeas)}
-    infeas_count = np.zeros(len(infeas))
+    infeas_pop = pop._infeas
+    infeas_pop.update_fitness(cost_evaluator)
+
+    items = [item for item in pop._infeas]
+    by_fitness = sorted(items, key=lambda item: item.fitness)
+    indiv2idx = {item.individual: idx for idx, item in enumerate(by_fitness)}
+    infeas_count = np.zeros(len(infeas_pop))
 
     for _ in range(10_000):
-        indiv = pop.get_binary_tournament(rng, cost_evaluator)
-        infeas_count[infeas[indiv]] += 1
+        indiv = pop.get_tournament(rng, cost_evaluator, k=k)
+        infeas_count[indiv2idx[indiv]] += 1
 
-    # Now we compare the observed ranking from the binary tournament selection
-    # against what we would expect from the actual fitness ranking. We compute
-    # the percentage of times we're incorrect, and test that that number is not
-    # too high.
-    actual_rank = np.argsort(-infeas_count)  # higher is better
-    expected_rank = np.arange(len(infeas))
-    pct_off = np.abs((actual_rank - expected_rank) / len(infeas)).mean()
-
+    # Now we compare the observed ranking from the tournament selection with
+    # what we expect from the actual fitness ranking. We compute the percentage
+    # of times we're incorrect, and test that that number is not too high.
+    actual_rank = 1 + np.argsort(-infeas_count)  # higher is better
+    expected_rank = 1 + np.arange(len(infeas_pop))
+    pct_off = np.abs((actual_rank - expected_rank) / len(infeas_pop)).mean()
     assert_(pct_off < 0.05)
+
+    # Previous test compared just rank. Now we compare expected frequency. An
+    # item at rank i wins only when the other k - 1 items have a rank lower
+    # than i. That happens with probability roughly proportional to
+    #   (1 - i / #pop) ** (k - 1)
+    actual_freq = infeas_count / infeas_count.sum()
+    expected_freq = (1 - expected_rank / len(infeas_pop)) ** (k - 1)
+    expected_freq /= expected_freq.sum()
+    assert_allclose(actual_freq, expected_freq, atol=0.01)  # 1% tolerance
+
+
+@mark.parametrize("k", [-100, -1, 0])  # k must be strictly positive
+def test_tournament_raises_for_invalid_k(k: int):
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    cost_evaluator = CostEvaluator(20, 6)
+    rng = XorShift128(seed=42)
+    pop = Population(bpd)
+
+    for individual in make_random_solutions(5, data, rng):
+        pop.add(individual, cost_evaluator)
+
+    with assert_raises(ValueError):
+        pop.get_tournament(rng, cost_evaluator, k=k)
 
 
 def test_purge_removes_duplicates():
@@ -334,3 +364,12 @@ def test_clear():
 
     pop.clear()
     assert_equal(len(pop), 0)
+
+
+def test_add_emits_warning_when_solution_is_empty():
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    cost_evaluator = CostEvaluator(20, 6)
+    pop = Population(bpd)
+
+    with assert_warns(EmptySolutionWarning):
+        pop.add(Individual(data, []), cost_evaluator)
