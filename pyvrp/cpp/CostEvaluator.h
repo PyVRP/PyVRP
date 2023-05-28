@@ -9,8 +9,8 @@
  */
 class CostEvaluator
 {
-    unsigned int capacityPenalty;
-    unsigned int timeWarpPenalty;
+    cost_type capacityPenalty;
+    cost_type timeWarpPenalty;
 
 public:
     CostEvaluator(unsigned int capacityPenalty, unsigned int timeWarpPenalty);
@@ -19,14 +19,14 @@ public:
      * Computes the total excess capacity penalty for the given vehicle load.
      */
     [[nodiscard]] inline cost_type
-    loadPenalty(unsigned int load, unsigned int vehicleCapacity) const;
+    loadPenalty(capacity_type load, capacity_type vehicleCapacity) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
      * the part of the load that exceeds the vehicle capacity.
      */
     [[nodiscard]] inline cost_type
-    loadPenaltyExcess(unsigned int excessLoad) const;
+    loadPenaltyExcess(capacity_type excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
@@ -45,13 +45,13 @@ public:
     [[nodiscard]] cost_type cost(Individual const &individual) const;
 };
 
-cost_type CostEvaluator::loadPenaltyExcess(unsigned int excessLoad) const
+cost_type CostEvaluator::loadPenaltyExcess(capacity_type excessLoad) const
 {
-    return excessLoad * capacityPenalty;
+    return static_cast<cost_type>(excessLoad) * capacityPenalty;
 }
 
-cost_type CostEvaluator::loadPenalty(unsigned int load,
-                                     unsigned int vehicleCapacity) const
+cost_type CostEvaluator::loadPenalty(capacity_type load,
+                                     capacity_type vehicleCapacity) const
 {
     // Branchless for performance: when load > capacity we return the excess
     // load penalty; else zero. Note that when load - vehicleCapacity wraps
@@ -66,7 +66,7 @@ cost_type CostEvaluator::twPenalty(duration_type timeWarp) const
 #ifdef VRP_NO_TIME_WINDOWS
     return 0;
 #else
-    return static_cast<cost_type>(timeWarp) * cost_type(timeWarpPenalty);
+    return static_cast<cost_type>(timeWarp) * timeWarpPenalty;
 #endif
 }
 

@@ -52,11 +52,11 @@ size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+capacity_type ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          size_t numVehicles,
-                         size_t vehicleCap,
+                         capacity_type vehicleCap,
                          Matrix<distance_type> const distMat,
                          Matrix<duration_type> const durMat)
     : dist_(std::move(distMat)),

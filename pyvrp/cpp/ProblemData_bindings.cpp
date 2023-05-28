@@ -19,7 +19,11 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("required") = true)
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
-        .def_readonly("demand", &ProblemData::Client::demand)
+        .def_property_readonly("demand",
+                               [](ProblemData::Client const &client) {
+                                   return static_cast<value_type>(
+                                       client.demand);
+                               })
         .def_property_readonly("service_duration",
                                [](ProblemData::Client const &client) {
                                    return static_cast<value_type>(
@@ -68,7 +72,10 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
         .def_property_readonly("vehicle_capacity",
-                               &ProblemData::vehicleCapacity)
+                               [](ProblemData const &data) {
+                                   return static_cast<value_type>(
+                                       data.vehicleCapacity());
+                               })
         .def("client",
              &ProblemData::client,
              py::arg("client"),

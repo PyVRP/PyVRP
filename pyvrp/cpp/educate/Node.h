@@ -1,7 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "ProblemData.h"
+#include "Measure.h"
 #include "TimeWindowSegment.h"
 
 class Route;
@@ -15,7 +15,7 @@ struct Node
     Route *route;     // Pointer towards the associated route
 
     // TODO can these data fields be moved to Route?
-    int cumulatedLoad;                        // Load depot -> client (incl)
+    capacity_type cumulatedLoad;              // Load depot -> client (incl)
     distance_type cumulatedDistance;          // Dist depot -> client (incl)
     distance_type cumulatedReversalDistance;  // Dist if (0..client) is reversed
 

@@ -21,8 +21,14 @@ PYBIND11_MODULE(_Individual, m)
              [](Individual::Route const &route) {
                  return static_cast<value_type>(route.distance());
              })
-        .def("demand", &Individual::Route::demand)
-        .def("excess_load", &Individual::Route::excessLoad)
+        .def("demand",
+             [](Individual::Route const &route) {
+                 return static_cast<value_type>(route.demand());
+             })
+        .def("excess_load",
+             [](Individual::Route const &route) {
+                 return static_cast<value_type>(route.excessLoad());
+             })
         .def("duration",
              [](Individual::Route const &route) {
                  return static_cast<value_type>(route.duration());
@@ -101,7 +107,10 @@ PYBIND11_MODULE(_Individual, m)
              [](Individual const &individual) {
                  return static_cast<value_type>(individual.distance());
              })
-        .def("excess_load", &Individual::excessLoad)
+        .def("excess_load",
+             [](Individual const &individual) {
+                 return static_cast<value_type>(individual.excessLoad());
+             })
         .def("time_warp",
              [](Individual const &individual) {
                  return static_cast<value_type>(individual.timeWarp());

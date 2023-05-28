@@ -11,6 +11,7 @@ enum class MeasureType
     DISTANCE,
     DURATION,
     COST,
+    CAPACITY,
 };
 
 template <MeasureType _> class Measure
@@ -18,6 +19,7 @@ template <MeasureType _> class Measure
     friend class Measure<MeasureType::DISTANCE>;
     friend class Measure<MeasureType::DURATION>;
     friend class Measure<MeasureType::COST>;
+    friend class Measure<MeasureType::CAPACITY>;
 
     value_type value;
 
@@ -63,6 +65,7 @@ public:
     explicit operator Measure<MeasureType::DISTANCE>() const { return {value}; }
     explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
     explicit operator Measure<MeasureType::COST>() const { return {value}; }
+    explicit operator Measure<MeasureType::CAPACITY>() const { return {value}; }
 
     // Comparison operators.
     auto operator==(Measure const &other) const { return value == other.value; }
@@ -110,5 +113,6 @@ Measure<Type> operator/(Measure<Type> const lhs, Measure<Type> const rhs)
 using distance_type = Measure<MeasureType::DISTANCE>;
 using duration_type = Measure<MeasureType::DURATION>;
 using cost_type = Measure<MeasureType::COST>;
+using capacity_type = Measure<MeasureType::CAPACITY>;
 
 #endif  // MEASURE_H

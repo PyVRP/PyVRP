@@ -51,18 +51,6 @@ class TimeWindowSegment:
         """
         Merges three time window segments, in order.
         """
-    @overload
-    @staticmethod
-    def merge(
-        duration_matrix: Matrix,
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-        third: TimeWindowSegment,
-        fourth: TimeWindowSegment,
-    ) -> TimeWindowSegment:
-        """
-        Merges four time window segments, in order.
-        """
     def total_time_warp(self) -> int:
         """
         Returns the total time warp on this route segment.

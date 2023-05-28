@@ -13,8 +13,8 @@ PYBIND11_MODULE(_CostEvaluator, m)
         .def(
             "load_penalty",
             [](CostEvaluator const &evaluator,
-               unsigned int load,
-               unsigned int vehicleCapacity) {
+               value_type load,
+               value_type vehicleCapacity) {
                 auto penalty = evaluator.loadPenalty(load, vehicleCapacity);
                 return static_cast<value_type>(penalty);
             },

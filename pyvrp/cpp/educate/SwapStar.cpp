@@ -123,9 +123,9 @@ cost_type SwapStar::evaluate(Route *routeU,
         {
             cost_type deltaCost = 0;
 
-            int const uDemand = data.client(U->client).demand;
-            int const vDemand = data.client(V->client).demand;
-            int const loadDiff = uDemand - vDemand;
+            auto const uDemand = data.client(U->client).demand;
+            auto const vDemand = data.client(V->client).demand;
+            auto const loadDiff = uDemand - vDemand;
 
             deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
                                                    data.vehicleCapacity());

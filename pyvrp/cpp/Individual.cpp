@@ -54,7 +54,7 @@ bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
 
 distance_type Individual::distance() const { return distance_; }
 
-size_t Individual::excessLoad() const { return excessLoad_; }
+capacity_type Individual::excessLoad() const { return excessLoad_; }
 
 cost_type Individual::prizes() const { return prizes_; }
 
@@ -235,9 +235,9 @@ Visits const &Individual::Route::visits() const { return visits_; }
 
 distance_type Individual::Route::distance() const { return distance_; }
 
-size_t Individual::Route::demand() const { return demand_; }
+capacity_type Individual::Route::demand() const { return demand_; }
 
-size_t Individual::Route::excessLoad() const { return excessLoad_; }
+capacity_type Individual::Route::excessLoad() const { return excessLoad_; }
 
 duration_type Individual::Route::duration() const { return duration_; }
 

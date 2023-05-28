@@ -22,15 +22,15 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};          // Client visits on this route
-        distance_type distance_ = 0;  // Total travel distance on this route
-        size_t demand_ = 0;           // Total demand served on this route
-        size_t excessLoad_ = 0;       // Excess demand (wrt to vehicle capacity)
-        duration_type duration_ = 0;  // Total travel duration on this route
-        duration_type service_ = 0;   // Total service duration on this route
-        duration_type timeWarp_ = 0;  // Total time warp on this route
-        duration_type wait_ = 0;      // Total waiting duration on this route
-        cost_type prizes_ = 0;        // Total value of prizes on this route
+        Visits visits_ = {};            // Client visits on this route
+        distance_type distance_ = 0;    // Total travel distance on this route
+        capacity_type demand_ = 0;      // Total demand served on this route
+        capacity_type excessLoad_ = 0;  // Excess demand (wrt vehicle capacity)
+        duration_type duration_ = 0;    // Total travel duration on this route
+        duration_type service_ = 0;     // Total service duration on this route
+        duration_type timeWarp_ = 0;    // Total time warp on this route
+        duration_type wait_ = 0;        // Total waiting duration on this route
+        cost_type prizes_ = 0;          // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
 
@@ -46,8 +46,8 @@ public:
 
         [[nodiscard]] Visits const &visits() const;
         [[nodiscard]] distance_type distance() const;
-        [[nodiscard]] size_t demand() const;
-        [[nodiscard]] size_t excessLoad() const;
+        [[nodiscard]] capacity_type demand() const;
+        [[nodiscard]] capacity_type excessLoad() const;
         [[nodiscard]] duration_type duration() const;
         [[nodiscard]] duration_type serviceDuration() const;
         [[nodiscard]] duration_type timeWarp() const;
@@ -70,7 +70,7 @@ private:
     size_t numRoutes_ = 0;             // Number of routes
     size_t numClients_ = 0;            // Number of clients in the solution
     distance_type distance_ = 0;       // Total distance
-    size_t excessLoad_ = 0;            // Total excess load over all routes
+    capacity_type excessLoad_ = 0;     // Total excess load over all routes
     cost_type prizes_ = 0;             // Total collected prize value
     cost_type uncollectedPrizes_ = 0;  // Total uncollected prize value
     duration_type timeWarp_ = 0;       // Total time warp over all routes
@@ -132,7 +132,7 @@ public:
     /**
      * @return Total excess load over all routes.
      */
-    [[nodiscard]] size_t excessLoad() const;
+    [[nodiscard]] capacity_type excessLoad() const;
 
     /**
      * @return Total collected prize value over all routes.
@@ -186,13 +186,14 @@ template <> struct hash<Individual>
 {
     std::size_t operator()(Individual const &individual) const
     {
-        value_type const dist = static_cast<value_type>(individual.distance_);
-        value_type const tw = static_cast<value_type>(individual.timeWarp_);
+        auto const dist = static_cast<value_type>(individual.distance_);
+        auto const excessLoad = static_cast<value_type>(individual.excessLoad_);
+        auto const tw = static_cast<value_type>(individual.timeWarp_);
 
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
         res = res * 31 + std::hash<value_type>()(dist);
-        res = res * 31 + std::hash<size_t>()(individual.excessLoad_);
+        res = res * 31 + std::hash<value_type>()(excessLoad);
         res = res * 31 + std::hash<value_type>()(tw);
 
         return res;

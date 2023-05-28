@@ -15,7 +15,7 @@ public:
     {
         int const x;                          // Coordinate X
         int const y;                          // Coordinate Y
-        int const demand;                     // Demand
+        capacity_type const demand;           // Demand
         duration_type const serviceDuration;  // Service duration
         duration_type const twEarly;          // Earliest possible arrival
         duration_type const twLate;           // Latest possible arrival
@@ -39,7 +39,7 @@ private:
 
     size_t const numClients_;
     size_t const numVehicles_;
-    size_t const vehicleCapacity_;
+    capacity_type const vehicleCapacity_;
 
 public:
     /**
@@ -95,7 +95,7 @@ public:
     /**
      * @return Capacity of each vehicle in this instance.
      */
-    [[nodiscard]] size_t vehicleCapacity() const;
+    [[nodiscard]] capacity_type vehicleCapacity() const;
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the list of
@@ -110,7 +110,7 @@ public:
      */
     ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
-                size_t vehicleCap,
+                capacity_type vehicleCap,
                 Matrix<distance_type> const distMat,
                 Matrix<duration_type> const durMat);
 };
