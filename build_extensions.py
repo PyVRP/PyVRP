@@ -26,12 +26,6 @@ def parse_args():
         help="Which type of solver to compile. Defaults to 'vrptw'.",
     )
     parser.add_argument(
-        "--precision",
-        default="double",
-        choices=["integer", "double"],
-        help="Double is more precise, integer faster. Defaults to 'double'.",
-    )
-    parser.add_argument(
         "--clean",
         action="store_true",
         help="Clean build and installation directories before building.",
@@ -85,7 +79,6 @@ def build(
     build_dir: pathlib.Path,
     build_type: str,
     problem: str,
-    precision: str,
     additional: List[str],
 ):
     cwd = pathlib.Path.cwd()
@@ -95,7 +88,6 @@ def build(
         f"-Dpython.platlibdir={cwd.absolute()}",
         f"-Dproblem={problem}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
-        f"-Dprecision={precision}",
         *additional,
         # fmt: on
     ]
@@ -121,7 +113,6 @@ def main():
         build_dir,
         args.build_type,
         args.problem,
-        args.precision,
         args.additional,
     )
 

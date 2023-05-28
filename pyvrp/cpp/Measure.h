@@ -4,11 +4,7 @@
 #include <compare>
 #include <type_traits>
 
-#ifdef INT_PRECISION
 using value_type = int;
-#else
-using value_type = double;
-#endif
 
 enum class MeasureType
 {
