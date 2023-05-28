@@ -4,11 +4,13 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
-  apt_packages:
-    - gcc-10
-  commands:
-    - pip install poetry
-    - poetry install --with docs
-    - poetry run make html --directory=docs SPHINXOPTS="-W --keep-going -n"
-    - mkdir _readthedocs/
-    - mv docs/build/html _readthedocs/ 
+  jobs:
+    post_create_environment:
+      - pip install poetry
+      - poetry config virtualenvs.create false
+    post_install:
+      - poetry install --with docs
+
+sphinx:
+  configuration: docs/source/conf.py
+  fail_on_warning: true
