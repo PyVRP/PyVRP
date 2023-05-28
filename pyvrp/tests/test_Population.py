@@ -304,10 +304,12 @@ def test_purge_removes_duplicates():
     assert_(pop.num_infeasible() != params.min_pop_size)
     params.min_pop_size += 1
 
-    # Keep adding individuals until we have had a purge, and returned to the
-    # minimum population size.
+    # Keep adding the individual until we have had a purge, and returned to the
+    # minimum population size. Note that the purge is done after adding the
+    # individual, so we must add the same individual in order to have at most
+    # min_pop_size - 1 other individuals than the duplicated individual.
     while pop.num_infeasible() != params.min_pop_size:
-        pop.add(Individual.make_random(data, rng), cost_evaluator)
+        pop.add(individual, cost_evaluator)
 
     # Since duplicates are purged first, there should now be only one of them
     # in the subpopulation. There cannot be zero, because we made sure of that.
