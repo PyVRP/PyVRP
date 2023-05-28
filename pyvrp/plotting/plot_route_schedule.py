@@ -1,15 +1,15 @@
-from typing import List, Optional
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 
-from pyvrp import ProblemData
+from pyvrp import ProblemData, Route
 
 
 def plot_route_schedule(
     data: ProblemData,
-    route: List[int],
+    route: Route,
     legend: bool = True,
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,

@@ -48,9 +48,12 @@ def selective_route_exchange(
 
     idx1 = rng.randint(first.num_routes())
     idx2 = idx1 if idx1 < second.num_routes() else 0
-
     max_routes_to_move = min(first.num_routes(), second.num_routes())
-    num_routes_to_move = rng.randint(max_routes_to_move) + 1  # at least one
+
+    if max_routes_to_move == 0:  # rng.randint() cannot be called in this case
+        num_routes_to_move = 1
+    else:
+        num_routes_to_move = rng.randint(max_routes_to_move) + 1
 
     return _srex(
         parents, data, cost_evaluator, (idx1, idx2), num_routes_to_move

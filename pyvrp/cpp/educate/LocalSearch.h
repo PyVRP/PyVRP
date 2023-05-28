@@ -48,14 +48,20 @@ class LocalSearch
     // Export the LS solution back into an individual
     Individual exportIndividual();
 
-    [[nodiscard]] bool
-    applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
+    // Tests the node pair (U, V).
+    bool applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
 
-    [[nodiscard]] bool
-    applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
+    // Tests the route pair (U, V).
+    bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
-    // Updates solution state after an improving local search move
+    // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
+
+    // Test inserting U after V. Called if U is not currently in the solution.
+    void maybeInsert(Node *U, Node *V, CostEvaluator const &costEvaluator);
+
+    // Test removing U from the solution. Called when U can be removed.
+    void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
 
 public:
     /**

@@ -1,10 +1,14 @@
 #include "LocalSearch.h"
+#include "TimeWindowSegment.h"
 
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <vector>
+
+using TWS = TimeWindowSegment;
 
 Individual LocalSearch::search(Individual &individual,
                                CostEvaluator const &costEvaluator)
@@ -35,14 +39,24 @@ Individual LocalSearch::search(Individual &individual,
         for (auto const uClient : orderNodes)
         {
             auto *U = &clients[uClient];
+
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
+
+            if (U->route && !data.client(uClient).required)  // test removing U
+                maybeRemove(U, costEvaluator);
 
             // Shuffling the neighbours in this loop should not matter much as
             // we are already randomizing the nodes U.
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
+
+                if (!U->route && V->route)             // U might be inserted
+                    maybeInsert(U, V, costEvaluator);  // into V's route
+
+                if (!U->route || !V->route)  // we already tested inserting U,
+                    continue;                // so we can skip this move
 
                 if (lastModified[U->route->idx] > lastTestedNode
                     || lastModified[V->route->idx] > lastTestedNode)
@@ -55,18 +69,18 @@ Individual LocalSearch::search(Individual &individual,
                 }
             }
 
-            // Empty route moves are not tested in the first iteration to avoid
-            // increasing the fleet size too much.
-            if (step > 0)
-            {
+            if (step > 0)  // empty moves are not tested initially to avoid
+            {              // using too many routes.
                 auto pred = [](auto const &route) { return route.empty(); };
                 auto empty = std::find_if(routes.begin(), routes.end(), pred);
 
                 if (empty == routes.end())
                     continue;
 
-                if (applyNodeOps(U, empty->depot, costEvaluator))
-                    continue;
+                if (U->route)  // try inserting U into the empty route.
+                    applyNodeOps(U, empty->depot, costEvaluator);
+                else  // U is not in the solution, so again try inserting.
+                    maybeInsert(U, empty->depot, costEvaluator);
             }
         }
     }
@@ -172,6 +186,73 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
+void LocalSearch::maybeInsert(Node *U,
+                              Node *V,
+                              CostEvaluator const &costEvaluator)
+{
+    assert(!U->route && V->route);
+
+    auto const &uClient = data.client(U->client);
+
+    int const current = data.dist(V->client, n(V)->client);
+    int const proposed = data.dist(V->client, U->client)
+                         + data.dist(U->client, n(V)->client) - uClient.prize;
+
+    int deltaCost = proposed - current;
+
+    deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
+                                           data.vehicleCapacity());
+    deltaCost
+        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
+
+    if (deltaCost >= V->route->timeWarp())  // adding U will likely not lower
+        return;                             // time warp, so we can stop here.
+
+    auto vTWS
+        = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
+
+    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
+
+    if (deltaCost < 0)
+    {
+        U->insertAfter(V);           // U has no route, so there's nothing to
+        update(V->route, V->route);  // update there.
+    }
+}
+
+void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
+{
+    assert(U->route);
+
+    auto const &uClient = data.client(U->client);
+
+    int const current = data.dist(p(U)->client, U->client)
+                        + data.dist(U->client, n(U)->client) - uClient.prize;
+
+    int const proposed = data.dist(p(U)->client, n(U)->client);
+
+    int deltaCost = proposed - current;
+
+    deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
+                                           data.vehicleCapacity());
+    deltaCost
+        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
+
+    auto uTWS
+        = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
+
+    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+
+    if (deltaCost < 0)
+    {
+        auto *route = U->route;  // after U->remove(), U->route is a nullptr
+        U->remove();
+        update(route, route);
+    }
+}
+
 void LocalSearch::update(Route *U, Route *V)
 {
     numMoves++;
@@ -190,6 +271,7 @@ void LocalSearch::update(Route *U, Route *V)
 void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
+    {
         clients[client].tw = {static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).serviceDuration,
@@ -197,9 +279,12 @@ void LocalSearch::loadIndividual(Individual const &individual)
                               data.client(client).twEarly,
                               data.client(client).twLate};
 
+        clients[client].route = nullptr;  // nullptr implies "not in solution"
+    }
+
     auto const &routesIndiv = individual.getRoutes();
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t r = 0; r != data.numVehicles(); r++)
     {
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -226,11 +311,11 @@ void LocalSearch::loadIndividual(Individual const &individual)
             client->prev = startDepot;
             startDepot->next = client;
 
-            for (int i = 1; i < static_cast<int>(routesIndiv[r].size()); i++)
+            for (size_t idx = 1; idx < routesIndiv[r].size(); idx++)
             {
                 Node *prev = client;
 
-                client = &clients[routesIndiv[r][i]];
+                client = &clients[routesIndiv[r][idx]];
                 client->route = route;
 
                 client->prev = prev;

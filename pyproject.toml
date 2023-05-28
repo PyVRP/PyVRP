@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.1.0"
+version = "0.3.0"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -69,7 +69,7 @@ optional = true
 
 [tool.poetry.group.examples.dependencies]
 jupyter = ">=1.0.0"
-pandas = ">=1.5.0"
+tabulate = "^0.9.0"
 
 
 [tool.poetry.group.dev.dependencies]

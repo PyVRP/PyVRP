@@ -6,14 +6,22 @@
 #include <string>
 #include <vector>
 
-ProblemData::Client::Client(
-    int x, int y, int demand, int serviceDuration, int twEarly, int twLate)
+ProblemData::Client::Client(int x,
+                            int y,
+                            int demand,
+                            int serviceDuration,
+                            int twEarly,
+                            int twLate,
+                            int prize,
+                            bool required)
     : x(x),
       y(y),
       demand(demand),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
-      twLate(twLate)
+      twLate(twLate),
+      prize(prize),
+      required(required)
 {
     if (demand < 0)
         throw std::invalid_argument("demand must be >= 0");
@@ -23,6 +31,9 @@ ProblemData::Client::Client(
 
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late");
+
+    if (prize < 0)
+        throw std::invalid_argument("prize must be >= 0");
 }
 
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
