@@ -111,4 +111,10 @@ using distance_type = Measure<MeasureType::DISTANCE>;
 using duration_type = Measure<MeasureType::DURATION>;
 using cost_type = Measure<MeasureType::COST>;
 
+// These conditions are needed for reinterpret casts from/to the underlying
+// value type. Those casts would be invalid if these asserts fail.
+static_assert(sizeof(distance_type) == sizeof(value_type));
+static_assert(sizeof(duration_type) == sizeof(value_type));
+static_assert(sizeof(cost_type) == sizeof(value_type));
+
 #endif  // MEASURE_H
