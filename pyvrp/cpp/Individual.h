@@ -31,6 +31,8 @@ public:
         size_t wait_ = 0;        // Total waiting duration on this route
         size_t prizes_ = 0;      // Total prize value collected on this route
 
+        std::pair<double, double> centroid_;  // center of the route
+
     public:
         [[nodiscard]] bool empty() const;
         [[nodiscard]] size_t size() const;
@@ -50,6 +52,8 @@ public:
         [[nodiscard]] size_t timeWarp() const;
         [[nodiscard]] size_t waitDuration() const;
         [[nodiscard]] size_t prizes() const;
+
+        [[nodiscard]] std::pair<double, double> const &centroid() const;
 
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;

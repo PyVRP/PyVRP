@@ -156,7 +156,7 @@ Individual::Individual(ProblemData const &data,
 }
 
 Individual::Route::Route(ProblemData const &data, Visits const visits)
-    : visits_(std::move(visits))
+    : visits_(std::move(visits)), centroid_({0, 0})
 {
     if (visits_.empty())
         return;
@@ -173,6 +173,9 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
         demand_ += clientData.demand;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
+
+        centroid_.first += static_cast<double>(clientData.x) / size();
+        centroid_.second += static_cast<double>(clientData.y) / size();
 
         time += data.client(prevClient).serviceDuration
                 + data.duration(prevClient, visits_[idx]);
@@ -242,6 +245,11 @@ size_t Individual::Route::timeWarp() const { return timeWarp_; }
 size_t Individual::Route::waitDuration() const { return wait_; }
 
 size_t Individual::Route::prizes() const { return prizes_; }
+
+std::pair<double, double> const &Individual::Route::centroid() const
+{
+    return centroid_;
+}
 
 bool Individual::Route::isFeasible() const
 {
