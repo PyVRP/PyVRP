@@ -175,6 +175,8 @@ def solve(
 
         with open(where, "w") as fh:
             fh.write(str(result.best))
+            fh.write(f"Cost: {result.cost()}")
+            fh.write("\n")
 
     return result
 

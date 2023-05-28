@@ -327,10 +327,6 @@ def test_str_contains_essential_information():
             for client in route:
                 assert_(str(client) in str_route)
 
-        # Last lines should contain the travel distance and collected prizes.
-        assert_(str(individual.distance()) in str_representation[-2])
-        assert_(str(individual.prizes()) in str_representation[-1])
-
 
 def test_hash():
     data = read("data/OkSmall.txt")
