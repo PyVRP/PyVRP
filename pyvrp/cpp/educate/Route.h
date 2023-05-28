@@ -20,7 +20,7 @@ class Route
     int load_;             // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
-    int timeWarp_;             // Current route time warp.
+    duration_type timeWarp_;   // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
@@ -70,7 +70,7 @@ public:           // TODO make fields private
     /**
      * @return Total time warp on this route.
      */
-    [[nodiscard]] inline int timeWarp() const;
+    [[nodiscard]] inline duration_type timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -135,7 +135,7 @@ Node *Route::operator[](size_t position) const
 
 int Route::load() const { return load_; }
 
-int Route::timeWarp() const { return timeWarp_; }
+duration_type Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 

@@ -8,18 +8,18 @@ CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
 {
 }
 
-unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
+cost_type CostEvaluator::penalisedCost(Individual const &individual) const
 {
     // Standard objective plus penalty terms for capacity- and time-related
     // infeasibilities.
-    return individual.distance() + individual.uncollectedPrizes()
+    return cost_type(individual.distance() + individual.uncollectedPrizes())
            + loadPenaltyExcess(individual.excessLoad())
            + twPenalty(individual.timeWarp());
 }
 
-unsigned int CostEvaluator::cost(Individual const &individual) const
+cost_type CostEvaluator::cost(Individual const &individual) const
 {
     return individual.isFeasible()
                ? individual.distance() + individual.uncollectedPrizes()
-               : std::numeric_limits<unsigned int>::max();
+               : std::numeric_limits<value_type>::max();
 }

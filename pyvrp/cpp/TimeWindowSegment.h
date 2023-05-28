@@ -2,6 +2,7 @@
 #define TIMEWINDOWDATA_H
 
 #include "Matrix.h"
+#include "Measure.h"
 
 class TimeWindowSegment
 {
@@ -28,7 +29,7 @@ public:
      * Total time warp, that is, the time warp along the the segment, and
      * potential time warp due to too late a release time.
      */
-    [[nodiscard]] inline int totalTimeWarp() const;
+    [[nodiscard]] inline duration_type totalTimeWarp() const;
 
     TimeWindowSegment() = default;
 
@@ -78,7 +79,7 @@ TimeWindowSegment TimeWindowSegment::merge(Matrix<int> const &durationMatrix,
 #endif
 }
 
-int TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
+duration_type TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
 
 TimeWindowSegment::TimeWindowSegment(int idxFirst,
                                      int idxLast,

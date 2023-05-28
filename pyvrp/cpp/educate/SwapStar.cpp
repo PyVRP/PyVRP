@@ -4,17 +4,19 @@ using TWS = TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 {
-    auto const currTimeWarp = costEvaluator.twPenalty(R1->timeWarp());
-
     for (Node *U = n(R1->depot); !U->isDepot(); U = n(U))
     {
         auto twData
             = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
+
+        distance_type const deltaDist = data.dist(p(U)->client, n(U)->client)
+                                        - data.dist(p(U)->client, U->client)
+                                        - data.dist(U->client, n(U)->client);
+
         removalCosts(R1->idx, U->client)
-            = data.dist(p(U)->client, n(U)->client)
-              - data.dist(p(U)->client, U->client)
-              - data.dist(U->client, n(U)->client)
-              + costEvaluator.twPenalty(twData.totalTimeWarp()) - currTimeWarp;
+            = static_cast<cost_type>(deltaDist)
+              + costEvaluator.twPenalty(twData.totalTimeWarp())
+              - costEvaluator.twPenalty(R1->timeWarp());
     }
 }
 
@@ -30,24 +32,30 @@ void SwapStar::updateInsertionCost(Route *R,
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData = TWS::merge(
         data.durationMatrix(), R->depot->twBefore, U->tw, n(R->depot)->twAfter);
-    int cost = data.dist(0, U->client)
-               + data.dist(U->client, n(R->depot)->client)
-               - data.dist(0, n(R->depot)->client)
-               + costEvaluator.twPenalty(twData.totalTimeWarp())
-               - costEvaluator.twPenalty(R->timeWarp());
 
-    insertPositions.maybeAdd(cost, R->depot);
+    distance_type deltaDist = data.dist(0, U->client)
+                              + data.dist(U->client, n(R->depot)->client)
+                              - data.dist(0, n(R->depot)->client);
+
+    cost_type deltaCost = static_cast<cost_type>(deltaDist)
+                          + costEvaluator.twPenalty(twData.totalTimeWarp())
+                          - costEvaluator.twPenalty(R->timeWarp());
+
+    insertPositions.maybeAdd(deltaCost, R->depot);
 
     for (Node *V = n(R->depot); !V->isDepot(); V = n(V))
     {
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(
             data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
-        int deltaCost = data.dist(V->client, U->client)
-                        + data.dist(U->client, n(V)->client)
-                        - data.dist(V->client, n(V)->client)
-                        + costEvaluator.twPenalty(twData.totalTimeWarp())
-                        - costEvaluator.twPenalty(R->timeWarp());
+
+        deltaDist = data.dist(V->client, U->client)
+                    + data.dist(U->client, n(V)->client)
+                    - data.dist(V->client, n(V)->client);
+
+        deltaCost = static_cast<cost_type>(deltaDist)
+                    + costEvaluator.twPenalty(twData.totalTimeWarp())
+                    - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
     }
@@ -68,11 +76,14 @@ std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
     // As a fallback option, we consider inserting in the place of V
     auto const twData = TWS::merge(
         data.durationMatrix(), p(V)->twBefore, U->tw, n(V)->twAfter);
-    int deltaCost = data.dist(p(V)->client, U->client)
-                    + data.dist(U->client, n(V)->client)
-                    - data.dist(p(V)->client, n(V)->client)
-                    + costEvaluator.twPenalty(twData.totalTimeWarp())
-                    - costEvaluator.twPenalty(V->route->timeWarp());
+
+    distance_type const deltaDist = data.dist(p(V)->client, U->client)
+                                    + data.dist(U->client, n(V)->client)
+                                    - data.dist(p(V)->client, n(V)->client);
+    cost_type const deltaCost
+        = static_cast<cost_type>(deltaDist)
+          + costEvaluator.twPenalty(twData.totalTimeWarp())
+          - costEvaluator.twPenalty(V->route->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
 }

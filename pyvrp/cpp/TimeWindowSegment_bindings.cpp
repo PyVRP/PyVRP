@@ -15,7 +15,10 @@ PYBIND11_MODULE(_TimeWindowSegment, m)
              py::arg("time_warp"),
              py::arg("tw_early"),
              py::arg("tw_late"))
-        .def("total_time_warp", &TWS::totalTimeWarp)
+        .def("total_time_warp",
+             [](TimeWindowSegment const &tws) {
+                 return static_cast<value_type>(tws.totalTimeWarp());
+             })
         .def_static("merge",
                     &TWS::merge<>,
                     py::arg("duration_matrix"),
