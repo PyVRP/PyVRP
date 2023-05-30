@@ -1,6 +1,8 @@
 #include "crossover.h"
 #include "Measure.h"
 
+#include <limits>
+
 using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
@@ -26,7 +28,7 @@ deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     duration_type clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + durPrevClient >= clientLate)
-        return INT_MAX;
+        return std::numeric_limits<value_type>::max();
 
     duration_type clientEarliestArrival
         = std::max(data.duration(0, client), data.client(client).twEarly);
@@ -36,7 +38,7 @@ deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     duration_type nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + durClientNext >= nextLate)
-        return INT_MAX;
+        return std::numeric_limits<value_type>::max();
 
     return static_cast<cost_type>(data.dist(prev, client)
                                   + data.dist(client, next)
@@ -55,7 +57,8 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
-        InsertPos best = {INT_MAX, &routes.front(), 0};
+        InsertPos best
+            = {std::numeric_limits<value_type>::max(), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {

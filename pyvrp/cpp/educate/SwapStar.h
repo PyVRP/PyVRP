@@ -3,8 +3,10 @@
 
 #include "LocalSearchOperator.h"
 #include "Matrix.h"
+#include "Measure.h"
 
 #include <array>
+#include <limits>
 #include <vector>
 
 /**
@@ -23,7 +25,10 @@ class SwapStar : public LocalSearchOperator<Route>
     struct ThreeBest  // stores three best SWAP* insertion points
     {
         bool shouldUpdate = true;
-        std::array<cost_type, 3> costs = {INT_MAX, INT_MAX, INT_MAX};
+        std::array<cost_type, 3> costs
+            = {std::numeric_limits<value_type>::max(),
+               std::numeric_limits<value_type>::max(),
+               std::numeric_limits<value_type>::max()};
         std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
 
         void maybeAdd(cost_type costInsert, Node *placeInsert)
