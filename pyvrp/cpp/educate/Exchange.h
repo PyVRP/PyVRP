@@ -85,18 +85,15 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
     auto const posV = V->position;
 
     assert(posU > 0);
-
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    auto const &dist = data.distanceMatrix();
-
     int const current = U->route->distBetween(posU - 1, posU + N)
-                        + dist(V->client, n(V)->client);
+                        + data.dist(V->client, n(V)->client);
 
-    int const proposed = dist(V->client, U->client)
+    int const proposed = data.dist(V->client, U->client)
                          + U->route->distBetween(posU, posU + N - 1)
-                         + dist(endU->client, n(V)->client)
-                         + dist(p(U)->client, n(endU)->client);
+                         + data.dist(endU->client, n(V)->client)
+                         + data.dist(p(U)->client, n(endU)->client);
 
     int deltaCost = proposed - current;
 
@@ -105,7 +102,8 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist, p(U)->twBefore, n(endU)->twAfter);
+        auto uTWS = TWS::merge(
+            data.durationMatrix(), p(U)->twBefore, n(endU)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
@@ -118,14 +116,14 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
                                                U->route->vehicleCapacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good
+            return deltaCost;  // even without V, the move will never be good.
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
                                                V->route->vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
                                                V->route->vehicleCapacity());
 
-        auto vTWS = TWS::merge(dist,
+        auto vTWS = TWS::merge(data.durationMatrix(),
                                V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
@@ -142,7 +140,7 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(data.durationMatrix(),
                                         p(U)->twBefore,
                                         route->twBetween(posU + N, posV),
                                         route->twBetween(posU, posU + N - 1),
@@ -152,7 +150,7 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
         }
         else
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(data.durationMatrix(),
                                         V->twBefore,
                                         route->twBetween(posU, posU + N - 1),
                                         route->twBetween(posV + 1, posU - 1),
@@ -176,11 +174,10 @@ int Exchange<N, M>::evalSwapMove(Node *U,
     auto const posV = V->position;
 
     assert(posU > 0 && posV > 0);
-
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
     auto *endV = M == 1 ? V : (*V->route)[posV + M - 1];
 
-    auto const &dist = data.distanceMatrix();
+    assert(U->route && V->route);
 
     int const current = U->route->distBetween(posU - 1, posU + N)
                         + V->route->distBetween(posV - 1, posV + M);
@@ -188,11 +185,12 @@ int Exchange<N, M>::evalSwapMove(Node *U,
     int const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
-        = dist(p(U)->client, V->client)
+        = data.dist(p(U)->client, V->client)
           + V->route->distBetween(posV, posV + M - 1)
-          + dist(endV->client, n(endU)->client) + dist(p(V)->client, U->client)
+          + data.dist(endV->client, n(endU)->client)
+          + data.dist(p(V)->client, U->client)
           + U->route->distBetween(posU, posU + N - 1)
-          + dist(endU->client, n(endV)->client);
+          + data.dist(endU->client, n(endV)->client);
 
     int deltaCost = proposed - current;
 
@@ -201,21 +199,13 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist,
+        auto uTWS = TWS::merge(data.durationMatrix(),
                                p(U)->twBefore,
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
-
-        auto vTWS = TWS::merge(dist,
-                               p(V)->twBefore,
-                               U->route->twBetween(posU, posU + N - 1),
-                               n(endV)->twAfter);
-
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
         auto const loadV = V->route->loadBetween(posV, posV + M - 1);
@@ -225,6 +215,14 @@ int Exchange<N, M>::evalSwapMove(Node *U,
                                                U->route->vehicleCapacity());
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
                                                U->route->vehicleCapacity());
+
+        auto vTWS = TWS::merge(data.durationMatrix(),
+                               p(V)->twBefore,
+                               U->route->twBetween(posU, posU + N - 1),
+                               n(endV)->twAfter);
+
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
                                                V->route->vehicleCapacity());
@@ -240,7 +238,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(data.durationMatrix(),
                                         p(U)->twBefore,
                                         route->twBetween(posV, posV + M - 1),
                                         route->twBetween(posU + N, posV - 1),
@@ -251,7 +249,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
         }
         else
         {
-            auto const tws = TWS::merge(dist,
+            auto const tws = TWS::merge(data.durationMatrix(),
                                         p(V)->twBefore,
                                         route->twBetween(posU, posU + N - 1),
                                         route->twBetween(posV + M, posU - 1),

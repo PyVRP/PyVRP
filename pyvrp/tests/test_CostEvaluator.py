@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
 from pyvrp import CostEvaluator, Individual
@@ -77,10 +77,28 @@ def test_cost():
     # Infeasible individual
     infeas_indiv = Individual(data, [[1, 2, 3, 4]])
 
-    # C++ code represents infinite as max value for unsigned integer
+    # C++ code represents infinity as UINT_MAX
     INFEAS_COST = np.iinfo(np.uint32).max
     assert_equal(cost_evaluator.cost(infeas_indiv), INFEAS_COST)
     assert_equal(default_cost_evaluator.cost(infeas_indiv), INFEAS_COST)
+
+
+def test_cost_with_prizes():
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    cost_evaluator = CostEvaluator(1, 1)
+
+    indiv = Individual(data, [[1, 2], [3, 4, 5]])
+    cost = cost_evaluator.cost(indiv)
+    assert_(indiv.is_feasible())
+
+    prizes = [data.client(idx).prize for idx in range(data.num_clients + 1)]
+    collected = sum(prizes[:6])
+    uncollected = sum(prizes) - collected
+
+    assert_allclose(prizes[0], 0)
+    assert_allclose(indiv.prizes(), collected)
+    assert_allclose(indiv.uncollected_prizes(), uncollected)
+    assert_allclose(indiv.distance() + indiv.uncollected_prizes(), cost)
 
 
 def test_penalised_cost():

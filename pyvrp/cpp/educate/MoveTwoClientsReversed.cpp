@@ -2,6 +2,8 @@
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
+#include <cassert>
+
 using TWS = TimeWindowSegment;
 
 int MoveTwoClientsReversed::evaluate(Node *U,
@@ -14,13 +16,14 @@ int MoveTwoClientsReversed::evaluate(Node *U,
     auto const posU = U->position;
     auto const posV = V->position;
 
-    auto const &dist = data.distanceMatrix();
+    assert(U->route && V->route);
 
     int const current = U->route->distBetween(posU - 1, posU + 2)
-                        + dist(V->client, n(V)->client);
-    int const proposed
-        = dist(p(U)->client, n(n(U))->client) + dist(V->client, n(U)->client)
-          + dist(n(U)->client, U->client) + dist(U->client, n(V)->client);
+                        + data.dist(V->client, n(V)->client);
+    int const proposed = data.dist(p(U)->client, n(n(U))->client)
+                         + data.dist(V->client, n(U)->client)
+                         + data.dist(n(U)->client, U->client)
+                         + data.dist(U->client, n(V)->client);
 
     int deltaCost = proposed - current;
 
@@ -29,7 +32,8 @@ int MoveTwoClientsReversed::evaluate(Node *U,
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(dist, p(U)->twBefore, n(n(U))->twAfter);
+        auto uTWS = TWS::merge(
+            data.durationMatrix(), p(U)->twBefore, n(n(U))->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
@@ -49,8 +53,8 @@ int MoveTwoClientsReversed::evaluate(Node *U,
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
                                                V->route->vehicleCapacity());
 
-        auto vTWS
-            = TWS::merge(dist, V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
+        auto vTWS = TWS::merge(
+            data.durationMatrix(), V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
@@ -64,7 +68,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
 
         if (posU < posV)
         {
-            auto const uTWS = TWS::merge(dist,
+            auto const uTWS = TWS::merge(data.durationMatrix(),
                                          p(U)->twBefore,
                                          route->twBetween(posU + 2, posV),
                                          n(U)->tw,
@@ -75,7 +79,7 @@ int MoveTwoClientsReversed::evaluate(Node *U,
         }
         else
         {
-            auto const uTWS = TWS::merge(dist,
+            auto const uTWS = TWS::merge(data.durationMatrix(),
                                          V->twBefore,
                                          n(U)->tw,
                                          U->tw,

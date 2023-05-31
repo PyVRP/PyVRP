@@ -15,13 +15,14 @@ def make_heterogeneous(data: ProblemData, vehicle_capacities: List[int]):
     """
     clients = [data.client(i) for i in range(data.num_clients + 1)]
     return ProblemData(
-        coords=[(c.x, c.y) for c in clients],
-        demands=[c.demand for c in clients],
+        clients=clients,
         vehicle_capacities=vehicle_capacities,
-        time_windows=[(c.tw_early, c.tw_late) for c in clients],
-        service_durations=[c.service_duration for c in clients],
-        duration_matrix=[
+        distance_matrix=[
             [data.dist(i, j) for j in range(data.num_clients + 1)]
+            for i in range(data.num_clients + 1)
+        ],
+        duration_matrix=[
+            [data.duration(i, j) for j in range(data.num_clients + 1)]
             for i in range(data.num_clients + 1)
         ],
     )

@@ -4,7 +4,7 @@
 #include "ProblemData.h"
 #include "XorShift128.h"
 
-#include <string>
+#include <iosfwd>
 #include <vector>
 
 class Individual
@@ -12,13 +12,63 @@ class Individual
     friend struct std::hash<Individual>;  // friend struct to enable hashing
 
     using Client = int;
-    using Route = std::vector<Client>;
+
+public:
+    /**
+     * A simple Route class that contains the route plan and some statistics.
+     */
+    class Route
+    {
+        using Visits = std::vector<Client>;
+
+        Visits visits_ = {};     // Client visits on this route
+        size_t distance_ = 0;    // Total travel distance on this route
+        size_t demand_ = 0;      // Total demand served on this route
+        size_t excessLoad_ = 0;  // Demand in excess of the vehicle's capacity
+        size_t duration_ = 0;    // Total travel duration on this route
+        size_t service_ = 0;     // Total service duration on this route
+        size_t timeWarp_ = 0;    // Total time warp on this route
+        size_t wait_ = 0;        // Total waiting duration on this route
+        size_t prizes_ = 0;      // Total prize value collected on this route
+
+    public:
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] Client operator[](size_t idx) const;
+
+        Visits::const_iterator begin() const;
+        Visits::const_iterator end() const;
+        Visits::const_iterator cbegin() const;
+        Visits::const_iterator cend() const;
+
+        [[nodiscard]] Visits const &visits() const;
+        [[nodiscard]] size_t distance() const;
+        [[nodiscard]] size_t demand() const;
+        [[nodiscard]] size_t excessLoad() const;
+        [[nodiscard]] size_t duration() const;
+        [[nodiscard]] size_t serviceDuration() const;
+        [[nodiscard]] size_t timeWarp() const;
+        [[nodiscard]] size_t waitDuration() const;
+        [[nodiscard]] size_t prizes() const;
+
+        [[nodiscard]] bool isFeasible() const;
+        [[nodiscard]] bool hasExcessLoad() const;
+        [[nodiscard]] bool hasTimeWarp() const;
+
+        Route() = default;  // default is empty
+        Route(ProblemData const &data, Visits const visits);
+    };
+
+private:
     using Routes = std::vector<Route>;
     using RouteType = int;
 
     size_t numNonEmptyRoutes_ = 0;  // Number of non-empty routes
+    size_t numClients_ = 0;         // Number of clients in the solution
     size_t distance_ = 0;           // Total distance
     size_t excessLoad_ = 0;         // Total excess load over all routes
+    size_t prizes_ = 0;             // Total collected prize value
+    size_t uncollectedPrizes_ = 0;  // Total uncollected prize value
     size_t timeWarp_ = 0;           // Total time warp over all routes
 
     Routes routes_;  // Routes - some routes may be non-empty
@@ -41,6 +91,11 @@ public:
      * routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numNonEmptyRoutes() const;
+
+    /**
+     * Number of clients in the solution.
+     */
+    [[nodiscard]] size_t numClients() const;
 
     /**
      * Returns this individual's routing decisions.
@@ -86,6 +141,16 @@ public:
     [[nodiscard]] size_t excessLoad() const;
 
     /**
+     * @return Total collected prize value over all routes.
+     */
+    [[nodiscard]] size_t prizes() const;
+
+    /**
+     * @return Total prize value of all unvisited clients.
+     */
+    [[nodiscard]] size_t uncollectedPrizes() const;
+
+    /**
      * @return Total time warp over all routes.
      */
     [[nodiscard]] size_t timeWarp() const;
@@ -114,11 +179,12 @@ public:
      *                       solved.
      * @param routes         Solution's route list.
      */
-    Individual(ProblemData const &data, Routes routes);
+    Individual(ProblemData const &data,
+               std::vector<std::vector<Client>> const &routes);
 };
 
-// Outputs an individual into a given ostream in VRPLIB format
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);
+std::ostream &operator<<(std::ostream &out, Individual::Route const &route);
 
 namespace std
 {

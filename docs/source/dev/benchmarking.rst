@@ -9,30 +9,24 @@ To find out about available options, run
 
    pyvrp --help
 
-To benchmark ``pyvrp``, we use the following `CRVPLIB <http://vrp.atd-lab.inf.puc-rio.br/index.php/en/>`_ instances:
+To benchmark ``pyvrp``, we mostly use instances from `CRVPLIB <http://vrp.atd-lab.inf.puc-rio.br/index.php/en/>`_ instances.
+Particularly:
 
 * For the VRPTW, we use `the Gehring and Homberger instances <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-HG.tgz>`_, particularly those with 1000 customers.
+  These instances are each run for two hours (on a reference CPU with PassMark score 2000; the time limit should be scaled by the score of your CPU).
 
 * For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
+  Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds (on a reference CPU with PassMark score 2183; the time limit should be scaled by the score of your CPU).
+  Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2183. 
 
-To get both instance sets quickly, the following shell script can be used to download and unpack them:
+Each instance is run ten times with different seeds.
+Each run is performed on a single core.
+For each instance, we take the average objectives/gaps of these ten runs with different seeds.
+
+To get the benchmark instance sets quickly, the ``PyVRP/Instances`` repository may be initialised as a submodule:
 
 .. code-block:: shell
 
-   echo "Downloading GH instances";
-   wget "http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-HG.tgz";
-   tar -xvf "Vrp-Set-HG.tgz" --strip-components=1;
-   mv Vrp-Set-HG GH;
-   rm "Vrp-Set-HG.tgz";
-   
-   echo "Downloading X instances";
-   wget "http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz";
-   tar -xvf "Vrp-Set-X.tgz" --strip-components=1;
-   rm "Vrp-Set-X.tgz";
+   git submodule init instances
 
-These commands create two directories, ``GH/`` and ``X/``, which contain the downloaded problem instance files and the current best known solutions.
-
-.. hint::
-
-   On Windows, these commands likely will not work.
-   In that case, please download the relevant files manually.
+After running this command, the instances will be available in ``instances/``.

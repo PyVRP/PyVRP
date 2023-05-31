@@ -1,15 +1,15 @@
-from typing import List, Optional
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 
-from pyvrp import ProblemData
+from pyvrp import ProblemData, Route
 
 
 def plot_route_schedule(
     data: ProblemData,
-    route: List[int],
+    route: Route,
     route_idx: int = 0,
     legend: bool = True,
     title: Optional[str] = None,
@@ -84,8 +84,8 @@ def plot_route_schedule(
     prev_idx = 0  # depot
     for idx in list(route) + [0]:
         stop = data.client(idx)
-        # Currently time = distance (i.e. assume speed of 1)
-        delta_time = delta_dist = data.dist(prev_idx, idx)
+        delta_time = data.duration(prev_idx, idx)
+        delta_dist = data.dist(prev_idx, idx)
         t += delta_time
         drive_time += delta_time
         dist += delta_dist

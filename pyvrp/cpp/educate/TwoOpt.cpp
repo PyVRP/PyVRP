@@ -12,12 +12,12 @@ int TwoOpt::evalWithinRoute(Node *U,
     if (U->position + 1 >= V->position)
         return 0;
 
-    auto const &dist = data.distanceMatrix();
-
-    int deltaCost
-        = dist(U->client, V->client) + dist(n(U)->client, n(V)->client)
-          + V->cumulatedReversalDistance - dist(U->client, n(U)->client)
-          - dist(V->client, n(V)->client) - n(U)->cumulatedReversalDistance;
+    int deltaCost = data.dist(U->client, V->client)
+                    + data.dist(n(U)->client, n(V)->client)
+                    + V->cumulatedReversalDistance
+                    - data.dist(U->client, n(U)->client)
+                    - data.dist(V->client, n(V)->client)
+                    - n(U)->cumulatedReversalDistance;
 
     if (!U->route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;
@@ -26,11 +26,11 @@ int TwoOpt::evalWithinRoute(Node *U,
     auto *itRoute = V;
     while (itRoute != U)
     {
-        tws = TWS::merge(dist, tws, itRoute->tw);
+        tws = TWS::merge(data.durationMatrix(), tws, itRoute->tw);
         itRoute = p(itRoute);
     }
 
-    tws = TWS::merge(dist, tws, n(V)->twAfter);
+    tws = TWS::merge(data.durationMatrix(), tws, n(V)->twAfter);
 
     deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
@@ -42,24 +42,24 @@ int TwoOpt::evalBetweenRoutes(Node *U,
                               Node *V,
                               CostEvaluator const &costEvaluator) const
 {
-    auto const &dist = data.distanceMatrix();
-
-    int const current
-        = dist(U->client, n(U)->client) + dist(V->client, n(V)->client);
-    int const proposed
-        = dist(U->client, n(V)->client) + dist(V->client, n(U)->client);
+    int const current = data.dist(U->client, n(U)->client)
+                        + data.dist(V->client, n(V)->client);
+    int const proposed = data.dist(U->client, n(V)->client)
+                         + data.dist(V->client, n(U)->client);
 
     int deltaCost = proposed - current;
 
     if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
-    auto const uTWS = TWS::merge(dist, U->twBefore, n(V)->twAfter);
+    auto const uTWS
+        = TWS::merge(data.durationMatrix(), U->twBefore, n(V)->twAfter);
 
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
-    auto const vTWS = TWS::merge(dist, V->twBefore, n(U)->twAfter);
+    auto const vTWS
+        = TWS::merge(data.durationMatrix(), V->twBefore, n(U)->twAfter);
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());

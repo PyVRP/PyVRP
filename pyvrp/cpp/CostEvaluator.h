@@ -33,7 +33,7 @@ public:
     [[nodiscard]] inline unsigned int twPenalty(unsigned int timeWarp) const;
 
     /**
-     * Computes the objective (penalised cost) for a given individual.
+     * Computes a smoothed objective (penalised cost) for a given individual.
      */
     [[nodiscard]] unsigned int
     penalisedCost(Individual const &individual) const;
