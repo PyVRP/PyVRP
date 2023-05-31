@@ -23,5 +23,5 @@ double brokenPairsDistance(Individual const &first, Individual const &second)
 
     // numBrokenPairs is at most 2n since we can count at most two broken edges
     // for each client. Here, we normalise the distance to [0, 1].
-    return numBrokenPairs / (2. * std::max(numClients, size_t(1)));
+    return numBrokenPairs / (2. * std::max<size_t>(numClients, 1));
 }

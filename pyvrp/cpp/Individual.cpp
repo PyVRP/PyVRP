@@ -96,7 +96,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     // per vehicle, with an adjustment in case the division is not perfect.
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
-    auto const perVehicle = std::max(numClients / numVehicles, size_t(1));
+    auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
     auto const perRoute = perVehicle + (numClients % numVehicles != 0);
 
     std::vector<std::vector<Client>> routes(data.numVehicles());
@@ -199,9 +199,8 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     distance_ += data.dist(last, 0);
     duration_ += data.duration(last, 0);
 
-    auto const zero = duration_type(0);
     time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max(time - data.depot().twLate, zero);  // depot tw close
+    timeWarp_ += std::max<duration_type>(time - data.depot().twLate, 0);
 
     excessLoad_ = data.vehicleCapacity() < demand_
                       ? demand_ - data.vehicleCapacity()

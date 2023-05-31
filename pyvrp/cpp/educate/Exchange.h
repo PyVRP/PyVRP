@@ -63,7 +63,7 @@ bool Exchange<N, M>::overlap(Node *U, Node *V) const
     return U->route == V->route
         // We need max(M, 1) here because when V is the depot and M == 0, this
         // would turn negative and wrap around to a large number.
-        && U->position <= V->position + std::max(M, size_t(1)) - 1
+        && U->position <= V->position + std::max<size_t>(M, 1) - 1
         && V->position <= U->position + N - 1;
     // clang-format on
 }
