@@ -5,6 +5,7 @@
 #include "ProblemData.h"
 #include "XorShift128.h"
 
+#include <functional>
 #include <iosfwd>
 #include <vector>
 
@@ -184,17 +185,13 @@ namespace std
 {
 template <> struct hash<Individual>
 {
-    std::size_t operator()(Individual const &individual) const
+    size_t operator()(Individual const &individual) const
     {
-        auto const dist = static_cast<Value>(individual.distance_);
-        auto const excessLoad = static_cast<Value>(individual.excessLoad_);
-        auto const tw = static_cast<Value>(individual.timeWarp_);
-
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
-        res = res * 31 + std::hash<Value>()(dist);
-        res = res * 31 + std::hash<Value>()(excessLoad);
-        res = res * 31 + std::hash<Value>()(tw);
+        res = res * 31 + std::hash<Distance>()(individual.distance_);
+        res = res * 31 + std::hash<Load>()(individual.excessLoad_);
+        res = res * 31 + std::hash<Duration>()(individual.timeWarp_);
 
         return res;
     }

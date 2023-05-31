@@ -2,6 +2,7 @@
 #define MEASURE_H
 
 #include <compare>
+#include <functional>
 #include <iostream>
 #include <type_traits>
 
@@ -127,6 +128,17 @@ std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
 {
     return out << static_cast<Value>(measure);
 }
+
+namespace std
+{
+template <MeasureType Type> struct hash<Measure<Type>>
+{
+    size_t operator()(Measure<Type> const measure) const
+    {
+        return std::hash<Value>()(static_cast<Value>(measure));
+    }
+};
+}  // namespace std
 
 // Useful type aliases.
 using Distance = Measure<MeasureType::DISTANCE>;
