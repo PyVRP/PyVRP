@@ -21,27 +21,24 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("y", &ProblemData::Client::y)
         .def_property_readonly("demand",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<value_type>(
-                                       client.demand);
+                                   return static_cast<Value>(client.demand);
                                })
         .def_property_readonly("service_duration",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<value_type>(
+                                   return static_cast<Value>(
                                        client.serviceDuration);
                                })
         .def_property_readonly("tw_early",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<value_type>(
-                                       client.twEarly);
+                                   return static_cast<Value>(client.twEarly);
                                })
         .def_property_readonly("tw_late",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<value_type>(
-                                       client.twLate);
+                                   return static_cast<Value>(client.twLate);
                                })
         .def_property_readonly("prize",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<value_type>(client.prize);
+                                   return static_cast<Value>(client.prize);
                                })
         .def_readonly("required", &ProblemData::Client::required);
 
@@ -73,7 +70,7 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
         .def_property_readonly("vehicle_capacity",
                                [](ProblemData const &data) {
-                                   return static_cast<value_type>(
+                                   return static_cast<Value>(
                                        data.vehicleCapacity());
                                })
         .def("client",
@@ -84,14 +81,14 @@ PYBIND11_MODULE(_ProblemData, m)
         .def(
             "dist",
             [](ProblemData const &data, size_t first, size_t second) {
-                return static_cast<value_type>(data.dist(first, second));
+                return static_cast<Value>(data.dist(first, second));
             },
             py::arg("first"),
             py::arg("second"))
         .def(
             "duration",
             [](ProblemData const &data, size_t first, size_t second) {
-                return static_cast<value_type>(data.duration(first, second));
+                return static_cast<Value>(data.duration(first, second));
             },
             py::arg("first"),
             py::arg("second"));

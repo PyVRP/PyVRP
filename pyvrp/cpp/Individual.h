@@ -186,15 +186,15 @@ template <> struct hash<Individual>
 {
     std::size_t operator()(Individual const &individual) const
     {
-        auto const dist = static_cast<value_type>(individual.distance_);
-        auto const excessLoad = static_cast<value_type>(individual.excessLoad_);
-        auto const tw = static_cast<value_type>(individual.timeWarp_);
+        auto const dist = static_cast<Value>(individual.distance_);
+        auto const excessLoad = static_cast<Value>(individual.excessLoad_);
+        auto const tw = static_cast<Value>(individual.timeWarp_);
 
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
-        res = res * 31 + std::hash<value_type>()(dist);
-        res = res * 31 + std::hash<value_type>()(excessLoad);
-        res = res * 31 + std::hash<value_type>()(tw);
+        res = res * 31 + std::hash<Value>()(dist);
+        res = res * 31 + std::hash<Value>()(excessLoad);
+        res = res * 31 + std::hash<Value>()(tw);
 
         return res;
     }

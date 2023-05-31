@@ -31,7 +31,7 @@ PYBIND11_MODULE(_TimeWindowSegment, m)
              py::arg("tw_late"))
         .def("total_time_warp",
              [](TWS const &tws) {
-                 return static_cast<value_type>(tws.totalTimeWarp());
+                 return static_cast<Value>(tws.totalTimeWarp());
              })
         .def_static("merge",
                     &merge<TWS, TWS>,

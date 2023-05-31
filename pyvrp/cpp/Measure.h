@@ -5,7 +5,7 @@
 #include <iostream>
 #include <type_traits>
 
-using value_type = int;
+using Value = int;
 
 enum class MeasureType
 {
@@ -16,9 +16,9 @@ enum class MeasureType
 };
 
 /**
- * The measure class is a thin wrapper around an underlying value of type
- * ``value_type``. The measure forms a strong type that is only explicitly
- * convertible into other arithmetic or measure types.
+ * The measure class is a thin wrapper around an underlying ``Value``. The
+ * measure forms a strong type that is only explicitly convertible into other
+ * arithmetic or measure types.
  */
 template <MeasureType _> class Measure
 {
@@ -27,17 +27,17 @@ template <MeasureType _> class Measure
     friend class Measure<MeasureType::COST>;
     friend class Measure<MeasureType::CAPACITY>;
 
-    value_type value;
+    Value value;
 
 public:
     // Default construction initialises to 0.
     Measure() = default;
 
     // This constructor takes any arithmetic type (generally useful) and casts
-    // its value to value_type.
+    // its value to Value.
     template <typename T,
               std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    Measure(T const value) : value(static_cast<value_type>(value))
+    Measure(T const value) : value(static_cast<Value>(value))
     {
     }
 
@@ -90,42 +90,42 @@ public:
 template <MeasureType Type>
 Measure<Type> operator+(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<value_type>(lhs) + static_cast<value_type>(rhs);
+    return static_cast<Value>(lhs) + static_cast<Value>(rhs);
 }
 
 template <MeasureType Type> Measure<Type> operator+(Measure<Type> const lhs)
 {
-    return +static_cast<value_type>(lhs);
+    return +static_cast<Value>(lhs);
 }
 
 template <MeasureType Type>
 Measure<Type> operator-(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<value_type>(lhs) - static_cast<value_type>(rhs);
+    return static_cast<Value>(lhs) - static_cast<Value>(rhs);
 }
 
 template <MeasureType Type> Measure<Type> operator-(Measure<Type> const lhs)
 {
-    return -static_cast<value_type>(lhs);
+    return -static_cast<Value>(lhs);
 }
 
 template <MeasureType Type>
 Measure<Type> operator*(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<value_type>(lhs) * static_cast<value_type>(rhs);
+    return static_cast<Value>(lhs) * static_cast<Value>(rhs);
 }
 
 template <MeasureType Type>
 Measure<Type> operator/(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<value_type>(lhs) / static_cast<value_type>(rhs);
+    return static_cast<Value>(lhs) / static_cast<Value>(rhs);
 }
 
 // For printing.
 template <MeasureType Type>
 std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
 {
-    return out << static_cast<value_type>(measure);
+    return out << static_cast<Value>(measure);
 }
 
 // Useful type aliases.

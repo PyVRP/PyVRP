@@ -27,7 +27,7 @@ Cost deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     Duration clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + durPrevClient >= clientLate)
-        return std::numeric_limits<value_type>::max();
+        return std::numeric_limits<Value>::max();
 
     Duration clientEarliestArrival
         = std::max(data.duration(0, client), data.client(client).twEarly);
@@ -37,7 +37,7 @@ Cost deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     Duration nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + durClientNext >= nextLate)
-        return std::numeric_limits<value_type>::max();
+        return std::numeric_limits<Value>::max();
 
     return static_cast<Cost>(data.dist(prev, client) + data.dist(client, next)
                              - data.dist(prev, next));
@@ -56,7 +56,7 @@ void crossover::greedyRepair(Routes &routes,
     for (Client client : unplanned)
     {
         InsertPos best
-            = {std::numeric_limits<value_type>::max(), &routes.front(), 0};
+            = {std::numeric_limits<Value>::max(), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
