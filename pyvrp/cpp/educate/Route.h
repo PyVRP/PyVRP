@@ -18,7 +18,7 @@ class Route
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
 
-    capacity_type load_;   // Current route load.
+    Capacity load_;        // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
     Duration timeWarp_;        // Current route time warp.
@@ -66,7 +66,7 @@ public:           // TODO make fields private
     /**
      * @return Total load on this route.
      */
-    [[nodiscard]] inline capacity_type load() const;
+    [[nodiscard]] inline Capacity load() const;
 
     /**
      * @return Total time warp on this route.
@@ -97,8 +97,7 @@ public:           // TODO make fields private
     /**
      * Calculates the load for segment [start, end].
      */
-    [[nodiscard]] inline capacity_type loadBetween(size_t start,
-                                                   size_t end) const;
+    [[nodiscard]] inline Capacity loadBetween(size_t start, size_t end) const;
 
     /**
      * Tests if this route overlaps with the other route, that is, whether
@@ -135,7 +134,7 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
-capacity_type Route::load() const { return load_; }
+Capacity Route::load() const { return load_; }
 
 Duration Route::timeWarp() const { return timeWarp_; }
 
@@ -171,7 +170,7 @@ Distance Route::distBetween(size_t start, size_t end) const
     return endDist - startDist;
 }
 
-capacity_type Route::loadBetween(size_t start, size_t end) const
+Capacity Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 

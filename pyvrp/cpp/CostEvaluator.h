@@ -18,14 +18,14 @@ public:
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
      */
-    [[nodiscard]] inline Cost loadPenalty(capacity_type load,
-                                          capacity_type vehicleCapacity) const;
+    [[nodiscard]] inline Cost loadPenalty(Capacity load,
+                                          Capacity vehicleCapacity) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
      * the part of the load that exceeds the vehicle capacity.
      */
-    [[nodiscard]] inline Cost loadPenaltyExcess(capacity_type excessLoad) const;
+    [[nodiscard]] inline Cost loadPenaltyExcess(Capacity excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
@@ -44,13 +44,12 @@ public:
     [[nodiscard]] Cost cost(Individual const &individual) const;
 };
 
-Cost CostEvaluator::loadPenaltyExcess(capacity_type excessLoad) const
+Cost CostEvaluator::loadPenaltyExcess(Capacity excessLoad) const
 {
     return static_cast<Cost>(excessLoad) * capacityPenalty;
 }
 
-Cost CostEvaluator::loadPenalty(capacity_type load,
-                                capacity_type vehicleCapacity) const
+Cost CostEvaluator::loadPenalty(Capacity load, Capacity vehicleCapacity) const
 {
     // Branchless for performance: when load > capacity we return the excess
     // load penalty; else zero. Note that when load - vehicleCapacity wraps

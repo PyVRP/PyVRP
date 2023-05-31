@@ -22,15 +22,15 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};            // Client visits on this route
-        Distance distance_ = 0;         // Total travel distance on this route
-        capacity_type demand_ = 0;      // Total demand served on this route
-        capacity_type excessLoad_ = 0;  // Excess demand (wrt vehicle capacity)
-        Duration duration_ = 0;         // Total travel duration on this route
-        Duration service_ = 0;          // Total service duration on this route
-        Duration timeWarp_ = 0;         // Total time warp on this route
-        Duration wait_ = 0;             // Total waiting duration on this route
-        Cost prizes_ = 0;               // Total value of prizes on this route
+        Visits visits_ = {};       // Client visits on this route
+        Distance distance_ = 0;    // Total travel distance on this route
+        Capacity demand_ = 0;      // Total demand served on this route
+        Capacity excessLoad_ = 0;  // Excess demand (wrt vehicle capacity)
+        Duration duration_ = 0;    // Total travel duration on this route
+        Duration service_ = 0;     // Total service duration on this route
+        Duration timeWarp_ = 0;    // Total time warp on this route
+        Duration wait_ = 0;        // Total waiting duration on this route
+        Cost prizes_ = 0;          // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
 
@@ -46,8 +46,8 @@ public:
 
         [[nodiscard]] Visits const &visits() const;
         [[nodiscard]] Distance distance() const;
-        [[nodiscard]] capacity_type demand() const;
-        [[nodiscard]] capacity_type excessLoad() const;
+        [[nodiscard]] Capacity demand() const;
+        [[nodiscard]] Capacity excessLoad() const;
         [[nodiscard]] Duration duration() const;
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
@@ -67,13 +67,13 @@ public:
 private:
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;          // Number of routes
-    size_t numClients_ = 0;         // Number of clients in the solution
-    Distance distance_ = 0;         // Total distance
-    capacity_type excessLoad_ = 0;  // Total excess load over all routes
-    Cost prizes_ = 0;               // Total collected prize value
-    Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
-    Duration timeWarp_ = 0;         // Total time warp over all routes
+    size_t numRoutes_ = 0;        // Number of routes
+    size_t numClients_ = 0;       // Number of clients in the solution
+    Distance distance_ = 0;       // Total distance
+    Capacity excessLoad_ = 0;     // Total excess load over all routes
+    Cost prizes_ = 0;             // Total collected prize value
+    Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
+    Duration timeWarp_ = 0;       // Total time warp over all routes
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -132,7 +132,7 @@ public:
     /**
      * @return Total excess load over all routes.
      */
-    [[nodiscard]] capacity_type excessLoad() const;
+    [[nodiscard]] Capacity excessLoad() const;
 
     /**
      * @return Total collected prize value over all routes.

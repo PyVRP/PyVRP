@@ -132,6 +132,6 @@ std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
 using Distance = Measure<MeasureType::DISTANCE>;
 using Duration = Measure<MeasureType::DURATION>;
 using Cost = Measure<MeasureType::COST>;
-using capacity_type = Measure<MeasureType::CAPACITY>;
+using Capacity = Measure<MeasureType::CAPACITY>;
 
 #endif  // MEASURE_H
