@@ -27,11 +27,13 @@ void Route::setupSector()
     if (empty())  // Note: sector has no meaning for empty routes, don't use
         return;
 
-    auto const depotData = data.client(0);
-    auto const clientData = data.client(n(depot)->client);
-    auto const angle = CircleSector::positive_mod(static_cast<int>(
-        32768. * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
-        / M_PI));
+    auto const &depotData = data.client(0);
+    auto const &clientData = data.client(n(depot)->client);
+
+    auto const diffX = static_cast<double>(clientData.x - depotData.x);
+    auto const diffY = static_cast<double>(clientData.y - depotData.y);
+    auto const angle = CircleSector::positive_mod(
+        static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
 
     sector.initialize(angle);
 
@@ -40,11 +42,12 @@ void Route::setupSector()
         auto const *node = *it;
         assert(!node->isDepot());
 
-        auto const clientData = data.client(node->client);
-        auto const angle = CircleSector::positive_mod(static_cast<int>(
-            32768.
-            * atan2(clientData.y - depotData.y, clientData.x - depotData.x)
-            / M_PI));
+        auto const &clientData = data.client(node->client);
+
+        auto const diffX = static_cast<double>(clientData.x - depotData.x);
+        auto const diffY = static_cast<double>(clientData.y - depotData.y);
+        auto const angle = CircleSector::positive_mod(
+            static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
 
         sector.extend(angle);
     }

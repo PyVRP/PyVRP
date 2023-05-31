@@ -13,14 +13,14 @@ class ProblemData
 public:
     struct Client
     {
-        int const x;                     // Coordinate X
-        int const y;                     // Coordinate Y
-        Load const demand;               // Demand
-        Duration const serviceDuration;  // Service duration
-        Duration const twEarly;          // Earliest possible arrival
-        Duration const twLate;           // Latest possible arrival
-        Cost const prize = 0;            // Prize for visiting this client
-        bool const required = true;      // Must client be in solution?
+        Coordinate const x;
+        Coordinate const y;
+        Load const demand;
+        Duration const serviceDuration;
+        Duration const twEarly;      // Earliest possible start of service
+        Duration const twLate;       // Latest possible start of service
+        Cost const prize = 0;        // Prize for visiting this client
+        bool const required = true;  // Must client be in solution?
 
         Client(int x,
                int y,

@@ -10,7 +10,8 @@ using Value = int;
 
 enum class MeasureType
 {
-    DISTANCE,
+    COORD,
+    DIST,
     DURATION,
     COST,
     LOAD,
@@ -23,9 +24,10 @@ enum class MeasureType
  */
 template <MeasureType _> class Measure
 {
-    friend class Measure<MeasureType::DISTANCE>;
-    friend class Measure<MeasureType::DURATION>;
+    friend class Measure<MeasureType::COORD>;
     friend class Measure<MeasureType::COST>;
+    friend class Measure<MeasureType::DIST>;
+    friend class Measure<MeasureType::DURATION>;
     friend class Measure<MeasureType::LOAD>;
 
     Value value;
@@ -75,9 +77,10 @@ public:
     }
 
     // Explicit conversions to other measures.
-    explicit operator Measure<MeasureType::DISTANCE>() const { return {value}; }
-    explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
+    explicit operator Measure<MeasureType::COORD>() const { return {value}; };
     explicit operator Measure<MeasureType::COST>() const { return {value}; }
+    explicit operator Measure<MeasureType::DIST>() const { return {value}; }
+    explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
     explicit operator Measure<MeasureType::LOAD>() const { return {value}; }
 
     // Comparison operators.
@@ -144,9 +147,10 @@ template <MeasureType Type> struct hash<Measure<Type>>
 }  // namespace std
 
 // Useful type aliases.
-using Distance = Measure<MeasureType::DISTANCE>;
-using Duration = Measure<MeasureType::DURATION>;
+using Coordinate = Measure<MeasureType::COORD>;
 using Cost = Measure<MeasureType::COST>;
+using Distance = Measure<MeasureType::DIST>;
+using Duration = Measure<MeasureType::DURATION>;
 using Load = Measure<MeasureType::LOAD>;
 
 #endif  // MEASURE_H

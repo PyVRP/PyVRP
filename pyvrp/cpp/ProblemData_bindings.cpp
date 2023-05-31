@@ -17,8 +17,14 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("tw_late") = 0,
              py::arg("prize") = 0,
              py::arg("required") = true)
-        .def_readonly("x", &ProblemData::Client::x)
-        .def_readonly("y", &ProblemData::Client::y)
+        .def_property_readonly("x",
+                               [](ProblemData::Client const &client) {
+                                   return static_cast<Value>(client.x);
+                               })
+        .def_property_readonly("y",
+                               [](ProblemData::Client const &client) {
+                                   return static_cast<Value>(client.y);
+                               })
         .def_property_readonly("demand",
                                [](ProblemData::Client const &client) {
                                    return static_cast<Value>(client.demand);
