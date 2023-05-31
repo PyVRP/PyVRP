@@ -15,6 +15,11 @@ enum class MeasureType
     CAPACITY,
 };
 
+/**
+ * The measure class is a thin wrapper around an underlying value of type
+ * ``value_type``. The measure forms a strong type that is only explicitly
+ * convertible into other arithmetic or measure types.
+ */
 template <MeasureType _> class Measure
 {
     friend class Measure<MeasureType::DISTANCE>;
