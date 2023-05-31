@@ -130,7 +130,7 @@ std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
 
 // Useful type aliases.
 using Distance = Measure<MeasureType::DISTANCE>;
-using duration_type = Measure<MeasureType::DURATION>;
+using Duration = Measure<MeasureType::DURATION>;
 using cost_type = Measure<MeasureType::COST>;
 using capacity_type = Measure<MeasureType::CAPACITY>;
 

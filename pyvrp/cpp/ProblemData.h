@@ -13,14 +13,14 @@ class ProblemData
 public:
     struct Client
     {
-        int const x;                          // Coordinate X
-        int const y;                          // Coordinate Y
-        capacity_type const demand;           // Demand
-        duration_type const serviceDuration;  // Service duration
-        duration_type const twEarly;          // Earliest possible arrival
-        duration_type const twLate;           // Latest possible arrival
-        cost_type const prize = 0;            // Prize for visiting this client
-        bool const required = true;           // Must client be in solution?
+        int const x;                     // Coordinate X
+        int const y;                     // Coordinate Y
+        capacity_type const demand;      // Demand
+        Duration const serviceDuration;  // Service duration
+        Duration const twEarly;          // Earliest possible arrival
+        Duration const twLate;           // Latest possible arrival
+        cost_type const prize = 0;       // Prize for visiting this client
+        bool const required = true;      // Must client be in solution?
 
         Client(int x,
                int y,
@@ -33,9 +33,9 @@ public:
     };
 
 private:
-    Matrix<Distance> const dist_;      // Distance matrix (+depot)
-    Matrix<duration_type> const dur_;  // Duration matrix (+depot)
-    std::vector<Client> clients_;      // Client (+depot) information
+    Matrix<Distance> const dist_;  // Distance matrix (+depot)
+    Matrix<Duration> const dur_;   // Duration matrix (+depot)
+    std::vector<Client> clients_;  // Client (+depot) information
 
     size_t const numClients_;
     size_t const numVehicles_;
@@ -69,8 +69,7 @@ public:
      * @param second Second client.
      * @return Travel duration from the first to the second client.
      */
-    [[nodiscard]] inline duration_type duration(size_t first,
-                                                size_t second) const;
+    [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
 
     /**
      * @return The full travel distance matrix.
@@ -80,7 +79,7 @@ public:
     /**
      * @return The full travel duration matrix.
      */
-    [[nodiscard]] Matrix<duration_type> const &durationMatrix() const;
+    [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
 
     /**
      * @return Total number of clients in this instance.
@@ -112,7 +111,7 @@ public:
                 size_t numVehicles,
                 capacity_type vehicleCap,
                 Matrix<Distance> const distMat,
-                Matrix<duration_type> const durMat);
+                Matrix<Duration> const durMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const
@@ -125,7 +124,7 @@ Distance ProblemData::dist(size_t first, size_t second) const
     return dist_(first, second);
 }
 
-duration_type ProblemData::duration(size_t first, size_t second) const
+Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }

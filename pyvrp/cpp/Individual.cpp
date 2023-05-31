@@ -60,7 +60,7 @@ cost_type Individual::prizes() const { return prizes_; }
 
 cost_type Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
 
-duration_type Individual::timeWarp() const { return timeWarp_; }
+Duration Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours()
 {
@@ -161,7 +161,7 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     if (visits_.empty())
         return;
 
-    duration_type time = data.depot().twEarly;
+    Duration time = data.depot().twEarly;
     int prevClient = 0;
 
     for (size_t idx = 0; idx != size(); ++idx)
@@ -200,7 +200,7 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     duration_ += data.duration(last, 0);
 
     time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max<duration_type>(time - data.depot().twLate, 0);
+    timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
 
     excessLoad_ = data.vehicleCapacity() < demand_
                       ? demand_ - data.vehicleCapacity()
@@ -238,13 +238,13 @@ capacity_type Individual::Route::demand() const { return demand_; }
 
 capacity_type Individual::Route::excessLoad() const { return excessLoad_; }
 
-duration_type Individual::Route::duration() const { return duration_; }
+Duration Individual::Route::duration() const { return duration_; }
 
-duration_type Individual::Route::serviceDuration() const { return service_; }
+Duration Individual::Route::serviceDuration() const { return service_; }
 
-duration_type Individual::Route::timeWarp() const { return timeWarp_; }
+Duration Individual::Route::timeWarp() const { return timeWarp_; }
 
-duration_type Individual::Route::waitDuration() const { return wait_; }
+Duration Individual::Route::waitDuration() const { return wait_; }
 
 cost_type Individual::Route::prizes() const { return prizes_; }
 

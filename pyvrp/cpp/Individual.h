@@ -26,10 +26,10 @@ public:
         Distance distance_ = 0;         // Total travel distance on this route
         capacity_type demand_ = 0;      // Total demand served on this route
         capacity_type excessLoad_ = 0;  // Excess demand (wrt vehicle capacity)
-        duration_type duration_ = 0;    // Total travel duration on this route
-        duration_type service_ = 0;     // Total service duration on this route
-        duration_type timeWarp_ = 0;    // Total time warp on this route
-        duration_type wait_ = 0;        // Total waiting duration on this route
+        Duration duration_ = 0;         // Total travel duration on this route
+        Duration service_ = 0;          // Total service duration on this route
+        Duration timeWarp_ = 0;         // Total time warp on this route
+        Duration wait_ = 0;             // Total waiting duration on this route
         cost_type prizes_ = 0;          // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
@@ -48,10 +48,10 @@ public:
         [[nodiscard]] Distance distance() const;
         [[nodiscard]] capacity_type demand() const;
         [[nodiscard]] capacity_type excessLoad() const;
-        [[nodiscard]] duration_type duration() const;
-        [[nodiscard]] duration_type serviceDuration() const;
-        [[nodiscard]] duration_type timeWarp() const;
-        [[nodiscard]] duration_type waitDuration() const;
+        [[nodiscard]] Duration duration() const;
+        [[nodiscard]] Duration serviceDuration() const;
+        [[nodiscard]] Duration timeWarp() const;
+        [[nodiscard]] Duration waitDuration() const;
         [[nodiscard]] cost_type prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;
@@ -73,7 +73,7 @@ private:
     capacity_type excessLoad_ = 0;     // Total excess load over all routes
     cost_type prizes_ = 0;             // Total collected prize value
     cost_type uncollectedPrizes_ = 0;  // Total uncollected prize value
-    duration_type timeWarp_ = 0;       // Total time warp over all routes
+    Duration timeWarp_ = 0;            // Total time warp over all routes
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -147,7 +147,7 @@ public:
     /**
      * @return Total time warp over all routes.
      */
-    [[nodiscard]] duration_type timeWarp() const;
+    [[nodiscard]] Duration timeWarp() const;
 
     bool operator==(Individual const &other) const;
 

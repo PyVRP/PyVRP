@@ -31,7 +31,7 @@ public:
     /**
      * Computes the time warp penalty for the given time warp.
      */
-    [[nodiscard]] inline cost_type twPenalty(duration_type timeWarp) const;
+    [[nodiscard]] inline cost_type twPenalty(Duration timeWarp) const;
 
     /**
      * Computes a smoothed objective (penalised cost) for a given individual.
@@ -61,7 +61,7 @@ cost_type CostEvaluator::loadPenalty(capacity_type load,
     return cost_type(load > vehicleCapacity) * penalty;
 }
 
-cost_type CostEvaluator::twPenalty(duration_type timeWarp) const
+cost_type CostEvaluator::twPenalty(Duration timeWarp) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return 0;

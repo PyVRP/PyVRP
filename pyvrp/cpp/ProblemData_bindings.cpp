@@ -52,7 +52,7 @@ PYBIND11_MODULE(_ProblemData, m)
                          std::vector<std::vector<int>> const &dist,
                          std::vector<std::vector<int>> const &dur) {
                  Matrix<Distance> distMat(clients.size());
-                 Matrix<duration_type> durMat(clients.size());
+                 Matrix<Duration> durMat(clients.size());
 
                  for (size_t row = 0; row != clients.size(); ++row)
                      for (size_t col = 0; col != clients.size(); ++col)

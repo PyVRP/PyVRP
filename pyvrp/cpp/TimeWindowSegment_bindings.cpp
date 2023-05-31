@@ -7,11 +7,11 @@ using TWS = TimeWindowSegment;
 
 template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
 {
-    Matrix<duration_type> durMat(mat.numRows(), mat.numCols());
+    Matrix<Duration> durMat(mat.numRows(), mat.numCols());
 
-    // Copy the Matrix<int> over to Matrix<duration_type>. That's not very
-    // efficient, but since this class is internal to PyVRP that does not
-    // matter much. We only expose it to Python for testing.
+    // Copy the Matrix<int> over to Matrix<Duration>. That's not very efficient,
+    // but since this class is internal to PyVRP that does not matter much. We
+    // only expose it to Python for testing.
     for (size_t row = 0; row != durMat.numRows(); ++row)
         for (size_t col = 0; col != durMat.numCols(); ++col)
             durMat(row, col) = mat(row, col);
