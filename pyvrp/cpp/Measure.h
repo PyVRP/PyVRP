@@ -84,6 +84,9 @@ public:
     auto operator==(Measure const &other) const { return value == other.value; }
     auto operator<=>(Measure const &other) const
     {
+        // TODO if we implement inexact equality for doubles, we also need to
+        //  update hashing to avoid two objects comparing equal with different
+        //  hash values).
         return value <=> other.value;
     }
 };
