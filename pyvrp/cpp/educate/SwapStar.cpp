@@ -182,31 +182,25 @@ cost_type SwapStar::evaluate(Route *routeU,
         = data.dist(best.VAfter->client, best.V->client)
           + data.dist(best.UAfter->client, best.U->client);
 
-    cost_type deltaCost = static_cast<cost_type>(proposed - current);
+    distance_type deltaDist = proposed - current;
 
     if (best.VAfter == p(best.U))
-    {
         // Insert in place of U
-        deltaCost += static_cast<cost_type>(
-            data.dist(best.V->client, n(best.U)->client));
-    }
+        deltaDist += data.dist(best.V->client, n(best.U)->client);
     else
-    {
-        deltaCost += static_cast<cost_type>(
-            data.dist(best.V->client, n(best.VAfter)->client)
-            + data.dist(p(best.U)->client, n(best.U)->client)
-            - data.dist(best.VAfter->client, n(best.VAfter)->client));
-    }
+        deltaDist += data.dist(best.V->client, n(best.VAfter)->client)
+                     + data.dist(p(best.U)->client, n(best.U)->client)
+                     - data.dist(best.VAfter->client, n(best.VAfter)->client);
 
     if (best.UAfter == p(best.V))
         // Insert in place of V
-        deltaCost += static_cast<cost_type>(
-            data.dist(best.U->client, n(best.V)->client));
+        deltaDist += data.dist(best.U->client, n(best.V)->client);
     else
-        deltaCost += static_cast<cost_type>(
-            data.dist(best.U->client, n(best.UAfter)->client)
-            + data.dist(p(best.V)->client, n(best.V)->client)
-            - data.dist(best.UAfter->client, n(best.UAfter)->client));
+        deltaDist += data.dist(best.U->client, n(best.UAfter)->client)
+                     + data.dist(p(best.V)->client, n(best.V)->client)
+                     - data.dist(best.UAfter->client, n(best.UAfter)->client);
+
+    cost_type deltaCost = static_cast<cost_type>(deltaDist);
 
     // It is not possible to have UAfter == V or VAfter == U, so the positions
     // are always strictly different
