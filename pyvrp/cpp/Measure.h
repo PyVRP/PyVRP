@@ -2,6 +2,7 @@
 #define MEASURE_H
 
 #include <compare>
+#include <iostream>
 #include <type_traits>
 
 using value_type = int;
@@ -113,6 +114,13 @@ template <MeasureType Type>
 Measure<Type> operator/(Measure<Type> const lhs, Measure<Type> const rhs)
 {
     return static_cast<value_type>(lhs) / static_cast<value_type>(rhs);
+}
+
+// For printing.
+template <MeasureType Type>
+std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
+{
+    return out << static_cast<value_type>(measure);
 }
 
 // Useful type aliases.

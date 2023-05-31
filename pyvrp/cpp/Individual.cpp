@@ -270,8 +270,8 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
-    out << "Distance: " << static_cast<value_type>(indiv.distance()) << '\n';
-    out << "Prizes: " << static_cast<value_type>(indiv.prizes()) << '\n';
+    out << "Distance: " << indiv.distance() << '\n';
+    out << "Prizes: " << indiv.prizes() << '\n';
     return out;
 }
 
