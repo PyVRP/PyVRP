@@ -73,7 +73,7 @@ void Route::update()
     auto const oldNodes = nodes;
     setupNodes();
 
-    Capacity load = 0;
+    Load load = 0;
     Distance distance = 0;
     Distance reverseDistance = 0;
     bool foundChange = false;

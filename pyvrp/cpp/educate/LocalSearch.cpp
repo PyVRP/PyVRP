@@ -205,10 +205,13 @@ void LocalSearch::maybeInsert(Node *U,
     deltaCost
         -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
 
-    if (deltaCost >= 0)  // adding U will likely not lower time warp,
-        return;          // so we can stop here.
+    // Adding U cannot decrease time warp in V's router enough to offset the
+    // deltaCost in either of these cases.
+    if ((V->route->isFeasible() && deltaCost >= 0)
+        || deltaCost >= costEvaluator.twPenalty(V->route->timeWarp()))
+        return;
 
-    auto vTWS
+    auto const vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
