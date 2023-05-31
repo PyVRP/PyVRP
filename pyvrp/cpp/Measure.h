@@ -61,6 +61,12 @@ public:
         return *this;
     }
 
+    Measure &operator/=(Measure const &rhs)
+    {
+        this->value /= rhs.value;
+        return *this;
+    }
+
     // Explicit conversions to other measures.
     explicit operator Measure<MeasureType::DISTANCE>() const { return {value}; }
     explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
