@@ -1,3 +1,4 @@
+from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_raises
 from pytest import mark
 
@@ -72,3 +73,32 @@ def test_depot_is_first_client():
     )
 
     assert_(data.depot() is data.client(0))
+
+
+def test_matrix_access():
+    """
+    Tests that the ``duration()`` and ``dist()`` methods correctly index the
+    underlying duration and distance matrices.
+    """
+    gen = default_rng(seed=42)
+    size = 6
+
+    dist_mat = gen.integers(500, size=(size, size))
+    dur_mat = gen.integers(500, size=(size, size))
+    clients = [
+        Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10)
+        for _ in range(size)
+    ]
+
+    data = ProblemData(
+        clients=clients,
+        num_vehicles=1,
+        vehicle_cap=1,
+        distance_matrix=dist_mat,  # type: ignore
+        duration_matrix=dur_mat,  # type: ignore
+    )
+
+    for frm in range(size):
+        for to in range(size):
+            assert_allclose(dur_mat[frm, to], data.duration(frm, to))
+            assert_allclose(dist_mat[frm, to], data.dist(frm, to))
