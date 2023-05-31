@@ -17,6 +17,20 @@ enum class MeasureType
     LOAD,
 };
 
+// Forward declaration so we can define the relevant type aliases early.
+template <MeasureType _> class Measure;
+
+// Type aliases. These are used throughout the program.
+using Coordinate = Measure<MeasureType::COORD>;
+using Cost = Measure<MeasureType::COST>;
+using Distance = Measure<MeasureType::DIST>;
+using Duration = Measure<MeasureType::DURATION>;
+using Load = Measure<MeasureType::LOAD>;
+
+//
+//                 EVERYTHING BELOW THIS IS IMPLEMENTATION
+//
+
 /**
  * The measure class is a thin wrapper around an underlying ``Value``. The
  * measure forms a strong type that is only explicitly convertible into other
@@ -24,12 +38,6 @@ enum class MeasureType
  */
 template <MeasureType _> class Measure
 {
-    friend class Measure<MeasureType::COORD>;
-    friend class Measure<MeasureType::COST>;
-    friend class Measure<MeasureType::DIST>;
-    friend class Measure<MeasureType::DURATION>;
-    friend class Measure<MeasureType::LOAD>;
-
     Value value;
 
 public:
@@ -44,6 +52,12 @@ public:
     {
     }
 
+    // Explicit conversions to other measures.
+    template <MeasureType Other> explicit operator Measure<Other>() const
+    {
+        return {value};
+    }
+
     // Explicit conversions of the underlying value to other arithmetic types.
     template <typename T,
               std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
@@ -52,48 +66,64 @@ public:
         return static_cast<T>(value);
     }
 
-    Measure &operator+=(Measure const &rhs)
-    {
-        this->value += rhs.value;
-        return *this;
-    }
-
-    Measure &operator-=(Measure const &rhs)
-    {
-        this->value -= rhs.value;
-        return *this;
-    }
-
-    Measure &operator*=(Measure const &rhs)
-    {
-        this->value *= rhs.value;
-        return *this;
-    }
-
-    Measure &operator/=(Measure const &rhs)
-    {
-        this->value /= rhs.value;
-        return *this;
-    }
-
-    // Explicit conversions to other measures.
-    explicit operator Measure<MeasureType::COORD>() const { return {value}; };
-    explicit operator Measure<MeasureType::COST>() const { return {value}; }
-    explicit operator Measure<MeasureType::DIST>() const { return {value}; }
-    explicit operator Measure<MeasureType::DURATION>() const { return {value}; }
-    explicit operator Measure<MeasureType::LOAD>() const { return {value}; }
+    // In-place unary operators.
+    Measure &operator+=(Measure const &rhs);
+    Measure &operator-=(Measure const &rhs);
+    Measure &operator*=(Measure const &rhs);
+    Measure &operator/=(Measure const &rhs);
 
     // Comparison operators.
-    auto operator==(Measure const &other) const { return value == other.value; }
-    auto operator<=>(Measure const &other) const
-    {
-        // TODO if we implement inexact equality for doubles, we also need to
-        //  update hashing to avoid two objects comparing equal with different
-        //  hash values).
-        return value <=> other.value;
-    }
+    auto operator==(Measure const &other) const;
+    auto operator<=>(Measure const &other) const;
 };
 
+// In-place unary operators.
+template <MeasureType Type>
+Measure<Type> &Measure<Type>::operator+=(Measure<Type> const &rhs)
+{
+    this->value += rhs.value;
+    return *this;
+}
+
+template <MeasureType Type>
+Measure<Type> &Measure<Type>::operator-=(Measure<Type> const &rhs)
+{
+    this->value -= rhs.value;
+    return *this;
+}
+
+template <MeasureType Type>
+Measure<Type> &Measure<Type>::operator*=(Measure<Type> const &rhs)
+{
+    this->value *= rhs.value;
+    return *this;
+}
+
+template <MeasureType Type>
+Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
+{
+    this->value /= rhs.value;
+    return *this;
+}
+
+// Comparison operators.
+
+template <MeasureType Type>
+auto Measure<Type>::operator==(Measure<Type> const &other) const
+{
+    // TODO if we implement inexact equality for doubles, we also need to
+    //  update hashing to avoid two objects comparing equal but having
+    //  different hash values.
+    return value == other.value;
+}
+
+template <MeasureType Type>
+auto Measure<Type>::operator<=>(Measure<Type> const &other) const
+{
+    return value <=> other.value;
+}
+
+// Free-standing binary operators.
 template <MeasureType Type>
 Measure<Type> operator+(Measure<Type> const lhs, Measure<Type> const rhs)
 {
@@ -145,12 +175,5 @@ template <MeasureType Type> struct hash<Measure<Type>>
     }
 };
 }  // namespace std
-
-// Useful type aliases.
-using Coordinate = Measure<MeasureType::COORD>;
-using Cost = Measure<MeasureType::COST>;
-using Distance = Measure<MeasureType::DIST>;
-using Duration = Measure<MeasureType::DURATION>;
-using Load = Measure<MeasureType::LOAD>;
 
 #endif  // MEASURE_H
