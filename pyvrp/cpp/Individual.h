@@ -30,7 +30,7 @@ public:
         Duration service_ = 0;          // Total service duration on this route
         Duration timeWarp_ = 0;         // Total time warp on this route
         Duration wait_ = 0;             // Total waiting duration on this route
-        cost_type prizes_ = 0;          // Total value of prizes on this route
+        Cost prizes_ = 0;               // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
 
@@ -52,7 +52,7 @@ public:
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
         [[nodiscard]] Duration waitDuration() const;
-        [[nodiscard]] cost_type prizes() const;
+        [[nodiscard]] Cost prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;
 
@@ -67,13 +67,13 @@ public:
 private:
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;             // Number of routes
-    size_t numClients_ = 0;            // Number of clients in the solution
-    Distance distance_ = 0;            // Total distance
-    capacity_type excessLoad_ = 0;     // Total excess load over all routes
-    cost_type prizes_ = 0;             // Total collected prize value
-    cost_type uncollectedPrizes_ = 0;  // Total uncollected prize value
-    Duration timeWarp_ = 0;            // Total time warp over all routes
+    size_t numRoutes_ = 0;          // Number of routes
+    size_t numClients_ = 0;         // Number of clients in the solution
+    Distance distance_ = 0;         // Total distance
+    capacity_type excessLoad_ = 0;  // Total excess load over all routes
+    Cost prizes_ = 0;               // Total collected prize value
+    Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
+    Duration timeWarp_ = 0;         // Total time warp over all routes
 
     Routes routes_;  // Routes - only the first numRoutes_ are non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -137,12 +137,12 @@ public:
     /**
      * @return Total collected prize value over all routes.
      */
-    [[nodiscard]] cost_type prizes() const;
+    [[nodiscard]] Cost prizes() const;
 
     /**
      * @return Total prize value of all unvisited clients.
      */
-    [[nodiscard]] cost_type uncollectedPrizes() const;
+    [[nodiscard]] Cost uncollectedPrizes() const;
 
     /**
      * @return Total time warp over all routes.

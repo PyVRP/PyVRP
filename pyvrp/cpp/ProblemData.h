@@ -19,7 +19,7 @@ public:
         Duration const serviceDuration;  // Service duration
         Duration const twEarly;          // Earliest possible arrival
         Duration const twLate;           // Latest possible arrival
-        cost_type const prize = 0;       // Prize for visiting this client
+        Cost const prize = 0;            // Prize for visiting this client
         bool const required = true;      // Must client be in solution?
 
         Client(int x,

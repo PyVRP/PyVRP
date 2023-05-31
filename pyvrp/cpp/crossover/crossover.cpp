@@ -11,14 +11,13 @@ namespace
 {
 struct InsertPos  // best insert position, used to plan unplanned clients
 {
-    cost_type deltaCost;
+    Cost deltaCost;
     Route *route;
     size_t offset;
 };
 
 // Evaluates the cost change of inserting client between prev and next.
-cost_type
-deltaCost(Client client, Client prev, Client next, ProblemData const &data)
+Cost deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
     Duration prevEarliestArrival
         = std::max(data.duration(0, prev), data.client(prev).twEarly);
@@ -40,9 +39,8 @@ deltaCost(Client client, Client prev, Client next, ProblemData const &data)
     if (clientEarliestFinish + durClientNext >= nextLate)
         return std::numeric_limits<value_type>::max();
 
-    return static_cast<cost_type>(data.dist(prev, client)
-                                  + data.dist(client, next)
-                                  - data.dist(prev, next));
+    return static_cast<Cost>(data.dist(prev, client) + data.dist(client, next)
+                             - data.dist(prev, next));
 }
 }  // namespace
 

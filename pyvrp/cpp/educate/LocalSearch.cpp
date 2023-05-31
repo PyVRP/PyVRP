@@ -198,7 +198,7 @@ void LocalSearch::maybeInsert(Node *U,
                                - data.dist(V->client, n(V)->client);
 
     auto const &uClient = data.client(U->client);
-    cost_type deltaCost = static_cast<cost_type>(deltaDist) - uClient.prize;
+    Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
                                            data.vehicleCapacity());
@@ -230,7 +230,7 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
                                - data.dist(U->client, n(U)->client);
 
     auto const &uClient = data.client(U->client);
-    cost_type deltaCost = static_cast<cost_type>(deltaDist) + uClient.prize;
+    Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
                                            data.vehicleCapacity());

@@ -14,19 +14,19 @@ class TwoOpt : public LocalSearchOperator<Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
-    cost_type
+    Cost
     evalWithinRoute(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
 
-    cost_type evalBetweenRoutes(Node *U,
-                                Node *V,
-                                CostEvaluator const &costEvaluator) const;
+    Cost evalBetweenRoutes(Node *U,
+                           Node *V,
+                           CostEvaluator const &costEvaluator) const;
 
     void applyWithinRoute(Node *U, Node *V) const;
 
     void applyBetweenRoutes(Node *U, Node *V) const;
 
 public:
-    cost_type
+    Cost
     evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Node *U, Node *V) const override;

@@ -6,9 +6,9 @@
 
 using TWS = TimeWindowSegment;
 
-cost_type MoveTwoClientsReversed::evaluate(Node *U,
-                                           Node *V,
-                                           CostEvaluator const &costEvaluator)
+Cost MoveTwoClientsReversed::evaluate(Node *U,
+                                      Node *V,
+                                      CostEvaluator const &costEvaluator)
 {
     if (U == n(V) || n(U) == V || n(U)->isDepot())
         return 0;
@@ -25,7 +25,7 @@ cost_type MoveTwoClientsReversed::evaluate(Node *U,
                               + data.dist(n(U)->client, U->client)
                               + data.dist(U->client, n(V)->client);
 
-    cost_type deltaCost = static_cast<cost_type>(proposed - current);
+    Cost deltaCost = static_cast<Cost>(proposed - current);
 
     if (U->route != V->route)
     {

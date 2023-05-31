@@ -30,8 +30,7 @@ public:
      * cannot become negative at all. In that case, the returned (non-negative)
      * cost delta does not constitute a full evaluation.
      */
-    virtual cost_type
-    evaluate(Arg *U, Arg *V, CostEvaluator const &costEvaluator)
+    virtual Cost evaluate(Arg *U, Arg *V, CostEvaluator const &costEvaluator)
     {
         return 0;
     }

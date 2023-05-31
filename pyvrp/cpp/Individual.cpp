@@ -11,7 +11,7 @@ using Routes = std::vector<Individual::Route>;
 
 void Individual::evaluate(ProblemData const &data)
 {
-    cost_type allPrizes = 0;
+    Cost allPrizes = 0;
     for (size_t client = 1; client <= data.numClients(); ++client)
         allPrizes += data.client(client).prize;
 
@@ -56,9 +56,9 @@ Distance Individual::distance() const { return distance_; }
 
 capacity_type Individual::excessLoad() const { return excessLoad_; }
 
-cost_type Individual::prizes() const { return prizes_; }
+Cost Individual::prizes() const { return prizes_; }
 
-cost_type Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
+Cost Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Individual::timeWarp() const { return timeWarp_; }
 
@@ -246,7 +246,7 @@ Duration Individual::Route::timeWarp() const { return timeWarp_; }
 
 Duration Individual::Route::waitDuration() const { return wait_; }
 
-cost_type Individual::Route::prizes() const { return prizes_; }
+Cost Individual::Route::prizes() const { return prizes_; }
 
 std::pair<double, double> const &Individual::Route::centroid() const
 {

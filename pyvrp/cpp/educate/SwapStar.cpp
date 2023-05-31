@@ -14,7 +14,7 @@ void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
                                    - data.dist(U->client, n(U)->client);
 
         removalCosts(R1->idx, U->client)
-            = static_cast<cost_type>(deltaDist)
+            = static_cast<Cost>(deltaDist)
               + costEvaluator.twPenalty(twData.totalTimeWarp())
               - costEvaluator.twPenalty(R1->timeWarp());
     }
@@ -37,9 +37,9 @@ void SwapStar::updateInsertionCost(Route *R,
                          + data.dist(U->client, n(R->depot)->client)
                          - data.dist(0, n(R->depot)->client);
 
-    cost_type deltaCost = static_cast<cost_type>(deltaDist)
-                          + costEvaluator.twPenalty(twData.totalTimeWarp())
-                          - costEvaluator.twPenalty(R->timeWarp());
+    Cost deltaCost = static_cast<Cost>(deltaDist)
+                     + costEvaluator.twPenalty(twData.totalTimeWarp())
+                     - costEvaluator.twPenalty(R->timeWarp());
 
     insertPositions.maybeAdd(deltaCost, R->depot);
 
@@ -53,7 +53,7 @@ void SwapStar::updateInsertionCost(Route *R,
                     + data.dist(U->client, n(V)->client)
                     - data.dist(V->client, n(V)->client);
 
-        deltaCost = static_cast<cost_type>(deltaDist)
+        deltaCost = static_cast<Cost>(deltaDist)
                     + costEvaluator.twPenalty(twData.totalTimeWarp())
                     - costEvaluator.twPenalty(R->timeWarp());
 
@@ -61,7 +61,7 @@ void SwapStar::updateInsertionCost(Route *R,
     }
 }
 
-std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
+std::pair<Cost, Node *> SwapStar::getBestInsertPoint(
     Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     auto &best_ = cache(V->route->idx, U->client);
@@ -80,10 +80,9 @@ std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
     Distance const deltaDist = data.dist(p(V)->client, U->client)
                                + data.dist(U->client, n(V)->client)
                                - data.dist(p(V)->client, n(V)->client);
-    cost_type const deltaCost
-        = static_cast<cost_type>(deltaDist)
-          + costEvaluator.twPenalty(twData.totalTimeWarp())
-          - costEvaluator.twPenalty(V->route->timeWarp());
+    Cost const deltaCost = static_cast<Cost>(deltaDist)
+                           + costEvaluator.twPenalty(twData.totalTimeWarp())
+                           - costEvaluator.twPenalty(V->route->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -94,9 +93,9 @@ void SwapStar::init(Individual const &indiv)
     std::fill(updated.begin(), updated.end(), true);
 }
 
-cost_type SwapStar::evaluate(Route *routeU,
-                             Route *routeV,
-                             CostEvaluator const &costEvaluator)
+Cost SwapStar::evaluate(Route *routeU,
+                        Route *routeV,
+                        CostEvaluator const &costEvaluator)
 {
     best = {};
 
@@ -121,7 +120,7 @@ cost_type SwapStar::evaluate(Route *routeU,
     for (Node *U = n(routeU->depot); !U->isDepot(); U = n(U))
         for (Node *V = n(routeV->depot); !V->isDepot(); V = n(V))
         {
-            cost_type deltaCost = 0;
+            Cost deltaCost = 0;
 
             auto const uDemand = data.client(U->client).demand;
             auto const vDemand = data.client(V->client).demand;
@@ -198,7 +197,7 @@ cost_type SwapStar::evaluate(Route *routeU,
                      + data.dist(p(best.V)->client, n(best.V)->client)
                      - data.dist(best.UAfter->client, n(best.UAfter)->client);
 
-    cost_type deltaCost = static_cast<cost_type>(deltaDist);
+    Cost deltaCost = static_cast<Cost>(deltaDist);
 
     // It is not possible to have UAfter == V or VAfter == U, so the positions
     // are always strictly different
