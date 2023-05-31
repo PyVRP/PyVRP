@@ -52,7 +52,7 @@ bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
 
-distance_type Individual::distance() const { return distance_; }
+Distance Individual::distance() const { return distance_; }
 
 capacity_type Individual::excessLoad() const { return excessLoad_; }
 
@@ -232,7 +232,7 @@ Visits::const_iterator Individual::Route::cend() const
 
 Visits const &Individual::Route::visits() const { return visits_; }
 
-distance_type Individual::Route::distance() const { return distance_; }
+Distance Individual::Route::distance() const { return distance_; }
 
 capacity_type Individual::Route::demand() const { return demand_; }
 

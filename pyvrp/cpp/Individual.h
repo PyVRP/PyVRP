@@ -23,7 +23,7 @@ public:
         using Visits = std::vector<Client>;
 
         Visits visits_ = {};            // Client visits on this route
-        distance_type distance_ = 0;    // Total travel distance on this route
+        Distance distance_ = 0;         // Total travel distance on this route
         capacity_type demand_ = 0;      // Total demand served on this route
         capacity_type excessLoad_ = 0;  // Excess demand (wrt vehicle capacity)
         duration_type duration_ = 0;    // Total travel duration on this route
@@ -45,7 +45,7 @@ public:
         Visits::const_iterator cend() const;
 
         [[nodiscard]] Visits const &visits() const;
-        [[nodiscard]] distance_type distance() const;
+        [[nodiscard]] Distance distance() const;
         [[nodiscard]] capacity_type demand() const;
         [[nodiscard]] capacity_type excessLoad() const;
         [[nodiscard]] duration_type duration() const;
@@ -69,7 +69,7 @@ private:
 
     size_t numRoutes_ = 0;             // Number of routes
     size_t numClients_ = 0;            // Number of clients in the solution
-    distance_type distance_ = 0;       // Total distance
+    Distance distance_ = 0;            // Total distance
     capacity_type excessLoad_ = 0;     // Total excess load over all routes
     cost_type prizes_ = 0;             // Total collected prize value
     cost_type uncollectedPrizes_ = 0;  // Total uncollected prize value
@@ -127,7 +127,7 @@ public:
     /**
      * @return Total distance over all routes.
      */
-    [[nodiscard]] distance_type distance() const;
+    [[nodiscard]] Distance distance() const;
 
     /**
      * @return Total excess load over all routes.

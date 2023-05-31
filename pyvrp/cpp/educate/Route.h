@@ -92,8 +92,7 @@ public:           // TODO make fields private
     /**
      * Calculates the distance for segment [start, end].
      */
-    [[nodiscard]] inline distance_type distBetween(size_t start,
-                                                   size_t end) const;
+    [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
 
     /**
      * Calculates the load for segment [start, end].
@@ -160,7 +159,7 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     return tws;
 }
 
-distance_type Route::distBetween(size_t start, size_t end) const
+Distance Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 

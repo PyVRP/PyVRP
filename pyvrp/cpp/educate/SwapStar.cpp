@@ -9,9 +9,9 @@ void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
         auto twData
             = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
 
-        distance_type const deltaDist = data.dist(p(U)->client, n(U)->client)
-                                        - data.dist(p(U)->client, U->client)
-                                        - data.dist(U->client, n(U)->client);
+        Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
+                                   - data.dist(p(U)->client, U->client)
+                                   - data.dist(U->client, n(U)->client);
 
         removalCosts(R1->idx, U->client)
             = static_cast<cost_type>(deltaDist)
@@ -33,9 +33,9 @@ void SwapStar::updateInsertionCost(Route *R,
     auto twData = TWS::merge(
         data.durationMatrix(), R->depot->twBefore, U->tw, n(R->depot)->twAfter);
 
-    distance_type deltaDist = data.dist(0, U->client)
-                              + data.dist(U->client, n(R->depot)->client)
-                              - data.dist(0, n(R->depot)->client);
+    Distance deltaDist = data.dist(0, U->client)
+                         + data.dist(U->client, n(R->depot)->client)
+                         - data.dist(0, n(R->depot)->client);
 
     cost_type deltaCost = static_cast<cost_type>(deltaDist)
                           + costEvaluator.twPenalty(twData.totalTimeWarp())
@@ -77,9 +77,9 @@ std::pair<cost_type, Node *> SwapStar::getBestInsertPoint(
     auto const twData = TWS::merge(
         data.durationMatrix(), p(V)->twBefore, U->tw, n(V)->twAfter);
 
-    distance_type const deltaDist = data.dist(p(V)->client, U->client)
-                                    + data.dist(U->client, n(V)->client)
-                                    - data.dist(p(V)->client, n(V)->client);
+    Distance const deltaDist = data.dist(p(V)->client, U->client)
+                               + data.dist(U->client, n(V)->client)
+                               - data.dist(p(V)->client, n(V)->client);
     cost_type const deltaCost
         = static_cast<cost_type>(deltaDist)
           + costEvaluator.twPenalty(twData.totalTimeWarp())
@@ -172,17 +172,15 @@ cost_type SwapStar::evaluate(Route *routeU,
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
-    distance_type const current
-        = data.dist(p(best.U)->client, best.U->client)
-          + data.dist(best.U->client, n(best.U)->client)
-          + data.dist(p(best.V)->client, best.V->client)
-          + data.dist(best.V->client, n(best.V)->client);
+    Distance const current = data.dist(p(best.U)->client, best.U->client)
+                             + data.dist(best.U->client, n(best.U)->client)
+                             + data.dist(p(best.V)->client, best.V->client)
+                             + data.dist(best.V->client, n(best.V)->client);
 
-    distance_type const proposed
-        = data.dist(best.VAfter->client, best.V->client)
-          + data.dist(best.UAfter->client, best.U->client);
+    Distance const proposed = data.dist(best.VAfter->client, best.V->client)
+                              + data.dist(best.UAfter->client, best.U->client);
 
-    distance_type deltaDist = proposed - current;
+    Distance deltaDist = proposed - current;
 
     if (best.VAfter == p(best.U))
         // Insert in place of U

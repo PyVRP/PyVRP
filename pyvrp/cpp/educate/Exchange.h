@@ -87,13 +87,13 @@ cost_type Exchange<N, M>::evalRelocateMove(
     assert(posU > 0);
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    distance_type const current = U->route->distBetween(posU - 1, posU + N)
-                                  + data.dist(V->client, n(V)->client);
+    Distance const current = U->route->distBetween(posU - 1, posU + N)
+                             + data.dist(V->client, n(V)->client);
 
-    distance_type const proposed = data.dist(V->client, U->client)
-                                   + U->route->distBetween(posU, posU + N - 1)
-                                   + data.dist(endU->client, n(V)->client)
-                                   + data.dist(p(U)->client, n(endU)->client);
+    Distance const proposed = data.dist(V->client, U->client)
+                              + U->route->distBetween(posU, posU + N - 1)
+                              + data.dist(endU->client, n(V)->client)
+                              + data.dist(p(U)->client, n(endU)->client);
 
     cost_type deltaCost = static_cast<cost_type>(proposed - current);
 
@@ -179,10 +179,10 @@ cost_type Exchange<N, M>::evalSwapMove(Node *U,
 
     assert(U->route && V->route);
 
-    distance_type const current = U->route->distBetween(posU - 1, posU + N)
-                                  + V->route->distBetween(posV - 1, posV + M);
+    Distance const current = U->route->distBetween(posU - 1, posU + N)
+                             + V->route->distBetween(posV - 1, posV + M);
 
-    distance_type const proposed
+    Distance const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
         = data.dist(p(U)->client, V->client)

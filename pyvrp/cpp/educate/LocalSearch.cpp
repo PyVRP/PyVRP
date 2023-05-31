@@ -193,9 +193,9 @@ void LocalSearch::maybeInsert(Node *U,
 {
     assert(!U->route && V->route);
 
-    distance_type const deltaDist = data.dist(V->client, U->client)
-                                    + data.dist(U->client, n(V)->client)
-                                    - data.dist(V->client, n(V)->client);
+    Distance const deltaDist = data.dist(V->client, U->client)
+                               + data.dist(U->client, n(V)->client)
+                               - data.dist(V->client, n(V)->client);
 
     auto const &uClient = data.client(U->client);
     cost_type deltaCost = static_cast<cost_type>(deltaDist) - uClient.prize;
@@ -225,9 +225,9 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
-    distance_type const deltaDist = data.dist(p(U)->client, n(U)->client)
-                                    - data.dist(p(U)->client, U->client)
-                                    - data.dist(U->client, n(U)->client);
+    Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
+                               - data.dist(p(U)->client, U->client)
+                               - data.dist(U->client, n(U)->client);
 
     auto const &uClient = data.client(U->client);
     cost_type deltaCost = static_cast<cost_type>(deltaDist) + uClient.prize;

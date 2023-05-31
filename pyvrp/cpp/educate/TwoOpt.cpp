@@ -12,12 +12,12 @@ cost_type TwoOpt::evalWithinRoute(Node *U,
     if (U->position + 1 >= V->position)
         return 0;
 
-    distance_type const deltaDist = data.dist(U->client, V->client)
-                                    + data.dist(n(U)->client, n(V)->client)
-                                    + V->cumulatedReversalDistance
-                                    - data.dist(U->client, n(U)->client)
-                                    - data.dist(V->client, n(V)->client)
-                                    - n(U)->cumulatedReversalDistance;
+    Distance const deltaDist = data.dist(U->client, V->client)
+                               + data.dist(n(U)->client, n(V)->client)
+                               + V->cumulatedReversalDistance
+                               - data.dist(U->client, n(U)->client)
+                               - data.dist(V->client, n(V)->client)
+                               - n(U)->cumulatedReversalDistance;
 
     cost_type deltaCost = static_cast<cost_type>(deltaDist);
 
@@ -44,10 +44,10 @@ cost_type TwoOpt::evalBetweenRoutes(Node *U,
                                     Node *V,
                                     CostEvaluator const &costEvaluator) const
 {
-    distance_type const current = data.dist(U->client, n(U)->client)
-                                  + data.dist(V->client, n(V)->client);
-    distance_type const proposed = data.dist(U->client, n(V)->client)
-                                   + data.dist(V->client, n(U)->client);
+    Distance const current = data.dist(U->client, n(U)->client)
+                             + data.dist(V->client, n(V)->client);
+    Distance const proposed = data.dist(U->client, n(V)->client)
+                              + data.dist(V->client, n(U)->client);
 
     cost_type deltaCost = static_cast<cost_type>(proposed - current);
 

@@ -33,9 +33,9 @@ public:
     };
 
 private:
-    Matrix<distance_type> const dist_;  // Distance matrix (+depot)
-    Matrix<duration_type> const dur_;   // Duration matrix (+depot)
-    std::vector<Client> clients_;       // Client (+depot) information
+    Matrix<Distance> const dist_;      // Distance matrix (+depot)
+    Matrix<duration_type> const dur_;  // Duration matrix (+depot)
+    std::vector<Client> clients_;      // Client (+depot) information
 
     size_t const numClients_;
     size_t const numVehicles_;
@@ -60,7 +60,7 @@ public:
      * @param second Second client.
      * @return distance from the first to the second client.
      */
-    [[nodiscard]] inline distance_type dist(size_t first, size_t second) const;
+    [[nodiscard]] inline Distance dist(size_t first, size_t second) const;
 
     /**
      * Returns the travel duration between the indicated two clients.
@@ -75,7 +75,7 @@ public:
     /**
      * @return The full travel distance matrix.
      */
-    [[nodiscard]] Matrix<distance_type> const &distanceMatrix() const;
+    [[nodiscard]] Matrix<Distance> const &distanceMatrix() const;
 
     /**
      * @return The full travel duration matrix.
@@ -111,7 +111,7 @@ public:
     ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
                 capacity_type vehicleCap,
-                Matrix<distance_type> const distMat,
+                Matrix<Distance> const distMat,
                 Matrix<duration_type> const durMat);
 };
 
@@ -120,7 +120,7 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-distance_type ProblemData::dist(size_t first, size_t second) const
+Distance ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
 }

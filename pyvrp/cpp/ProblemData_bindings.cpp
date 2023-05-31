@@ -51,7 +51,7 @@ PYBIND11_MODULE(_ProblemData, m)
                          int vehicleCap,
                          std::vector<std::vector<int>> const &dist,
                          std::vector<std::vector<int>> const &dur) {
-                 Matrix<distance_type> distMat(clients.size());
+                 Matrix<Distance> distMat(clients.size());
                  Matrix<duration_type> durMat(clients.size());
 
                  for (size_t row = 0; row != clients.size(); ++row)
