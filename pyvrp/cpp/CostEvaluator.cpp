@@ -2,8 +2,7 @@
 
 #include <limits>
 
-CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
-                             unsigned int timeWarpPenalty)
+CostEvaluator::CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty)
     : capacityPenalty(capacityPenalty), timeWarpPenalty(timeWarpPenalty)
 {
 }

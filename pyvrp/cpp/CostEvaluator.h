@@ -13,7 +13,7 @@ class CostEvaluator
     Cost timeWarpPenalty;
 
 public:
-    CostEvaluator(unsigned int capacityPenalty, unsigned int timeWarpPenalty);
+    CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty);
 
     /**
      * Computes the total excess capacity penalty for the given vehicle load.
