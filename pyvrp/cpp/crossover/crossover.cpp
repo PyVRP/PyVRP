@@ -25,27 +25,35 @@ Cost deltaCost(Client client,
 #else
     auto const &clientData = data.client(client);
     auto const &prevData = data.client(prev);
-    auto const &nextData = data.client(next);
 
-    auto const prevEarly = std::max(data.duration(0, prev), prevData.twEarly);
-    auto const prevEarlyFinish = prevEarly + prevData.serviceDuration;
-    auto const arriveClient = prevEarlyFinish + data.duration(prev, client);
-
-    auto const clientEarly = std::max(arriveClient, clientData.twEarly);
-    auto const clientEarlyFinish = clientEarly + clientData.serviceDuration;
-    auto const arriveNext = clientEarlyFinish + data.duration(client, next);
-
+    auto const clientService = clientData.serviceDuration;
     auto const clientLate = clientData.twLate;
-    auto const nextLate = nextData.twLate;
-    auto const arrivePrevNext = prevEarlyFinish + data.duration(prev, next);
+    auto const nextLate = data.client(next).twLate;
 
-    auto const currTimeWarp = std::max<Duration>(arrivePrevNext - nextLate, 0);
-    auto const propTimeWarp = std::max<Duration>(arriveClient - clientLate, 0)
-                              + std::max<Duration>(arriveNext - nextLate, 0);
+    // Fastest we can be done at prev, and thus get ready to leave for client
+    auto const prevStart = std::max(data.duration(0, prev), prevData.twEarly);
+    auto const prevFinish = prevStart + prevData.serviceDuration;
+
+    // Time warp when we go directly from prev to next (current situation).
+    auto const prevNextArrive = prevFinish + data.duration(prev, next);
+    auto const currTimeWarp = std::max<Duration>(prevNextArrive - nextLate, 0);
+
+    // Determine arrival at client. This incurs some timewarp if the arrival is
+    // after client.twLate. We finish at arrival time + service. But if there
+    // is some time warp, we subtract that from the departure time at client.
+    auto const clientArrive = prevFinish + data.duration(prev, client);
+    auto const clientStart = std::max(clientArrive, clientData.twEarly);
+    auto const clientTimeWarp = std::max<Duration>(clientStart - clientLate, 0);
+    auto const clientFinish = clientStart - clientTimeWarp + clientService;
+
+    // We then continue to next, where we might arrive too late and also incur
+    // further time warp.
+    auto const nextArrive = clientFinish + data.duration(client, next);
+    auto const nextTimeWarp = std::max<Duration>(nextArrive - nextLate, 0);
 
     return static_cast<Cost>(propDist - currDist)
-           + costEvaluator.twPenalty(propTimeWarp)
-           - costEvaluator.twPenalty(currTimeWarp);
+           + costEvaluator.twPenalty(clientTimeWarp + nextTimeWarp)  // proposed
+           - costEvaluator.twPenalty(currTimeWarp);                  // current
 #endif
 }
 }  // namespace
