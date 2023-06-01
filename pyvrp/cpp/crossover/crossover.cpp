@@ -30,7 +30,7 @@ Cost deltaCost(Client client,
     auto const clientLate = clientData.twLate;
     auto const nextLate = data.client(next).twLate;
 
-    // Fastest we can be done at prev, and thus get ready to leave for client
+    // Determine the earliest time we can depart from prev.
     auto const prevStart = std::max(data.duration(0, prev), prevData.twEarly);
     auto const prevFinish = prevStart + prevData.serviceDuration;
 
