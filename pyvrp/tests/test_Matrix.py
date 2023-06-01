@@ -5,10 +5,14 @@ from pyvrp._Matrix import Matrix
 
 def test_dimension_constructor():
     square = Matrix(10)
+    assert_equal(square.num_rows, 10)
+    assert_equal(square.num_cols, 10)
     assert_equal(square.size(), 10 * 10)
     assert_equal(square.max(), 0)  # matrix initialises all zero
 
     rectangle = Matrix(10, 20)
+    assert_equal(rectangle.num_rows, 10)
+    assert_equal(rectangle.num_cols, 20)
     assert_equal(rectangle.size(), 10 * 20)
     assert_equal(rectangle.max(), 0)  # matrix initialises all zero
 

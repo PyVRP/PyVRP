@@ -222,7 +222,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
 
     data = ProblemData(
         clients=clients,
-        nb_vehicles=1,
+        num_vehicles=1,
         vehicle_cap=0,
         distance_matrix=[  # distance-wise, the best route is 0 -> 1 -> 2 -> 0.
             [0, 1, 5],

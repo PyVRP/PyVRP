@@ -150,5 +150,5 @@ double SubPopulation::Item::avgDistanceClosest() const
     for (size_t idx = 0; idx != maxSize; ++idx)
         result += proximity[idx].first;
 
-    return result / std::max(maxSize, size_t(1));
+    return result / std::max<size_t>(maxSize, 1);
 }

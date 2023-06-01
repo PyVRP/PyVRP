@@ -40,6 +40,10 @@ public:
 
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
 
+    [[nodiscard]] size_t numCols() const;
+
+    [[nodiscard]] size_t numRows() const;
+
     /**
      * @return Maximum element in the matrix.
      */
@@ -94,6 +98,10 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
 {
     return data_[cols_ * row + col];
 }
+
+template <typename T> size_t Matrix<T>::numCols() const { return cols_; }
+
+template <typename T> size_t Matrix<T>::numRows() const { return rows_; }
 
 template <typename T> T Matrix<T>::max() const
 {

@@ -77,8 +77,8 @@ def test_cost():
     # Infeasible individual
     infeas_indiv = Individual(data, [[1, 2, 3, 4]])
 
-    # C++ code represents infinity as UINT_MAX
-    INFEAS_COST = np.iinfo(np.uint32).max
+    # C++ code represents infinity using a relevant maximal value.
+    INFEAS_COST = np.iinfo(np.int32).max
     assert_equal(cost_evaluator.cost(infeas_indiv), INFEAS_COST)
     assert_equal(default_cost_evaluator.cost(infeas_indiv), INFEAS_COST)
 

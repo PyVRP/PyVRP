@@ -1,4 +1,5 @@
 #include "LocalSearch.h"
+#include "Measure.h"
 #include "TimeWindowSegment.h"
 
 #include <algorithm>
@@ -192,23 +193,24 @@ void LocalSearch::maybeInsert(Node *U,
 {
     assert(!U->route && V->route);
 
+    Distance const deltaDist = data.dist(V->client, U->client)
+                               + data.dist(U->client, n(V)->client)
+                               - data.dist(V->client, n(V)->client);
+
     auto const &uClient = data.client(U->client);
-
-    int const current = data.dist(V->client, n(V)->client);
-    int const proposed = data.dist(V->client, U->client)
-                         + data.dist(U->client, n(V)->client) - uClient.prize;
-
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
                                            data.vehicleCapacity());
     deltaCost
         -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
 
-    if (deltaCost >= V->route->timeWarp())  // adding U will likely not lower
-        return;                             // time warp, so we can stop here.
+    // If this is true, adding U cannot decrease time warp in V's route enough
+    // to offset the deltaCost.
+    if (deltaCost >= costEvaluator.twPenalty(V->route->timeWarp()))
+        return;
 
-    auto vTWS
+    auto const vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
@@ -225,14 +227,12 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
+    Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
+                               - data.dist(p(U)->client, U->client)
+                               - data.dist(U->client, n(U)->client);
+
     auto const &uClient = data.client(U->client);
-
-    int const current = data.dist(p(U)->client, U->client)
-                        + data.dist(U->client, n(U)->client) - uClient.prize;
-
-    int const proposed = data.dist(p(U)->client, n(U)->client);
-
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
                                            data.vehicleCapacity());

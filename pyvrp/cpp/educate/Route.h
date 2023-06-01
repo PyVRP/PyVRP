@@ -3,6 +3,7 @@
 
 #include "CircleSector.h"
 #include "Node.h"
+#include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
 #include <array>
@@ -17,10 +18,10 @@ class Route
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
 
-    int load_;             // Current route load.
+    Load load_;            // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
-    int timeWarp_;             // Current route time warp.
+    Duration timeWarp_;        // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
@@ -65,12 +66,12 @@ public:           // TODO make fields private
     /**
      * @return Total load on this route.
      */
-    [[nodiscard]] inline int load() const;
+    [[nodiscard]] inline Load load() const;
 
     /**
      * @return Total time warp on this route.
      */
-    [[nodiscard]] inline int timeWarp() const;
+    [[nodiscard]] inline Duration timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -91,12 +92,12 @@ public:           // TODO make fields private
     /**
      * Calculates the distance for segment [start, end].
      */
-    [[nodiscard]] inline int distBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
 
     /**
      * Calculates the load for segment [start, end].
      */
-    [[nodiscard]] inline int loadBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
      * Tests if this route overlaps with the other route, that is, whether
@@ -133,9 +134,9 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
-int Route::load() const { return load_; }
+Load Route::load() const { return load_; }
 
-int Route::timeWarp() const { return timeWarp_; }
+Duration Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 
@@ -157,7 +158,7 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     return tws;
 }
 
-int Route::distBetween(size_t start, size_t end) const
+Distance Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
@@ -169,7 +170,7 @@ int Route::distBetween(size_t start, size_t end) const
     return endDist - startDist;
 }
 
-int Route::loadBetween(size_t start, size_t end) const
+Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 

@@ -20,8 +20,8 @@ double routeAngle(ProblemData const &data, Route const &route)
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
     auto const [routeX, routeY] = route.centroid();
-    auto const dx = routeX - data.depot().x;
-    auto const dy = routeY - data.depot().y;
+    auto const dx = routeX - static_cast<double>(data.depot().x);
+    auto const dy = routeY - static_cast<double>(data.depot().y);
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 

@@ -29,16 +29,17 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
     inline bool adjacent(Node *U, Node *V) const;
 
     // Special case that's applied when M == 0
-    int evalRelocateMove(Node *U,
-                         Node *V,
-                         CostEvaluator const &costEvaluator) const;
+    Cost evalRelocateMove(Node *U,
+                          Node *V,
+                          CostEvaluator const &costEvaluator) const;
 
     // Applied when M != 0
-    int
+    Cost
     evalSwapMove(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
 
 public:
-    int evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
+    Cost
+    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Node *U, Node *V) const override;
 };
@@ -62,7 +63,7 @@ bool Exchange<N, M>::overlap(Node *U, Node *V) const
     return U->route == V->route
         // We need max(M, 1) here because when V is the depot and M == 0, this
         // would turn negative and wrap around to a large number.
-        && U->position <= V->position + std::max(M, size_t(1)) - 1
+        && U->position <= V->position + std::max<size_t>(M, 1) - 1
         && V->position <= U->position + N - 1;
     // clang-format on
 }
@@ -77,9 +78,9 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evalRelocateMove(Node *U,
-                                     Node *V,
-                                     CostEvaluator const &costEvaluator) const
+Cost Exchange<N, M>::evalRelocateMove(Node *U,
+                                      Node *V,
+                                      CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -87,15 +88,15 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
     assert(posU > 0);
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    int const current = U->route->distBetween(posU - 1, posU + N)
-                        + data.dist(V->client, n(V)->client);
+    Distance const current = U->route->distBetween(posU - 1, posU + N)
+                             + data.dist(V->client, n(V)->client);
 
-    int const proposed = data.dist(V->client, U->client)
-                         + U->route->distBetween(posU, posU + N - 1)
-                         + data.dist(endU->client, n(V)->client)
-                         + data.dist(p(U)->client, n(endU)->client);
+    Distance const proposed = data.dist(V->client, U->client)
+                              + U->route->distBetween(posU, posU + N - 1)
+                              + data.dist(endU->client, n(V)->client)
+                              + data.dist(p(U)->client, n(endU)->client);
 
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(proposed - current);
 
     if (U->route != V->route)
     {
@@ -166,9 +167,9 @@ int Exchange<N, M>::evalRelocateMove(Node *U,
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evalSwapMove(Node *U,
-                                 Node *V,
-                                 CostEvaluator const &costEvaluator) const
+Cost Exchange<N, M>::evalSwapMove(Node *U,
+                                  Node *V,
+                                  CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
     auto const posV = V->position;
@@ -179,10 +180,10 @@ int Exchange<N, M>::evalSwapMove(Node *U,
 
     assert(U->route && V->route);
 
-    int const current = U->route->distBetween(posU - 1, posU + N)
-                        + V->route->distBetween(posV - 1, posV + M);
+    Distance const current = U->route->distBetween(posU - 1, posU + N)
+                             + V->route->distBetween(posV - 1, posV + M);
 
-    int const proposed
+    Distance const proposed
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
         = data.dist(p(U)->client, V->client)
@@ -192,7 +193,7 @@ int Exchange<N, M>::evalSwapMove(Node *U,
           + U->route->distBetween(posU, posU + N - 1)
           + data.dist(endU->client, n(endV)->client);
 
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(proposed - current);
 
     if (U->route != V->route)
     {
@@ -266,9 +267,9 @@ int Exchange<N, M>::evalSwapMove(Node *U,
 }
 
 template <size_t N, size_t M>
-int Exchange<N, M>::evaluate(Node *U,
-                             Node *V,
-                             CostEvaluator const &costEvaluator)
+Cost Exchange<N, M>::evaluate(Node *U,
+                              Node *V,
+                              CostEvaluator const &costEvaluator)
 {
     if (containsDepot(U, N) || overlap(U, V))
         return 0;

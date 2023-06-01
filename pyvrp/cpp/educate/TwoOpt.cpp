@@ -5,19 +5,21 @@
 
 using TWS = TimeWindowSegment;
 
-int TwoOpt::evalWithinRoute(Node *U,
-                            Node *V,
-                            CostEvaluator const &costEvaluator) const
+Cost TwoOpt::evalWithinRoute(Node *U,
+                             Node *V,
+                             CostEvaluator const &costEvaluator) const
 {
     if (U->position + 1 >= V->position)
         return 0;
 
-    int deltaCost = data.dist(U->client, V->client)
-                    + data.dist(n(U)->client, n(V)->client)
-                    + V->cumulatedReversalDistance
-                    - data.dist(U->client, n(U)->client)
-                    - data.dist(V->client, n(V)->client)
-                    - n(U)->cumulatedReversalDistance;
+    Distance const deltaDist = data.dist(U->client, V->client)
+                               + data.dist(n(U)->client, n(V)->client)
+                               + V->cumulatedReversalDistance
+                               - data.dist(U->client, n(U)->client)
+                               - data.dist(V->client, n(V)->client)
+                               - n(U)->cumulatedReversalDistance;
+
+    Cost deltaCost = static_cast<Cost>(deltaDist);
 
     if (!U->route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;
@@ -38,16 +40,16 @@ int TwoOpt::evalWithinRoute(Node *U,
     return deltaCost;
 }
 
-int TwoOpt::evalBetweenRoutes(Node *U,
-                              Node *V,
-                              CostEvaluator const &costEvaluator) const
+Cost TwoOpt::evalBetweenRoutes(Node *U,
+                               Node *V,
+                               CostEvaluator const &costEvaluator) const
 {
-    int const current = data.dist(U->client, n(U)->client)
-                        + data.dist(V->client, n(V)->client);
-    int const proposed = data.dist(U->client, n(V)->client)
-                         + data.dist(V->client, n(U)->client);
+    Distance const current = data.dist(U->client, n(U)->client)
+                             + data.dist(V->client, n(V)->client);
+    Distance const proposed = data.dist(U->client, n(V)->client)
+                              + data.dist(V->client, n(U)->client);
 
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(proposed - current);
 
     if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
         return deltaCost;
@@ -64,7 +66,7 @@ int TwoOpt::evalBetweenRoutes(Node *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
-    int const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
+    auto const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
 
     deltaCost += costEvaluator.loadPenalty(U->route->load() - deltaLoad,
                                            data.vehicleCapacity());
@@ -118,7 +120,7 @@ void TwoOpt::applyBetweenRoutes(Node *U, Node *V) const
     }
 }
 
-int TwoOpt::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
+Cost TwoOpt::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
 {
     if (U->route->idx > V->route->idx)  // will be tackled in a later iteration
         return 0;                       // - no need to process here already

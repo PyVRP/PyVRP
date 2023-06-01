@@ -38,25 +38,25 @@ ProblemData::Client::Client(int x,
 
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
-Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
-Matrix<int> const &ProblemData::durationMatrix() const { return dur_; }
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+Load ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          size_t numVehicles,
-                         size_t vehicleCap,
-                         std::vector<std::vector<int>> const &distMat,
-                         std::vector<std::vector<int>> const &durMat)
-    : dist_(distMat),
-      dur_(durMat),
+                         Load vehicleCap,
+                         Matrix<Distance> const distMat,
+                         Matrix<Duration> const durMat)
+    : dist_(std::move(distMat)),
+      dur_(std::move(durMat)),
       clients_(clients),
-      numClients_(std::max(clients.size(), static_cast<size_t>(1)) - 1),
+      numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicles_(numVehicles),
       vehicleCapacity_(vehicleCap)
 {

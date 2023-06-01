@@ -59,7 +59,7 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
 
 
 def regenerate_stubs(install_dir: pathlib.Path):
-    def _regen(extension):
+    def regen(extension):
         ext_dir = extension.parent
         ext_name, _ = extension.name.split(".", maxsplit=1)
 
@@ -69,10 +69,10 @@ def regenerate_stubs(install_dir: pathlib.Path):
         )
 
     for extension in install_dir.rglob("*.so"):
-        _regen(extension)
+        regen(extension)
 
     for extension in install_dir.rglob("*.pyd"):
-        _regen(extension)
+        regen(extension)
 
 
 def build(

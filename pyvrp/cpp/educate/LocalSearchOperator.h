@@ -3,6 +3,7 @@
 
 #include "CostEvaluator.h"
 #include "Individual.h"
+#include "Measure.h"
 #include "Node.h"
 #include "ProblemData.h"
 #include "Route.h"
@@ -29,7 +30,7 @@ public:
      * cannot become negative at all. In that case, the returned (non-negative)
      * cost delta does not constitute a full evaluation.
      */
-    virtual int evaluate(Arg *U, Arg *V, CostEvaluator const &costEvaluator)
+    virtual Cost evaluate(Arg *U, Arg *V, CostEvaluator const &costEvaluator)
     {
         return 0;
     }

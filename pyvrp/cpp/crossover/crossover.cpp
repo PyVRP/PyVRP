@@ -1,4 +1,7 @@
 #include "crossover.h"
+#include "Measure.h"
+
+#include <limits>
 
 using Client = int;
 using Route = std::vector<Client>;
@@ -8,36 +11,36 @@ namespace
 {
 struct InsertPos  // best insert position, used to plan unplanned clients
 {
-    int deltaCost;
+    Cost deltaCost;
     Route *route;
     size_t offset;
 };
 
 // Evaluates the cost change of inserting client between prev and next.
-int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
+Cost deltaCost(Client client, Client prev, Client next, ProblemData const &data)
 {
-    int prevEarliestArrival
+    Duration prevEarliestArrival
         = std::max(data.duration(0, prev), data.client(prev).twEarly);
-    int prevEarliestFinish
+    Duration prevEarliestFinish
         = prevEarliestArrival + data.client(prev).serviceDuration;
-    int durPrevClient = data.duration(prev, client);
-    int clientLate = data.client(client).twLate;
+    Duration durPrevClient = data.duration(prev, client);
+    Duration clientLate = data.client(client).twLate;
 
     if (prevEarliestFinish + durPrevClient >= clientLate)
-        return INT_MAX;
+        return std::numeric_limits<Cost>::max();
 
-    int clientEarliestArrival
+    Duration clientEarliestArrival
         = std::max(data.duration(0, client), data.client(client).twEarly);
-    int clientEarliestFinish
+    Duration clientEarliestFinish
         = clientEarliestArrival + data.client(client).serviceDuration;
-    int durClientNext = data.duration(client, next);
-    int nextLate = data.client(next).twLate;
+    Duration durClientNext = data.duration(client, next);
+    Duration nextLate = data.client(next).twLate;
 
     if (clientEarliestFinish + durClientNext >= nextLate)
-        return INT_MAX;
+        return std::numeric_limits<Cost>::max();
 
-    return data.dist(prev, client) + data.dist(client, next)
-           - data.dist(prev, next);
+    return static_cast<Cost>(data.dist(prev, client) + data.dist(client, next)
+                             - data.dist(prev, next));
 }
 }  // namespace
 
@@ -52,7 +55,7 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
-        InsertPos best = {INT_MAX, &routes.front(), 0};
+        InsertPos best = {std::numeric_limits<Cost>::max(), &routes.front(), 0};
 
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
