@@ -19,36 +19,34 @@ PYBIND11_MODULE(_Individual, m)
              py::return_value_policy::reference_internal)
         .def("distance",
              [](Individual::Route const &route) {
-                 return static_cast<Value>(route.distance());
+                 return route.distance().get();
              })
-        .def("demand",
-             [](Individual::Route const &route) {
-                 return static_cast<Value>(route.demand());
-             })
+        .def(
+            "demand",
+            [](Individual::Route const &route) { return route.demand().get(); })
         .def("excess_load",
              [](Individual::Route const &route) {
-                 return static_cast<Value>(route.excessLoad());
+                 return route.excessLoad().get();
              })
         .def("duration",
              [](Individual::Route const &route) {
-                 return static_cast<Value>(route.duration());
+                 return route.duration().get();
              })
         .def("service_duration",
              [](Individual::Route const &route) {
-                 return static_cast<Value>(route.serviceDuration());
+                 return route.serviceDuration().get();
              })
         .def("time_warp",
              [](Individual::Route const &route) {
-                 return static_cast<Value>(route.timeWarp());
+                 return route.timeWarp().get();
              })
         .def("wait_duration",
              [](Individual::Route const &route) {
-                 return static_cast<Value>(route.waitDuration());
+                 return route.waitDuration().get();
              })
-        .def("prizes",
-             [](Individual::Route const &route) {
-                 return static_cast<Value>(route.prizes());
-             })
+        .def(
+            "prizes",
+            [](Individual::Route const &route) { return route.prizes().get(); })
         .def("centroid", &Individual::Route::centroid)
         .def("is_feasible", &Individual::Route::isFeasible)
         .def("has_excess_load", &Individual::Route::hasExcessLoad)
@@ -105,23 +103,23 @@ PYBIND11_MODULE(_Individual, m)
         .def("has_time_warp", &Individual::hasTimeWarp)
         .def("distance",
              [](Individual const &individual) {
-                 return static_cast<Value>(individual.distance());
+                 return individual.distance().get();
              })
         .def("excess_load",
              [](Individual const &individual) {
-                 return static_cast<Value>(individual.excessLoad());
+                 return individual.excessLoad().get();
              })
         .def("time_warp",
              [](Individual const &individual) {
-                 return static_cast<Value>(individual.timeWarp());
+                 return individual.timeWarp().get();
              })
         .def("prizes",
              [](Individual const &individual) {
-                 return static_cast<Value>(individual.prizes());
+                 return individual.prizes().get();
              })
         .def("uncollected_prizes",
              [](Individual const &individual) {
-                 return static_cast<Value>(individual.uncollectedPrizes());
+                 return individual.uncollectedPrizes().get();
              })
         .def(
             "__copy__",

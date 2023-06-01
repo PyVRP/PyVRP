@@ -54,18 +54,10 @@ public:
     }
 
     // Explicit conversions to other measures.
-    template <MeasureType Other> explicit operator Measure<Other>() const
-    {
-        return {value};
-    }
+    template <MeasureType Other> explicit operator Measure<Other>() const;
 
-    // Explicit conversions of the underlying value to other arithmetic types.
-    template <typename T,
-              std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-    explicit operator T() const
-    {
-        return static_cast<T>(value);
-    }
+    // Retreives the underlying value.
+    Value get() const;
 
     // In-place unary operators.
     Measure &operator+=(Measure const &rhs);
@@ -77,6 +69,16 @@ public:
     auto operator==(Measure const &other) const;
     auto operator<=>(Measure const &other) const;
 };
+
+// Explicit conversions to other measures.
+template <MeasureType This, MeasureType Other>
+explicit operator Measure<This>::Measure<Other>() const
+{
+    return value;
+}
+
+// Retreives the underlying value.
+template <MeasureType Type> Value Measure<Type>::get() const { return value; }
 
 // In-place unary operators.
 template <MeasureType Type>
@@ -128,42 +130,42 @@ auto Measure<Type>::operator<=>(Measure<Type> const &other) const
 template <MeasureType Type>
 Measure<Type> operator+(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<Value>(lhs) + static_cast<Value>(rhs);
+    return lhs.get() + rhs.get();
 }
 
 template <MeasureType Type> Measure<Type> operator+(Measure<Type> const lhs)
 {
-    return +static_cast<Value>(lhs);
+    return +lhs.get();
 }
 
 template <MeasureType Type>
 Measure<Type> operator-(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<Value>(lhs) - static_cast<Value>(rhs);
+    return lhs.get() - rhs.get();
 }
 
 template <MeasureType Type> Measure<Type> operator-(Measure<Type> const lhs)
 {
-    return -static_cast<Value>(lhs);
+    return -lhs.get();
 }
 
 template <MeasureType Type>
 Measure<Type> operator*(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<Value>(lhs) * static_cast<Value>(rhs);
+    return lhs.get() * rhs.get();
 }
 
 template <MeasureType Type>
 Measure<Type> operator/(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    return static_cast<Value>(lhs) / static_cast<Value>(rhs);
+    return lhs.get() / rhs.get();
 }
 
 // For printing.
 template <MeasureType Type>
 std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
 {
-    return out << static_cast<Value>(measure);
+    return out << measure.get();
 }
 
 // Specialisations for hashing and numerical limits.
@@ -173,7 +175,7 @@ template <MeasureType Type> struct hash<Measure<Type>>
 {
     size_t operator()(Measure<Type> const measure) const
     {
-        return std::hash<Value>()(static_cast<Value>(measure));
+        return std::hash<Value>()(measure.get());
     }
 };
 

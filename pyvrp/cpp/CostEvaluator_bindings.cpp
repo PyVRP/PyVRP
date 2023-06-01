@@ -17,30 +17,26 @@ PYBIND11_MODULE(_CostEvaluator, m)
             [](CostEvaluator const &evaluator,
                Value load,
                Value vehicleCapacity) {
-                auto penalty = evaluator.loadPenalty(load, vehicleCapacity);
-                return static_cast<Value>(penalty);
+                return evaluator.loadPenalty(load, vehicleCapacity).get();
             },
             py::arg("load"),
             py::arg("vehicle_capacity"))
         .def(
             "tw_penalty",
             [](CostEvaluator const &evaluator, Value const timeWarp) {
-                auto penalty = evaluator.twPenalty(timeWarp);
-                return static_cast<Value>(penalty);
+                return evaluator.twPenalty(timeWarp).get()
             },
             py::arg("time_warp"))
         .def(
             "penalised_cost",
             [](CostEvaluator const &evaluator, Individual const &individual) {
-                auto cost = evaluator.penalisedCost(individual);
-                return static_cast<Value>(cost);
+                return evaluator.penalisedCost(individual).get()
             },
             py::arg("individual"))
         .def(
             "cost",
             [](CostEvaluator const &evaluator, Individual const &individual) {
-                auto cost = evaluator.cost(individual);
-                return static_cast<Value>(cost);
+                return evaluator.cost(individual).get();
             },
             py::arg("individual"));
 }

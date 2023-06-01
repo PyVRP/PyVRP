@@ -17,34 +17,31 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("tw_late") = 0,
              py::arg("prize") = 0,
              py::arg("required") = true)
-        .def_property_readonly("x",
-                               [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(client.x);
-                               })
-        .def_property_readonly("y",
-                               [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(client.y);
-                               })
+        .def_property_readonly(
+            "x",
+            [](ProblemData::Client const &client) { return client.x.get(); })
+        .def_property_readonly(
+            "y",
+            [](ProblemData::Client const &client) { return client.y.get(); })
         .def_property_readonly("demand",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(client.demand);
+                                   return client.demand.get();
                                })
         .def_property_readonly("service_duration",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(
-                                       client.serviceDuration);
+                                   return client.serviceDuration.get();
                                })
         .def_property_readonly("tw_early",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(client.twEarly);
+                                   return client.twEarly.get();
                                })
         .def_property_readonly("tw_late",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(client.twLate);
+                                   return client.twLate.get();
                                })
         .def_property_readonly("prize",
                                [](ProblemData::Client const &client) {
-                                   return static_cast<Value>(client.prize);
+                                   return client.prize.get();
                                })
         .def_readonly("required", &ProblemData::Client::required);
 
@@ -76,8 +73,7 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
         .def_property_readonly("vehicle_capacity",
                                [](ProblemData const &data) {
-                                   return static_cast<Value>(
-                                       data.vehicleCapacity());
+                                   return data.vehicleCapacity().get();
                                })
         .def("client",
              &ProblemData::client,
@@ -87,14 +83,14 @@ PYBIND11_MODULE(_ProblemData, m)
         .def(
             "dist",
             [](ProblemData const &data, size_t first, size_t second) {
-                return static_cast<Value>(data.dist(first, second));
+                return data.dist(first, second).get();
             },
             py::arg("first"),
             py::arg("second"))
         .def(
             "duration",
             [](ProblemData const &data, size_t first, size_t second) {
-                return static_cast<Value>(data.duration(first, second));
+                return data.duration(first, second).get();
             },
             py::arg("first"),
             py::arg("second"));
