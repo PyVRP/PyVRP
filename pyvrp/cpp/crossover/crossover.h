@@ -12,11 +12,13 @@
 namespace crossover
 {
 /**
- * Greedily inserts the unplanned clients into non-empty routes.
+ * Greedily inserts each unplanned client into the non-empty route that's
+ * nearest to the client.
  */
 void greedyRepair(std::vector<std::vector<int>> &routes,
                   std::vector<int> const &unplanned,
-                  ProblemData const &data);
+                  ProblemData const &data,
+                  CostEvaluator const &costEvaluator);
 }  // namespace crossover
 
 /**

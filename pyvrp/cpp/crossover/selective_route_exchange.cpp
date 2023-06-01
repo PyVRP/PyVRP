@@ -227,8 +227,8 @@ Individual selectiveRouteExchange(
         if (!selectedB.contains(c))
             unplanned.push_back(c);
 
-    crossover::greedyRepair(routes1, unplanned, data);
-    crossover::greedyRepair(routes2, unplanned, data);
+    crossover::greedyRepair(routes1, unplanned, data, costEvaluator);
+    crossover::greedyRepair(routes2, unplanned, data, costEvaluator);
 
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};
