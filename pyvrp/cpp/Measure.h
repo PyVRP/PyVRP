@@ -4,6 +4,7 @@
 #include <compare>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <type_traits>
 
 using Value = int;
@@ -165,6 +166,7 @@ std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
     return out << static_cast<Value>(measure);
 }
 
+// Specialisations for hashing and numerical limits.
 namespace std
 {
 template <MeasureType Type> struct hash<Measure<Type>>
@@ -174,6 +176,14 @@ template <MeasureType Type> struct hash<Measure<Type>>
         return std::hash<Value>()(static_cast<Value>(measure));
     }
 };
+
+template <MeasureType Type> class numeric_limits<Measure<Type>>
+{
+public:  // TODO should return type be Measure<Type>?
+    static Value min() { return std::numeric_limits<Value>::min(); }
+    static Value max() { return std::numeric_limits<Value>::max(); }
+};
+
 }  // namespace std
 
 #endif  // MEASURE_H

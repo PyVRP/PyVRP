@@ -22,5 +22,5 @@ Cost CostEvaluator::cost(Individual const &individual) const
     // Penalties are zero when individual is feasible, so we can fall back to
     // penalised cost in that case.
     return individual.isFeasible() ? penalisedCost(individual)
-                                   : std::numeric_limits<Value>::max();
+                                   : std::numeric_limits<Cost>::max();
 }
