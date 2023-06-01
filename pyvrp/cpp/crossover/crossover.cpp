@@ -39,8 +39,8 @@ Cost deltaCost(Client client,
     auto const currTimeWarp = std::max<Duration>(prevNextArrive - nextLate, 0);
 
     // Determine arrival at client. This incurs some timewarp if the arrival is
-    // after client.twLate. We finish at arrival time + service. But if there
-    // is some time warp, we subtract that from the departure time at client.
+    // after client.twLate. We finish at start time + service. We subtract any
+    // time warp from the departure time at client.
     auto const clientArrive = prevFinish + data.duration(prev, client);
     auto const clientStart = std::max(clientArrive, clientData.twEarly);
     auto const clientTimeWarp = std::max<Duration>(clientStart - clientLate, 0);
