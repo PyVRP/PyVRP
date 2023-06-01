@@ -80,7 +80,7 @@ void crossover::greedyRepair(Routes &routes,
 
         // Determine non-empty route with centroid nearest to this client.
         auto bestDistance = std::numeric_limits<double>::max();
-        auto bestIdx = 0;
+        auto bestRouteIdx = 0;
         for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
             if (routes[rIdx].empty())
@@ -91,33 +91,33 @@ void crossover::greedyRepair(Routes &routes,
 
             if (distance < bestDistance)
             {
-                bestIdx = rIdx;
+                bestRouteIdx = rIdx;
                 bestDistance = distance;
             }
         }
 
         // Find best insertion point in selected route.
-        auto &route = routes[bestIdx];
+        auto &bestRoute = routes[bestRouteIdx];
         Cost bestCost = std::numeric_limits<Cost>::max();
         auto offset = 0;
-        for (size_t idx = 0; idx <= route.size(); ++idx)
+        for (size_t idx = 0; idx <= bestRoute.size(); ++idx)
         {
             Client prev, next;
 
             if (idx == 0)  // try after depot
             {
                 prev = 0;
-                next = route[0];
+                next = bestRoute[0];
             }
-            else if (idx == route.size())  // try before depot
+            else if (idx == bestRoute.size())  // try before depot
             {
-                prev = route.back();
+                prev = bestRoute.back();
                 next = 0;
             }
             else  // try between [idx - 1] and [idx]
             {
-                prev = route[idx - 1];
-                next = route[idx];
+                prev = bestRoute[idx - 1];
+                next = bestRoute[idx];
             }
 
             auto cost = deltaCost(client, prev, next, data, costEvaluator);
@@ -128,12 +128,11 @@ void crossover::greedyRepair(Routes &routes,
             }
         }
 
-        // Insert client into route and update route centroid.
-        route.insert(route.begin() + offset, client);
-
-        auto const size = static_cast<double>(route.size());
-        auto const [routeX, routeY] = centroids[bestIdx];
-        centroids[bestIdx].first = (routeX * (size - 1) + x) / size;
-        centroids[bestIdx].second = (routeY * (size - 1) + y) / size;
+        // Update route centroid and insert client into route.
+        auto const size = static_cast<double>(bestRoute.size());
+        auto const [routeX, routeY] = centroids[bestRouteIdx];
+        centroids[bestRouteIdx].first = (routeX * size + x) / (size + 1);
+        centroids[bestRouteIdx].second = (routeY * size + y) / (size + 1);
+        bestRoute.insert(bestRoute.begin() + offset, client);
     }
 }
