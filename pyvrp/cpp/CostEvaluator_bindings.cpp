@@ -24,13 +24,13 @@ PYBIND11_MODULE(_CostEvaluator, m)
         .def(
             "tw_penalty",
             [](CostEvaluator const &evaluator, Value const timeWarp) {
-                return evaluator.twPenalty(timeWarp).get()
+                return evaluator.twPenalty(timeWarp).get();
             },
             py::arg("time_warp"))
         .def(
             "penalised_cost",
             [](CostEvaluator const &evaluator, Individual const &individual) {
-                return evaluator.penalisedCost(individual).get()
+                return evaluator.penalisedCost(individual).get();
             },
             py::arg("individual"))
         .def(

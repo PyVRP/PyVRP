@@ -53,8 +53,19 @@ public:
     {
     }
 
+    // Explicit conversions of the underlying value to other arithmetic types.
+    template <typename T,
+              std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
+    explicit operator T() const
+    {
+        return static_cast<T>(value);
+    }
+
     // Explicit conversions to other measures.
-    template <MeasureType Other> explicit operator Measure<Other>() const;
+    template <MeasureType Other> explicit operator Measure<Other>() const
+    {
+        return value;
+    }
 
     // Retreives the underlying value.
     Value get() const;
@@ -69,13 +80,6 @@ public:
     auto operator==(Measure const &other) const;
     auto operator<=>(Measure const &other) const;
 };
-
-// Explicit conversions to other measures.
-template <MeasureType This, MeasureType Other>
-explicit operator Measure<This>::Measure<Other>() const
-{
-    return value;
-}
 
 // Retreives the underlying value.
 template <MeasureType Type> Value Measure<Type>::get() const { return value; }
