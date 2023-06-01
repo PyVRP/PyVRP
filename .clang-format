@@ -5,7 +5,7 @@ IndentWidth: 4
 SpacesBeforeTrailingComments: 2
 BreakBeforeBraces: Allman
 ColumnLimit: 80
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+PackConstructorInitializers: CurrentLine
 TabWidth: 4
 UseTab: Never
 BreakBeforeBinaryOperators: All

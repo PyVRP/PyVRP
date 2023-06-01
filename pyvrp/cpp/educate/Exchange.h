@@ -59,13 +59,11 @@ bool Exchange<N, M>::containsDepot(Node *node, size_t segLength) const
 template <size_t N, size_t M>
 bool Exchange<N, M>::overlap(Node *U, Node *V) const
 {
-    // clang-format off
     return U->route == V->route
-        // We need max(M, 1) here because when V is the depot and M == 0, this
-        // would turn negative and wrap around to a large number.
-        && U->position <= V->position + std::max<size_t>(M, 1) - 1
-        && V->position <= U->position + N - 1;
-    // clang-format on
+           // We need max(M, 1) here because when V is the depot and M == 0,
+           // this would turn negative and wrap around to a large number.
+           && U->position <= V->position + std::max<size_t>(M, 1) - 1
+           && V->position <= U->position + N - 1;
 }
 
 template <size_t N, size_t M>

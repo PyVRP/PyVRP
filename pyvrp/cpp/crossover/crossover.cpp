@@ -10,7 +10,7 @@ using Routes = std::vector<Route>;
 
 namespace
 {
-// Evaluates the cost change of inserting client between prev and next.
+// Approximates the cost change of inserting client between prev and next.
 Cost deltaCost(Client client,
                Client prev,
                Client next,
@@ -24,7 +24,7 @@ Cost deltaCost(Client client,
     // clang-format on
 
 #ifdef VRP_NO_TIME_WINDOWS
-    return static_cast<Cost>(deltaDist);  // only distance cost delta
+    return static_cast<Cost>(deltaDist);
 #else
     auto const &clientData = data.client(client);
     auto const &prevData = data.client(prev);
@@ -46,9 +46,9 @@ Cost deltaCost(Client client,
     auto const propTimeWarp = std::max<Duration>(arriveClient - clientLate, 0)
                               + std::max<Duration>(arriveNext - nextLate, 0);
 
-    return static_cast<Cost>(deltaDist)              // distance cost delta,
-           + costEvaluator.twPenalty(propTimeWarp)   // and time warp related
-           - costEvaluator.twPenalty(currTimeWarp);  // changes
+    return static_cast<Cost>(deltaDist)
+           + costEvaluator.twPenalty(propTimeWarp)
+           - costEvaluator.twPenalty(currTimeWarp);
 #endif
 }
 }  // namespace
@@ -58,15 +58,14 @@ void crossover::greedyRepair(Routes &routes,
                              ProblemData const &data,
                              CostEvaluator const &costEvaluator)
 {
-    // Determine the number of non-empty routes.
-    size_t numRoutes = 0;
-    for (size_t rIdx = 0; rIdx != routes.size(); ++rIdx)
-        if (!routes[rIdx].empty())
-            numRoutes = rIdx + 1;
+    // Determine the index just past the last non-empty route.
+    auto const pred = [](Route const &route) { return !route.empty(); };
+    auto const last = std::find_if(routes.rbegin(), routes.rend(), pred);
+    auto const numRoutes = std::distance(last, routes.rend());
 
     // Determine centroids of each route.
     std::vector<std::pair<double, double>> centroids(numRoutes, {0, 0});
-    for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
+    for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
         for (Client client : routes[rIdx])
         {
             auto const size = static_cast<double>(routes[rIdx].size());
@@ -79,16 +78,17 @@ void crossover::greedyRepair(Routes &routes,
 
     for (Client client : unplanned)
     {
+        auto const x = static_cast<double>(data.client(client).x);
+        auto const y = static_cast<double>(data.client(client).y);
+
         // Determine non-empty route with centroid nearest to this client.
         auto bestDistance = std::numeric_limits<double>::max();
         auto bestIdx = 0;
-        for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
+        for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
             if (routes[rIdx].empty())
                 continue;
 
-            auto const x = static_cast<double>(data.client(client).x);
-            auto const y = static_cast<double>(data.client(client).y);
             auto const distance = std::hypot(x - centroids[rIdx].first,
                                              y - centroids[rIdx].second);
 
@@ -133,11 +133,10 @@ void crossover::greedyRepair(Routes &routes,
 
         // Insert client into route and update route centroid.
         route.insert(route.begin() + offset, client);
+
         auto const size = static_cast<double>(route.size());
-        auto const [x, y] = centroids[bestIdx];
-        auto const clientX = static_cast<double>(data.client(client).x);
-        auto const clientY = static_cast<double>(data.client(client).y);
-        centroids[bestIdx].first = (x * (size - 1) + clientX) / size;
-        centroids[bestIdx].second = (y * (size - 1) + clientY) / size;
+        auto const [routeX, routeY] = centroids[bestIdx];
+        centroids[bestIdx].first = (routeX * (size - 1) + x) / size;
+        centroids[bestIdx].second = (routeY * (size - 1) + y) / size;
     }
 }
