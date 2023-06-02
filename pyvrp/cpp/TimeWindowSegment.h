@@ -50,19 +50,16 @@ TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
     return {};
 #else
     auto const arcDuration = durationMatrix(idxLast, other.idxFirst);
-    auto const delta = duration - timeWarp + arcDuration;
-
-    auto const wait = other.twEarly - delta - twLate;
-    auto const tw = twEarly + delta - other.twLate;
-    auto const deltaWait = std::max<Duration>(wait, 0);
-    auto const deltaTw = std::max<Duration>(tw, 0);
+    auto const diff = duration - timeWarp + arcDuration;
+    auto const diffWait = std::max<Duration>(other.twEarly - diff - twLate, 0);
+    auto const diffTw = std::max<Duration>(twEarly + diff - other.twLate, 0);
 
     return {idxFirst,
             other.idxLast,
-            duration + other.duration + arcDuration + deltaWait,
-            timeWarp + other.timeWarp + deltaTw,
-            std::max(other.twEarly - delta, twEarly) - deltaWait,
-            std::min(other.twLate - delta, twLate) + deltaTw};
+            duration + other.duration + arcDuration + diffWait,
+            timeWarp + other.timeWarp + diffTw,
+            std::max(other.twEarly - diff, twEarly) - diffWait,
+            std::min(other.twLate - diff, twLate) + diffTw};
 #endif
 }
 
