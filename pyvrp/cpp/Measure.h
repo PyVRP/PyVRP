@@ -123,8 +123,7 @@ template <MeasureType Type>
 bool Measure<Type>::operator==(Measure<Type> const &other) const
 {
 #ifdef PYVRP_DOUBLE_PRECISION
-    // This uses the same tolerance as HGS-CVRP (1e-5).
-    return std::abs(value - other.value) < 1e-5;
+    return std::abs(value - other.value) < 1e-5;  // HGS-CVRP tolerance value
 #else
     return value == other.value;
 #endif
