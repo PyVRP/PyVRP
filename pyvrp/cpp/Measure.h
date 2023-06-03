@@ -44,6 +44,14 @@ using Load = Measure<MeasureType::LOAD>;
  */
 template <MeasureType _> class Measure
 {
+    friend struct std::hash<Measure>;  // friend struct to enable hashing
+
+#ifdef PYVRP_DOUBLE_PRECISION
+    static constexpr Value const TOLERANCE = 1e-6;
+#else
+    static constexpr Value const TOLERANCE = 1;
+#endif
+
     Value value;
 
 public:
@@ -73,7 +81,7 @@ public:
     }
 
     // Retreives the underlying value.
-    Value get() const;
+    [[nodiscard]] Value get() const;
 
     // In-place unary operators.
     Measure &operator+=(Measure const &rhs);
@@ -82,8 +90,8 @@ public:
     Measure &operator/=(Measure const &rhs);
 
     // Comparison operators.
-    auto operator==(Measure const &other) const;
-    auto operator<=>(Measure const &other) const;
+    [[nodiscard]] bool operator==(Measure const &other) const;
+    [[nodiscard]] auto operator<=>(Measure const &other) const;
 };
 
 // Retreives the underlying value.
@@ -120,21 +128,18 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
 
 // Comparison operators.
 template <MeasureType Type>
-auto Measure<Type>::operator==(Measure<Type> const &other) const
+bool Measure<Type>::operator==(Measure<Type> const &other) const
 {
-#ifdef PYVRP_DOUBLE_PRECISION
-    auto const ourValue = std::pow(10, 9) * value;
-    auto const otherValue = std::pow(10, 9) * other.value;
-    return std::trunc(ourValue) == std::trunc(otherValue);
-#else
-    return value == other.value;
-#endif
+    return std::abs(value - other.value) < TOLERANCE;
 }
 
 template <MeasureType Type>
 auto Measure<Type>::operator<=>(Measure<Type> const &other) const
 {
-    return value <=> other.value;
+    if (*this == other)  // equality must be checked first, to ensure we use a
+        return 0;        // loose comparison in double precision mode.
+
+    return value < other.value ? -1 : 1;
 }
 
 // Free-standing binary operators.
@@ -187,8 +192,11 @@ template <MeasureType Type> struct hash<Measure<Type>>
     size_t operator()(Measure<Type> const measure) const
     {
 #ifdef PYVRP_DOUBLE_PRECISION
-        auto const value = std::pow(10, 9) * measure.get();
-        return std::hash<Value>()(std::trunc(value));
+        // When using double precision, this hashes 'equal' items differently
+        // when they are very close to an integer value. As an example, 1 - eps
+        // hashes to 0, while 1 + eps hashes to 1. This is not ideal behaviour,
+        // but should work well enough for our application.
+        return std::hash<Value>()(std::floor(measure.get()));
 #else
         return std::hash<Value>()(measure.get());
 #endif
