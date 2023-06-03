@@ -15,7 +15,7 @@ Cost deltaCost(Client client,
                Client prev,
                Client next,
                ProblemData const &data,
-               CostEvaluator const &costEvaluator)
+               [[maybe_unused]] CostEvaluator const &costEvaluator)
 {
     auto const currDist = data.dist(prev, next);
     auto const propDist = data.dist(prev, client) + data.dist(client, next);

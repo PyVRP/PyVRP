@@ -31,15 +31,14 @@ public:
      * cost delta does not constitute a full evaluation.
      */
     virtual Cost evaluate(Arg *U, Arg *V, CostEvaluator const &costEvaluator)
-    {
-        return 0;
-    }
+        = 0;
 
     /**
      * Applies this operator to the given arguments. For improvements, should
      * only be called if <code>evaluate()</code> returns a negative delta cost.
      */
-    virtual void apply(Arg *U, Arg *V) const {};
+    // TODO remove arguments - always applies to most recently evaluated pair.
+    virtual void apply(Arg *U, Arg *V) const = 0;
 
     LocalSearchOperatorBase(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperatorBase() = default;
@@ -66,14 +65,14 @@ public:
      * Called once after loading in the individual to improve. This can be used
      * to e.g. update local operator state.
      */
-    virtual void init(Individual const &indiv){};
+    virtual void init([[maybe_unused]] Individual const &indiv){};
 
     /**
      * Called when a route has been changed. Can be used to update caches, but
      * the implementation should be fast: this is called every time something
      * changes!
      */
-    virtual void update(Route *U){};
+    virtual void update([[maybe_unused]] Route *U){};
 };
 
 #endif  // LOCALSEARCHOPERATOR_H
