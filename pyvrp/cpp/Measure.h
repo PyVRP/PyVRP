@@ -44,14 +44,6 @@ using Load = Measure<MeasureType::LOAD>;
  */
 template <MeasureType _> class Measure
 {
-    friend struct std::hash<Measure>;  // friend struct to enable hashing
-
-#ifdef PYVRP_DOUBLE_PRECISION
-    static constexpr Value const TOLERANCE = 0.00001;  // same as in HGS-CVRP
-#else
-    static constexpr Value const TOLERANCE = 1;
-#endif
-
     Value value;
 
 public:
@@ -130,7 +122,12 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
 template <MeasureType Type>
 bool Measure<Type>::operator==(Measure<Type> const &other) const
 {
-    return std::abs(value - other.value) < TOLERANCE;
+#ifdef PYVRP_DOUBLE_PRECISION
+    // This uses the same tolerance as HGS-CVRP (1e-5).
+    return std::abs(value - other.value) < 1e-5;
+#else
+    return value == other.value;
+#endif
 }
 
 template <MeasureType Type>
@@ -193,10 +190,9 @@ template <MeasureType Type> struct hash<Measure<Type>>
     {
 #ifdef PYVRP_DOUBLE_PRECISION
         // When using double precision, this hashes 'equal' items differently
-        // when they are very close to an integer value. As an example, 1 - eps
-        // hashes to 0, while 1 + eps hashes to 1. This is not ideal behaviour,
-        // but should work well enough for our application.
-        return std::hash<Value>()(std::floor(measure.get()));
+        // when they are very close to halfway between an integer value. Not
+        // ideal, but this should work well enough for our application.
+        return std::hash<Value>()(std::round(measure.get()));
 #else
         return std::hash<Value>()(measure.get());
 #endif
