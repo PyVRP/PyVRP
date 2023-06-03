@@ -77,8 +77,7 @@ private:
     std::vector<Item> items;
 
     // Removes the element at the given iterator location from the items.
-    void remove(std::vector<Item>::iterator const &iterator,
-                CostEvaluator const &costEvaluator);
+    void remove(std::vector<Item>::iterator const &iterator);
 
 public:
     SubPopulation(DiversityMeasure divOp, PopulationParams const &params);

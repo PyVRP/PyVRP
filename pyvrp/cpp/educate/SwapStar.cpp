@@ -286,7 +286,7 @@ Cost SwapStar::evaluate(Route *routeU,
     return deltaCost;
 }
 
-void SwapStar::apply(Route *U, Route *V) const
+void SwapStar::apply([[maybe_unused]] Route *U, [[maybe_unused]] Route *V) const
 {
     if (best.U && best.UAfter && best.V && best.VAfter)
     {

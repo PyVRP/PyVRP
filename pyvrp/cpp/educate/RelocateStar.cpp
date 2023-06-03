@@ -33,7 +33,8 @@ Cost RelocateStar::evaluate(Route *U,
     return move.deltaCost;
 }
 
-void RelocateStar::apply(Route *U, Route *V) const
+void RelocateStar::apply([[maybe_unused]] Route *U,
+                         [[maybe_unused]] Route *V) const
 {
     move.from->insertAfter(move.to);
 }
