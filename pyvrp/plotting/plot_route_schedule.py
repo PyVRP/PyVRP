@@ -156,7 +156,7 @@ def plot_route_schedule(
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {data.vehicle_capacity})")
+    twin1.set_ylabel(f"Load (capacity = {data.vehicle_capacity:.0f})")
 
     if legend:
         twin1.legend(loc="upper right")

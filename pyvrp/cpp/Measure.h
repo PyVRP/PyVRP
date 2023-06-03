@@ -187,7 +187,7 @@ template <MeasureType Type> struct hash<Measure<Type>>
     size_t operator()(Measure<Type> const measure) const
     {
 #ifdef PYVRP_DOUBLE_PRECISION
-        auto const value = std::pow(10, 9) * other.get();
+        auto const value = std::pow(10, 9) * measure.get();
         return std::hash<Value>()(std::trunc(value));
 #else
         return std::hash<Value>()(measure.get());
