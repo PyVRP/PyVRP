@@ -1,13 +1,14 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
+#include <cmath>
 #include <compare>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <type_traits>
 
-#ifdef VRP_DOUBLE_PRECISION
+#ifdef PYVRP_DOUBLE_PRECISION
 using Value = double;
 #else
 using Value = int;
@@ -118,14 +119,16 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
 }
 
 // Comparison operators.
-
 template <MeasureType Type>
 auto Measure<Type>::operator==(Measure<Type> const &other) const
 {
-    // TODO if we implement inexact equality for doubles, we also need to
-    //  update hashing to avoid two objects comparing equal but having
-    //  different hash values.
+#ifdef PYVRP_DOUBLE_PRECISION
+    auto const ourValue = std::pow(10, 9) * value;
+    auto const otherValue = std::pow(10, 9) * other.value;
+    return std::trunc(ourValue) == std::trunc(otherValue);
+#else
     return value == other.value;
+#endif
 }
 
 template <MeasureType Type>
@@ -183,7 +186,12 @@ template <MeasureType Type> struct hash<Measure<Type>>
 {
     size_t operator()(Measure<Type> const measure) const
     {
+#ifdef PYVRP_DOUBLE_PRECISION
+        auto const value = std::pow(10, 9) * other.get();
+        return std::hash<Value>()(std::trunc(value));
+#else
         return std::hash<Value>()(measure.get());
+#endif
     }
 };
 

@@ -61,7 +61,7 @@ Cost CostEvaluator::loadPenalty(Load load, Load vehicleCapacity) const
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 {
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return 0;
 #else
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;

@@ -121,7 +121,7 @@ bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
 
 bool Route::hasTimeWarp() const
 {
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
     return !isTimeWarpFeasible_;

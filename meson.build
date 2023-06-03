@@ -27,11 +27,11 @@ endif
 if get_option('problem') == 'cvrp'
     # CVRP does not have time windows, so we set a flag that compiles time 
     # window stuff out of the extension modules.
-    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
+    add_project_arguments('-DPYVRP_NO_TIME_WINDOWS', language: 'cpp')
 endif
 
 if get_option('precision') == 'double'  # default is integer
-    add_project_arguments('-DVRP_DOUBLE_PRECISION', language: 'cpp')
+    add_project_arguments('-DPYVRP_DOUBLE_PRECISION', language: 'cpp')
 endif
 
 # We first compile a common library that contains all regular, C++ code. This
