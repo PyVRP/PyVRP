@@ -83,7 +83,7 @@ public:
 
     // Comparison operators.
     [[nodiscard]] bool operator==(Measure const &other) const;
-    [[nodiscard]] auto operator<=>(Measure const &other) const;
+    [[nodiscard]] int operator<=>(Measure const &other) const;
 };
 
 // Retreives the underlying value.
@@ -130,7 +130,7 @@ bool Measure<Type>::operator==(Measure<Type> const &other) const
 }
 
 template <MeasureType Type>
-auto Measure<Type>::operator<=>(Measure<Type> const &other) const
+int Measure<Type>::operator<=>(Measure<Type> const &other) const
 {
     if (*this == other)  // equality must be checked first, to ensure we use a
         return 0;        // loose comparison in double precision mode.
