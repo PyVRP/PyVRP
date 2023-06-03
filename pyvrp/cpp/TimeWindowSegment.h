@@ -42,9 +42,9 @@ public:
                              Duration twLate);
 };
 
-TimeWindowSegment
-TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
-                         TimeWindowSegment const &other) const
+TimeWindowSegment TimeWindowSegment::merge(
+    [[maybe_unused]] Matrix<Duration> const &durationMatrix,
+    [[maybe_unused]] TimeWindowSegment const &other) const
 {
 #ifdef VRP_NO_TIME_WINDOWS
     return {};
@@ -70,16 +70,12 @@ TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
                          TimeWindowSegment const &second,
                          Args... args)
 {
-#ifdef VRP_NO_TIME_WINDOWS
-    return {};
-#else
     auto const res = first.merge(durationMatrix, second);
 
     if constexpr (sizeof...(args) == 0)
         return res;
     else
         return merge(durationMatrix, res, args...);
-#endif
 }
 
 Duration TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
