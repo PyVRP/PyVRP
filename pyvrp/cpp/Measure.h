@@ -7,7 +7,11 @@
 #include <limits>
 #include <type_traits>
 
+#ifdef VRP_DOUBLE_PRECISION
+using Value = double;
+#else
 using Value = int;
+#endif
 
 enum class MeasureType
 {
