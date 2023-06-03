@@ -47,7 +47,7 @@ template <MeasureType _> class Measure
     friend struct std::hash<Measure>;  // friend struct to enable hashing
 
 #ifdef PYVRP_DOUBLE_PRECISION
-    static constexpr Value const TOLERANCE = 1e-6;
+    static constexpr Value const TOLERANCE = 0.00001;  // same as in HGS-CVRP
 #else
     static constexpr Value const TOLERANCE = 1;
 #endif
