@@ -64,18 +64,22 @@ TimeWindowSegment TimeWindowSegment::merge(
 }
 
 template <typename... Args>
-TimeWindowSegment
-TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
-                         TimeWindowSegment const &first,
-                         TimeWindowSegment const &second,
-                         Args... args)
+TimeWindowSegment TimeWindowSegment::merge(
+    [[maybe_unused]] Matrix<Duration> const &durationMatrix,
+    [[maybe_unused]] TimeWindowSegment const &first,
+    [[maybe_unused]] TimeWindowSegment const &second,
+    [[maybe_unused]] Args... args)
 {
+#ifdef VRP_NO_TIME_WINDOWS
+    return {};
+#else
     auto const res = first.merge(durationMatrix, second);
 
     if constexpr (sizeof...(args) == 0)
         return res;
     else
         return merge(durationMatrix, res, args...);
+#endif;
 }
 
 Duration TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
