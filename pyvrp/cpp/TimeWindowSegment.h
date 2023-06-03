@@ -79,7 +79,7 @@ TimeWindowSegment TimeWindowSegment::merge(
         return res;
     else
         return merge(durationMatrix, res, args...);
-#endif;
+#endif
 }
 
 Duration TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
