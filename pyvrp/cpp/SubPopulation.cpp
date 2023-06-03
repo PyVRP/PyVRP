@@ -2,6 +2,9 @@
 
 #include <numeric>
 
+using const_iter = std::vector<SubPopulation::Item>::const_iterator;
+using iter = std::vector<SubPopulation::Item>::iterator;
+
 SubPopulation::SubPopulation(DiversityMeasure divOp,
                              PopulationParams const &params)
     : divOp(divOp), params(params)
@@ -49,19 +52,11 @@ SubPopulation::Item const &SubPopulation::operator[](size_t idx) const
     return items[idx];
 }
 
-std::vector<SubPopulation::Item>::const_iterator SubPopulation::cbegin() const
-{
-    return items.cbegin();
-}
+const_iter SubPopulation::cbegin() const { return items.cbegin(); }
 
-std::vector<SubPopulation::Item>::const_iterator SubPopulation::cend() const
-{
-    return items.cend();
-}
+const_iter SubPopulation::cend() const { return items.cend(); }
 
-void SubPopulation::remove(
-    std::vector<SubPopulation::Item>::iterator const &iterator,
-    CostEvaluator const &costEvaluator)
+void SubPopulation::remove(iter const &iterator)
 {
     for (auto &[params, individual, fitness, proximity] : items)
         // Remove individual from other proximities.
@@ -92,7 +87,7 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
         if (duplicate == items.end())  // there are no more duplicates
             break;
 
-        remove(duplicate, costEvaluator);
+        remove(duplicate);
     }
 
     while (size() > params.minPopSize)
@@ -104,7 +99,7 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
                 return a.fitness < b.fitness;
             });
 
-        remove(worstFitness, costEvaluator);
+        remove(worstFitness);
     }
 }
 
