@@ -8,7 +8,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<int, int, int, int, int, int, int, bool>(),
+        .def(py::init<Value, Value, Value, Value, Value, Value, Value, bool>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
@@ -48,9 +48,9 @@ PYBIND11_MODULE(_ProblemData, m)
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init([](std::vector<ProblemData::Client> const &clients,
                          int numVehicles,
-                         int vehicleCap,
-                         std::vector<std::vector<int>> const &dist,
-                         std::vector<std::vector<int>> const &dur) {
+                         Value vehicleCap,
+                         std::vector<std::vector<Value>> const &dist,
+                         std::vector<std::vector<Value>> const &dur) {
                  Matrix<Distance> distMat(clients.size());
                  Matrix<Duration> durMat(clients.size());
 

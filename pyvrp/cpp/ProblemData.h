@@ -22,13 +22,13 @@ public:
         Cost const prize = 0;        // Prize for visiting this client
         bool const required = true;  // Must client be in solution?
 
-        Client(int x,
-               int y,
-               int demand = 0,
-               int serviceDuration = 0,
-               int twEarly = 0,
-               int twLate = 0,
-               int prize = 0,
+        Client(Coordinate x,
+               Coordinate y,
+               Load demand = 0,
+               Duration serviceDuration = 0,
+               Duration twEarly = 0,
+               Duration twLate = 0,
+               Cost prize = 0,
                bool required = true);
     };
 
