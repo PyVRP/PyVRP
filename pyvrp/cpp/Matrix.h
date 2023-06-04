@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef PYVRP_MATRIX_H
+#define PYVRP_MATRIX_H
 
 #include <algorithm>
 #include <sstream>
@@ -110,4 +110,4 @@ template <typename T> T Matrix<T>::max() const
 
 template <typename T> size_t Matrix<T>::size() const { return data_.size(); }
 
-#endif
+#endif  // PYVRP_MATRIX_H

@@ -1,5 +1,5 @@
-#ifndef XORSHIFT128_H
-#define XORSHIFT128_H
+#ifndef PYVRP_XORSHIFT128_H
+#define PYVRP_XORSHIFT128_H
 
 #include <cstddef>
 #include <cstdint>
@@ -82,4 +82,4 @@ template <typename T> XorShift128::result_type XorShift128::randint(T high)
     return operator()() % high;
 }
 
-#endif  // XORSHIFT128_H
+#endif  // PYVRP_XORSHIFT128_H

@@ -1,5 +1,5 @@
-#ifndef CROSSOVER_H
-#define CROSSOVER_H
+#ifndef PYVRP_CROSSOVER_H
+#define PYVRP_CROSSOVER_H
 
 #include "CostEvaluator.h"
 #include "Individual.h"
@@ -51,4 +51,4 @@ Individual selectiveRouteExchange(
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes);
 
-#endif  // CROSSOVER_H
+#endif  // PYVRP_CROSSOVER_H

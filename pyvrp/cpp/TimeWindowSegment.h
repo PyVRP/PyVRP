@@ -1,5 +1,5 @@
-#ifndef TIMEWINDOWDATA_H
-#define TIMEWINDOWDATA_H
+#ifndef PYVRP_TIMEWINDOWSEGMENT_H
+#define PYVRP_TIMEWINDOWSEGMENT_H
 
 #include "Matrix.h"
 #include "Measure.h"
@@ -99,4 +99,4 @@ TimeWindowSegment::TimeWindowSegment(int idxFirst,
 {
 }
 
-#endif  // TIMEWINDOWDATA_H
+#endif  // PYVRP_TIMEWINDOWSEGMENT_H

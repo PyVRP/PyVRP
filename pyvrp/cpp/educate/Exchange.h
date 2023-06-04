@@ -1,5 +1,5 @@
-#ifndef EXCHANGE_H
-#define EXCHANGE_H
+#ifndef PYVRP_EXCHANGE_H
+#define PYVRP_EXCHANGE_H
 
 #include "LocalSearchOperator.h"
 #include "TimeWindowSegment.h"
@@ -318,4 +318,4 @@ template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V) const
     }
 }
 
-#endif  // EXCHANGE_H
+#endif  // PYVRP_EXCHANGE_H

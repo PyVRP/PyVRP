@@ -1,5 +1,5 @@
-#ifndef RELOCATESTAR_H
-#define RELOCATESTAR_H
+#ifndef PYVRP_RELOCATESTAR_H
+#define PYVRP_RELOCATESTAR_H
 
 #include "Exchange.h"
 #include "LocalSearchOperator.h"
@@ -32,4 +32,4 @@ public:
     }
 };
 
-#endif  // RELOCATESTAR_H
+#endif  // PYVRP_RELOCATESTAR_H

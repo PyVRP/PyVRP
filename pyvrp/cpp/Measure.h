@@ -1,5 +1,5 @@
-#ifndef MEASURE_H
-#define MEASURE_H
+#ifndef PYVRP_MEASURE_H
+#define PYVRP_MEASURE_H
 
 #include <cmath>
 #include <compare>
@@ -210,4 +210,4 @@ public:  // TODO should return type be Measure<Type>?
 
 }  // namespace std
 
-#endif  // MEASURE_H
+#endif  // PYVRP_MEASURE_H

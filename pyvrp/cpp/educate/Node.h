@@ -1,5 +1,5 @@
-#ifndef NODE_H
-#define NODE_H
+#ifndef PYVRP_NODE_H
+#define PYVRP_NODE_H
 
 #include "Measure.h"
 #include "TimeWindowSegment.h"
@@ -53,4 +53,4 @@ inline Node *p(Node *node) { return node->prev; }
  */
 inline Node *n(Node *node) { return node->next; }
 
-#endif  // NODE_H
+#endif  // PYVRP_NODE_H

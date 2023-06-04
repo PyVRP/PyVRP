@@ -1,5 +1,5 @@
-#ifndef HGS_PROBLEMDATA_H
-#define HGS_PROBLEMDATA_H
+#ifndef PYVRP_PROBLEMDATA_H
+#define PYVRP_PROBLEMDATA_H
 
 #include "Matrix.h"
 #include "Measure.h"
@@ -129,4 +129,4 @@ Duration ProblemData::duration(size_t first, size_t second) const
     return dur_(first, second);
 }
 
-#endif  // HGS_PROBLEMDATA_H
+#endif  // PYVRP_PROBLEMDATA_H

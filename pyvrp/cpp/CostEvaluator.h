@@ -1,5 +1,5 @@
-#ifndef HGS_COSTEVALUATOR_H
-#define HGS_COSTEVALUATOR_H
+#ifndef PYVRP_COSTEVALUATOR_H
+#define PYVRP_COSTEVALUATOR_H
 
 #include "Individual.h"
 #include "Measure.h"
@@ -68,4 +68,4 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #endif
 }
 
-#endif  // HGS_COSTEVALUATOR_H
+#endif  // PYVRP_COSTEVALUATOR_H

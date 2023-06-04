@@ -1,5 +1,5 @@
-#ifndef SWAPSTAR_H
-#define SWAPSTAR_H
+#ifndef PYVRP_SWAPSTAR_H
+#define PYVRP_SWAPSTAR_H
 
 #include "LocalSearchOperator.h"
 #include "Matrix.h"
@@ -108,4 +108,4 @@ public:
     }
 };
 
-#endif  // SWAPSTAR_H
+#endif  // PYVRP_SWAPSTAR_H
