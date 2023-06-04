@@ -38,6 +38,11 @@ jobs:
           - compiler: clang
             compiler-version: '12'
             python-version: '3.11'
+
+          # No need to test 'new' compilers with 'old' Python versions. This
+          # saves a bit in the CI process.
+          - compiler-version: latest
+            python-version: '3.8'
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
