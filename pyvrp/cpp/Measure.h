@@ -41,6 +41,9 @@ using Load = Measure<MeasureType::LOAD>;
  * The measure class is a thin wrapper around an underlying ``Value``. The
  * measure forms a strong type that is only explicitly convertible into other
  * arithmetic or measure types.
+ *
+ * Note that comparisons involving a Measure are not exact when compiling with
+ * double precision. A small tolerance is used instead.
  */
 template <MeasureType _> class Measure
 {
