@@ -1,5 +1,5 @@
-#ifndef INDIVIDUAL_H
-#define INDIVIDUAL_H
+#ifndef PYVRP_INDIVIDUAL_H
+#define PYVRP_INDIVIDUAL_H
 
 #include "Measure.h"
 #include "ProblemData.h"
@@ -198,4 +198,4 @@ template <> struct hash<Individual>
 };
 }  // namespace std
 
-#endif
+#endif  // PYVRP_INDIVIDUAL_H

@@ -1,5 +1,5 @@
-#ifndef HGS_COSTEVALUATOR_H
-#define HGS_COSTEVALUATOR_H
+#ifndef PYVRP_COSTEVALUATOR_H
+#define PYVRP_COSTEVALUATOR_H
 
 #include "Individual.h"
 #include "Measure.h"
@@ -61,11 +61,11 @@ Cost CostEvaluator::loadPenalty(Load load, Load vehicleCapacity) const
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 {
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return 0;
 #else
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
 }
 
-#endif  // HGS_COSTEVALUATOR_H
+#endif  // PYVRP_COSTEVALUATOR_H

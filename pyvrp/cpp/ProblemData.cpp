@@ -6,13 +6,13 @@
 #include <string>
 #include <vector>
 
-ProblemData::Client::Client(int x,
-                            int y,
-                            int demand,
-                            int serviceDuration,
-                            int twEarly,
-                            int twLate,
-                            int prize,
+ProblemData::Client::Client(Coordinate x,
+                            Coordinate y,
+                            Load demand,
+                            Duration serviceDuration,
+                            Duration twEarly,
+                            Duration twLate,
+                            Cost prize,
                             bool required)
     : x(x),
       y(y),

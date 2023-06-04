@@ -20,7 +20,7 @@ Cost deltaCost(Client client,
     auto const currDist = data.dist(prev, next);
     auto const propDist = data.dist(prev, client) + data.dist(client, next);
 
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return static_cast<Cost>(propDist - currDist);
 #else
     auto const &clientData = data.client(client);

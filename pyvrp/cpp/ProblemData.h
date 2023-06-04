@@ -1,5 +1,5 @@
-#ifndef HGS_PROBLEMDATA_H
-#define HGS_PROBLEMDATA_H
+#ifndef PYVRP_PROBLEMDATA_H
+#define PYVRP_PROBLEMDATA_H
 
 #include "Matrix.h"
 #include "Measure.h"
@@ -22,13 +22,13 @@ public:
         Cost const prize = 0;        // Prize for visiting this client
         bool const required = true;  // Must client be in solution?
 
-        Client(int x,
-               int y,
-               int demand = 0,
-               int serviceDuration = 0,
-               int twEarly = 0,
-               int twLate = 0,
-               int prize = 0,
+        Client(Coordinate x,
+               Coordinate y,
+               Load demand = 0,
+               Duration serviceDuration = 0,
+               Duration twEarly = 0,
+               Duration twLate = 0,
+               Cost prize = 0,
                bool required = true);
     };
 
@@ -129,4 +129,4 @@ Duration ProblemData::duration(size_t first, size_t second) const
     return dur_(first, second);
 }
 
-#endif  // HGS_PROBLEMDATA_H
+#endif  // PYVRP_PROBLEMDATA_H

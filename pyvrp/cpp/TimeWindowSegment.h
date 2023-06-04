@@ -1,5 +1,5 @@
-#ifndef TIMEWINDOWDATA_H
-#define TIMEWINDOWDATA_H
+#ifndef PYVRP_TIMEWINDOWSEGMENT_H
+#define PYVRP_TIMEWINDOWSEGMENT_H
 
 #include "Matrix.h"
 #include "Measure.h"
@@ -46,7 +46,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] Matrix<Duration> const &durationMatrix,
     [[maybe_unused]] TimeWindowSegment const &other) const
 {
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
     auto const arcDuration = durationMatrix(idxLast, other.idxFirst);
@@ -70,7 +70,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] TimeWindowSegment const &second,
     [[maybe_unused]] Args... args)
 {
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
     auto const res = first.merge(durationMatrix, second);
@@ -99,4 +99,4 @@ TimeWindowSegment::TimeWindowSegment(int idxFirst,
 {
 }
 
-#endif  // TIMEWINDOWDATA_H
+#endif  // PYVRP_TIMEWINDOWSEGMENT_H

@@ -1,13 +1,18 @@
-#ifndef MEASURE_H
-#define MEASURE_H
+#ifndef PYVRP_MEASURE_H
+#define PYVRP_MEASURE_H
 
+#include <cmath>
 #include <compare>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <type_traits>
 
+#ifdef PYVRP_DOUBLE_PRECISION
+using Value = double;
+#else
 using Value = int;
+#endif
 
 enum class MeasureType
 {
@@ -36,6 +41,9 @@ using Load = Measure<MeasureType::LOAD>;
  * The measure class is a thin wrapper around an underlying ``Value``. The
  * measure forms a strong type that is only explicitly convertible into other
  * arithmetic or measure types.
+ *
+ * Note that comparisons involving a Measure are not exact when compiling with
+ * double precision. A small tolerance is used instead.
  */
 template <MeasureType _> class Measure
 {
@@ -68,7 +76,7 @@ public:
     }
 
     // Retreives the underlying value.
-    Value get() const;
+    [[nodiscard]] Value get() const;
 
     // In-place unary operators.
     Measure &operator+=(Measure const &rhs);
@@ -77,8 +85,8 @@ public:
     Measure &operator/=(Measure const &rhs);
 
     // Comparison operators.
-    auto operator==(Measure const &other) const;
-    auto operator<=>(Measure const &other) const;
+    [[nodiscard]] bool operator==(Measure const &other) const;
+    [[nodiscard]] int operator<=>(Measure const &other) const;
 };
 
 // Retreives the underlying value.
@@ -114,20 +122,23 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
 }
 
 // Comparison operators.
-
 template <MeasureType Type>
-auto Measure<Type>::operator==(Measure<Type> const &other) const
+bool Measure<Type>::operator==(Measure<Type> const &other) const
 {
-    // TODO if we implement inexact equality for doubles, we also need to
-    //  update hashing to avoid two objects comparing equal but having
-    //  different hash values.
+#ifdef PYVRP_DOUBLE_PRECISION
+    return std::abs(value - other.value) < 1e-5;  // HGS-CVRP tolerance value
+#else
     return value == other.value;
+#endif
 }
 
 template <MeasureType Type>
-auto Measure<Type>::operator<=>(Measure<Type> const &other) const
+int Measure<Type>::operator<=>(Measure<Type> const &other) const
 {
-    return value <=> other.value;
+    if (*this == other)  // equality must be checked first, to ensure we use a
+        return 0;        // loose comparison in double precision mode.
+
+    return value < other.value ? -1 : 1;
 }
 
 // Free-standing binary operators.
@@ -179,7 +190,14 @@ template <MeasureType Type> struct hash<Measure<Type>>
 {
     size_t operator()(Measure<Type> const measure) const
     {
+#ifdef PYVRP_DOUBLE_PRECISION
+        // When using double precision, this hashes 'equal' items differently
+        // when they are very close to halfway between an integer value. Not
+        // ideal, but this should work well enough for our application.
+        return std::hash<Value>()(std::round(measure.get()));
+#else
         return std::hash<Value>()(measure.get());
+#endif
     }
 };
 
@@ -192,4 +210,4 @@ public:  // TODO should return type be Measure<Type>?
 
 }  // namespace std
 
-#endif  // MEASURE_H
+#endif  // PYVRP_MEASURE_H

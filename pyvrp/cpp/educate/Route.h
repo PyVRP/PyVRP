@@ -1,5 +1,5 @@
-#ifndef HGS_VRPTW_ROUTE_H
-#define HGS_VRPTW_ROUTE_H
+#ifndef PYVRP_ROUTE_H
+#define PYVRP_ROUTE_H
 
 #include "CircleSector.h"
 #include "Node.h"
@@ -121,7 +121,7 @@ bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
 
 bool Route::hasTimeWarp() const
 {
-#ifdef VRP_NO_TIME_WINDOWS
+#ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
     return !isTimeWarpFeasible_;
@@ -187,4 +187,4 @@ Load Route::loadBetween(size_t start, size_t end) const
 // Outputs a route into a given ostream in CVRPLib format
 std::ostream &operator<<(std::ostream &out, Route const &route);
 
-#endif  // HGS_VRPTW_ROUTE_H
+#endif  // PYVRP_ROUTE_H

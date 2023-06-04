@@ -1,5 +1,5 @@
-#ifndef TWOOPT_H
-#define TWOOPT_H
+#ifndef PYVRP_TWOOPT_H
+#define PYVRP_TWOOPT_H
 
 #include "LocalSearchOperator.h"
 
@@ -32,4 +32,4 @@ public:
     void apply(Node *U, Node *V) const override;
 };
 
-#endif  // TWOOPT_H
+#endif  // PYVRP_TWOOPT_H

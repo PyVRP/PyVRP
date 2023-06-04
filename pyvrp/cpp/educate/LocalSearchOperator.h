@@ -1,5 +1,5 @@
-#ifndef LOCALSEARCHOPERATOR_H
-#define LOCALSEARCHOPERATOR_H
+#ifndef PYVRP_LOCALSEARCHOPERATOR_H
+#define PYVRP_LOCALSEARCHOPERATOR_H
 
 #include "CostEvaluator.h"
 #include "Individual.h"
@@ -75,4 +75,4 @@ public:
     virtual void update([[maybe_unused]] Route *U){};
 };
 
-#endif  // LOCALSEARCHOPERATOR_H
+#endif  // PYVRP_LOCALSEARCHOPERATOR_H

@@ -1,5 +1,5 @@
-#ifndef MOVETWOCLIENTSREVERSED_H
-#define MOVETWOCLIENTSREVERSED_H
+#ifndef PYVRP_MOVETWOCLIENTSREVERSED_H
+#define PYVRP_MOVETWOCLIENTSREVERSED_H
 
 #include "LocalSearchOperator.h"
 
@@ -17,4 +17,4 @@ public:
     void apply(Node *U, Node *V) const override;
 };
 
-#endif  // MOVETWOCLIENTSREVERSED_H
+#endif  // PYVRP_MOVETWOCLIENTSREVERSED_H
