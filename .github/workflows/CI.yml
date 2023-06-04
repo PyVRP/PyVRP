@@ -29,6 +29,15 @@ jobs:
             compiler-version: '10'  # minimum gcc version
           - compiler: gcc
             compiler-version: '12'  # minimum clang version
+  
+          # No need to test 'old' compilers with 'new' Python versions. This
+          # saves a bit in the CI process.
+          - compiler: gcc
+            compiler-version: '10'
+            python-version: '3.11'
+          - compiler: clang
+            compiler-version: '12'
+            python-version: '3.11'
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
