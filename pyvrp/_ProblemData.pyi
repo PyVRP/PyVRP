@@ -52,7 +52,7 @@ class Client:
         required: bool = True,
     ) -> None: ...
 
-class Route:
+class RouteData:
     """
     Simple data object storing all route data as properties.
 
@@ -113,7 +113,7 @@ class ProblemData:
         Client
             A simple data object containing the depot's information.
         """
-    def route_data(self, route: int) -> Route:
+    def route_data(self, route: int) -> RouteData:
         """
         Returns route data for the given route index.
 
