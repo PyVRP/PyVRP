@@ -92,8 +92,7 @@ def test_matrix_access():
 
     data = ProblemData(
         clients=clients,
-        nb_vehicles=1,
-        vehicle_cap=1,
+        vehicle_capacities=[1, 1],
         distance_matrix=dist_mat,  # type: ignore
         duration_matrix=dur_mat,  # type: ignore
     )
