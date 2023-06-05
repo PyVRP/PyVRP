@@ -56,7 +56,7 @@ public:
         [[nodiscard]] bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Visits const visits);
+        Route(ProblemData const &data, Visits const visits, size_t const rIdx);
     };
 
 private:

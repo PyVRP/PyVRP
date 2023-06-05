@@ -11,9 +11,10 @@ namespace py = pybind11;
 PYBIND11_MODULE(_Individual, m)
 {
     py::class_<Individual::Route>(m, "Route")
-        .def(py::init<ProblemData const &, std::vector<int>>(),
+        .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
-             py::arg("visits"))
+             py::arg("visits"),
+             py::arg("rIdx"))
         .def("visits",
              &Individual::Route::visits,
              py::return_value_policy::reference_internal)

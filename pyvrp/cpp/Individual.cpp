@@ -19,12 +19,11 @@ void Individual::evaluate(ProblemData const &data)
     for (size_t idx = 0; idx < data.maxNumRoutes(); idx++)
     {
         auto const &route = routes_[idx];
-        auto const &routeData = data.routeData(idx);
         if (route.empty())
             continue;
 
         // Whole solution statistics.
-        numRoutes_++;
+        numNonEmptyRoutes_++;
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
@@ -125,21 +124,21 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     auto const perRouteFloor = std::max(numClients / maxNumRoutes, size_t(1));
     auto const perRoute = perRouteFloor + (numClients % maxNumRoutes != 0);
 
-    std::vector<std::vector<Client>> routes(data.numVehicles());
+    std::vector<std::vector<Client>> routes(data.maxNumRoutes());
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
+        routes_[idx] = Route(data, routes[idx], idx);
 
-    makeNeighbours();
+    makeNeighbours(data);
     makeAssignedRouteTypes(data);
     evaluate(data);
 }
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
-    : routes_(data.numVehicles()),
+    : routes_(data.maxNumRoutes()),
       neighbours(data.numClients() + 1, {0, 0}),
       assignedRouteTypes(data.numClients() + 1)
 {
@@ -172,14 +171,16 @@ Individual::Individual(ProblemData const &data,
     }
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
+        routes_[idx] = Route(data, routes[idx], idx);
 
     makeNeighbours(data);
     makeAssignedRouteTypes(data);
     evaluate(data);
 }
 
-Individual::Route::Route(ProblemData const &data, Visits const visits)
+Individual::Route::Route(ProblemData const &data,
+                         Visits const visits,
+                         size_t const rIdx)
     : visits_(std::move(visits))
 {
     if (visits_.empty())
@@ -221,9 +222,8 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     duration_ += data.duration(last, 0);
     time += data.client(last).serviceDuration + data.duration(last, 0);
     timeWarp_ += std::max(time - data.depot().twLate, 0);  // depot closing tw
-    excessLoad_ = data.vehicleCapacity() < demand_
-                      ? demand_ - data.vehicleCapacity()
-                      : 0;
+    auto const capacity = data.routeData(rIdx).vehicleCapacity;
+    excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;
 }
 
 bool Individual::Route::empty() const { return visits_.empty(); }
@@ -285,9 +285,11 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     auto const &routes = indiv.getRoutes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
+    {
         if (routes[idx].empty())
             continue;
-    out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
+        out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
+    }
 
     out << "Distance: " << indiv.distance() << '\n';
     out << "Prizes: " << indiv.prizes() << '\n';
