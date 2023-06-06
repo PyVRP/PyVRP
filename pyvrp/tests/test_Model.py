@@ -1,4 +1,3 @@
-import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
@@ -174,26 +173,24 @@ def test_model_and_solve():
         model.add_client(1191, 639, 5, 360, 12000, 19500),
     ]
 
-    edge_weights = np.array(
-        [
-            [0, 1544, 1944, 1931, 1476],
-            [1726, 0, 1992, 1427, 1593],
-            [1965, 1975, 0, 621, 1090],
-            [2063, 1433, 647, 0, 818],
-            [1475, 1594, 1090, 828, 0],
-        ]
-    )
+    edge_weights = [
+        [0, 1544, 1944, 1931, 1476],
+        [1726, 0, 1992, 1427, 1593],
+        [1965, 1975, 0, 621, 1090],
+        [2063, 1433, 647, 0, 818],
+        [1475, 1594, 1090, 828, 0],
+    ]
 
     for idx, client in enumerate(clients, 1):
-        from_depot = edge_weights[0, idx]
-        to_depot = edge_weights[idx, 0]
+        from_depot = edge_weights[0][idx]
+        to_depot = edge_weights[idx][0]
 
         model.add_edge(depot, client, from_depot, from_depot)
         model.add_edge(client, depot, to_depot, to_depot)
 
         for other_idx, other in enumerate(clients, 1):
-            from_client = edge_weights[idx, other_idx]
-            to_client = edge_weights[other_idx, idx]
+            from_client = edge_weights[idx][other_idx]
+            to_client = edge_weights[other_idx][idx]
 
             model.add_edge(client, other, from_client, from_client)
             model.add_edge(other, client, to_client, to_client)
