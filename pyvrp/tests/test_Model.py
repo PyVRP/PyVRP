@@ -146,7 +146,6 @@ def test_read_and_solve():
     # Solve the small E-n22-k4 instance using read-and-solve.
     where = "pyvrp/tests/data/E-n22-k4.txt"
     model = Model.read(where, round_func="dimacs")
-
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 3_743)
     assert_(res.is_feasible())
@@ -156,7 +155,6 @@ def test_model_and_solve():
     # Solve the small OkSmall instance (four clients) using read-and-solve.
     where = "pyvrp/tests/data/OkSmall.txt"
     model = Model.read(where)
-
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
