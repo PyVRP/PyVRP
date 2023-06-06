@@ -117,6 +117,9 @@ class Model:
         distance: int,
         duration: int,
     ) -> Edge:
+        if distance < 0 or duration < 0:
+            raise ValueError("Cannot have negative edge distance or duration.")
+
         edge = Edge(frm, to, distance, duration)
         self._edges.append(edge)
         return edge
