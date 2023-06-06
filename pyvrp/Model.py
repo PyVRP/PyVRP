@@ -13,9 +13,8 @@ from pyvrp._ProblemData import Client, ProblemData
 from pyvrp._XorShift128 import XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-
-from .read import no_rounding, read
-from .stop import StoppingCriterion
+from pyvrp.read import no_rounding, read
+from pyvrp.stop import StoppingCriterion
 
 Depot = Client
 
