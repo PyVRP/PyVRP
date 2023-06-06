@@ -13,14 +13,9 @@ from pyvrp._ProblemData import Client, ProblemData
 from pyvrp._XorShift128 import XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.educate import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
-    LocalSearch,
-    compute_neighbours,
-)
-from pyvrp.read import no_rounding, read
-from pyvrp.stop import StoppingCriterion
+
+from .read import no_rounding, read
+from .stop import StoppingCriterion
 
 Depot = Client
 
@@ -41,7 +36,7 @@ class VehicleType:
 
 class Model:
     """
-    A modelling interface for vehicle routing problems.
+    A simple interface for modelling vehicle routing problems with PyVRP.
     """
 
     def __init__(self):
@@ -53,6 +48,11 @@ class Model:
 
     @property
     def data(self) -> Optional[ProblemData]:
+        """
+        Returns the underlying :class:`~pyvrp._ProblemData.ProblemData`
+        instance, if it already exists. Returns ``None`` if it has not
+        yet been created.
+        """
         return self._data
 
     @classmethod
@@ -62,6 +62,14 @@ class Model:
         instance_format: str = "vrplib",
         round_func: Union[str, Callable] = no_rounding,
     ) -> "Model":
+        """
+        Reads a VRPLIB or Solomon formatted file into a model instance.
+
+        .. note::
+
+           This method is a thin wrapper around :func:`~pyvrp.read.read`. See
+           that function for details.
+        """
         data = read(where, instance_format, round_func)
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]
         edges = [
@@ -96,6 +104,10 @@ class Model:
         prize: int = 0,
         required: bool = True,
     ) -> Client:
+        """
+        Adds a client with the given attributes to the model. Returns the
+        created :class:`~pyvrp._ProblemData.Client` instance.
+        """
         client = Client(
             x,
             y,
@@ -113,6 +125,15 @@ class Model:
     def add_depot(
         self, x: int, y: int, tw_early: int = 0, tw_late: int = 0
     ) -> Depot:
+        """
+        Adds a depot with the given attributes to the model. Returns the
+        created :class:`~pyvrp._ProblemData.Client` instance.
+
+        .. warning::
+
+           PyVRP does not yet support multi-depot VRPs. For now, only one depot
+           can be added to the model.
+        """
         if len(self._depots) >= 1:
             msg = "PyVRP does not yet support multi-depot VRPs."
             raise ValueError(msg)
@@ -128,6 +149,17 @@ class Model:
         distance: int,
         duration: int = 0,
     ) -> Edge:
+        """
+        Adds an edge :math:`(i, j)` between ``frm`` (:math:`i`) and ``to``
+        (:math:`j`). The edge can be given distance and duration attributes.
+        Distance is required, but the default duration is zero. Returns the
+        created edge.
+
+        Raises
+        ------
+        ValueError
+            When either distance or duration is a negative value.
+        """
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
 
@@ -136,6 +168,19 @@ class Model:
         return edge
 
     def add_vehicle_type(self, amount: int, capacity: int) -> VehicleType:
+        """
+        TODO
+
+        .. warning::
+
+           PyVRP does not yet support heterogeneous fleet VRPs. For now, only
+           one vehicle type can be added to the model.
+
+        Raises
+        ------
+        ValueError
+            TODO
+        """
         if len(self._vehicle_types) >= 1:
             msg = "PyVRP does not yet support heterogeneous fleet VRPs."
             raise ValueError(msg)
@@ -151,6 +196,9 @@ class Model:
         return vehicle_type
 
     def update(self):
+        """
+        TODO
+        """
         clients = self._depots + self._clients
         client2idx = {id(client): idx for idx, client in enumerate(clients)}
 
@@ -177,6 +225,30 @@ class Model:
         )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
+        """
+        TODO
+
+        Parameters
+        ----------
+        stop
+            TODO
+        seed, optional
+            TODO, by default 0
+
+        Returns
+        -------
+        Result
+            The solution result object, containing the best found solution.
+        """
+        # These cause a circular import, so the imports needed to be postponed
+        # to here (where they are actually used).
+        from pyvrp.educate import (
+            NODE_OPERATORS,
+            ROUTE_OPERATORS,
+            LocalSearch,
+            compute_neighbours,
+        )
+
         if self.data is None:
             self.update()
             assert self.data is not None  # mypy needs this assert
