@@ -33,6 +33,12 @@ class Edge:
     duration: int
 
 
+@dataclass
+class VehicleType:
+    amount: int
+    capacity: int
+
+
 class Model:
     """
     A modelling interface for vehicle routing problems.
@@ -42,6 +48,7 @@ class Model:
         self._clients: List[Client] = []
         self._depots: List[Depot] = []
         self._edges: List[Edge] = []
+        self._vehicle_types: List[VehicleType] = []
         self._data: Optional[ProblemData] = None
 
     @property
@@ -67,11 +74,13 @@ class Model:
             for frm in range(data.num_clients + 1)
             for to in range(data.num_clients + 1)
         ]
+        vehicle_types = [VehicleType(data.num_clients, data.vehicle_capacity)]
 
         self = Model()
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
+        self._vehicle_types = vehicle_types
         self._data = data
 
         return self
@@ -126,17 +135,36 @@ class Model:
         self._edges.append(edge)
         return edge
 
+    def add_vehicle_type(self, amount: int, capacity: int) -> VehicleType:
+        if len(self._vehicle_types) >= 1:
+            msg = "PyVRP does not yet support heterogeneous fleet VRPs."
+            raise ValueError(msg)
+
+        if amount <= 0:
+            raise ValueError("Cannot have non-positive number of vehicles.")
+
+        if capacity <= 0:
+            raise ValueError("Cannot have non-positive vehicle capacity.")
+
+        vehicle_type = VehicleType(amount, capacity)
+        self._vehicle_types.append(vehicle_type)
+        return vehicle_type
+
     def update(self):
         clients = self._depots + self._clients
         client2idx = {id(client): idx for idx, client in enumerate(clients)}
 
-        # TODO
-        num_vehicles = 1
-        vehicle_capacity = 1
+        num_vehicles = self._vehicle_types[0].amount
+        vehicle_capacity = self._vehicle_types[0].capacity
 
         shape = (len(clients), len(clients))
-        distances = np.full(shape, np.inf, dtype=int)
-        durations = np.full(shape, np.inf, dtype=int)
+        infty = 1e9  # TODO
+
+        distances = np.full(shape, infty, dtype=int)
+        np.fill_diagonal(distances, 0)
+
+        durations = np.full(shape, infty, dtype=int)
+        np.fill_diagonal(durations, 0)
 
         for edge in self._edges:
             frm = client2idx[id(edge.frm)]
