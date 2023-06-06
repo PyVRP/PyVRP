@@ -19,7 +19,7 @@ from pyvrp.educate import (
     LocalSearch,
     compute_neighbours,
 )
-from pyvrp.read import read
+from pyvrp.read import no_rounding, read
 from pyvrp.stop import StoppingCriterion
 
 Depot = Client
@@ -59,8 +59,8 @@ class Model:
     def read(
         cls,
         where: Union[str, pathlib.Path],
-        instance_format: str,
-        round_func: Union[str, Callable],
+        instance_format: str = "vrplib",
+        round_func: Union[str, Callable] = no_rounding,
     ) -> "Model":
         data = read(where, instance_format, round_func)
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]

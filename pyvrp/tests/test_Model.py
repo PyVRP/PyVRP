@@ -1,7 +1,8 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Model
+from pyvrp import Model, ProblemData, read
+from pyvrp.stop import MaxIterations
 
 
 def test_model_update():
@@ -70,5 +71,42 @@ def test_add_vehicle_type_raises_negative_amount_or_capacity(amount, capacity):
         model.add_vehicle_type(amount, capacity)
 
 
-def test_read_and_solve():
+def test_add_client():
     pass
+
+
+def test_add_depot():
+    pass
+
+
+def test_add_edge():
+    pass
+
+
+def test_add_vehicle_type():
+    pass
+
+
+def test_read():
+    where = "pyvrp/tests/data/E-n22-k4.txt"
+    model = Model.read(where, round_func="dimacs")
+
+    model_data: ProblemData = model.data  # type: ignore
+    read_data = read(where, round_func="dimacs")
+
+    assert_(model_data is not None)
+    assert_equal(model_data.num_clients, read_data.num_clients)
+    assert_equal(model_data.num_vehicles, read_data.num_vehicles)
+    assert_equal(model_data.vehicle_capacity, read_data.vehicle_capacity)
+
+    assert_equal(model_data.dist(3, 4), read_data.dist(3, 4))
+    assert_equal(model_data.duration(2, 1), read_data.duration(2, 1))
+
+
+def test_solve():
+    where = "pyvrp/tests/data/E-n22-k4.txt"
+    model = Model.read(where, round_func="dimacs")
+
+    res = model.solve(stop=MaxIterations(100), seed=0)
+    assert_equal(res.cost(), 3_743)
+    assert_(res.is_feasible())
