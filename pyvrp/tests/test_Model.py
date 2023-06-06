@@ -131,16 +131,19 @@ def test_read():
     model_data: ProblemData = model.data  # type: ignore
     read_data = read(where, round_func="dimacs")
 
-    assert_(model_data is not None)
+    # We can first check if the overall problem dimension numbers agree.
     assert_equal(model_data.num_clients, read_data.num_clients)
     assert_equal(model_data.num_vehicles, read_data.num_vehicles)
     assert_equal(model_data.vehicle_capacity, read_data.vehicle_capacity)
 
+    # It's a bit cumbersome to compare the whole matrices, so we use a few
+    # sample traces from the distance and duration matrices instead.
     assert_equal(model_data.dist(3, 4), read_data.dist(3, 4))
     assert_equal(model_data.duration(2, 1), read_data.duration(2, 1))
 
 
 def test_solve():
+    # Test and solve a small instance.
     where = "pyvrp/tests/data/E-n22-k4.txt"
     model = Model.read(where, round_func="dimacs")
     res = model.solve(stop=MaxIterations(100), seed=0)
