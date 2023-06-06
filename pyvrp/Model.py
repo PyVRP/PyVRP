@@ -2,6 +2,8 @@ import pathlib
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Union
 
+import numpy as np
+
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
@@ -102,7 +104,7 @@ class Model:
     def add_depot(
         self, x: int, y: int, tw_early: int = 0, tw_late: int = 0
     ) -> Depot:
-        if len(self._depots) > 1:
+        if len(self._depots) >= 1:
             msg = "PyVRP does not yet support multi-depot VRPs."
             raise ValueError(msg)
 
@@ -125,15 +127,22 @@ class Model:
         return edge
 
     def update(self):
-        # TODO
         clients = self._depots + self._clients
-        # client2idx = {id(client): idx for idx, client in enumerate(clients)}
+        client2idx = {id(client): idx for idx, client in enumerate(clients)}
 
+        # TODO
         num_vehicles = 1
         vehicle_capacity = 1
 
-        distances = [[]]
-        durations = [[]]
+        shape = (len(clients), len(clients))
+        distances = np.full(shape, np.inf, dtype=int)
+        durations = np.full(shape, np.inf, dtype=int)
+
+        for edge in self._edges:
+            frm = client2idx[id(edge.frm)]
+            to = client2idx[id(edge.to)]
+            distances[frm, to] = edge.distance
+            durations[frm, to] = edge.duration
 
         self._data = ProblemData(
             clients, num_vehicles, vehicle_capacity, distances, durations
