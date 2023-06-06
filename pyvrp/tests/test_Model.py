@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
@@ -142,11 +143,61 @@ def test_read():
     assert_equal(model_data.duration(2, 1), read_data.duration(2, 1))
 
 
-def test_solve():
-    # Test and solve a small instance.
+def test_read_and_solve():
+    # Solve the small E-n22-k4 instance using read-and-solve.
     where = "pyvrp/tests/data/E-n22-k4.txt"
     model = Model.read(where, round_func="dimacs")
-    res = model.solve(stop=MaxIterations(100), seed=0)
 
+    res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 3_743)
+    assert_(res.is_feasible())
+
+
+def test_model_and_solve():
+    # Solve the small OkSmall instance (four clients) using read-and-solve.
+    where = "pyvrp/tests/data/OkSmall.txt"
+    model = Model.read(where)
+
+    res = model.solve(stop=MaxIterations(100), seed=0)
+    assert_equal(res.cost(), 9_155)
+    assert_(res.is_feasible())
+
+    # Now do the same thing, but model the instance using the modelling API.
+    # This should of course result in the same solution.
+    model = Model()
+    model.add_vehicle_type(amount=3, capacity=10)
+    depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
+    clients = [
+        model.add_client(226, 1297, 5, 360, 15600, 22500),
+        model.add_client(590, 530, 5, 360, 12000, 19500),
+        model.add_client(435, 718, 3, 420, 8400, 15300),
+        model.add_client(1191, 639, 5, 360, 12000, 19500),
+    ]
+
+    edge_weights = np.array(
+        [
+            [0, 1544, 1944, 1931, 1476],
+            [1726, 0, 1992, 1427, 1593],
+            [1965, 1975, 0, 621, 1090],
+            [2063, 1433, 647, 0, 818],
+            [1475, 1594, 1090, 828, 0],
+        ]
+    )
+
+    for idx, client in enumerate(clients, 1):
+        from_depot = edge_weights[0, idx]
+        to_depot = edge_weights[idx, 0]
+
+        model.add_edge(depot, client, from_depot, from_depot)
+        model.add_edge(client, depot, to_depot, to_depot)
+
+        for other_idx, other in enumerate(clients, 1):
+            from_client = edge_weights[idx, other_idx]
+            to_client = edge_weights[other_idx, idx]
+
+            model.add_edge(client, other, from_client, from_client)
+            model.add_edge(other, client, to_client, to_client)
+
+    res = model.solve(stop=MaxIterations(100), seed=0)
+    assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())

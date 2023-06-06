@@ -126,7 +126,7 @@ class Model:
         frm: Union[Client, Depot],
         to: Union[Client, Depot],
         distance: int,
-        duration: int,
+        duration: int = 0,
     ) -> Edge:
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
