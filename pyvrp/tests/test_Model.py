@@ -71,20 +71,57 @@ def test_add_vehicle_type_raises_negative_amount_or_capacity(amount, capacity):
         model.add_vehicle_type(amount, capacity)
 
 
-def test_add_client():
-    pass
+def test_add_client_attributes():
+    model = Model()
+    client = model.add_client(
+        x=1,
+        y=2,
+        demand=3,
+        service_duration=4,
+        tw_early=5,
+        tw_late=6,
+        prize=7,
+        required=False,
+    )
+
+    assert_equal(client.x, 1)
+    assert_equal(client.y, 2)
+    assert_equal(client.demand, 3)
+    assert_equal(client.service_duration, 4)
+    assert_equal(client.tw_early, 5)
+    assert_equal(client.tw_late, 6)
+    assert_equal(client.prize, 7)
+    assert_(not client.required)
 
 
-def test_add_depot():
-    pass
+def test_add_depot_attributes():
+    model = Model()
+    depot = model.add_depot(x=1, y=0, tw_early=3, tw_late=5)
+
+    assert_equal(depot.x, 1)
+    assert_equal(depot.y, 0)
+    assert_equal(depot.tw_early, 3)
+    assert_equal(depot.tw_late, 5)
 
 
 def test_add_edge():
-    pass
+    model = Model()
+    depot = model.add_depot(0, 0)
+    client = model.add_client(0, 1)
+    edge = model.add_edge(depot, client, distance=15, duration=49)
+
+    assert_(edge.frm is depot)
+    assert_(edge.to is client)
+    assert_equal(edge.distance, 15)
+    assert_equal(edge.duration, 49)
 
 
 def test_add_vehicle_type():
-    pass
+    model = Model()
+    vehicle_type = model.add_vehicle_type(amount=10, capacity=998)
+
+    assert_equal(vehicle_type.amount, 10)
+    assert_equal(vehicle_type.capacity, 998)
 
 
 def test_read():
@@ -106,7 +143,7 @@ def test_read():
 def test_solve():
     where = "pyvrp/tests/data/E-n22-k4.txt"
     model = Model.read(where, round_func="dimacs")
-
     res = model.solve(stop=MaxIterations(100), seed=0)
+
     assert_equal(res.cost(), 3_743)
     assert_(res.is_feasible())
