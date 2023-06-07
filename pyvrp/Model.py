@@ -205,9 +205,9 @@ class Model:
         num_vehicles = self._vehicle_types[0].amount
         vehicle_capacity = self._vehicle_types[0].capacity
 
-        infty = 1e9  # TODO
-        distances = np.full((len(clients), len(clients)), infty, dtype=int)
-        durations = np.full((len(clients), len(clients)), infty, dtype=int)
+        max_value = 1e3 * max(max(e.distance, e.duration) for e in self._edges)
+        distances = np.full((len(clients), len(clients)), max_value, dtype=int)
+        durations = np.full((len(clients), len(clients)), max_value, dtype=int)
 
         for edge in self._edges:
             frm = client2idx[id(edge.frm)]
