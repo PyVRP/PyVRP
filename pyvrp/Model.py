@@ -29,7 +29,7 @@ class Edge:
 
 @dataclass
 class VehicleType:
-    amount: int
+    number: int
     capacity: int
 
 
@@ -166,9 +166,9 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_vehicle_type(self, amount: int, capacity: int) -> VehicleType:
+    def add_vehicle_type(self, number: int, capacity: int) -> VehicleType:
         """
-        Adds a vehicle type with the given amount of vehicles of given capacity
+        Adds a vehicle type with the given number of vehicles of given capacity
         to the model.
 
         .. warning::
@@ -179,19 +179,19 @@ class Model:
         Raises
         ------
         ValueError
-            When either the vehicle amount or capacity is not a positive value.
+            When either the vehicle number or capacity is not a positive value.
         """
         if len(self._vehicle_types) >= 1:
             msg = "PyVRP does not yet support heterogeneous fleet VRPs."
             raise ValueError(msg)
 
-        if amount <= 0:
+        if number <= 0:
             raise ValueError("Must have positive number of vehicles.")
 
         if capacity < 0:
             raise ValueError("Cannot have negative vehicle capacity.")
 
-        vehicle_type = VehicleType(amount, capacity)
+        vehicle_type = VehicleType(number, capacity)
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
@@ -202,7 +202,7 @@ class Model:
         clients = self._depots + self._clients
         client2idx = {id(client): idx for idx, client in enumerate(clients)}
 
-        num_vehicles = self._vehicle_types[0].amount
+        num_vehicles = self._vehicle_types[0].number
         vehicle_capacity = self._vehicle_types[0].capacity
 
         infty = sum(max(e.distance, e.duration) for e in self._edges)

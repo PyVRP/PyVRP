@@ -56,18 +56,18 @@ def test_add_vehicle_type_raises_more_than_one_type():
 
 
 @mark.parametrize(
-    "amount, capacity",
+    "number, capacity",
     [
         (0, 1),  # zero vehicles is not OK (but zero capacity is)
         (-1, 1),  # negative vehicles is not OK
         (1, -1),  # negative capacity is not OK
     ],
 )
-def test_add_vehicle_type_raises_negative_amount_or_capacity(amount, capacity):
+def test_add_vehicle_type_raises_negative_number_or_capacity(number, capacity):
     model = Model()
 
     with assert_raises(ValueError):
-        model.add_vehicle_type(amount, capacity)
+        model.add_vehicle_type(number, capacity)
 
 
 def test_add_client_attributes():
@@ -117,9 +117,9 @@ def test_add_edge():
 
 def test_add_vehicle_type():
     model = Model()
-    vehicle_type = model.add_vehicle_type(amount=10, capacity=998)
+    vehicle_type = model.add_vehicle_type(number=10, capacity=998)
 
-    assert_equal(vehicle_type.amount, 10)
+    assert_equal(vehicle_type.number, 10)
     assert_equal(vehicle_type.capacity, 998)
 
 
@@ -161,7 +161,7 @@ def test_model_and_solve():
     # Now do the same thing, but model the instance using the modelling API.
     # This should of course result in the same solution.
     model = Model()
-    model.add_vehicle_type(amount=3, capacity=10)
+    model.add_vehicle_type(number=3, capacity=10)
     depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
     clients = [
         model.add_client(226, 1297, 5, 360, 15600, 22500),
@@ -208,7 +208,7 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type(amount=1, capacity=0)
+    model.add_vehicle_type(number=1, capacity=0)
 
     res = model.solve(stop=MaxIterations(100), seed=4)
     assert_equal(res.best.num_routes(), 1)
