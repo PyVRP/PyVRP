@@ -81,12 +81,12 @@ class Model:
             for frm in range(data.num_clients + 1)
             for to in range(data.num_clients + 1)
         ]
-        vehicle_types = [VehicleType(data.num_clients, data.vehicle_capacity)]
 
         self = Model()
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
+        vehicle_types = [VehicleType(data.num_vehicles, data.vehicle_capacity)]
         self._vehicle_types = vehicle_types
         self._data = data
 
@@ -244,9 +244,8 @@ class Model:
             compute_neighbours,
         )
 
-        if self.data is None:
-            self.update()  # make sure data is available
-            assert self.data is not None  # mypy needs this assert
+        self.update()  # make sure data is available
+        assert self.data is not None  # mypy needs this assert
 
         rng = XorShift128(seed=seed)
         ls = LocalSearch(self.data, rng, compute_neighbours(self.data))
