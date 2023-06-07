@@ -168,7 +168,8 @@ class Model:
 
     def add_vehicle_type(self, amount: int, capacity: int) -> VehicleType:
         """
-        TODO
+        Adds a vehicle type with the given amount of vehicles of given capacity
+        to the model.
 
         .. warning::
 
@@ -178,7 +179,7 @@ class Model:
         Raises
         ------
         ValueError
-            TODO
+            When either the vehicle amount or capacity is not a positive value.
         """
         if len(self._vehicle_types) >= 1:
             msg = "PyVRP does not yet support heterogeneous fleet VRPs."
@@ -196,7 +197,7 @@ class Model:
 
     def update(self):
         """
-        TODO
+        Updates the underlying ProblemData instance.
         """
         clients = self._depots + self._clients
         client2idx = {id(client): idx for idx, client in enumerate(clients)}
@@ -225,14 +226,14 @@ class Model:
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
         """
-        TODO
+        Solve this model.
 
         Parameters
         ----------
         stop
-            TODO
+            Stopping criterion to use.
         seed, optional
-            TODO, by default 0
+            Seed value to use for the PRNG, by default 0.
 
         Returns
         -------
@@ -248,9 +249,8 @@ class Model:
             compute_neighbours,
         )
 
-        if self.data is None:
-            self.update()
-            assert self.data is not None  # mypy needs this assert
+        self.update()  # make sure data is available
+        assert self.data is not None  # mypy needs this assert
 
         rng = XorShift128(seed=seed)
         ls = LocalSearch(self.data, rng, compute_neighbours(self.data))
