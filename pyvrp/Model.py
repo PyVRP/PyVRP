@@ -205,14 +205,9 @@ class Model:
         num_vehicles = self._vehicle_types[0].amount
         vehicle_capacity = self._vehicle_types[0].capacity
 
-        shape = (len(clients), len(clients))
         infty = 1e9  # TODO
-
-        distances = np.full(shape, infty, dtype=int)
-        np.fill_diagonal(distances, 0)
-
-        durations = np.full(shape, infty, dtype=int)
-        np.fill_diagonal(durations, 0)
+        distances = np.full((len(clients), len(clients)), infty, dtype=int)
+        durations = np.full((len(clients), len(clients)), infty, dtype=int)
 
         for edge in self._edges:
             frm = client2idx[id(edge.frm)]
@@ -249,8 +244,9 @@ class Model:
             compute_neighbours,
         )
 
-        self.update()  # make sure data is available
-        assert self.data is not None  # mypy needs this assert
+        if self.data is None:
+            self.update()  # make sure data is available
+            assert self.data is not None  # mypy needs this assert
 
         rng = XorShift128(seed=seed)
         ls = LocalSearch(self.data, rng, compute_neighbours(self.data))
