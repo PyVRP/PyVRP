@@ -186,10 +186,10 @@ class Model:
             raise ValueError(msg)
 
         if amount <= 0:
-            raise ValueError("Cannot have non-positive number of vehicles.")
+            raise ValueError("Must have positive number of vehicles.")
 
-        if capacity <= 0:
-            raise ValueError("Cannot have non-positive vehicle capacity.")
+        if capacity < 0:
+            raise ValueError("Cannot have negative vehicle capacity.")
 
         vehicle_type = VehicleType(amount, capacity)
         self._vehicle_types.append(vehicle_type)
@@ -205,7 +205,7 @@ class Model:
         num_vehicles = self._vehicle_types[0].amount
         vehicle_capacity = self._vehicle_types[0].capacity
 
-        infty = np.iinfo(np.int32).max
+        infty = sum(max(e.distance, e.duration) for e in self._edges)
         distances = np.full((len(clients), len(clients)), infty, dtype=int)
         durations = np.full((len(clients), len(clients)), infty, dtype=int)
 

@@ -58,9 +58,8 @@ def test_add_vehicle_type_raises_more_than_one_type():
 @mark.parametrize(
     "amount, capacity",
     [
-        (0, 1),  # zero vehicles is not OK
+        (0, 1),  # zero vehicles is not OK (but zero capacity is)
         (-1, 1),  # negative vehicles is not OK
-        (1, 0),  # zero capacity is not OK
         (1, -1),  # negative capacity is not OK
     ],
 )
@@ -195,4 +194,23 @@ def test_model_and_solve():
 
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
+    assert_(res.is_feasible())
+
+
+def test_partial_matrix():
+    model = Model()
+    depot = model.add_depot(0, 0)
+    clients = [model.add_client(0, 1), model.add_client(1, 0)]
+
+    # Only a subset of all possible edges exist. The model should be able to
+    # handle that.
+    model.add_edge(depot, clients[0], distance=1)
+    model.add_edge(clients[0], clients[1], distance=2)
+    model.add_edge(clients[1], depot, distance=1)
+
+    model.add_vehicle_type(amount=1, capacity=0)
+
+    res = model.solve(stop=MaxIterations(100), seed=4)
+    assert_equal(res.best.num_routes(), 1)
+    assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
     assert_(res.is_feasible())
