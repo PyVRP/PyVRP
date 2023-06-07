@@ -205,9 +205,11 @@ class Model:
         num_vehicles = self._vehicle_types[0].number
         vehicle_capacity = self._vehicle_types[0].capacity
 
-        infty = sum(max(e.distance, e.duration) for e in self._edges)
-        distances = np.full((len(clients), len(clients)), infty, dtype=int)
-        durations = np.full((len(clients), len(clients)), infty, dtype=int)
+        # This should be a sufficiently large maximum value to make sure such
+        # edges are never traversed.
+        max_value = 1e3 * max(max(e.distance, e.duration) for e in self._edges)
+        distances = np.full((len(clients), len(clients)), max_value, dtype=int)
+        durations = np.full((len(clients), len(clients)), max_value, dtype=int)
 
         for edge in self._edges:
             frm = client2idx[id(edge.frm)]
