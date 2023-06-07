@@ -197,7 +197,7 @@ def test_model_and_solve():
     assert_(res.is_feasible())
 
 
-def test_partial_matrix():
+def test_partial_distance_duration_matrix():
     model = Model()
     depot = model.add_depot(0, 0)
     clients = [model.add_client(0, 1), model.add_client(1, 0)]
