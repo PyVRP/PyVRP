@@ -5,7 +5,7 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm
+from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
@@ -257,15 +257,16 @@ class Model:
 
         self.update()  # make sure data is available
         assert self.data is not None  # mypy needs this assert
+        data = self.data
 
         rng = XorShift128(seed=seed)
-        ls = LocalSearch(self.data, rng, compute_neighbours(self.data))
+        ls = LocalSearch(data, rng, compute_neighbours(data))
 
         for op in NODE_OPERATORS:
-            ls.add_node_operator(op(self.data))
+            ls.add_node_operator(op(data))
 
         for op in ROUTE_OPERATORS:
-            ls.add_route_operator(op(self.data))
+            ls.add_route_operator(op(data))
 
         pm = PenaltyManager()
         pop_params = PopulationParams()
@@ -275,5 +276,6 @@ class Model:
             for _ in range(pop_params.min_pop_size)
         ]
 
-        algo = GeneticAlgorithm(self.data, pm, rng, pop, ls, srex, init)
+        gen_params = GeneticAlgorithmParams(collect_statistics=True)
+        algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, gen_params)
         return algo.run(stop)
