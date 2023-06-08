@@ -1,7 +1,8 @@
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
 from pytest import mark
 
 from pyvrp import Model, ProblemData, read
+from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
 
 
@@ -214,3 +215,38 @@ def test_partial_distance_duration_matrix():
     assert_equal(res.best.num_routes(), 1)
     assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
     assert_(res.is_feasible())
+
+
+def test_update_warns_about_scaling_issues(recwarn):
+    model = Model()
+    model.add_vehicle_type(number=1, capacity=0)
+    depot = model.add_depot(0, 0)
+    client = model.add_client(1, 1)
+
+    # 10 million is still small enough that no warning should be issued about
+    # numerical issues.
+    model.add_edge(client, depot, distance=10_000_000)
+    model.update()
+    assert_equal(len(recwarn), 0)
+
+    # But 100 million is too large. That's really close to INT_MAX, and might
+    # result in issues. So now a warning should be issued.
+    model.add_edge(depot, client, distance=100_000_000)
+    with assert_warns(ScalingWarning):
+        model.update()
+
+
+def test_read_solve_update_solve_same_solution():
+    where = "pyvrp/tests/data/OkSmall.txt"
+    model = Model.read(where)
+
+    def solve_and_check():
+        res = model.solve(stop=MaxIterations(100), seed=0)
+        assert_equal(res.cost(), 9_155)
+        assert_(res.is_feasible())
+
+    # If nothing has changed, update() should not result in a different data
+    # instance. We should thus find the exact same solution.
+    solve_and_check()
+    model.update()
+    solve_and_check()

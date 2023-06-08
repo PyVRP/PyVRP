@@ -1,6 +1,7 @@
 import pathlib
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Union
+from warnings import warn
 
 import numpy as np
 
@@ -13,6 +14,7 @@ from pyvrp._ProblemData import Client, ProblemData
 from pyvrp._XorShift128 import XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp.exceptions import ScalingWarning
 from pyvrp.read import no_rounding, read
 from pyvrp.stop import StoppingCriterion
 
@@ -207,7 +209,14 @@ class Model:
 
         # This should be a sufficiently large maximum value to make sure such
         # edges are never traversed.
-        max_value = 1e3 * max(max(e.distance, e.duration) for e in self._edges)
+        max_value = 10 * max(max(e.distance, e.duration) for e in self._edges)
+        if max_value > 0.1 * np.iinfo(np.int32).max:  # >10% of INT_MAX
+            msg = """
+            The maximum distance or duration value is very large. This might
+            impact numerical stability. Consider rescaling your input data.
+            """
+            warn(msg, ScalingWarning)
+
         distances = np.full((len(clients), len(clients)), max_value, dtype=int)
         durations = np.full((len(clients), len(clients)), max_value, dtype=int)
 
