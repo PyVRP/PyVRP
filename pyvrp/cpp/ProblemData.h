@@ -34,7 +34,7 @@ public:
 
     struct VehicleType
     {
-        size_t capacity;       // Capacity (max total demand) of the vehicle
+        Load capacity;         // Capacity (max total demand) of the vehicle
         size_t qty_available;  // Qty available of this vehicle type
         inline bool operator==(VehicleType const &other) const;
         inline bool operator!=(VehicleType const &other) const;

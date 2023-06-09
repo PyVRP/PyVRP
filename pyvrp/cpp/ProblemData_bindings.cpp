@@ -49,7 +49,10 @@ PYBIND11_MODULE(_ProblemData, m)
         .def(py::init<int, size_t>(),
              py::arg("capacity"),
              py::arg("qty_available"))
-        .def_readonly("capacity", &ProblemData::VehicleType::capacity)
+        .def_property_readonly("capacity",
+                               [](ProblemData::VehicleType const &vehicleType) {
+                                   return vehicleType.capacity.get();
+                               })
         .def_readonly("qty_available",
                       &ProblemData::VehicleType::qty_available);
 

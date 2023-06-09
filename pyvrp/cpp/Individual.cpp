@@ -69,7 +69,7 @@ Cost Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Individual::timeWarp() const { return timeWarp_; }
 
-void Individual::makeNeighbours(ProblemData const &data)
+void Individual::makeNeighbours()
 {
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
@@ -139,7 +139,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
         }
     }
 
-    makeNeighbours(data);
+    makeNeighbours();
     makeAssignedRouteTypes(data);
     evaluate(data);
 }
@@ -203,7 +203,7 @@ Individual::Individual(ProblemData const &data,
     };
     std::stable_sort(routes_.begin(), routes_.end(), comp);
 
-    makeNeighbours(data);
+    makeNeighbours();
     makeAssignedRouteTypes(data);
     evaluate(data);
 }
@@ -211,7 +211,7 @@ Individual::Individual(ProblemData const &data,
 Individual::Route::Route(ProblemData const &data,
                          Visits const visits,
                          size_t const vehicleType)
-    : visits_(std::move(visits)), vehicleType_(vehicleType), centroid_({0, 0})
+    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
     if (visits_.empty())
         return;

@@ -86,7 +86,7 @@ private:
     std::vector<RouteType> assignedRouteTypes;  // assigned route per client
 
     // Determines the [pred, succ] pairs for each client.
-    void makeNeighbours(ProblemData const &data);
+    void makeNeighbours();
 
     // Determines assigned route types for each client.
     void makeAssignedRouteTypes(ProblemData const &data);

@@ -82,7 +82,7 @@ public:           // TODO make fields private
     /**
      * @return the capacity for this route.
      */
-    [[nodiscard]] inline size_t capacity() const;
+    [[nodiscard]] inline Load capacity() const;
 
     /**
      * @return Number of clients in this route.
@@ -146,7 +146,7 @@ Duration Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 
-size_t Route::capacity() const { return vehicleType.capacity; }
+Load Route::capacity() const { return vehicleType.capacity; }
 
 size_t Route::size() const
 {

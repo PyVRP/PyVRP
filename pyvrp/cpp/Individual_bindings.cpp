@@ -14,7 +14,7 @@ PYBIND11_MODULE(_Individual, m)
         .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
-             py::arg("rIdx"))
+             py::arg("vehicleType") = 0)
         .def("visits",
              &Individual::Route::visits,
              py::return_value_policy::reference_internal)
