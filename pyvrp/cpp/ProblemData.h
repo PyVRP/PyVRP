@@ -12,12 +12,23 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                // Coordinate X
-        int y;                // Coordinate Y
-        int serviceDuration;  // Service duration
-        int demand;           // Demand
-        int twEarly;          // Earliest arrival (when using time windows)
-        int twLate;           // Latest arrival (when using time windows)
+        int x;                 // Coordinate X
+        int y;                 // Coordinate Y
+        int demand;            // Demand
+        int serviceDuration;   // Service duration
+        int twEarly;           // Earliest arrival (when using time windows)
+        int twLate;            // Latest arrival (when using time windows)
+        int prize = 0;         // Prize collected when visiting this client
+        bool required = true;  // Must this client be part of a solution?
+
+        Client(int x,
+               int y,
+               int demand = 0,
+               int serviceDuration = 0,
+               int twEarly = 0,
+               int twLate = 0,
+               int prize = 0,
+               bool required = true);
     };
 
     struct RouteData
@@ -29,6 +40,7 @@ public:
 
 private:
     Matrix<int> const dist_;          // Distance matrix (+depot)
+    Matrix<int> const dur_;           // Duration matrix (+depot)
     std::vector<Client> clients_;     // Client (+depot) information
     std::vector<RouteData> routes_;   // Routes information per route
     std::vector<size_t> routeTypes_;  // Type idx per route
@@ -63,16 +75,30 @@ public:
     /**
      * Returns the distance between the indicated two clients.
      *
-     * @param first First client.
+     * @param first  First client.
      * @param second Second client.
      * @return distance from the first to the second client.
      */
     [[nodiscard]] inline int dist(size_t first, size_t second) const;
 
     /**
-     * @return The full distance matrix.
+     * Returns the travel duration between the indicated two clients.
+     *
+     * @param first  First client.
+     * @param second Second client.
+     * @return Travel duration from the first to the second client.
+     */
+    [[nodiscard]] inline int duration(size_t first, size_t second) const;
+
+    /**
+     * @return The full travel distance matrix.
      */
     [[nodiscard]] Matrix<int> const &distanceMatrix() const;
+
+    /**
+     * @return The full travel duration matrix.
+     */
+    [[nodiscard]] Matrix<int> const &durationMatrix() const;
 
     /**
      * @return Total number of clients in this instance.
@@ -85,23 +111,19 @@ public:
     [[nodiscard]] size_t maxNumRoutes() const;
 
     /**
-     * Constructs a ProblemData object with the given data. Assumes the data
-     * contains the depot, such that each vector is one longer than the number
-     * of clients.
+     * Constructs a ProblemData object with the given data. Assumes the list of
+     * clients contains the depot, such that each vector is one longer than the
+     * number of clients.
      *
-     * @param coords       Coordinates as pairs of [x, y].
-     * @param demands      Client demands.
+     * @param clients      List of clients (including depot at index 0).
      * @param capacities   Capacity (max total demand) for each route.
-     * @param timeWindows  Time windows as pairs of [early, late].
-     * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
+     * @param durMat       Duration matrix.
      */
-    ProblemData(std::vector<std::pair<int, int>> const &coords,
-                std::vector<int> const &demands,
+    ProblemData(std::vector<Client> const &clients,
                 std::vector<size_t> const &capacities,
-                std::vector<std::pair<int, int>> const &timeWindows,
-                std::vector<int> const &servDurs,
-                std::vector<std::vector<int>> const &distMat);
+                std::vector<std::vector<int>> const &distMat,
+                std::vector<std::vector<int>> const &durMat);
 };
 
 inline bool ProblemData::RouteData::operator==(RouteData const &other) const
@@ -132,6 +154,11 @@ size_t const &ProblemData::routeType(size_t route) const
 int ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
+}
+
+int ProblemData::duration(size_t first, size_t second) const
+{
+    return dur_(first, second);
 }
 
 #endif  // HGS_PROBLEMDATA_H

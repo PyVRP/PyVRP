@@ -23,4 +23,18 @@ class CostEvaluator:
     def load_penalty(self, load: int, capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
     def penalised_cost(self, individual: Individual) -> int: ...
-    def cost(self, individual: Individual) -> int: ...
+    def cost(self, individual: Individual) -> int:
+        """
+        Evaluates and returns the cost/objective of the given individual.
+        Hand-waving some details, let :math:`x_{ij} \\in \\{ 0, 1 \\}` indicate
+        if edge :math:`(i, j)` is used in the solution encoded by the given
+        individual, and :math:`y_i \\in \\{ 0, 1 \\}` indicate if client
+        :math:`i` is visited. The objective is then given by
+
+        .. math::
+
+           \\sum_{(i, j)} d_{ij} x_{ij} + \\sum_{i} p_i (1 - y_i),
+
+        where the first part lists the distance costs, and the second part the
+        prizes of the unvisited clients.
+        """

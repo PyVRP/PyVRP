@@ -1,7 +1,7 @@
 Getting help
 ============
 
-Conversations about development and issues take place in the `GitHub repository <https://github.com/N-Wouda/PyVRP/>`_.
+Conversations about development and issues take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
 Feel free to open a new issue if you have something to discuss.
 
 Submitting a bug report

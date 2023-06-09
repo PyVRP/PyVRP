@@ -6,7 +6,7 @@
 using Client = int;
 using Clients = std::vector<Client>;
 using ClientSet = std::unordered_set<Client>;
-using Route = std::vector<Client>;
+using Route = Individual::Route;
 using Routes = std::vector<Route>;
 
 namespace
@@ -227,8 +227,8 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    Routes routes1(data.maxNumRoutes());
-    Routes routes2(data.maxNumRoutes());
+    std::vector<std::vector<Client>> routes1(data.maxNumRoutes());
+    std::vector<std::vector<Client>> routes2(data.maxNumRoutes());
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)

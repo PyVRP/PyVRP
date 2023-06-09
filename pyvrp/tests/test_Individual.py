@@ -1,10 +1,11 @@
 from copy import copy, deepcopy
 
-from numpy.testing import assert_, assert_equal, assert_raises
+import numpy as np
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Individual, ProblemData, XorShift128
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp import Client, Individual, ProblemData, XorShift128
+from pyvrp.tests.helpers import get_route_visits, make_heterogeneous, read
 
 
 def test_route_constructor_sorts_by_empty():
@@ -33,25 +34,52 @@ def test_route_constructor_sorts_by_empty():
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices for each group of equal vehicle capacities.
-    assert_equal(indiv.get_routes(), [[3, 4], [], [], [1, 2], []])
+    assert_equal(get_route_visits(indiv), [[3, 4], [], [], [1, 2], []])
 
 
-def test_route_constructor_raises():
+def test_random_constructor_cycles_over_routes():
+    # This instance has four clients and three vehicles. Since 1 client per
+    # vehicle would not work (insufficient vehicles), each route is given two
+    # clients (and the last route should be empty).
+    data = read("data/OkSmall.txt")
+    rng = XorShift128(seed=42)
+
+    indiv = Individual.make_random(data, rng)
+    routes = indiv.get_routes()
+
+    assert_equal(indiv.num_non_empty_routes(), 2)
+    assert_equal(len(routes), 3)
+
+    for idx, size in enumerate([2, 2, 0]):
+        assert_equal(len(routes[idx]), size)
+
+
+def test_route_constructor_raises_too_many_vehicles():
     data = read("data/OkSmall.txt")
 
     assert_equal(data.max_num_routes, 3)
 
     # Only two routes should not raise. But we should always get max_num_routes
     # routes back.
-    individual = Individual(data, [[1, 2], [4, 2]])
+    individual = Individual(data, [[1, 2], [4, 3]])
     assert_equal(len(individual.get_routes()), data.max_num_routes)
 
     # Empty third route should not raise.
-    Individual(data, [[1, 2], [4, 2], []])
+    Individual(data, [[1, 2], [4, 3], []])
 
     # More than three routes should raise, since we only have three vehicles.
     with assert_raises(RuntimeError):
         Individual(data, [[1], [2], [3], [4]])
+
+
+def test_route_constructor_raises_for_invalid_routes():
+    data = read("data/OkSmall.txt")
+    with assert_raises(RuntimeError):
+        Individual(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
+
+    data = read("data/OkSmallPrizes.txt")
+    with assert_raises(RuntimeError):
+        Individual(data, [[2], [3, 4]])  # 1 is required but not visited
 
 
 def test_get_neighbours():
@@ -99,19 +127,26 @@ def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
     indiv = Individual(data, [[1, 2], [3], [4]])
-    assert_(indiv.is_feasible())
+    routes = indiv.get_routes()
 
-    # Feasible individual, so cost should equal total distance travelled.
-    dist = (
-        data.dist(0, 1)
-        + data.dist(1, 2)
-        + data.dist(2, 0)
-        + data.dist(0, 3)
-        + data.dist(3, 0)
-        + data.dist(0, 4)
-        + data.dist(4, 0)
+    # Solution is feasible, so all its routes should also be feasible.
+    assert_(indiv.is_feasible())
+    assert_(all(route.is_feasible() for route in routes))
+
+    # Solution distance should be equal to all routes' distances. These we
+    # check separately.
+    assert_allclose(
+        indiv.distance(), sum(route.distance() for route in routes)
     )
-    assert_equal(indiv.distance(), dist)
+
+    expected = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
+    assert_allclose(routes[0].distance(), expected)
+
+    expected = data.dist(0, 3) + data.dist(3, 0)
+    assert_allclose(routes[1].distance(), expected)
+
+    expected = data.dist(0, 4) + data.dist(4, 0)
+    assert_allclose(routes[2].distance(), expected)
 
 
 def test_excess_load_calculation():
@@ -147,40 +182,94 @@ def test_heterogeneous_capacity_excess_load_calculation():
     assert_equal(indiv.excess_load(), 0)
 
 
-def test_time_warp_calculation():
+def test_route_access_methods():
     data = read("data/OkSmall.txt")
-
     indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
+
+    # Test route access: getting the route plan should return a simple list, as
+    # given to the individual above.
+    assert_equal(routes[0].visits(), [1, 3])
+    assert_equal(routes[1].visits(), [2, 4])
+
+    # There's no excess load, so all excess load should be zero.
     assert_(not indiv.has_excess_load())
-    assert_(indiv.has_time_warp())
+    assert_allclose(routes[0].excess_load(), 0)
+    assert_allclose(routes[1].excess_load(), 0)
 
-    # There's only time warp on the first route: dist(0, 1) = 1'544, so we
+    # Total route demand.
+    demands = [data.client(idx).demand for idx in range(data.num_clients + 1)]
+    assert_allclose(routes[0].demand(), demands[1] + demands[3])
+    assert_allclose(routes[1].demand(), demands[2] + demands[4])
+
+    # The first route is not feasible due to time warp, but the second one is.
+    # See also the tests below.
+    assert_(not routes[0].is_feasible())
+    assert_(routes[1].is_feasible())
+
+    # Total service duration.
+    services = [
+        data.client(idx).service_duration
+        for idx in range(data.num_clients + 1)
+    ]
+    assert_allclose(routes[0].service_duration(), services[1] + services[3])
+    assert_allclose(routes[1].service_duration(), services[2] + services[4])
+
+
+def test_route_time_warp_and_wait_duration():
+    data = read("data/OkSmall.txt")
+    indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
+
+    # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
-    # starts at 15'600, and completes at 15'600 + 360. Then we drive dist(1, 3)
-    # = 1'427, where we arrive after 15'300 (its closing time window). This is
-    # where we incur time warp: we need to 'warp back' to 15'300.
-    tw_first_route = 15_600 + 360 + 1_427 - 15_300
-    tw_second_route = 0
-    assert_equal(indiv.time_warp(), tw_first_route + tw_second_route)
+    # starts at 15'600, and completes at 15'600 + 360. Then we drive for
+    # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
+    # window). This is where we incur time warp: we need to 'warp' to 15'300.
+    assert_(indiv.has_time_warp())
+    assert_(routes[0].has_time_warp())
+    assert_(not routes[1].has_time_warp())
+    assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
+    assert_allclose(routes[1].time_warp(), 0)
+    assert_allclose(indiv.time_warp(), routes[0].time_warp())
+
+    # On the first route, we have to wait at the first client, where we arrive
+    # at 1'544, but cannot start service until 15'600. On the second route, we
+    # also have to wait at the first client, where we arrive at 1'944, but
+    # cannot start service until 12'000.
+    assert_equal(routes[0].wait_duration(), 15_600 - 1_544)
+    assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
 
 
-def test_time_warp_for_a_very_constrained_problem():
+@mark.parametrize(
+    "dist_mat",
+    [
+        np.full((3, 3), fill_value=100, dtype=int),
+        np.full((3, 3), fill_value=1, dtype=int),
+        np.full((3, 3), fill_value=1000, dtype=int),
+    ],
+)
+def test_time_warp_for_a_very_constrained_problem(dist_mat):
     """
     This tests an artificial instance where the second client cannot be reached
     directly from the depot in a feasible solution, but only after the first
     client.
     """
+    dur_mat = [
+        [0, 1, 10],  # cannot get to 2 from depot within 2's time window
+        [1, 0, 1],
+        [1, 1, 0],
+    ]
+
     data = ProblemData(
-        coords=[(0, 0), (1, 0), (2, 0)],
-        demands=[0, 0, 0],
-        capacities=[0, 0],
-        time_windows=[(0, 10), (0, 5), (0, 5)],
-        service_durations=[0, 0, 0],
-        duration_matrix=[
-            [0, 1, 10],  # cannot get to 2 from depot within 2's time window
-            [1, 0, 1],
-            [1, 1, 0],
+        clients=[
+            Client(x=0, y=0, tw_late=10),
+            Client(x=1, y=0, tw_late=5),
+            Client(x=2, y=0, tw_late=5),
         ],
+        capacities=[0, 0],
+        distance_matrix=dist_mat,
+        duration_matrix=dur_mat,
     )
 
     # This solution directly visits the second client from the depot, which is
@@ -195,6 +284,11 @@ def test_time_warp_for_a_very_constrained_problem():
     assert_(not feasible.has_time_warp())
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
+
+    assert_equal(
+        feasible.distance(),
+        dist_mat[0, 1] + dist_mat[1, 2] + dist_mat[2, 0],
+    )
 
 
 # TODO test all time warp cases
@@ -299,11 +393,11 @@ def test_heterogeneous_route_sorting():
 
     # First two vehicles have same capacity, so order does not matter
     expected = [[1, 2, 3, 4], [], []]
-    assert_equal(indiv1.get_routes(), expected)
-    assert_equal(indiv2.get_routes(), expected)
+    assert_equal(get_route_visits(indiv1), expected)
+    assert_equal(get_route_visits(indiv2), expected)
 
     # Third vehicle has a different capacity, so should not be moved forward
-    assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
+    assert_equal(get_route_visits(indiv3), [[], [], [1, 2, 3, 4]])
 
 
 def test_unsorted_heterogeneous_route_sorting():
@@ -320,12 +414,12 @@ def test_unsorted_heterogeneous_route_sorting():
     indiv3 = Individual(data, [[], [], [1, 2, 3, 4]])
 
     # First two vehicles have different capacities, so order does matter
-    assert_equal(indiv1.get_routes(), [[1, 2, 3, 4], [], []])
-    assert_equal(indiv2.get_routes(), [[], [1, 2, 3, 4], []])
+    assert_equal(get_route_visits(indiv1), [[1, 2, 3, 4], [], []])
+    assert_equal(get_route_visits(indiv2), [[], [1, 2, 3, 4], []])
 
     # Third vehicle has a different capacity than the second, so should not be
     # moved forward even though it has the same capacity as the first vehicle.
-    assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
+    assert_equal(get_route_visits(indiv3), [[], [], [1, 2, 3, 4]])
 
 
 @mark.parametrize(
@@ -346,8 +440,9 @@ def test_str_contains_essential_information(capacities):
         num_non_empty_routes = individual.num_non_empty_routes()
 
         # There should be no more than num_non_empty_routes lines (each
-        # detailing a single route), and a final line containing the distance.
-        assert_equal(len(str_representation), num_non_empty_routes + 1)
+        # detailing a single route), and two final lines containing distance
+        # and prizes.
+        assert_equal(len(str_representation), num_non_empty_routes + 2)
 
         # The first num_non_empty_routes lines should each contain a route,
         # where each route should contain every client that is in the route as
@@ -358,8 +453,9 @@ def test_str_contains_essential_information(capacities):
             for client in route:
                 assert_(str(client) in str_route)
 
-        # Last line should contain the distance (cost).
-        assert_(str(individual.distance()) in str_representation[-1])
+        # Last lines should contain the travel distance and collected prizes.
+        assert_(str(individual.distance()) in str_representation[-2])
+        assert_(str(individual.prizes()) in str_representation[-1])
 
 
 def test_hash():

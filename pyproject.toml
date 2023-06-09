@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.1.0"
+version = "0.3.0"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -9,7 +9,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/N-Wouda/PyVRP"
+repository = "https://github.com/PyVRP/PyVRP"
 include = [
     { path = "LICENSE.md" },
     { path = "meson.build", format = "sdist" },
@@ -37,7 +37,7 @@ classifiers = [
 
 
 [tool.poetry.urls]
-"Tracker" = "https://github.com/N-Wouda/PyVRP/issues"
+"Tracker" = "https://github.com/PyVRP/PyVRP/issues"
 
 
 [tool.poetry.dependencies]
@@ -69,7 +69,7 @@ optional = true
 
 [tool.poetry.group.examples.dependencies]
 jupyter = ">=1.0.0"
-pandas = ">=1.5.0"
+tabulate = "^0.9.0"
 
 
 [tool.poetry.group.dev.dependencies]

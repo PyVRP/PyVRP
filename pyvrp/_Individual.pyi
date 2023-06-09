@@ -1,7 +1,60 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
+
+class Route:
+    """
+    A simple class that stores the route plan and some statistics.
+    """
+
+    def __init__(self, data: ProblemData, visits: List[int]) -> None: ...
+    def __getitem__(self, idx: int) -> int: ...
+    def __iter__(self) -> Iterator[int]: ...
+    def __len__(self) -> int: ...
+    def is_feasible(self) -> bool: ...
+    def has_excess_load(self) -> bool: ...
+    def has_time_warp(self) -> bool: ...
+    def demand(self) -> int:
+        """
+        Total client demand on this route.
+        """
+    def excess_load(self) -> int:
+        """
+        Demand in excess of the vehicle's capacity.
+        """
+    def distance(self) -> int:
+        """
+        Total distance travelled on this route.
+        """
+    def duration(self) -> int:
+        """
+        Total route duration, including waiting time.
+        """
+    def visits(self) -> List[int]:
+        """
+        Route visits, as a list of clients.
+        """
+    def service_duration(self) -> int:
+        """
+        Total duration of service on the route.
+        """
+    def time_warp(self) -> int:
+        """
+        Any time warp incurred along the route.
+        """
+    def wait_duration(self) -> int:
+        """
+        Total waiting duration on this route.
+        """
+    def prizes(self) -> int:
+        """
+        Total prize value collected on this route.
+        """
+    def type_idx(self) -> int:
+        """
+        Idx of the type of this route.
+        """
 
 class Individual:
     """
@@ -69,7 +122,7 @@ class Individual:
             A list of index values that encode for each client the index of the
             route type of the route they are assigned to.
         """
-    def get_routes(self) -> List[List[int]]:
+    def get_routes(self) -> List[Route]:
         """
         The solution this individual encodes, as a list of routes.
 
@@ -85,9 +138,9 @@ class Individual:
         Returns
         -------
         list
-            A list of routes, where each route is a list of client numbers. The
-            routes each start and end at the depot (0), but that is implicit:
-            the depot is not part of the returned routes.
+            A list of routes. Each :class:`~pyvrp._Individual.Route` starts and
+            ends at the depot (0), but that is implicit: the depot is not part
+            of the returned routes.
         """
     def has_excess_load(self) -> bool:
         """
@@ -135,6 +188,24 @@ class Individual:
         int
             Total time warp over all routes.
         """
+    def prizes(self) -> int:
+        """
+        Returns the total collected prize value over all routes.
+
+        Returns
+        -------
+        int
+            Value of collected prizes.
+        """
+    def uncollected_prizes(self) -> int:
+        """
+        Total prize value of all clients not visited in this solution.
+
+        Returns
+        -------
+        int
+            Value of uncollected prizes.
+        """
     def is_feasible(self) -> bool:
         """
         Whether this individual is feasible. This is a shorthand for checking
@@ -155,6 +226,15 @@ class Individual:
         -------
         int
             Number of non-empty routes.
+        """
+    def num_clients(self) -> int:
+        """
+        Number of clients in this solution.
+
+        Returns
+        -------
+        int
+            Number of clients in this solution.
         """
     def __copy__(self) -> Individual: ...
     def __deepcopy__(self, memo: Dict) -> Individual: ...
