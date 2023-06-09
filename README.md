@@ -8,7 +8,7 @@
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports the capacitated VRP (CVRP), the VRP with time windows (VRPTW), and prize-collecting. 
 
-The implementation is inspired by Thibaut Vidal's [HGS-CVRP][7], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
+The implementation builds on Thibaut Vidal's [HGS-CVRP][7], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
 Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install `pyvrp` directly from the source code.
 
