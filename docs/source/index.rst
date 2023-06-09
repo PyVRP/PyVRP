@@ -4,7 +4,7 @@
 PyVRP is a Python package that offers a high-performance implementation of the hybrid genetic search algorithm for vehicle routing problems (VRPs).
 PyVRP currently supports the capacitated VRP (CVRP), the VRP with time windows (VRPTW), and prize-collecting. 
 
-The implementation is inspired by `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
+The implementation builds on `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
 This allows users to directly solve VRP instances, or implement variants of the HGS algorithm using Python, inspired by the examples in this documentation. 
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
 Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install PyVRP directly from the source code.
