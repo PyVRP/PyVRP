@@ -1,5 +1,5 @@
-#ifndef LOCALSEARCH_H
-#define LOCALSEARCH_H
+#ifndef PYVRP_LOCALSEARCH_H
+#define PYVRP_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
 #include "Individual.h"
@@ -112,4 +112,4 @@ public:
     LocalSearch(ProblemData &data, XorShift128 &rng, Neighbours neighbours);
 };
 
-#endif
+#endif  // PYVRP_LOCALSEARCH_H

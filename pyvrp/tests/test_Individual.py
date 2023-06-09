@@ -4,7 +4,14 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Client, Individual, ProblemData, VehicleType, XorShift128
+from pyvrp import (
+    Client,
+    Individual,
+    ProblemData,
+    Route,
+    VehicleType,
+    XorShift128,
+)
 from pyvrp.tests.helpers import get_route_visits, make_heterogeneous, read
 
 
@@ -464,8 +471,8 @@ def test_str_contains_essential_information(vehicle_types):
                 assert_(str(client) in str_route)
 
         # Last lines should contain the travel distance and collected prizes.
-        assert_(str(individual.distance()) in str_representation[-2])
-        assert_(str(individual.prizes()) in str_representation[-1])
+        assert_(str(int(individual.distance())) in str_representation[-2])
+        assert_(str(int(individual.prizes())) in str_representation[-1])
 
 
 def test_hash():
@@ -488,3 +495,16 @@ def test_hash():
     # These two are the same solution, so their hashes should be the same too.
     assert_equal(indiv2, indiv3)
     assert_equal(hash(indiv2), hash(indiv3))
+
+
+def test_route_centroid():
+    data = read("data/OkSmall.txt")
+    x = np.array([data.client(client).x for client in range(5)])
+    y = np.array([data.client(client).y for client in range(5)])
+
+    routes = [Route(data, [1, 2]), Route(data, [3]), Route(data, [4])]
+
+    for route in routes:
+        x_center, y_center = route.centroid()
+        assert_equal(x_center, x[route].mean())
+        assert_equal(y_center, y[route].mean())

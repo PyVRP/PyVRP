@@ -1,5 +1,6 @@
 #include "crossover.h"
 
+#include <cassert>
 #include <cmath>
 #include <unordered_set>
 
@@ -13,57 +14,27 @@ namespace
 {
 double routeAngle(ProblemData const &data, Route const &route)
 {
-    // Computes the route angle center. Assumes that the route is non-empty.
-    int cumulatedX = 0;
-    int cumulatedY = 0;
-
-    for (int node : route)
-    {
-        cumulatedX += data.client(node).x;
-        cumulatedY += data.client(node).y;
-    }
+    assert(!route.empty());
 
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
-    auto const routeSize = static_cast<double>(route.size());
-    auto const dy = cumulatedY / routeSize - data.depot().y;
-    auto const dx = cumulatedX / routeSize - data.depot().x;
+    auto const [routeX, routeY] = route.centroid();
+    auto const dx = routeX - static_cast<double>(data.depot().x);
+    auto const dy = routeY - static_cast<double>(data.depot().y);
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
-std::vector<int>
-getNonEmptyRouteIndicesByAscendingAngle(ProblemData const &data,
-                                        Routes const &routes)
+Routes sortByAscAngle(ProblemData const &data, Routes routes)
 {
-    // This function performs a customized argsort of the routes by the angle
-    // of each route (avg. angle to depot of customers in route). It is custom
-    // since it filters empty routes but keeps the original indices.
+    auto cmp = [&data](Route a, Route b) {
+        return (a.empty() || b.empty())
+                   ? !a.empty() && b.empty()
+                   : routeAngle(data, a) < routeAngle(data, b);
+    };
 
-    // First we create a vector of (angle, idx) pairs for non-empty routes,
-    // which we sort normally, so by angle (first item of pair).
-    std::vector<std::pair<double, int>> routePolarAngles;
-    routePolarAngles.reserve(data.numVehicles());
-
-    size_t numNonEmptyRoutes = 0;
-    for (size_t r = 0; r < data.numVehicles(); r++)
-        if (!routes[r].empty())
-        {
-            numNonEmptyRoutes++;
-            routePolarAngles.emplace_back(routeAngle(data, routes[r]), r);
-        }
-
-    // Sort angles of non-empty routes
-    std::sort(routePolarAngles.begin(),
-              routePolarAngles.begin() + numNonEmptyRoutes);
-
-    // Copy the result keeping to return only the second item (route index)
-    std::vector<int> result;
-    result.reserve(numNonEmptyRoutes);
-    for (size_t r = 0; r < numNonEmptyRoutes; r++)
-        result.emplace_back(routePolarAngles[r].second);
-
-    return result;
+    std::sort(routes.begin(), routes.end(), cmp);
+    return routes;
 }
 }  // namespace
 
@@ -93,18 +64,8 @@ Individual selectiveRouteExchange(
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
-    auto const &routesA = parents.first->getRoutes();
-    auto const &routesB = parents.second->getRoutes();
-
-    // Get indices of non-empty routes sorted according to center angle.
-    // By using indices we can put the resulting routes after the exchange
-    // in the right positions so they get the right vehicle types, and this
-    // avoids creating copies of the routes to filter non-empty routes.
-    auto const &idxA = getNonEmptyRouteIndicesByAscendingAngle(data, routesA);
-    auto const &idxB = getNonEmptyRouteIndicesByAscendingAngle(data, routesB);
-
-    size_t nRoutesA = idxA.size();
-    size_t nRoutesB = idxB.size();
+    size_t nRoutesA = parents.first->numRoutes();
+    size_t nRoutesB = parents.second->numRoutes();
 
     if (startA >= nRoutesA)
         throw std::invalid_argument("Expected startA < nRoutesA.");
@@ -113,8 +74,14 @@ Individual selectiveRouteExchange(
         throw std::invalid_argument("Expected startB < nRoutesB.");
 
     if (numMovedRoutes < 1 || numMovedRoutes > std::min(nRoutesA, nRoutesB))
-        throw std::invalid_argument(
-            "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]");
+    {
+        auto msg = "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]";
+        throw std::invalid_argument(msg);
+    }
+
+    // Sort parents' routes by (ascending) polar angle.
+    auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
+    auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
     ClientSet selectedA;
     ClientSet selectedB;
@@ -124,11 +91,11 @@ Individual selectiveRouteExchange(
     // close to each other.
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
-        selectedA.insert(routesA[idxA[(startA + r) % nRoutesA]].begin(),
-                         routesA[idxA[(startA + r) % nRoutesA]].end());
+        auto const &routeA = routesA[(startA + r) % nRoutesA];
+        selectedA.insert(routeA.begin(), routeA.end());
 
-        selectedB.insert(routesB[idxB[(startB + r) % nRoutesB]].begin(),
-                         routesB[idxB[(startB + r) % nRoutesB]].end());
+        auto const &routeB = routesB[(startB + r) % nRoutesB];
+        selectedB.insert(routeB.begin(), routeB.end());
     }
 
     // For the selection, we want to minimize |A\B| as these need replanning
@@ -137,37 +104,37 @@ Individual selectiveRouteExchange(
         // Difference for moving 'left' in parent A
         int differenceALeft = 0;
 
-        for (Client c : routesA[idxA[(startA - 1 + nRoutesA) % nRoutesA]])
+        for (Client c : routesA[(startA - 1 + nRoutesA) % nRoutesA])
             differenceALeft += !selectedB.contains(c);
 
-        for (Client c : routesA[idxA[(startA + numMovedRoutes - 1) % nRoutesA]])
+        for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
             differenceALeft -= !selectedB.contains(c);
 
         // Difference for moving 'right' in parent A
         int differenceARight = 0;
 
-        for (Client c : routesA[idxA[(startA + numMovedRoutes) % nRoutesA]])
+        for (Client c : routesA[(startA + numMovedRoutes) % nRoutesA])
             differenceARight += !selectedB.contains(c);
 
-        for (Client c : routesA[idxA[startA]])
+        for (Client c : routesA[startA])
             differenceARight -= !selectedB.contains(c);
 
         // Difference for moving 'left' in parent B
         int differenceBLeft = 0;
 
-        for (Client c : routesB[idxB[(startB - 1 + numMovedRoutes) % nRoutesB]])
+        for (Client c : routesB[(startB - 1 + numMovedRoutes) % nRoutesB])
             differenceBLeft += selectedA.contains(c);
 
-        for (Client c : routesB[idxB[(startB - 1 + nRoutesB) % nRoutesB]])
+        for (Client c : routesB[(startB - 1 + nRoutesB) % nRoutesB])
             differenceBLeft -= selectedA.contains(c);
 
         // Difference for moving 'right' in parent B
         int differenceBRight = 0;
 
-        for (Client c : routesB[idxB[startB]])
+        for (Client c : routesB[startB])
             differenceBRight += selectedA.contains(c);
 
-        for (Client c : routesB[idxB[(startB + numMovedRoutes) % nRoutesB]])
+        for (Client c : routesB[(startB + numMovedRoutes) % nRoutesB])
             differenceBRight -= selectedA.contains(c);
 
         int const bestDifference = std::min({differenceALeft,
@@ -180,43 +147,37 @@ Individual selectiveRouteExchange(
 
         if (bestDifference == differenceALeft)
         {
-            for (Client c :
-                 routesA[idxA[(startA + numMovedRoutes - 1) % nRoutesA]])
+            for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
                 selectedA.erase(c);
 
             startA = (startA - 1 + nRoutesA) % nRoutesA;
-            selectedA.insert(routesA[idxA[startA]].begin(),
-                             routesA[idxA[startA]].end());
+            selectedA.insert(routesA[startA].begin(), routesA[startA].end());
         }
         else if (bestDifference == differenceARight)
         {
-            for (Client c : routesA[idxA[startA]])
+            for (Client c : routesA[startA])
                 selectedA.erase(c);
 
             startA = (startA + 1) % nRoutesA;
 
-            for (Client c :
-                 routesA[idxA[(startA + numMovedRoutes - 1) % nRoutesA]])
+            for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
                 selectedA.insert(c);
         }
         else if (bestDifference == differenceBLeft)
         {
-            for (Client c :
-                 routesB[idxB[(startB + numMovedRoutes - 1) % nRoutesB]])
+            for (Client c : routesB[(startB + numMovedRoutes - 1) % nRoutesB])
                 selectedB.erase(c);
 
             startB = (startB - 1 + nRoutesB) % nRoutesB;
-            selectedB.insert(routesB[idxB[startB]].begin(),
-                             routesB[idxB[startB]].end());
+            selectedB.insert(routesB[startB].begin(), routesB[startB].end());
         }
         else if (bestDifference == differenceBRight)
         {
-            for (Client c : routesB[idxB[startB]])
+            for (Client c : routesB[startB])
                 selectedB.erase(c);
 
             startB = (startB + 1) % nRoutesB;
-            for (Client c :
-                 routesB[idxB[(startB + numMovedRoutes - 1) % nRoutesB]])
+            for (Client c : routesB[(startB + numMovedRoutes - 1) % nRoutesB])
                 selectedB.insert(c);
         }
     }
@@ -233,29 +194,29 @@ Individual selectiveRouteExchange(
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
-        size_t posA = (startA + r) % nRoutesA;
-        size_t posB = (startB + r) % nRoutesB;
+        size_t indexA = (startA + r) % nRoutesA;
+        size_t indexB = (startB + r) % nRoutesB;
 
-        for (Client c : routesB[idxB[posB]])
+        for (Client c : routesB[indexB])
         {
-            routes1[idxA[posA]].push_back(c);  // c in B
+            routes1[indexA].push_back(c);  // c in B
 
             if (!clientsInSelectedBNotA.contains(c))
-                routes2[idxA[posA]].push_back(c);  // c in A^B
+                routes2[indexA].push_back(c);  // c in A^B
         }
     }
 
     // Move routes from parent A that are kept
     for (size_t r = numMovedRoutes; r < nRoutesA; r++)
     {
-        size_t posA = (startA + r) % nRoutesA;
+        size_t indexA = (startA + r) % nRoutesA;
 
-        for (Client c : routesA[idxA[posA]])
+        for (Client c : routesA[indexA])
         {
             if (!clientsInSelectedBNotA.contains(c))
-                routes1[idxA[posA]].push_back(c);  // c in Ac\B
+                routes1[indexA].push_back(c);  // c in Ac\B
 
-            routes2[idxA[posA]].push_back(c);  // c in Ac
+            routes2[indexA].push_back(c);  // c in Ac
         }
     }
 
@@ -266,8 +227,8 @@ Individual selectiveRouteExchange(
         if (!selectedB.contains(c))
             unplanned.push_back(c);
 
-    crossover::greedyRepair(routes1, unplanned, data);
-    crossover::greedyRepair(routes2, unplanned, data);
+    crossover::greedyRepair(routes1, unplanned, data, costEvaluator);
+    crossover::greedyRepair(routes2, unplanned, data, costEvaluator);
 
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};

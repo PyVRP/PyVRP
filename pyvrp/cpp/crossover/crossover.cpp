@@ -1,4 +1,8 @@
 #include "crossover.h"
+#include "Measure.h"
+
+#include <cmath>
+#include <limits>
 
 using Client = int;
 using Route = std::vector<Client>;
@@ -6,85 +10,137 @@ using Routes = std::vector<Route>;
 
 namespace
 {
-struct InsertPos  // best insert position, used to plan unplanned clients
+// Approximates the cost change of inserting client between prev and next.
+Cost deltaCost(Client client,
+               Client prev,
+               Client next,
+               ProblemData const &data,
+               [[maybe_unused]] CostEvaluator const &costEvaluator)
 {
-    int deltaCost;
-    Route *route;
-    size_t offset;
-};
+    auto const currDist = data.dist(prev, next);
+    auto const propDist = data.dist(prev, client) + data.dist(client, next);
 
-// Evaluates the cost change of inserting client between prev and next.
-int deltaCost(Client client, Client prev, Client next, ProblemData const &data)
-{
-    int prevEarliestArrival
-        = std::max(data.duration(0, prev), data.client(prev).twEarly);
-    int prevEarliestFinish
-        = prevEarliestArrival + data.client(prev).serviceDuration;
-    int durPrevClient = data.duration(prev, client);
-    int clientLate = data.client(client).twLate;
+#ifdef PYVRP_NO_TIME_WINDOWS
+    return static_cast<Cost>(propDist - currDist);
+#else
+    auto const &clientData = data.client(client);
+    auto const &prevData = data.client(prev);
 
-    if (prevEarliestFinish + durPrevClient >= clientLate)
-        return INT_MAX;
+    auto const clientService = clientData.serviceDuration;
+    auto const clientLate = clientData.twLate;
+    auto const nextLate = data.client(next).twLate;
 
-    int clientEarliestArrival
-        = std::max(data.duration(0, client), data.client(client).twEarly);
-    int clientEarliestFinish
-        = clientEarliestArrival + data.client(client).serviceDuration;
-    int durClientNext = data.duration(client, next);
-    int nextLate = data.client(next).twLate;
+    // Determine the earliest time we can depart from prev.
+    auto const prevStart = std::max(data.duration(0, prev), prevData.twEarly);
+    auto const prevFinish = prevStart + prevData.serviceDuration;
 
-    if (clientEarliestFinish + durClientNext >= nextLate)
-        return INT_MAX;
+    // Time warp when we go directly from prev to next (current situation).
+    auto const prevNextArrive = prevFinish + data.duration(prev, next);
+    auto const currTimeWarp = std::max<Duration>(prevNextArrive - nextLate, 0);
 
-    return data.dist(prev, client) + data.dist(client, next)
-           - data.dist(prev, next);
+    // Determine arrival at client. This incurs some timewarp if the arrival is
+    // after client.twLate. We finish at start time + service. We subtract any
+    // time warp from the departure time at client.
+    auto const clientArrive = prevFinish + data.duration(prev, client);
+    auto const clientStart = std::max(clientArrive, clientData.twEarly);
+    auto const clientTimeWarp = std::max<Duration>(clientStart - clientLate, 0);
+    auto const clientFinish = clientStart - clientTimeWarp + clientService;
+
+    // We then continue to next, where we might arrive too late and also incur
+    // further time warp.
+    auto const nextArrive = clientFinish + data.duration(client, next);
+    auto const nextTimeWarp = std::max<Duration>(nextArrive - nextLate, 0);
+
+    return static_cast<Cost>(propDist - currDist)
+           + costEvaluator.twPenalty(clientTimeWarp + nextTimeWarp)  // proposed
+           - costEvaluator.twPenalty(currTimeWarp);                  // current
+#endif
 }
 }  // namespace
 
 void crossover::greedyRepair(Routes &routes,
                              std::vector<Client> const &unplanned,
-                             ProblemData const &data)
+                             ProblemData const &data,
+                             CostEvaluator const &costEvaluator)
 {
-    size_t lastNonEmptryRoute = 0;  // points to the last non-empty route
-    for (size_t rIdx = 0; rIdx != routes.size(); ++rIdx)
-        if (!routes[rIdx].empty())
-            lastNonEmptryRoute = rIdx;
+    // Determine the index just past the last non-empty route.
+    auto const pred = [](Route const &route) { return !route.empty(); };
+    auto const last = std::find_if(routes.rbegin(), routes.rend(), pred);
+    auto const numRoutes = std::distance(last, routes.rend());
+
+    // Determine centroids of each route.
+    std::vector<std::pair<double, double>> centroids(numRoutes, {0, 0});
+    for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
+        for (Client client : routes[rIdx])
+        {
+            auto const size = static_cast<double>(routes[rIdx].size());
+            auto const x = static_cast<double>(data.client(client).x);
+            auto const y = static_cast<double>(data.client(client).y);
+
+            centroids[rIdx].first += x / size;
+            centroids[rIdx].second += y / size;
+        }
 
     for (Client client : unplanned)
     {
-        InsertPos best = {INT_MAX, &routes.front(), 0};
+        auto const x = static_cast<double>(data.client(client).x);
+        auto const y = static_cast<double>(data.client(client).y);
 
-        for (size_t rIdx = 0; rIdx <= lastNonEmptryRoute; ++rIdx)
+        // Determine non-empty route with centroid nearest to this client.
+        auto bestDistance = std::numeric_limits<double>::max();
+        auto bestRouteIdx = 0;
+        for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
-            auto &route = routes[rIdx];
+            if (routes[rIdx].empty())
+                continue;
 
-            for (size_t idx = 0; idx <= route.size() && !route.empty(); ++idx)
+            auto const distance = std::hypot(x - centroids[rIdx].first,
+                                             y - centroids[rIdx].second);
+
+            if (distance < bestDistance)
             {
-                Client prev, next;
-
-                if (idx == 0)  // try after depot
-                {
-                    prev = 0;
-                    next = route[0];
-                }
-                else if (idx == route.size())  // try before depot
-                {
-                    prev = route.back();
-                    next = 0;
-                }
-                else  // try between [idx - 1] and [idx]
-                {
-                    prev = route[idx - 1];
-                    next = route[idx];
-                }
-
-                auto const cost = deltaCost(client, prev, next, data);
-                if (cost < best.deltaCost)
-                    best = {cost, &route, idx};
+                bestRouteIdx = rIdx;
+                bestDistance = distance;
             }
         }
 
-        auto const [_, route, offset] = best;
-        route->insert(route->begin() + static_cast<long>(offset), client);
+        // Find best insertion point in selected route.
+        auto &bestRoute = routes[bestRouteIdx];
+        Cost bestCost = std::numeric_limits<Cost>::max();
+        auto offset = 0;
+        for (size_t idx = 0; idx <= bestRoute.size(); ++idx)
+        {
+            Client prev, next;
+
+            if (idx == 0)  // try after depot
+            {
+                prev = 0;
+                next = bestRoute[0];
+            }
+            else if (idx == bestRoute.size())  // try before depot
+            {
+                prev = bestRoute.back();
+                next = 0;
+            }
+            else  // try between [idx - 1] and [idx]
+            {
+                prev = bestRoute[idx - 1];
+                next = bestRoute[idx];
+            }
+
+            auto cost = deltaCost(client, prev, next, data, costEvaluator);
+            if (cost < bestCost)
+            {
+                bestCost = cost;
+                offset = idx;
+            }
+        }
+
+        // Update route centroid and insert client into route.
+        auto const size = static_cast<double>(bestRoute.size());
+        auto const [routeX, routeY] = centroids[bestRouteIdx];
+        centroids[bestRouteIdx].first = (routeX * size + x) / (size + 1);
+        centroids[bestRouteIdx].second = (routeY * size + y) / (size + 1);
+        bestRoute.insert(bestRoute.begin() + offset, client);
     }
 }

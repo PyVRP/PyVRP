@@ -12,7 +12,7 @@ using RouteType = int;
 
 void Individual::evaluate(ProblemData const &data)
 {
-    size_t allPrizes = 0;
+    Cost allPrizes = 0;
     for (size_t client = 1; client <= data.numClients(); ++client)
         allPrizes += data.client(client).prize;
 
@@ -59,15 +59,15 @@ bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
 
 bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
 
-size_t Individual::distance() const { return distance_; }
+Distance Individual::distance() const { return distance_; }
 
-size_t Individual::excessLoad() const { return excessLoad_; }
+Load Individual::excessLoad() const { return excessLoad_; }
 
-size_t Individual::prizes() const { return prizes_; }
+Cost Individual::prizes() const { return prizes_; }
 
-size_t Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
+Cost Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
 
-size_t Individual::timeWarp() const { return timeWarp_; }
+Duration Individual::timeWarp() const { return timeWarp_; }
 
 void Individual::makeNeighbours(ProblemData const &data)
 {
@@ -121,7 +121,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     // per vehicle, with an adjustment in case the division is not perfect.
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
-    auto const perRouteFloor = std::max(numClients / numVehicles, size_t(1));
+    auto const perRouteFloor = std::max<size_t>(numClients / numVehicles, 1);
     auto const perRoute = perRouteFloor + (numClients % numVehicles != 0);
 
     std::vector<std::vector<Client>> routes(data.numVehicles());
@@ -211,12 +211,12 @@ Individual::Individual(ProblemData const &data,
 Individual::Route::Route(ProblemData const &data,
                          Visits const visits,
                          size_t const vehicleType)
-    : visits_(std::move(visits)), vehicleType_(vehicleType)
+    : visits_(std::move(visits)), vehicleType_(vehicleType), centroid_({0, 0})
 {
     if (visits_.empty())
         return;
 
-    int time = data.depot().twEarly;
+    Duration time = data.depot().twEarly;
     int prevClient = 0;
 
     for (size_t idx = 0; idx != size(); ++idx)
@@ -228,6 +228,9 @@ Individual::Route::Route(ProblemData const &data,
         demand_ += clientData.demand;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
+
+        centroid_.first += static_cast<double>(clientData.x) / size();
+        centroid_.second += static_cast<double>(clientData.y) / size();
 
         time += data.client(prevClient).serviceDuration
                 + data.duration(prevClient, visits_[idx]);
@@ -250,8 +253,10 @@ Individual::Route::Route(ProblemData const &data,
     Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, 0);
     duration_ += data.duration(last, 0);
+
     time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max(time - data.depot().twLate, 0);  // depot closing tw
+    timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
+
     auto const capacity = data.vehicleType(vehicleType).capacity;
     excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;
 }
@@ -281,21 +286,26 @@ Visits::const_iterator Individual::Route::cend() const
 
 Visits const &Individual::Route::visits() const { return visits_; }
 
-size_t Individual::Route::distance() const { return distance_; }
+Distance Individual::Route::distance() const { return distance_; }
 
-size_t Individual::Route::demand() const { return demand_; }
+Load Individual::Route::demand() const { return demand_; }
 
-size_t Individual::Route::excessLoad() const { return excessLoad_; }
+Load Individual::Route::excessLoad() const { return excessLoad_; }
 
-size_t Individual::Route::duration() const { return duration_; }
+Duration Individual::Route::duration() const { return duration_; }
 
-size_t Individual::Route::serviceDuration() const { return service_; }
+Duration Individual::Route::serviceDuration() const { return service_; }
 
-size_t Individual::Route::timeWarp() const { return timeWarp_; }
+Duration Individual::Route::timeWarp() const { return timeWarp_; }
 
-size_t Individual::Route::waitDuration() const { return wait_; }
+Duration Individual::Route::waitDuration() const { return wait_; }
 
-size_t Individual::Route::prizes() const { return prizes_; }
+Cost Individual::Route::prizes() const { return prizes_; }
+
+std::pair<double, double> const &Individual::Route::centroid() const
+{
+    return centroid_;
+}
 
 size_t Individual::Route::vehicleType() const { return vehicleType_; }
 

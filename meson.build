@@ -24,22 +24,14 @@ if get_option('buildtype') == 'debug'
     add_project_link_arguments('--coverage', language: 'cpp')
 endif
 
-if compiler.has_argument('-Wno-unused-parameter')
-    # Ignore unused parameters, because not all operator implementations use 
-    # every argument they are given (and that's OK).
-    add_project_arguments('-Wno-unused-parameter', language: 'cpp')
-endif
-
 if get_option('problem') == 'cvrp'
     # CVRP does not have time windows, so we set a flag that compiles time 
     # window stuff out of the extension modules.
-    add_project_arguments('-DVRP_NO_TIME_WINDOWS', language: 'cpp')
+    add_project_arguments('-DPYVRP_NO_TIME_WINDOWS', language: 'cpp')
+endif
 
-    if compiler.has_argument('-Wno-unused-private-field')
-        # Ignore unused fields, since a number of time window related fields
-        # are unused by the CVRP.
-        add_project_arguments('-Wno-unused-private-field', language: 'cpp')
-    endif
+if get_option('precision') == 'double'  # default is integer
+    add_project_arguments('-DPYVRP_DOUBLE_PRECISION', language: 'cpp')
 endif
 
 # We first compile a common library that contains all regular, C++ code. This

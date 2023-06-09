@@ -1,9 +1,11 @@
-#ifndef INDIVIDUAL_H
-#define INDIVIDUAL_H
+#ifndef PYVRP_INDIVIDUAL_H
+#define PYVRP_INDIVIDUAL_H
 
+#include "Measure.h"
 #include "ProblemData.h"
 #include "XorShift128.h"
 
+#include <functional>
 #include <iosfwd>
 #include <vector>
 
@@ -21,16 +23,18 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};      // Client visits on this route
-        size_t distance_ = 0;     // Total travel distance on this route
-        size_t demand_ = 0;       // Total demand served on this route
-        size_t excessLoad_ = 0;   // Demand in excess of the vehicle's capacity
-        size_t duration_ = 0;     // Total travel duration on this route
-        size_t service_ = 0;      // Total service duration on this route
-        size_t timeWarp_ = 0;     // Total time warp on this route
-        size_t wait_ = 0;         // Total waiting duration on this route
-        size_t prizes_ = 0;       // Total prize value collected on this route
-        size_t vehicleType_ = 0;  // Type of vehicle of this route
+        Visits visits_ = {};     // Client visits on this route
+        Distance distance_ = 0;  // Total travel distance on this route
+        Load demand_ = 0;        // Total demand served on this route
+        Load excessLoad_ = 0;    // Excess demand (wrt vehicle capacity)
+        Duration duration_ = 0;  // Total travel duration on this route
+        Duration service_ = 0;   // Total service duration on this route
+        Duration timeWarp_ = 0;  // Total time warp on this route
+        Duration wait_ = 0;      // Total waiting duration on this route
+        Cost prizes_ = 0;        // Total value of prizes on this route
+
+        std::pair<double, double> centroid_;  // center of the route
+        size_t vehicleType_ = 0;              // Type of vehicle of this route
 
     public:
         [[nodiscard]] bool empty() const;
@@ -43,14 +47,16 @@ public:
         Visits::const_iterator cend() const;
 
         [[nodiscard]] Visits const &visits() const;
-        [[nodiscard]] size_t distance() const;
-        [[nodiscard]] size_t demand() const;
-        [[nodiscard]] size_t excessLoad() const;
-        [[nodiscard]] size_t duration() const;
-        [[nodiscard]] size_t serviceDuration() const;
-        [[nodiscard]] size_t timeWarp() const;
-        [[nodiscard]] size_t waitDuration() const;
-        [[nodiscard]] size_t prizes() const;
+        [[nodiscard]] Distance distance() const;
+        [[nodiscard]] Load demand() const;
+        [[nodiscard]] Load excessLoad() const;
+        [[nodiscard]] Duration duration() const;
+        [[nodiscard]] Duration serviceDuration() const;
+        [[nodiscard]] Duration timeWarp() const;
+        [[nodiscard]] Duration waitDuration() const;
+        [[nodiscard]] Cost prizes() const;
+
+        [[nodiscard]] std::pair<double, double> const &centroid() const;
         [[nodiscard]] size_t vehicleType() const;
 
         [[nodiscard]] bool isFeasible() const;
@@ -69,11 +75,11 @@ private:
 
     size_t numNonEmptyRoutes_ = 0;  // Number of non-empty routes
     size_t numClients_ = 0;         // Number of clients in the solution
-    size_t distance_ = 0;           // Total distance
-    size_t excessLoad_ = 0;         // Total excess load over all routes
-    size_t prizes_ = 0;             // Total collected prize value
-    size_t uncollectedPrizes_ = 0;  // Total uncollected prize value
-    size_t timeWarp_ = 0;           // Total time warp over all routes
+    Distance distance_ = 0;         // Total distance
+    Load excessLoad_ = 0;           // Total excess load over all routes
+    Cost prizes_ = 0;               // Total collected prize value
+    Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
+    Duration timeWarp_ = 0;         // Total time warp over all routes
 
     Routes routes_;  // Routes - some routes may be non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -137,27 +143,27 @@ public:
     /**
      * @return Total distance over all routes.
      */
-    [[nodiscard]] size_t distance() const;
+    [[nodiscard]] Distance distance() const;
 
     /**
      * @return Total excess load over all routes.
      */
-    [[nodiscard]] size_t excessLoad() const;
+    [[nodiscard]] Load excessLoad() const;
 
     /**
      * @return Total collected prize value over all routes.
      */
-    [[nodiscard]] size_t prizes() const;
+    [[nodiscard]] Cost prizes() const;
 
     /**
      * @return Total prize value of all unvisited clients.
      */
-    [[nodiscard]] size_t uncollectedPrizes() const;
+    [[nodiscard]] Cost uncollectedPrizes() const;
 
     /**
      * @return Total time warp over all routes.
      */
-    [[nodiscard]] size_t timeWarp() const;
+    [[nodiscard]] Duration timeWarp() const;
 
     bool operator==(Individual const &other) const;
 
@@ -194,17 +200,17 @@ namespace std
 {
 template <> struct hash<Individual>
 {
-    std::size_t operator()(Individual const &individual) const
+    size_t operator()(Individual const &individual) const
     {
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(individual.numNonEmptyRoutes_);
-        res = res * 31 + std::hash<size_t>()(individual.distance_);
-        res = res * 31 + std::hash<size_t>()(individual.excessLoad_);
-        res = res * 31 + std::hash<size_t>()(individual.timeWarp_);
+        res = res * 31 + std::hash<Distance>()(individual.distance_);
+        res = res * 31 + std::hash<Load>()(individual.excessLoad_);
+        res = res * 31 + std::hash<Duration>()(individual.timeWarp_);
 
         return res;
     }
 };
 }  // namespace std
 
-#endif
+#endif  // PYVRP_INDIVIDUAL_H

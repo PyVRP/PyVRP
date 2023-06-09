@@ -1,5 +1,5 @@
-#ifndef CIRCLESECTOR_H
-#define CIRCLESECTOR_H
+#ifndef PYVRP_CIRCLESECTOR_H
+#define PYVRP_CIRCLESECTOR_H
 
 // Data structure to represent circle sectors
 // Angles are measured in [0,65535] instead of [0,359], in such a way that
@@ -79,4 +79,4 @@ struct CircleSector
     }
 };
 
-#endif
+#endif  // PYVRP_CIRCLESECTOR_H

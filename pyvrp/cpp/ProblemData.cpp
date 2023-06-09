@@ -7,13 +7,13 @@
 #include <string>
 #include <vector>
 
-ProblemData::Client::Client(int x,
-                            int y,
-                            int demand,
-                            int serviceDuration,
-                            int twEarly,
-                            int twLate,
-                            int prize,
+ProblemData::Client::Client(Coordinate x,
+                            Coordinate y,
+                            Load demand,
+                            Duration serviceDuration,
+                            Duration twEarly,
+                            Duration twLate,
+                            Cost prize,
                             bool required)
     : x(x),
       y(y),
@@ -39,9 +39,9 @@ ProblemData::Client::Client(int x,
 
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
-Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
-Matrix<int> const &ProblemData::durationMatrix() const { return dur_; }
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
@@ -51,13 +51,13 @@ size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
-                         std::vector<std::vector<int>> const &distMat,
-                         std::vector<std::vector<int>> const &durMat)
-    : dist_(distMat),
-      dur_(durMat),
+                         Matrix<Distance> const distMat,
+                         Matrix<Duration> const durMat)
+    : dist_(std::move(distMat)),
+      dur_(std::move(durMat)),
       clients_(clients),
       vehicleTypes_(vehicleTypes),
-      numClients_(std::max(clients.size(), static_cast<size_t>(1)) - 1),
+      numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicles_(std::accumulate(vehicleTypes.begin(),
                                    vehicleTypes.end(),
                                    0,

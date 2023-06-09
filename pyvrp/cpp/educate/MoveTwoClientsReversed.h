@@ -1,5 +1,5 @@
-#ifndef MOVETWOCLIENTSREVERSED_H
-#define MOVETWOCLIENTSREVERSED_H
+#ifndef PYVRP_MOVETWOCLIENTSREVERSED_H
+#define PYVRP_MOVETWOCLIENTSREVERSED_H
 
 #include "LocalSearchOperator.h"
 
@@ -11,9 +11,10 @@ class MoveTwoClientsReversed : public LocalSearchOperator<Node>
     using LocalSearchOperator::LocalSearchOperator;
 
 public:
-    int evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
+    Cost
+    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Node *U, Node *V) const override;
 };
 
-#endif  // MOVETWOCLIENTSREVERSED_H
+#endif  // PYVRP_MOVETWOCLIENTSREVERSED_H

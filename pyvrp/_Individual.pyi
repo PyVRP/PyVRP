@@ -51,6 +51,10 @@ class Route:
         """
         Total prize value collected on this route.
         """
+    def centroid(self) -> Tuple[float, float]:
+        """
+        Center point of the client locations on this route.
+        """
     def vehicle_type(self) -> int:
         """
         Idx of the type of the vehicle used for this route.

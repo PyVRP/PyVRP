@@ -8,7 +8,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<int, int, int, int, int, int, int, bool>(),
+        .def(py::init<Value, Value, Value, Value, Value, Value, Value, bool>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
@@ -17,13 +17,32 @@ PYBIND11_MODULE(_ProblemData, m)
              py::arg("tw_late") = 0,
              py::arg("prize") = 0,
              py::arg("required") = true)
-        .def_readonly("x", &ProblemData::Client::x)
-        .def_readonly("y", &ProblemData::Client::y)
-        .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
-        .def_readonly("demand", &ProblemData::Client::demand)
-        .def_readonly("tw_early", &ProblemData::Client::twEarly)
-        .def_readonly("tw_late", &ProblemData::Client::twLate)
-        .def_readonly("prize", &ProblemData::Client::prize)
+        .def_property_readonly(
+            "x",
+            [](ProblemData::Client const &client) { return client.x.get(); })
+        .def_property_readonly(
+            "y",
+            [](ProblemData::Client const &client) { return client.y.get(); })
+        .def_property_readonly("demand",
+                               [](ProblemData::Client const &client) {
+                                   return client.demand.get();
+                               })
+        .def_property_readonly("service_duration",
+                               [](ProblemData::Client const &client) {
+                                   return client.serviceDuration.get();
+                               })
+        .def_property_readonly("tw_early",
+                               [](ProblemData::Client const &client) {
+                                   return client.twEarly.get();
+                               })
+        .def_property_readonly("tw_late",
+                               [](ProblemData::Client const &client) {
+                                   return client.twLate.get();
+                               })
+        .def_property_readonly("prize",
+                               [](ProblemData::Client const &client) {
+                                   return client.prize.get();
+                               })
         .def_readonly("required", &ProblemData::Client::required);
 
     py::class_<ProblemData::VehicleType>(m, "VehicleType")
@@ -35,10 +54,23 @@ PYBIND11_MODULE(_ProblemData, m)
                       &ProblemData::VehicleType::qty_available);
 
     py::class_<ProblemData>(m, "ProblemData")
-        .def(py::init<std::vector<ProblemData::Client> const &,
-                      std::vector<ProblemData::VehicleType> const &,
-                      std::vector<std::vector<int>> const &,
-                      std::vector<std::vector<int>> const &>(),
+        .def(py::init(
+                 [](std::vector<ProblemData::Client> const &clients,
+                    std::vector<ProblemData::VehicleType> const &vehicleTypes,
+                    std::vector<std::vector<Value>> const &dist,
+                    std::vector<std::vector<Value>> const &dur) {
+                     Matrix<Distance> distMat(clients.size());
+                     Matrix<Duration> durMat(clients.size());
+
+                     for (size_t row = 0; row != clients.size(); ++row)
+                         for (size_t col = 0; col != clients.size(); ++col)
+                         {
+                             distMat(row, col) = dist[row][col];
+                             durMat(row, col) = dur[row][col];
+                         }
+
+                     return ProblemData(clients, vehicleTypes, distMat, durMat);
+                 }),
              py::arg("clients"),
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
@@ -50,21 +82,24 @@ PYBIND11_MODULE(_ProblemData, m)
         .def("client",
              &ProblemData::client,
              py::arg("client"),
-             py::return_value_policy::reference)
+             py::return_value_policy::reference_internal)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("idx"),
              py::return_value_policy::reference)
-        .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
-        .def("duration",
-             &ProblemData::duration,
-             py::arg("first"),
-             py::arg("second"))
-        .def("distance_matrix",
-             &ProblemData::distanceMatrix,
-             py::return_value_policy::reference)
-        .def("duration_matrix",
-             &ProblemData::durationMatrix,
-             py::return_value_policy::reference);
+        .def(
+            "dist",
+            [](ProblemData const &data, size_t first, size_t second) {
+                return data.dist(first, second).get();
+            },
+            py::arg("first"),
+            py::arg("second"))
+        .def(
+            "duration",
+            [](ProblemData const &data, size_t first, size_t second) {
+                return data.duration(first, second).get();
+            },
+            py::arg("first"),
+            py::arg("second"));
 }
