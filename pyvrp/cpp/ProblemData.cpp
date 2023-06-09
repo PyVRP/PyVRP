@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -44,27 +45,25 @@ Matrix<int> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
-size_t ProblemData::maxNumRoutes() const { return numAvailableRoutes_; }
+size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
+
+size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
-                         std::vector<size_t> const &capacities,
+                         std::vector<VehicleType> const &vehicleTypes,
                          std::vector<std::vector<int>> const &distMat,
                          std::vector<std::vector<int>> const &durMat)
     : dist_(distMat),
       dur_(durMat),
       clients_(clients),
-      routes_(capacities.size()),
-      routeTypes_(capacities.size()),
+      vehicleTypes_(vehicleTypes),
       numClients_(std::max(clients.size(), static_cast<size_t>(1)) - 1),
-      numAvailableRoutes_(capacities.size())
+      numVehicles_(std::accumulate(vehicleTypes.begin(),
+                                   vehicleTypes.end(),
+                                   0,
+                                   [](int sum, const VehicleType &vehicleType) {
+                                       return sum + vehicleType.qty_available;
+                                   })),
+      numVehicleTypes_(vehicleTypes.size())
 {
-
-    size_t routeType = 0;
-    for (size_t idx = 0; idx < static_cast<size_t>(numAvailableRoutes_); ++idx)
-    {
-        routes_[idx] = {capacities[idx]};
-        if (idx > 0 && routes_[idx] != routes_[idx - 1])
-            routeType++;
-        routeTypes_[idx] = routeType;
-    }
 }

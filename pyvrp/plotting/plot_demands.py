@@ -35,7 +35,11 @@ def plot_demands(
 
     if title is None:
         capacities = np.array(
-            [data.route_data(i).capacity for i in range(data.max_num_routes)]
+            [
+                data.vehicle_type(i).capacity
+                for i in range(data.num_vehicle_types)
+                for _ in range(data.vehicle_type(i).qty_available)
+            ]
         )
         title = (
             f"Demands (avg. cap = {capacities.mean()}, "

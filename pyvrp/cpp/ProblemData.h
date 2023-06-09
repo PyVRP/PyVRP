@@ -31,22 +31,23 @@ public:
                bool required = true);
     };
 
-    struct RouteData
+    struct VehicleType
     {
-        size_t capacity;  // Capacity (max total demand) of the route
-        inline bool operator==(RouteData const &other) const;
-        inline bool operator!=(RouteData const &other) const;
+        size_t capacity;       // Capacity (max total demand) of the vehicle
+        size_t qty_available;  // Qty available of this vehicle type
+        inline bool operator==(VehicleType const &other) const;
+        inline bool operator!=(VehicleType const &other) const;
     };
 
 private:
-    Matrix<int> const dist_;          // Distance matrix (+depot)
-    Matrix<int> const dur_;           // Duration matrix (+depot)
-    std::vector<Client> clients_;     // Client (+depot) information
-    std::vector<RouteData> routes_;   // Routes information per route
-    std::vector<size_t> routeTypes_;  // Type idx per route
+    Matrix<int> const dist_;                 // Distance matrix (+depot)
+    Matrix<int> const dur_;                  // Duration matrix (+depot)
+    std::vector<Client> clients_;            // Client (+depot) information
+    std::vector<VehicleType> vehicleTypes_;  // Routes information per route
 
     size_t const numClients_;
-    size_t const numAvailableRoutes_;
+    size_t const numVehicles_;
+    size_t const numVehicleTypes_;
 
 public:
     /**
@@ -61,16 +62,10 @@ public:
     [[nodiscard]] Client const &depot() const;
 
     /**
-     * @param route Route for which to return the data.
-     * @return A struct containing the indicated route's information.
+     * @param idx Index of the vehicle type to return.
+     * @return A struct containing the vehicle type.
      */
-    [[nodiscard]] inline RouteData const &routeData(size_t route) const;
-
-    /**
-     * @param route Route for which to return the route type.
-     * @return RouteType index of the route type of the route.
-     */
-    [[nodiscard]] inline size_t const &routeType(size_t route) const;
+    [[nodiscard]] inline VehicleType const &vehicleType(size_t idx) const;
 
     /**
      * Returns the distance between the indicated two clients.
@@ -106,9 +101,14 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
+     * @return Total number of vehicle types in this instance.
+     */
+    [[nodiscard]] size_t numVehicleTypes() const;
+
+    /**
      * @return Total number of routes available in this instance.
      */
-    [[nodiscard]] size_t maxNumRoutes() const;
+    [[nodiscard]] size_t numVehicles() const;
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the list of
@@ -116,22 +116,22 @@ public:
      * number of clients.
      *
      * @param clients      List of clients (including depot at index 0).
-     * @param capacities   Capacity (max total demand) for each route.
+     * @param vehicleTypes List of vehicle types.
      * @param distMat      Distance matrix.
      * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
-                std::vector<size_t> const &capacities,
+                std::vector<VehicleType> const &vehicleTypes,
                 std::vector<std::vector<int>> const &distMat,
                 std::vector<std::vector<int>> const &durMat);
 };
 
-inline bool ProblemData::RouteData::operator==(RouteData const &other) const
+inline bool ProblemData::VehicleType::operator==(VehicleType const &other) const
 {
     return capacity == other.capacity;
 }
 
-inline bool ProblemData::RouteData::operator!=(RouteData const &other) const
+inline bool ProblemData::VehicleType::operator!=(VehicleType const &other) const
 {
     return !(*this == other);
 }
@@ -141,14 +141,9 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-ProblemData::RouteData const &ProblemData::routeData(size_t route) const
+ProblemData::VehicleType const &ProblemData::vehicleType(size_t idx) const
 {
-    return routes_[route];
-}
-
-size_t const &ProblemData::routeType(size_t route) const
-{
-    return routeTypes_[route];
+    return vehicleTypes_[idx];
 }
 
 int ProblemData::dist(size_t first, size_t second) const

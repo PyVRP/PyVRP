@@ -26,31 +26,36 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("prize", &ProblemData::Client::prize)
         .def_readonly("required", &ProblemData::Client::required);
 
-    py::class_<ProblemData::RouteData>(m, "RouteData")
-        .def(py::init<size_t>(), py::arg("capacity"))
-        .def_readonly("capacity", &ProblemData::RouteData::capacity);
+    py::class_<ProblemData::VehicleType>(m, "VehicleType")
+        .def(py::init<int, size_t>(),
+             py::arg("capacity"),
+             py::arg("qty_available"))
+        .def_readonly("capacity", &ProblemData::VehicleType::capacity)
+        .def_readonly("qty_available",
+                      &ProblemData::VehicleType::qty_available);
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init<std::vector<ProblemData::Client> const &,
-                      std::vector<size_t> const &,
+                      std::vector<ProblemData::VehicleType> const &,
                       std::vector<std::vector<int>> const &,
                       std::vector<std::vector<int>> const &>(),
              py::arg("clients"),
-             py::arg("capacities"),
+             py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
-        .def_property_readonly("max_num_routes", &ProblemData::maxNumRoutes)
+        .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
+        .def_property_readonly("num_vehicle_types",
+                               &ProblemData::numVehicleTypes)
         .def("client",
              &ProblemData::client,
              py::arg("client"),
              py::return_value_policy::reference)
         .def("depot", &ProblemData::depot, py::return_value_policy::reference)
-        .def("route_data",
-             &ProblemData::routeData,
-             py::arg("route"),
+        .def("vehicle_type",
+             &ProblemData::vehicleType,
+             py::arg("idx"),
              py::return_value_policy::reference)
-        .def("route_type", &ProblemData::routeType, py::arg("route"))
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
         .def("duration",
              &ProblemData::duration,

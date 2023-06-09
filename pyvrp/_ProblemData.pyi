@@ -52,17 +52,22 @@ class Client:
         required: bool = True,
     ) -> None: ...
 
-class RouteData:
+class VehicleType:
     """
-    Simple data object storing all route data as properties.
+    Simple data object storing all vehicle type data as properties.
 
     Attributes
     ----------
     capacity
         Capacity of this route (maximum total demand that can be served).
+    qty_available
+        Number of vehicles of this type that are available.
     """
 
     capacity: int
+    qty_available: int
+
+    def __init__(self, capacity: int, qty_available: int) -> None: ...
 
 class ProblemData:
     """
@@ -75,8 +80,8 @@ class ProblemData:
         List of clients. The first client (at index 0) is assumed to be the
         depot. The time window for the depot is assumed to describe the overall
         time horizon. The depot should have 0 demand and 0 service duration.
-    capacities
-        List of capacities for all routes in the problem instance.
+    vehicle_types
+        List of vehicle_types in the problem instance.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0).
@@ -85,7 +90,7 @@ class ProblemData:
     def __init__(
         self,
         clients: List[Client],
-        capacities: List[int],
+        vehicle_types: List[VehicleType],
         distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
@@ -113,33 +118,19 @@ class ProblemData:
         Client
             A simple data object containing the depot's information.
         """
-    def route_data(self, route: int) -> RouteData:
+    def vehicle_type(self, idx: int) -> VehicleType:
         """
-        Returns route data for the given route index.
+        Returns vehicle type for the index of the vehicle type.
 
         Parameters
         ----------
-        route
-            Route number for which to retrieve information.
+        idx
+            Index of the vehicle type.
 
         Returns
         -------
-        RouteData
-            A simple data object containing the requested route's information.
-        """
-    def route_type(self, route: int) -> int:
-        """
-        Returns the route type (index) for the given route index.
-
-        Parameters
-        ----------
-        route
-            Route number for which to retrieve route type.
-
-        Returns
-        -------
-        int
-            Index of the route type of the requested route.
+        VehicleType
+            A simple data object containing the vehicle type information.
         """
     def dist(self, first: int, second: int) -> int:
         """
@@ -204,12 +195,22 @@ class ProblemData:
             Number of clients in the instance.
         """
     @property
-    def max_num_routes(self) -> int:
+    def num_vehicles(self) -> int:
         """
-        Maximum number of routes in this problem instance.
+        Number of vehicles in this problem instance.
 
         Returns
         -------
         int
-            Maximum number of routes in the instance.
+            Number of vehicles in this problem instance.
+        """
+    @property
+    def num_vehicle_types(self) -> int:
+        """
+        Number of vehicle types in this problem instance.
+
+        Returns
+        -------
+        int
+            Number of vehicle types in this problem instance.
         """

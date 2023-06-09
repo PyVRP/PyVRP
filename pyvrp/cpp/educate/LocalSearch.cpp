@@ -26,7 +26,7 @@ Individual LocalSearch::search(Individual &individual,
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
     std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
-    lastModified = std::vector<int>(data.maxNumRoutes(), 0);
+    lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
     numMoves = 0;
@@ -94,8 +94,8 @@ Individual LocalSearch::intensify(Individual &individual,
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
 
-    std::vector<int> lastTestedRoutes(data.maxNumRoutes(), -1);
-    lastModified = std::vector<int>(data.maxNumRoutes(), 0);
+    std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
+    lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
     numMoves = 0;
@@ -139,30 +139,30 @@ Individual LocalSearch::intensify(Individual &individual,
 bool LocalSearch::applyNodeOpsWithEmptyRoutes(
     Node *U, CostEvaluator const &costEvaluator)
 {
-    // Loop over all empty routes that are not exchangable with the previous
-    // empty route (assuming routes are grouped) and try the operator
-    int prev_r = -1;
     bool success = false;
-    for (size_t r = 0; r < routes.size(); r++)
+    // Loop over vehicle types and try to insert in empty route
+    auto pred = [](auto const &route) { return route.empty(); };
+    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
     {
-        if (routes[r].empty()
-            && (prev_r == -1 || (data.routeType(r) != data.routeType(prev_r))))
-        {
-            prev_r = r;
-            // Note: if the operation is succesful, we still continue
-            // checking operations with other empty routes, similar to
-            // how a move involving U, V will still check U, V' afterwards
-            if (U->route)
-            {  // try inserting U into the empty route.
-                if (applyNodeOps(U, routes[r].depot, costEvaluator))
-                    success = true;
-            }
-            else
-            {  // U is not in the solution, so again try inserting.
-                if (maybeInsert(U, routes[r].depot, costEvaluator))
-                    success = true;
-            }
-            // TODO break for loop if data.isHomogeneousFleet()?
+        auto start = routes.begin() + typeOffsets[typeIdx];
+        auto end = start + data.vehicleType(typeIdx).qty_available;
+        auto empty = std::find_if(start, end, pred);
+
+        if (empty == end)
+            continue;
+
+        // Note: if the operation is succesful, we still continue
+        // checking operations with other empty routes, similar to
+        // how a move involving U, V will still check U, V' afterwards
+        if (U->route)
+        {  // try inserting U into the empty route.
+            if (applyNodeOps(U, empty->depot, costEvaluator))
+                success = true;
+        }
+        else
+        {  // U is not in the solution, so again try inserting.
+            if (maybeInsert(U, empty->depot, costEvaluator))
+                success = true;
         }
     }
     return success;
@@ -309,7 +309,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
     auto const &routesIndiv = individual.getRoutes();
 
-    for (size_t r = 0; r != data.maxNumRoutes(); r++)
+    for (size_t r = 0; r != data.numVehicles(); r++)
     {
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -360,9 +360,9 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
 Individual LocalSearch::exportIndividual()
 {
-    std::vector<std::vector<int>> indivRoutes(data.maxNumRoutes());
+    std::vector<std::vector<int>> indivRoutes(data.numVehicles());
 
-    for (size_t r = 0; r < data.maxNumRoutes(); r++)
+    for (size_t r = 0; r < data.numVehicles(); r++)
     {
         Node *node = startDepots[r].next;
 
@@ -417,12 +417,13 @@ LocalSearch::LocalSearch(ProblemData &data,
       rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
-      orderRoutes(data.maxNumRoutes()),
-      lastModified(data.maxNumRoutes(), -1),
+      orderRoutes(data.numVehicles()),
+      lastModified(data.numVehicles(), -1),
       clients(data.numClients() + 1),
       routes(),
-      startDepots(data.maxNumRoutes()),
-      endDepots(data.maxNumRoutes())
+      typeOffsets(data.numVehicleTypes()),
+      startDepots(data.numVehicles()),
+      endDepots(data.numVehicles())
 {
     setNeighbours(neighbours);
 
@@ -432,17 +433,28 @@ LocalSearch::LocalSearch(ProblemData &data,
     for (size_t i = 0; i <= data.numClients(); i++)
         clients[i].client = i;
 
-    routes.reserve(data.maxNumRoutes());
-    for (size_t i = 0; i < data.maxNumRoutes(); i++)
+    // For convenience, we create a vector with offset/starting indexes for
+    // each vehicle type.
+    routes.reserve(data.numVehicles());
+    size_t rIdx = 0;
+    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
-        routes.emplace_back(data, i);
-        routes[i].idx = i;
-        routes[i].depot = &startDepots[i];
+        typeOffsets[typeIdx] = rIdx;
 
-        startDepots[i].client = 0;
-        startDepots[i].route = &routes[i];
+        auto const qty_available = data.vehicleType(typeIdx).qty_available;
+        for (size_t i = 0; i != qty_available; ++i)
+        {
+            routes.emplace_back(data, rIdx, typeIdx);
+            routes[rIdx].idx = rIdx;
+            routes[rIdx].depot = &startDepots[rIdx];
 
-        endDepots[i].client = 0;
-        endDepots[i].route = &routes[i];
+            startDepots[rIdx].client = 0;
+            startDepots[rIdx].route = &routes[rIdx];
+
+            endDepots[rIdx].client = 0;
+            endDepots[rIdx].route = &routes[rIdx];
+
+            rIdx++;
+        }
     }
 }

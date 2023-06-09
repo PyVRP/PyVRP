@@ -8,8 +8,8 @@
 
 using TWS = TimeWindowSegment;
 
-Route::Route(ProblemData const &data, size_t const idx)
-    : data(data), routeData(data.routeData(idx)), idx(idx)
+Route::Route(ProblemData const &data, size_t const idx, size_t const typeIdx)
+    : data(data), vehicleType(data.vehicleType(typeIdx)), idx(idx)
 {
 }
 
@@ -118,7 +118,7 @@ void Route::update()
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;
-    isLoadFeasible_ = static_cast<size_t>(load_) <= routeData.capacity;
+    isLoadFeasible_ = static_cast<size_t>(load_) <= vehicleType.capacity;
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;

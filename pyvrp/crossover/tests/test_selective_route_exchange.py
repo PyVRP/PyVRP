@@ -3,7 +3,7 @@ import itertools
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
+from pyvrp import CostEvaluator, Individual, VehicleType, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
     selective_route_exchange as cpp_srex,
@@ -125,7 +125,7 @@ def test_srex_heterogeneous_greedy_repair():
     heterogeneous routes.
     """
     data = read("data/OkSmallGreedyRepair.txt")
-    data = make_heterogeneous(data, [10, 10, 20])
+    data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't
@@ -190,7 +190,9 @@ def test_srex_heterogeneous_changed_start_indices():
     Tests the case where the initial start indices are changed in SREX for
     heterogeneous routes.
     """
-    data = make_heterogeneous(read("data/OkSmall.txt"), [10, 10, 20])
+    data = make_heterogeneous(
+        read("data/OkSmall.txt"), [VehicleType(10, 2), VehicleType(20, 1)]
+    )
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't

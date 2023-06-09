@@ -1,7 +1,14 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Client, CostEvaluator, Individual, ProblemData, XorShift128
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Individual,
+    ProblemData,
+    VehicleType,
+    XorShift128,
+)
 from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
 from pyvrp.educate._Exchange import (
     Exchange10,
@@ -222,7 +229,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
 
     data = ProblemData(
         clients=clients,
-        capacities=[0],
+        vehicle_types=[VehicleType(0, 1)],
         distance_matrix=[  # distance-wise, the best route is 0 -> 1 -> 2 -> 0.
             [0, 1, 5],
             [5, 0, 1],
@@ -260,8 +267,8 @@ def test_relocate_to_heterogeneous_empty_route():
     This test asserts that a customer will be relocated to a non-empty route
     with a different capacity even if there is another empty route in between.
     """
-
-    data = make_heterogeneous(read("data/OkSmall.txt"), [12, 5, 1, 3])
+    vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
+    data = make_heterogeneous(read("data/OkSmall.txt"), vehicle_types)
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator(100_000, 6)
     rng = XorShift128(seed=42)

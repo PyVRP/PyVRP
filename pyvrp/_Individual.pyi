@@ -51,9 +51,9 @@ class Route:
         """
         Total prize value collected on this route.
         """
-    def type_idx(self) -> int:
+    def vehicle_type(self) -> int:
         """
-        Idx of the type of this route.
+        Idx of the type of the vehicle used for this route.
         """
 
 class Individual:
@@ -71,7 +71,7 @@ class Individual:
     ------
     RuntimeError
         When the number of routes in the ``routes`` argument exceeds
-        :py:attr:`~pyvrp._ProblemData.ProblemData.max_num_routes`.
+        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
     """
 
     def __init__(
@@ -129,11 +129,11 @@ class Individual:
         .. note::
 
            This list is of length
-           :py:attr:`~pyvrp._ProblemData.ProblemData.max_num_routes`, but there
+           :py:attr:`~pyvrp._ProblemData.ProblemData.vehicles`, but there
            could be a number of empty routes. For groups of routes with the
-           same capacity, non-empty routes come before empty routes, but there
-           may be empty routes in between non-empty routes for heterogeneous
-           capacities.
+           same vehicle type, non-empty routes come before empty routes, but
+           there may be empty routes in between non-empty routes for
+           heterogeneous vehicle types.
 
         Returns
         -------
@@ -205,6 +205,15 @@ class Individual:
         -------
         int
             Value of uncollected prizes.
+        """
+    def vehicle_type(self) -> int:
+        """
+        Index of the vehicle type corresponding to this route.
+
+        Returns
+        -------
+        int
+            Index of the vehicle type of this route.
         """
     def is_feasible(self) -> bool:
         """

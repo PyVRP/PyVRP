@@ -16,7 +16,7 @@ void Individual::evaluate(ProblemData const &data)
     for (size_t client = 1; client <= data.numClients(); ++client)
         allPrizes += data.client(client).prize;
 
-    for (size_t idx = 0; idx < data.maxNumRoutes(); idx++)
+    for (size_t idx = 0; idx < data.numVehicles(); idx++)
     {
         auto const &route = routes_[idx];
         if (route.empty())
@@ -82,11 +82,11 @@ void Individual::makeAssignedRouteTypes(ProblemData const &data)
 {
     assignedRouteTypes[0] = -1;  // unassigned
 
-    for (size_t rIdx = 0; rIdx != data.maxNumRoutes(); ++rIdx)
+    for (size_t rIdx = 0; rIdx != data.numVehicles(); ++rIdx)
     {
         auto const route = routes_[rIdx];
         for (size_t idx = 0; idx != route.size(); ++idx)
-            assignedRouteTypes[route[idx]] = data.routeType(rIdx);
+            assignedRouteTypes[route[idx]] = route.vehicleType();
     }
 }
 
@@ -108,7 +108,7 @@ bool Individual::operator==(Individual const &other) const
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.maxNumRoutes()),
+    : routes_(data.numVehicles()),
       neighbours(data.numClients() + 1, {0, 0}),
       assignedRouteTypes(data.numClients() + 1)
 {
@@ -119,17 +119,25 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
     // Distribute clients evenly over the routes: the total number of clients
     // per vehicle, with an adjustment in case the division is not perfect.
-    auto const maxNumRoutes = data.maxNumRoutes();
+    auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
-    auto const perRouteFloor = std::max(numClients / maxNumRoutes, size_t(1));
-    auto const perRoute = perRouteFloor + (numClients % maxNumRoutes != 0);
+    auto const perRouteFloor = std::max(numClients / numVehicles, size_t(1));
+    auto const perRoute = perRouteFloor + (numClients % numVehicles != 0);
 
-    std::vector<std::vector<Client>> routes(data.maxNumRoutes());
+    std::vector<std::vector<Client>> routes(data.numVehicles());
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx], idx);
+    size_t idx = 0;
+    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
+    {
+        auto const qty_available = data.vehicleType(typeIdx).qty_available;
+        for (size_t i = 0; i != qty_available; ++i)
+        {
+            routes_[idx] = Route(data, routes[idx], typeIdx);
+            idx++;
+        }
+    }
 
     makeNeighbours(data);
     makeAssignedRouteTypes(data);
@@ -138,11 +146,11 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
-    : routes_(data.maxNumRoutes()),
+    : routes_(data.numVehicles()),
       neighbours(data.numClients() + 1, {0, 0}),
       assignedRouteTypes(data.numClients() + 1)
 {
-    if (routes.size() > data.maxNumRoutes())
+    if (routes.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
@@ -170,9 +178,17 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
-    for (size_t idx = 0; idx != routes_.size(); ++idx)
-        routes_[idx]
-            = Route(data, idx < routes.size() ? routes[idx] : Visits(), idx);
+    size_t idx = 0;
+    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
+    {
+        auto const qty_available = data.vehicleType(typeIdx).qty_available;
+        for (size_t i = 0; i != qty_available; ++i)
+        {
+            auto const &visits = idx < routes.size() ? routes[idx] : Visits();
+            routes_[idx] = Route(data, visits, typeIdx);
+            idx++;
+        }
+    }
 
     // We sort routes by route types. Within routes of the same type
     // a precedes b only when a is not empty and b is. Combined with a stable
@@ -180,8 +196,8 @@ Individual::Individual(ProblemData const &data,
     // also make sure all empty routes are at the end of routes_ for each
     // route type.
     auto comp = [&data](auto &a, auto &b) {
-        auto const typeA = a.typeIdx();
-        auto const typeB = b.typeIdx();
+        auto const typeA = a.vehicleType();
+        auto const typeB = b.vehicleType();
         // If same type, empty vehicles first
         return typeA == typeB ? !a.empty() && b.empty() : typeA < typeB;
     };
@@ -194,8 +210,8 @@ Individual::Individual(ProblemData const &data,
 
 Individual::Route::Route(ProblemData const &data,
                          Visits const visits,
-                         size_t const rIdx)
-    : visits_(std::move(visits)), typeIdx_(data.routeType(rIdx))
+                         size_t const vehicleType)
+    : visits_(std::move(visits)), vehicleType_(vehicleType)
 {
     if (visits_.empty())
         return;
@@ -236,7 +252,7 @@ Individual::Route::Route(ProblemData const &data,
     duration_ += data.duration(last, 0);
     time += data.client(last).serviceDuration + data.duration(last, 0);
     timeWarp_ += std::max(time - data.depot().twLate, 0);  // depot closing tw
-    auto const capacity = data.routeData(rIdx).capacity;
+    auto const capacity = data.vehicleType(vehicleType).capacity;
     excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;
 }
 
@@ -281,7 +297,7 @@ size_t Individual::Route::waitDuration() const { return wait_; }
 
 size_t Individual::Route::prizes() const { return prizes_; }
 
-size_t Individual::Route::typeIdx() const { return typeIdx_; }
+size_t Individual::Route::vehicleType() const { return vehicleType_; }
 
 bool Individual::Route::isFeasible() const
 {

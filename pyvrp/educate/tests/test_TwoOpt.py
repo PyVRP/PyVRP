@@ -3,7 +3,7 @@ from typing import List
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
+from pyvrp import CostEvaluator, Individual, VehicleType, XorShift128
 from pyvrp.educate import (
     LocalSearch,
     NeighbourhoodParams,
@@ -38,8 +38,17 @@ def test_OkSmall_instance():
     assert_equal(improved_individual, expected)
 
 
-@mark.parametrize("capacities", [[10, 10], [8, 10], [10, 8], [9, 9], [8, 8]])
-def test_OkSmall_heterogeneous_capacity(capacities: List[int]):
+@mark.parametrize(
+    "vehicle_types",
+    [
+        [VehicleType(10, 2)],
+        [VehicleType(8, 1), VehicleType(10, 1)],
+        [VehicleType(10, 1), VehicleType(8, 1)],
+        [VehicleType(9, 1), VehicleType(9, 1)],
+        [VehicleType(8, 1), VehicleType(8, 1)],
+    ],
+)
+def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     # This instance tests a two-opt move that is improving when disregarding
     # the vehicle capacities. Depending on the (heterogeneous) capacities,
     # the move may or may not be improving and should be applied or not
@@ -52,7 +61,7 @@ def test_OkSmall_heterogeneous_capacity(capacities: List[int]):
 
     # Now making it heterogenous, the same move should result in capacity
     # penalties and thus not be applied
-    data = make_heterogeneous(data, capacities)
+    data = make_heterogeneous(data, vehicle_types)
 
     neighbours: List[List[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)

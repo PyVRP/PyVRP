@@ -10,7 +10,6 @@ from pyvrp import ProblemData, Route
 def plot_route_schedule(
     data: ProblemData,
     route: Route,
-    route_idx: int = 0,
     legend: bool = True,
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
@@ -33,9 +32,6 @@ def plot_route_schedule(
         Data instance for which to plot the route schedule.
     route
         Route (list of clients) whose schedule to plot.
-    route_idx, optional
-        Route idx of the route to plot. Use to plot the correct capacity with a
-        heteregeneous fleet. Defaults to 0 (first route).
     legend, optional
         Whether or not to show the legends. Default True.
     title, optional
@@ -45,8 +41,7 @@ def plot_route_schedule(
     """
     if not ax:
         _, ax = plt.subplots()
-
-    route_data = data.route_data(route_idx)
+    vehicle_type = data.vehicle_type(route.vehicle_type())
     depot = data.client(0)  # For readability, define variable
     horizon = depot.tw_late - depot.tw_early
 
@@ -156,12 +151,12 @@ def plot_route_schedule(
     twin1.fill_between(
         *zip(*trace_load), color="black", alpha=0.1, label="Remaining load"
     )
-    twin1.set_ylim([0, route_data.capacity])
+    twin1.set_ylim([0, vehicle_type.capacity])
 
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {route_data.capacity})")
+    twin1.set_ylabel(f"Load (capacity = {vehicle_type.capacity})")
 
     if legend:
         twin1.legend(loc="upper right")

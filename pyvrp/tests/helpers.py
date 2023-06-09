@@ -3,12 +3,12 @@ import time
 from functools import lru_cache
 from typing import List
 
-from pyvrp import Individual, ProblemData
+from pyvrp import Individual, ProblemData, VehicleType
 from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
 
-def make_heterogeneous(data: ProblemData, capacities: List[int]):
+def make_heterogeneous(data: ProblemData, vehicle_types: List[VehicleType]):
     """
     Creates a new ProblemData instance by replacing the capacities for routes.
     All other data are kept identical.
@@ -16,7 +16,7 @@ def make_heterogeneous(data: ProblemData, capacities: List[int]):
     clients = [data.client(i) for i in range(data.num_clients + 1)]
     return ProblemData(
         clients=clients,
-        capacities=capacities,
+        vehicle_types=vehicle_types,
         distance_matrix=[
             [data.dist(i, j) for j in range(data.num_clients + 1)]
             for i in range(data.num_clients + 1)

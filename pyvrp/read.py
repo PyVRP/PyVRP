@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Union
 import numpy as np
 import vrplib
 
-from ._ProblemData import Client, ProblemData
+from ._ProblemData import Client, ProblemData, VehicleType
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -132,8 +132,6 @@ def read(
 
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
-    capacities = [capacity for _ in range(num_vehicles)]
-
     # Checks
     if len(depots) != 1 or depots[0] != 0:
         raise ValueError(
@@ -166,10 +164,11 @@ def read(
         )
         for idx in range(dimension)
     ]
+    vehicle_types = [VehicleType(capacity, num_vehicles)]
 
     return ProblemData(
         clients,
-        capacities,
+        vehicle_types,
         distances,
         durations,
     )

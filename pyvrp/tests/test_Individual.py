@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Client, Individual, ProblemData, XorShift128
+from pyvrp import Client, Individual, ProblemData, VehicleType, XorShift128
 from pyvrp.tests.helpers import get_route_visits, make_heterogeneous, read
 
 
@@ -26,7 +26,7 @@ def test_route_constructor_sorts_by_empty():
     assert_equal(len(routes[2]), 0)
 
     # Test heterogeneous case
-    data = make_heterogeneous(data, [10, 10, 10, 20, 20])
+    data = make_heterogeneous(data, [VehicleType(10, 3), VehicleType(20, 2)])
     indiv = Individual(data, [[], [3, 4], [], [], [1, 2]])
 
     # num_non_empty_routes() should show two non-empty routes.
@@ -57,12 +57,12 @@ def test_random_constructor_cycles_over_routes():
 def test_route_constructor_raises_too_many_vehicles():
     data = read("data/OkSmall.txt")
 
-    assert_equal(data.max_num_routes, 3)
+    assert_equal(data.num_vehicles, 3)
 
-    # Only two routes should not raise. But we should always get max_num_routes
+    # Only two routes should not raise. But we should always get num_vehicles
     # routes back.
     individual = Individual(data, [[1, 2], [4, 3]])
-    assert_equal(len(individual.get_routes()), data.max_num_routes)
+    assert_equal(len(individual.get_routes()), data.num_vehicles)
 
     # Empty third route should not raise.
     Individual(data, [[1, 2], [4, 3], []])
@@ -158,12 +158,14 @@ def test_excess_load_calculation():
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10.
-    assert_equal(indiv.excess_load(), 18 - data.route_data(0).capacity)
+    assert_equal(indiv.excess_load(), 18 - data.vehicle_type(0).capacity)
 
 
 def test_heterogeneous_capacity_excess_load_calculation():
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, capacities=[10, 10, 20])
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    )
 
     # This instance has capacities [10, 10, 20] and total demand of 18 so if
     # all demand is put in the first route the excess_load is 18 - 10 = 8.
@@ -267,7 +269,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
-        capacities=[0, 0],
+        vehicle_types=[VehicleType(0, 2)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
     )
@@ -296,7 +298,9 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
 def test_num_non_empty_routes_calculation():
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, capacities=[10, 10, 20])
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    )
 
     indiv = Individual(data, [[1, 2, 3, 4]])
     assert_equal(indiv.num_non_empty_routes(), 1)
@@ -368,7 +372,9 @@ def test_same_routes_different_vehicle_not_eq():
     # Make sure capacities are different but large enough (>18) to have no
     # violations so have the same attributes, such that we actually test if the
     # assignments are used for the equality comparison.
-    data = make_heterogeneous(data, capacities=[20, 20, 30])
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(20, 2), VehicleType(30, 1)]
+    )
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -385,7 +391,9 @@ def test_heterogeneous_route_sorting():
     Tests that individual sorts non-empty routes per group of same capacities.
     """
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, capacities=[10, 10, 20])
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    )
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -407,7 +415,9 @@ def test_unsorted_heterogeneous_route_sorting():
     routes to be sorted but it is more efficient to have them sorted.
     """
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, capacities=[10, 20, 10])
+    data = make_heterogeneous(
+        data, [VehicleType(10, 1), VehicleType(20, 1), VehicleType(10, 1)]
+    )
 
     indiv1 = Individual(data, [[1, 2, 3, 4]])
     indiv2 = Individual(data, [[], [1, 2, 3, 4]])
@@ -423,12 +433,12 @@ def test_unsorted_heterogeneous_route_sorting():
 
 
 @mark.parametrize(
-    "capacities",
-    [[10, 10, 10], [10, 10, 20]],
+    "vehicle_types",
+    [[VehicleType(10, 3)], [VehicleType(10, 2), VehicleType(20, 1)]],
 )
-def test_str_contains_essential_information(capacities):
+def test_str_contains_essential_information(vehicle_types):
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, capacities=capacities)
+    data = make_heterogeneous(data, vehicle_types)
 
     rng = XorShift128(seed=2)
 

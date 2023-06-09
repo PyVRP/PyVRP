@@ -21,16 +21,16 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};     // Client visits on this route
-        size_t distance_ = 0;    // Total travel distance on this route
-        size_t demand_ = 0;      // Total demand served on this route
-        size_t excessLoad_ = 0;  // Demand in excess of the vehicle's capacity
-        size_t duration_ = 0;    // Total travel duration on this route
-        size_t service_ = 0;     // Total service duration on this route
-        size_t timeWarp_ = 0;    // Total time warp on this route
-        size_t wait_ = 0;        // Total waiting duration on this route
-        size_t prizes_ = 0;      // Total prize value collected on this route
-        size_t typeIdx_ = 0;     // Type of this route
+        Visits visits_ = {};      // Client visits on this route
+        size_t distance_ = 0;     // Total travel distance on this route
+        size_t demand_ = 0;       // Total demand served on this route
+        size_t excessLoad_ = 0;   // Demand in excess of the vehicle's capacity
+        size_t duration_ = 0;     // Total travel duration on this route
+        size_t service_ = 0;      // Total service duration on this route
+        size_t timeWarp_ = 0;     // Total time warp on this route
+        size_t wait_ = 0;         // Total waiting duration on this route
+        size_t prizes_ = 0;       // Total prize value collected on this route
+        size_t vehicleType_ = 0;  // Type of vehicle of this route
 
     public:
         [[nodiscard]] bool empty() const;
@@ -51,14 +51,16 @@ public:
         [[nodiscard]] size_t timeWarp() const;
         [[nodiscard]] size_t waitDuration() const;
         [[nodiscard]] size_t prizes() const;
-        [[nodiscard]] size_t typeIdx() const;
+        [[nodiscard]] size_t vehicleType() const;
 
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Visits const visits, size_t const rIdx);
+        Route(ProblemData const &data,
+              Visits const visits,
+              size_t const vehicleType_);
     };
 
 private:
