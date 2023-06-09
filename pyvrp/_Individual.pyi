@@ -51,6 +51,10 @@ class Route:
         """
         Total prize value collected on this route.
         """
+    def type_idx(self) -> int:
+        """
+        Idx of the type of this route.
+        """
 
 class Individual:
     """

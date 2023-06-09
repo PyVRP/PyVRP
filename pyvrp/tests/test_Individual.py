@@ -5,7 +5,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import Client, Individual, ProblemData, XorShift128
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import get_route_visits, make_heterogeneous, read
 
 
 def test_route_constructor_sorts_by_empty():
@@ -34,7 +34,7 @@ def test_route_constructor_sorts_by_empty():
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices for each group of equal vehicle capacities.
-    assert_equal(indiv.get_routes(), [[3, 4], [], [], [1, 2], []])
+    assert_equal(get_route_visits(indiv), [[3, 4], [], [], [1, 2], []])
 
 
 def test_random_constructor_cycles_over_routes():
@@ -47,7 +47,7 @@ def test_random_constructor_cycles_over_routes():
     indiv = Individual.make_random(data, rng)
     routes = indiv.get_routes()
 
-    assert_equal(indiv.num_routes(), 2)
+    assert_equal(indiv.num_non_empty_routes(), 2)
     assert_equal(len(routes), 3)
 
     for idx, size in enumerate([2, 2, 0]):
@@ -393,11 +393,11 @@ def test_heterogeneous_route_sorting():
 
     # First two vehicles have same capacity, so order does not matter
     expected = [[1, 2, 3, 4], [], []]
-    assert_equal(indiv1.get_routes(), expected)
-    assert_equal(indiv2.get_routes(), expected)
+    assert_equal(get_route_visits(indiv1), expected)
+    assert_equal(get_route_visits(indiv2), expected)
 
     # Third vehicle has a different capacity, so should not be moved forward
-    assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
+    assert_equal(get_route_visits(indiv3), [[], [], [1, 2, 3, 4]])
 
 
 def test_unsorted_heterogeneous_route_sorting():
@@ -414,12 +414,12 @@ def test_unsorted_heterogeneous_route_sorting():
     indiv3 = Individual(data, [[], [], [1, 2, 3, 4]])
 
     # First two vehicles have different capacities, so order does matter
-    assert_equal(indiv1.get_routes(), [[1, 2, 3, 4], [], []])
-    assert_equal(indiv2.get_routes(), [[], [1, 2, 3, 4], []])
+    assert_equal(get_route_visits(indiv1), [[1, 2, 3, 4], [], []])
+    assert_equal(get_route_visits(indiv2), [[], [1, 2, 3, 4], []])
 
     # Third vehicle has a different capacity than the second, so should not be
     # moved forward even though it has the same capacity as the first vehicle.
-    assert_equal(indiv3.get_routes(), [[], [], [1, 2, 3, 4]])
+    assert_equal(get_route_visits(indiv3), [[], [], [1, 2, 3, 4]])
 
 
 @mark.parametrize(

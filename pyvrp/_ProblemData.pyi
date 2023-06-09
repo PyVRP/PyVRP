@@ -127,6 +127,20 @@ class ProblemData:
         RouteData
             A simple data object containing the requested route's information.
         """
+    def route_type(self, route: int) -> int:
+        """
+        Returns the route type (index) for the given route index.
+
+        Parameters
+        ----------
+        route
+            Route number for which to retrieve route type.
+
+        Returns
+        -------
+        int
+            Index of the route type of the requested route.
+        """
     def dist(self, first: int, second: int) -> int:
         """
         Returns the travel distance between the first and second argument,

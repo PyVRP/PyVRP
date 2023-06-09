@@ -170,8 +170,22 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx], idx);
+    for (size_t idx = 0; idx != routes_.size(); ++idx)
+        routes_[idx]
+            = Route(data, idx < routes.size() ? routes[idx] : Visits(), idx);
+
+    // We sort routes by route types. Within routes of the same type
+    // a precedes b only when a is not empty and b is. Combined with a stable
+    // sort, this ensures we keep the original sorting as much as possible, but
+    // also make sure all empty routes are at the end of routes_ for each
+    // route type.
+    auto comp = [&data](auto &a, auto &b) {
+        auto const typeA = a.typeIdx();
+        auto const typeB = b.typeIdx();
+        // If same type, empty vehicles first
+        return typeA == typeB ? !a.empty() && b.empty() : typeA < typeB;
+    };
+    std::stable_sort(routes_.begin(), routes_.end(), comp);
 
     makeNeighbours(data);
     makeAssignedRouteTypes(data);
@@ -181,7 +195,7 @@ Individual::Individual(ProblemData const &data,
 Individual::Route::Route(ProblemData const &data,
                          Visits const visits,
                          size_t const rIdx)
-    : visits_(std::move(visits))
+    : visits_(std::move(visits)), typeIdx_(data.routeType(rIdx))
 {
     if (visits_.empty())
         return;
@@ -266,6 +280,8 @@ size_t Individual::Route::timeWarp() const { return timeWarp_; }
 size_t Individual::Route::waitDuration() const { return wait_; }
 
 size_t Individual::Route::prizes() const { return prizes_; }
+
+size_t Individual::Route::typeIdx() const { return typeIdx_; }
 
 bool Individual::Route::isFeasible() const
 {

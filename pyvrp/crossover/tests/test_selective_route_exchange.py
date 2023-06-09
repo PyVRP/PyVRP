@@ -8,7 +8,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
     selective_route_exchange as cpp_srex,
 )
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import get_route_visits, make_heterogeneous, read
 
 
 def test_same_parents_same_offspring():
@@ -144,19 +144,19 @@ def test_srex_heterogeneous_greedy_repair():
 
     # The offspring solution should have the routes according to indiv1
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
-    assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
+    assert_equal(get_route_visits(offspring), [[2, 3, 4], [1], []])
 
     # Even if indiv2 is heterogeneous
     offspring = cpp_srex((indiv1, indiv2h), data, cost_evaluator, (0, 0), 1)
-    assert_equal(offspring.get_routes(), [[2, 3, 4], [1], []])
+    assert_equal(get_route_visits(offspring), [[2, 3, 4], [1], []])
 
     # If indiv1 is heterogeneous, the result should be so too
     offspring = cpp_srex((indiv1h, indiv2), data, cost_evaluator, (0, 0), 1)
-    assert_equal(offspring.get_routes(), [[2, 3, 4], [], [1]])
+    assert_equal(get_route_visits(offspring), [[2, 3, 4], [], [1]])
 
     # Same if indiv2 is also heterogeneous
     offspring = cpp_srex((indiv1h, indiv2h), data, cost_evaluator, (0, 0), 1)
-    assert_equal(offspring.get_routes(), [[2, 3, 4], [], [1]])
+    assert_equal(get_route_visits(offspring), [[2, 3, 4], [], [1]])
 
 
 def test_srex_changed_start_indices():
@@ -212,16 +212,16 @@ def test_srex_heterogeneous_changed_start_indices():
     # returned since it has the lowest cost.
 
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
-    assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
+    assert_equal(get_route_visits(offspring), [[1, 2, 4], [3], []])
 
     offspring = cpp_srex((indiv1, indiv2h), data, cost_evaluator, (1, 1), 1)
-    assert_equal(offspring.get_routes(), [[1, 2, 4], [3], []])
+    assert_equal(get_route_visits(offspring), [[1, 2, 4], [3], []])
 
     offspring = cpp_srex((indiv1h, indiv2), data, cost_evaluator, (1, 1), 1)
-    assert_equal(offspring.get_routes(), [[1, 2, 4], [], [3]])
+    assert_equal(get_route_visits(offspring), [[1, 2, 4], [], [3]])
 
     offspring = cpp_srex((indiv1h, indiv2h), data, cost_evaluator, (1, 1), 1)
-    assert_equal(offspring.get_routes(), [[1, 2, 4], [], [3]])
+    assert_equal(get_route_visits(offspring), [[1, 2, 4], [], [3]])
 
 
 def test_srex_a_right_move():

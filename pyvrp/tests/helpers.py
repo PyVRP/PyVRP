@@ -28,6 +28,10 @@ def make_heterogeneous(data: ProblemData, vehicle_capacities: List[int]):
     )
 
 
+def get_route_visits(indiv: Individual):
+    return [r.visits() for r in indiv.get_routes()]
+
+
 @lru_cache
 def read(where: str, *args, **kwargs):
     """

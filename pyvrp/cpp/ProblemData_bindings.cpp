@@ -51,6 +51,7 @@ PYBIND11_MODULE(_ProblemData, m)
              &ProblemData::routeData,
              py::arg("route"),
              py::return_value_policy::reference)
+        .def("route_type", &ProblemData::routeType, py::arg("route"))
         .def("dist", &ProblemData::dist, py::arg("first"), py::arg("second"))
         .def("duration",
              &ProblemData::duration,
