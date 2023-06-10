@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 class Client:
     """
@@ -101,6 +101,15 @@ class ProblemData:
         -------
         Client
             A simple data object containing the depot's information.
+        """
+    def centroid(self) -> Tuple[float, float]:
+        """
+        Center point of all client locations (excluding the depot).
+
+        Returns
+        -------
+        tuple
+            Centroid of all client locations.
         """
     def dist(self, first: int, second: int) -> int:
         """

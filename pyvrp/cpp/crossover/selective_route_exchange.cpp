@@ -12,6 +12,7 @@ using Routes = std::vector<Route>;
 
 namespace
 {
+// Angle of the given route w.r.t. the centroid of all client locations.
 double routeAngle(ProblemData const &data, Route const &route)
 {
     assert(!route.empty());
@@ -19,9 +20,10 @@ double routeAngle(ProblemData const &data, Route const &route)
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
+    auto const [dataX, dataY] = data.centroid();
     auto const [routeX, routeY] = route.centroid();
-    auto const dx = routeX - static_cast<double>(data.depot().x);
-    auto const dy = routeY - static_cast<double>(data.depot().y);
+    auto const dx = routeX - dataX;
+    auto const dy = routeY - dataY;
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
@@ -104,10 +106,10 @@ Individual selectiveRouteExchange(
         // Difference for moving 'left' in parent A
         int differenceALeft = 0;
 
-        for (Client c : routesA[(startA - 1 + nRoutesA) % nRoutesA])
+        for (Client c : routesA[(nRoutesA + startA - 1) % nRoutesA])
             differenceALeft += !selectedB.contains(c);
 
-        for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
+        for (Client c : routesA[(numMovedRoutes + startA - 1) % nRoutesA])
             differenceALeft -= !selectedB.contains(c);
 
         // Difference for moving 'right' in parent A
@@ -122,10 +124,10 @@ Individual selectiveRouteExchange(
         // Difference for moving 'left' in parent B
         int differenceBLeft = 0;
 
-        for (Client c : routesB[(startB - 1 + numMovedRoutes) % nRoutesB])
+        for (Client c : routesB[(numMovedRoutes + startB - 1) % nRoutesB])
             differenceBLeft += selectedA.contains(c);
 
-        for (Client c : routesB[(startB - 1 + nRoutesB) % nRoutesB])
+        for (Client c : routesB[(nRoutesB + startB - 1) % nRoutesB])
             differenceBLeft -= selectedA.contains(c);
 
         // Difference for moving 'right' in parent B
@@ -150,7 +152,7 @@ Individual selectiveRouteExchange(
             for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
                 selectedA.erase(c);
 
-            startA = (startA - 1 + nRoutesA) % nRoutesA;
+            startA = (nRoutesA + startA - 1) % nRoutesA;
             selectedA.insert(routesA[startA].begin(), routesA[startA].end());
         }
         else if (bestDifference == differenceARight)
@@ -168,7 +170,7 @@ Individual selectiveRouteExchange(
             for (Client c : routesB[(startB + numMovedRoutes - 1) % nRoutesB])
                 selectedB.erase(c);
 
-            startB = (startB - 1 + nRoutesB) % nRoutesB;
+            startB = (nRoutesB + startB - 1) % nRoutesB;
             selectedB.insert(routesB[startB].begin(), routesB[startB].end());
         }
         else if (bestDifference == differenceBRight)
