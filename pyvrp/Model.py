@@ -56,6 +56,14 @@ class Model:
         """
         return self._data
 
+    @property
+    def locations(self) -> List[Client]:
+        """
+        Returns all locations (depots and clients) in the current model. The
+        routes returned by :meth:`~solve` can be used to index these locations.
+        """
+        return self._depots + self._clients
+
     @classmethod
     def read(
         cls,
@@ -201,8 +209,8 @@ class Model:
         """
         Updates the underlying ProblemData instance.
         """
-        clients = self._depots + self._clients
-        client2idx = {id(client): idx for idx, client in enumerate(clients)}
+        locs = self.locations
+        loc2idx = {id(client): idx for idx, client in enumerate(locs)}
 
         num_vehicles = self._vehicle_types[0].number
         vehicle_capacity = self._vehicle_types[0].capacity
@@ -217,17 +225,17 @@ class Model:
             """
             warn(msg, ScalingWarning)
 
-        distances = np.full((len(clients), len(clients)), max_value, dtype=int)
-        durations = np.full((len(clients), len(clients)), max_value, dtype=int)
+        distances = np.full((len(locs), len(locs)), max_value, dtype=int)
+        durations = np.full((len(locs), len(locs)), max_value, dtype=int)
 
         for edge in self._edges:
-            frm = client2idx[id(edge.frm)]
-            to = client2idx[id(edge.to)]
+            frm = loc2idx[id(edge.frm)]
+            to = loc2idx[id(edge.to)]
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
         self._data = ProblemData(
-            clients, num_vehicles, vehicle_capacity, distances, durations
+            locs, num_vehicles, vehicle_capacity, distances, durations
         )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
