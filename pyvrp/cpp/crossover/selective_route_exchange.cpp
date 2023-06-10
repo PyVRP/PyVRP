@@ -106,10 +106,10 @@ Individual selectiveRouteExchange(
         // Difference for moving 'left' in parent A
         int differenceALeft = 0;
 
-        for (Client c : routesA[(nRoutesA + startA - 1) % nRoutesA])
+        for (Client c : routesA[(startA - 1 + nRoutesA) % nRoutesA])
             differenceALeft += !selectedB.contains(c);
 
-        for (Client c : routesA[(numMovedRoutes + startA - 1) % nRoutesA])
+        for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
             differenceALeft -= !selectedB.contains(c);
 
         // Difference for moving 'right' in parent A
@@ -124,10 +124,10 @@ Individual selectiveRouteExchange(
         // Difference for moving 'left' in parent B
         int differenceBLeft = 0;
 
-        for (Client c : routesB[(numMovedRoutes + startB - 1) % nRoutesB])
+        for (Client c : routesB[(startB - 1 + numMovedRoutes) % nRoutesB])
             differenceBLeft += selectedA.contains(c);
 
-        for (Client c : routesB[(nRoutesB + startB - 1) % nRoutesB])
+        for (Client c : routesB[(startB - 1 + nRoutesB) % nRoutesB])
             differenceBLeft -= selectedA.contains(c);
 
         // Difference for moving 'right' in parent B
@@ -152,7 +152,7 @@ Individual selectiveRouteExchange(
             for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
                 selectedA.erase(c);
 
-            startA = (nRoutesA + startA - 1) % nRoutesA;
+            startA = (startA - 1 + nRoutesA) % nRoutesA;
             selectedA.insert(routesA[startA].begin(), routesA[startA].end());
         }
         else if (bestDifference == differenceARight)
@@ -170,7 +170,7 @@ Individual selectiveRouteExchange(
             for (Client c : routesB[(startB + numMovedRoutes - 1) % nRoutesB])
                 selectedB.erase(c);
 
-            startB = (nRoutesB + startB - 1) % nRoutesB;
+            startB = (startB - 1 + nRoutesB) % nRoutesB;
             selectedB.insert(routesB[startB].begin(), routesB[startB].end());
         }
         else if (bestDifference == differenceBRight)
