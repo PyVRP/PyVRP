@@ -25,8 +25,8 @@ class LocalSearch
     // numClients + 1, but nothing stored for the depot!)
     Neighbours neighbours;
 
-    std::vector<int> orderNodes;   // node order used for node operators
-    std::vector<int> orderRoutes;  // route order used by route operators
+    std::vector<int> orderNodes;   // node order used by LocalSearch::search
+    std::vector<int> orderRoutes;  // route order used by LocalSearch::intensify
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
