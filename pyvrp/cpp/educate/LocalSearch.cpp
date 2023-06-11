@@ -16,10 +16,6 @@ Individual LocalSearch::search(Individual &individual,
 {
     loadIndividual(individual);
 
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-
     if (nodeOps.empty())
         throw std::runtime_error("No known node operators.");
 
@@ -97,10 +93,6 @@ Individual LocalSearch::intensify(Individual &individual,
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
-
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
 
@@ -144,6 +136,15 @@ Individual LocalSearch::intensify(Individual &individual,
     }
 
     return exportIndividual();
+}
+
+void LocalSearch::shuffle(XorShift128 &rng)
+{
+    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
+    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+
+    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
+    std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Node *U,
@@ -383,13 +384,13 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     this->neighbours = neighbours;
 }
 
-LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
+LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
+{
+    return neighbours;
+}
 
-LocalSearch::LocalSearch(ProblemData &data,
-                         XorShift128 &rng,
-                         Neighbours neighbours)
+LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
