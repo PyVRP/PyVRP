@@ -12,6 +12,7 @@ using Routes = std::vector<Route>;
 
 namespace
 {
+// Angle of the given route w.r.t. the centroid of all client locations.
 double routeAngle(ProblemData const &data, Route const &route)
 {
     assert(!route.empty());
@@ -19,9 +20,10 @@ double routeAngle(ProblemData const &data, Route const &route)
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
+    auto const [dataX, dataY] = data.centroid();
     auto const [routeX, routeY] = route.centroid();
-    auto const dx = routeX - static_cast<double>(data.depot().x);
-    auto const dy = routeY - static_cast<double>(data.depot().y);
+    auto const dx = routeX - dataX;
+    auto const dy = routeY - dataY;
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
