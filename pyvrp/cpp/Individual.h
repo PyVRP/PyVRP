@@ -67,7 +67,6 @@ public:
 private:
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;        // Number of routes
     size_t numClients_ = 0;       // Number of clients in the solution
     Distance distance_ = 0;       // Total distance
     Load excessLoad_ = 0;         // Total excess load over all routes
@@ -186,7 +185,7 @@ template <> struct hash<Individual>
     size_t operator()(Individual const &individual) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
+        res = res * 31 + std::hash<size_t>()(individual.routes_.size());
         res = res * 31 + std::hash<Distance>()(individual.distance_);
         res = res * 31 + std::hash<Load>()(individual.excessLoad_);
         res = res * 31 + std::hash<Duration>()(individual.timeWarp_);

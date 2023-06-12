@@ -19,7 +19,6 @@ void Individual::evaluate(ProblemData const &data)
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
-        numRoutes_++;
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
@@ -30,7 +29,7 @@ void Individual::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-size_t Individual::numRoutes() const { return numRoutes_; }
+size_t Individual::numRoutes() const { return routes_.size(); }
 
 size_t Individual::numClients() const { return numClients_; }
 
@@ -77,7 +76,7 @@ bool Individual::operator==(Individual const &other) const
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
-        && numRoutes_ == other.numRoutes_
+        && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours;
     // clang-format on
 }
