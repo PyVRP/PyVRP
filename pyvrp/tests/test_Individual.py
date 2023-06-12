@@ -14,13 +14,11 @@ def test_route_constructor_filters_empty():
     indiv = Individual(data, [[3, 4], [], [1, 2]])
     routes = indiv.get_routes()
 
-    # num_routes() should show two non-empty routes. However, we passed in
-    # three routes, so len(routes) should not have changed.
+    # num_routes() and len(routes) should show two non-empty routes.
     assert_equal(indiv.num_routes(), 2)
     assert_equal(len(routes), 2)
 
-    # We expect Individual to sort the routes such that all non-empty routes
-    # are in the lower indices.
+    # The only two non-empty routes should now each have two clients.
     assert_equal(len(routes[0]), 2)
     assert_equal(len(routes[1]), 2)
 
@@ -312,16 +310,15 @@ def test_str_contains_essential_information():
         str_representation = str(individual).splitlines()
 
         routes = individual.get_routes()
-        num_routes = individual.num_routes()
 
-        # There should be no more than num_routes lines (each detailing a
+        # There should be no more than len(routes) lines (each detailing a
         # single route), and two final lines containing distance and prizes.
-        assert_equal(len(str_representation), num_routes + 2)
+        assert_equal(len(str_representation), len(routes) + 2)
 
-        # The first num_routes lines should each contain a route, where each
+        # The first len(routes) lines should each contain a route, where each
         # route should contain every client that is in the route as returned
         # by get_routes().
-        for route, str_route in zip(routes[:num_routes], str_representation):
+        for route, str_route in zip(routes, str_representation):
             for client in route:
                 assert_(str(client) in str_route)
 

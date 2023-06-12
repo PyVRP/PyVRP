@@ -36,7 +36,6 @@ public:
         std::pair<double, double> centroid_;  // center of the route
 
     public:
-        [[nodiscard]] bool empty() const;
         [[nodiscard]] size_t size() const;
         [[nodiscard]] Client operator[](size_t idx) const;
 
@@ -76,7 +75,7 @@ private:
     Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
     Duration timeWarp_ = 0;       // Total time warp over all routes
 
-    Routes routes_;  // Routes - only the first numRoutes_ are non-empty
+    Routes routes_;  // Routes - only includes non-empty routes
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
 
     // Determines the [pred, succ] pairs for each client.
@@ -87,9 +86,8 @@ private:
 
 public:
     /**
-     * Returns the number of non-empty routes in this individual's solution.
-     * Such non-empty routes are guaranteed to be in the lower indices of the
-     * routes returned by ``getRoutes``.
+     * Returns the number of (non-empty) routes in this individual's solution.
+     * Equal to the length of the vector of routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
 

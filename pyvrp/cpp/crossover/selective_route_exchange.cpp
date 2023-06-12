@@ -15,8 +15,6 @@ namespace
 // Angle of the given route w.r.t. the centroid of all client locations.
 double routeAngle(ProblemData const &data, Route const &route)
 {
-    assert(!route.empty());
-
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
@@ -30,9 +28,7 @@ double routeAngle(ProblemData const &data, Route const &route)
 Routes sortByAscAngle(ProblemData const &data, Routes routes)
 {
     auto cmp = [&data](Route a, Route b) {
-        return (a.empty() || b.empty())
-                   ? !a.empty() && b.empty()
-                   : routeAngle(data, a) < routeAngle(data, b);
+        return routeAngle(data, a) < routeAngle(data, b);
     };
 
     std::sort(routes.begin(), routes.end(), cmp);

@@ -305,7 +305,6 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         if (r < routesIndiv.size())
         {
-            assert(!routesIndiv[r].empty());
             Node *client = &clients[routesIndiv[r][0]];
             client->route = route;
 

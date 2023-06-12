@@ -81,7 +81,6 @@ def test_str_contains_essential_information(routes):
     else:
         assert_("INFEASIBLE" in str_representation)
 
-    # And make sure that all non-empty routes are printed as well.
+    # And make sure that all (non-empty) routes are printed as well.
     for route in individual.get_routes():
-        if route:
-            assert_(str(route) in str_representation)
+        assert_(str(route) in str_representation)

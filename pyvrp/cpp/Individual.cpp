@@ -1,6 +1,7 @@
 #include "Individual.h"
 #include "ProblemData.h"
 
+#include <cassert>
 #include <fstream>
 #include <numeric>
 #include <sstream>
@@ -17,9 +18,6 @@ void Individual::evaluate(ProblemData const &data)
 
     for (auto const &route : routes_)
     {
-        if (route.empty())  // First empty route. All subsequent routes are
-            break;          // empty as well.
-
         // Whole solution statistics.
         numRoutes_++;
         numClients_ += route.size();
@@ -114,7 +112,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
-    : routes_(routes.size()), neighbours(data.numClients() + 1, {0, 0})
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
@@ -144,12 +142,11 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
-    // Only store nonempty routes
-    size_t count = 0;
+    // Only store non-empty routes
+    routes_.reserve(routes.size());
     for (size_t idx = 0; idx != routes.size(); ++idx)
         if (!routes[idx].empty())
-            routes_[count++] = Route(data, routes[idx]);
-    routes_.resize(count);
+            routes_.emplace_back(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
@@ -158,8 +155,7 @@ Individual::Individual(ProblemData const &data,
 Individual::Route::Route(ProblemData const &data, Visits const visits)
     : visits_(std::move(visits)), centroid_({0, 0})
 {
-    if (visits_.empty())
-        return;
+    assert(!visits_.empty());
 
     Duration time = data.depot().twEarly;
     int prevClient = 0;
@@ -206,8 +202,6 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
                       ? demand_ - data.vehicleCapacity()
                       : 0;
 }
-
-bool Individual::Route::empty() const { return visits_.empty(); }
 
 size_t Individual::Route::size() const { return visits_.size(); }
 
