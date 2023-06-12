@@ -82,7 +82,7 @@ bool Individual::operator==(Individual const &other) const
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -101,9 +101,9 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
+    routes_.reserve(numRoutes);
     for (size_t idx = 0; idx != numRoutes; ++idx)
-        routes_[idx] = Route(data, routes[idx]);
-    routes_.resize(numRoutes);
+        routes_.emplace_back(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
