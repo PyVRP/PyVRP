@@ -64,7 +64,7 @@ def test_srex_move_all_routes():
     indiv2 = Individual(data, [[1, 2], [3], [4]])
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 3)
 
-    # Note: result will be permuted but equality is invariant to that
+    # Note: result will be permuted but equality is invariant to that.
     assert_equal(offspring, indiv2)
 
 
@@ -103,8 +103,6 @@ def test_srex_greedy_repair():
     data = read("data/OkSmallGreedyRepair.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them
     indiv1 = Individual(data, [[3, 4], [1, 2]])
     indiv2 = Individual(data, [[2, 3], [4, 1]])
 
@@ -166,8 +164,6 @@ def test_srex_changed_start_indices():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them
     indiv1 = Individual(data, [[4], [1, 2, 3]])
     indiv2 = Individual(data, [[3], [1, 2, 4]])
 
@@ -234,8 +230,6 @@ def test_srex_a_right_move():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them
     indiv1 = Individual(data, [[4], [2], [1, 3]])
     indiv2 = Individual(data, [[3], [2], [4, 1]])
 
@@ -282,9 +276,10 @@ def test_srex_a_left_move():
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them
-    indiv1 = Individual(data, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, [[3], [4], [2, 1]])
+    # affect them.
+    indiv1 = Individual(data, [[2], [1, 3], [4]])
+    indiv2 = Individual(data, [[3], [2, 1], [4]])
+
     offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
     expected = Individual(data, [[4], [2, 1], [3]])
     assert_equal(offspring, expected)
@@ -299,10 +294,10 @@ def test_srex_b_left_move():
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them
-    indiv1 = Individual(data, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, [[3], [2], [4, 1]])
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    # affect them.
+    indiv1 = Individual(data, [[2], [1, 3], [4]])
+    indiv2 = Individual(data, [[3], [4, 1], [2]])
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 2), 1)
     expected = Individual(data, [[4, 1], [2], [3]])
     assert_equal(offspring, expected)
 
@@ -316,9 +311,10 @@ def test_srex_b_right_move():
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them
-    indiv1 = Individual(data, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, [[3], [4], [2, 1]])
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    # affect them.
+    indiv1 = Individual(data, [[2], [1, 3], [4]])
+    indiv2 = Individual(data, [[3], [2, 1], [4]])
+
+    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 1), 1)
     expected = Individual(data, [[4], [2], [1, 3]])
     assert_equal(offspring, expected)

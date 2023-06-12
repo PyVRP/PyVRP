@@ -1,8 +1,10 @@
+import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_raises
 from pytest import mark
 
 from pyvrp import Client, ProblemData, VehicleType
+from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
@@ -72,6 +74,17 @@ def test_depot_is_first_client():
     )
 
     assert_(data.depot() is data.client(0))
+
+
+def test_centroid():
+    data = read("data/OkSmall.txt")
+
+    centroid = data.centroid()
+    x = [data.client(idx).x for idx in range(1, data.num_clients + 1)]
+    y = [data.client(idx).y for idx in range(1, data.num_clients + 1)]
+
+    assert_allclose(centroid[0], np.mean(x))
+    assert_allclose(centroid[1], np.mean(y))
 
 
 def test_matrix_access():

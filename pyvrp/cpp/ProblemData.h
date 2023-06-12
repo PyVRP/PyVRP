@@ -41,6 +41,7 @@ public:
     };
 
 private:
+    std::pair<double, double> centroid_;     // Centroid of client locations
     Matrix<Distance> const dist_;            // Distance matrix (+depot)
     Matrix<Duration> const dur_;             // Duration matrix (+depot)
     std::vector<Client> clients_;            // Client (+depot) information
@@ -61,6 +62,11 @@ public:
      * @return A struct containing the depot's information.
      */
     [[nodiscard]] Client const &depot() const;
+
+    /**
+     * @return Centroid of client locations.
+     */
+    [[nodiscard]] std::pair<double, double> const &centroid() const;
 
     /**
      * @param idx Index of the vehicle type to return.

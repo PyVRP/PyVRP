@@ -39,6 +39,11 @@ ProblemData::Client::Client(Coordinate x,
 
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
+std::pair<double, double> const &ProblemData::centroid() const
+{
+    return centroid_;
+}
+
 Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
 Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
@@ -53,7 +58,8 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> const distMat,
                          Matrix<Duration> const durMat)
-    : dist_(std::move(distMat)),
+    : centroid_({0, 0}),
+      dist_(std::move(distMat)),
       dur_(std::move(durMat)),
       clients_(clients),
       vehicleTypes_(vehicleTypes),
@@ -66,4 +72,9 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                                    })),
       numVehicleTypes_(vehicleTypes.size())
 {
+    for (size_t idx = 1; idx <= numClients(); ++idx)
+    {
+        centroid_.first += static_cast<double>(clients[idx].x) / numClients();
+        centroid_.second += static_cast<double>(clients[idx].y) / numClients();
+    }
 }

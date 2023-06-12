@@ -86,7 +86,12 @@ PYBIND11_MODULE(_ProblemData, m)
              &ProblemData::client,
              py::arg("client"),
              py::return_value_policy::reference_internal)
-        .def("depot", &ProblemData::depot, py::return_value_policy::reference)
+        .def("depot",
+             &ProblemData::depot,
+             py::return_value_policy::reference_internal)
+        .def("centroid",
+             &ProblemData::centroid,
+             py::return_value_policy::reference_internal)
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("idx"),
