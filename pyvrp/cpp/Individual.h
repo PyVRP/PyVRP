@@ -30,8 +30,8 @@ public:
         Load excessLoad_ = 0;    // Excess demand (wrt vehicle capacity)
         Duration travel_ = 0;    // Total travel duration on this route
         Duration service_ = 0;   // Total service duration on this route
-        TimeWindowSegment tws_;
-        Cost prizes_ = 0;  // Total value of prizes on this route
+        TimeWindowSegment tws_;  // Time window segment of this route
+        Cost prizes_ = 0;        // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
 

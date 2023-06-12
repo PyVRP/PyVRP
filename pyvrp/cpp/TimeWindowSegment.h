@@ -14,7 +14,7 @@ class TimeWindowSegment
     Duration duration_ = 0;  // Duration = travel + wait + service time
     Duration timeWarp_ = 0;  // Cumulative time warp (end - start = dur - tw)
     Duration twEarly_ = 0;   // Earliest moment to start service of first client
-    Duration twLate_ = 0;    // Latest moment to start service of first client
+    Duration twLate_ = 0;    // Latest moment to start service of last client
 
     [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
                                    TWS const &other) const;
