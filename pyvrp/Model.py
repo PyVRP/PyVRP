@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import List, Optional, Union
 from warnings import warn
 
@@ -19,18 +18,24 @@ from pyvrp.stop import StoppingCriterion
 Depot = Client
 
 
-@dataclass
 class Edge:
-    frm: Client
-    to: Client
-    distance: int
-    duration: int
+
+    __slots__ = ["frm", "to", "distance", "duration"]
+
+    def __init__(self, frm: Client, to: Client, distance: int, duration: int):
+        self.frm = frm
+        self.to = to
+        self.distance = distance
+        self.duration = duration
 
 
-@dataclass
 class VehicleType:
-    number: int
-    capacity: int
+
+    __slots__ = ["number", "capacity"]
+
+    def __init__(self, number: int, capacity: int):
+        self.number = number
+        self.capacity = capacity
 
 
 class Model:
@@ -207,7 +212,7 @@ class Model:
         Updates the underlying ProblemData instance.
         """
         locs = self.locations
-        loc2idx = {id(client): idx for idx, client in enumerate(locs)}
+        loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         num_vehicles = self._vehicle_types[0].number
         vehicle_capacity = self._vehicle_types[0].capacity
