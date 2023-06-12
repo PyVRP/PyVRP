@@ -261,6 +261,25 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     )
 
 
+def test_time_warp_return_to_depot():
+    """
+    This tests wether the calculated total duration and time warp includes the
+    travel back to the depot.
+    """
+    data = ProblemData(
+        clients=[Client(x=0, y=0, tw_late=1), Client(x=1, y=0)],
+        num_vehicles=1,
+        vehicle_cap=0,
+        distance_matrix=[[0, 0], [0, 0]],
+        duration_matrix=[[0, 1], [1, 0]],
+    )
+    # Travel from depot to client and back gives duration 1 + 1 = 2
+    # This is 1 more than the depot time window 1, giving a time warp of 1
+    individual = Individual(data, [[1]])
+    assert_equal(individual.get_routes()[0].duration(), 2)
+    assert_equal(individual.time_warp(), 1)
+
+
 # TODO test all time warp cases
 
 

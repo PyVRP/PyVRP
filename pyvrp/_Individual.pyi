@@ -29,7 +29,7 @@ class Route:
         """
     def duration(self) -> int:
         """
-        Total route duration, including waiting time.
+        Total route travel duration (excluding waiting and service duration).
         """
     def visits(self) -> List[int]:
         """
