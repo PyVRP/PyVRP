@@ -36,6 +36,7 @@ public:
         std::pair<double, double> centroid_;  // center of the route
 
     public:
+        [[nodiscard]] bool empty() const;
         [[nodiscard]] size_t size() const;
         [[nodiscard]] Client operator[](size_t idx) const;
 

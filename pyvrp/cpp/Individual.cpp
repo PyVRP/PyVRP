@@ -202,6 +202,8 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
                       : 0;
 }
 
+bool Individual::Route::empty() const { return visits_.empty(); }
+
 size_t Individual::Route::size() const { return visits_.size(); }
 
 Client Individual::Route::operator[](size_t idx) const { return visits_[idx]; }
