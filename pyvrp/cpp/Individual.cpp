@@ -96,13 +96,13 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     // per vehicle, with an adjustment in case the division is not perfect.
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
-    auto const minPerVehicle = std::max<size_t>(numClients / numVehicles, 1);
-    auto const maxPerVehicle = minPerVehicle + (numClients % numVehicles != 0);
-    auto const numRoutes = (numClients + maxPerVehicle - 1) / maxPerVehicle;
+    auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
+    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
     std::vector<std::vector<Client>> routes(numRoutes);
     for (size_t idx = 0; idx != numClients; ++idx)
-        routes[idx % maxPerVehicle].push_back(clients[idx]);
+        routes[idx / perRoute].push_back(clients[idx]);
 
     for (size_t idx = 0; idx != numRoutes; ++idx)
         routes_[idx] = Route(data, routes[idx]);
