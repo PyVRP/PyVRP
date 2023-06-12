@@ -100,8 +100,8 @@ PYBIND11_MODULE(_Individual, m)
         .def("get_neighbours",
              &Individual::getNeighbours,
              py::return_value_policy::reference_internal)
-        .def("get_assigned_route_types",
-             &Individual::getAssignedRouteTypes,
+        .def("get_assigned_vehicle_types",
+             &Individual::getAssignedVehicleTypes,
              py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_load", &Individual::hasExcessLoad)

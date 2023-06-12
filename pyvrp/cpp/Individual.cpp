@@ -45,9 +45,9 @@ std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
     return neighbours;
 }
 
-std::vector<RouteType> const &Individual::getAssignedRouteTypes() const
+std::vector<RouteType> const &Individual::getAssignedVehicleTypes() const
 {
-    return assignedRouteTypes;
+    return assignedVehicleTypes;
 }
 
 bool Individual::isFeasible() const
@@ -80,13 +80,13 @@ void Individual::makeNeighbours()
 
 void Individual::makeAssignedRouteTypes(ProblemData const &data)
 {
-    assignedRouteTypes[0] = -1;  // unassigned
+    assignedVehicleTypes[0] = -1;  // unassigned
 
     for (size_t rIdx = 0; rIdx != data.numVehicles(); ++rIdx)
     {
         auto const route = routes_[rIdx];
         for (size_t idx = 0; idx != route.size(); ++idx)
-            assignedRouteTypes[route[idx]] = route.vehicleType();
+            assignedVehicleTypes[route[idx]] = route.vehicleType();
     }
 }
 
@@ -103,14 +103,14 @@ bool Individual::operator==(Individual const &other) const
         && timeWarp_ == other.timeWarp_
         && numRoutes_ == other.numRoutes_
         && neighbours == other.neighbours
-        && assignedRouteTypes == other.assignedRouteTypes;
+        && assignedVehicleTypes == other.assignedVehicleTypes;
     // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
     : routes_(data.numVehicles()),
       neighbours(data.numClients() + 1, {0, 0}),
-      assignedRouteTypes(data.numClients() + 1)
+      assignedVehicleTypes(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -148,7 +148,7 @@ Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
     : routes_(data.numVehicles()),
       neighbours(data.numClients() + 1, {0, 0}),
-      assignedRouteTypes(data.numClients() + 1)
+      assignedVehicleTypes(data.numClients() + 1)
 {
     if (routes.size() > data.numVehicles())
     {

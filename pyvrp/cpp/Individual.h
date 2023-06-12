@@ -83,7 +83,7 @@ private:
 
     Routes routes_;  // Routes - some routes may be non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
-    std::vector<RouteType> assignedRouteTypes;  // assigned route per client
+    std::vector<RouteType> assignedVehicleTypes;  // Client assigned veh. types
 
     // Determines the [pred, succ] pairs for each client.
     void makeNeighbours();
@@ -123,7 +123,7 @@ public:
      * Returns a vector of route types for each client (index) in this
      * individual's routes. Includes the depot at index 0.
      */
-    [[nodiscard]] std::vector<RouteType> const &getAssignedRouteTypes() const;
+    [[nodiscard]] std::vector<RouteType> const &getAssignedVehicleTypes() const;
 
     /**
      * @return True when this solution is feasible; false otherwise.
