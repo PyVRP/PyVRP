@@ -8,7 +8,7 @@ from pyvrp import Client, Individual, ProblemData, Route, XorShift128
 from pyvrp.tests.helpers import read
 
 
-def test_route_constructor_sorts_by_empty():
+def test_route_constructor_filters_empty():
     data = read("data/OkSmall.txt")
 
     indiv = Individual(data, [[3, 4], [], [1, 2]])
@@ -17,13 +17,12 @@ def test_route_constructor_sorts_by_empty():
     # num_routes() should show two non-empty routes. However, we passed in
     # three routes, so len(routes) should not have changed.
     assert_equal(indiv.num_routes(), 2)
-    assert_equal(len(routes), 3)
+    assert_equal(len(routes), 2)
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices.
     assert_equal(len(routes[0]), 2)
     assert_equal(len(routes[1]), 2)
-    assert_equal(len(routes[2]), 0)
 
 
 def test_random_constructor_cycles_over_routes():
@@ -37,9 +36,9 @@ def test_random_constructor_cycles_over_routes():
     routes = indiv.get_routes()
 
     assert_equal(indiv.num_routes(), 2)
-    assert_equal(len(routes), 3)
+    assert_equal(len(routes), 2)
 
-    for idx, size in enumerate([2, 2, 0]):
+    for idx, size in enumerate([2, 2]):
         assert_equal(len(routes[idx]), size)
 
 
@@ -48,10 +47,9 @@ def test_route_constructor_raises_too_many_vehicles():
 
     assert_equal(data.num_vehicles, 3)
 
-    # Only two routes should not raise. But we should always get num_vehicles
-    # routes back.
+    # Only two routes should not raise.
     individual = Individual(data, [[1, 2], [4, 3]])
-    assert_equal(len(individual.get_routes()), data.num_vehicles)
+    assert_equal(len(individual.get_routes()), 2)
 
     # Empty third route should not raise.
     Individual(data, [[1, 2], [4, 3], []])
