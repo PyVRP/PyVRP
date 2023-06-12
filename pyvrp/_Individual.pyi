@@ -233,7 +233,7 @@ class Individual:
             Whether the solution of this individual is feasible with respect to
             capacity and time window constraints.
         """
-    def num_non_empty_routes(self) -> int:
+    def num_routes(self) -> int:
         """
         Number of non-empty routes in this solution.
 

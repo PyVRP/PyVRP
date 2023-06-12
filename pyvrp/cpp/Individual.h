@@ -73,13 +73,13 @@ private:
     using Routes = std::vector<Route>;
     using RouteType = int;
 
-    size_t numNonEmptyRoutes_ = 0;  // Number of non-empty routes
-    size_t numClients_ = 0;         // Number of clients in the solution
-    Distance distance_ = 0;         // Total distance
-    Load excessLoad_ = 0;           // Total excess load over all routes
-    Cost prizes_ = 0;               // Total collected prize value
-    Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
-    Duration timeWarp_ = 0;         // Total time warp over all routes
+    size_t numRoutes_ = 0;        // Number of routes
+    size_t numClients_ = 0;       // Number of clients in the solution
+    Distance distance_ = 0;       // Total distance
+    Load excessLoad_ = 0;         // Total excess load over all routes
+    Cost prizes_ = 0;             // Total collected prize value
+    Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
+    Duration timeWarp_ = 0;       // Total time warp over all routes
 
     Routes routes_;  // Routes - some routes may be non-empty
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -100,7 +100,7 @@ public:
      * Such non-empty routes are guaranteed to be in the lower indices of the
      * routes returned by ``getRoutes``.
      */
-    [[nodiscard]] size_t numNonEmptyRoutes() const;
+    [[nodiscard]] size_t numRoutes() const;
 
     /**
      * Number of clients in the solution.
@@ -123,7 +123,7 @@ public:
      * Returns a vector of route types for each client (index) in this
      * individual's routes. Includes the depot at index 0.
      */
-    [[nodiscard]] std::vector<RouteType> const &getAssignments() const;
+    [[nodiscard]] std::vector<RouteType> const &getAssignedRouteTypes() const;
 
     /**
      * @return True when this solution is feasible; false otherwise.
@@ -203,7 +203,7 @@ template <> struct hash<Individual>
     size_t operator()(Individual const &individual) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(individual.numNonEmptyRoutes_);
+        res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
         res = res * 31 + std::hash<Distance>()(individual.distance_);
         res = res * 31 + std::hash<Load>()(individual.excessLoad_);
         res = res * 31 + std::hash<Duration>()(individual.timeWarp_);

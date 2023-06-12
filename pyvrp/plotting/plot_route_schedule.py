@@ -24,7 +24,7 @@ def plot_route_schedule(
       warp on the route.
     * Dash-dotted: driving and service time, excluding wait time and time warp.
     * Dotted: pure driving time.
-    * Grey shaded background: remaining load in the route.
+    * Grey shaded background: remaining load in the vehicle.
 
     Parameters
     ----------
@@ -149,7 +149,7 @@ def plot_route_schedule(
     # Plot remaining load on second axis
     twin1 = ax.twinx()
     twin1.fill_between(
-        *zip(*trace_load), color="black", alpha=0.1, label="Remaining load"
+        *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
     )
     twin1.set_ylim([0, vehicle_type.capacity])
 

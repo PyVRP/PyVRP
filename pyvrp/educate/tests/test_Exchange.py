@@ -54,7 +54,7 @@ def test_swap_single_route_stays_single_route(operator):
     improved_individual = ls.search(individual, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(improved_individual.num_non_empty_routes(), 1)
+    assert_equal(improved_individual.num_routes(), 1)
     current_cost = cost_evaluator.penalised_cost(individual)
     improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)
@@ -87,7 +87,7 @@ def test_relocate_uses_empty_routes(operator):
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
-    assert_(improved_individual.num_non_empty_routes() > 1)
+    assert_(improved_individual.num_routes() > 1)
     current_cost = cost_evaluator.penalised_cost(individual)
     improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)

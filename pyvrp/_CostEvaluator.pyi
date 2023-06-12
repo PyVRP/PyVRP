@@ -12,7 +12,7 @@ class CostEvaluator:
     Parameters
     ----------
     capacity_penalty
-        The penalty for each unit of excess load over the capacity.
+        The penalty for each unit of excess load over the vehicle capacity.
     tw_penalty
         The penalty for each unit of time warp.
     """
@@ -20,7 +20,7 @@ class CostEvaluator:
     def __init__(
         self, capacity_penalty: int = 0, tw_penalty: int = 0
     ) -> None: ...
-    def load_penalty(self, load: int, capacity: int) -> int: ...
+    def load_penalty(self, load: int, vehicle_capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
     def penalised_cost(self, individual: Individual) -> int: ...
     def cost(self, individual: Individual) -> int:

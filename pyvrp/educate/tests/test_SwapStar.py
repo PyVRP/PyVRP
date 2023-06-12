@@ -69,7 +69,7 @@ def test_swap_star_on_RC208_instance(seed: int):
 
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
-    assert_equal(improved_individual.num_non_empty_routes(), 2)
+    assert_equal(improved_individual.num_routes(), 2)
     current_cost = cost_evaluator.penalised_cost(individual)
     improved_cost = cost_evaluator.penalised_cost(improved_individual)
     assert_(improved_cost < current_cost)

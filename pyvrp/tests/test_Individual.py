@@ -21,9 +21,9 @@ def test_route_constructor_sorts_by_empty():
     indiv = Individual(data, [[3, 4], [], [1, 2]])
     routes = indiv.get_routes()
 
-    # num_non_empty_routes() should show two non-empty routes. However, we
+    # num_routes() should show two non-empty routes. However, we
     # passed in three routes, so len(routes) should not have changed.
-    assert_equal(indiv.num_non_empty_routes(), 2)
+    assert_equal(indiv.num_routes(), 2)
     assert_equal(len(routes), 3)
 
     # We expect Individual to sort the routes such that all non-empty routes
@@ -36,8 +36,8 @@ def test_route_constructor_sorts_by_empty():
     data = make_heterogeneous(data, [VehicleType(10, 3), VehicleType(20, 2)])
     indiv = Individual(data, [[], [3, 4], [], [], [1, 2]])
 
-    # num_non_empty_routes() should show two non-empty routes.
-    assert_equal(indiv.num_non_empty_routes(), 2)
+    # num_routes() should show two non-empty routes.
+    assert_equal(indiv.num_routes(), 2)
 
     # We expect Individual to sort the routes such that all non-empty routes
     # are in the lower indices for each group of equal vehicle capacities.
@@ -54,7 +54,7 @@ def test_random_constructor_cycles_over_routes():
     indiv = Individual.make_random(data, rng)
     routes = indiv.get_routes()
 
-    assert_equal(indiv.num_non_empty_routes(), 2)
+    assert_equal(indiv.num_routes(), 2)
     assert_equal(len(routes), 3)
 
     for idx, size in enumerate([2, 2, 0]):
@@ -303,29 +303,29 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 # TODO test all time warp cases
 
 
-def test_num_non_empty_routes_calculation():
+def test_num_routes_calculation():
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(
         data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
     )
 
     indiv = Individual(data, [[1, 2, 3, 4]])
-    assert_equal(indiv.num_non_empty_routes(), 1)
+    assert_equal(indiv.num_routes(), 1)
 
     indiv = Individual(data, [[], [1, 2, 3, 4]])
-    assert_equal(indiv.num_non_empty_routes(), 1)
+    assert_equal(indiv.num_routes(), 1)
 
     indiv = Individual(data, [[], [], [1, 2, 3, 4]])
-    assert_equal(indiv.num_non_empty_routes(), 1)
+    assert_equal(indiv.num_routes(), 1)
 
     indiv = Individual(data, [[1, 2], [3, 4]])
-    assert_equal(indiv.num_non_empty_routes(), 2)
+    assert_equal(indiv.num_routes(), 2)
 
     indiv = Individual(data, [[1, 2], [], [3, 4]])
-    assert_equal(indiv.num_non_empty_routes(), 2)
+    assert_equal(indiv.num_routes(), 2)
 
     indiv = Individual(data, [[1], [2], [3, 4]])
-    assert_equal(indiv.num_non_empty_routes(), 3)
+    assert_equal(indiv.num_routes(), 3)
 
 
 def test_copy():
@@ -454,19 +454,16 @@ def test_str_contains_essential_information(vehicle_types):
         str_representation = str(individual).splitlines()
 
         routes = individual.get_routes()
-        num_non_empty_routes = individual.num_non_empty_routes()
+        num_routes = individual.num_routes()
 
-        # There should be no more than num_non_empty_routes lines (each
-        # detailing a single route), and two final lines containing distance
-        # and prizes.
-        assert_equal(len(str_representation), num_non_empty_routes + 2)
+        # There should be no more than num_routes lines (each detailing a
+        # single route), and two final lines containing distance and prizes.
+        assert_equal(len(str_representation), num_routes + 2)
 
-        # The first num_non_empty_routes lines should each contain a route,
-        # where each route should contain every client that is in the route as
-        # returned by get_routes().
-        for route, str_route in zip(
-            routes[:num_non_empty_routes], str_representation
-        ):
+        # The first num_routes lines should each contain a route, where each
+        # route should contain every client that is in the route as returned
+        # by get_routes().
+        for route, str_route in zip(routes[:num_routes], str_representation):
             for client in route:
                 assert_(str(client) in str_route)
 

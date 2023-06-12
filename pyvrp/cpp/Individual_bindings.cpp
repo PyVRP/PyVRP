@@ -92,7 +92,7 @@ PYBIND11_MODULE(_Individual, m)
                     py::arg("data"),
                     py::arg("rng"));
             })
-        .def("num_non_empty_routes", &Individual::numNonEmptyRoutes)
+        .def("num_routes", &Individual::numRoutes)
         .def("num_clients", &Individual::numClients)
         .def("get_routes",
              &Individual::getRoutes,
@@ -101,7 +101,7 @@ PYBIND11_MODULE(_Individual, m)
              &Individual::getNeighbours,
              py::return_value_policy::reference_internal)
         .def("get_assigned_route_types",
-             &Individual::getAssignments,
+             &Individual::getAssignedRouteTypes,
              py::return_value_policy::reference_internal)
         .def("is_feasible", &Individual::isFeasible)
         .def("has_excess_load", &Individual::hasExcessLoad)

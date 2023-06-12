@@ -66,8 +66,8 @@ Individual selectiveRouteExchange(
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
-    size_t nRoutesA = parents.first->numNonEmptyRoutes();
-    size_t nRoutesB = parents.second->numNonEmptyRoutes();
+    size_t nRoutesA = parents.first->numRoutes();
+    size_t nRoutesB = parents.second->numRoutes();
 
     if (startA >= nRoutesA)
         throw std::invalid_argument("Expected startA < nRoutesA.");

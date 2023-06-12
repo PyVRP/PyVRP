@@ -23,7 +23,7 @@ void Individual::evaluate(ProblemData const &data)
             continue;
 
         // Whole solution statistics.
-        numNonEmptyRoutes_++;
+        numRoutes_++;
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
@@ -34,7 +34,7 @@ void Individual::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-size_t Individual::numNonEmptyRoutes() const { return numNonEmptyRoutes_; }
+size_t Individual::numRoutes() const { return numRoutes_; }
 
 size_t Individual::numClients() const { return numClients_; }
 
@@ -45,7 +45,7 @@ std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
     return neighbours;
 }
 
-std::vector<RouteType> const &Individual::getAssignments() const
+std::vector<RouteType> const &Individual::getAssignedRouteTypes() const
 {
     return assignedRouteTypes;
 }
@@ -101,7 +101,7 @@ bool Individual::operator==(Individual const &other) const
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
-        && numNonEmptyRoutes_ == other.numNonEmptyRoutes_
+        && numRoutes_ == other.numRoutes_
         && neighbours == other.neighbours
         && assignedRouteTypes == other.assignedRouteTypes;
     // clang-format on
@@ -178,6 +178,7 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
+    // Create routes per vehicle type by looping over vehicle types.
     size_t idx = 0;
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
