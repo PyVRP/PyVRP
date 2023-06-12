@@ -28,9 +28,9 @@ PYBIND11_MODULE(_Individual, m)
              [](Individual::Route const &route) {
                  return route.excessLoad().get();
              })
-        .def("duration",
+        .def("travel_duration",
              [](Individual::Route const &route) {
-                 return route.duration().get();
+                 return route.travelDuration().get();
              })
         .def("service_duration",
              [](Individual::Route const &route) {
@@ -43,6 +43,18 @@ PYBIND11_MODULE(_Individual, m)
         .def("wait_duration",
              [](Individual::Route const &route) {
                  return route.waitDuration().get();
+             })
+        .def("total_duration",
+             [](Individual::Route const &route) {
+                 return route.totalDuration().get();
+             })
+        .def("earliest_start",
+             [](Individual::Route const &route) {
+                 return route.earliestStart().get();
+             })
+        .def("latest_start",
+             [](Individual::Route const &route) {
+                 return route.latestStart().get();
              })
         .def(
             "prizes",

@@ -22,7 +22,7 @@ class TimeWindowSegment:
         idx_last
             Index of the last customer in the route segment.
         duration
-            Total duration, including waiting time.
+            Total duration, including waiting and service time.
         time_warp
             Total time warp on the route segment.
         tw_early

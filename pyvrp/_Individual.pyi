@@ -27,7 +27,7 @@ class Route:
         """
         Total distance travelled on this route.
         """
-    def duration(self) -> int:
+    def travel_duration(self) -> int:
         """
         Total route travel duration (excluding waiting and service duration).
         """
@@ -46,6 +46,19 @@ class Route:
     def wait_duration(self) -> int:
         """
         Total waiting duration on this route.
+        """
+    def total_duration(self) -> int:
+        """
+        Total duration on this route (travel + service + wait - timewarp).
+        It holds that duration = end time - start time.
+        """
+    def earliest_start(self) -> int:
+        """
+        Earliest start time of the route that will result in minimal duration.
+        """
+    def latest_start(self) -> int:
+        """
+        Latest start time of the route that will result in minimal duration.
         """
     def prizes(self) -> int:
         """

@@ -213,7 +213,7 @@ void LocalSearch::maybeInsert(Node *U,
     auto const vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
     if (deltaCost < 0)
@@ -242,7 +242,7 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     auto uTWS
         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
     deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
     if (deltaCost < 0)
@@ -272,13 +272,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
     {
-        clients[client].tw = {static_cast<int>(client),  // TODO cast
-                              static_cast<int>(client),  // TODO cast
-                              data.client(client).serviceDuration,
-                              0,
-                              data.client(client).twEarly,
-                              data.client(client).twLate};
-
+        clients[client].tw = {client, data.client(client)};
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 

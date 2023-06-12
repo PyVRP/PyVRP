@@ -1,5 +1,6 @@
 #include "Individual.h"
 #include "ProblemData.h"
+#include "TimeWindowSegment.h"
 
 #include <fstream>
 #include <numeric>
@@ -161,15 +162,18 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     if (visits_.empty())
         return;
 
-    Duration time = data.depot().twEarly;
+    auto const depot = data.depot();
+    auto const durMat = data.durationMatrix();
+    auto const depotTws = TimeWindowSegment(0, depot);
+    tws_ = depotTws;
     int prevClient = 0;
-
     for (size_t idx = 0; idx != size(); ++idx)
     {
-        auto const &clientData = data.client(visits_[idx]);
+        auto const client = visits_[idx];
+        auto const &clientData = data.client(client);
 
-        distance_ += data.dist(prevClient, visits_[idx]);
-        duration_ += data.duration(prevClient, visits_[idx]);
+        distance_ += data.dist(prevClient, client);
+        travel_ += data.duration(prevClient, client);
         demand_ += clientData.demand;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
@@ -177,31 +181,16 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
 
-        time += data.client(prevClient).serviceDuration
-                + data.duration(prevClient, visits_[idx]);
+        auto const clientTws = TimeWindowSegment(client, clientData);
+        tws_ = TimeWindowSegment::merge(durMat, tws_, clientTws);
 
-        if (time < clientData.twEarly)  // add wait duration
-        {
-            wait_ += clientData.twEarly - time;
-            time = clientData.twEarly;
-        }
-
-        if (time > clientData.twLate)  // add time warp
-        {
-            timeWarp_ += time - clientData.twLate;
-            time = clientData.twLate;
-        }
-
-        prevClient = visits_[idx];
+        prevClient = client;
     }
 
     Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, 0);
-    duration_ += data.duration(last, 0);
-
-    time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
-
+    travel_ += data.duration(last, 0);
+    tws_ = TimeWindowSegment::merge(durMat, tws_, depotTws);
     excessLoad_ = data.vehicleCapacity() < demand_
                       ? demand_ - data.vehicleCapacity()
                       : 0;
@@ -238,13 +227,22 @@ Load Individual::Route::demand() const { return demand_; }
 
 Load Individual::Route::excessLoad() const { return excessLoad_; }
 
-Duration Individual::Route::duration() const { return duration_; }
+Duration Individual::Route::travelDuration() const { return travel_; }
 
 Duration Individual::Route::serviceDuration() const { return service_; }
 
-Duration Individual::Route::timeWarp() const { return timeWarp_; }
+Duration Individual::Route::timeWarp() const { return tws_.timeWarp(); }
 
-Duration Individual::Route::waitDuration() const { return wait_; }
+Duration Individual::Route::waitDuration() const
+{
+    return tws_.duration() - travel_ - service_;
+}
+
+Duration Individual::Route::totalDuration() const { return tws_.duration(); }
+
+Duration Individual::Route::earliestStart() const { return tws_.twEarly(); }
+
+Duration Individual::Route::latestStart() const { return tws_.twLate(); }
 
 Cost Individual::Route::prizes() const { return prizes_; }
 
@@ -260,7 +258,7 @@ bool Individual::Route::isFeasible() const
 
 bool Individual::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Individual::Route::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Individual::Route::hasTimeWarp() const { return tws_.timeWarp() > 0; }
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {

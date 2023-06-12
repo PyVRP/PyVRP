@@ -104,7 +104,7 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
         auto uTWS = TWS::merge(
             data.durationMatrix(), p(U)->twBefore, n(endU)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
@@ -127,7 +127,7 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
     }
     else  // within same route
@@ -145,7 +145,7 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
                                         route->twBetween(posU, posU + N - 1),
                                         n(V)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
         }
         else
         {
@@ -155,7 +155,7 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
                                         route->twBetween(posV + 1, posU - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
         }
 
         deltaCost -= costEvaluator.twPenalty(route->timeWarp());
@@ -203,7 +203,7 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
         auto const loadU = U->route->loadBetween(posU, posU + N - 1);
@@ -220,7 +220,7 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
@@ -244,7 +244,7 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
                                         route->twBetween(posU, posU + N - 1),
                                         n(endV)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
         }
         else
         {
@@ -255,7 +255,7 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
                                         route->twBetween(posV, posV + M - 1),
                                         n(endU)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
         }
 
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());

@@ -185,7 +185,7 @@ def test_route_access_methods():
     assert_allclose(routes[1].service_duration(), services[2] + services[4])
 
 
-def test_route_time_warp_and_wait_duration():
+def test_route_time_warp_and_start_time_calculations():
     data = read("data/OkSmall.txt")
     indiv = Individual(data, [[1, 3], [2, 4]])
     routes = indiv.get_routes()
@@ -202,12 +202,52 @@ def test_route_time_warp_and_wait_duration():
     assert_allclose(routes[1].time_warp(), 0)
     assert_allclose(indiv.time_warp(), routes[0].time_warp())
 
-    # On the first route, we have to wait at the first client, where we arrive
-    # at 1'544, but cannot start service until 15'600. On the second route, we
-    # also have to wait at the first client, where we arrive at 1'944, but
-    # cannot start service until 12'000.
-    assert_equal(routes[0].wait_duration(), 15_600 - 1_544)
-    assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
+    # In both routes, there is no waiting time.
+    assert_equal(routes[0].wait_duration(), 0)
+    assert_equal(routes[1].wait_duration(), 0)
+
+    # Since route 0 has a timewarp, there is no slack and the
+    # route should start exactly at 15'600 - 1'544 = 14056
+    assert_equal(routes[0].earliest_start(), 14_056)
+    assert_equal(routes[0].latest_start(), 14_056)
+
+    # Route 1 has some slack, it shouldn't start before 12'000 - 1'944 = 10'056
+    # (otherwise we will have waiting time and a longer duration) and not after
+    # 19'500 - 1'090 - 360 - 1'944 = 16'106
+    assert_equal(routes[1].earliest_start(), 10_056)
+    assert_equal(routes[1].latest_start(), 16_106)
+
+
+def test_route_wait_time_calculations():
+    data = read("data/OkSmallWaitTime.txt")
+    indiv = Individual(data, [[1, 3], [2, 4]])
+    routes = indiv.get_routes()
+
+    # In route 1, the latest start of service for client 2 is 15'000, then
+    # adding 360 service and 1'090 travel we arrive at client 4 at 16'450 and
+    # have to wait 18'000 - 16'450 = 1'550
+    assert_equal(routes[1].wait_duration(), 1_550)
+    # Since there is waiting time, there is no slack and we should start
+    # as late as possible, at 15'000 - 1'944 = 13'056
+    assert_equal(routes[1].earliest_start(), 13_056)
+    assert_equal(routes[1].latest_start(), 13_056)
+
+    # Additionally, we will test that we can have both wait time and time warp
+    # in a single route, and it holds that duration = travel + service + wait
+    indiv = Individual(data, [[1, 3, 2, 4]])
+    route = indiv.get_routes()[0]
+
+    assert_(route.has_time_warp())
+    assert_(route.time_warp() > 0)
+    assert_(route.wait_duration() > 0)
+    assert_equal(
+        route.total_duration(),
+        route.travel_duration()
+        + route.service_duration()
+        + route.wait_duration(),
+    )
+    # In this case, there is no slack either
+    assert_equal(route.earliest_start(), route.latest_start())
 
 
 @mark.parametrize(
@@ -276,7 +316,7 @@ def test_time_warp_return_to_depot():
     # Travel from depot to client and back gives duration 1 + 1 = 2
     # This is 1 more than the depot time window 1, giving a time warp of 1
     individual = Individual(data, [[1]])
-    assert_equal(individual.get_routes()[0].duration(), 2)
+    assert_equal(individual.get_routes()[0].total_duration(), 2)
     assert_equal(individual.time_warp(), 1)
 
 

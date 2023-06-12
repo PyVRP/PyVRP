@@ -120,7 +120,7 @@ void Route::update()
     load_ = nodes.back()->cumulatedLoad;
     isLoadFeasible_ = static_cast<size_t>(load_) <= data.vehicleCapacity();
 
-    timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
+    timeWarp_ = nodes.back()->twBefore.timeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;
 }
 

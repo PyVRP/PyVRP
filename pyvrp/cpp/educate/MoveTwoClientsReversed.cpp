@@ -35,7 +35,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto uTWS = TWS::merge(
             data.durationMatrix(), p(U)->twBefore, n(n(U))->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
         auto const loadDiff = U->route->loadBetween(posU, posU + 1);
@@ -56,7 +56,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto vTWS = TWS::merge(
             data.durationMatrix(), V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
     }
     else  // within same route
@@ -75,7 +75,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
                                          U->tw,
                                          n(V)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         }
         else
         {
@@ -86,7 +86,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
                                          route->twBetween(posV + 1, posU - 1),
                                          n(n(U))->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         }
 
         deltaCost -= costEvaluator.twPenalty(route->timeWarp());
