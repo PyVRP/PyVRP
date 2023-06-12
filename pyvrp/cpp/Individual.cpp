@@ -1,7 +1,6 @@
 #include "Individual.h"
 #include "ProblemData.h"
 
-#include <cassert>
 #include <fstream>
 #include <numeric>
 #include <sstream>
@@ -154,7 +153,8 @@ Individual::Individual(ProblemData const &data,
 Individual::Route::Route(ProblemData const &data, Visits const visits)
     : visits_(std::move(visits)), centroid_({0, 0})
 {
-    assert(!visits_.empty());
+    if (visits_.empty())
+        return;
 
     Duration time = data.depot().twEarly;
     int prevClient = 0;
