@@ -1,6 +1,5 @@
-import pathlib
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -15,7 +14,6 @@ from pyvrp._XorShift128 import XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.read import no_rounding, read
 from pyvrp.stop import StoppingCriterion
 
 Depot = Client
@@ -65,21 +63,20 @@ class Model:
         return self._depots + self._clients
 
     @classmethod
-    def read(
-        cls,
-        where: Union[str, pathlib.Path],
-        instance_format: str = "vrplib",
-        round_func: Union[str, Callable] = no_rounding,
-    ) -> "Model":
+    def from_data(cls, data: ProblemData) -> "Model":
         """
-        Reads a VRPLIB or Solomon formatted file into a model instance.
+        Constructs a model instance from the given data.
 
-        .. note::
+        Parameters
+        ----------
+        data
+            Problem data to feed into the model.
 
-           This method is a thin wrapper around :func:`~pyvrp.read.read`. See
-           that function for details.
+        Returns
+        -------
+        Model
+            A model instance representing the given data.
         """
-        data = read(where, instance_format, round_func)
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]
         edges = [
             Edge(
@@ -179,7 +176,7 @@ class Model:
     def add_vehicle_type(self, number: int, capacity: int) -> VehicleType:
         """
         Adds a vehicle type with the given number of vehicles of given capacity
-        to the model.
+        to the model. Returns the created vehicle type.
 
         .. warning::
 

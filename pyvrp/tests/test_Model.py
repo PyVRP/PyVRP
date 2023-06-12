@@ -1,9 +1,10 @@
 from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
 from pytest import mark
 
-from pyvrp import Model, ProblemData, read
+from pyvrp import Model, ProblemData
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
+from pyvrp.tests.helpers import read
 
 
 def test_model_update():
@@ -124,12 +125,10 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.capacity, 998)
 
 
-def test_read():
-    where = "pyvrp/tests/data/E-n22-k4.txt"
-    model = Model.read(where, round_func="dimacs")
-
+def test_from_data():
+    read_data = read("data/E-n22-k4.txt", round_func="dimacs")
+    model = Model.from_data(read_data)
     model_data: ProblemData = model.data  # type: ignore
-    read_data = read(where, round_func="dimacs")
 
     # We can first check if the overall problem dimension numbers agree.
     assert_equal(model_data.num_clients, read_data.num_clients)
@@ -142,19 +141,19 @@ def test_read():
     assert_equal(model_data.duration(2, 1), read_data.duration(2, 1))
 
 
-def test_read_and_solve():
-    # Solve the small E-n22-k4 instance using read-and-solve.
-    where = "pyvrp/tests/data/E-n22-k4.txt"
-    model = Model.read(where, round_func="dimacs")
+def test_from_data_and_solve():
+    # Solve the small E-n22-k4 instance using the from_data constructor.
+    data = read("data/E-n22-k4.txt", round_func="dimacs")
+    model = Model.from_data(data)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 3_743)
     assert_(res.is_feasible())
 
 
 def test_model_and_solve():
-    # Solve the small OkSmall instance (four clients) using read-and-solve.
-    where = "pyvrp/tests/data/OkSmall.txt"
-    model = Model.read(where)
+    # Solve the small OkSmall instance using the from_data constructor.
+    data = read("data/OkSmall.txt")
+    model = Model.from_data(data)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
@@ -236,9 +235,9 @@ def test_update_warns_about_scaling_issues(recwarn):
         model.update()
 
 
-def test_read_solve_update_solve_same_solution():
-    where = "pyvrp/tests/data/OkSmall.txt"
-    model = Model.read(where)
+def test_from_data_solve_update_solve_same_solution():
+    data = read("data/OkSmall.txt")
+    model = Model.from_data(data)
 
     def solve_and_check():
         res = model.solve(stop=MaxIterations(100), seed=0)
