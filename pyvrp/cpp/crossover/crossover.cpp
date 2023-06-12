@@ -83,11 +83,14 @@ void crossover::greedyRepair(Routes &routes,
         auto const x = static_cast<double>(data.client(client).x);
         auto const y = static_cast<double>(data.client(client).y);
 
-        // Determine route with centroid nearest to this client.
+        // Determine non-empty route with centroid nearest to this client.
         auto bestDistance = std::numeric_limits<double>::max();
         auto bestRouteIdx = 0;
         for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
+            if (routes[rIdx].empty())
+                continue;
+
             auto const distance = std::hypot(x - centroids[rIdx].first,
                                              y - centroids[rIdx].second);
 
