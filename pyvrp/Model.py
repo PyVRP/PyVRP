@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Union
 from warnings import warn
 
 import numpy as np
@@ -48,16 +48,6 @@ class Model:
         self._depots: List[Depot] = []
         self._edges: List[Edge] = []
         self._vehicle_types: List[VehicleType] = []
-        self._data: Optional[ProblemData] = None
-
-    @property
-    def data(self) -> Optional[ProblemData]:
-        """
-        Returns the underlying :class:`~pyvrp._ProblemData.ProblemData`
-        instance, if it already exists. Returns ``None`` if it has not
-        yet been created.
-        """
-        return self._data
 
     @property
     def locations(self) -> List[Client]:
@@ -100,7 +90,6 @@ class Model:
         self._edges = edges
         vehicle_types = [VehicleType(data.num_vehicles, data.vehicle_capacity)]
         self._vehicle_types = vehicle_types
-        self._data = data
 
         return self
 
@@ -207,9 +196,10 @@ class Model:
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
-    def update(self):
+    def data(self) -> ProblemData:
         """
-        Updates the underlying ProblemData instance.
+        Creates and returns a :class:`~pyvrp._ProblemData.ProblemData` instance
+        from this model's attributes.
         """
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
@@ -236,8 +226,12 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        self._data = ProblemData(
-            locs, num_vehicles, vehicle_capacity, distances, durations
+        return ProblemData(
+            locs,
+            num_vehicles,
+            vehicle_capacity,
+            distances,
+            durations,
         )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
@@ -265,10 +259,7 @@ class Model:
             compute_neighbours,
         )
 
-        self.update()  # make sure data is available
-        assert self.data is not None  # mypy needs this assert
-        data = self.data
-
+        data = self.data()
         rng = XorShift128(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))
 
@@ -282,7 +273,7 @@ class Model:
         pop_params = PopulationParams()
         pop = Population(bpd, pop_params)
         init = [
-            Individual.make_random(self.data, rng)
+            Individual.make_random(data, rng)
             for _ in range(pop_params.min_pop_size)
         ]
 

@@ -1,17 +1,14 @@
 from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
 from pytest import mark
 
-from pyvrp import Model, ProblemData
+from pyvrp import Model
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
 from pyvrp.tests.helpers import read
 
 
-def test_model_update():
-    # Just after construction, the ProblemData instance has not yet been
-    # constructed and should return None.
+def test_model_data():
     model = Model()
-    assert_(model.data is None)
 
     # Let's add some data: a single client, and edges from/to the depot.
     depot = model.add_depot(0, 0)
@@ -20,11 +17,9 @@ def test_model_update():
     model.add_edge(client, depot, 1, 1)
     model.add_vehicle_type(1, 1)
 
-    # After calling update, a ProblemData instance is constructed. In this case
-    # it should have one client.
-    model.update()
-    assert_(model.data is not None)
-    assert_equal(model.data.num_clients, 1)  # type: ignore
+    # The model should now have one client.
+    data = model.data()
+    assert_equal(data.num_clients, 1)
 
 
 def test_add_depot_raises_more_than_one_depot():
@@ -128,7 +123,7 @@ def test_add_vehicle_type():
 def test_from_data():
     read_data = read("data/E-n22-k4.txt", round_func="dimacs")
     model = Model.from_data(read_data)
-    model_data: ProblemData = model.data  # type: ignore
+    model_data = model.data()
 
     # We can first check if the overall problem dimension numbers agree.
     assert_equal(model_data.num_clients, read_data.num_clients)
@@ -147,6 +142,12 @@ def test_from_data_and_solve():
     model = Model.from_data(data)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 3_743)
+    assert_(res.is_feasible())
+
+    data = read("data/OkSmall.txt")
+    model = Model.from_data(data)
+    res = model.solve(stop=MaxIterations(100), seed=0)
+    assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
 
@@ -216,7 +217,7 @@ def test_partial_distance_duration_matrix():
     assert_(res.is_feasible())
 
 
-def test_update_warns_about_scaling_issues(recwarn):
+def test_data_warns_about_scaling_issues(recwarn):
     model = Model()
     model.add_vehicle_type(number=1, capacity=0)
     depot = model.add_depot(0, 0)
@@ -225,27 +226,11 @@ def test_update_warns_about_scaling_issues(recwarn):
     # 10 million is still small enough that no warning should be issued about
     # numerical issues.
     model.add_edge(client, depot, distance=10_000_000)
-    model.update()
+    model.data()
     assert_equal(len(recwarn), 0)
 
     # But 100 million is too large. That's really close to INT_MAX, and might
     # result in issues. So now a warning should be issued.
     model.add_edge(depot, client, distance=100_000_000)
     with assert_warns(ScalingWarning):
-        model.update()
-
-
-def test_from_data_solve_update_solve_same_solution():
-    data = read("data/OkSmall.txt")
-    model = Model.from_data(data)
-
-    def solve_and_check():
-        res = model.solve(stop=MaxIterations(100), seed=0)
-        assert_equal(res.cost(), 9_155)
-        assert_(res.is_feasible())
-
-    # If nothing has changed, update() should not result in a different data
-    # instance. We should thus find the exact same solution.
-    solve_and_check()
-    model.update()
-    solve_and_check()
+        model.data()
