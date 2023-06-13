@@ -3,7 +3,7 @@ from typing import List
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, VehicleType, XorShift128
+from pyvrp import CostEvaluator, Individual, Route, VehicleType, XorShift128
 from pyvrp.educate import (
     LocalSearch,
     NeighbourhoodParams,
@@ -41,7 +41,7 @@ def test_OkSmall_instance():
 @mark.parametrize(
     "vehicle_types",
     [
-        [VehicleType(10, 2)],
+        [VehicleType(10, 1), VehicleType(10, 1)],
         [VehicleType(8, 1), VehicleType(10, 1)],
         [VehicleType(10, 1), VehicleType(8, 1)],
         [VehicleType(9, 1), VehicleType(9, 1)],
@@ -67,8 +67,12 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(TwoOpt(data))
 
-    individual1 = Individual(data, [[1, 3], [2, 4]])
-    individual2 = Individual(data, [[1, 4], [2, 3]])
+    individual1 = Individual(
+        data, [Route(data, [1, 3], 0), Route(data, [2, 4], 1)]
+    )
+    individual2 = Individual(
+        data, [Route(data, [1, 4], 0), Route(data, [2, 3], 1)]
+    )
     cost1 = cost_evaluator.penalised_cost(individual1)
     cost2 = cost_evaluator.penalised_cost(individual2)
     # worse_cost = cost_evaluator.penalised_cost(worse_individual)

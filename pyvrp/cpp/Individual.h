@@ -88,10 +88,15 @@ private:
     void makeNeighbours();
 
     // Determines assigned route types for each client.
-    void makeAssignedRouteTypes();
+    void makeAssignedVehicleTypes();
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
+
+    // Transforms vector of vector of clients to vector of Route objects
+    std::vector<Route>
+    transformRoutes(ProblemData const &data,
+                    std::vector<std::vector<Client>> const &routes);
 
 public:
     /**
@@ -181,7 +186,9 @@ public:
     Individual(ProblemData const &data, XorShift128 &rng);
 
     /**
-     * Constructs an individual having the given routes as its solution.
+     * Constructs an individual having routes given as lists of client indices
+     * as its solution. This constructor will assume all of the routes are
+     * for the first vehicle type.
      *
      * @param data           Data instance describing the problem that's being
      *                       solved.
@@ -189,6 +196,17 @@ public:
      */
     Individual(ProblemData const &data,
                std::vector<std::vector<Client>> const &routes);
+
+    /**
+     * Constructs an individual having routes given as Route objects  as its
+     * solution. This allows constructing solutions with heterogeneous vehicle
+     * types.
+     *
+     * @param data           Data instance describing the problem that's being
+     *                       solved.
+     * @param routes         Solution's route list.
+     */
+    Individual(ProblemData const &data, std::vector<Route> const &routes);
 };
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv);

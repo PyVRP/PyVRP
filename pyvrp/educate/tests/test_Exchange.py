@@ -6,6 +6,7 @@ from pyvrp import (
     CostEvaluator,
     Individual,
     ProblemData,
+    Route,
     VehicleType,
     XorShift128,
 )
@@ -287,6 +288,11 @@ def test_relocate_to_heterogeneous_empty_route():
     # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all
     # load penalties, but other moves would increase load penalties.
     # Therefore, this requires moving to an empty route which is not the first.
-    individual = Individual(data, [[1, 2, 3], [4], [], []])
-    expected = Individual(data, [[1, 2], [4], [], [3]])
+    individual = Individual(
+        data, [Route(data, [1, 2, 3], 0), Route(data, [4], 1)]
+    )
+    expected = Individual(
+        data,
+        [Route(data, [1, 2], 0), Route(data, [4], 1), Route(data, [3], 3)],
+    )
     assert_equal(ls.search(individual, cost_evaluator), expected)

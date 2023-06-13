@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
@@ -71,7 +71,8 @@ class Individual:
     data
         Data instance.
     routes
-        Route list to use.
+        Route list to use. Should be a list of Route objects, or list of list
+        of ints representing clients.
 
     Raises
     ------
@@ -83,7 +84,7 @@ class Individual:
     def __init__(
         self,
         data: ProblemData,
-        routes: List[List[int]],
+        routes: List[Union[Route, List[int]]],
     ) -> None: ...
     @classmethod
     def make_random(

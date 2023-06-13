@@ -1,9 +1,11 @@
 #include "Individual.h"
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <fstream>
 #include <numeric>
 #include <sstream>
+#include <vector>
 
 using Client = int;
 using Visits = std::vector<Client>;
@@ -73,9 +75,9 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-void Individual::makeAssignedRouteTypes()
+void Individual::makeAssignedVehicleTypes()
 {
-    assignedVehicleTypes[0] = -1;  // unassigned
+    assignedVehicleTypes.assign(assignedVehicleTypes.size(), -1);  // unassigned
 
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
@@ -130,12 +132,32 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     }
 
     makeNeighbours();
-    makeAssignedRouteTypes();
+    makeAssignedVehicleTypes();
     evaluate(data);
+}
+
+std::vector<Individual::Route>
+Individual::transformRoutes(ProblemData const &data,
+                            std::vector<std::vector<Client>> const &routes)
+{
+    std::vector<Route> transformedRoutes;
+    std::transform(routes.begin(),
+                   routes.end(),
+                   std::back_inserter(transformedRoutes),
+                   [&data](const std::vector<Client> &visits) {
+                       return Route(data, visits, 0);
+                   });
+    return transformedRoutes;
 }
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
+    : Individual(data, transformRoutes(data, routes))
+{
+}
+
+Individual::Individual(ProblemData const &data,
+                       std::vector<Route> const &routes)
     : neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
@@ -146,9 +168,28 @@ Individual::Individual(ProblemData const &data,
     }
 
     std::vector<size_t> visits(data.numClients() + 1, 0);
+    std::vector<size_t> used_vehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
+    {
+        if (route.empty())
+        {
+            std::ostringstream msg;
+            msg << "Individual should not contain empty routes.";
+            throw std::runtime_error(msg.str());
+        }
+        used_vehicles[route.vehicleType()]++;
         for (auto const client : route)
             visits[client]++;
+    }
+
+    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
+        if (used_vehicles[typeIdx] > data.vehicleType(typeIdx).qty_available)
+        {
+            std::ostringstream msg;
+            msg << "Used more than " << data.vehicleType(typeIdx).qty_available
+                << " vehicles of type " << typeIdx << ".";
+            throw std::runtime_error(msg.str());
+        }
 
     for (size_t client = 1; client <= data.numClients(); ++client)
     {
@@ -167,31 +208,25 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
-    // Create routes per vehicle type by looping over vehicle types.
     // Only store non-empty routes
     routes_.reserve(routes.size());
-    size_t idx = 0;
-    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
+    for (auto const &route : routes)
+        if (!route.empty())
+            routes_.push_back(route);
+
+    if (data.numVehicleTypes() > 0)
     {
-        auto const qty_available = data.vehicleType(typeIdx).qty_available;
-        for (size_t i = 0; i != qty_available; ++i)
-        {
-            if (idx < routes.size() && !routes[idx].empty())
-                routes_.emplace_back(data, routes[idx], typeIdx);
-            idx++;
-        }
+        // We sort routes by vehicle types. Combined with a stable sort, this
+        // ensures we keep the original sorting as much as possible.
+        auto comp = [&data](auto &a, auto &b) {
+            // If same type, empty vehicles first
+            return a.vehicleType() < b.vehicleType();
+        };
+        std::stable_sort(routes_.begin(), routes_.end(), comp);
     }
 
-    // We sort routes by route types. Combined with a stable sort, this ensures
-    // we keep the original sorting as much as possible.
-    auto comp = [&data](auto &a, auto &b) {
-        // If same type, empty vehicles first
-        return a.vehicleType() < b.vehicleType();
-    };
-    std::stable_sort(routes_.begin(), routes_.end(), comp);
-
     makeNeighbours();
-    makeAssignedRouteTypes();
+    makeAssignedVehicleTypes();
     evaluate(data);
 }
 

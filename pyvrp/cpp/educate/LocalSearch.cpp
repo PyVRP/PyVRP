@@ -360,16 +360,26 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
 Individual LocalSearch::exportIndividual()
 {
-    std::vector<std::vector<int>> indivRoutes(data.numVehicles());
+    std::vector<Individual::Route> indivRoutes;
+    indivRoutes.reserve(data.numVehicles());
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
     {
-        Node *node = startDepots[r].next;
+        auto start = typeOffsets[typeIdx];
+        auto end = start + data.vehicleType(typeIdx).qty_available;
 
-        while (!node->isDepot())
+        for (size_t r = start; r != end; r++)
         {
-            indivRoutes[r].push_back(node->client);
-            node = node->next;
+            Node *node = startDepots[r].next;
+            std::vector<int> visits;
+
+            while (!node->isDepot())
+            {
+                visits.push_back(node->client);
+                node = node->next;
+            }
+            if (!visits.empty())
+                indivRoutes.emplace_back(data, visits, typeIdx);
         }
     }
 
