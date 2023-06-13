@@ -7,6 +7,7 @@ from warnings import warn
 import numpy as np
 import vrplib
 
+from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
 from ._ProblemData import Client, ProblemData
@@ -168,8 +169,7 @@ def read(
         for idx in range(dimension)
     ]
 
-    max_value = max(distances.max(), durations.max())
-    if max_value > 0.1 * np.iinfo(np.int32).max:  # >10% of INT_MAX
+    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
         msg = """
         The maximum distance or duration value is very large. This might
         impact numerical stability. Consider rescaling your input data.

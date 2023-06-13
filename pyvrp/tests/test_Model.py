@@ -2,6 +2,7 @@ from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
 from pytest import mark
 
 from pyvrp import Model
+from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
 from pyvrp.tests.helpers import read
@@ -211,6 +212,12 @@ def test_partial_distance_duration_matrix():
 
     model.add_vehicle_type(number=1, capacity=0)
 
+    # These edges were not set, so their distance values should default to the
+    # maximum value we use for such edges.
+    data = model.data()
+    assert_equal(data.dist(0, 2), MAX_VALUE)
+    assert_equal(data.dist(1, 0), MAX_VALUE)
+
     res = model.solve(stop=MaxIterations(100), seed=4)
     assert_equal(res.best.num_routes(), 1)
     assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
@@ -223,14 +230,13 @@ def test_data_warns_about_scaling_issues(recwarn):
     depot = model.add_depot(0, 0)
     client = model.add_client(1, 1)
 
-    # 10 million is still small enough that no warning should be issued about
-    # numerical issues.
-    model.add_edge(client, depot, distance=10_000_000)
-    model.data()
-    assert_equal(len(recwarn), 0)
+    # Normal distance sizes; should all be OK.
+    for distance in [1, 10, 100, 1_000, 10_000, 100_000, MAX_USER_VALUE]:
+        model.add_edge(client, depot, distance=distance)
+        model.data()
+        assert_equal(len(recwarn), 0)
 
-    # But 100 million is too large. That's really close to INT_MAX, and might
-    # result in issues. So now a warning should be issued.
-    model.add_edge(depot, client, distance=100_000_000)
+    # But a value exceeding the maximum user value is not OK. This should warn.
+    model.add_edge(depot, client, distance=MAX_USER_VALUE + 1)
     with assert_warns(ScalingWarning):
         model.data()

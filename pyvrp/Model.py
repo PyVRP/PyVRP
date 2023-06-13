@@ -10,6 +10,7 @@ from pyvrp.Result import Result
 from pyvrp._Individual import Individual
 from pyvrp._ProblemData import Client, ProblemData
 from pyvrp._XorShift128 import XorShift128
+from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
@@ -207,18 +208,18 @@ class Model:
         num_vehicles = self._vehicle_types[0].number
         vehicle_capacity = self._vehicle_types[0].capacity
 
-        # This should be a sufficiently large maximum value to make sure such
-        # edges are never traversed.
-        max_value = 10 * max(max(e.distance, e.duration) for e in self._edges)
-        if max_value > 0.1 * np.iinfo(np.int32).max:  # >10% of INT_MAX
+        max_data_value = max(max(e.distance, e.duration) for e in self._edges)
+        if max_data_value > MAX_USER_VALUE:
             msg = """
             The maximum distance or duration value is very large. This might
             impact numerical stability. Consider rescaling your input data.
             """
             warn(msg, ScalingWarning)
 
-        distances = np.full((len(locs), len(locs)), max_value, dtype=int)
-        durations = np.full((len(locs), len(locs)), max_value, dtype=int)
+        # Default value is a sufficiently large value to make sure any edges
+        # not set below are never traversed.
+        distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
+        durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
 
         for edge in self._edges:
             frm = loc2idx[id(edge.frm)]
