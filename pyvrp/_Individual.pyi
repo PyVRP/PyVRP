@@ -134,12 +134,10 @@ class Individual:
 
         .. note::
 
-           This list is of length
-           :py:attr:`~pyvrp._ProblemData.ProblemData.vehicles`, but there
-           could be a number of empty routes. For groups of routes with the
-           same vehicle type, non-empty routes come before empty routes, but
-           there may be empty routes in between non-empty routes for
-           heterogeneous vehicle types.
+           The length of this list is equal to the number of non-empty routes,
+           which is at most equal to
+           :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`. Routes are
+           sorted by vehicle type.
 
         Returns
         -------
@@ -235,12 +233,12 @@ class Individual:
         """
     def num_routes(self) -> int:
         """
-        Number of non-empty routes in this solution.
+        Number of (non-empty) routes in this solution.
 
         Returns
         -------
         int
-            Number of non-empty routes.
+            Number of (non-empty) routes.
         """
     def num_clients(self) -> int:
         """

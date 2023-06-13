@@ -16,14 +16,9 @@ void Individual::evaluate(ProblemData const &data)
     for (size_t client = 1; client <= data.numClients(); ++client)
         allPrizes += data.client(client).prize;
 
-    for (size_t idx = 0; idx < data.numVehicles(); idx++)
+    for (auto const &route : routes_)
     {
-        auto const &route = routes_[idx];
-        if (route.empty())
-            continue;
-
         // Whole solution statistics.
-        numRoutes_++;
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
@@ -34,7 +29,7 @@ void Individual::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-size_t Individual::numRoutes() const { return numRoutes_; }
+size_t Individual::numRoutes() const { return routes_.size(); }
 
 size_t Individual::numClients() const { return numClients_; }
 
@@ -78,16 +73,13 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-void Individual::makeAssignedRouteTypes(ProblemData const &data)
+void Individual::makeAssignedRouteTypes()
 {
     assignedVehicleTypes[0] = -1;  // unassigned
 
-    for (size_t rIdx = 0; rIdx != data.numVehicles(); ++rIdx)
-    {
-        auto const route = routes_[rIdx];
+    for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
             assignedVehicleTypes[route[idx]] = route.vehicleType();
-    }
 }
 
 bool Individual::operator==(Individual const &other) const
@@ -101,15 +93,14 @@ bool Individual::operator==(Individual const &other) const
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
-        && numRoutes_ == other.numRoutes_
+        && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours
         && assignedVehicleTypes == other.assignedVehicleTypes;
     // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()),
-      neighbours(data.numClients() + 1, {0, 0}),
+    : neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
@@ -121,33 +112,31 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     // per vehicle, with an adjustment in case the division is not perfect.
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
-    auto const perRouteFloor = std::max<size_t>(numClients / numVehicles, 1);
-    auto const perRoute = perRouteFloor + (numClients % numVehicles != 0);
+    auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
+    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
-    std::vector<std::vector<Client>> routes(data.numVehicles());
+    std::vector<std::vector<Client>> routes(numRoutes);
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
-    size_t idx = 0;
+    routes_.reserve(numRoutes);
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
         auto const qty_available = data.vehicleType(typeIdx).qty_available;
         for (size_t i = 0; i != qty_available; ++i)
-        {
-            routes_[idx] = Route(data, routes[idx], typeIdx);
-            idx++;
-        }
+            if (routes_.size() < routes.size())
+                routes_.emplace_back(data, routes[routes_.size()], typeIdx);
     }
 
     makeNeighbours();
-    makeAssignedRouteTypes(data);
+    makeAssignedRouteTypes();
     evaluate(data);
 }
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
-    : routes_(data.numVehicles()),
-      neighbours(data.numClients() + 1, {0, 0}),
+    : neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
     if (routes.size() > data.numVehicles())
@@ -179,33 +168,30 @@ Individual::Individual(ProblemData const &data,
     }
 
     // Create routes per vehicle type by looping over vehicle types.
+    // Only store non-empty routes
+    routes_.reserve(routes.size());
     size_t idx = 0;
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
         auto const qty_available = data.vehicleType(typeIdx).qty_available;
         for (size_t i = 0; i != qty_available; ++i)
         {
-            auto const &visits = idx < routes.size() ? routes[idx] : Visits();
-            routes_[idx] = Route(data, visits, typeIdx);
+            if (idx < routes.size() && !routes[idx].empty())
+                routes_.emplace_back(data, routes[idx], typeIdx);
             idx++;
         }
     }
 
-    // We sort routes by route types. Within routes of the same type
-    // a precedes b only when a is not empty and b is. Combined with a stable
-    // sort, this ensures we keep the original sorting as much as possible, but
-    // also make sure all empty routes are at the end of routes_ for each
-    // route type.
+    // We sort routes by route types. Combined with a stable sort, this ensures
+    // we keep the original sorting as much as possible.
     auto comp = [&data](auto &a, auto &b) {
-        auto const typeA = a.vehicleType();
-        auto const typeB = b.vehicleType();
         // If same type, empty vehicles first
-        return typeA == typeB ? !a.empty() && b.empty() : typeA < typeB;
+        return a.vehicleType() < b.vehicleType();
     };
     std::stable_sort(routes_.begin(), routes_.end(), comp);
 
     makeNeighbours();
-    makeAssignedRouteTypes(data);
+    makeAssignedRouteTypes();
     evaluate(data);
 }
 
@@ -328,11 +314,7 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     auto const &routes = indiv.getRoutes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
-    {
-        if (routes[idx].empty())
-            continue;
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
-    }
 
     out << "Distance: " << indiv.distance() << '\n';
     out << "Prizes: " << indiv.prizes() << '\n';
