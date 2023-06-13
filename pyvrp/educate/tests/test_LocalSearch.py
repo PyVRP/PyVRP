@@ -200,10 +200,14 @@ def test_cpp_shuffle_results_in_different_solution():
     cost_evaluator = CostEvaluator(1, 1)
     individual = Individual.make_random(data, rng)
 
-    # The shuffle method changes the order in which moves are evaluated, and
-    # that should result in two very different search trajectories.
+    # LocalSearch::search is deterministic, so two calls with the same base
+    # individual should result in the same improved solution.
     improved1 = ls.search(individual, cost_evaluator)
-    ls.shuffle(rng)
     improved2 = ls.search(individual, cost_evaluator)
+    assert_(improved1 == improved2)
 
-    assert_(improved1 != improved2)
+    # But the shuffle method changes the order in which moves are evaluated,
+    # which should result in a very different search trajectory.
+    ls.shuffle(rng)
+    improved3 = ls.search(individual, cost_evaluator)
+    assert_(improved3 != improved1)

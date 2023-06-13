@@ -102,7 +102,8 @@ public:
                          int overlapToleranceDegrees = 0);
 
     /**
-     * Shuffles the order in which the node and route pairs are evaluated.
+     * Shuffles the order in which the node and route pairs are evaluated, and
+     * the order in which node and route operators are applied.
      */
     void shuffle(XorShift128 &rng);
 
