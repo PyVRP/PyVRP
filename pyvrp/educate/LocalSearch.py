@@ -27,12 +27,10 @@ class LocalSearch:
     """
 
     def __init__(
-        self,
-        data: ProblemData,
-        rng: XorShift128,
-        neighbours: Neighbours,
+        self, data: ProblemData, rng: XorShift128, neighbours: Neighbours
     ):
-        self._ls = _LocalSearch(data, rng, neighbours)
+        self._ls = _LocalSearch(data, neighbours)
+        self._rng = rng
 
     def add_node_operator(self, op):
         """
@@ -170,6 +168,7 @@ class LocalSearch:
             The improved individual. This is not the same object as the
             individual that was passed in.
         """
+        self._ls.shuffle(self._rng)
         return self._ls.intensify(
             individual, cost_evaluator, overlap_tolerance_degrees
         )
@@ -200,4 +199,5 @@ class LocalSearch:
             The improved individual. This is not the same object as the
             individual that was passed in.
         """
+        self._ls.shuffle(self._rng)
         return self._ls.search(individual, cost_evaluator)
