@@ -10,6 +10,7 @@ from pyvrp.educate import (
     Neighbours,
     compute_neighbours,
 )
+from pyvrp.educate._LocalSearch import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import read
 
 
@@ -94,9 +95,7 @@ def test_local_search_set_get_neighbours(
     symmetric_neighbours: bool,
 ):
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-
-    seed = 42
-    rng = XorShift128(seed=seed)
+    rng = XorShift128(seed=42)
 
     params = NeighbourhoodParams(nb_granular=1)
     prev_neighbours = compute_neighbours(data, params)
@@ -188,3 +187,27 @@ def test_prize_collecting():
     # ...but an optimised prize-collecting solution is likely not complete.
     assert_(improved.num_clients() < individual.num_clients())
     assert_(improved_cost < individual_cost)
+
+
+def test_cpp_shuffle_results_in_different_solution():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    ls = cpp_LocalSearch(data, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+    ls.add_node_operator(Exchange11(data))
+
+    cost_evaluator = CostEvaluator(1, 1)
+    individual = Individual.make_random(data, rng)
+
+    # LocalSearch::search is deterministic, so two calls with the same base
+    # individual should result in the same improved solution.
+    improved1 = ls.search(individual, cost_evaluator)
+    improved2 = ls.search(individual, cost_evaluator)
+    assert_(improved1 == improved2)
+
+    # But the shuffle method changes the order in which moves are evaluated,
+    # which should result in a very different search trajectory.
+    ls.shuffle(rng)
+    improved3 = ls.search(individual, cost_evaluator)
+    assert_(improved3 != improved1)
