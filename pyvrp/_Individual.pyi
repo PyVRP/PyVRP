@@ -147,6 +147,15 @@ class Individual:
             ends at the depot (0), but that is implicit: the depot is not part
             of the returned routes.
         """
+    def get_routes_for_vehicle_type(self, vehicle_type: int) -> List[Route]:
+        """
+        Returns the routes in the solution for a given vehicle type.
+
+        Returns
+        -------
+        list
+            A list of routes for the given vehicle type.
+        """
     def has_excess_load(self) -> bool:
         """
         Returns whether this individual violates capacity constraints.
@@ -240,6 +249,15 @@ class Individual:
         -------
         int
             Number of (non-empty) routes.
+        """
+    def num_routes_for_vehicle_type(self, vehicle_type: int) -> List[Route]:
+        """
+        Number of (non-empty) routes in this solution for a given vehicle type.
+
+        Returns
+        -------
+        int
+            Number of (non-empty) routes for the given vehicle type.
         """
     def num_clients(self) -> int:
         """

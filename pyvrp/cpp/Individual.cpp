@@ -33,9 +33,19 @@ void Individual::evaluate(ProblemData const &data)
 
 size_t Individual::numRoutes() const { return routes_.size(); }
 
+size_t Individual::numRoutesForVehicleType(size_t vehicleType) const
+{
+    return routesPerVehicleType_[vehicleType].size();
+}
+
 size_t Individual::numClients() const { return numClients_; }
 
 Routes const &Individual::getRoutes() const { return routes_; }
+
+Routes const &Individual::getRoutesForVehicleType(size_t vehicleType) const
+{
+    return routesPerVehicleType_[vehicleType];
+};
 
 std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
 {
@@ -82,6 +92,20 @@ void Individual::makeAssignedVehicleTypes()
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
             assignedVehicleTypes[route[idx]] = route.vehicleType();
+}
+
+void Individual::makeRoutesPerVehicleType()
+{
+    auto start = routes_.begin();
+    for (auto it = routes_.begin(); it != routes_.end(); ++it)
+    {
+        if (it->vehicleType() != start->vehicleType())
+        {
+            routesPerVehicleType_.emplace_back(start, it);
+            start = it;
+        }
+    }
+    routesPerVehicleType_.emplace_back(start, routes_.end());
 }
 
 bool Individual::operator==(Individual const &other) const
@@ -133,6 +157,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
     makeNeighbours();
     makeAssignedVehicleTypes();
+    makeRoutesPerVehicleType();
     evaluate(data);
 }
 
@@ -227,6 +252,7 @@ Individual::Individual(ProblemData const &data,
 
     makeNeighbours();
     makeAssignedVehicleTypes();
+    makeRoutesPerVehicleType();
     evaluate(data);
 }
 

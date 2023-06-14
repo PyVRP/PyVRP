@@ -81,6 +81,7 @@ private:
     Duration timeWarp_ = 0;       // Total time warp over all routes
 
     Routes routes_;  // Routes - only includes non-empty routes
+    std::vector<Routes> routesPerVehicleType_;  // Routes per vehicle type
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
     std::vector<RouteType> assignedVehicleTypes;  // Client assigned veh. types
 
@@ -89,6 +90,9 @@ private:
 
     // Determines assigned route types for each client.
     void makeAssignedVehicleTypes();
+
+    // Creates vector with routes per vehicle type
+    void makeRoutesPerVehicleType();
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
@@ -106,6 +110,13 @@ public:
     [[nodiscard]] size_t numRoutes() const;
 
     /**
+     * Returns the number of (non-empty) routes in this individual's solution
+     * for a specific vehicle type. Equal to the length of the vector of routes
+     * returned by ``getRoutes`` when called for a specific vehicle type.
+     */
+    [[nodiscard]] size_t numRoutesForVehicleType(size_t vehicleType) const;
+
+    /**
      * Number of clients in the solution.
      */
     [[nodiscard]] size_t numClients() const;
@@ -114,6 +125,12 @@ public:
      * Returns this individual's routing decisions.
      */
     [[nodiscard]] Routes const &getRoutes() const;
+
+    /**
+     * Returns this individual's routing decisions for a specific vehicle type.
+     */
+    [[nodiscard]] Routes const &
+    getRoutesForVehicleType(size_t vehicleType) const;
 
     /**
      * Returns a vector of [pred, succ] clients for each client (index) in this
