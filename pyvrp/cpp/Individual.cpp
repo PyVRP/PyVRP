@@ -342,14 +342,14 @@ bool Individual::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 
 std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
-    // Since non-empty routes are guaranteed to come before empty routes
-    // this will print consecutive route numbers for homogeneous problem
-    // instances, but there may be gaps in the route indices corresponding
-    // to different vehicle capacities.
     auto const &routes = indiv.getRoutes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
+    {
+        out << "Route #" << idx + 1;
+        out << " (type " << routes[idx].vehicleType() << ")";
+        out << ": " << routes[idx] << '\n';
+    }
 
     out << "Distance: " << indiv.distance() << '\n';
     out << "Prizes: " << indiv.prizes() << '\n';

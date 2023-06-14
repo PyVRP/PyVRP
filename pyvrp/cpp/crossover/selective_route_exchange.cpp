@@ -186,8 +186,8 @@ Individual selectiveRouteExchange(
         if (!selectedA.contains(c))
             clientsInSelectedBNotA.insert(c);
 
-    std::vector<std::vector<Client>> routes1(nRoutesA);
-    std::vector<std::vector<Client>> routes2(nRoutesB);
+    std::vector<std::vector<Client>> visits1(nRoutesA);
+    std::vector<std::vector<Client>> visits2(nRoutesA);
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)
@@ -197,10 +197,10 @@ Individual selectiveRouteExchange(
 
         for (Client c : routesB[indexB])
         {
-            routes1[indexA].push_back(c);  // c in B
+            visits1[indexA].push_back(c);  // c in B
 
             if (!clientsInSelectedBNotA.contains(c))
-                routes2[indexA].push_back(c);  // c in A^B
+                visits2[indexA].push_back(c);  // c in A^B
         }
     }
 
@@ -212,9 +212,9 @@ Individual selectiveRouteExchange(
         for (Client c : routesA[indexA])
         {
             if (!clientsInSelectedBNotA.contains(c))
-                routes1[indexA].push_back(c);  // c in Ac\B
+                visits1[indexA].push_back(c);  // c in Ac\B
 
-            routes2[indexA].push_back(c);  // c in Ac
+            visits2[indexA].push_back(c);  // c in Ac
         }
     }
 
@@ -225,8 +225,22 @@ Individual selectiveRouteExchange(
         if (!selectedB.contains(c))
             unplanned.push_back(c);
 
-    crossover::greedyRepair(routes1, unplanned, data, costEvaluator);
-    crossover::greedyRepair(routes2, unplanned, data, costEvaluator);
+    crossover::greedyRepair(visits1, unplanned, data, costEvaluator);
+    crossover::greedyRepair(visits2, unplanned, data, costEvaluator);
+
+    // Assign correct types to routes (from parents) and filter empty
+    std::vector<Individual::Route> routes1;
+    routes1.reserve(nRoutesA);
+    std::vector<Individual::Route> routes2;
+    routes2.reserve(nRoutesA);
+
+    for (size_t r = 0; r < nRoutesA; r++)
+    {
+        if (!visits1[r].empty())
+            routes1.emplace_back(data, visits1[r], routesA[r].vehicleType());
+        if (!visits2[r].empty())
+            routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
+    }
 
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};
