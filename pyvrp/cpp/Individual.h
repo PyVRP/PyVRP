@@ -68,7 +68,6 @@ public:
 private:
     using Routes = std::vector<Route>;
 
-    size_t numRoutes_ = 0;        // Number of routes
     size_t numClients_ = 0;       // Number of clients in the solution
     Distance distance_ = 0;       // Total distance
     Load excessLoad_ = 0;         // Total excess load over all routes
@@ -76,7 +75,7 @@ private:
     Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
     Duration timeWarp_ = 0;       // Total time warp over all routes
 
-    Routes routes_;  // Routes - only the first numRoutes_ are non-empty
+    Routes routes_;  // Routes - only includes non-empty routes
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
 
     // Determines the [pred, succ] pairs for each client.
@@ -87,9 +86,8 @@ private:
 
 public:
     /**
-     * Returns the number of non-empty routes in this individual's solution.
-     * Such non-empty routes are guaranteed to be in the lower indices of the
-     * routes returned by ``getRoutes``.
+     * Returns the number of (non-empty) routes in this individual's solution.
+     * Equal to the length of the vector of routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
 
@@ -188,7 +186,7 @@ template <> struct hash<Individual>
     size_t operator()(Individual const &individual) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(individual.numRoutes_);
+        res = res * 31 + std::hash<size_t>()(individual.routes_.size());
         res = res * 31 + std::hash<Distance>()(individual.distance_);
         res = res * 31 + std::hash<Load>()(individual.excessLoad_);
         res = res * 31 + std::hash<Duration>()(individual.timeWarp_);

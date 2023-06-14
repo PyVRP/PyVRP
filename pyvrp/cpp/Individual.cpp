@@ -17,11 +17,7 @@ void Individual::evaluate(ProblemData const &data)
 
     for (auto const &route : routes_)
     {
-        if (route.empty())  // First empty route. All subsequent routes are
-            break;          // empty as well.
-
         // Whole solution statistics.
-        numRoutes_++;
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
@@ -32,7 +28,7 @@ void Individual::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-size_t Individual::numRoutes() const { return numRoutes_; }
+size_t Individual::numRoutes() const { return routes_.size(); }
 
 size_t Individual::numClients() const { return numClients_; }
 
@@ -79,13 +75,13 @@ bool Individual::operator==(Individual const &other) const
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
-        && numRoutes_ == other.numRoutes_
+        && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours;
     // clang-format on
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -98,13 +94,15 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     auto const numClients = data.numClients();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
     auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
-    std::vector<std::vector<Client>> routes(data.numVehicles());
+    std::vector<std::vector<Client>> routes(numRoutes);
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
+    routes_.reserve(numRoutes);
+    for (size_t idx = 0; idx != numRoutes; ++idx)
+        routes_.emplace_back(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
@@ -112,7 +110,7 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
 
 Individual::Individual(ProblemData const &data,
                        std::vector<std::vector<Client>> const &routes)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
@@ -142,14 +140,11 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
+    // Only store non-empty routes
+    routes_.reserve(routes.size());
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
-
-    // a precedes b only when a is not empty and b is. Combined with a stable
-    // sort, this ensures we keep the original sorting as much as possible, but
-    // also make sure all empty routes are at the end of routes_.
-    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
-    std::stable_sort(routes_.begin(), routes_.end(), comp);
+        if (!routes[idx].empty())
+            routes_.emplace_back(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
@@ -266,7 +261,7 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
 {
     auto const &routes = indiv.getRoutes();
 
-    for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
+    for (size_t idx = 0; idx != routes.size(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
     out << "Distance: " << indiv.distance() << '\n';

@@ -63,14 +63,11 @@ void crossover::greedyRepair(Routes &routes,
                              ProblemData const &data,
                              CostEvaluator const &costEvaluator)
 {
-    // Determine the index just past the last non-empty route.
-    auto const pred = [](Route const &route) { return !route.empty(); };
-    auto const last = std::find_if(routes.rbegin(), routes.rend(), pred);
-    auto const numRoutes = std::distance(last, routes.rend());
+    auto const numRoutes = routes.size();
 
     // Determine centroids of each route.
     std::vector<std::pair<double, double>> centroids(numRoutes, {0, 0});
-    for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
+    for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         for (Client client : routes[rIdx])
         {
             auto const size = static_cast<double>(routes[rIdx].size());
@@ -89,7 +86,7 @@ void crossover::greedyRepair(Routes &routes,
         // Determine non-empty route with centroid nearest to this client.
         auto bestDistance = std::numeric_limits<double>::max();
         auto bestRouteIdx = 0;
-        for (auto rIdx = 0; rIdx != numRoutes; ++rIdx)
+        for (size_t rIdx = 0; rIdx != numRoutes; ++rIdx)
         {
             if (routes[rIdx].empty())
                 continue;
