@@ -147,7 +147,7 @@ bool LocalSearch::applyNodeOpsWithEmptyRoutes(
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
     {
         auto start = routes.begin() + typeOffsets[typeIdx];
-        auto end = start + data.vehicleType(typeIdx).qty_available;
+        auto end = start + data.vehicleType(typeIdx).numAvailable;
         auto empty = std::find_if(start, end, pred);
 
         if (empty == end)
@@ -367,7 +367,7 @@ Individual LocalSearch::exportIndividual()
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
     {
         auto start = typeOffsets[typeIdx];
-        auto end = start + data.vehicleType(typeIdx).qty_available;
+        auto end = start + data.vehicleType(typeIdx).numAvailable;
 
         for (size_t r = start; r != end; r++)
         {
@@ -452,8 +452,8 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     {
         typeOffsets[typeIdx] = rIdx;
 
-        auto const qty_available = data.vehicleType(typeIdx).qty_available;
-        for (size_t i = 0; i != qty_available; ++i)
+        auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
+        for (size_t i = 0; i != numAvailable; ++i)
         {
             routes.emplace_back(data, rIdx, typeIdx);
             routes[rIdx].idx = rIdx;

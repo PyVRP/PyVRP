@@ -125,8 +125,8 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     routes_.reserve(numRoutes);
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
-        auto const qty_available = data.vehicleType(typeIdx).qty_available;
-        for (size_t i = 0; i != qty_available; ++i)
+        auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
+        for (size_t i = 0; i != numAvailable; ++i)
             if (routes_.size() < routes.size())
                 routes_.emplace_back(data, routes[routes_.size()], typeIdx);
     }
@@ -183,10 +183,10 @@ Individual::Individual(ProblemData const &data,
     }
 
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
-        if (used_vehicles[typeIdx] > data.vehicleType(typeIdx).qty_available)
+        if (used_vehicles[typeIdx] > data.vehicleType(typeIdx).numAvailable)
         {
             std::ostringstream msg;
-            msg << "Used more than " << data.vehicleType(typeIdx).qty_available
+            msg << "Used more than " << data.vehicleType(typeIdx).numAvailable
                 << " vehicles of type " << typeIdx << ".";
             throw std::runtime_error(msg.str());
         }

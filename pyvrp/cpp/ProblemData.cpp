@@ -68,7 +68,7 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                                    vehicleTypes.end(),
                                    0,
                                    [](int sum, const VehicleType &vehicleType) {
-                                       return sum + vehicleType.qty_available;
+                                       return sum + vehicleType.numAvailable;
                                    })),
       numVehicleTypes_(vehicleTypes.size())
 {

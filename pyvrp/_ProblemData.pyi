@@ -58,14 +58,14 @@ class VehicleType:
     ----------
     capacity
         Capacity of this route (maximum total demand that can be served).
-    qty_available
+    num_available
         Number of vehicles of this type that are available.
     """
 
     capacity: int
-    qty_available: int
+    num_available: int
 
-    def __init__(self, capacity: int, qty_available: int) -> None: ...
+    def __init__(self, capacity: int, num_available: int) -> None: ...
 
 class ProblemData:
     """

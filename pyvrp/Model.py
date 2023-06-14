@@ -8,7 +8,7 @@ from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
 from pyvrp._Individual import Individual
-from pyvrp._ProblemData import Client, ProblemData
+from pyvrp._ProblemData import Client, ProblemData, VehicleType
 from pyvrp._XorShift128 import XorShift128
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
@@ -28,15 +28,6 @@ class Edge:
         self.to = to
         self.distance = distance
         self.duration = duration
-
-
-class VehicleType:
-
-    __slots__ = ["number", "capacity"]
-
-    def __init__(self, number: int, capacity: int):
-        self.number = number
-        self.capacity = capacity
 
 
 class Model:
@@ -89,7 +80,9 @@ class Model:
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
-        vehicle_types = [VehicleType(data.num_vehicles, data.vehicle_capacity)]
+        vehicle_types = [
+            data.vehicle_type(i) for i in range(data.num_vehicle_types)
+        ]
         self._vehicle_types = vehicle_types
 
         return self
@@ -168,32 +161,31 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_vehicle_type(self, number: int, capacity: int) -> VehicleType:
+    def add_vehicle_type(
+        self, num_available: int, capacity: int
+    ) -> VehicleType:
         """
-        Adds a vehicle type with the given number of vehicles of given capacity
-        to the model. Returns the created vehicle type.
-
-        .. warning::
-
-           PyVRP does not yet support heterogeneous fleet VRPs. For now, only
-           one vehicle type can be added to the model.
+        Adds a vehicle type with the given number of available vehicles of
+        given capacity to the model. Returns the created vehicle type.
 
         Raises
         ------
         ValueError
-            When either the vehicle number or capacity is not a positive value.
+            When the number available or capacity is not a positive value.
         """
         if len(self._vehicle_types) >= 1:
             msg = "PyVRP does not yet support heterogeneous fleet VRPs."
             raise ValueError(msg)
 
-        if number <= 0:
-            raise ValueError("Must have positive number of vehicles.")
+        if num_available <= 0:
+            raise ValueError(
+                "Must have positive number of available vehicles."
+            )
 
         if capacity < 0:
             raise ValueError("Cannot have negative vehicle capacity.")
 
-        vehicle_type = VehicleType(number, capacity)
+        vehicle_type = VehicleType(num_available, capacity)
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
@@ -205,8 +197,7 @@ class Model:
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
-        num_vehicles = self._vehicle_types[0].number
-        vehicle_capacity = self._vehicle_types[0].capacity
+        vehicle_types = self._vehicle_types
 
         max_data_value = max(max(e.distance, e.duration) for e in self._edges)
         if max_data_value > MAX_USER_VALUE:
@@ -229,8 +220,7 @@ class Model:
 
         return ProblemData(
             locs,
-            num_vehicles,
-            vehicle_capacity,
+            vehicle_types,
             distances,
             durations,
         )

@@ -38,7 +38,7 @@ def plot_demands(
             [
                 data.vehicle_type(i).capacity
                 for i in range(data.num_vehicle_types)
-                for _ in range(data.vehicle_type(i).qty_available)
+                for _ in range(data.vehicle_type(i).num_available)
             ]
         )
         title = (
