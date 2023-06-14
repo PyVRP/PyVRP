@@ -38,7 +38,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 )
 def test_init_raises_invalid_arguments(num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    indiv = Individual(data, [[1, 2, 3, 4], [], []])
+    indiv = Individual(data, [[1, 2, 3, 4]])
 
     with assert_raises(ValueError):
         Result(indiv, Statistics(), num_iterations, runtime)
