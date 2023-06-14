@@ -16,7 +16,7 @@ def test_model_data():
     client = model.add_client(0, 1, demand=1)
     model.add_edge(depot, client, 1, 1)
     model.add_edge(client, depot, 1, 1)
-    model.add_vehicle_type(1, 1)
+    model.add_vehicle_type(capacity=1, num_available=1)
 
     # The model should now have one client.
     data = model.data()
@@ -45,14 +45,6 @@ def test_add_edge_raises_negative_distance_or_duration():
         model.add_edge(client, depot, distance=0, duration=-1)
 
 
-def test_add_vehicle_type_raises_more_than_one_type():
-    model = Model()
-    model.add_vehicle_type(1, 10)  # first type should be OK
-
-    with assert_raises(ValueError):
-        model.add_vehicle_type(2, 10)  # second (and more) should not be
-
-
 @mark.parametrize(
     "number, capacity",
     [
@@ -63,9 +55,8 @@ def test_add_vehicle_type_raises_more_than_one_type():
 )
 def test_add_vehicle_type_raises_negative_number_or_capacity(number, capacity):
     model = Model()
-
     with assert_raises(ValueError):
-        model.add_vehicle_type(number, capacity)
+        model.add_vehicle_type(capacity=capacity, num_available=number)
 
 
 def test_add_client_attributes():
@@ -115,9 +106,9 @@ def test_add_edge():
 
 def test_add_vehicle_type():
     model = Model()
-    vehicle_type = model.add_vehicle_type(number=10, capacity=998)
+    vehicle_type = model.add_vehicle_type(num_available=10, capacity=998)
 
-    assert_equal(vehicle_type.number, 10)
+    assert_equal(vehicle_type.num_available, 10)
     assert_equal(vehicle_type.capacity, 998)
 
 
@@ -129,7 +120,9 @@ def test_from_data():
     # We can first check if the overall problem dimension numbers agree.
     assert_equal(model_data.num_clients, read_data.num_clients)
     assert_equal(model_data.num_vehicles, read_data.num_vehicles)
-    assert_equal(model_data.vehicle_capacity, read_data.vehicle_capacity)
+    assert_equal(
+        model_data.vehicle_type(0).capacity, read_data.vehicle_type(0).capacity
+    )
 
     # It's a bit cumbersome to compare the whole matrices, so we use a few
     # sample traces from the distance and duration matrices instead.
@@ -163,7 +156,7 @@ def test_model_and_solve():
     # Now do the same thing, but model the instance using the modelling API.
     # This should of course result in the same solution.
     model = Model()
-    model.add_vehicle_type(number=3, capacity=10)
+    model.add_vehicle_type(capacity=10, num_available=3)
     depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
     clients = [
         model.add_client(226, 1297, 5, 360, 15600, 22500),
@@ -210,7 +203,7 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type(number=1, capacity=0)
+    model.add_vehicle_type(capacity=0, num_available=1)
 
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
@@ -226,7 +219,7 @@ def test_partial_distance_duration_matrix():
 
 def test_data_warns_about_scaling_issues(recwarn):
     model = Model()
-    model.add_vehicle_type(number=1, capacity=0)
+    model.add_vehicle_type(capacity=0, num_available=1)
     depot = model.add_depot(0, 0)
     client = model.add_client(1, 1)
 

@@ -162,7 +162,7 @@ class Model:
         return edge
 
     def add_vehicle_type(
-        self, num_available: int, capacity: int
+        self, capacity: int, num_available: int
     ) -> VehicleType:
         """
         Adds a vehicle type with the given number of available vehicles of
@@ -173,19 +173,15 @@ class Model:
         ValueError
             When the number available or capacity is not a positive value.
         """
-        if len(self._vehicle_types) >= 1:
-            msg = "PyVRP does not yet support heterogeneous fleet VRPs."
-            raise ValueError(msg)
+        if capacity < 0:
+            raise ValueError("Cannot have negative vehicle capacity.")
 
         if num_available <= 0:
             raise ValueError(
                 "Must have positive number of available vehicles."
             )
 
-        if capacity < 0:
-            raise ValueError("Cannot have negative vehicle capacity.")
-
-        vehicle_type = VehicleType(num_available, capacity)
+        vehicle_type = VehicleType(capacity, num_available)
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
