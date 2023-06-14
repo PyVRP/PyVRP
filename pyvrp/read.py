@@ -2,9 +2,13 @@ import functools
 import pathlib
 from numbers import Number
 from typing import Callable, Dict, List, Union
+from warnings import warn
 
 import numpy as np
 import vrplib
+
+from pyvrp.constants import MAX_USER_VALUE
+from pyvrp.exceptions import ScalingWarning
 
 from ._ProblemData import Client, ProblemData, VehicleType
 
@@ -165,6 +169,13 @@ def read(
         for idx in range(dimension)
     ]
     vehicle_types = [VehicleType(capacity, num_vehicles)]
+
+    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
+        msg = """
+        The maximum distance or duration value is very large. This might
+        impact numerical stability. Consider rescaling your input data.
+        """
+        warn(msg, ScalingWarning)
 
     return ProblemData(
         clients,
