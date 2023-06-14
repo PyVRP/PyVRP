@@ -214,7 +214,7 @@ Individual::Individual(ProblemData const &data,
         if (!route.empty())
             routes_.push_back(route);
 
-    if (data.numVehicleTypes() > 0)
+    if (data.isHeterogeneous())
     {
         // We sort routes by vehicle types. Combined with a stable sort, this
         // ensures we keep the original sorting as much as possible.

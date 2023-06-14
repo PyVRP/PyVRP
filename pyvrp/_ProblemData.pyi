@@ -203,3 +203,14 @@ class ProblemData:
         int
             Number of vehicle types in this problem instance.
         """
+    @property
+    def is_heterogeneous(self) -> bool:
+        """
+        Flag indicating if this problem instance is heterogeneous, which means
+        it has more than one vehicle type.
+
+        Returns
+        -------
+        bool
+            Whether this problem instance is heterogeneous.
+        """

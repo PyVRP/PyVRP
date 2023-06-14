@@ -118,6 +118,11 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
+     * @return If instance is heterogeneous, which means > 1 vehicle type.
+     */
+    [[nodiscard]] bool isHeterogeneous() const;
+
+    /**
      * Constructs a ProblemData object with the given data. Assumes the list of
      * clients contains the depot, such that each vector is one longer than the
      * number of clients.

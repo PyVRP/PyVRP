@@ -54,6 +54,8 @@ size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
+bool ProblemData::isHeterogeneous() const { return numVehicleTypes_ > 1; }
+
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> const distMat,
