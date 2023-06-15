@@ -28,6 +28,7 @@ Contents
    :maxdepth: 1
    :caption: Getting started
 
+   setup/introduction_to_vrp
    setup/introduction_to_hgs
    setup/installation
    setup/getting_help
