@@ -6,36 +6,69 @@
 #include <string>
 #include <vector>
 
+ProblemData::Client::Client(Coordinate x,
+                            Coordinate y,
+                            Load demand,
+                            Duration serviceDuration,
+                            Duration twEarly,
+                            Duration twLate,
+                            Cost prize,
+                            bool required)
+    : x(x),
+      y(y),
+      demand(demand),
+      serviceDuration(serviceDuration),
+      twEarly(twEarly),
+      twLate(twLate),
+      prize(prize),
+      required(required)
+{
+    if (demand < 0)
+        throw std::invalid_argument("demand must be >= 0");
+
+    if (serviceDuration < 0)
+        throw std::invalid_argument("service_duration must be >= 0");
+
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late");
+
+    if (prize < 0)
+        throw std::invalid_argument("prize must be >= 0");
+}
+
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
-Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
+std::pair<double, double> const &ProblemData::centroid() const
+{
+    return centroid_;
+}
+
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+Load ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
-ProblemData::ProblemData(std::vector<std::pair<int, int>> const &coords,
-                         std::vector<int> const &demands,
+ProblemData::ProblemData(std::vector<Client> const &clients,
                          size_t numVehicles,
-                         size_t vehicleCap,
-                         std::vector<std::pair<int, int>> const &timeWindows,
-                         std::vector<int> const &servDurs,
-                         std::vector<std::vector<int>> const &distMat)
-    : dist_(distMat),
-      clients_(coords.size()),
-      numClients_(static_cast<int>(coords.size()) - 1),
+                         Load vehicleCap,
+                         Matrix<Distance> const distMat,
+                         Matrix<Duration> const durMat)
+    : centroid_({0, 0}),
+      dist_(std::move(distMat)),
+      dur_(std::move(durMat)),
+      clients_(clients),
+      numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicles_(numVehicles),
       vehicleCapacity_(vehicleCap)
 {
-    // TODO argument checks
-
-    for (size_t idx = 0; idx <= static_cast<size_t>(numClients_); ++idx)
-        clients_[idx] = {coords[idx].first,
-                         coords[idx].second,
-                         servDurs[idx],
-                         demands[idx],
-                         timeWindows[idx].first,
-                         timeWindows[idx].second};
+    for (size_t idx = 1; idx <= numClients(); ++idx)
+    {
+        centroid_.first += static_cast<double>(clients[idx].x) / numClients();
+        centroid_.second += static_cast<double>(clients[idx].y) / numClients();
+    }
 }

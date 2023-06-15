@@ -1,34 +1,54 @@
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 class Client:
     """
-    Simple data object storing all client data as properties.
+    Simple data object storing all client data as (read-only) properties.
 
-    Attributes
+    Parameters
     ----------
-    demand
-        The amount this client's demanding.
-    service_duration
-        This client's service duration, that is, the amount of time we need to
-        visit the client for.
-    tw_early
-        Earliest time at which we can visit this client.
-    tw_late
-        Latest time at which we can visit this client.
     x
         Horizontal coordinate of this client, that is, the 'x' part of the
         client's (x, y) location tuple.
     y
         Vertical coordinate of this client, that is, the 'y' part of the
         client's (x, y) location tuple.
+    demand
+        The amount this client's demanding. Default 0.
+    service_duration
+        This client's service duration, that is, the amount of time we need to
+        visit the client for. Service should start (but not necessarily end)
+        within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
+        Default 0.
+    tw_early
+        Earliest time at which we can visit this client. Default 0.
+    tw_late
+        Latest time at which we can visit this client. Default 0.
+    prize
+        Prize collected by visiting this client. Default 0.
+    required
+        Whether this client must be part of a feasible solution. Default True.
     """
 
+    x: int
+    y: int
     demand: int
     service_duration: int
     tw_early: int
     tw_late: int
-    x: int
-    y: int
+    prize: int
+    required: bool
+
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        demand: int = 0,
+        service_duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
+        prize: int = 0,
+        required: bool = True,
+    ) -> None: ...
 
 class ProblemData:
     """
@@ -37,42 +57,25 @@ class ProblemData:
 
     Parameters
     ----------
-    coords
-        Array of (x, y) coordinates. The first coordinate at index 0 is assumed
-        to be the depot.
-    demands
-        Array of client demands. The demand at index 0 is assumed to be the
-        depot's demand, and should be zero.
-    nb_vehicles
+    clients
+        List of clients. The first client (at index 0) is assumed to be the
+        depot. The time window for the depot is assumed to describe the overall
+        time horizon. The depot should have 0 demand and 0 service duration.
+    num_vehicles
         The number of vehicles in this problem instance.
     vehicle_cap
         Homogenous vehicle capacity for all vehicles in the problem instance.
-    time_windows
-        Array of (early, late) time windows. The time window at index 0 is
-        assumed to be the depot's time window, and describes the overall time
-        horizon.
-    service_durations
-        Array of service durations, that is, the length of time needed to
-        service a customer upon visiting. The service duration at index 0 is
-        assumed to be the depot's service time, and should be zero.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
-        index 0). Does not have to be symmetric.
-
-    Notes
-    -----
-    All array data assume that the data at or involving index 0 relates to the
-    depot, and all other indices specify client information.
+        index 0).
     """
 
     def __init__(
         self,
-        coords: List[Tuple[int, int]],
-        demands: List[int],
-        nb_vehicles: int,
+        clients: List[Client],
+        num_vehicles: int,
         vehicle_cap: int,
-        time_windows: List[Tuple[int, int]],
-        service_durations: List[int],
+        distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
     def client(self, client: int) -> Client:
@@ -99,7 +102,33 @@ class ProblemData:
         Client
             A simple data object containing the depot's information.
         """
+    def centroid(self) -> Tuple[float, float]:
+        """
+        Center point of all client locations (excluding the depot).
+
+        Returns
+        -------
+        tuple
+            Centroid of all client locations.
+        """
     def dist(self, first: int, second: int) -> int:
+        """
+        Returns the travel distance between the first and second argument,
+        according to this instance's travel distance matrix.
+
+        Parameters
+        ----------
+        first
+            Client or depot number.
+        second
+            Client or depot number.
+
+        Returns
+        -------
+        int
+            Travel distance between the given clients.
+        """
+    def duration(self, first: int, second: int) -> int:
         """
         Returns the travel duration between the first and second argument,
         according to this instance's travel duration matrix.
@@ -115,16 +144,6 @@ class ProblemData:
         -------
         int
             Travel duration between the given clients.
-        """
-    def distance_matrix(self) -> Any:
-        """
-        Returns the travel duration matrix used for distance/duration
-        computations.
-
-        Returns
-        -------
-        Any
-            Travel duration matrix.
         """
     @property
     def num_clients(self) -> int:

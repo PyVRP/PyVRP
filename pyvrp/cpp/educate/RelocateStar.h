@@ -1,5 +1,5 @@
-#ifndef RELOCATESTAR_H
-#define RELOCATESTAR_H
+#ifndef PYVRP_RELOCATESTAR_H
+#define PYVRP_RELOCATESTAR_H
 
 #include "Exchange.h"
 #include "LocalSearchOperator.h"
@@ -12,7 +12,7 @@ class RelocateStar : public LocalSearchOperator<Route>
 {
     struct Move
     {
-        int deltaCost = 0;
+        Cost deltaCost = 0;
         Node *from = nullptr;
         Node *to = nullptr;
     };
@@ -21,7 +21,7 @@ class RelocateStar : public LocalSearchOperator<Route>
     Move move;
 
 public:
-    int
+    Cost
     evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Route *U, Route *V) const override;
@@ -32,4 +32,4 @@ public:
     }
 };
 
-#endif  // RELOCATESTAR_H
+#endif  // PYVRP_RELOCATESTAR_H

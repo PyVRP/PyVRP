@@ -1,5 +1,5 @@
-#ifndef HGS_DIVERSITY_H
-#define HGS_DIVERSITY_H
+#ifndef PYVRP_DIVERSITY_H
+#define PYVRP_DIVERSITY_H
 
 #include "Individual.h"
 #include "ProblemData.h"
@@ -21,4 +21,4 @@ typedef std::function<double(Individual const &, Individual const &)>
  */
 double brokenPairsDistance(Individual const &first, Individual const &second);
 
-#endif  // HGS_DIVERSITY_H
+#endif  // PYVRP_DIVERSITY_H

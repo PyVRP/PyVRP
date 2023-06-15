@@ -1,16 +1,16 @@
-PyVRP
-=====
+.. figure:: assets/images/PyVRP.svg
+   :alt: PyVRP logo
 
-`pyvrp` is a flexible, extensible, and well-documented Python package for solving Vehicle Routing Problems (VRPs) and generating state-of-the-art results on various VRP variants.
-The package provides an implementation of the Hybrid Genetic Search (HGS) algorithm for VRPs, catering to both practitioners looking to solve real-world problems and researchers seeking a starting point or strong baseline for improving the state of the art.
-`pyvrp` offers the flexibility to customize the overall algorithm using Python and the provided HGS implementation serves as just one example of a large family of algorithms that can be built using the building blocks of this package.
-Users can create custom operators or even implement entirely new algorithms using the provided framework.
+PyVRP is a Python package that offers a high-performance implementation of the hybrid genetic search algorithm for vehicle routing problems (VRPs).
+PyVRP currently supports the capacitated VRP (CVRP), the VRP with time windows (VRPTW), and prize-collecting. 
 
-In particular, `pyvrp` provides the following features:
-- A complete implementation of the HGS algorithm to solve the Capacitated Vehicle Routing Problem (CVRP) and Vehicle Routing Problem with Time Windows (VRPTW)
-- A variety of operators, such as crossover, local search, destroy and repair operators
+The implementation builds on `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
+This allows users to directly solve VRP instances, or implement variants of the HGS algorithm using Python, inspired by the examples in this documentation. 
+Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
+Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install PyVRP directly from the source code.
 
-``pyvrp`` may be installed in the usual way as
+The PyVRP package comes with pre-compiled binaries for Windows, Mac OS and Linux, and can thus be easily installed without requiring local compilation.
+It can be installed through *pip* via
 
 .. code-block:: shell
 
@@ -20,6 +20,9 @@ In particular, `pyvrp` provides the following features:
 
     If you are new to vehicle routing or metaheuristics, you might benefit from first reading :doc:`introduction to VRP <setup/introduction_to_vrp>` and :doc:`introduction to HGS for VRP <setup/introduction_to_hgs>`.
     To set up an installation from source, or to run the examples listed below yourself, please have a look at the :doc:`installation instructions <setup/installation>`.
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 1
@@ -43,7 +46,6 @@ In particular, `pyvrp` provides the following features:
 
    api/pyvrp
    api/crossover
-   api/diagnostics
    api/diversity
    api/educate
    api/plotting

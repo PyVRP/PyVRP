@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from typing import Callable, Generator, Tuple
+from warnings import warn
 
 from ._CostEvaluator import CostEvaluator
 from ._Individual import Individual
 from ._SubPopulation import PopulationParams, SubPopulation
 from ._XorShift128 import XorShift128
+from .exceptions import EmptySolutionWarning
 
 
 class Population:
@@ -104,7 +106,17 @@ class Population:
         cost_evaluator
             CostEvaluator to use to compute the cost.
         """
-        # Note: the PenaltyManager is required here since adding an individual
+        if individual.num_clients() == 0:
+            msg = """
+            An empty solution is being added to the population. This typically
+            indicates that there is a significant difference between the values
+            of the prizes and the other objective terms, which hints at a data
+            problem. Note that not every part of PyVRP can work gracefully with
+            empty solutions.
+            """
+            warn(msg, EmptySolutionWarning)
+
+        # Note: the CostEvaluator is required here since adding an individual
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
         if individual.is_feasible():

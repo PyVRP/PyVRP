@@ -1,9 +1,9 @@
-#ifndef XORSHIFT128_H
-#define XORSHIFT128_H
+#ifndef PYVRP_XORSHIFT128_H
+#define PYVRP_XORSHIFT128_H
 
-#include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <type_traits>
 
 /**
@@ -60,9 +60,15 @@ public:
     template <typename T> result_type randint(T high);
 };
 
-constexpr size_t XorShift128::min() { return 0; }
+constexpr size_t XorShift128::min()
+{
+    return std::numeric_limits<result_type>::min();
+}
 
-constexpr size_t XorShift128::max() { return UINT32_MAX; }
+constexpr size_t XorShift128::max()
+{
+    return std::numeric_limits<result_type>::max();
+}
 
 template <typename T> T XorShift128::rand()
 {
@@ -76,4 +82,4 @@ template <typename T> XorShift128::result_type XorShift128::randint(T high)
     return operator()() % high;
 }
 
-#endif  // XORSHIFT128_H
+#endif  // PYVRP_XORSHIFT128_H
