@@ -37,7 +37,7 @@ The algorithm continues until a provided stopping criterion is met, at which poi
 
     **return** :math:`s^*`
 
-The `pyvrp` package provides the HGS algorithm, crossover operators, stopping criteria, and numerous local search operators.
+The ``pyvrp`` package provides the HGS algorithm, crossover operators, stopping criteria, and numerous local search operators.
 You only need provide the initial solutions, for which we suggest to take random initial solutions to ensure diversity in the search.
 
 .. hint::
