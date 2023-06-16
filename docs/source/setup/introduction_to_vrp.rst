@@ -1,5 +1,5 @@
-An introduction to VRP
-======================
+A brief introduction to VRP
+===========================
 
 The vehicle routing problem (VRP) is one of the most well-studied problem in the field of operations research, motivated by numerous industrial applications.
 The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost.
