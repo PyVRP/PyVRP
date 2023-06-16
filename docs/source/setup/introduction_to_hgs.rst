@@ -28,15 +28,11 @@ The algorithm continues until a provided stopping criterion is met, at which poi
         Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
         Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
         Improve the offspring using a local search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
-
         **if** :math:`s^c` has a better objective value than :math:`s^*`:
             :math:`s^* \gets s^c`
-
         Add the candidate solution to the population.
-
         **if** population size exceeds maximum size:
             Remove the solutions with lowest fitness until population size is at minimum size
-
     **return** :math:`s^*`
 
 The ``pyvrp`` package provides the HGS algorithm, crossover operators, stopping criteria, and numerous local search operators.
