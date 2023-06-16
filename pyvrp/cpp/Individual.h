@@ -112,7 +112,7 @@ public:
     /**
      * Returns the number of (non-empty) routes in this individual's solution
      * for a specific vehicle type. Equal to the length of the vector of routes
-     * returned by ``getRoutes`` when called for a specific vehicle type.
+     * returned by ``getRoutesForVehicleType`` for the same vehicle type.
      */
     [[nodiscard]] size_t numRoutesForVehicleType(size_t vehicleType) const;
 
