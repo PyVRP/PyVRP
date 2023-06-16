@@ -53,8 +53,8 @@ Each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time
 A vehicle is allowed to arrive at a customer location before the beginning of the time window, but it must wait for the window to open to start the service.
 The depot has a time window :math:`\left[0, H \right]`, where :math:`H` is the latest time at which all vehicles must have returned.
 
-A feasible solution to the VRPTW consists of a set of routes in which all customers are visited within the specified time window and all vehicles returns to the depot in time.
-The objective is to find a feasible solution that minimises the overall travel cost.
+A feasible solution to the VRPTW consists of a set of routes in which all customers are visited within the specified time window and all vehicles return to the depot in time.
+The objective is to find a feasible solution that minimises the total travel cost.
 
 .. hint::
     Check out :ref:`this example notebook </examples/vrptw.ipynb>` in which we solve a VRPTW instance.
@@ -63,8 +63,8 @@ The objective is to find a feasible solution that minimises the overall travel c
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all customers.
-Instead, the customers are divided into required customers, which much be visited, and optional customers.
+Instead, the customers are divided into required customers, which must be visited, and optional customers.
 Optional customers have a prize :math:`p_i > 0` that is collected upon visiting the customer.
 
-A feasible PC-VRP solution comprises a set of routes that visits all required customers, and may include visits to optional customers.
-The objective is to find a feasible solution that maximises the net profit, calculated as the difference between the total prizes collected and the overall travel costs.
+A feasible PC-VRP solution comprises a set of routes in which all required customers are visited, and may include visits to optional customers.
+The objective is to find a feasible solution that maximises the total prizes collected minus the total travel costs.
