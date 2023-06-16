@@ -529,7 +529,7 @@ def test_duplicate_vehicle_types():
     "vehicle_types",
     [[VehicleType(10, 3)], [VehicleType(10, 2), VehicleType(20, 1)]],
 )
-def test_str_contains_essential_information(vehicle_types):
+def test_str_contains_routes(vehicle_types):
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_types)
 
@@ -542,19 +542,14 @@ def test_str_contains_essential_information(vehicle_types):
         routes = individual.get_routes()
 
         # There should be no more than len(routes) lines (each detailing a
-        # single route), and two final lines containing distance and prizes.
-        assert_equal(len(str_representation), len(routes) + 2)
+        # single route).
+        assert_equal(len(str_representation), len(routes))
 
-        # The first len(routes) lines should each contain a route, where each
-        # route should contain every client that is in the route as returned
-        # by get_routes().
+        # Each line should contain a route, where each route should contain
+        # every client that is in the route as returned by get_routes().
         for route, str_route in zip(routes, str_representation):
             for client in route:
                 assert_(str(client) in str_route)
-
-        # Last lines should contain the travel distance and collected prizes.
-        assert_(str(int(individual.distance())) in str_representation[-2])
-        assert_(str(int(individual.prizes())) in str_representation[-1])
 
 
 def test_hash():
