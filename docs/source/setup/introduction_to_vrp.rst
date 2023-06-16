@@ -3,12 +3,10 @@ A brief introduction to VRP
 
 The vehicle routing problem (VRP) is one of the most well-studied problem in the field of operations research, motivated by numerous industrial applications.
 The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost.
-Motivated by the enormous potential for cost savings, designing efficient algorithms that can compute low cost solutions have been the central interest among VRP researchers.
-
-(TODO: insert delivery nice image here?)
 
 While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_ problems.
-Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPTW, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
+Motivated by the enormous potential for cost savings, creating effective algorithms to calculate cost-efficient solutions has been a primary focus for VRP researchers.
+Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPs, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
 
 .. note::
 
