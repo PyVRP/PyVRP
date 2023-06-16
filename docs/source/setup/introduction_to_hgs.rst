@@ -10,8 +10,8 @@ This hybrid approach allows for effective exploration and exploitation of the se
     For a more thorough introduction to HGS for VRPs, we refer to the papers by `Vidal et al. (2013) <https://www.sciencedirect.com/science/article/pii/S0305054812001645>`_ and `Vidal (2022) <https://www.sciencedirect.com/science/article/pii/S030505482100349X>`_.
 
 The HGS algorithm works as follows.
-HGS maintains a population of solutions, which are initialized by a set of given initial solutions.
-In every iteration of the search loop, the algorithm selects two existing solutions from the population using a *k*-ary tournament, favoring solutions with higher fitness.
+HGS maintains a population of solutions, which are initialised by a set of given initial solutions.
+In every iteration of the search loop, the algorithm selects two existing solutions from the population using a *k*-ary tournament, favouring solutions with higher fitness.
 A crossover operator then takes these two parent solutions to generate an offspring solution that inherits features from both parents.
 After the crossover, the offspring solution is further improved using a local search procedure.
 If the candidate solution improves over the best solution found so far, then we register it as the new best solution.
