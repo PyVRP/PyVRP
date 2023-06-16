@@ -250,7 +250,7 @@ class Individual:
         int
             Number of (non-empty) routes.
         """
-    def num_routes_for_vehicle_type(self, vehicle_type: int) -> List[Route]:
+    def num_routes_for_vehicle_type(self, vehicle_type: int) -> int:
         """
         Number of (non-empty) routes in this solution for a given vehicle type.
 
