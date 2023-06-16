@@ -1,24 +1,25 @@
 An introduction to VRP
 ======================
 
-The Vehicle Routing Problem (VRP) is one of the most well-studied problem in the field of operations research, motivated by numerous industrial applications. The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost, while respecting all operational constraints.
-Motivated by the enormous potential for cost savings, designing efficient algorithms that can compute low cost solutions have been the central interest among VRP researchers in  recent decades.
+The vehicle routing problem (VRP) is one of the most well-studied problem in the field of operations research, motivated by numerous industrial applications.
+The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost, while respecting all operational constraints.
+Motivated by the enormous potential for cost savings, designing efficient algorithms that can compute low cost solutions have been the central interest among VRP researchers.
 
-(TODO: insert delivery nice image here)
+(TODO: insert delivery nice image here?)
 
-While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_.
-Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPTW, including but not limited to, local search, tabu search, genetic algorithms, and branch-and-cut algorithms.
+While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_ problems.
+Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPTW, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
 
 .. note::
 
-    PyVRP focuses on the implementation of heuristic and metaheuristic algorithms to solve large-scale vehicle routing problems. For an exact state-of-the-art solution method, we refer to `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
+    PyVRP primarily implements heuristic and metaheuristic algorithms for solving vehicle routing problems (VRPs). As these algorithms do not guarantee optimal solutions, we rigorously benchmark them to evaluate their effectiveness. For an exact state-of-the-art solver, we refer to `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
 
 
 VRP variants
 ---------------------------
 
-We present here the VRP variants that are supported by PyVRP. We focus mainly on the nomenclature that is common in the academic literature, and we also present a formal definition for each of these variants.
-An extensive list VRP variants can be found in the seminal work by `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
+Here, we introduce the VRP variants supported by PyVRP, along with providing a formal definition for each of these variations.
+An extensive list VRPs can be found in the seminal work by `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 .. note::
 
@@ -65,4 +66,6 @@ Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the prize-collecting vehicle routing problem (PCVRP), ....
+
+(TODO: also known as VRP with Profits)
 TODO
