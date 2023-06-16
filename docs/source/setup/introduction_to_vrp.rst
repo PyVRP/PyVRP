@@ -7,6 +7,16 @@ Motivated by the enormous potential for cost savings, designing efficient algori
 
 (TODO: insert delivery nice image here?)
 
+While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_ problems.
+Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPTW, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
+
+.. note::
+
+    PyVRP primarily implements heuristic and metaheuristic algorithms for solving vehicle routing problems (VRPs).
+    As these algorithms do not guarantee optimal solutions, we rigorously :doc:`benchmark <benchmarks>` them to evaluate their effectiveness.
+    For an exact state-of-the-art solver, we refer to `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
+
+
 VRP variants
 ------------
 
@@ -47,7 +57,7 @@ Each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time
 A vehicle is allowed to arrive at a customer location before the beginning of the time window, but it must wait for the window to open to start the service.
 The depot has a time window :math:`\left[0, H \right]`, where :math:`H` is the latest time at which all vehicles must have returned.
 
-A feasible solution to the VRPTW consists of a set of routes where all customers are visited within the specified time window and all vehicles returns to the depot in time.
+A feasible solution to the VRPTW consists of a set of routes in which all customers are visited within the specified time window and all vehicles returns to the depot in time.
 The objective is to find a feasible solution that minimises the overall travel cost.
 
 .. hint::
@@ -56,18 +66,9 @@ The objective is to find a feasible solution that minimises the overall travel c
 
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In the prize-collecting vehicle routing problem (PC-VRP), visiting all customers is not required.
+Instead, visiting a customer results in a prize :math:`p_i \ge 0`.
+Customers with zero prizes are assumed to be customers that are required to be visited, whereas customers with non-zero prizes are assumed to be optional.
 
-In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all customers.
-Instead, visiting a customer yields a prize :math:`p_i \ge 0`, and the goal is to maximise the sum of collected prizes minus the overall travel cost.
-
-The PC-VRP is also known as the VRP with profits.
-
-
-Solving VRPs
-------------
-While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_ problems.
-Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPTW, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
-
-.. note::
-
-    PyVRP primarily implements heuristic and metaheuristic algorithms for solving vehicle routing problems (VRPs). As these algorithms do not guarantee optimal solutions, we rigorously :doc:`benchmark <benchmarks>` them to evaluate their effectiveness. For an exact state-of-the-art solver, we refer to `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
+A feasible PC-VRP solution comprises a set of routes that visits all required customers, and may include visits to optional customers.
+The objective is to find a feasible solution that maximizes the net profit, calculated as the difference between the total prizes collected and the overall travel costs.
