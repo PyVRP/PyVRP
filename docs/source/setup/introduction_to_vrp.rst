@@ -1,11 +1,11 @@
 A brief introduction to VRP
 ===========================
 
-The vehicle routing problem (VRP) is one of the most well-studied problem in the field of operations research, motivated by numerous industrial applications.
+The vehicle routing problem (VRP) is one of the most well-studied problem in the field of operations research motivated by applications such as postal delivery, waste collection, and many more.
 The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost.
 
 While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_ problems.
-Motivated by the enormous potential for cost savings, creating effective algorithms to calculate cost-efficient solutions has been a primary focus for VRP researchers.
+Motivated by the enormous potential for cost savings, creating effective algorithms to compute cost-efficient solutions has been a primary focus for VRP researchers.
 Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPs, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
 
 .. note::
@@ -18,7 +18,7 @@ Various heuristics, metaheuristics, and exact methods have been developed to tac
 VRP variants
 ------------
 
-Here, we introduce the VRP variants supported by PyVRP.
+Here, we introduce the VRP variants that are supported by PyVRP.
 An extensive list VRP variants can be found in the seminal work by `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 .. note::
@@ -28,7 +28,7 @@ An extensive list VRP variants can be found in the seminal work by `Toth and Vig
 In the following, we consider a complete graph :math:`G=(V,A)`, where :math:`V` is the vertex set and :math:`A` is the arc set.
 The vertex set :math:`V` is partitioned into :math:`V=\{0\} \cup V_c`, where :math:`0` represents the depot and :math:`V_c=\{1, \dots, n\}` denotes the set of :math:`n` customers.
 Each arc :math:`(i, j) \in A` has a weight :math:`c_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
-The fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot.
+A fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot.
 
 
 Capacitated vehicle routing problem
@@ -65,8 +65,8 @@ The objective is to find a feasible solution that minimises the overall travel c
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In the prize-collecting vehicle routing problem (PC-VRP), visiting all customers is not required.
-Instead, visiting a customer results in a prize :math:`p_i \ge 0`.
-Customers with zero prizes are assumed to be customers that are required to be visited, whereas customers with non-zero prizes are assumed to be optional.
+Instead, the customers are partitioned into required customers, which much be visited, and optional customers.
+Optional customers have a prize :math:`p_i > 0` that is collected upon visiting the customer.
 
 A feasible PC-VRP solution comprises a set of routes that visits all required customers, and may include visits to optional customers.
 The objective is to find a feasible solution that maximizes the net profit, calculated as the difference between the total prizes collected and the overall travel costs.
