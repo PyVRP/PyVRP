@@ -19,7 +19,7 @@ VRP variants
 ------------
 
 Here, we introduce the VRP variants that are supported by PyVRP.
-An extensive list VRP variants can be found in the seminal work by `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
+An extensive list VRP variants can be found in `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 .. note::
 
@@ -64,8 +64,8 @@ The objective is to find a feasible solution that minimises the overall travel c
 
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In the prize-collecting vehicle routing problem (PC-VRP), visiting all customers is not required.
-Instead, the customers are partitioned into required customers, which much be visited, and optional customers.
+In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all cusomters.
+Instead, the customers are divided into required customers, which much be visited, and optional customers.
 Optional customers have a prize :math:`p_i > 0` that is collected upon visiting the customer.
 
 A feasible PC-VRP solution comprises a set of routes that visits all required customers, and may include visits to optional customers.
