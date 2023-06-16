@@ -1,25 +1,25 @@
 A brief introduction to VRP
 ===========================
 
-The vehicle routing problem (VRP) is one of the most well-studied problem in the field of operations research motivated by applications such as postal delivery, waste collection, and many more.
+The vehicle routing problem (VRP) is one of the most studied problems in the field of operations research motivated by applications such as postal delivery, waste collection, and many more.
 The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost.
 
-While finding a feasible solution for a given VRP is often relatively simple, discovering the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_ problems.
-Motivated by the enormous potential for cost savings, creating effective algorithms to compute cost-efficient solutions has been a primary focus for VRP researchers.
+Motivated by the enormous potential for cost savings, creating algorithms to compute cost-efficient solutions has been a primary focus for VRP researchers.
+While finding a feasible solution for a given VRP is often relatively simple, obtaining the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_.
 Various heuristics, metaheuristics, and exact methods have been developed to tackle the VRPs, including but not limited to, local search, genetic algorithms, and branch-and-cut algorithms.
 
 .. note::
 
     PyVRP primarily implements heuristic and metaheuristic algorithms for solving vehicle routing problems (VRPs).
     As these algorithms do not guarantee optimal solutions, we rigorously :doc:`benchmark <benchmarks>` them to evaluate their effectiveness.
-    For an exact state-of-the-art solver, we refer to `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
+    For an exact state-of-the-art solver, see, for example, `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
 
 
-VRP variants
-------------
+Supported VRP variants
+----------------------
 
-Here, we introduce the VRP variants that are supported by PyVRP.
-An extensive list VRP variants can be found in `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
+In this section, we introduce the VRP variants that are supported by PyVRP.
+An extensive list of VRP variants can be found in `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 .. note::
 
@@ -41,8 +41,6 @@ It is also assumed that the fleet of vehicles :math:`K` is homogeneous, meaning 
 A feasible solution to the CVRP consists of a set of routes that all begin and end at the depot, such that each customer is visited exactly once and none of the routes exceed the vehicle capacity.
 The objective is to find a feasible solution that minimises the total travelling cost.
 
-Note that most vehicle routing problem variants are extensions of the CVRP.
-
 .. hint::
     Check out :ref:`this example notebook </examples/cvrp.ipynb>` in which we solve a CVRP instance.
 
@@ -50,7 +48,7 @@ Vehicle routing problem with time windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The vehicle routing problem with time windows (VRPTW) is a variant of the VRP that introduces timing constraints.
-Each arc :math:`(i, j) \in A` has an additional parameter :math:`t_{ij}`, denoting the travel time from client :math:`i` to :math:`j`.
+Each arc :math:`(i, j) \in A` has an additional parameter :math:`t_{ij}`, denoting the travel time from customer :math:`i` to :math:`j`.
 Each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time :math:`s_{i} \ge 0` and a time window :math:`\left[e_i, l_i\right]` that denotes the earliest and latest time that service can start at the customer.
 A vehicle is allowed to arrive at a customer location before the beginning of the time window, but it must wait for the window to open to start the service.
 The depot has a time window :math:`\left[0, H \right]`, where :math:`H` is the latest time at which all vehicles must have returned.
@@ -64,9 +62,9 @@ The objective is to find a feasible solution that minimises the overall travel c
 
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all cusomters.
+In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all customers.
 Instead, the customers are divided into required customers, which much be visited, and optional customers.
 Optional customers have a prize :math:`p_i > 0` that is collected upon visiting the customer.
 
 A feasible PC-VRP solution comprises a set of routes that visits all required customers, and may include visits to optional customers.
-The objective is to find a feasible solution that maximizes the net profit, calculated as the difference between the total prizes collected and the overall travel costs.
+The objective is to find a feasible solution that maximises the net profit, calculated as the difference between the total prizes collected and the overall travel costs.
