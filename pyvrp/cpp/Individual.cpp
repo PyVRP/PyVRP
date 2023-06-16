@@ -101,11 +101,11 @@ void Individual::makeRoutesPerVehicleType()
     {
         if (it->vehicleType() != start->vehicleType())
         {
-            routesPerVehicleType_.emplace_back(start, it);
+            routesPerVehicleType_[start->vehicleType()].assign(start, it);
             start = it;
         }
     }
-    routesPerVehicleType_.emplace_back(start, routes_.end());
+    routesPerVehicleType_[start->vehicleType()].assign(start, routes_.end());
 }
 
 bool Individual::operator==(Individual const &other) const
@@ -126,7 +126,8 @@ bool Individual::operator==(Individual const &other) const
 }
 
 Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : neighbours(data.numClients() + 1, {0, 0}),
+    : routesPerVehicleType_(data.numVehicleTypes()),
+      neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
@@ -183,7 +184,8 @@ Individual::Individual(ProblemData const &data,
 
 Individual::Individual(ProblemData const &data,
                        std::vector<Route> const &routes)
-    : neighbours(data.numClients() + 1, {0, 0}),
+    : routesPerVehicleType_(data.numVehicleTypes()),
+      neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
     if (routes.size() > data.numVehicles())

@@ -54,6 +54,12 @@ def test_route_constructor_heterogeneous():
     assert_equal(routes[0].visits(), [1, 2])
     assert_equal(routes[0].vehicle_type(), 1)
 
+    # Test if we have an individual with only the first type
+    indiv = Individual(data, [[1, 2, 3, 4]])
+    # Check for vehicle type 1
+    routes = indiv.get_routes_for_vehicle_type(1)
+    assert_equal(len(routes), 0)
+
 
 def test_random_constructor_cycles_over_routes():
     # This instance has four clients and three vehicles. Since 1 client per
