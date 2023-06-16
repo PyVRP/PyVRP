@@ -1,15 +1,15 @@
 #include "RelocateStar.h"
 
-int RelocateStar::evaluate(Route *U,
-                           Route *V,
-                           CostEvaluator const &costEvaluator)
+Cost RelocateStar::evaluate(Route *U,
+                            Route *V,
+                            CostEvaluator const &costEvaluator)
 {
     move = {};
 
     for (auto *nodeU = n(U->depot); !nodeU->isDepot(); nodeU = n(nodeU))
     {
         // Test inserting U after V's depot
-        int deltaCost = relocate.evaluate(nodeU, V->depot, costEvaluator);
+        Cost deltaCost = relocate.evaluate(nodeU, V->depot, costEvaluator);
 
         if (deltaCost < move.deltaCost)
             move = {deltaCost, nodeU, V->depot};
@@ -33,7 +33,8 @@ int RelocateStar::evaluate(Route *U,
     return move.deltaCost;
 }
 
-void RelocateStar::apply(Route *U, Route *V) const
+void RelocateStar::apply([[maybe_unused]] Route *U,
+                         [[maybe_unused]] Route *V) const
 {
     move.from->insertAfter(move.to);
 }

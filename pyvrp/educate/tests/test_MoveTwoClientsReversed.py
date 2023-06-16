@@ -34,13 +34,14 @@ def test_single_route_OkSmall():
     assert_(improved_cost < current_cost)
 
     # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
-    # after 2 as 2 -> 3 -> 1 -> 4.
-    assert_equal(improved_individual.get_routes(), [[2, 3, 1, 4], [], []])
+    # after 4 as 2 -> 4 -> 3 -> 1.
+    expected = Individual(data, [[2, 4, 3, 1]])
+    assert_equal(improved_individual, expected)
 
     # These two-route solutions can all be created by MoveTwoClientsReversed
     # from the returned solution. So they must have a cost that's at best equal
     # to the returned solution's cost.
-    for routes in ([[3, 2], [1, 4]], [[2, 3], [4, 1]], [[2, 4], [1, 3]]):
+    for routes in ([[3, 1], [4, 2]], [[2, 1], [3, 4]], [[2, 4], [1, 3]]):
         other = Individual(data, routes)
         improved_cost = cost_evaluator.penalised_cost(improved_individual)
         other_cost = cost_evaluator.penalised_cost(other)

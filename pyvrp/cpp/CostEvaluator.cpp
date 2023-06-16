@@ -1,22 +1,26 @@
 #include "CostEvaluator.h"
+
 #include <limits>
 
-CostEvaluator::CostEvaluator(unsigned int capacityPenalty,
-                             unsigned int timeWarpPenalty)
+CostEvaluator::CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty)
     : capacityPenalty(capacityPenalty), timeWarpPenalty(timeWarpPenalty)
 {
 }
 
-unsigned int CostEvaluator::penalisedCost(Individual const &individual) const
+Cost CostEvaluator::penalisedCost(Individual const &individual) const
 {
-    auto const loadPen = loadPenaltyExcess(individual.excessLoad());
-    auto const twPen = twPenalty(individual.timeWarp());
-
-    return individual.distance() + loadPen + twPen;
+    // Standard objective plus penalty terms for capacity- and time-related
+    // infeasibilities.
+    return static_cast<Cost>(individual.distance())
+           + individual.uncollectedPrizes()
+           + loadPenaltyExcess(individual.excessLoad())
+           + twPenalty(individual.timeWarp());
 }
 
-unsigned int CostEvaluator::cost(Individual const &individual) const
+Cost CostEvaluator::cost(Individual const &individual) const
 {
-    return individual.isFeasible() ? individual.distance()
-                                   : std::numeric_limits<unsigned int>::max();
+    // Penalties are zero when individual is feasible, so we can fall back to
+    // penalised cost in that case.
+    return individual.isFeasible() ? penalisedCost(individual)
+                                   : std::numeric_limits<Cost>::max();
 }

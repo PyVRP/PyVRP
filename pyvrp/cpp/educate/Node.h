@@ -1,14 +1,13 @@
-#ifndef NODE_H
-#define NODE_H
+#ifndef PYVRP_NODE_H
+#define PYVRP_NODE_H
 
-#include "ProblemData.h"
+#include "Measure.h"
 #include "TimeWindowSegment.h"
 
 class Route;
 
-class Node
+struct Node
 {
-public:               // TODO make fields private
     int client;       // Client represented with this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
@@ -16,9 +15,9 @@ public:               // TODO make fields private
     Route *route;     // Pointer towards the associated route
 
     // TODO can these data fields be moved to Route?
-    int cumulatedLoad;              // Load from depot to client (inclusive)
-    int cumulatedDistance;          // Distance from depot to client (inclusive)
-    int cumulatedReversalDistance;  // Distance if (0 .. client) is reversed
+    Load cumulatedLoad;                  // Load depot -> client (incl)
+    Distance cumulatedDistance;          // Dist depot -> client (incl)
+    Distance cumulatedReversalDistance;  // Dist if (0..client) is reversed
 
     TimeWindowSegment tw;        // TWS for individual node (client)
     TimeWindowSegment twBefore;  // TWS for (0...client) including self
@@ -27,14 +26,19 @@ public:               // TODO make fields private
     [[nodiscard]] inline bool isDepot() const;
 
     /**
-     * Inserts this node after the other and updates the solution.
+     * Inserts this node after the other and updates the relevant links.
      */
     void insertAfter(Node *other);
 
     /**
-     * Swaps this node with the other and updates the solution.
+     * Swaps this node with the other and updates the relevant links.
      */
     void swapWith(Node *other);
+
+    /**
+     * Removes this node and updates the relevant links.
+     */
+    void remove();
 };
 
 bool Node::isDepot() const { return client == 0; }
@@ -49,4 +53,4 @@ inline Node *p(Node *node) { return node->prev; }
  */
 inline Node *n(Node *node) { return node->next; }
 
-#endif  // NODE_H
+#endif  // PYVRP_NODE_H

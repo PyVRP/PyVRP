@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef PYVRP_MATRIX_H
+#define PYVRP_MATRIX_H
 
 #include <algorithm>
 #include <sstream>
@@ -39,6 +39,10 @@ public:
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col);
 
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
+
+    [[nodiscard]] size_t numCols() const;
+
+    [[nodiscard]] size_t numRows() const;
 
     /**
      * @return Maximum element in the matrix.
@@ -95,6 +99,10 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
     return data_[cols_ * row + col];
 }
 
+template <typename T> size_t Matrix<T>::numCols() const { return cols_; }
+
+template <typename T> size_t Matrix<T>::numRows() const { return rows_; }
+
 template <typename T> T Matrix<T>::max() const
 {
     return *std::max_element(data_.begin(), data_.end());
@@ -102,4 +110,4 @@ template <typename T> T Matrix<T>::max() const
 
 template <typename T> size_t Matrix<T>::size() const { return data_.size(); }
 
-#endif
+#endif  // PYVRP_MATRIX_H

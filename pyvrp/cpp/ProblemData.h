@@ -1,7 +1,8 @@
-#ifndef HGS_PROBLEMDATA_H
-#define HGS_PROBLEMDATA_H
+#ifndef PYVRP_PROBLEMDATA_H
+#define PYVRP_PROBLEMDATA_H
 
 #include "Matrix.h"
+#include "Measure.h"
 #include "XorShift128.h"
 
 #include <iosfwd>
@@ -12,21 +13,34 @@ class ProblemData
 public:
     struct Client
     {
-        int x;                // Coordinate X
-        int y;                // Coordinate Y
-        int serviceDuration;  // Service duration
-        int demand;           // Demand
-        int twEarly;          // Earliest arrival (when using time windows)
-        int twLate;           // Latest arrival (when using time windows)
+        Coordinate const x;
+        Coordinate const y;
+        Load const demand;
+        Duration const serviceDuration;
+        Duration const twEarly;      // Earliest possible start of service
+        Duration const twLate;       // Latest possible start of service
+        Cost const prize = 0;        // Prize for visiting this client
+        bool const required = true;  // Must client be in solution?
+
+        Client(Coordinate x,
+               Coordinate y,
+               Load demand = 0,
+               Duration serviceDuration = 0,
+               Duration twEarly = 0,
+               Duration twLate = 0,
+               Cost prize = 0,
+               bool required = true);
     };
 
 private:
-    Matrix<int> const dist_;       // Distance matrix (+depot)
-    std::vector<Client> clients_;  // Client (+depot) information
+    std::pair<double, double> centroid_;  // Centroid of client locations
+    Matrix<Distance> const dist_;         // Distance matrix (+depot)
+    Matrix<Duration> const dur_;          // Duration matrix (+depot)
+    std::vector<Client> clients_;         // Client (+depot) information
 
     size_t const numClients_;
     size_t const numVehicles_;
-    size_t const vehicleCapacity_;
+    Load const vehicleCapacity_;
 
 public:
     /**
@@ -41,18 +55,37 @@ public:
     [[nodiscard]] Client const &depot() const;
 
     /**
+     * @return Centroid of client locations.
+     */
+    [[nodiscard]] std::pair<double, double> const &centroid() const;
+
+    /**
      * Returns the distance between the indicated two clients.
      *
-     * @param first First client.
+     * @param first  First client.
      * @param second Second client.
      * @return distance from the first to the second client.
      */
-    [[nodiscard]] inline int dist(size_t first, size_t second) const;
+    [[nodiscard]] inline Distance dist(size_t first, size_t second) const;
 
     /**
-     * @return The full distance matrix.
+     * Returns the travel duration between the indicated two clients.
+     *
+     * @param first  First client.
+     * @param second Second client.
+     * @return Travel duration from the first to the second client.
      */
-    [[nodiscard]] Matrix<int> const &distanceMatrix() const;
+    [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
+
+    /**
+     * @return The full travel distance matrix.
+     */
+    [[nodiscard]] Matrix<Distance> const &distanceMatrix() const;
+
+    /**
+     * @return The full travel duration matrix.
+     */
+    [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
 
     /**
      * @return Total number of clients in this instance.
@@ -67,28 +100,24 @@ public:
     /**
      * @return Capacity of each vehicle in this instance.
      */
-    [[nodiscard]] size_t vehicleCapacity() const;
+    [[nodiscard]] Load vehicleCapacity() const;
 
     /**
-     * Constructs a ProblemData object with the given data. Assumes the data
-     * contains the depot, such that each vector is one longer than the number
-     * of clients.
+     * Constructs a ProblemData object with the given data. Assumes the list of
+     * clients contains the depot, such that each vector is one longer than the
+     * number of clients.
      *
-     * @param coords       Coordinates as pairs of [x, y].
-     * @param demands      Client demands.
+     * @param clients      List of clients (including depot at index 0).
      * @param numVehicles  Number of vehicles.
      * @param vehicleCap   Vehicle capacity.
-     * @param timeWindows  Time windows as pairs of [early, late].
-     * @param servDurs     Service durations.
      * @param distMat      Distance matrix.
+     * @param durMat       Duration matrix.
      */
-    ProblemData(std::vector<std::pair<int, int>> const &coords,
-                std::vector<int> const &demands,
+    ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
-                size_t vehicleCap,
-                std::vector<std::pair<int, int>> const &timeWindows,
-                std::vector<int> const &servDurs,
-                std::vector<std::vector<int>> const &distMat);
+                Load vehicleCap,
+                Matrix<Distance> const distMat,
+                Matrix<Duration> const durMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const
@@ -96,9 +125,14 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-int ProblemData::dist(size_t first, size_t second) const
+Distance ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
 }
 
-#endif  // HGS_PROBLEMDATA_H
+Duration ProblemData::duration(size_t first, size_t second) const
+{
+    return dur_(first, second);
+}
+
+#endif  // PYVRP_PROBLEMDATA_H

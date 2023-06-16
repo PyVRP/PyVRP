@@ -1,31 +1,32 @@
 #include "LocalSearch.h"
+#include "Measure.h"
+#include "TimeWindowSegment.h"
 
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <vector>
+
+using TWS = TimeWindowSegment;
 
 Individual LocalSearch::search(Individual &individual,
                                CostEvaluator const &costEvaluator)
 {
     loadIndividual(individual);
 
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-
     if (nodeOps.empty())
         throw std::runtime_error("No known node operators.");
 
-    // Caches the last time nodes were tested for modification (uses nbMoves to
+    // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
     std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
-    nbMoves = 0;
+    numMoves = 0;
 
     for (int step = 0; !searchCompleted; ++step)
     {
@@ -35,14 +36,24 @@ Individual LocalSearch::search(Individual &individual,
         for (auto const uClient : orderNodes)
         {
             auto *U = &clients[uClient];
+
             auto const lastTestedNode = lastTestedNodes[uClient];
-            lastTestedNodes[uClient] = nbMoves;
+            lastTestedNodes[uClient] = numMoves;
+
+            if (U->route && !data.client(uClient).required)  // test removing U
+                maybeRemove(U, costEvaluator);
 
             // Shuffling the neighbours in this loop should not matter much as
             // we are already randomizing the nodes U.
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
+
+                if (!U->route && V->route)             // U might be inserted
+                    maybeInsert(U, V, costEvaluator);  // into V's route
+
+                if (!U->route || !V->route)  // we already tested inserting U,
+                    continue;                // so we can skip this move
 
                 if (lastModified[U->route->idx] > lastTestedNode
                     || lastModified[V->route->idx] > lastTestedNode)
@@ -55,18 +66,18 @@ Individual LocalSearch::search(Individual &individual,
                 }
             }
 
-            // Empty route moves are not tested in the first iteration to avoid
-            // increasing the fleet size too much.
-            if (step > 0)
-            {
+            if (step > 0)  // empty moves are not tested initially to avoid
+            {              // using too many routes.
                 auto pred = [](auto const &route) { return route.empty(); };
                 auto empty = std::find_if(routes.begin(), routes.end(), pred);
 
                 if (empty == routes.end())
                     continue;
 
-                if (applyNodeOps(U, empty->depot, costEvaluator))
-                    continue;
+                if (U->route)  // try inserting U into the empty route.
+                    applyNodeOps(U, empty->depot, costEvaluator);
+                else  // U is not in the solution, so again try inserting.
+                    maybeInsert(U, empty->depot, costEvaluator);
             }
         }
     }
@@ -82,10 +93,6 @@ Individual LocalSearch::intensify(Individual &individual,
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
-
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
 
@@ -93,7 +100,7 @@ Individual LocalSearch::intensify(Individual &individual,
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
-    nbMoves = 0;
+    numMoves = 0;
 
     while (!searchCompleted)
     {
@@ -107,7 +114,7 @@ Individual LocalSearch::intensify(Individual &individual,
                 continue;
 
             auto const lastTested = lastTestedRoutes[U.idx];
-            lastTestedRoutes[U.idx] = nbMoves;
+            lastTestedRoutes[U.idx] = numMoves;
 
             // Shuffling in this loop should not matter much as we are
             // already randomizing the routes U.
@@ -129,6 +136,15 @@ Individual LocalSearch::intensify(Individual &individual,
     }
 
     return exportIndividual();
+}
+
+void LocalSearch::shuffle(XorShift128 &rng)
+{
+    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
+    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+
+    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
+    std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Node *U,
@@ -172,24 +188,91 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
+void LocalSearch::maybeInsert(Node *U,
+                              Node *V,
+                              CostEvaluator const &costEvaluator)
+{
+    assert(!U->route && V->route);
+
+    Distance const deltaDist = data.dist(V->client, U->client)
+                               + data.dist(U->client, n(V)->client)
+                               - data.dist(V->client, n(V)->client);
+
+    auto const &uClient = data.client(U->client);
+    Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
+
+    deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
+                                           data.vehicleCapacity());
+    deltaCost
+        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
+
+    // If this is true, adding U cannot decrease time warp in V's route enough
+    // to offset the deltaCost.
+    if (deltaCost >= costEvaluator.twPenalty(V->route->timeWarp()))
+        return;
+
+    auto const vTWS
+        = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
+
+    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
+
+    if (deltaCost < 0)
+    {
+        U->insertAfter(V);           // U has no route, so there's nothing to
+        update(V->route, V->route);  // update there.
+    }
+}
+
+void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
+{
+    assert(U->route);
+
+    Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
+                               - data.dist(p(U)->client, U->client)
+                               - data.dist(U->client, n(U)->client);
+
+    auto const &uClient = data.client(U->client);
+    Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
+
+    deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
+                                           data.vehicleCapacity());
+    deltaCost
+        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
+
+    auto uTWS
+        = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
+
+    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+
+    if (deltaCost < 0)
+    {
+        auto *route = U->route;  // after U->remove(), U->route is a nullptr
+        U->remove();
+        update(route, route);
+    }
+}
+
 void LocalSearch::update(Route *U, Route *V)
 {
-    nbMoves++;
+    numMoves++;
     searchCompleted = false;
 
     U->update();
-    lastModified[U->idx] = nbMoves;
+    lastModified[U->idx] = numMoves;
 
     if (U != V)
     {
         V->update();
-        lastModified[V->idx] = nbMoves;
+        lastModified[V->idx] = numMoves;
     }
 }
 
 void LocalSearch::loadIndividual(Individual const &individual)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
+    {
         clients[client].tw = {static_cast<int>(client),  // TODO cast
                               static_cast<int>(client),  // TODO cast
                               data.client(client).serviceDuration,
@@ -197,9 +280,12 @@ void LocalSearch::loadIndividual(Individual const &individual)
                               data.client(client).twEarly,
                               data.client(client).twLate};
 
+        clients[client].route = nullptr;  // nullptr implies "not in solution"
+    }
+
     auto const &routesIndiv = individual.getRoutes();
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (size_t r = 0; r != data.numVehicles(); r++)
     {
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -212,15 +298,13 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         startDepot->tw = clients[0].tw;
         startDepot->twBefore = clients[0].tw;
-        startDepot->twAfter = clients[0].tw;
 
         endDepot->tw = clients[0].tw;
-        endDepot->twBefore = clients[0].tw;
         endDepot->twAfter = clients[0].tw;
 
         Route *route = &routes[r];
 
-        if (!routesIndiv[r].empty())
+        if (r < routesIndiv.size())
         {
             Node *client = &clients[routesIndiv[r][0]];
             client->route = route;
@@ -228,11 +312,11 @@ void LocalSearch::loadIndividual(Individual const &individual)
             client->prev = startDepot;
             startDepot->next = client;
 
-            for (int i = 1; i < static_cast<int>(routesIndiv[r].size()); i++)
+            for (size_t idx = 1; idx < routesIndiv[r].size(); idx++)
             {
                 Node *prev = client;
 
-                client = &clients[routesIndiv[r][i]];
+                client = &clients[routesIndiv[r][idx]];
                 client->route = route;
 
                 client->prev = prev;
@@ -300,13 +384,13 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     this->neighbours = neighbours;
 }
 
-LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
+LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
+{
+    return neighbours;
+}
 
-LocalSearch::LocalSearch(ProblemData &data,
-                         XorShift128 &rng,
-                         Neighbours neighbours)
+LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
