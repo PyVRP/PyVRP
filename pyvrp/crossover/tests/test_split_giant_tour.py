@@ -23,7 +23,7 @@ def test_split_giant_tour():
     assert_equal(routes, [[4], [3, 2, 1]])
 
 
-def test_split_giant_tour_ignore_feasibility_last_vehicle():
+def test_split_giant_tour_ignores_feasibility_last_vehicle():
     """
     Tests that all remaining clients are added to the last vehicle if the
     number of routes is equal to the number of vehicles, regardless of

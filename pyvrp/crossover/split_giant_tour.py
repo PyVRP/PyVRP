@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from pyvrp import ProblemData
+from pyvrp._ProblemData import ProblemData
 
 
 @dataclass
