@@ -10,8 +10,8 @@ Motivated by the enormous potential for cost savings, designing efficient algori
 VRP variants
 ------------
 
-Here, we introduce the VRP variants supported by PyVRP, along with providing a formal definition for each of these variations.
-An extensive list VRPs can be found in the seminal work by `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
+Here, we introduce the VRP variants supported by PyVRP.
+An extensive list VRP variants can be found in the seminal work by `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 .. note::
 
@@ -19,8 +19,8 @@ An extensive list VRPs can be found in the seminal work by `Toth and Vigo (2014)
 
 In the following, we consider a complete graph :math:`G=(V,A)`, where :math:`V` is the vertex set and :math:`A` is the arc set.
 The vertex set :math:`V` is partitioned into :math:`V=\{0\} \cup V_c`, where :math:`0` represents the depot and :math:`V_c=\{1, \dots, n\}` denotes the set of :math:`n` customers.
-Each arc :math:`(i, j) \in A` has a weight :math:`d_{ij} \ge 0` that represents the travel distance from :math:`i \in V` to :math:`j \in V`, which need not to be symmetric and/or euclidean.
-The fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot and operate at identical costs.
+Each arc :math:`(i, j) \in A` has a weight :math:`c_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
+The fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot.
 
 
 Capacitated vehicle routing problem
@@ -28,10 +28,10 @@ Capacitated vehicle routing problem
 
 The most studied variant of the vehicle routing problem is the *capacitated vehicle routing problem* (CVRP).
 In this variant, each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`.
-It is also assumed that the fleet of vehicles :math:`K` is assumed to be homogeneous, meaning that they all have the same maximum capacity :math:`Q > 0`.
+It is also assumed that the fleet of vehicles :math:`K` is homogeneous, meaning that they all have the same maximum capacity :math:`Q > 0`.
 
-A feasible solution to the CVRP consists of a set of routes that all begin and end at the depot, such that each customer is visited exactly once and none of the vehicles exceed their capacity.
-The objective is to find a feasible solution that minimizes the total distance.
+A feasible solution to the CVRP consists of a set of routes that all begin and end at the depot, such that each customer is visited exactly once and none of the routes exceed the vehicle capacity.
+The objective is to find a feasible solution that minimises the total travelling cost.
 
 Note that most vehicle routing problem variants are extensions of the CVRP.
 
@@ -42,13 +42,13 @@ Vehicle routing problem with time windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Vehicle Routing Problem with Time Windows (VRPTW) is a variant of the VRP that introduces timing constraints.
-Each arc :math:`(i, j) \in A` have an additional weight :math:`t_{ij}`, denoting the travel time from client :math:`i` to :math:`j`.
-Each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time :math:`s_{i} \ge 0` and a (hard) time window :math:`\left[e_i, l_i\right]` that denotes the earliest and latest time that service can start.
-A vehicle is allowed to arrive at a customer location before the beginning of the time window, but it must wait for the window to open to start the delivery.
-Each vehicle must return to the depot before the end of the depot time window :math:`H`.
+Each arc :math:`(i, j) \in A` has an additional parameter :math:`t_{ij}`, denoting the travel time from client :math:`i` to :math:`j`.
+Each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time :math:`s_{i} \ge 0` and a time window :math:`\left[e_i, l_i\right]` that denotes the earliest and latest time that service can start at the customer.
+A vehicle is allowed to arrive at a customer location before the beginning of the time window, but it must wait for the window to open to start the service.
+The depot has a time window :math:`\left[0, H \right]`, where :math:`H` is the latest time at which all vehicles must have returned.
 
-A feasible solution to the VRPTW consists of a set of routes where each vehicle arrives at each customer location within the specified time window and returns to the depot in time.
-The objective is to find a feasible solution that minimizes the overall travel cost, which is often defined as the total distance.
+A feasible solution to the VRPTW consists of a set of routes where all customers are visited within the specified time window and all vehicles returns to the depot in time.
+The objective is to find a feasible solution that minimises the overall travel cost.
 
 .. hint::
     Check out :ref:`this example notebook </examples/vrptw.ipynb>` in which we solve a VRPTW instance.
@@ -57,10 +57,10 @@ The objective is to find a feasible solution that minimizes the overall travel c
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the prize-collecting vehicle routing problem (PCVRP), ....
+In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all customers.
+Instead, visiting a customer yields a prize :math:`p_i \ge 0`, and the goal is to maximise the sum of collected prizes minus the overall travel cost.
 
-(TODO: also known as VRP with Profits)
-TODO
+The PC-VRP is also known as the VRP with profits.
 
 
 Solving VRPs
