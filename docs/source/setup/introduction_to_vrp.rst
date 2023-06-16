@@ -51,7 +51,7 @@ Note that most vehicle routing problem variants are extensions of the CVRP.
 Vehicle routing problem with time windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Vehicle Routing Problem with Time Windows (VRPTW) is a variant of the VRP that introduces timing constraints.
+The vehicle routing problem with time windows (VRPTW) is a variant of the VRP that introduces timing constraints.
 Each arc :math:`(i, j) \in A` has an additional parameter :math:`t_{ij}`, denoting the travel time from client :math:`i` to :math:`j`.
 Each customer :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time :math:`s_{i} \ge 0` and a time window :math:`\left[e_i, l_i\right]` that denotes the earliest and latest time that service can start at the customer.
 A vehicle is allowed to arrive at a customer location before the beginning of the time window, but it must wait for the window to open to start the service.
