@@ -1,5 +1,6 @@
 #include "crossover.h"
 
+#include <cassert>
 #include <cmath>
 #include <unordered_set>
 
@@ -11,43 +12,26 @@ using Routes = std::vector<Route>;
 
 namespace
 {
+// Angle of the given route w.r.t. the centroid of all client locations.
 double routeAngle(ProblemData const &data, Route const &route)
 {
-    // Computes the route angle center. Assumes that the route is non-empty.
-    int cumulatedX = 0;
-    int cumulatedY = 0;
-
-    for (int node : route)
-    {
-        cumulatedX += data.client(node).x;
-        cumulatedY += data.client(node).y;
-    }
-
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
     // https://stackoverflow.com/a/16561333/4316405.
-    auto const routeSize = static_cast<double>(route.size());
-    auto const dy = cumulatedY / routeSize - data.depot().y;
-    auto const dx = cumulatedX / routeSize - data.depot().x;
+    auto const [dataX, dataY] = data.centroid();
+    auto const [routeX, routeY] = route.centroid();
+    auto const dx = routeX - dataX;
+    auto const dy = routeY - dataY;
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
-Routes getNonEmptyRoutesByAscendingAngle(ProblemData const &data, Routes routes)
+Routes sortByAscAngle(ProblemData const &data, Routes routes)
 {
     auto cmp = [&data](Route a, Route b) {
-        return (a.empty() || b.empty())
-                   ? !a.empty() && b.empty()
-                   : routeAngle(data, a) < routeAngle(data, b);
+        return routeAngle(data, a) < routeAngle(data, b);
     };
 
     std::sort(routes.begin(), routes.end(), cmp);
-
-    size_t empty = 0;
-    for (; empty != routes.size(); ++empty)
-        if (routes[empty].empty())
-            break;
-
-    routes.resize(empty);
     return routes;
 }
 }  // namespace
@@ -78,14 +62,8 @@ Individual selectiveRouteExchange(
     auto startA = startIndices.first;
     auto startB = startIndices.second;
 
-    // Sort routes according to center angle for both parents
-    auto const routesA
-        = getNonEmptyRoutesByAscendingAngle(data, parents.first->getRoutes());
-    auto const routesB
-        = getNonEmptyRoutesByAscendingAngle(data, parents.second->getRoutes());
-
-    size_t nRoutesA = routesA.size();
-    size_t nRoutesB = routesB.size();
+    size_t nRoutesA = parents.first->numRoutes();
+    size_t nRoutesB = parents.second->numRoutes();
 
     if (startA >= nRoutesA)
         throw std::invalid_argument("Expected startA < nRoutesA.");
@@ -94,8 +72,14 @@ Individual selectiveRouteExchange(
         throw std::invalid_argument("Expected startB < nRoutesB.");
 
     if (numMovedRoutes < 1 || numMovedRoutes > std::min(nRoutesA, nRoutesB))
-        throw std::invalid_argument(
-            "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]");
+    {
+        auto msg = "Expected numMovedRoutes in [1, min(nRoutesA, nRoutesB)]";
+        throw std::invalid_argument(msg);
+    }
+
+    // Sort parents' routes by (ascending) polar angle.
+    auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
+    auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
     ClientSet selectedA;
     ClientSet selectedB;
@@ -105,11 +89,11 @@ Individual selectiveRouteExchange(
     // close to each other.
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
-        selectedA.insert(routesA[(startA + r) % nRoutesA].begin(),
-                         routesA[(startA + r) % nRoutesA].end());
+        auto const &routeA = routesA[(startA + r) % nRoutesA];
+        selectedA.insert(routeA.begin(), routeA.end());
 
-        selectedB.insert(routesB[(startB + r) % nRoutesB].begin(),
-                         routesB[(startB + r) % nRoutesB].end());
+        auto const &routeB = routesB[(startB + r) % nRoutesB];
+        selectedB.insert(routeB.begin(), routeB.end());
     }
 
     // For the selection, we want to minimize |A\B| as these need replanning
@@ -241,8 +225,8 @@ Individual selectiveRouteExchange(
         if (!selectedB.contains(c))
             unplanned.push_back(c);
 
-    crossover::greedyRepair(routes1, unplanned, data);
-    crossover::greedyRepair(routes2, unplanned, data);
+    crossover::greedyRepair(routes1, unplanned, data, costEvaluator);
+    crossover::greedyRepair(routes2, unplanned, data, costEvaluator);
 
     Individual indiv1{data, routes1};
     Individual indiv2{data, routes2};

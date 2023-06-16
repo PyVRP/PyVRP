@@ -1,6 +1,7 @@
-from numpy.testing import assert_equal, assert_raises
+from numpy.testing import assert_equal, assert_raises, assert_warns
 from pytest import mark
 
+from pyvrp.exceptions import ScalingWarning
 from pyvrp.tests.helpers import read
 
 
@@ -65,18 +66,12 @@ def test_reading_OkSmall_instance():
         [1475, 1594, 1090, 828, 0],
     ]
 
-    # For instances read through VRPLIB/read(), distance is duration. So these
-    # matrices should be the same as the expected edge weights above.
-    dist_mat = data.distance_matrix()
-    dur_mat = data.duration_matrix()
-
+    # For instances read through VRPLIB/read(), distance is duration. So the
+    # dist/durs should be the same as the expected edge weights above.
     for frm in range(data.num_clients + 1):  # incl. depot
         for to in range(data.num_clients + 1):  # incl. depot
             assert_equal(data.dist(frm, to), expected[frm][to])
-            assert_equal(dist_mat[frm, to], expected[frm][to])
-
             assert_equal(data.duration(frm, to), expected[frm][to])
-            assert_equal(dur_mat[frm, to], expected[frm][to])
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
@@ -170,6 +165,15 @@ def test_reading_RC208_instance():  # Solomon style instance
 
     for client in range(1, data.num_clients + 1):  # excl. depot
         assert_equal(data.client(client).service_duration, 100)
+
+
+def test_warns_about_scaling_issues(recwarn):
+    # But 100 million is too large. That's really close to INT_MAX, and might
+    # result in issues. So now a warning should be issued.
+    with assert_warns(ScalingWarning):
+        # The arc from the depot to client 4 is really large (one billion), so
+        # that should trigger a warning.
+        read("data/ReallyLargeDistance.txt")
 
 
 # TODO test round funcs

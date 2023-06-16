@@ -1,4 +1,5 @@
 #include "LocalSearch.h"
+#include "Measure.h"
 #include "TimeWindowSegment.h"
 
 #include <algorithm>
@@ -14,10 +15,6 @@ Individual LocalSearch::search(Individual &individual,
                                CostEvaluator const &costEvaluator)
 {
     loadIndividual(individual);
-
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
 
     if (nodeOps.empty())
         throw std::runtime_error("No known node operators.");
@@ -96,10 +93,6 @@ Individual LocalSearch::intensify(Individual &individual,
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
-
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
 
@@ -143,6 +136,15 @@ Individual LocalSearch::intensify(Individual &individual,
     }
 
     return exportIndividual();
+}
+
+void LocalSearch::shuffle(XorShift128 &rng)
+{
+    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
+    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+
+    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
+    std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Node *U,
@@ -192,23 +194,24 @@ void LocalSearch::maybeInsert(Node *U,
 {
     assert(!U->route && V->route);
 
+    Distance const deltaDist = data.dist(V->client, U->client)
+                               + data.dist(U->client, n(V)->client)
+                               - data.dist(V->client, n(V)->client);
+
     auto const &uClient = data.client(U->client);
-
-    int const current = data.dist(V->client, n(V)->client);
-    int const proposed = data.dist(V->client, U->client)
-                         + data.dist(U->client, n(V)->client) - uClient.prize;
-
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
                                            data.vehicleCapacity());
     deltaCost
         -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
 
-    if (deltaCost >= V->route->timeWarp())  // adding U will likely not lower
-        return;                             // time warp, so we can stop here.
+    // If this is true, adding U cannot decrease time warp in V's route enough
+    // to offset the deltaCost.
+    if (deltaCost >= costEvaluator.twPenalty(V->route->timeWarp()))
+        return;
 
-    auto vTWS
+    auto const vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
@@ -225,14 +228,12 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
+    Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
+                               - data.dist(p(U)->client, U->client)
+                               - data.dist(U->client, n(U)->client);
+
     auto const &uClient = data.client(U->client);
-
-    int const current = data.dist(p(U)->client, U->client)
-                        + data.dist(U->client, n(U)->client) - uClient.prize;
-
-    int const proposed = data.dist(p(U)->client, n(U)->client);
-
-    int deltaCost = proposed - current;
+    Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
                                            data.vehicleCapacity());
@@ -303,7 +304,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         Route *route = &routes[r];
 
-        if (!routesIndiv[r].empty())
+        if (r < routesIndiv.size())
         {
             Node *client = &clients[routesIndiv[r][0]];
             client->route = route;
@@ -383,13 +384,13 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     this->neighbours = neighbours;
 }
 
-LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
+LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
+{
+    return neighbours;
+}
 
-LocalSearch::LocalSearch(ProblemData &data,
-                         XorShift128 &rng,
-                         Neighbours neighbours)
+LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),

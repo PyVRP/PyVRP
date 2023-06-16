@@ -4,8 +4,6 @@ class StatisticsNotCollectedError(Exception):
     that can only be used when statistics are available.
     """
 
-    pass
-
 
 class EmptySolutionWarning(UserWarning):
     """
@@ -13,4 +11,9 @@ class EmptySolutionWarning(UserWarning):
     forbidden, per se, but very odd.
     """
 
-    pass
+
+class ScalingWarning(UserWarning):
+    """
+    Raised when the distance or duration values in the problem are very large,
+    which could cause the algorithm to start using forbidden edges as well.
+    """

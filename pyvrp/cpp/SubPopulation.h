@@ -1,5 +1,5 @@
-#ifndef SUBPOPULATION_H
-#define SUBPOPULATION_H
+#ifndef PYVRP_SUBPOPULATION_H
+#define PYVRP_SUBPOPULATION_H
 
 #include "CostEvaluator.h"
 #include "Individual.h"
@@ -77,8 +77,7 @@ private:
     std::vector<Item> items;
 
     // Removes the element at the given iterator location from the items.
-    void remove(std::vector<Item>::iterator const &iterator,
-                CostEvaluator const &costEvaluator);
+    void remove(std::vector<Item>::iterator const &iterator);
 
 public:
     SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
@@ -103,4 +102,4 @@ public:
     void updateFitness(CostEvaluator const &costEvaluator);
 };
 
-#endif  // SUBPOPULATION_H
+#endif  // PYVRP_SUBPOPULATION_H

@@ -51,6 +51,10 @@ class Route:
         """
         Total prize value collected on this route.
         """
+    def centroid(self) -> Tuple[float, float]:
+        """
+        Center point of the client locations on this route.
+        """
 
 class Individual:
     """
@@ -113,11 +117,9 @@ class Individual:
 
         .. note::
 
-           This list is of length
-           :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`, but there
-           could be a number of empty routes. These empty routes are all in the
-           higher indices (guarantee). Use :meth:`~num_routes` to determine
-           which of the lower indices contain non-empty routes.
+           The length of this list is equal to the number of non-empty routes,
+           which is at most equal to
+           :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
 
         Returns
         -------
@@ -204,12 +206,12 @@ class Individual:
         """
     def num_routes(self) -> int:
         """
-        Number of non-empty routes in this solution.
+        Number of (non-empty) routes in this solution.
 
         Returns
         -------
         int
-            Number of non-empty routes.
+            Number of (non-empty) routes.
         """
     def num_clients(self) -> int:
         """

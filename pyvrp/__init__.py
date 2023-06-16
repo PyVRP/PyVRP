@@ -1,4 +1,5 @@
 from .GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from .Model import Model
 from .PenaltyManager import PenaltyManager, PenaltyParams
 from .Population import Population, PopulationParams
 from .Result import Result

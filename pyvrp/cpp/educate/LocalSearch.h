@@ -1,5 +1,5 @@
-#ifndef LOCALSEARCH_H
-#define LOCALSEARCH_H
+#ifndef PYVRP_LOCALSEARCH_H
+#define PYVRP_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
 #include "Individual.h"
@@ -19,15 +19,14 @@ class LocalSearch
     using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<int>>;
 
-    ProblemData &data;
-    XorShift128 &rng;
+    ProblemData const &data;
 
-    // Neighborhood restrictions: For each client, list of nearby clients (size
-    // nbClients + 1, but nothing stored for the depot!)
+    // Neighborhood restrictions: list of nearby clients for each client (size
+    // numClients + 1, but nothing stored for the depot!)
     Neighbours neighbours;
 
-    std::vector<int> orderNodes;   // random node order used in RI operators
-    std::vector<int> orderRoutes;  // random route order used in SWAP* operators
+    std::vector<int> orderNodes;   // node order used by LocalSearch::search
+    std::vector<int> orderRoutes;  // route order used by LocalSearch::intensify
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
@@ -85,7 +84,7 @@ public:
     /**
      * @return The neighbourhood structure currently in use.
      */
-    Neighbours getNeighbours();
+    Neighbours const &getNeighbours() const;
 
     /**
      * Performs regular (node-based) local search around the given individual,
@@ -95,15 +94,20 @@ public:
                       CostEvaluator const &costEvaluator);
 
     /**
-     * Performs a more intensive local search around the given individual,
-     * using route-based operators and subpath enumeration. Returns a new,
-     * hopefully improved individual.
+     * Performs a more intensive route-based local search around the given
+     * individual, and returns a new, hopefully improved individual.
      */
     Individual intensify(Individual &individual,
                          CostEvaluator const &costEvaluator,
                          int overlapToleranceDegrees = 0);
 
-    LocalSearch(ProblemData &data, XorShift128 &rng, Neighbours neighbours);
+    /**
+     * Shuffles the order in which the node and route pairs are evaluated, and
+     * the order in which node and route operators are applied.
+     */
+    void shuffle(XorShift128 &rng);
+
+    LocalSearch(ProblemData const &data, Neighbours neighbours);
 };
 
-#endif
+#endif  // PYVRP_LOCALSEARCH_H

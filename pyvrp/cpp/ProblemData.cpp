@@ -6,13 +6,13 @@
 #include <string>
 #include <vector>
 
-ProblemData::Client::Client(int x,
-                            int y,
-                            int demand,
-                            int serviceDuration,
-                            int twEarly,
-                            int twLate,
-                            int prize,
+ProblemData::Client::Client(Coordinate x,
+                            Coordinate y,
+                            Load demand,
+                            Duration serviceDuration,
+                            Duration twEarly,
+                            Duration twLate,
+                            Cost prize,
                             bool required)
     : x(x),
       y(y),
@@ -38,26 +38,37 @@ ProblemData::Client::Client(int x,
 
 ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
-Matrix<int> const &ProblemData::distanceMatrix() const { return dist_; }
+std::pair<double, double> const &ProblemData::centroid() const
+{
+    return centroid_;
+}
 
-Matrix<int> const &ProblemData::durationMatrix() const { return dur_; }
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-size_t ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+Load ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          size_t numVehicles,
-                         size_t vehicleCap,
-                         std::vector<std::vector<int>> const &distMat,
-                         std::vector<std::vector<int>> const &durMat)
-    : dist_(distMat),
-      dur_(durMat),
+                         Load vehicleCap,
+                         Matrix<Distance> const distMat,
+                         Matrix<Duration> const durMat)
+    : centroid_({0, 0}),
+      dist_(std::move(distMat)),
+      dur_(std::move(durMat)),
       clients_(clients),
-      numClients_(std::max(clients.size(), static_cast<size_t>(1)) - 1),
+      numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicles_(numVehicles),
       vehicleCapacity_(vehicleCap)
 {
+    for (size_t idx = 1; idx <= numClients(); ++idx)
+    {
+        centroid_.first += static_cast<double>(clients[idx].x) / numClients();
+        centroid_.second += static_cast<double>(clients[idx].y) / numClients();
+    }
 }
