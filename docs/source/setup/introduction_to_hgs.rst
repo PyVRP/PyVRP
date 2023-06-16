@@ -10,13 +10,13 @@ This hybrid approach allows for effective exploration and exploitation of the se
     For a more thorough introduction to HGS for VRPs, we refer to the papers by `Vidal et al. (2013) <https://www.sciencedirect.com/science/article/pii/S0305054812001645>`_ and `Vidal (2022) <https://www.sciencedirect.com/science/article/pii/S030505482100349X>`_.
 
 The HGS algorithm works as follows.
-HGS maintain a population of solutions, which are initialized by a set of initial solutions.
-In every iteration of the search loop, the algorithm selects two existing solutions from the population, using a so-called *k*-ary tournament to ensure that solutions with high fitness (a combined metric of quality and diversity) get selected more frequently.
-A crossover operator then takes these two parent solutions and uses those to generate an offspring solution that inherits features from both parents.
-After crossover completes, the offspring solution is improved using local search.
-If the new solution improves over the best solution so far, then we register it as the new best solution.
-The solution is then added to the population.
-When the population has reached the maximum size, a survivor selection mechanism is performed that purges the least fit solutions from the population until it is at minimum size.
+HGS maintains a population of solutions, which are initialized by a set of given initial solutions.
+In every iteration of the search loop, the algorithm selects two existing solutions from the population using a *k*-ary tournament, favoring solutions with higher fitness.
+A crossover operator then takes these two parent solutions to generate an offspring solution that inherits features from both parents.
+After the crossover, the offspring solution is further improved using a local search procedure.
+If the candidate solution improves over the best solution found so far, then we register it as the new best solution.
+The candidate solution is then added to the population.
+Upon reaching the maximum population size, a survivor selection mechanism purges the least fit solutions until the population is back at the minimum size.
 The algorithm continues until a provided stopping criterion is met, at which point it returns the best solution found. In pseudocode, HGS works as follows:
 
 .. line-block::
