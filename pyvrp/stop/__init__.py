@@ -1,3 +1,4 @@
+from .FirstImprovement import FirstImprovement
 from .MaxIterations import MaxIterations
 from .MaxRuntime import MaxRuntime
 from .NoImprovement import NoImprovement
