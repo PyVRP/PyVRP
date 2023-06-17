@@ -245,7 +245,7 @@ Individual::Individual(ProblemData const &data,
     {
         // We sort routes by vehicle types. Combined with a stable sort, this
         // ensures we keep the original sorting as much as possible.
-        auto comp = [&data](auto &a, auto &b) {
+        auto comp = [](auto &a, auto &b) {
             // If same type, empty vehicles first
             return a.vehicleType() < b.vehicleType();
         };
