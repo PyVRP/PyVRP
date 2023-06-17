@@ -13,7 +13,7 @@ The HGS algorithm works as follows.
 HGS maintains a population of solutions, which is initialised by a set of initial solutions given as input to the algorithm.
 In every iteration of the search loop, the algorithm selects two existing parent solutions from the population using a *k*-ary tournament, favouring solutions with higher fitness.
 A crossover operator then uses these two parent solutions to generate an offspring solution that inherits features from both parents.
-After the crossover, the offspring solution is further improved using a local search procedure.
+After the crossover, the offspring solution is further improved using a search procedure.
 If the candidate solution improves over the best solution found so far, then we register it as the new best solution.
 The candidate solution is then added to the population.
 Upon reaching the maximum population size, a survivor selection mechanism removes the least fit solutions until the population is back at the minimum size.
