@@ -310,7 +310,7 @@ template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V) const
     }
 
     // ...and swap the overlapping nodes!
-    for (size_t count = 0; count != std::min(N, M); ++count)
+    for (size_t count = 0; count != M; ++count)
     {
         U->swapWith(V);
         U = n(U);
