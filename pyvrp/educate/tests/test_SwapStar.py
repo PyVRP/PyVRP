@@ -32,9 +32,9 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     ls.add_route_operator(SwapStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
-        solidual = Solution.make_random(data, rng)
+        sol = Solution.make_random(data, rng)
 
-        swap_sol = ls.search(solidual, cost_evaluator)
+        swap_sol = ls.search(sol, cost_evaluator)
         swap_star_sol = ls.intensify(
             swap_sol, cost_evaluator, overlap_tolerance_degrees=360
         )
@@ -42,7 +42,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
         # The regular swap operator should have been able to improve the random
         # solution. After swap gets stuck, SWAP* should still be able to
         # further improve the solution.
-        current_cost = cost_evaluator.penalised_cost(solidual)
+        current_cost = cost_evaluator.penalised_cost(sol)
         swap_cost = cost_evaluator.penalised_cost(swap_sol)
         swap_star_cost = cost_evaluator.penalised_cost(swap_star_sol)
         assert_(swap_cost < current_cost)
