@@ -56,6 +56,8 @@ PYBIND11_MODULE(_Individual, m)
              [](Individual::Route const &route) {
                  return route.latestStart().get();
              })
+        .def("slack",
+             [](Individual::Route const &route) { return route.slack().get(); })
         .def(
             "prizes",
             [](Individual::Route const &route) { return route.prizes().get(); })

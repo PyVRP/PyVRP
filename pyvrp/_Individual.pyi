@@ -60,6 +60,10 @@ class Route:
         """
         Latest start time of the route that will result in minimal duration.
         """
+    def slack(self) -> int:
+        """
+        How much the route earliest start time can be delayed.
+        """
     def prizes(self) -> int:
         """
         Total prize value collected on this route.

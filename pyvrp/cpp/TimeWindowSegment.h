@@ -34,14 +34,14 @@ public:
 
     TimeWindowSegment() = default;  // TODO at least require client index
 
-    inline TimeWindowSegment(size_t idxFirst_,
-                             size_t idxLast_,
+    inline TimeWindowSegment(size_t idxFirst,
+                             size_t idxLast,
                              Duration duration,
                              Duration timeWarp,
                              Duration twEarly,
                              Duration twLate);
 
-    inline TimeWindowSegment(size_t idx, ProblemData::Client client);
+    inline TimeWindowSegment(size_t idx, ProblemData::Client const &client);
 };
 
 TimeWindowSegment TimeWindowSegment::merge(
@@ -93,14 +93,14 @@ Duration TimeWindowSegment::twEarly() const { return twEarly_; }
 
 Duration TimeWindowSegment::twLate() const { return twLate_; }
 
-TimeWindowSegment::TimeWindowSegment(size_t idxFirst_,
-                                     size_t idxLast_,
+TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
+                                     size_t idxLast,
                                      Duration duration,
                                      Duration timeWarp,
                                      Duration twEarly,
                                      Duration twLate)
-    : idxFirst_(idxFirst_),
-      idxLast_(idxLast_),
+    : idxFirst_(idxFirst),
+      idxLast_(idxLast),
       duration_(duration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
@@ -108,7 +108,8 @@ TimeWindowSegment::TimeWindowSegment(size_t idxFirst_,
 {
 }
 
-TimeWindowSegment::TimeWindowSegment(size_t idx, ProblemData::Client client)
+TimeWindowSegment::TimeWindowSegment(size_t idx,
+                                     ProblemData::Client const &client)
     : idxFirst_(idx),
       idxLast_(idx),
       duration_(client.serviceDuration),

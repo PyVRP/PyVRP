@@ -162,8 +162,8 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
     if (visits_.empty())
         return;
 
-    auto const depot = data.depot();
-    auto const durMat = data.durationMatrix();
+    auto const &depot = data.depot();
+    auto const &durMat = data.durationMatrix();
     auto const depotTws = TimeWindowSegment(0, depot);
     tws_ = depotTws;
     int prevClient = 0;
@@ -243,6 +243,11 @@ Duration Individual::Route::totalDuration() const { return tws_.duration(); }
 Duration Individual::Route::earliestStart() const { return tws_.twEarly(); }
 
 Duration Individual::Route::latestStart() const { return tws_.twLate(); }
+
+Duration Individual::Route::slack() const
+{
+    return tws_.twLate() - tws_.twEarly();
+}
 
 Cost Individual::Route::prizes() const { return prizes_; }
 

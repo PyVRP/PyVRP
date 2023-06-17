@@ -56,6 +56,7 @@ public:
         [[nodiscard]] Duration totalDuration() const;
         [[nodiscard]] Duration earliestStart() const;
         [[nodiscard]] Duration latestStart() const;
+        [[nodiscard]] Duration slack() const;
         [[nodiscard]] Cost prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;
