@@ -10,9 +10,9 @@ Various heuristics, metaheuristics, and exact methods have been developed to tac
 
 .. note::
 
-    PyVRP primarily implements heuristic and metaheuristic algorithms for solving vehicle routing problems (VRPs).
-    As these algorithms do not guarantee optimal solutions, we rigorously :doc:`benchmark <benchmarks>` them to evaluate their effectiveness.
-    For a state-of-the-art exact solver, see, for example, `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
+   PyVRP primarily implements heuristic and metaheuristic algorithms for solving vehicle routing problems (VRPs).
+   As these algorithms do not guarantee optimal solutions, we rigorously :doc:`benchmark <benchmarks>` them to evaluate their effectiveness.
+   For a state-of-the-art exact solver, see, for example, `VRPSolverEasy <https://github.com/inria-UFF/VRPSolverEasy>`_.
 
 
 Supported VRP variants

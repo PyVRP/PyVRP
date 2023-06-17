@@ -7,7 +7,7 @@ This hybrid approach allows for effective exploration and exploitation of the se
 
 .. note::
 
-    For a more thorough introduction to HGS for VRPs, we refer to the papers by `Vidal et al. (2013) <https://www.sciencedirect.com/science/article/pii/S0305054812001645>`_ and `Vidal (2022) <https://www.sciencedirect.com/science/article/pii/S030505482100349X>`_.
+   For a more thorough introduction to HGS for VRPs, we refer to the papers by `Vidal et al. (2013) <https://www.sciencedirect.com/science/article/pii/S0305054812001645>`_ and `Vidal (2022) <https://www.sciencedirect.com/science/article/pii/S030505482100349X>`_.
 
 The HGS algorithm works as follows.
 HGS maintains a population of solutions, which is initialised by a set of initial solutions given as input to the algorithm.
@@ -21,25 +21,25 @@ The algorithm continues until a provided stopping criterion is met, at which poi
 
 In pseudocode, HGS works as follows:
 
-.. line-block::
+    .. line-block::
 
-    **Input:** initial solutions :math:`s_1, \dots, s_{n}`
-    **Output:** the best found solution :math:`s^*`
-    :math:`s^* \gets s`
-    **repeat** until stopping criteria is met:
-        Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
-        Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
-        Improve the offspring using a search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
-        Add the candidate solution to the population.
-        **if** :math:`s^c` has a better objective value than :math:`s^*`:
-            :math:`s^* \gets s^c`
-        **if** population size exceeds maximum size:
-            Remove the solutions with lowest fitness until population size is at minimum size
-    **return** :math:`s^*`
+       **Input:** initial solutions :math:`s_1, \dots, s_{n}`
+       **Output:** the best found solution :math:`s^*`
+       :math:`s^* \gets s`
+       **repeat** until stopping criteria is met:
+           Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
+           Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
+           Improve the offspring using a search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
+           Add the candidate solution to the population.
+           **if** :math:`s^c` has a better objective value than :math:`s^*`:
+               :math:`s^* \gets s^c`
+           **if** population size exceeds maximum size:
+               Remove the solutions with lowest fitness until population size is at minimum size
+       **return** :math:`s^*`
 
 The ``pyvrp`` package provides the HGS algorithm, crossover operators, stopping criteria, and various search procedures and operators.
 You only need provide the initial solutions, for which we suggest to take random initial solutions to ensure diversity in the search.
 
 .. hint::
-    See the examples :doc:`capacitated VRP <../examples/cvrp>` 
- and :doc:`VRP with time windows <../examples/vrptw>` on how to setup HGS to solve these VRPs.
+
+   See the examples :doc:`capacitated VRP <../examples/cvrp>` and :doc:`VRP with time windows <../examples/vrptw>` on how to setup HGS to solve these VRPs.
