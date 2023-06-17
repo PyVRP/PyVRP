@@ -18,7 +18,7 @@ It can be installed through *pip* via
 
 .. hint::
 
-    If you are new to metaheuristics or vehicle routing, you might benefit from first reading the :doc:`introduction to HGS for VRP <setup/introduction_to_hgs>`.
+    If you are new to vehicle routing or metaheuristics, you might benefit from first reading the :doc:`introduction to VRP <setup/introduction_to_vrp>` and the :doc:`introduction to HGS <setup/introduction_to_hgs>`.
     To set up an installation from source, or to run the examples listed below yourself, please have a look at the :doc:`installation instructions <setup/installation>`.
 
 Contents
@@ -28,6 +28,7 @@ Contents
    :maxdepth: 1
    :caption: Getting started
 
+   setup/introduction_to_vrp
    setup/introduction_to_hgs
    setup/installation
    setup/getting_help
