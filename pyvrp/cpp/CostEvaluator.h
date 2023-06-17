@@ -1,8 +1,8 @@
 #ifndef PYVRP_COSTEVALUATOR_H
 #define PYVRP_COSTEVALUATOR_H
 
-#include "Individual.h"
 #include "Measure.h"
+#include "Solution.h"
 
 /**
  * Cost evaluator class that computes penalty values for timewarp and load.
