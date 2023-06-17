@@ -17,7 +17,9 @@ After the crossover, the offspring solution is further improved using a search p
 If the candidate solution improves over the best solution found so far, then we register it as the new best solution.
 The candidate solution is then added to the population.
 Upon reaching the maximum population size, a survivor selection mechanism removes the least fit solutions until the population is back at the minimum size.
-The algorithm continues until a provided stopping criterion is met, at which point it returns the best solution found. In pseudocode, HGS works as follows:
+The algorithm continues until a provided stopping criterion is met, at which point it returns the best solution found. 
+
+In pseudocode, HGS works as follows:
 
 .. line-block::
 
