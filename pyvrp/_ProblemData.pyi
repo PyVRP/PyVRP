@@ -57,7 +57,7 @@ class VehicleType:
     Attributes
     ----------
     capacity
-        Capacity of this route (maximum total demand that can be served).
+        Capacity (maximum total demand) of this vehicle type.
     num_available
         Number of vehicles of this type that are available.
     """
