@@ -2,7 +2,7 @@ A brief introduction to VRP
 ===========================
 
 The vehicle routing problem (VRP) is one of the most studied problems in the field of operations research motivated by applications such as postal delivery, waste collection, and many more.
-The overarching goal of the VRP is to determine a set of vehicle routes to fulfill all (or some) transportation requests at the lowest possible cost.
+The overarching goal of the VRP is to determine a set of vehicle routes to fulfil all (or some) transportation requests at the lowest possible cost.
 
 .. figure:: ../assets/images/introduction-to-vrp.svg
    :alt: A vehicle routing problem
@@ -37,7 +37,7 @@ The most studied variant of the vehicle routing problem is the *capacitated vehi
 In this variant, each client :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`.
 It is also assumed that the fleet of vehicles :math:`K` is homogeneous, meaning that they all have the same maximum capacity :math:`Q > 0`.
 
-A feasible solution to the CVRP consists of a set of routes that all begin and end at the depot, such that each client is visited exactly once and none of the routes exceed the vehicle capacity.
+A feasible solution to the CVRP consists of a set of routes that all begin and end at the depot, such that each client is visited exactly once and none of the routes exceeds the vehicle capacity.
 The objective is to find a feasible solution that minimises the total travelling cost.
 
 .. hint::
@@ -65,5 +65,5 @@ Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all clients.
-Some customer visits may be required, but most are considered optional, and customers have a prize :math:`p_i \ge 0` that is collected when customer :math:`i` is visited.
+Some customer visits may be required, but most are considered optional, and customers have a prize :math:`p_i \ge 0` that is collected when client :math:`i` is visited.
 The goal is to balance the competing goals of minimising travel costs while maximising the collected prizes.
