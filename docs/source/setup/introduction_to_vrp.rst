@@ -42,7 +42,8 @@ A feasible solution to the CVRP consists of a set of routes that all begin and e
 The objective is to find a feasible solution that minimises the total travelling cost.
 
 .. hint::
-    Check out :ref:`this example notebook </examples/cvrp.ipynb>` in which we solve a CVRP instance.
+
+   Check out :ref:`this example notebook </examples/cvrp.ipynb>` in which we solve a CVRP instance.
 
 Vehicle routing problem with time windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
