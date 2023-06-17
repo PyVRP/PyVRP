@@ -87,7 +87,7 @@ mypy = "^0.991"
 
 
 [tool.poetry.scripts]
-pyvrp = "pyvrp.cli:main"
+pyvrp = "pyvrp.benchmark.cli:main"
 
 
 [tool.black]

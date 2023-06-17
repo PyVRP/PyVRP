@@ -3,8 +3,8 @@ import time
 from functools import lru_cache
 
 from pyvrp import Solution
-from pyvrp.read import read as _read
-from pyvrp.read import read_solution as _read_solution
+from pyvrp import read as _read
+from pyvrp import read_solution as _read_solution
 
 
 @lru_cache
