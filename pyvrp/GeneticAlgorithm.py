@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable, Collection, Tuple
 
-from pyvrp.educate.LocalSearch import LocalSearch
+from pyvrp.search.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
 from .PenaltyManager import PenaltyManager

@@ -253,7 +253,7 @@ class Model:
         """
         # These cause a circular import, so the imports needed to be postponed
         # to here (where they are actually used).
-        from pyvrp.educate import (
+        from pyvrp.search import (
             NODE_OPERATORS,
             ROUTE_OPERATORS,
             LocalSearch,

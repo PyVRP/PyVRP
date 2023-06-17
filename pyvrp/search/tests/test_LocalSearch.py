@@ -2,7 +2,7 @@ from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import CostEvaluator, Solution, XorShift128
-from pyvrp.educate import (
+from pyvrp.search import (
     Exchange10,
     Exchange11,
     LocalSearch,
@@ -10,7 +10,7 @@ from pyvrp.educate import (
     Neighbours,
     compute_neighbours,
 )
-from pyvrp.educate._LocalSearch import LocalSearch as cpp_LocalSearch
+from pyvrp.search._LocalSearch import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import read
 
 
