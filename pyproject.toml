@@ -113,7 +113,7 @@ testpaths = "pyvrp"
 omit = [
     "build_extensions.py",  # build entrypoint
     "pyvrp/show_versions.py",  # only prints debug information
-    "pyvrp/cli.py",  # tested in other ways than unit tests
+    "pyvrp/benchmark/cli.py",  # tested in other ways than unit tests
     "*/tests/*",
     "venv/*",
     "docs/*",
