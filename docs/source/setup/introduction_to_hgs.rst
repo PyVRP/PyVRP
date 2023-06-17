@@ -27,7 +27,7 @@ The algorithm continues until a provided stopping criterion is met, at which poi
     **repeat** until stopping criteria is met:
         Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
         Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
-        Improve the offspring using a local search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
+        Improve the offspring using a search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
         **if** :math:`s^c` has a better objective value than :math:`s^*`:
             :math:`s^* \gets s^c`
         Add the candidate solution to the population.
