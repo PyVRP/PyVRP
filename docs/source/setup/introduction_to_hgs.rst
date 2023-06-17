@@ -25,7 +25,7 @@ In pseudocode, HGS works as follows:
 
        **Input:** initial solutions :math:`s_1, \dots, s_{n}`
        **Output:** the best found solution :math:`s^*`
-       :math:`s^* \gets s`
+       Set :math:`s^*` to the initial solution with the best objective value
        **repeat** until stopping criteria is met:
            Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
            Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
