@@ -29,11 +29,11 @@ PYBIND11_MODULE(_LocalSearch, m)
              py::return_value_policy::reference_internal)
         .def("search",
              &LocalSearch::search,
-             py::arg("individual"),
+             py::arg("solution"),
              py::arg("cost_evaluator"))
         .def("intensify",
              &LocalSearch::intensify,
-             py::arg("individual"),
+             py::arg("solution"),
              py::arg("cost_evaluator"),
              py::arg("overlap_tolerance_degrees") = 0)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
