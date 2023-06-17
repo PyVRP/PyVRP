@@ -45,7 +45,7 @@ Routes const &Individual::getRoutes() const { return routes_; }
 Routes const &Individual::getRoutesForVehicleType(size_t vehicleType) const
 {
     return routesPerVehicleType_[vehicleType];
-};
+}
 
 std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
 {
