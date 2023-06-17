@@ -169,7 +169,7 @@ def test_initial_solutions_added_when_restarting():
     current = {sol for sol in pop}
     assert_equal(len(current & init), 25)
 
-    # The population contains one more solution because of the educate step.
+    # The population contains one more solution because of the search step.
     assert_equal(len(pop), 26)
 
 
