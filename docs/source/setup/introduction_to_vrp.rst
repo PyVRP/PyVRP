@@ -63,6 +63,7 @@ The objective is to find a feasible solution that minimises the total travel cos
 
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 In the prize-collecting vehicle routing problem (PC-VRP), it is not mandatory to visit all customers.
 Instead, the customers are divided into required customers, which must be visited, and optional customers.
 Optional customers have a prize :math:`p_i > 0` that is collected upon visiting the customer.
