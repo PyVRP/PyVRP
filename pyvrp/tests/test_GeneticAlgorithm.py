@@ -4,10 +4,10 @@ from pytest import mark
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
-    Individual,
     PenaltyManager,
     Population,
     PopulationParams,
+    Solution,
     XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
@@ -108,10 +108,9 @@ def test_raises_when_no_initial_solutions():
         # No initial solutions should raise.
         GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [])
 
-    individual = Individual.make_random(data, rng)
-
     # One initial solution, so this should be OK.
-    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [individual])
+    sol = Solution.make_random(data, rng)
+    GeneticAlgorithm(data, pen_manager, rng, pop, ls, srex, [sol])
 
 
 def test_initial_solutions_added_when_running():
@@ -131,7 +130,7 @@ def test_initial_solutions_added_when_running():
 
     # Since we ran the algorithm for zero iterations, the population should
     # contain only the initial solutions.
-    current = {individual for individual in pop}
+    current = {sol for sol in pop}
     assert_equal(len(current & init), 25)
     assert_equal(len(pop), 25)
 
@@ -151,7 +150,7 @@ def test_initial_solutions_added_when_restarting():
 
     # We use the best known solution as one of the initial solutions so that
     # there are no improving iterations.
-    init = {Individual(data, read_solution("data/RC208.sol"))}
+    init = {Solution(data, read_solution("data/RC208.sol"))}
     init.update(make_random_solutions(24, data, rng))
 
     params = GeneticAlgorithmParams(
@@ -167,10 +166,10 @@ def test_initial_solutions_added_when_restarting():
     # There are precisely enough non-improving iterations to trigger the
     # restarting mechanism. GA should have cleared and re-initialised the
     # population with the initial solutions.
-    current = {individual for individual in pop}
+    current = {sol for sol in pop}
     assert_equal(len(current & init), 25)
 
-    # The population contains one more individual because of the educate step.
+    # The population contains one more solution because of the educate step.
     assert_equal(len(pop), 26)
 
 
@@ -212,7 +211,7 @@ def test_best_initial_solution():
     pm = PenaltyManager()
     pop = Population(bpd)
 
-    bks = Individual(data, read_solution("data/RC208.sol"))
+    bks = Solution(data, read_solution("data/RC208.sol"))
     init = [bks] + make_random_solutions(24, data, rng)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))

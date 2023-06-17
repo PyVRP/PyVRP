@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
+from pyvrp import CostEvaluator, Solution, XorShift128
 from pyvrp.educate import (
     Exchange11,
     LocalSearch,
@@ -32,19 +32,19 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     ls.add_route_operator(SwapStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
-        individual = Individual.make_random(data, rng)
+        solidual = Solution.make_random(data, rng)
 
-        swap_individual = ls.search(individual, cost_evaluator)
-        swap_star_individual = ls.intensify(
-            swap_individual, cost_evaluator, overlap_tolerance_degrees=360
+        swap_sol = ls.search(solidual, cost_evaluator)
+        swap_star_sol = ls.intensify(
+            swap_sol, cost_evaluator, overlap_tolerance_degrees=360
         )
 
         # The regular swap operator should have been able to improve the random
-        # individual. After swap gets stuck, SWAP* should still be able to
-        # further improve the individual.
-        current_cost = cost_evaluator.penalised_cost(individual)
-        swap_cost = cost_evaluator.penalised_cost(swap_individual)
-        swap_star_cost = cost_evaluator.penalised_cost(swap_star_individual)
+        # solution. After swap gets stuck, SWAP* should still be able to
+        # further improve the solution.
+        current_cost = cost_evaluator.penalised_cost(solidual)
+        swap_cost = cost_evaluator.penalised_cost(swap_sol)
+        swap_star_cost = cost_evaluator.penalised_cost(swap_star_sol)
         assert_(swap_cost < current_cost)
         assert_(swap_star_cost < swap_cost)
 
@@ -62,14 +62,14 @@ def test_swap_star_on_RC208_instance(seed: int):
     # splitting the single-route solution.
     route = list(range(1, data.num_clients + 1))
     split = rng.randint(data.num_clients)
-    individual = Individual(data, [route[:split], route[split:]])
-    improved_individual = ls.intensify(
-        individual, cost_evaluator, overlap_tolerance_degrees=360
+    sol = Solution(data, [route[:split], route[split:]])
+    improved_sol = ls.intensify(
+        sol, cost_evaluator, overlap_tolerance_degrees=360
     )
 
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
-    assert_equal(improved_individual.num_routes(), 2)
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_equal(improved_sol.num_routes(), 2)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)

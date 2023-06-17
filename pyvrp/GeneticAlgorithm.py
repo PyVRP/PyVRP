@@ -10,13 +10,13 @@ from .Population import Population
 from .Result import Result
 from .Statistics import Statistics
 from ._CostEvaluator import CostEvaluator
-from ._Individual import Individual
 from ._ProblemData import ProblemData
+from ._Solution import Solution
 from ._XorShift128 import XorShift128
 
-_Parents = Tuple[Individual, Individual]
+_Parents = Tuple[Solution, Solution]
 CrossoverOperator = Callable[
-    [_Parents, ProblemData, CostEvaluator, XorShift128], Individual
+    [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
 ]
 
 
@@ -76,7 +76,7 @@ class GeneticAlgorithm:
         population: Population,
         local_search: LocalSearch,
         crossover_op: CrossoverOperator,
-        initial_solutions: Collection[Individual],
+        initial_solutions: Collection[Solution],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
         if len(initial_solutions) == 0:
@@ -119,8 +119,8 @@ class GeneticAlgorithm:
         iters = 0
         iters_no_improvement = 1
 
-        for individual in self._initial_solutions:
-            self._pop.add(individual, self._cost_evaluator)
+        for sol in self._initial_solutions:
+            self._pop.add(sol, self._cost_evaluator)
 
         while not stop(self._cost_evaluator.cost(self._best)):
             iters += 1
@@ -129,8 +129,8 @@ class GeneticAlgorithm:
                 iters_no_improvement = 1
                 self._pop.clear()
 
-                for individual in self._initial_solutions:
-                    self._pop.add(individual, self._cost_evaluator)
+                for sol in self._initial_solutions:
+                    self._pop.add(sol, self._cost_evaluator)
 
             curr_best = self._cost_evaluator.cost(self._best)
 
@@ -153,67 +153,64 @@ class GeneticAlgorithm:
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
 
-    def _educate(self, individual: Individual):
-        def is_new_best(indiv):
-            cost = self._cost_evaluator.cost(indiv)
+    def _educate(self, sol: Solution):
+        def is_new_best(sol):
+            cost = self._cost_evaluator.cost(sol)
             best_cost = self._cost_evaluator.cost(self._best)
             return cost < best_cost
 
-        def add_and_register(indiv):
-            self._pop.add(indiv, self._cost_evaluator)
-            self._pm.register_load_feasible(not indiv.has_excess_load())
-            self._pm.register_time_feasible(not indiv.has_time_warp())
+        def add_and_register(sol):
+            self._pop.add(sol, self._cost_evaluator)
+            self._pm.register_load_feasible(not sol.has_excess_load())
+            self._pm.register_time_feasible(not sol.has_time_warp())
 
         intensify_prob = self._params.intensify_probability
         should_intensify = self._rng.rand() < intensify_prob
 
-        individual = self._ls.run(
-            individual, self._cost_evaluator, should_intensify
-        )
+        sol = self._ls.run(sol, self._cost_evaluator, should_intensify)
 
-        if is_new_best(individual):
-            self._best = individual
+        if is_new_best(sol):
+            self._best = sol
 
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
-                individual = self._ls.intensify(
-                    individual,
+                sol = self._ls.intensify(
+                    sol,
                     self._cost_evaluator,
                     overlap_tolerance_degrees=360,
                 )
 
-                if is_new_best(individual):
-                    self._best = individual
+                if is_new_best(sol):
+                    self._best = sol
 
-        add_and_register(individual)
+        add_and_register(sol)
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
         if (
-            not individual.is_feasible()
+            not sol.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-
             should_intensify = self._rng.rand() < intensify_prob
-            individual = self._ls.run(
-                individual,
+            sol = self._ls.run(
+                sol,
                 self._pm.get_booster_cost_evaluator(),
                 should_intensify,
             )
 
-            if is_new_best(individual):
-                self._best = individual
+            if is_new_best(sol):
+                self._best = sol
 
                 if self._params.intensify_on_best:
-                    individual = self._ls.intensify(
-                        individual,
+                    sol = self._ls.intensify(
+                        sol,
                         self._pm.get_booster_cost_evaluator(),
                         overlap_tolerance_degrees=360,
                     )
 
-                    if is_new_best(individual):
-                        self._best = individual
+                    if is_new_best(sol):
+                        self._best = sol
 
-            if individual.is_feasible():
-                add_and_register(individual)
+            if sol.is_feasible():
+                add_and_register(sol)

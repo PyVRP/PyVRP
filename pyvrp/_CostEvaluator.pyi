@@ -1,6 +1,6 @@
 from typing import overload
 
-from pyvrp._Individual import Individual
+from pyvrp._Solution import Solution
 
 class CostEvaluator:
     """
@@ -22,13 +22,13 @@ class CostEvaluator:
     ) -> None: ...
     def load_penalty(self, load: int, vehicle_capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
-    def penalised_cost(self, individual: Individual) -> int: ...
-    def cost(self, individual: Individual) -> int:
+    def penalised_cost(self, solution: Solution) -> int: ...
+    def cost(self, solution: Solution) -> int:
         """
-        Evaluates and returns the cost/objective of the given individual.
+        Evaluates and returns the cost/objective of the given solution.
         Hand-waving some details, let :math:`x_{ij} \\in \\{ 0, 1 \\}` indicate
         if edge :math:`(i, j)` is used in the solution encoded by the given
-        individual, and :math:`y_i \\in \\{ 0, 1 \\}` indicate if client
+        solution, and :math:`y_i \\in \\{ 0, 1 \\}` indicate if client
         :math:`i` is visited. The objective is then given by
 
         .. math::

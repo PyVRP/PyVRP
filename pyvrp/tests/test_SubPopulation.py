@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
+from pyvrp import CostEvaluator, Solution, XorShift128
 from pyvrp._SubPopulation import PopulationParams, SubPopulation
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
@@ -22,21 +22,21 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     assert_equal(len(subpop), 0)
 
     for _ in range(nb_close):
-        subpop.add(Individual.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(data, rng), cost_evaluator)
 
-    # The first nb_close individuals all have each other in their "closest"
-    # list. The averages only differ because each individual is themselves not
+    # The first nb_close solutions all have each other in their "closest"
+    # list. The averages only differ because each solution is themselves not
     # in their own list. So we would expect these values to all be pretty
     # similar.
     distances = np.array([item.avg_distance_closest() for item in subpop])
     assert_allclose(distances, distances.mean(), rtol=1 / len(subpop))
     assert_equal(len(subpop), nb_close)
 
-    # Let's add a significantly larger set of individuals.
+    # Let's add a significantly larger set of solutions.
     for _ in range(250 - nb_close):
-        subpop.add(Individual.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(data, rng), cost_evaluator)
 
-    # Now the "closest" lists should differ quite a bit between individuals,
+    # Now the "closest" lists should differ quite a bit between solutions,
     # and the average distances should thus not all be the same any more.
     distances = np.array([item.avg_distance_closest() for item in subpop])
     assert_equal(len(subpop), params.max_pop_size)
@@ -57,20 +57,20 @@ def test_avg_distance_closest_for_single_route_solutions():
         # This is a single-route solution, but the route is continually shifted
         # (or rotated) around the depot.
         shifted_route = single_route[-offset:] + single_route[:-offset]
-        shifted = Individual(data, [shifted_route])
+        shifted = Solution(data, [shifted_route])
 
         for item in subpop:
-            # Every individual already in the subpopulation has exactly two
-            # broken links with this new shifted individual, both around the
+            # Every solution already in the subpopulation has exactly two
+            # broken links with this new shifted solution, both around the
             # depot. So the average broken pairs distance is 2 / num_clients
             # for all of them.
-            assert_equal(bpd(item.individual, shifted), 2 / data.num_clients)
+            assert_equal(bpd(item.solution, shifted), 2 / data.num_clients)
 
         subpop.add(shifted, cost_evaluator)
         assert_equal(len(subpop), offset + 1)
 
-        # Since the broken pairs distance is the same for all individuals, the
-        # average distance amongst the closest individuals should also be the
+        # Since the broken pairs distance is the same for all solutions, the
+        # average distance amongst the closest solutions should also be the
         # same for all of them.
         distances = np.array([item.avg_distance_closest() for item in subpop])
         assert_allclose(distances, distances.mean())
@@ -84,14 +84,15 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Individual.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(data, rng), cost_evaluator)
+
     # We need to call update_fitness before accessing the fitness
     subpop.update_fitness(cost_evaluator)
 
-    # When all individuals are elite the diversity weight term drops out, and
+    # When all solutions are elite the diversity weight term drops out, and
     # fitness rankings are purely based on the cost ranking.
     cost = np.array(
-        [cost_evaluator.penalised_cost(item.individual) for item in subpop]
+        [cost_evaluator.penalised_cost(item.solution) for item in subpop]
     )
     by_cost = np.argsort(cost, kind="stable")
 
@@ -115,14 +116,15 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Individual.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(data, rng), cost_evaluator)
+
     # We need to call update_fitness before accessing the fitness
     subpop.update_fitness(cost_evaluator)
 
-    # When no individuals are elite, the fitness ranking is based on the mean
+    # When no solutions are elite, the fitness ranking is based on the mean
     # of the cost and diversity ranks.
     cost = np.array(
-        [cost_evaluator.penalised_cost(item.individual) for item in subpop]
+        [cost_evaluator.penalised_cost(item.solution) for item in subpop]
     )
     cost_rank = np.argsort(cost, kind="stable")
 

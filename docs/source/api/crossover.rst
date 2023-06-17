@@ -5,7 +5,7 @@
 Crossover operators
 ===================
 
-The :mod:`pyvrp.crossover` module provides operators that are responsible for generating a new offspring :class:`~pyvrp._Individual.Individual` solution from two parent solutions.
+The :mod:`pyvrp.crossover` module provides operators that are responsible for generating a new offspring :class:`~pyvrp._Solution.Solution` solution from two parent solutions.
 
 .. automodule:: pyvrp.crossover.selective_route_exchange
 

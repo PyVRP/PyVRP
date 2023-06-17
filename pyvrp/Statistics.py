@@ -53,7 +53,7 @@ class Statistics:
         population
             Population instance to collect statistics from.
         cost_evaluator
-            CostEvaluator used to compute costs for individuals.
+            CostEvaluator used to compute costs for solutions.
         """
         start = self._clock
         self._clock = perf_counter()
@@ -86,9 +86,9 @@ class Statistics:
 
         size = len(subpop)
         costs = [
-            cost_evaluator.penalised_cost(item.individual) for item in subpop
+            cost_evaluator.penalised_cost(item.solution) for item in subpop
         ]
-        num_routes = [item.individual.num_routes() for item in subpop]
+        num_routes = [item.solution.num_routes() for item in subpop]
         diversities = [item.avg_distance_closest() for item in subpop]
 
         return _Datum(

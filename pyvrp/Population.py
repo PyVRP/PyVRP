@@ -4,7 +4,7 @@ from typing import Callable, Generator, Tuple
 from warnings import warn
 
 from ._CostEvaluator import CostEvaluator
-from ._Individual import Individual
+from ._Solution import Solution
 from ._SubPopulation import PopulationParams, SubPopulation
 from ._XorShift128 import XorShift128
 from .exceptions import EmptySolutionWarning
@@ -25,7 +25,7 @@ class Population:
 
     def __init__(
         self,
-        diversity_op: Callable[[Individual, Individual], float],
+        diversity_op: Callable[[Solution, Solution], float],
         params: PopulationParams = PopulationParams(),
     ):
         self._op = diversity_op
@@ -34,20 +34,20 @@ class Population:
         self._feas = SubPopulation(diversity_op, params)
         self._infeas = SubPopulation(diversity_op, params)
 
-    def __iter__(self) -> Generator[Individual, None, None]:
+    def __iter__(self) -> Generator[Solution, None, None]:
         """
-        Iterates over the individuals contained in this population.
+        Iterates over the solutions contained in this population.
 
         Yields
         ------
         iterable
-            An iterable object of individuals.
+            An iterable object of solutions.
         """
         for item in self._feas:
-            yield item.individual
+            yield item.solution
 
         for item in self._infeas:
-            yield item.individual
+            yield item.solution
 
     def __len__(self) -> int:
         """
@@ -74,39 +74,39 @@ class Population:
 
     def num_feasible(self) -> int:
         """
-        Returns the number of feasible individuals in the population.
+        Returns the number of feasible solutions in the population.
 
         Returns
         -------
         int
-            Number of feasible individuals.
+            Number of feasible solutions.
         """
         return len(self._feas)
 
     def num_infeasible(self) -> int:
         """
-        Returns the number of infeasible individuals in the population.
+        Returns the number of infeasible solutions in the population.
 
         Returns
         -------
         int
-            Number of infeasible individuals.
+            Number of infeasible solutions.
         """
         return len(self._infeas)
 
-    def add(self, individual: Individual, cost_evaluator: CostEvaluator):
+    def add(self, solution: Solution, cost_evaluator: CostEvaluator):
         """
-        Adds the given individual to the population. Survivor selection is
+        Adds the given solution to the population. Survivor selection is
         automatically triggered when the population reaches its maximum size.
 
         Parameters
         ----------
-        individual
-            Individual to add to the population.
+        solution
+            Solution to add to the population.
         cost_evaluator
             CostEvaluator to use to compute the cost.
         """
-        if individual.num_clients() == 0:
+        if solution.num_clients() == 0:
             msg = """
             An empty solution is being added to the population. This typically
             indicates that there is a significant difference between the values
@@ -116,19 +116,19 @@ class Population:
             """
             warn(msg, EmptySolutionWarning)
 
-        # Note: the CostEvaluator is required here since adding an individual
+        # Note: the CostEvaluator is required here since adding an solution
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
-        if individual.is_feasible():
+        if solution.is_feasible():
             # Note: the feasible subpopulation actually doet not depend
             # on the penalty values but we use the same implementation.
-            self._feas.add(individual, cost_evaluator)
+            self._feas.add(solution, cost_evaluator)
         else:
-            self._infeas.add(individual, cost_evaluator)
+            self._infeas.add(solution, cost_evaluator)
 
     def clear(self):
         """
-        Clears the population by removing all individuals currently in the
+        Clears the population by removing all solutions currently in the
         population.
         """
         self._feas = SubPopulation(self._op, self._params)
@@ -139,7 +139,7 @@ class Population:
         rng: XorShift128,
         cost_evaluator: CostEvaluator,
         k: int = 2,
-    ) -> Tuple[Individual, Individual]:
+    ) -> Tuple[Solution, Solution]:
         """
         Selects two (if possible non-identical) parents by tournament, subject
         to a diversity restriction.
@@ -151,13 +151,13 @@ class Population:
         cost_evaluator
             Cost evaluator to use when computing the fitness.
         k
-            The number of individuals to draw for the tournament. Defaults to
+            The number of solutions to draw for the tournament. Defaults to
             two, which results in a binary tournament.
 
         Returns
         -------
         tuple
-            A pair of individuals (parents).
+            A solution pair (parents).
         """
         self._update_fitness(cost_evaluator)
 
@@ -178,10 +178,10 @@ class Population:
 
     def get_tournament(
         self, rng: XorShift128, cost_evaluator: CostEvaluator, k: int = 2
-    ) -> Individual:
+    ) -> Solution:
         """
-        Selects an individual from this population by k-ary tournament, based
-        on the (internal) fitness values of the selected individuals.
+        Selects a solution from this population by k-ary tournament, based
+        on the (internal) fitness values of the selected solutions.
 
         Parameters
         ----------
@@ -190,18 +190,18 @@ class Population:
         cost_evaluator
             Cost evaluator to use when computing the fitness.
         k
-            The number of individuals to draw for the tournament. Defaults to
+            The number of solutions to draw for the tournament. Defaults to
             two, which results in a binary tournament.
 
         Returns
         -------
-        Individual
-            The selected individual.
+        Solution
+            The selected solution.
         """
         self._update_fitness(cost_evaluator)
         return self._get_tournament(rng, k)
 
-    def _get_tournament(self, rng: XorShift128, k: int) -> Individual:
+    def _get_tournament(self, rng: XorShift128, k: int) -> Solution:
         if k <= 0:
             raise ValueError(f"Expected k > 0; got k = {k}.")
 
@@ -216,4 +216,4 @@ class Population:
 
         items = [select() for _ in range(k)]
         fittest = min(items, key=lambda item: item.fitness)
-        return fittest.individual
+        return fittest.solution

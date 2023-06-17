@@ -1,7 +1,7 @@
 from typing import Callable, Iterator
 
 from pyvrp._CostEvaluator import CostEvaluator
-from pyvrp._Individual import Individual
+from pyvrp._Solution import Solution
 
 class PopulationParams:
     generation_size: int
@@ -25,18 +25,18 @@ class PopulationParams:
 class SubPopulation:
     def __init__(
         self,
-        diversity_op: Callable[[Individual, Individual], float],
+        diversity_op: Callable[[Solution, Solution], float],
         params: PopulationParams,
     ) -> None:
         """
         Creates a SubPopulation instance.
 
-        This subpopulation manages a number individuals, and initiates survivor
+        This subpopulation manages a number solutions, and initiates survivor
         selection (purging) when their number grows large. A subpopulation's
-        individuals (and metadata) can be accessed via indexing and iteration.
-        Each individual is stored as a tuple of type ``_Item``, which stores
-        the individual itself, a fitness score (higher is worse), and a list
-        of proximity values to the other individuals in the subpopulation.
+        solutions (and metadata) can be accessed via indexing and iteration.
+        Each solution is stored as a tuple of type ``_Item``, which stores
+        the solution itself, a fitness score (higher is worse), and a list
+        of proximity values to the other solutions in the subpopulation.
 
         Parameters
         ----------
@@ -45,23 +45,21 @@ class SubPopulation:
         params
             Population parameters.
         """
-    def add(
-        self, individual: Individual, cost_evaluator: CostEvaluator
-    ) -> None:
+    def add(self, solution: Solution, cost_evaluator: CostEvaluator) -> None:
         """
-        Adds the given individual to the subpopulation. Survivor selection is
+        Adds the given solution to the subpopulation. Survivor selection is
         automatically triggered when the population reaches its maximum size.
 
         Parameters
         ----------
-        individual
-            Individual to add to the subpopulation.
+        solution
+            Solution to add to the subpopulation.
         cost_evaluator
             CostEvaluator to use to compute the cost.
         """
     def purge(self, cost_evaluator: CostEvaluator) -> None:
         """
-        Performs survivor selection: individuals in the subpopulation are
+        Performs survivor selection: solutions in the subpopulation are
         purged until the population is reduced to the ``min_pop_size``.
         Purging happens to duplicate solutions first, and then to solutions
         with high biased fitness.
@@ -73,13 +71,14 @@ class SubPopulation:
         """
     def update_fitness(self, cost_evaluator: CostEvaluator) -> None:
         """
-        Updates the biased fitness scores of individuals in the subpopulation.
+        Updates the biased fitness scores of solutions in the subpopulation.
         This fitness depends on the quality of the solution (based on its cost)
-        and the diversity w.r.t. to other individuals in the subpopulation.
+        and the diversity w.r.t. to other solutions in the subpopulation.
 
         .. warning::
-            This function must be called before accessing the
-            SubPopulationItem.fitness attribute.
+
+           This function must be called before accessing the
+           :meth:`~SubPopulationItem.fitness` attribute.
         """
     def __getitem__(self, idx: int) -> SubPopulationItem: ...
     def __iter__(self) -> Iterator[SubPopulationItem]: ...
@@ -87,38 +86,39 @@ class SubPopulation:
 
 class SubPopulationItem:
     @property
-    def fitness(self) -> float: ...
-    """
-    Fitness value for this SubPopulationItem.
-
-    Returns
-    -------
-    float
-        Fitness value for this SubPopulationItem.
-
-    .. warning::
-        This is a cached property that is not automatically updated. Before
-        accessing the property, `SubPopulation.update_fitness` should be called
-        unless the population has not changed since the last call.
-    """
-    @property
-    def individual(self) -> Individual: ...
-    """
-    Individual for this SubPopulationItem.
-
-    Returns
-    -------
-    Individual
-        Individual for this SubPopulationItem.
-    """
-    def avg_distance_closest(self) -> float:
+    def fitness(self) -> float:
         """
-        Determines the average distance of the individual wrapped by this item
-        to a number of individuals that are most similar to it. This provides a
-        measure of the relative 'diversity' of the wrapped individual.
+        Fitness value for this SubPopulationItem.
 
         Returns
         -------
         float
-            The average distance/diversity of the wrapped individual.
+            Fitness value for this SubPopulationItem.
+
+        .. warning::
+
+           This is a cached property that is not automatically updated. Before
+           accessing the property, :meth:`~SubPopulation.update_fitness` should
+           be called unless the population has not changed since the last call.
+        """
+    @property
+    def solution(self) -> Solution:
+        """
+        Solution for this SubPopulationItem.
+
+        Returns
+        -------
+        Solution
+            Solution for this SubPopulationItem.
+        """
+    def avg_distance_closest(self) -> float:
+        """
+        Determines the average distance of the solution wrapped by this item
+        to a number of solutions that are most similar to it. This provides a
+        measure of the relative 'diversity' of the wrapped solution.
+
+        Returns
+        -------
+        float
+            The average distance/diversity of the wrapped solution.
         """
