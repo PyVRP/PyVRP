@@ -57,7 +57,8 @@ A feasible solution to the VRPTW consists of a set of routes in which all custom
 The objective is to find a feasible solution that minimises the total travel cost.
 
 .. hint::
-    Check out :ref:`this example notebook </examples/vrptw.ipynb>` in which we solve a VRPTW instance.
+
+   Check out :ref:`this example notebook </examples/vrptw.ipynb>` in which we solve a VRPTW instance.
 
 
 Prize-collecting vehicle routing problem
