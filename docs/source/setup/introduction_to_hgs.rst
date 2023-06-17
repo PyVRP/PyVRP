@@ -1,5 +1,5 @@
 A brief introduction to HGS
-===================================
+===========================
 
 PyVRP provides a high-performance implementation of the hybrid genetic search (HGS) algorithm for vehicle routing problems (VRPs).
 HGS combines the global search capabilities of genetic algorithms with the fine-tuning efficiency of (local) search methods.
