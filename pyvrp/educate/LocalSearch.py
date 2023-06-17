@@ -115,21 +115,21 @@ class LocalSearch:
         # TODO separate load/export solution from c++ implementation
         # so we only need to do it once
         while True:
-            sol = self.search(solution, cost_evaluator)
+            solution = self.search(solution, cost_evaluator)
 
             if not should_intensify:
                 return solution
 
-            new_sol = self.intensify(solution, cost_evaluator)
+            new_solution = self.intensify(solution, cost_evaluator)
 
-            current_cost = cost_evaluator.penalised_cost(sol)
-            new_cost = cost_evaluator.penalised_cost(new_sol)
+            current_cost = cost_evaluator.penalised_cost(solution)
+            new_cost = cost_evaluator.penalised_cost(new_solution)
 
             if new_cost < current_cost:
-                sol = new_sol
+                solution = new_solution
                 continue
 
-            return sol
+            return solution
 
     def intensify(
         self,
