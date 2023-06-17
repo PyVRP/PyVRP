@@ -14,7 +14,7 @@ HGS maintains a population of solutions, which is initialised by a set of initia
 In every iteration of the search loop, the algorithm selects two existing parent solutions from the population using a *k*-ary tournament, favouring solutions with higher fitness.
 A crossover operator then uses these two parent solutions to generate an offspring solution that inherits features from both parents.
 After the crossover, the offspring solution is further improved using a search procedure.
-The candidate solution is first added to the population.
+The resulting candidate solution is first added to the population.
 If the candidate solution improves over the best solution found so far, it is also registered as the new best solution.
 Upon reaching the maximum population size, a survivor selection mechanism removes the least fit solutions until the population is back at the minimum size.
 The algorithm continues until a provided stopping criterion is met, at which point it returns the best solution found. 
