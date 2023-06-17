@@ -2,7 +2,7 @@
 #define PYVRP_SUBPOPULATION_H
 
 #include "CostEvaluator.h"
-#include "Individual.h"
+#include "Solution.h"
 #include "diversity/diversity.h"
 
 #include <functional>
@@ -56,7 +56,7 @@ class SubPopulation
 public:
     struct Item
     {
-        using Proximity = std::vector<std::pair<double, Individual const *>>;
+        using Proximity = std::vector<std::pair<double, Solution const *>>;
 
         PopulationParams const *params;
 
@@ -64,7 +64,8 @@ public:
         // reference to memory owned and allocated by the SubPopulation this
         // item is part of. The SubPopulation remains responsible for managing
         // that memory.
-        Individual const *individual;
+        Solution const *solution;
+
         // Fitness should be used carefully: only directly after updateFitness
         // was called. At any other moment, it will be outdated.
         double fitness;
@@ -84,7 +85,7 @@ public:
 
     ~SubPopulation();
 
-    void add(Individual const *individual, CostEvaluator const &costEvaluator);
+    void add(Solution const *solution, CostEvaluator const &costEvaluator);
 
     std::vector<Item>::const_iterator cbegin() const;
 
@@ -96,9 +97,8 @@ public:
 
     void purge(CostEvaluator const &costEvaluator);
 
-    // Recomputes the fitness of all individuals maintained by this population.
-    // This is called whenever an individual is added to, or removed from, the
-    // population.
+    // Recomputes the fitness of all solutions maintained by this subpopulation.
+    // This is called whenever a solution is added or removed.
     void updateFitness(CostEvaluator const &costEvaluator);
 };
 

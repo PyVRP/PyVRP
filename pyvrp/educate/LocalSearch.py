@@ -1,8 +1,8 @@
 from typing import List
 
 from pyvrp._CostEvaluator import CostEvaluator
-from pyvrp._Individual import Individual
 from pyvrp._ProblemData import ProblemData
+from pyvrp._Solution import Solution
 from pyvrp._XorShift128 import XorShift128
 
 from ._LocalSearch import LocalSearch as _LocalSearch
@@ -35,7 +35,7 @@ class LocalSearch:
     def add_node_operator(self, op):
         """
         Adds a node operator to this local search object. The node operator
-        will be used by :meth:`~search` to improve an individual.
+        will be used by :meth:`~search` to improve a solution.
 
         Parameters
         ----------
@@ -47,7 +47,7 @@ class LocalSearch:
     def add_route_operator(self, op):
         """
         Adds a route operator to this local search object. The route operator
-        will be used by :meth:`~intensify` to improve an individual using more
+        will be used by :meth:`~intensify` to improve a solution using more
         expensive route operators.
 
         Parameters
@@ -82,21 +82,21 @@ class LocalSearch:
 
     def run(
         self,
-        individual: Individual,
+        solution: Solution,
         cost_evaluator: CostEvaluator,
         should_intensify: bool,
-    ) -> Individual:
+    ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
-        iteratively improve the given individual. First, :meth:`~search` is
+        iteratively improve the given solution. First, :meth:`~search` is
         applied. Thereafter, if ``should_intensify`` is true,
         :meth:`~intensify` is applied. This process repeats until no further
         improvements are found. Finally, the improved solution is returned.
 
         Parameters
         ----------
-        individual
-            The individual to improve through local search.
+        solution
+            The solution to improve through local search.
         cost_evaluator
             Cost evaluator to use.
         should_intensify
@@ -106,46 +106,47 @@ class LocalSearch:
 
         Returns
         -------
-        Individual
-            The improved individual. This is not the same object as the
-            individual that was passed in.
+        Solution
+            The improved solution. This is not the same object as the
+            solution that was passed in.
         """
         # HACK We keep searching and intensifying to mimic the local search
         # implementation of HGS-CVRP and HGS-VRPTW
-        # TODO separate load/export individual from c++ implementation
+        # TODO separate load/export solution from c++ implementation
         # so we only need to do it once
         while True:
-            individual = self.search(individual, cost_evaluator)
+            solution = self.search(solution, cost_evaluator)
 
             if not should_intensify:
-                return individual
+                return solution
 
-            new_individual = self.intensify(individual, cost_evaluator)
+            new_solution = self.intensify(solution, cost_evaluator)
 
-            current_cost = cost_evaluator.penalised_cost(individual)
-            new_cost = cost_evaluator.penalised_cost(new_individual)
+            current_cost = cost_evaluator.penalised_cost(solution)
+            new_cost = cost_evaluator.penalised_cost(new_solution)
+
             if new_cost < current_cost:
-                individual = new_individual
+                solution = new_solution
                 continue
 
-            return individual
+            return solution
 
     def intensify(
         self,
-        individual: Individual,
+        solution: Solution,
         cost_evaluator: CostEvaluator,
         overlap_tolerance_degrees: int = 0,
-    ) -> Individual:
+    ) -> Solution:
         """
         This method uses the intensifying route operators on this local search
-        object to improve the given individual. To limit the computation
+        object to improve the given solution. To limit the computation
         demands of intensification, the  ``overlap_tolerance_degrees`` argument
         can be used to limit the number of route pairs that are evaluated.
 
         Parameters
         ----------
-        individual
-            The individual to improve.
+        solution
+            The solution to improve.
         cost_evaluator
             Cost evaluator to use.
         overlap_tolerance_degrees
@@ -164,26 +165,26 @@ class LocalSearch:
 
         Returns
         -------
-        Individual
-            The improved individual. This is not the same object as the
-            individual that was passed in.
+        Solution
+            The improved solution. This is not the same object as the
+            solution that was passed in.
         """
         self._ls.shuffle(self._rng)
         return self._ls.intensify(
-            individual, cost_evaluator, overlap_tolerance_degrees
+            solution, cost_evaluator, overlap_tolerance_degrees
         )
 
     def search(
-        self, individual: Individual, cost_evaluator: CostEvaluator
-    ) -> Individual:
+        self, solution: Solution, cost_evaluator: CostEvaluator
+    ) -> Solution:
         """
         This method uses the node operators on this local search object to
-        improve the given individual.
+        improve the given solution.
 
         Parameters
         ----------
-        individual
-            The individual to improve.
+        solution
+            The solution to improve.
         cost_evaluator
             Cost evaluator to use.
 
@@ -195,9 +196,9 @@ class LocalSearch:
 
         Returns
         -------
-        Individual
-            The improved individual. This is not the same object as the
-            individual that was passed in.
+        Solution
+            The improved solution. This is not the same object as the
+            solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls.search(individual, cost_evaluator)
+        return self._ls.search(solution, cost_evaluator)

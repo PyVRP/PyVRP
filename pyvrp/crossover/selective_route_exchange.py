@@ -1,19 +1,19 @@
 from typing import Tuple
 
 from pyvrp._CostEvaluator import CostEvaluator
-from pyvrp._Individual import Individual
 from pyvrp._ProblemData import ProblemData
+from pyvrp._Solution import Solution
 from pyvrp._XorShift128 import XorShift128
 
 from ._selective_route_exchange import selective_route_exchange as _srex
 
 
 def selective_route_exchange(
-    parents: Tuple[Individual, Individual],
+    parents: Tuple[Solution, Solution],
     data: ProblemData,
     cost_evaluator: CostEvaluator,
     rng: XorShift128,
-) -> Individual:
+) -> Solution:
     """
     This crossover operator due to Nagata and Kobayashi (2010) combines routes
     from both parents to generate a new offspring solution. It does this by
@@ -34,7 +34,7 @@ def selective_route_exchange(
 
     Returns
     -------
-    Individual
+    Solution
         A new offspring.
 
     References

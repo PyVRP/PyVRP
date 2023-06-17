@@ -2,11 +2,11 @@
 #define PYVRP_LOCALSEARCHOPERATOR_H
 
 #include "CostEvaluator.h"
-#include "Individual.h"
 #include "Measure.h"
 #include "Node.h"
 #include "ProblemData.h"
 #include "Route.h"
+#include "Solution.h"
 
 template <typename Arg> class LocalSearchOperatorBase
 {
@@ -62,10 +62,10 @@ class LocalSearchOperator<Route> : public LocalSearchOperatorBase<Route>
 
 public:
     /**
-     * Called once after loading in the individual to improve. This can be used
+     * Called once after loading in the solution to improve. This can be used
      * to e.g. update local operator state.
      */
-    virtual void init([[maybe_unused]] Individual const &indiv){};
+    virtual void init([[maybe_unused]] Solution const &solution){};
 
     /**
      * Called when a route has been changed. Can be used to update caches, but

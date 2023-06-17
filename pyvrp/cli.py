@@ -16,12 +16,12 @@ import pyvrp.educate
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
-    Individual,
     PenaltyManager,
     PenaltyParams,
     Population,
     PopulationParams,
     Result,
+    Solution,
     XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
@@ -149,8 +149,7 @@ def solve(
         ls.add_route_operator(op(data))
 
     init = [
-        Individual.make_random(data, rng)
-        for _ in range(pop_params.min_pop_size)
+        Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
     ]
     algo = GeneticAlgorithm(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
@@ -184,7 +183,7 @@ def benchmark_solve(instance: str, **kwargs):
     """
     Small wrapper script around ``solve()`` that translates result objects into
     a few key statistics, and returns those. This is needed because the result
-    solution (of type ``Individual``) cannot be pickled.
+    solution (of type ``Solution``) cannot be pickled.
     """
     res = solve(instance, **kwargs)
     instance_name = Path(instance).stem

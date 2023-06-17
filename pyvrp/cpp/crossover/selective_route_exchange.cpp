@@ -7,7 +7,7 @@
 using Client = int;
 using Clients = std::vector<Client>;
 using ClientSet = std::unordered_set<Client>;
-using Route = Individual::Route;
+using Route = Solution::Route;
 using Routes = std::vector<Route>;
 
 namespace
@@ -36,8 +36,8 @@ Routes sortByAscAngle(ProblemData const &data, Routes routes)
 }
 }  // namespace
 
-Individual selectiveRouteExchange(
-    std::pair<Individual const *, Individual const *> const &parents,
+Solution selectiveRouteExchange(
+    std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
     CostEvaluator const &costEvaluator,
     std::pair<size_t, size_t> const startIndices,
@@ -228,10 +228,10 @@ Individual selectiveRouteExchange(
     crossover::greedyRepair(routes1, unplanned, data, costEvaluator);
     crossover::greedyRepair(routes2, unplanned, data, costEvaluator);
 
-    Individual indiv1{data, routes1};
-    Individual indiv2{data, routes2};
+    Solution sol1{data, routes1};
+    Solution sol2{data, routes2};
 
-    auto const cost1 = costEvaluator.penalisedCost(indiv1);
-    auto const cost2 = costEvaluator.penalisedCost(indiv2);
-    return cost1 < cost2 ? indiv1 : indiv2;
+    auto const cost1 = costEvaluator.penalisedCost(sol1);
+    auto const cost2 = costEvaluator.penalisedCost(sol2);
+    return cost1 < cost2 ? sol1 : sol2;
 }

@@ -1,4 +1,4 @@
-#include "Individual.h"
+#include "Solution.h"
 #include "ProblemData.h"
 
 #include <fstream>
@@ -7,9 +7,9 @@
 
 using Client = int;
 using Visits = std::vector<Client>;
-using Routes = std::vector<Individual::Route>;
+using Routes = std::vector<Solution::Route>;
 
-void Individual::evaluate(ProblemData const &data)
+void Solution::evaluate(ProblemData const &data)
 {
     Cost allPrizes = 0;
     for (size_t client = 1; client <= data.numClients(); ++client)
@@ -28,37 +28,34 @@ void Individual::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-size_t Individual::numRoutes() const { return routes_.size(); }
+size_t Solution::numRoutes() const { return routes_.size(); }
 
-size_t Individual::numClients() const { return numClients_; }
+size_t Solution::numClients() const { return numClients_; }
 
-Routes const &Individual::getRoutes() const { return routes_; }
+Routes const &Solution::getRoutes() const { return routes_; }
 
-std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
+std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
 {
     return neighbours;
 }
 
-bool Individual::isFeasible() const
-{
-    return !hasExcessLoad() && !hasTimeWarp();
-}
+bool Solution::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
-Distance Individual::distance() const { return distance_; }
+Distance Solution::distance() const { return distance_; }
 
-Load Individual::excessLoad() const { return excessLoad_; }
+Load Solution::excessLoad() const { return excessLoad_; }
 
-Cost Individual::prizes() const { return prizes_; }
+Cost Solution::prizes() const { return prizes_; }
 
-Cost Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
+Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
-Duration Individual::timeWarp() const { return timeWarp_; }
+Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Individual::makeNeighbours()
+void Solution::makeNeighbours()
 {
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
@@ -67,7 +64,7 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-bool Individual::operator==(Individual const &other) const
+bool Solution::operator==(Solution const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the neighbours are all equal.
@@ -80,7 +77,7 @@ bool Individual::operator==(Individual const &other) const
     // clang-format on
 }
 
-Individual::Individual(ProblemData const &data, XorShift128 &rng)
+Solution::Solution(ProblemData const &data, XorShift128 &rng)
     : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
@@ -108,8 +105,8 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     evaluate(data);
 }
 
-Individual::Individual(ProblemData const &data,
-                       std::vector<std::vector<Client>> const &routes)
+Solution::Solution(ProblemData const &data,
+                   std::vector<std::vector<Client>> const &routes)
     : neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
@@ -150,7 +147,7 @@ Individual::Individual(ProblemData const &data,
     evaluate(data);
 }
 
-Individual::Route::Route(ProblemData const &data, Visits const visits)
+Solution::Route::Route(ProblemData const &data, Visits const visits)
     : visits_(std::move(visits)), centroid_({0, 0})
 {
     if (visits_.empty())
@@ -202,64 +199,61 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
                       : 0;
 }
 
-bool Individual::Route::empty() const { return visits_.empty(); }
+bool Solution::Route::empty() const { return visits_.empty(); }
 
-size_t Individual::Route::size() const { return visits_.size(); }
+size_t Solution::Route::size() const { return visits_.size(); }
 
-Client Individual::Route::operator[](size_t idx) const { return visits_[idx]; }
+Client Solution::Route::operator[](size_t idx) const { return visits_[idx]; }
 
-Visits::const_iterator Individual::Route::begin() const
+Visits::const_iterator Solution::Route::begin() const
 {
     return visits_.cbegin();
 }
 
-Visits::const_iterator Individual::Route::end() const { return visits_.cend(); }
+Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
 
-Visits::const_iterator Individual::Route::cbegin() const
+Visits::const_iterator Solution::Route::cbegin() const
 {
     return visits_.cbegin();
 }
 
-Visits::const_iterator Individual::Route::cend() const
-{
-    return visits_.cend();
-}
+Visits::const_iterator Solution::Route::cend() const { return visits_.cend(); }
 
-Visits const &Individual::Route::visits() const { return visits_; }
+Visits const &Solution::Route::visits() const { return visits_; }
 
-Distance Individual::Route::distance() const { return distance_; }
+Distance Solution::Route::distance() const { return distance_; }
 
-Load Individual::Route::demand() const { return demand_; }
+Load Solution::Route::demand() const { return demand_; }
 
-Load Individual::Route::excessLoad() const { return excessLoad_; }
+Load Solution::Route::excessLoad() const { return excessLoad_; }
 
-Duration Individual::Route::duration() const { return duration_; }
+Duration Solution::Route::duration() const { return duration_; }
 
-Duration Individual::Route::serviceDuration() const { return service_; }
+Duration Solution::Route::serviceDuration() const { return service_; }
 
-Duration Individual::Route::timeWarp() const { return timeWarp_; }
+Duration Solution::Route::timeWarp() const { return timeWarp_; }
 
-Duration Individual::Route::waitDuration() const { return wait_; }
+Duration Solution::Route::waitDuration() const { return wait_; }
 
-Cost Individual::Route::prizes() const { return prizes_; }
+Cost Solution::Route::prizes() const { return prizes_; }
 
-std::pair<double, double> const &Individual::Route::centroid() const
+std::pair<double, double> const &Solution::Route::centroid() const
 {
     return centroid_;
 }
 
-bool Individual::Route::isFeasible() const
+bool Solution::Route::isFeasible() const
 {
     return !hasExcessLoad() && !hasTimeWarp();
 }
 
-bool Individual::Route::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Individual::Route::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 
-std::ostream &operator<<(std::ostream &out, Individual const &indiv)
+std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {
-    auto const &routes = indiv.getRoutes();
+    auto const &routes = sol.getRoutes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
@@ -267,7 +261,7 @@ std::ostream &operator<<(std::ostream &out, Individual const &indiv)
     return out;
 }
 
-std::ostream &operator<<(std::ostream &out, Individual::Route const &route)
+std::ostream &operator<<(std::ostream &out, Solution::Route const &route)
 {
     for (Client const client : route)
         out << client << ' ';

@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual
+from pyvrp import CostEvaluator, Solution
 from pyvrp.tests.helpers import read
 
 
@@ -67,16 +67,14 @@ def test_cost():
     default_cost_evaluator = CostEvaluator()
     cost_evaluator = CostEvaluator(20, 6)
 
-    # Feasible individual
-    feas_indiv = Individual(data, [[1, 2], [3], [4]])
-    distance = feas_indiv.distance()
+    feas_sol = Solution(data, [[1, 2], [3], [4]])  # feasible solution
+    distance = feas_sol.distance()
 
-    assert_allclose(cost_evaluator.cost(feas_indiv), distance)
-    assert_allclose(default_cost_evaluator.cost(feas_indiv), distance)
+    assert_allclose(cost_evaluator.cost(feas_sol), distance)
+    assert_allclose(default_cost_evaluator.cost(feas_sol), distance)
 
-    # Infeasible individual
-    infeas_indiv = Individual(data, [[1, 2, 3, 4]])
-    assert_(not infeas_indiv.is_feasible())
+    infeas_sol = Solution(data, [[1, 2, 3, 4]])  # infeasible solution
+    assert_(not infeas_sol.is_feasible())
 
     # The C++ code represents infinity using a relevant maximal value, which
     # depends on the precision type (double or integer).
@@ -85,26 +83,26 @@ def test_cost():
     else:
         INFEAS_COST = np.finfo(np.float64).max
 
-    assert_allclose(cost_evaluator.cost(infeas_indiv), INFEAS_COST)
-    assert_allclose(default_cost_evaluator.cost(infeas_indiv), INFEAS_COST)
+    assert_allclose(cost_evaluator.cost(infeas_sol), INFEAS_COST)
+    assert_allclose(default_cost_evaluator.cost(infeas_sol), INFEAS_COST)
 
 
 def test_cost_with_prizes():
     data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(1, 1)
 
-    indiv = Individual(data, [[1, 2], [3, 4, 5]])
-    cost = cost_evaluator.cost(indiv)
-    assert_(indiv.is_feasible())
+    sol = Solution(data, [[1, 2], [3, 4, 5]])
+    cost = cost_evaluator.cost(sol)
+    assert_(sol.is_feasible())
 
     prizes = [data.client(idx).prize for idx in range(data.num_clients + 1)]
     collected = sum(prizes[:6])
     uncollected = sum(prizes) - collected
 
     assert_allclose(prizes[0], 0)
-    assert_allclose(indiv.prizes(), collected)
-    assert_allclose(indiv.uncollected_prizes(), uncollected)
-    assert_allclose(indiv.distance() + indiv.uncollected_prizes(), cost)
+    assert_allclose(sol.prizes(), collected)
+    assert_allclose(sol.uncollected_prizes(), uncollected)
+    assert_allclose(sol.distance() + sol.uncollected_prizes(), cost)
 
 
 def test_penalised_cost():
@@ -114,14 +112,14 @@ def test_penalised_cost():
     default_evaluator = CostEvaluator()
     cost_evaluator = CostEvaluator(penalty_capacity, penalty_tw)
 
-    feas = Individual(data, [[1, 2], [3], [4]])
+    feas = Solution(data, [[1, 2], [3], [4]])
     assert_(feas.is_feasible())
 
-    # For a feasible individual, cost and penalised_cost equal distance.
+    # For a feasible solution, cost and penalised_cost equal distance.
     assert_allclose(cost_evaluator.penalised_cost(feas), feas.distance())
     assert_allclose(default_evaluator.penalised_cost(feas), feas.distance())
 
-    infeas = Individual(data, [[1, 2, 3, 4]])
+    infeas = Solution(data, [[1, 2, 3, 4]])
     assert_(not infeas.is_feasible())
 
     # Compute cost associated with violated constraints.

@@ -7,8 +7,8 @@ from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
-from pyvrp._Individual import Individual
 from pyvrp._ProblemData import Client, ProblemData
+from pyvrp._Solution import Solution
 from pyvrp._XorShift128 import XorShift128
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
@@ -274,7 +274,7 @@ class Model:
         pop_params = PopulationParams()
         pop = Population(bpd, pop_params)
         init = [
-            Individual.make_random(data, rng)
+            Solution.make_random(data, rng)
             for _ in range(pop_params.min_pop_size)
         ]
 

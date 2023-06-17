@@ -3,9 +3,9 @@ from numpy.testing import assert_, assert_raises
 
 from pyvrp import (
     CostEvaluator,
-    Individual,
     Population,
     PopulationParams,
+    Solution,
     XorShift128,
     plotting,
 )
@@ -20,8 +20,8 @@ IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
 
 def test_plotting_methods_raise_when_no_stats_available():
     data = read("data/OkSmall.txt")
-    individual = Individual(data, [[1, 2, 3, 4]])
-    res = Result(individual, Statistics(), 0, 0.0)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    res = Result(sol, Statistics(), 0, 0.0)
 
     assert_(not res.has_statistics())
 
@@ -45,10 +45,10 @@ def test_plot_solution():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
 
-    individual = Individual(data, bks)
+    sol = Solution(data, bks)
 
-    plotting.plot_solution(individual, data)
-    plotting.plot_solution(individual, data, plot_customers=True)
+    plotting.plot_solution(sol, data)
+    plotting.plot_solution(sol, data, plot_customers=True)
 
 
 @img_comp(["plot_result"], **IMG_KWARGS)
@@ -63,25 +63,25 @@ def test_plot_result():
     params = PopulationParams()
     pop = Population(broken_pairs_distance, params=params)
 
-    for indiv in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(indiv, cost_evaluator)
+    for sol in make_random_solutions(params.min_pop_size, data, rng):
+        pop.add(sol, cost_evaluator)
 
     stats = Statistics()
 
     for i in range(num_iterations):
         if i == num_iterations // 2:
             # Make sure we insert a feasible solution
-            individual = Individual(data, bks)
+            sol = Solution(data, bks)
         else:
-            individual = Individual.make_random(data, rng)
+            sol = Solution.make_random(data, rng)
 
-        pop.add(individual, cost_evaluator)
+        pop.add(sol, cost_evaluator)
         stats.collect_from(pop, cost_evaluator)
 
         # Hacky to produce deterministic result
         stats.runtimes[-1] = i % 3
 
-    res = Result(Individual(data, bks), stats, num_iterations, 0.0)
+    res = Result(Solution(data, bks), stats, num_iterations, 0.0)
     plotting.plot_result(res, data)
 
 

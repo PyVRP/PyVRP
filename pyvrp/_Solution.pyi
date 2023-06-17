@@ -56,9 +56,9 @@ class Route:
         Center point of the client locations on this route.
         """
 
-class Individual:
+class Solution:
     """
-    The Individual class encodes VRP solutions.
+    Encodes VRP solutions.
 
     Parameters
     ----------
@@ -80,13 +80,9 @@ class Individual:
         routes: List[List[int]],
     ) -> None: ...
     @classmethod
-    def make_random(
-        cls,
-        data: ProblemData,
-        rng: XorShift128,
-    ) -> Individual:
+    def make_random(cls, data: ProblemData, rng: XorShift128) -> Solution:
         """
-        Creates a randomly generated Individual.
+        Creates a randomly generated solution.
 
         Parameters
         ----------
@@ -97,8 +93,8 @@ class Individual:
 
         Returns
         -------
-        Individual
-            The randomly generated Individual.
+        Solution
+            The randomly generated solution.
         """
     def get_neighbours(self) -> List[Tuple[int, int]]:
         """
@@ -109,11 +105,11 @@ class Individual:
         -------
         list
             A list of ``(pred, succ)`` tuples that encode for each client their
-            predecessor and successors in this individual's routes.
+            predecessor and successors in this solutions's routes.
         """
     def get_routes(self) -> List[Route]:
         """
-        The solution this individual encodes, as a list of routes.
+        The solution's routing decisions.
 
         .. note::
 
@@ -124,27 +120,27 @@ class Individual:
         Returns
         -------
         list
-            A list of routes. Each :class:`~pyvrp._Individual.Route` starts and
+            A list of routes. Each :class:`~pyvrp._Solution.Route` starts and
             ends at the depot (0), but that is implicit: the depot is not part
             of the returned routes.
         """
     def has_excess_load(self) -> bool:
         """
-        Returns whether this individual violates capacity constraints.
+        Returns whether this solution violates capacity constraints.
 
         Returns
         -------
         bool
-            True if the individual is not capacity feasible, False otherwise.
+            True if the solution is not capacity feasible, False otherwise.
         """
     def has_time_warp(self) -> bool:
         """
-        Returns whether this individual violates time window constraints.
+        Returns whether this solution violates time window constraints.
 
         Returns
         -------
         bool
-            True if the individual is not time window feasible, False
+            True if the solution is not time window feasible, False
             otherwise.
         """
     def distance(self) -> int:
@@ -194,14 +190,14 @@ class Individual:
         """
     def is_feasible(self) -> bool:
         """
-        Whether this individual is feasible. This is a shorthand for checking
-        :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
+        Whether this solution is feasible. This is a shorthand for checking
+        that :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
         false.
 
         Returns
         -------
         bool
-            Whether the solution of this individual is feasible with respect to
+            Whether the solution of this solution is feasible with respect to
             capacity and time window constraints.
         """
     def num_routes(self) -> int:
@@ -222,8 +218,8 @@ class Individual:
         int
             Number of clients in this solution.
         """
-    def __copy__(self) -> Individual: ...
-    def __deepcopy__(self, memo: Dict) -> Individual: ...
+    def __copy__(self) -> Solution: ...
+    def __deepcopy__(self, memo: Dict) -> Solution: ...
     def __hash__(self) -> int: ...
     def __eq__(self, other: Any) -> bool: ...
     def __str__(self) -> str: ...
