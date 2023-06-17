@@ -1,0 +1,2 @@
+class FleetManager:
+    pass
