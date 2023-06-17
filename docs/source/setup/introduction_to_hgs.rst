@@ -39,4 +39,5 @@ The ``pyvrp`` package provides the HGS algorithm, crossover operators, stopping 
 You only need provide the initial solutions, for which we suggest to take random initial solutions to ensure diversity in the search.
 
 .. hint::
-    See the examples :doc:`Vehicle Routing Problem with Time Windows <../examples/vrptw>` and :doc:`Capacitated Vehicle Routing Problem <../examples/cvrp>` on how to setup HGS to solve these VRPs.
+    See the examples :doc:`capacitated VRP <../examples/cvrp>` 
+ and :doc:`VRP with time windows <../examples/vrptw>` on how to setup HGS to solve these VRPs.
