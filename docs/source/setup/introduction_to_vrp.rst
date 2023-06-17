@@ -18,7 +18,7 @@ Various heuristics, metaheuristics, and exact methods have been developed to tac
 Supported VRP variants
 ----------------------
 
-In this section, we introduce the VRP variants that are supported by PyVRP.
+In this section, we introduce the VRP variants that PyVRP currently supports.
 An extensive list of VRP variants can be found in `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 .. note::
