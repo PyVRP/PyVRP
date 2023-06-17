@@ -13,7 +13,7 @@ def test_broken_pairs_distance():
     sol3 = Solution(data, [[3], [4, 1, 2], []])
     sol4 = Solution(data, [[4, 3, 2, 1], [], []])
 
-    # BPD of an solution and itself should be zero.
+    # BPD of a solution and itself should be zero.
     for sol in [sol1, sol2, sol3, sol4]:
         assert_allclose(bpd(sol, sol), 0.0)
 

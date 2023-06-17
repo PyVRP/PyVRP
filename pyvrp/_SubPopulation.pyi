@@ -31,9 +31,9 @@ class SubPopulation:
         """
         Creates a SubPopulation instance.
 
-        This subpopulation manages a number solutions, and initiates survivor
-        selection (purging) when their number grows large. A subpopulation's
-        solutions (and metadata) can be accessed via indexing and iteration.
+        This subpopulation manages a collection of solutions, and initiates
+        survivor selection (purging) when their number grows large. A
+        subpopulation's solutions can be accessed via indexing and iteration.
         Each solution is stored as a tuple of type ``_Item``, which stores
         the solution itself, a fitness score (higher is worse), and a list
         of proximity values to the other solutions in the subpopulation.

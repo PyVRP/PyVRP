@@ -165,7 +165,7 @@ public:
     Solution(ProblemData const &data, XorShift128 &rng);
 
     /**
-     * Constructs an solution with the given routes.
+     * Constructs a solution with the given routes.
      *
      * @param data   Data instance describing the problem that's being solved.
      * @param routes Solution's route list.

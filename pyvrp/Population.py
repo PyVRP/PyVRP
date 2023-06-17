@@ -116,7 +116,7 @@ class Population:
             """
             warn(msg, EmptySolutionWarning)
 
-        # Note: the CostEvaluator is required here since adding an solution
+        # Note: the CostEvaluator is required here since adding a solution
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
         if solution.is_feasible():
