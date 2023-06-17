@@ -27,7 +27,7 @@ An extensive list of VRP variants can be found in `Toth and Vigo (2014) <https:/
 
 In the following, we consider a complete graph :math:`G=(V,A)`, where :math:`V` is the vertex set and :math:`A` is the arc set.
 The vertex set :math:`V` is partitioned into :math:`V=\{0\} \cup V_c`, where :math:`0` represents the depot and :math:`V_c=\{1, \dots, n\}` denotes the set of :math:`n` customers.
-Each arc :math:`(i, j) \in A` has a weight :math:`c_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
+Each arc :math:`(i, j) \in A` has a weight :math:`d_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
 A fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot.
 
 
