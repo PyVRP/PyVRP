@@ -21,10 +21,6 @@ Supported VRP variants
 In this section, we introduce the VRP variants that PyVRP currently supports.
 An extensive list of VRP variants can be found in `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
-.. note::
-
-    Interested in variants that are not supported yet by PyVRP? Feel free to make an issue on `GitHub <https://github.com/PyVRP/PyVRP/issues>`_!
-
 In the following, we consider a complete graph :math:`G=(V,A)`, where :math:`V` is the vertex set and :math:`A` is the arc set.
 The vertex set :math:`V` is partitioned into :math:`V=\{0\} \cup V_c`, where :math:`0` represents the depot and :math:`V_c=\{1, \dots, n\}` denotes the set of :math:`n` clients.
 Each arc :math:`(i, j) \in A` has a weight :math:`d_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
