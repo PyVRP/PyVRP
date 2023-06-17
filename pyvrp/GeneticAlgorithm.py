@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable, Collection, Tuple
 
-from pyvrp.educate.LocalSearch import LocalSearch
+from pyvrp.search.LocalSearch import LocalSearch
 from pyvrp.stop import StoppingCriterion
 
 from .PenaltyManager import PenaltyManager
@@ -138,7 +138,7 @@ class GeneticAlgorithm:
             offspring = self._op(
                 parents, self._data, self._cost_evaluator, self._rng
             )
-            self._educate(offspring)
+            self._search(offspring)
 
             new_best = self._cost_evaluator.cost(self._best)
 
@@ -153,7 +153,7 @@ class GeneticAlgorithm:
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
 
-    def _educate(self, sol: Solution):
+    def _search(self, sol: Solution):
         def is_new_best(sol):
             cost = self._cost_evaluator.cost(sol)
             best_cost = self._cost_evaluator.cost(self._best)

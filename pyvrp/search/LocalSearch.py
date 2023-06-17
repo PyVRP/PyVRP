@@ -12,9 +12,9 @@ Neighbours = List[List[int]]
 
 class LocalSearch:
     """
-    LocalSearch educator. This educator is able to explore a granular
-    neighbourhood in a very efficient manner using user-provided node and route
-    operators. This quickly results in much improved ('educated') solutions.
+    Local search method. This search method explores a granular neighbourhood
+    in a very efficient manner using user-provided node and route operators.
+    This quickly results in much improved solutions.
 
     Parameters
     ----------

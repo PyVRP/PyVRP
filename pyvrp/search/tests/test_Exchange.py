@@ -2,8 +2,8 @@ from numpy.testing import assert_, assert_equal
 from pytest import mark
 
 from pyvrp import Client, CostEvaluator, ProblemData, Solution, XorShift128
-from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
-from pyvrp.educate._Exchange import (
+from pyvrp.search import LocalSearch, NeighbourhoodParams, compute_neighbours
+from pyvrp.search._Exchange import (
     Exchange10,
     Exchange11,
     Exchange20,

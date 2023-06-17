@@ -12,7 +12,7 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.educate import Exchange10, LocalSearch, compute_neighbours
+from pyvrp.search import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
 from pyvrp.tests.helpers import make_random_solutions, read, read_solution
 
@@ -169,7 +169,7 @@ def test_initial_solutions_added_when_restarting():
     current = {sol for sol in pop}
     assert_equal(len(current & init), 25)
 
-    # The population contains one more solution because of the educate step.
+    # The population contains one more solution because of the search step.
     assert_equal(len(pop), 26)
 
 

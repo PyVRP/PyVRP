@@ -12,7 +12,7 @@ except ModuleNotFoundError:
     msg = "Install 'tqdm' and 'tomli' to use the command line program."
     raise ModuleNotFoundError(msg)
 
-import pyvrp.educate
+import pyvrp.search
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
@@ -26,14 +26,14 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.educate import (
+from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
+from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
 
 
@@ -136,14 +136,14 @@ def solve(
 
     node_ops = NODE_OPERATORS
     if "node_ops" in config:
-        node_ops = [getattr(pyvrp.educate, op) for op in config["node_ops"]]
+        node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
 
     for op in node_ops:
         ls.add_node_operator(op(data))
 
     route_ops = ROUTE_OPERATORS
     if "route_ops" in config:
-        route_ops = [getattr(pyvrp.educate, op) for op in config["route_ops"]]
+        route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
 
     for op in route_ops:
         ls.add_route_operator(op(data))
