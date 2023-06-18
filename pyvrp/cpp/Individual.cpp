@@ -238,7 +238,7 @@ Duration Individual::Route::waitDuration() const
     return tws_.duration() - travel_ - service_;
 }
 
-Duration Individual::Route::totalDuration() const { return tws_.duration(); }
+Duration Individual::Route::duration() const { return tws_.duration(); }
 
 Duration Individual::Route::earliestStart() const { return tws_.twEarly(); }
 

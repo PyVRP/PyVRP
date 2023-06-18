@@ -47,10 +47,12 @@ class Route:
         """
         Total waiting duration on this route.
         """
-    def total_duration(self) -> int:
+    def duration(self) -> int:
         """
-        Total duration on this route (travel + service + wait - timewarp).
-        It holds that duration = end time - start time.
+        Total duration on this route (travel + service + wait time).
+        It holds that end time = start time + duration - time warp, or,
+        equivalently = end time - start time = duration - time warp, as long
+        as start time is between `earliest_start()` and `latest_start()`.
         """
     def earliest_start(self) -> int:
         """

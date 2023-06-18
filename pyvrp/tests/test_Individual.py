@@ -210,12 +210,14 @@ def test_route_time_warp_and_start_time_calculations():
     # route should start exactly at 15'600 - 1'544 = 14056
     assert_equal(routes[0].earliest_start(), 14_056)
     assert_equal(routes[0].latest_start(), 14_056)
+    assert_equal(routes[0].slack(), 0)
 
     # Route 1 has some slack, it shouldn't start before 12'000 - 1'944 = 10'056
     # (otherwise we will have waiting time and a longer duration) and not after
     # 19'500 - 1'090 - 360 - 1'944 = 16'106
     assert_equal(routes[1].earliest_start(), 10_056)
     assert_equal(routes[1].latest_start(), 16_106)
+    assert_equal(routes[1].slack(), 16_106 - 10_056)
 
 
 def test_route_wait_time_calculations():
@@ -231,6 +233,7 @@ def test_route_wait_time_calculations():
     # as late as possible, at 15'000 - 1'944 = 13'056
     assert_equal(routes[1].earliest_start(), 13_056)
     assert_equal(routes[1].latest_start(), 13_056)
+    assert_equal(routes[1].slack(), 0)
 
     # Additionally, we will test that we can have both wait time and time warp
     # in a single route, and it holds that duration = travel + service + wait
@@ -241,13 +244,14 @@ def test_route_wait_time_calculations():
     assert_(route.time_warp() > 0)
     assert_(route.wait_duration() > 0)
     assert_equal(
-        route.total_duration(),
+        route.duration(),
         route.travel_duration()
         + route.service_duration()
         + route.wait_duration(),
     )
     # In this case, there is no slack either
     assert_equal(route.earliest_start(), route.latest_start())
+    assert_equal(route.slack(), 0)
 
 
 @mark.parametrize(
@@ -316,7 +320,8 @@ def test_time_warp_return_to_depot():
     # Travel from depot to client and back gives duration 1 + 1 = 2
     # This is 1 more than the depot time window 1, giving a time warp of 1
     individual = Individual(data, [[1]])
-    assert_equal(individual.get_routes()[0].total_duration(), 2)
+    routes = individual.get_routes()
+    assert_equal(routes[0].duration(), 2)
     assert_equal(individual.time_warp(), 1)
 
 

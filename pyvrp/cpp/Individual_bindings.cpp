@@ -44,9 +44,9 @@ PYBIND11_MODULE(_Individual, m)
              [](Individual::Route const &route) {
                  return route.waitDuration().get();
              })
-        .def("total_duration",
+        .def("duration",
              [](Individual::Route const &route) {
-                 return route.totalDuration().get();
+                 return route.duration().get();
              })
         .def("earliest_start",
              [](Individual::Route const &route) {

@@ -53,7 +53,7 @@ public:
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
         [[nodiscard]] Duration waitDuration() const;
-        [[nodiscard]] Duration totalDuration() const;
+        [[nodiscard]] Duration duration() const;
         [[nodiscard]] Duration earliestStart() const;
         [[nodiscard]] Duration latestStart() const;
         [[nodiscard]] Duration slack() const;
