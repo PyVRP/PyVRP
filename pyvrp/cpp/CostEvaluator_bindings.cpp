@@ -27,14 +27,14 @@ PYBIND11_MODULE(_CostEvaluator, m)
             py::arg("time_warp"))
         .def(
             "penalised_cost",
-            [](CostEvaluator const &evaluator, Individual const &individual) {
-                return evaluator.penalisedCost(individual).get();
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.penalisedCost(solution).get();
             },
-            py::arg("individual"))
+            py::arg("solution"))
         .def(
             "cost",
-            [](CostEvaluator const &evaluator, Individual const &individual) {
-                return evaluator.cost(individual).get();
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.cost(solution).get();
             },
-            py::arg("individual"));
+            py::arg("solution"));
 }

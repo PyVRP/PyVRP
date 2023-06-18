@@ -167,7 +167,7 @@ class PenaltyManager:
         Parameters
         ----------
         is_load_feasible
-            Boolean indicating whether the last individual was feasible w.r.t
+            Boolean indicating whether the last solution was feasible w.r.t.
             the capacity constraint.
         """
         self._load_feas.append(is_load_feasible)
@@ -188,8 +188,8 @@ class PenaltyManager:
         Parameters
         ----------
         is_time_feasible
-            Boolean indicating whether the last individual was feasible w.r.t
-             the time constraint.
+            Boolean indicating whether the last solution was feasible w.r.t.
+            the time constraint.
         """
         self._time_feas.append(is_time_feasible)
         if (

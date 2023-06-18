@@ -2,11 +2,11 @@
 #define PYVRP_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
-#include "Individual.h"
 #include "LocalSearchOperator.h"
 #include "Node.h"
 #include "ProblemData.h"
 #include "Route.h"
+#include "Solution.h"
 #include "XorShift128.h"
 
 #include <functional>
@@ -43,11 +43,11 @@ class LocalSearch
     int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
-    // Load an initial solution that we will attempt to improve
-    void loadIndividual(Individual const &individual);
+    // Load an initial solution that we will attempt to improve.
+    void loadSolution(Solution const &solution);
 
-    // Export the LS solution back into an individual
-    Individual exportIndividual();
+    // Export the LS solution back into a solution.
+    Solution exportSolution() const;
 
     // Tests the node U with empty routes.
     bool applyNodeOpsWithEmptyRoutes(Node *U,
@@ -93,19 +93,18 @@ public:
     Neighbours const &getNeighbours() const;
 
     /**
-     * Performs regular (node-based) local search around the given individual,
-     * and returns a new, hopefully improved individual.
+     * Performs regular (node-based) local search around the given solution,
+     * and returns a new, hopefully improved solution.
      */
-    Individual search(Individual &individual,
-                      CostEvaluator const &costEvaluator);
+    Solution search(Solution &solution, CostEvaluator const &costEvaluator);
 
     /**
      * Performs a more intensive route-based local search around the given
-     * individual, and returns a new, hopefully improved individual.
+     * solution, and returns a new, hopefully improved solution.
      */
-    Individual intensify(Individual &individual,
-                         CostEvaluator const &costEvaluator,
-                         int overlapToleranceDegrees = 0);
+    Solution intensify(Solution &solution,
+                       CostEvaluator const &costEvaluator,
+                       int overlapToleranceDegrees = 0);
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and

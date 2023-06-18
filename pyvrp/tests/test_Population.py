@@ -10,9 +10,9 @@ from pytest import mark
 
 from pyvrp import (
     CostEvaluator,
-    Individual,
     Population,
     PopulationParams,
+    Solution,
     XorShift128,
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
@@ -111,21 +111,21 @@ def test_add_triggers_purge():
     params = PopulationParams()
     pop = Population(bpd, params=params)
 
-    for indiv in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(indiv, cost_evaluator)
+    for sol in make_random_solutions(params.min_pop_size, data, rng):
+        pop.add(sol, cost_evaluator)
 
-    # Population should initialise at least min_pop_size individuals
+    # Population should initialise at least min_pop_size solutions
     assert_(len(pop) >= params.min_pop_size)
     assert_equal(len(pop), pop.num_feasible() + pop.num_infeasible())
 
     num_feas = pop.num_feasible()
     num_infeas = pop.num_infeasible()
 
-    while True:  # keep adding feasible individuals until we are about to purge
-        individual = Individual.make_random(data, rng)
+    while True:  # keep adding feasible solutions until we are about to purge
+        sol = Solution.make_random(data, rng)
 
-        if individual.is_feasible():
-            pop.add(individual, cost_evaluator)
+        if sol.is_feasible():
+            pop.add(sol, cost_evaluator)
             num_feas += 1
 
             assert_equal(len(pop), num_feas + num_infeas)
@@ -134,15 +134,15 @@ def test_add_triggers_purge():
         if num_feas == params.max_pop_size:  # next add() triggers purge
             break
 
-    # RNG is fixed, and this next individual is feasible. Since we now have a
-    # feasible population that is of maximal size, adding this individual
-    # should trigger survivor selection (purge). Survivor selection reduces the
+    # RNG is fixed, and this next solution is feasible. Since we now have a
+    # feasible population that is of maximal size, adding this solution should
+    # trigger survivor selection (purge). Survivor selection reduces the
     # feasible subpopulation to min_pop_size, so the overal population is then
     # just num_infeas + min_pop_size.
-    individual = Individual.make_random(data, rng)
-    assert_(individual.is_feasible())
+    sol = Solution.make_random(data, rng)
+    assert_(sol.is_feasible())
 
-    pop.add(individual, cost_evaluator)
+    pop.add(sol, cost_evaluator)
     assert_equal(pop.num_feasible(), params.min_pop_size)
     assert_equal(len(pop), num_infeas + params.min_pop_size)
 
@@ -157,18 +157,18 @@ def test_select_returns_same_parents_if_no_other_option():
 
     assert_equal(len(pop), 0)
 
-    pop.add(Individual(data, [[3, 2], [1, 4]]), cost_evaluator)
+    pop.add(Solution(data, [[3, 2], [1, 4]]), cost_evaluator)
     assert_equal(len(pop), 1)
 
-    # We added a single individual, so we should now get the same parent twice.
+    # We added a single solution, so we should now get the same parent twice.
     parents = pop.select(rng, cost_evaluator)
     assert_(parents[0] == parents[1])
 
-    # Now we add another, different individual.
-    pop.add(Individual(data, [[3, 2], [1], [4]]), cost_evaluator)
+    # Now we add another, different solution.
+    pop.add(Solution(data, [[3, 2], [1], [4]]), cost_evaluator)
     assert_equal(len(pop), 2)
 
-    # We should now get two different individuals as parents, at least most of
+    # We should now get two different solutions as parents, at least most of
     # the time. The actual probability of getting the same parents is very
     # small, but not zero. So let's do an experiment where we do 1000 selects,
     # and collect the number of times the parents are different.
@@ -199,14 +199,14 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
 
     for _ in range(10):
         # With zero min_pop_size and zero generation_size, every additional
-        # individual triggers a purge. So the population size can never grow
+        # solution triggers a purge. So the population size can never grow
         # beyond zero.
-        pop.add(Individual.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
         assert_equal(len(pop), 0)
 
 
 @mark.parametrize("nb_elite", [5, 25])
-def test_elite_individuals_are_not_purged(nb_elite: int):
+def test_elite_solutions_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(nb_elite=nb_elite)
@@ -214,38 +214,31 @@ def test_elite_individuals_are_not_purged(nb_elite: int):
 
     pop = Population(bpd, params=params)
 
-    # Keep adding individuals until the infeasible subpopulation is of maximum
+    # Keep adding solutions until the infeasible subpopulation is of maximum
     # size.
     while pop.num_infeasible() != params.max_pop_size:
-        pop.add(Individual.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
 
     assert_equal(pop.num_infeasible(), params.max_pop_size)
 
-    # These are the nb_elite best solutions in the current solution pool. These
+    # These are the elite best solutions in the current solution pool. These
     # should never be purged.
-    curr_individuals = [
-        individual for individual in pop if not individual.is_feasible()
-    ]
-
-    best_individuals = sorted(
-        curr_individuals, key=cost_evaluator.penalised_cost
-    )
-    elite_individuals = best_individuals[:nb_elite]
+    curr_sols = [sol for sol in pop if not sol.is_feasible()]
+    best_sols = sorted(curr_sols, key=cost_evaluator.penalised_cost)
+    elite_sols = best_sols[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
     single_route = [client for client in range(1, data.num_clients + 1)]
-    pop.add(Individual(data, [single_route]), cost_evaluator)
+    pop.add(Solution(data, [single_route]), cost_evaluator)
 
     # After the purge, there should remain min_pop_size infeasible solutions.
     assert_equal(pop.num_infeasible(), params.min_pop_size)
 
-    # In the infeasible subpopulation, nb_elite solutions from before the purge
-    # should also still be present. We test that by selecting the nb_elite best
-    # individuals from before the purge. We test by id/memory location because
-    # these individuals should still be present, unmodified.
-    new_individuals = [id(individual) for individual in pop]
-    for elite_individual in elite_individuals:
-        assert_(id(elite_individual) in new_individuals)
+    # Elite solutions from before the purge should also still be present. We
+    # test by id/memory location that these solutions are still present.
+    new_sols = [id(sol) for sol in pop]
+    for elite_sol in elite_sols:
+        assert_(id(elite_sol) in new_sols)
 
 
 @mark.parametrize("k", [2, 3])
@@ -255,25 +248,25 @@ def test_tournament_ranks_by_fitness(k: int):
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
-    for individual in make_random_solutions(50, data, rng):
-        if not individual.is_feasible():
-            pop.add(individual, cost_evaluator)
+    for sol in make_random_solutions(50, data, rng):
+        if not sol.is_feasible():
+            pop.add(sol, cost_evaluator)
 
     assert_equal(pop.num_feasible(), 0)
 
-    # Since this test requires the fitness values of the individuals, we have
+    # Since this test requires the fitness values of the solutions, we have
     # to access the underlying infeasible subpopulation directly.
     infeas_pop = pop._infeas
     infeas_pop.update_fitness(cost_evaluator)
 
     items = [item for item in pop._infeas]
     by_fitness = sorted(items, key=lambda item: item.fitness)
-    indiv2idx = {item.individual: idx for idx, item in enumerate(by_fitness)}
+    sol2idx = {item.solution: idx for idx, item in enumerate(by_fitness)}
     infeas_count = np.zeros(len(infeas_pop))
 
     for _ in range(10_000):
-        indiv = pop.get_tournament(rng, cost_evaluator, k=k)
-        infeas_count[indiv2idx[indiv]] += 1
+        sol = pop.get_tournament(rng, cost_evaluator, k=k)
+        infeas_count[sol2idx[sol]] += 1
 
     # Now we compare the observed ranking from the tournament selection with
     # what we expect from the actual fitness ranking. We compute the percentage
@@ -300,8 +293,8 @@ def test_tournament_raises_for_invalid_k(k: int):
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
-    for individual in make_random_solutions(5, data, rng):
-        pop.add(individual, cost_evaluator)
+    for sol in make_random_solutions(5, data, rng):
+        pop.add(sol, cost_evaluator)
 
     with assert_raises(ValueError):
         pop.get_tournament(rng, cost_evaluator, k=k)
@@ -315,39 +308,35 @@ def test_purge_removes_duplicates():
 
     pop = Population(bpd, params=params)
 
-    for indiv in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(indiv, cost_evaluator)
+    for sol in make_random_solutions(params.min_pop_size, data, rng):
+        pop.add(sol, cost_evaluator)
 
     assert_equal(len(pop), params.min_pop_size)
 
-    # This is the individual we are going to add a few times. That should make
+    # This is the solution we are going to add a few times. That should make
     # sure the relevant subpopulation definitely contains duplicates.
-    individual = Individual.make_random(data, rng)
-    assert_(not individual.is_feasible())
+    sol = Solution.make_random(data, rng)
+    assert_(not sol.is_feasible())
 
     for _ in range(params.generation_size):
-        pop.add(individual, cost_evaluator)
+        pop.add(sol, cost_evaluator)
 
     # Make sure we have not yet purged, and increase the minimum population
     # size by one to make sure we're definitely not removing *all* of the
-    # duplicate individuals.
+    # duplicate solutions.
     assert_(pop.num_infeasible() != params.min_pop_size)
     params.min_pop_size += 1
 
-    # Keep adding the individual until we have had a purge, and returned to the
+    # Keep adding the solution until we have had a purge, and returned to the
     # minimum population size. Note that the purge is done after adding the
-    # individual, so we must add the same individual in order to have at most
-    # min_pop_size - 1 other individuals than the duplicated individual.
+    # solution, so we must add the same solution in order to have at most
+    # min_pop_size - 1 other solutions than the duplicated solution.
     while pop.num_infeasible() != params.min_pop_size:
-        pop.add(individual, cost_evaluator)
+        pop.add(sol, cost_evaluator)
 
     # Since duplicates are purged first, there should now be only one of them
     # in the subpopulation. There cannot be zero, because we made sure of that.
-    duplicates = 0
-    for other in pop:
-        if other == individual:
-            duplicates += 1
-
+    duplicates = sum(other == sol for other in pop)
     assert_equal(duplicates, 1)
 
 
@@ -357,8 +346,8 @@ def test_clear():
     rng = XorShift128(seed=42)
     pop = Population(bpd)
 
-    for individual in make_random_solutions(10, data, rng):
-        pop.add(individual, cost_evaluator)
+    for sol in make_random_solutions(10, data, rng):
+        pop.add(sol, cost_evaluator)
 
     assert_equal(len(pop), 10)
 
@@ -372,4 +361,4 @@ def test_add_emits_warning_when_solution_is_empty():
     pop = Population(bpd)
 
     with assert_warns(EmptySolutionWarning):
-        pop.add(Individual(data, []), cost_evaluator)
+        pop.add(Solution(data, []), cost_evaluator)

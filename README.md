@@ -8,7 +8,7 @@
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports the capacitated VRP (CVRP), the VRP with time windows (VRPTW), and prize-collecting. 
 
-The implementation builds on Thibaut Vidal's [HGS-CVRP][7], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
+The implementation builds on Thibaut Vidal's [HGS-CVRP][8], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
 Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install `pyvrp` directly from the source code.
 
@@ -19,7 +19,7 @@ pip install pyvrp
 This also resolves the few core dependencies `pyvrp` has.
 The documentation is available [here][1].
 
-> If you are new to metaheuristics or vehicle routing, you might benefit from reading the [introduction to HGS for VRP][6] page.
+> If you are new to vehicle routing or metaheuristics, you might benefit from first reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
 
 ### Examples
 
@@ -57,6 +57,8 @@ TODO
 
 [5]: https://pyvrp.readthedocs.io/en/latest/examples/cvrp.html
 
-[6]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_hgs.html
+[6]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_vrp.html
 
-[7]: https://github.com/vidalt/HGS-CVRP/
+[7]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_hgs.html
+
+[8]: https://github.com/vidalt/HGS-CVRP/

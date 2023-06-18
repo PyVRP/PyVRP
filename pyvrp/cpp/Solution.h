@@ -1,5 +1,5 @@
-#ifndef PYVRP_INDIVIDUAL_H
-#define PYVRP_INDIVIDUAL_H
+#ifndef PYVRP_SOLUTION_H
+#define PYVRP_SOLUTION_H
 
 #include "Measure.h"
 #include "ProblemData.h"
@@ -9,9 +9,9 @@
 #include <iosfwd>
 #include <vector>
 
-class Individual
+class Solution
 {
-    friend struct std::hash<Individual>;  // friend struct to enable hashing
+    friend struct std::hash<Solution>;  // friend struct to enable hashing
 
     using Client = int;
 
@@ -104,15 +104,15 @@ private:
 
 public:
     /**
-     * Returns the number of (non-empty) routes in this individual's solution.
-     * Equal to the length of the vector of routes returned by ``getRoutes``.
+     * Returns the number of (non-empty) routes in this solution. Equal to the
+     * length of the vector of routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
 
     /**
-     * Returns the number of (non-empty) routes in this individual's solution
-     * for a specific vehicle type. Equal to the length of the vector of routes
-     * returned by ``getRoutesForVehicleType`` for the same vehicle type.
+     * Returns the number of (non-empty) routes in this solution for a specific
+     * vehicle type. Equal to the length of the vector of routes returned by
+     * ``getRoutesForVehicleType`` for the same vehicle type.
      */
     [[nodiscard]] size_t numRoutesForVehicleType(size_t vehicleType) const;
 
@@ -122,26 +122,26 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
-     * Returns this individual's routing decisions.
+     * Returns the routing decisions.
      */
     [[nodiscard]] Routes const &getRoutes() const;
 
     /**
-     * Returns this individual's routing decisions for a specific vehicle type.
+     * Returns this solution's routing decisions for a specific vehicle type.
      */
     [[nodiscard]] Routes const &
     getRoutesForVehicleType(size_t vehicleType) const;
 
     /**
      * Returns a vector of [pred, succ] clients for each client (index) in this
-     * individual's routes. Includes the depot at index 0.
+     * solutions's routes. Includes the depot at index 0.
      */
     [[nodiscard]] std::vector<std::pair<Client, Client>> const &
     getNeighbours() const;
 
     /**
-     * Returns a vector of route types for each client (index) in this
-     * individual's routes. Includes the depot at index 0.
+     * Returns a vector of assigned vehicle types for each client (index) in
+     * this solution's routes. Includes the depot at index 0.
      */
     [[nodiscard]] std::vector<RouteType> const &getAssignedVehicleTypes() const;
 
@@ -185,65 +185,62 @@ public:
      */
     [[nodiscard]] Duration timeWarp() const;
 
-    bool operator==(Individual const &other) const;
+    bool operator==(Solution const &other) const;
 
-    Individual &operator=(Individual const &other) = delete;  // is immutable
-    Individual &operator=(Individual &&other) = delete;       // is immutable
+    Solution &operator=(Solution const &other) = delete;  // is immutable
+    Solution &operator=(Solution &&other) = delete;       // is immutable
 
-    Individual(Individual const &other) = default;
-    Individual(Individual &&other) = default;
+    Solution(Solution const &other) = default;
+    Solution(Solution &&other) = default;
 
     /**
-     * Constructs a random individual using the given random number generator.
+     * Constructs a random solution using the given random number generator.
      *
-     * @param data           Data instance describing the problem that's being
-     *                       solved.
-     * @param rng            Random number generator.
+     * @param data Data instance describing the problem that's being solved.
+     * @param rng  Random number generator.
      */
-    Individual(ProblemData const &data, XorShift128 &rng);
+    Solution(ProblemData const &data, XorShift128 &rng);
 
     /**
-     * Constructs an individual having routes given as lists of client indices
+     * Constructs a solution having routes given as lists of client indices
      * as its solution. This constructor will assume all of the routes are
      * for the first vehicle type.
      *
-     * @param data           Data instance describing the problem that's being
-     *                       solved.
-     * @param routes         Solution's route list.
+     * @param data   Data instance describing the problem that's being solved.
+     * @param routes Solution's route list.
      */
-    Individual(ProblemData const &data,
-               std::vector<std::vector<Client>> const &routes);
+    Solution(ProblemData const &data,
+             std::vector<std::vector<Client>> const &routes);
 
     /**
-     * Constructs an individual having routes given as Route objects  as its
-     * solution. This allows constructing solutions with heterogeneous vehicle
-     * types.
+     * Constructs a solution having routes given as Route objects. This allows
+     * constructing solutions with heterogeneous vehicle types.
      *
      * @param data           Data instance describing the problem that's being
      *                       solved.
      * @param routes         Solution's route list.
      */
-    Individual(ProblemData const &data, std::vector<Route> const &routes);
+    Solution(ProblemData const &data, std::vector<Route> const &routes);
 };
 
-std::ostream &operator<<(std::ostream &out, Individual const &indiv);
-std::ostream &operator<<(std::ostream &out, Individual::Route const &route);
+std::ostream &operator<<(std::ostream &out, Solution const &sol);
+std::ostream &operator<<(std::ostream &out, Solution::Route const &route);
 
 namespace std
 {
-template <> struct hash<Individual>
+template <> struct hash<Solution>
 {
-    size_t operator()(Individual const &individual) const
+    size_t operator()(Solution const &sol) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(individual.routes_.size());
-        res = res * 31 + std::hash<Distance>()(individual.distance_);
-        res = res * 31 + std::hash<Load>()(individual.excessLoad_);
-        res = res * 31 + std::hash<Duration>()(individual.timeWarp_);
+        res = res * 31 + std::hash<size_t>()(sol.routes_.size());
+        res = res * 31 + std::hash<Distance>()(sol.distance_);
+        res = res * 31 + std::hash<Load>()(sol.excessLoad_);
+        res = res * 31 + std::hash<Duration>()(sol.timeWarp_);
 
         return res;
     }
 };
 }  // namespace std
 
-#endif  // PYVRP_INDIVIDUAL_H
+#endif  // PYVRP_SOLUTION_H

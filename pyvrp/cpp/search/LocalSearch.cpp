@@ -11,10 +11,10 @@
 
 using TWS = TimeWindowSegment;
 
-Individual LocalSearch::search(Individual &individual,
-                               CostEvaluator const &costEvaluator)
+Solution LocalSearch::search(Solution &solution,
+                             CostEvaluator const &costEvaluator)
 {
-    loadIndividual(individual);
+    loadSolution(solution);
 
     if (nodeOps.empty())
         throw std::runtime_error("No known node operators.");
@@ -73,14 +73,14 @@ Individual LocalSearch::search(Individual &individual,
         }
     }
 
-    return exportIndividual();
+    return exportSolution();
 }
 
-Individual LocalSearch::intensify(Individual &individual,
-                                  CostEvaluator const &costEvaluator,
-                                  int overlapToleranceDegrees)
+Solution LocalSearch::intensify(Solution &solution,
+                                CostEvaluator const &costEvaluator,
+                                int overlapToleranceDegrees)
 {
-    loadIndividual(individual);
+    loadSolution(solution);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
@@ -126,7 +126,7 @@ Individual LocalSearch::intensify(Individual &individual,
         }
     }
 
-    return exportIndividual();
+    return exportSolution();
 }
 
 void LocalSearch::shuffle(XorShift128 &rng)
@@ -294,7 +294,7 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
-void LocalSearch::loadIndividual(Individual const &individual)
+void LocalSearch::loadSolution(Solution const &solution)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
     {
@@ -308,7 +308,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 
-    auto const &routesIndiv = individual.getRoutes();
+    auto const &solRoutes = solution.getRoutes();
 
     for (size_t r = 0; r != data.numVehicles(); r++)
     {
@@ -329,19 +329,19 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         Route *route = &routes[r];
 
-        if (r < routesIndiv.size())
+        if (r < solRoutes.size())
         {
-            Node *client = &clients[routesIndiv[r][0]];
+            Node *client = &clients[solRoutes[r][0]];
             client->route = route;
 
             client->prev = startDepot;
             startDepot->next = client;
 
-            for (size_t idx = 1; idx < routesIndiv[r].size(); idx++)
+            for (size_t idx = 1; idx < solRoutes[r].size(); idx++)
             {
                 Node *prev = client;
 
-                client = &clients[routesIndiv[r][idx]];
+                client = &clients[solRoutes[r][idx]];
                 client->route = route;
 
                 client->prev = prev;
@@ -356,13 +356,13 @@ void LocalSearch::loadIndividual(Individual const &individual)
     }
 
     for (auto *routeOp : routeOps)
-        routeOp->init(individual);
+        routeOp->init(solution);
 }
 
-Individual LocalSearch::exportIndividual()
+Solution LocalSearch::exportSolution() const
 {
-    std::vector<Individual::Route> indivRoutes;
-    indivRoutes.reserve(data.numVehicles());
+    std::vector<Solution::Route> solRoutes;
+    solRoutes.reserve(data.numVehicles());
 
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
     {
@@ -380,11 +380,11 @@ Individual LocalSearch::exportIndividual()
                 node = node->next;
             }
             if (!visits.empty())
-                indivRoutes.emplace_back(data, visits, typeIdx);
+                solRoutes.emplace_back(data, visits, typeIdx);
         }
     }
 
-    return {data, indivRoutes};
+    return {data, solRoutes};
 }
 
 void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }

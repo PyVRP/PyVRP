@@ -3,8 +3,8 @@ from typing import List
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, Route, VehicleType, XorShift128
-from pyvrp.educate import (
+from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
+from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
     TwoOpt,
@@ -22,20 +22,20 @@ def test_OkSmall_instance():
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(TwoOpt(data))
 
-    individual = Individual(data, [[1, 2, 3, 4]])
-    improved_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(improved_individual.num_routes(), 2)
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_equal(improved_sol.num_routes(), 2)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
 
     # First improving (U, V) node pair is (1, 3), which results in the route
     # [1, 3, 2, 4]. The second improving node pair involves the depot of an
     # empty route: (1, 0). This results in routes [1] and [3, 2, 4].
-    expected = Individual(data, [[1], [3, 2, 4]])
-    assert_equal(improved_individual, expected)
+    expected = Solution(data, [[1], [3, 2, 4]])
+    assert_equal(improved_sol, expected)
 
 
 @mark.parametrize(
@@ -52,8 +52,8 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     # This instance tests a two-opt move that is improving when disregarding
     # the vehicle capacities. Depending on the (heterogeneous) capacities,
     # the move may or may not be improving and should be applied or not
-    # The starting individual has routes [1, 3] and [2, 4] with demands 8, 10
-    # the 2-opt individual has routes [1, 4] and [2, 3] with demands 10, 8
+    # The starting solution has routes [1, 3] and [2, 4] with demands 8, 10
+    # the 2-opt solution has routes [1, 4] and [2, 3] with demands 10, 8
 
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(10000, 6)  # Large capacity penalty
@@ -67,25 +67,21 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(TwoOpt(data))
 
-    individual1 = Individual(
-        data, [Route(data, [1, 3], 0), Route(data, [2, 4], 1)]
-    )
-    individual2 = Individual(
-        data, [Route(data, [1, 4], 0), Route(data, [2, 3], 1)]
-    )
-    cost1 = cost_evaluator.penalised_cost(individual1)
-    cost2 = cost_evaluator.penalised_cost(individual2)
-    # worse_cost = cost_evaluator.penalised_cost(worse_individual)
+    sol1 = Solution(data, [Route(data, [1, 3], 0), Route(data, [2, 4], 1)])
+    sol2 = Solution(data, [Route(data, [1, 4], 0), Route(data, [2, 3], 1)])
+    cost1 = cost_evaluator.penalised_cost(sol1)
+    cost2 = cost_evaluator.penalised_cost(sol2)
+    # worse_cost = cost_evaluator.penalised_cost(worse_sol)
     # assert(worse_cost > current_cost)
     assert cost1 != cost2
 
     # Using the local search, the result should not get worse
-    improved_individual1 = ls.search(individual1, cost_evaluator)
-    improved_individual2 = ls.search(individual2, cost_evaluator)
+    improved_sol1 = ls.search(sol1, cost_evaluator)
+    improved_sol2 = ls.search(sol2, cost_evaluator)
 
-    expected_individual = individual1 if cost1 < cost2 else individual2
-    assert_equal(improved_individual1, expected_individual)
-    assert_equal(improved_individual2, expected_individual)
+    expected_sol = sol1 if cost1 < cost2 else sol2
+    assert_equal(improved_sol1, expected_sol)
+    assert_equal(improved_sol2, expected_sol)
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
@@ -99,10 +95,10 @@ def test_RC208_instance(seed: int):
     ls.add_node_operator(TwoOpt(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, [single_route])
-    improved_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [single_route])
+    improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)

@@ -90,7 +90,7 @@ class SwapStar : public LocalSearchOperator<Route>
     BestMove best;
 
 public:
-    void init(Individual const &indiv) override;
+    void init(Solution const &solution) override;
 
     Cost
     evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;

@@ -6,9 +6,9 @@ from pytest import mark
 
 from pyvrp import (
     Client,
-    Individual,
     ProblemData,
     Route,
+    Solution,
     VehicleType,
     XorShift128,
 )
@@ -19,23 +19,23 @@ def test_route_constructor_raises_for_empty_routes():
     data = read("data/OkSmall.txt")
 
     with assert_raises(RuntimeError):
-        Individual(data, [[3, 4], [1, 2], []])
+        Solution(data, [[3, 4], [1, 2], []])
     with assert_raises(RuntimeError):
-        Individual(data, [[3, 4], [], [1, 2]])
+        Solution(data, [[3, 4], [], [1, 2]])
 
 
 def test_route_constructor_heterogeneous():
     data = read("data/OkSmall.txt")
     # Test heterogeneous case
     data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
-    indiv = Individual(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+    sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
 
     # num_routes() should show two non-empty routes.
-    assert_equal(indiv.num_routes(), 2)
+    assert_equal(sol.num_routes(), 2)
 
-    # We expect Individual to remove empty routes and return routes with the
+    # We expect Solution to remove empty routes and return routes with the
     # correct vehicle types;
-    routes = indiv.get_routes()
+    routes = sol.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
@@ -43,21 +43,21 @@ def test_route_constructor_heterogeneous():
     assert_equal(routes[1].vehicle_type(), 1)
 
     # Check for vehicle type 0
-    routes = indiv.get_routes_for_vehicle_type(0)
+    routes = sol.get_routes_for_vehicle_type(0)
     assert_equal(len(routes), 1)
     assert_equal(routes[0].visits(), [3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
 
     # Check for vehicle type 1
-    routes = indiv.get_routes_for_vehicle_type(1)
+    routes = sol.get_routes_for_vehicle_type(1)
     assert_equal(len(routes), 1)
     assert_equal(routes[0].visits(), [1, 2])
     assert_equal(routes[0].vehicle_type(), 1)
 
-    # Test if we have an individual with only the first type
-    indiv = Individual(data, [[1, 2, 3, 4]])
+    # Test if we have a solution with only the first type
+    sol = Solution(data, [[1, 2, 3, 4]])
     # Check for vehicle type 1
-    routes = indiv.get_routes_for_vehicle_type(1)
+    routes = sol.get_routes_for_vehicle_type(1)
     assert_equal(len(routes), 0)
 
 
@@ -68,10 +68,10 @@ def test_random_constructor_cycles_over_routes():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=42)
 
-    indiv = Individual.make_random(data, rng)
-    routes = indiv.get_routes()
+    sol = Solution.make_random(data, rng)
+    routes = sol.get_routes()
 
-    assert_equal(indiv.num_routes(), 2)
+    assert_equal(sol.num_routes(), 2)
     assert_equal(len(routes), 2)
 
     for idx, size in enumerate([2, 2]):
@@ -84,62 +84,58 @@ def test_route_constructor_raises_too_many_vehicles():
     assert_equal(data.num_vehicles, 3)
 
     # Only two routes should not raise.
-    individual = Individual(data, [[1, 2], [4, 3]])
-    assert_equal(len(individual.get_routes()), 2)
+    sol = Solution(data, [[1, 2], [4, 3]])
+    assert_equal(len(sol.get_routes()), 2)
 
     # Three routes should not raise.
-    Individual(data, [[1, 2], [4], [3]])
+    Solution(data, [[1, 2], [4], [3]])
 
     # More than three routes should raise, since we only have three vehicles.
     with assert_raises(RuntimeError):
-        Individual(data, [[1], [2], [3], [4]])
+        Solution(data, [[1], [2], [3], [4]])
 
     # Now test heterogeneous case
     data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
 
     # Only two routes (of type 0) should not raise.
-    individual = Individual(data, [[1, 2], [4, 3]])
-    assert_equal(len(individual.get_routes()), 2)
+    sol = Solution(data, [[1, 2], [4, 3]])
+    assert_equal(len(sol.get_routes()), 2)
 
     # One route of both vehicle types should not raise.
-    individual = Individual(
-        data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)]
-    )
-    assert_equal(len(individual.get_routes()), 2)
+    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)])
+    assert_equal(len(sol.get_routes()), 2)
 
     # Two routes of type 1 and one of type 2 should not raise as we have those.
-    individual = Individual(
+    sol = Solution(
         data,
         [Route(data, [1], 0), Route(data, [2], 0), Route(data, [4, 3], 1)],
     )
-    assert_equal(len(individual.get_routes()), 3)
+    assert_equal(len(sol.get_routes()), 3)
 
     # Two routes of vehicle type 1 should raise since we have only one.
     with assert_raises(RuntimeError):
-        individual = Individual(
-            data, [Route(data, [1, 2], 1), Route(data, [4, 3], 1)]
-        )
+        sol = Solution(data, [Route(data, [1, 2], 1), Route(data, [4, 3], 1)])
 
     # Three routes should raise since they are considered to be type 0.
     with assert_raises(RuntimeError):
-        Individual(data, [[1, 2], [4], [3]])
+        Solution(data, [[1, 2], [4], [3]])
 
 
 def test_route_constructor_raises_for_invalid_routes():
     data = read("data/OkSmall.txt")
     with assert_raises(RuntimeError):
-        Individual(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
+        Solution(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
 
     data = read("data/OkSmallPrizes.txt")
     with assert_raises(RuntimeError):
-        Individual(data, [[2], [3, 4]])  # 1 is required but not visited
+        Solution(data, [[2], [3, 4]])  # 1 is required but not visited
 
 
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[3, 4], [1, 2]])
-    neighbours = indiv.get_neighbours()
+    sol = Solution(data, [[3, 4], [1, 2]])
+    neighbours = sol.get_neighbours()
 
     expected = [
         (0, 0),  # 0: is depot
@@ -160,13 +156,11 @@ def test_get_assigned_vehicle_types():
     data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
 
     # One route of both vehicle types should not raise.
-    individual = Individual(
-        data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)]
-    )
+    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)])
 
     # Depot has -1 as assigned vehicle type
     expected = [-1, 0, 0, 1, 1]
-    assert_equal(individual.get_assigned_vehicle_types(), expected)
+    assert_equal(sol.get_assigned_vehicle_types(), expected)
 
 
 def test_get_assigned_vehicle_types_unassigned():
@@ -174,49 +168,47 @@ def test_get_assigned_vehicle_types_unassigned():
     # collecting.
     data = read("data/OkSmallPrizes.txt")
 
-    individual = Individual(data, [[1], [3, 4]])  # 2 not visited
+    sol = Solution(data, [[1], [3, 4]])  # 2 not visited
 
     # Depot and uncollected clients have -1 as assigned vehicle type
     expected = [-1, 0, -1, 0, 0]
-    assert_equal(individual.get_assigned_vehicle_types(), expected)
+    assert_equal(sol.get_assigned_vehicle_types(), expected)
 
 
 def test_feasibility():
     data = read("data/OkSmall.txt")
 
     # This solution is infeasible due to both load and time window violations.
-    indiv = Individual(data, [[1, 2, 3, 4]])
-    assert_(not indiv.is_feasible())
+    sol = Solution(data, [[1, 2, 3, 4]])
+    assert_(not sol.is_feasible())
 
     # First route has total load 18, but vehicle capacity is only 10.
-    assert_(indiv.has_excess_load())
+    assert_(sol.has_excess_load())
 
     # Client 4 has TW [8400, 15300], but client 2 cannot be visited before
     # 15600, so there must be time warp on the single-route solution.
-    assert_(indiv.has_time_warp())
+    assert_(sol.has_time_warp())
 
     # Let's try another solution that's actually feasible.
-    indiv = Individual(data, [[1, 2], [3], [4]])
-    assert_(indiv.is_feasible())
-    assert_(not indiv.has_excess_load())
-    assert_(not indiv.has_time_warp())
+    sol = Solution(data, [[1, 2], [3], [4]])
+    assert_(sol.is_feasible())
+    assert_(not sol.has_excess_load())
+    assert_(not sol.has_time_warp())
 
 
 def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[1, 2], [3], [4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 2], [3], [4]])
+    routes = sol.get_routes()
 
     # Solution is feasible, so all its routes should also be feasible.
-    assert_(indiv.is_feasible())
+    assert_(sol.is_feasible())
     assert_(all(route.is_feasible() for route in routes))
 
     # Solution distance should be equal to all routes' distances. These we
     # check separately.
-    assert_allclose(
-        indiv.distance(), sum(route.distance() for route in routes)
-    )
+    assert_allclose(sol.distance(), sum(route.distance() for route in routes))
 
     expected = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
     assert_allclose(routes[0].distance(), expected)
@@ -231,13 +223,13 @@ def test_distance_calculation():
 def test_excess_load_calculation():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[4, 3, 1, 2]])
-    assert_(indiv.has_excess_load())
-    assert_(not indiv.has_time_warp())
+    sol = Solution(data, [[4, 3, 1, 2]])
+    assert_(sol.has_excess_load())
+    assert_(not sol.has_time_warp())
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10.
-    assert_equal(indiv.excess_load(), 18 - data.vehicle_type(0).capacity)
+    assert_equal(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
 
 
 def test_heterogeneous_capacity_excess_load_calculation():
@@ -249,28 +241,28 @@ def test_heterogeneous_capacity_excess_load_calculation():
     # This instance has capacities 10 and 20 for vehicle type 0 and 1. The
     # total demand is 18 so if all demand is put in vehicle type 0 the
     # excess_load is 18 - 10 = 8.
-    indiv = Individual(data, [Route(data, [1, 2, 3, 4], 0)])
-    assert_(indiv.has_excess_load())
-    assert_equal(indiv.excess_load(), 8)
+    sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    assert_(sol.has_excess_load())
+    assert_equal(sol.excess_load(), 8)
 
     # With vehicle type 1, the capacity 20 is larger than 18.
-    indiv = Individual(data, [Route(data, [1, 2, 3, 4], 1)])
-    assert_(not indiv.has_excess_load())
-    assert_equal(indiv.excess_load(), 0)
+    sol = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+    assert_(not sol.has_excess_load())
+    assert_equal(sol.excess_load(), 0)
 
 
 def test_route_access_methods():
     data = read("data/OkSmall.txt")
-    indiv = Individual(data, [[1, 3], [2, 4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
 
     # Test route access: getting the route plan should return a simple list, as
-    # given to the individual above.
+    # given to the solution above.
     assert_equal(routes[0].visits(), [1, 3])
     assert_equal(routes[1].visits(), [2, 4])
 
     # There's no excess load, so all excess load should be zero.
-    assert_(not indiv.has_excess_load())
+    assert_(not sol.has_excess_load())
     assert_allclose(routes[0].excess_load(), 0)
     assert_allclose(routes[1].excess_load(), 0)
 
@@ -295,20 +287,20 @@ def test_route_access_methods():
 
 def test_route_time_warp_and_wait_duration():
     data = read("data/OkSmall.txt")
-    indiv = Individual(data, [[1, 3], [2, 4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
 
     # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
     # starts at 15'600, and completes at 15'600 + 360. Then we drive for
     # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
     # window). This is where we incur time warp: we need to 'warp' to 15'300.
-    assert_(indiv.has_time_warp())
+    assert_(sol.has_time_warp())
     assert_(routes[0].has_time_warp())
     assert_(not routes[1].has_time_warp())
     assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
     assert_allclose(routes[1].time_warp(), 0)
-    assert_allclose(indiv.time_warp(), routes[0].time_warp())
+    assert_allclose(sol.time_warp(), routes[0].time_warp())
 
     # On the first route, we have to wait at the first client, where we arrive
     # at 1'544, but cannot start service until 15'600. On the second route, we
@@ -351,13 +343,13 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
     # This solution directly visits the second client from the depot, which is
     # not time window feasible.
-    infeasible = Individual(data, [[1], [2]])
+    infeasible = Solution(data, [[1], [2]])
     assert_(infeasible.has_time_warp())
     assert_(not infeasible.has_excess_load())
     assert_(not infeasible.is_feasible())
 
     # But visiting the second client after the first is feasible.
-    feasible = Individual(data, [[1, 2]])
+    feasible = Solution(data, [[1, 2]])
     assert_(not feasible.has_time_warp())
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
@@ -377,32 +369,32 @@ def test_num_routes_calculation():
         data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
     )
 
-    indiv = Individual(data, [[1, 2, 3, 4]])
-    assert_equal(indiv.num_routes(), 1)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    assert_equal(sol.num_routes(), 1)
 
-    indiv = Individual(data, [Route(data, [1, 2, 3, 4], 0)])
-    assert_equal(indiv.num_routes(), 1)
+    sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    assert_equal(sol.num_routes(), 1)
 
-    indiv = Individual(data, [[1, 2], [3, 4]])
-    assert_equal(indiv.num_routes(), 2)
+    sol = Solution(data, [[1, 2], [3, 4]])
+    assert_equal(sol.num_routes(), 2)
 
     with assert_raises(RuntimeError):
         # This raises since we don't specify route types, which means we create
         # 3 routes of type 0 whereas we only have 2 available.
-        indiv = Individual(data, [[1], [2], [3, 4]])
+        sol = Solution(data, [[1], [2], [3, 4]])
 
     # It works if we specify the correct vehicle types
-    indiv = Individual(
+    sol = Solution(
         data,
         [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)],
     )
-    assert_equal(indiv.num_routes(), 3)
-    assert_equal(indiv.num_routes_for_vehicle_type(0), 2)
-    assert_equal(indiv.num_routes_for_vehicle_type(1), 1)
+    assert_equal(sol.num_routes(), 3)
+    assert_equal(sol.num_routes_for_vehicle_type(0), 2)
+    assert_equal(sol.num_routes_for_vehicle_type(1), 1)
 
     # But not if we violate the qty available per vehicle type
     with assert_raises(RuntimeError):
-        indiv = Individual(
+        sol = Solution(
             data,
             [Route(data, [1], 0), Route(data, [2], 1), Route(data, [3, 4], 1)],
         )
@@ -411,47 +403,47 @@ def test_num_routes_calculation():
 def test_copy():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[1, 2, 3, 4]])
-    copy_indiv = copy(indiv)
-    deepcopy_indiv = deepcopy(indiv)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    copy_sol = copy(sol)
+    deepcopy_sol = deepcopy(sol)
 
-    # Copied individuals are equal to the original individual
-    assert_(indiv == copy_indiv)
-    assert_(indiv == deepcopy_indiv)
+    # Copied solutions are equal to the original solution
+    assert_(sol == copy_sol)
+    assert_(sol == deepcopy_sol)
 
     # But they are not the same object
-    assert_(indiv is not copy_indiv)
-    assert_(indiv is not deepcopy_indiv)
+    assert_(sol is not copy_sol)
+    assert_(sol is not deepcopy_sol)
 
 
 def test_eq():
     data = read("data/OkSmall.txt")
 
-    indiv1 = Individual(data, [[1, 2, 3, 4]])
-    indiv2 = Individual(data, [[1, 2], [3], [4]])
-    indiv3 = Individual(data, [[1, 2, 3, 4]])
+    sol1 = Solution(data, [[1, 2, 3, 4]])
+    sol2 = Solution(data, [[1, 2], [3], [4]])
+    sol3 = Solution(data, [[1, 2, 3, 4]])
 
-    assert_(indiv1 == indiv1)  # individuals should be equal to themselves
-    assert_(indiv2 == indiv2)
-    assert_(indiv1 != indiv2)  # different routes, so should not be equal
-    assert_(indiv1 == indiv3)  # same solution, different individual
+    assert_(sol1 == sol1)  # Solutions should be equal to themselves
+    assert_(sol2 == sol2)
+    assert_(sol1 != sol2)  # different routes, so should not be equal
+    assert_(sol1 == sol3)  # same routes, different solution
 
-    indiv4 = Individual(data, [[1, 2, 3], [4]])
-    indiv5 = Individual(data, [[4], [1, 2, 3]])
+    sol4 = Solution(data, [[1, 2, 3], [4]])
+    sol5 = Solution(data, [[4], [1, 2, 3]])
 
-    assert_(indiv4 == indiv5)  # routes are the same, but in different order
+    assert_(sol4 == sol5)  # routes are the same, but in different order
 
-    # And a few tests against things that are not Individuals, just to be sure
+    # And a few tests against things that are not solutions, just to be sure
     # there's also a type check in there somewhere.
-    assert_(indiv4 != 1)
-    assert_(indiv4 != "abc")
-    assert_(indiv5 != 5)
-    assert_(indiv5 != "cd")
+    assert_(sol4 != 1)
+    assert_(sol4 != "abc")
+    assert_(sol5 != 5)
+    assert_(sol5 != "cd")
 
 
 def test_eq_heterogeneous_vehicle():
     """
-    Tests that two individuals are not considered equal if they have the same
+    Tests that two solutions are not considered equal if they have the same
     routes (orders of clients) but served by different vehicle types.
     """
     data = read("data/OkSmall.txt")
@@ -463,29 +455,29 @@ def test_eq_heterogeneous_vehicle():
     )
 
     # These two should be the same
-    indiv1 = Individual(data, [[1, 2, 3, 4]])
-    indiv2 = Individual(data, [Route(data, [1, 2, 3, 4], 0)])
-    # Create indiv with different vehicle type
-    indiv3 = Individual(data, [Route(data, [1, 2, 3, 4], 1)])
+    sol1 = Solution(data, [[1, 2, 3, 4]])
+    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    # Create solution with different vehicle type
+    sol3 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
 
-    # First two indivs have one route with the same vehicle type
-    assert_(indiv1 == indiv2)
-    # Indiv 3 is different since the route has a different vehicle type
-    assert_(indiv1 != indiv3)
+    # First two solution have one route with the same vehicle type
+    assert_(sol1 == sol2)
+    # Solution 3 is different since the route has a different vehicle type
+    assert_(sol1 != sol3)
 
     # Order should not matter so these should be the same
-    indiv1 = Individual(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
-    indiv2 = Individual(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
-    assert_(indiv1 == indiv2)
+    sol1 = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
+    sol2 = Solution(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
+    assert_(sol1 == sol2)
 
     # But changing the vehicle types should be different
-    indiv3 = Individual(data, [Route(data, [1, 2], 1), Route(data, [3, 4], 0)])
-    assert_(indiv1 != indiv3)
+    sol3 = Solution(data, [Route(data, [1, 2], 1), Route(data, [3, 4], 0)])
+    assert_(sol1 != sol3)
 
 
 def test_heterogeneous_route_sorting():
     """
-    Tests that individual sorts routes by vehicle type.
+    Tests that solution sorts routes by vehicle type.
     """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(
@@ -493,22 +485,22 @@ def test_heterogeneous_route_sorting():
     )
 
     # These routes should remain unchanged in their order
-    indiv1 = Individual(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
-    routes1 = indiv1.get_routes()
+    sol1 = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
+    routes1 = sol1.get_routes()
     assert_equal(routes1[0].vehicle_type(), 0)
     assert_equal(routes1[1].vehicle_type(), 1)
     assert_equal(routes1[0].visits(), [1, 2])
     assert_equal(routes1[1].visits(), [3, 4])
 
     # These routes should be sorted
-    indiv2 = Individual(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
-    routes2 = indiv2.get_routes()
+    sol2 = Solution(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
+    routes2 = sol2.get_routes()
     assert_equal(routes2[0].vehicle_type(), 0)
     assert_equal(routes2[1].vehicle_type(), 1)
     assert_equal(routes2[0].visits(), [1, 2])
     assert_equal(routes2[1].visits(), [3, 4])
-    # The individuals should be equal
-    assert_equal(indiv1, indiv2)
+    # The solutions should be equal
+    assert_equal(sol1, sol2)
 
 
 def test_duplicate_vehicle_types():
@@ -519,10 +511,10 @@ def test_duplicate_vehicle_types():
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 1)])
 
-    indiv1 = Individual(data, [Route(data, [1, 2, 3, 4], 0)])
-    indiv2 = Individual(data, [Route(data, [1, 2, 3, 4], 1)])
+    sol1 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
 
-    assert_(indiv1 != indiv2)
+    assert_(sol1 != sol2)
 
 
 @mark.parametrize(
@@ -536,10 +528,9 @@ def test_str_contains_routes(vehicle_types):
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
-        individual = Individual.make_random(data, rng)
-        str_representation = str(individual).splitlines()
-
-        routes = individual.get_routes()
+        sol = Solution.make_random(data, rng)
+        str_representation = str(sol).splitlines()
+        routes = sol.get_routes()
 
         # There should be no more than len(routes) lines (each detailing a
         # single route).
@@ -556,22 +547,22 @@ def test_hash():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=2)
 
-    indiv1 = Individual.make_random(data, rng)
-    indiv2 = Individual.make_random(data, rng)
+    sol1 = Solution.make_random(data, rng)
+    sol2 = Solution.make_random(data, rng)
 
-    hash1 = hash(indiv1)
-    hash2 = hash(indiv2)
+    hash1 = hash(sol1)
+    hash2 = hash(sol2)
 
     # Two random solutions. They're not the same, so the hashes should not be
     # the same either.
-    assert_(indiv1 != indiv2)
+    assert_(sol1 != sol2)
     assert_(hash1 != hash2)
 
-    indiv3 = deepcopy(indiv2)  # is a direct copy
+    sol3 = deepcopy(sol2)  # is a direct copy
 
     # These two are the same solution, so their hashes should be the same too.
-    assert_equal(indiv2, indiv3)
-    assert_equal(hash(indiv2), hash(indiv3))
+    assert_equal(sol2, sol3)
+    assert_equal(hash(sol2), hash(sol3))
 
 
 def test_route_centroid():

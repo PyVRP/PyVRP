@@ -1,4 +1,4 @@
-#include "Individual.h"
+#include "Solution.h"
 
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -8,61 +8,56 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_Individual, m)
+PYBIND11_MODULE(_Solution, m)
 {
-    py::class_<Individual::Route>(m, "Route")
+    py::class_<Solution::Route>(m, "Route")
         .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicleType") = 0)
         .def("visits",
-             &Individual::Route::visits,
+             &Solution::Route::visits,
              py::return_value_policy::reference_internal)
-        .def("distance",
-             [](Individual::Route const &route) {
-                 return route.distance().get();
-             })
         .def(
-            "demand",
-            [](Individual::Route const &route) { return route.demand().get(); })
+            "distance",
+            [](Solution::Route const &route) { return route.distance().get(); })
+        .def("demand",
+             [](Solution::Route const &route) { return route.demand().get(); })
         .def("excess_load",
-             [](Individual::Route const &route) {
+             [](Solution::Route const &route) {
                  return route.excessLoad().get();
              })
-        .def("duration",
-             [](Individual::Route const &route) {
-                 return route.duration().get();
-             })
+        .def(
+            "duration",
+            [](Solution::Route const &route) { return route.duration().get(); })
         .def("service_duration",
-             [](Individual::Route const &route) {
+             [](Solution::Route const &route) {
                  return route.serviceDuration().get();
              })
-        .def("time_warp",
-             [](Individual::Route const &route) {
-                 return route.timeWarp().get();
-             })
+        .def(
+            "time_warp",
+            [](Solution::Route const &route) { return route.timeWarp().get(); })
         .def("wait_duration",
-             [](Individual::Route const &route) {
+             [](Solution::Route const &route) {
                  return route.waitDuration().get();
              })
-        .def(
-            "prizes",
-            [](Individual::Route const &route) { return route.prizes().get(); })
-        .def("centroid", &Individual::Route::centroid)
-        .def("vehicle_type", &Individual::Route::vehicleType)
-        .def("is_feasible", &Individual::Route::isFeasible)
-        .def("has_excess_load", &Individual::Route::hasExcessLoad)
-        .def("has_time_warp", &Individual::Route::hasTimeWarp)
-        .def("__len__", &Individual::Route::size)
+        .def("prizes",
+             [](Solution::Route const &route) { return route.prizes().get(); })
+        .def("centroid", &Solution::Route::centroid)
+        .def("vehicle_type", &Solution::Route::vehicleType)
+        .def("is_feasible", &Solution::Route::isFeasible)
+        .def("has_excess_load", &Solution::Route::hasExcessLoad)
+        .def("has_time_warp", &Solution::Route::hasTimeWarp)
+        .def("__len__", &Solution::Route::size)
         .def(
             "__iter__",
-            [](Individual::Route const &route) {
+            [](Solution::Route const &route) {
                 return py::make_iterator(route.cbegin(), route.cend());
             },
             py::return_value_policy::reference_internal)
         .def(
             "__getitem__",
-            [](Individual::Route const &route, int idx) {
+            [](Solution::Route const &route, int idx) {
                 // int so we also support negative offsets from the end.
                 idx = idx < 0 ? route.size() + idx : idx;
                 if (idx < 0 || static_cast<size_t>(idx) >= route.size())
@@ -70,19 +65,19 @@ PYBIND11_MODULE(_Individual, m)
                 return route[idx];
             },
             py::arg("idx"))
-        .def("__str__", [](Individual::Route const &route) {
+        .def("__str__", [](Solution::Route const &route) {
             std::stringstream stream;
             stream << route;
             return stream.str();
         });
 
-    py::class_<Individual>(m, "Individual")
+    py::class_<Solution>(m, "Solution")
         // Note, order of constructors is important, since Route implements
         // __len__ and __index__, it can also be converted to std::vector<int>
         // and thus passing a list of Route objects is also valid for the
         // second constructor. PyBind will use the first matching one.
         .def(py::init<ProblemData const &,
-                      std::vector<Individual::Route> const &>(),
+                      std::vector<Solution::Route> const &>(),
              py::arg("data"),
              py::arg("routes"))
         .def(py::init<ProblemData const &,
@@ -95,69 +90,52 @@ PYBIND11_MODULE(_Individual, m)
             {                             // not yet support those natively.
                 return py::cpp_function(  // See issue 1693 in the pybind repo.
                     [](ProblemData const &data, XorShift128 &rng) {
-                        return Individual(data, rng);
+                        return Solution(data, rng);
                     },
                     py::arg("data"),
                     py::arg("rng"));
             })
-        .def("num_routes", &Individual::numRoutes)
+        .def("num_routes", &Solution::numRoutes)
         .def("num_routes_for_vehicle_type",
-             &Individual::numRoutesForVehicleType,
+             &Solution::numRoutesForVehicleType,
              py::arg("vehicle_type"))
-        .def("num_clients", &Individual::numClients)
+        .def("num_clients", &Solution::numClients)
         .def("get_routes",
-             &Individual::getRoutes,
+             &Solution::getRoutes,
              py::return_value_policy::reference_internal)
         .def("get_routes_for_vehicle_type",
-             &Individual::getRoutesForVehicleType,
+             &Solution::getRoutesForVehicleType,
              py::return_value_policy::reference_internal,
              py::arg("vehicle_type"))
         .def("get_neighbours",
-             &Individual::getNeighbours,
+             &Solution::getNeighbours,
              py::return_value_policy::reference_internal)
         .def("get_assigned_vehicle_types",
-             &Individual::getAssignedVehicleTypes,
+             &Solution::getAssignedVehicleTypes,
              py::return_value_policy::reference_internal)
-        .def("is_feasible", &Individual::isFeasible)
-        .def("has_excess_load", &Individual::hasExcessLoad)
-        .def("has_time_warp", &Individual::hasTimeWarp)
+        .def("is_feasible", &Solution::isFeasible)
+        .def("has_excess_load", &Solution::hasExcessLoad)
+        .def("has_time_warp", &Solution::hasTimeWarp)
         .def("distance",
-             [](Individual const &individual) {
-                 return individual.distance().get();
-             })
+             [](Solution const &sol) { return sol.distance().get(); })
         .def("excess_load",
-             [](Individual const &individual) {
-                 return individual.excessLoad().get();
-             })
+             [](Solution const &sol) { return sol.excessLoad().get(); })
         .def("time_warp",
-             [](Individual const &individual) {
-                 return individual.timeWarp().get();
-             })
-        .def("prizes",
-             [](Individual const &individual) {
-                 return individual.prizes().get();
-             })
+             [](Solution const &sol) { return sol.timeWarp().get(); })
+        .def("prizes", [](Solution const &sol) { return sol.prizes().get(); })
         .def("uncollected_prizes",
-             [](Individual const &individual) {
-                 return individual.uncollectedPrizes().get();
-             })
-        .def(
-            "__copy__",
-            [](Individual const &individual) { return Individual(individual); })
+             [](Solution const &sol) { return sol.uncollectedPrizes().get(); })
+        .def("__copy__", [](Solution const &sol) { return Solution(sol); })
         .def(
             "__deepcopy__",
-            [](Individual const &individual, py::dict) {
-                return Individual(individual);
-            },
+            [](Solution const &sol, py::dict) { return Solution(sol); },
             py::arg("memo"))
         .def("__hash__",
-             [](Individual const &individual) {
-                 return std::hash<Individual>()(individual);
-             })
+             [](Solution const &sol) { return std::hash<Solution>()(sol); })
         .def(py::self == py::self)  // this is __eq__
-        .def("__str__", [](Individual const &individual) {
+        .def("__str__", [](Solution const &sol) {
             std::stringstream stream;
-            stream << individual;
+            stream << sol;
             return stream.str();
         });
 }

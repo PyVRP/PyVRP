@@ -3,7 +3,7 @@ import itertools
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, Route, VehicleType, XorShift128
+from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._selective_route_exchange import (
     selective_route_exchange as cpp_srex,
@@ -20,10 +20,10 @@ def test_same_parents_same_offspring():
     cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
 
-    individual = Individual(data, [[1, 2], [3, 4]])
-    offspring = srex((individual, individual), data, cost_evaluator, rng)
+    solution = Solution(data, [[1, 2], [3, 4]])
+    offspring = srex((solution, solution), data, cost_evaluator, rng)
 
-    assert_equal(offspring, individual)
+    assert_equal(offspring, solution)
 
 
 @mark.parametrize(
@@ -39,12 +39,12 @@ def test_raise_invalid_arguments(idx1, idx2, num_moved_routes):
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[1], [2], [3, 4]])
-    indiv2 = Individual(data, [[1, 2, 3, 4]])
+    sol1 = Solution(data, [[1], [2], [3, 4]])
+    sol2 = Solution(data, [[1, 2, 3, 4]])
 
     with assert_raises(ValueError):
         cpp_srex(
-            (indiv1, indiv2),
+            (sol1, sol2),
             data,
             cost_evaluator,
             (idx1, idx2),
@@ -60,12 +60,12 @@ def test_srex_move_all_routes():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[1], [2], [3, 4]])
-    indiv2 = Individual(data, [[1, 2], [3], [4]])
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 3)
+    sol1 = Solution(data, [[1], [2], [3, 4]])
+    sol2 = Solution(data, [[1, 2], [3], [4]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 3)
 
     # Note: result will be permuted but equality is invariant to that.
-    assert_equal(offspring, indiv2)
+    assert_equal(offspring, sol2)
 
 
 def test_srex_sorts_routes():
@@ -82,18 +82,18 @@ def test_srex_sorts_routes():
 
     routes1 = [[1], [2], [3, 4]]
     routes2 = [[1, 2], [3], [4]]
-    indiv1 = Individual(data, routes1)
-    indiv2 = Individual(data, routes2)
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    sol1 = Solution(data, routes1)
+    sol2 = Solution(data, routes2)
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 1)
 
     for permuted_routes1 in itertools.permutations(routes1):
         for permuted_routes2 in itertools.permutations(routes2):
-            indiv1 = Individual(data, permuted_routes1)
-            indiv2 = Individual(data, permuted_routes2)
-            offspring_permuted = cpp_srex(
-                (indiv1, indiv2), data, cost_evaluator, (0, 0), 1
+            sol1 = Solution(data, permuted_routes1)
+            sol2 = Solution(data, permuted_routes2)
+            permuted_offspring = cpp_srex(
+                (sol1, sol2), data, cost_evaluator, (0, 0), 1
             )
-            assert_equal(offspring_permuted, offspring)
+            assert_equal(permuted_offspring, offspring)
 
 
 def test_srex_greedy_repair():
@@ -103,17 +103,17 @@ def test_srex_greedy_repair():
     data = read("data/OkSmallGreedyRepair.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[3, 4], [1, 2]])
-    indiv2 = Individual(data, [[2, 3], [4, 1]])
+    sol1 = Solution(data, [[3, 4], [1, 2]])
+    sol2 = Solution(data, [[2, 3], [4, 1]])
 
     # The start indices do not change because there are no improving moves.
-    # So, indiv1's route [3, 4] will be replaced by indiv2's route [2, 3].
+    # So, sol1's route [3, 4] will be replaced by sol2's route [2, 3].
     # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
     # which are both repaired using greedy repair. After repair, we obtain the
     # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
     # cost 9725. The first one is returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
-    expected = Individual(data, [[2, 3, 4], [1]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 1)
+    expected = Solution(data, [[2, 3, 4], [1]])
     assert_equal(offspring, expected)
 
 
@@ -128,14 +128,10 @@ def test_srex_heterogeneous_greedy_repair():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them, and create a heterogeneous version for each
-    indiv1 = Individual(data, [[3, 4], [1, 2]])
-    indiv1h = Individual(
-        data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)]
-    )
-    indiv2 = Individual(data, [[2, 3], [4, 1]])
-    indiv2h = Individual(
-        data, [Route(data, [2, 3], 0), Route(data, [4, 1], 1)]
-    )
+    indiv1 = Solution(data, [[3, 4], [1, 2]])
+    indiv1h = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+    indiv2 = Solution(data, [[2, 3], [4, 1]])
+    indiv2h = Solution(data, [Route(data, [2, 3], 0), Route(data, [4, 1], 1)])
 
     # The start indices do not change because there are no improving moves.
     # So, indiv1's route [3, 4] will be replaced by indiv2's route [2, 3].
@@ -185,20 +181,20 @@ def test_srex_changed_start_indices():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[4], [1, 2, 3]])
-    indiv2 = Individual(data, [[3], [1, 2, 4]])
+    sol1 = Solution(data, [[4], [1, 2, 3]])
+    sol2 = Solution(data, [[3], [1, 2, 4]])
 
-    # We will start with idx1 = 1 and idx2 = 1 (1 for both indivs)
+    # We will start with idx1 = 1 and idx2 = 1 (1 for both solutions)
     # The difference for A to move left (= right) is -1. The difference for B
     # to move left (= right) is 1. The new indices become idx1 = 0 and
     # idx2 = 1. There are no improving moves in this position since the
     # difference for A to move is 1 and difference for B to move is 1.
-    # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
+    # So, sol1's route [4] will be replaced by sol2's route [1, 2, 4].
     # This results in two candidate offspring, [[1, 2, 4], [3]] with cost
     # 10195, and [[4], [1, 2, 3]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
-    expected = Individual(data, [[1, 2, 4], [3]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (1, 1), 1)
+    expected = Solution(data, [[1, 2, 4], [3]])
     assert_equal(offspring, expected)
 
 
@@ -214,14 +210,10 @@ def test_srex_heterogeneous_changed_start_indices():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them
-    indiv1 = Individual(data, [[4], [1, 2, 3]])
-    indiv1h = Individual(
-        data, [Route(data, [4], 0), Route(data, [1, 2, 3], 1)]
-    )
-    indiv2 = Individual(data, [[3], [1, 2, 4]])
-    indiv2h = Individual(
-        data, [Route(data, [3], 0), Route(data, [1, 2, 4], 1)]
-    )
+    indiv1 = Solution(data, [[4], [1, 2, 3]])
+    indiv1h = Solution(data, [Route(data, [4], 0), Route(data, [1, 2, 3], 1)])
+    indiv2 = Solution(data, [[3], [1, 2, 4]])
+    indiv2h = Solution(data, [Route(data, [3], 0), Route(data, [1, 2, 4], 1)])
 
     # We will start with idx1 = 1 and idx2 = 1 (1 for both indivs)
     # Note that the indices relate to the indices of the non-empty routes!
@@ -275,8 +267,8 @@ def test_srex_a_right_move():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    indiv1 = Individual(data, [[4], [2], [1, 3]])
-    indiv2 = Individual(data, [[3], [2], [4, 1]])
+    sol1 = Solution(data, [[4], [2], [1, 3]])
+    sol2 = Solution(data, [[3], [2], [4, 1]])
 
     # We describe the A-right case here in detail. The tests below for A-left,
     # B-left and B-right can be worked out similarly. Note that the test cases
@@ -307,8 +299,8 @@ def test_srex_a_right_move():
     # Candidate offspring
     # [4, 1] [2] [3] - cost: 12699 <-- selected as new offspring
     # [4] [2] [1, 3] - cost: 24416
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
-    expected = Individual(data, [[4, 1], [2], [3]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (2, 2), 1)
+    expected = Solution(data, [[4, 1], [2], [3]])
     assert_equal(offspring, expected)
 
 
@@ -322,11 +314,11 @@ def test_srex_a_left_move():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them.
-    indiv1 = Individual(data, [[2], [1, 3], [4]])
-    indiv2 = Individual(data, [[3], [2, 1], [4]])
+    sol1 = Solution(data, [[2], [1, 3], [4]])
+    sol2 = Solution(data, [[3], [2, 1], [4]])
 
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 2), 1)
-    expected = Individual(data, [[4], [2, 1], [3]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (2, 2), 1)
+    expected = Solution(data, [[4], [2, 1], [3]])
     assert_equal(offspring, expected)
 
 
@@ -340,10 +332,10 @@ def test_srex_b_left_move():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them.
-    indiv1 = Individual(data, [[2], [1, 3], [4]])
-    indiv2 = Individual(data, [[3], [4, 1], [2]])
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 2), 1)
-    expected = Individual(data, [[4, 1], [2], [3]])
+    sol1 = Solution(data, [[2], [1, 3], [4]])
+    sol2 = Solution(data, [[3], [4, 1], [2]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (1, 2), 1)
+    expected = Solution(data, [[4, 1], [2], [3]])
     assert_equal(offspring, expected)
 
 
@@ -357,9 +349,9 @@ def test_srex_b_right_move():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them.
-    indiv1 = Individual(data, [[2], [1, 3], [4]])
-    indiv2 = Individual(data, [[3], [2, 1], [4]])
+    sol1 = Solution(data, [[2], [1, 3], [4]])
+    sol2 = Solution(data, [[3], [2, 1], [4]])
 
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (2, 1), 1)
-    expected = Individual(data, [[4], [2], [1, 3]])
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (2, 1), 1)
+    expected = Solution(data, [[4], [2], [1, 3]])
     assert_equal(offspring, expected)

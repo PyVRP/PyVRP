@@ -12,28 +12,28 @@ except ModuleNotFoundError:
     msg = "Install 'tqdm' and 'tomli' to use the command line program."
     raise ModuleNotFoundError(msg)
 
-import pyvrp.educate
+import pyvrp.search
 from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
-    Individual,
     PenaltyManager,
     PenaltyParams,
     Population,
     PopulationParams,
     Result,
+    Solution,
     XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.educate import (
+from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
+from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
 from pyvrp.stop import MaxIterations, MaxRuntime
 
 
@@ -136,21 +136,20 @@ def solve(
 
     node_ops = NODE_OPERATORS
     if "node_ops" in config:
-        node_ops = [getattr(pyvrp.educate, op) for op in config["node_ops"]]
+        node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
 
     for op in node_ops:
         ls.add_node_operator(op(data))
 
     route_ops = ROUTE_OPERATORS
     if "route_ops" in config:
-        route_ops = [getattr(pyvrp.educate, op) for op in config["route_ops"]]
+        route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
 
     for op in route_ops:
         ls.add_route_operator(op(data))
 
     init = [
-        Individual.make_random(data, rng)
-        for _ in range(pop_params.min_pop_size)
+        Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
     ]
     algo = GeneticAlgorithm(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
@@ -184,7 +183,7 @@ def benchmark_solve(instance: str, **kwargs):
     """
     Small wrapper script around ``solve()`` that translates result objects into
     a few key statistics, and returns those. This is needed because the result
-    solution (of type ``Individual``) cannot be pickled.
+    solution (of type ``Solution``) cannot be pickled.
     """
     res = solve(instance, **kwargs)
     instance_name = Path(instance).stem

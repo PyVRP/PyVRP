@@ -1,8 +1,8 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
-from pyvrp.educate import (
+from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp.search import (
     Exchange10,
     LocalSearch,
     NeighbourhoodParams,
@@ -29,18 +29,18 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     ls.add_route_operator(RelocateStar(data))
 
     for _ in range(10):  # repeat a few times to really make sure
-        individual = Individual.make_random(data, rng)
-        exchange_individual = ls.search(individual, cost_evaluator)
-        relocate_individual = ls.intensify(
-            exchange_individual, cost_evaluator, overlap_tolerance_degrees=360
+        sol = Solution.make_random(data, rng)
+        exchange_sol = ls.search(sol, cost_evaluator)
+        relocate_sol = ls.intensify(
+            exchange_sol, cost_evaluator, overlap_tolerance_degrees=360
         )
 
         # RELOCATE* applies the best (1, 0)-exchange moves between routes. But
         # when the granular neighbourhood covers the entire client space, that
         # best move has already been evaluated and applied by regular (1,0)
-        # exchange. Thus, at this point the individual cannot be improved
+        # exchange. Thus, at this point the solution cannot be improved
         # further by RELOCATE*.
-        assert_equal(relocate_individual, exchange_individual)
+        assert_equal(relocate_sol, exchange_sol)
 
 
 @mark.parametrize("size", [2, 5, 10])
@@ -59,19 +59,19 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     ls.add_node_operator(Exchange10(data))
     ls.add_route_operator(RelocateStar(data))
 
-    individual = Individual.make_random(data, rng)
-    exchange_individual = ls.search(individual, cost_evaluator)
-    relocate_individual = ls.intensify(
-        exchange_individual, cost_evaluator, overlap_tolerance_degrees=360
+    sol = Solution.make_random(data, rng)
+    exchange_sol = ls.search(sol, cost_evaluator)
+    relocate_sol = ls.intensify(
+        exchange_sol, cost_evaluator, overlap_tolerance_degrees=360
     )
 
-    # The original individual was not that great, so after (1, 0)-Exchange it
+    # The original solution was not that great, so after (1, 0)-Exchange it
     # should have improved. But that operator is restricted by the size of the
     # granular neighbourhood, which limits the number of operators. RELOCATE*
     # overcomes some of that, and as a result, should be able to improve the
     # solution further.
-    current_cost = cost_evaluator.penalised_cost(individual)
-    exchange_cost = cost_evaluator.penalised_cost(exchange_individual)
-    relocate_cost = cost_evaluator.penalised_cost(relocate_individual)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    exchange_cost = cost_evaluator.penalised_cost(exchange_sol)
+    relocate_cost = cost_evaluator.penalised_cost(relocate_sol)
     assert_(current_cost > exchange_cost)
     assert_(exchange_cost > relocate_cost)
