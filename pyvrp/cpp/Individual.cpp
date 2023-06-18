@@ -96,6 +96,8 @@ void Individual::makeAssignedVehicleTypes()
 
 void Individual::makeRoutesPerVehicleType()
 {
+    if (routes_.empty())
+        return;
     auto start = routes_.begin();
     for (auto it = routes_.begin(); it != routes_.end(); ++it)
     {
