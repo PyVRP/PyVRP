@@ -79,7 +79,7 @@ class ProblemData:
         depot. The time window for the depot is assumed to describe the overall
         time horizon. The depot should have 0 demand and 0 service duration.
     vehicle_types
-        List of vehicle_types in the problem instance.
+        List of vehicle types in the problem instance.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0).

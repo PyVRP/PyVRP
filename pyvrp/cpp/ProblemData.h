@@ -36,8 +36,6 @@ public:
     {
         Load capacity;        // Capacity (max total demand) of the vehicle
         size_t numAvailable;  // Qty available of this vehicle type
-        inline bool operator==(VehicleType const &other) const;
-        inline bool operator!=(VehicleType const &other) const;
     };
 
 private:
@@ -113,7 +111,7 @@ public:
     [[nodiscard]] size_t numVehicleTypes() const;
 
     /**
-     * @return Total number of routes available in this instance.
+     * @return Total number of vehicles available in this instance.
      */
     [[nodiscard]] size_t numVehicles() const;
 
@@ -137,16 +135,6 @@ public:
                 Matrix<Distance> const distMat,
                 Matrix<Duration> const durMat);
 };
-
-inline bool ProblemData::VehicleType::operator==(VehicleType const &other) const
-{
-    return capacity == other.capacity;
-}
-
-inline bool ProblemData::VehicleType::operator!=(VehicleType const &other) const
-{
-    return !(*this == other);
-}
 
 ProblemData::Client const &ProblemData::client(size_t client) const
 {

@@ -69,7 +69,7 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       numVehicles_(std::accumulate(vehicleTypes.begin(),
                                    vehicleTypes.end(),
                                    0,
-                                   [](int sum, const VehicleType &vehicleType) {
+                                   [](int sum, VehicleType const &vehicleType) {
                                        return sum + vehicleType.numAvailable;
                                    })),
       numVehicleTypes_(vehicleTypes.size())

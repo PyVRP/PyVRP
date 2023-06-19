@@ -96,7 +96,7 @@ PYBIND11_MODULE(_ProblemData, m)
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("idx"),
-             py::return_value_policy::reference)
+             py::return_value_policy::reference_internal)
         .def(
             "dist",
             [](ProblemData const &data, size_t first, size_t second) {
