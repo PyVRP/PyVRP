@@ -25,8 +25,8 @@ PYBIND11_MODULE(_SubPopulation, m)
         .def_readwrite("ub_diversity", &PopulationParams::ubDiversity);
 
     py::class_<SubPopulation::Item>(m, "SubPopulationItem")
-        .def_readonly("individual",
-                      &SubPopulation::Item::individual,
+        .def_readonly("solution",
+                      &SubPopulation::Item::solution,
                       py::return_value_policy::reference_internal)
         .def_readonly("fitness", &SubPopulation::Item::fitness)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
@@ -38,7 +38,7 @@ PYBIND11_MODULE(_SubPopulation, m)
              py::keep_alive<1, 3>())  // keep params alive
         .def("add",
              &SubPopulation::add,
-             py::arg("individual"),
+             py::arg("solution"),
              py::arg("cost_evaluator"))
         .def("__len__", &SubPopulation::size)
         .def(

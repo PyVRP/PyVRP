@@ -1,4 +1,4 @@
-#include "Individual.h"
+#include "Solution.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
@@ -8,9 +8,9 @@
 
 using Client = int;
 using Visits = std::vector<Client>;
-using Routes = std::vector<Individual::Route>;
+using Routes = std::vector<Solution::Route>;
 
-void Individual::evaluate(ProblemData const &data)
+void Solution::evaluate(ProblemData const &data)
 {
     Cost allPrizes = 0;
     for (size_t client = 1; client <= data.numClients(); ++client)
@@ -18,11 +18,7 @@ void Individual::evaluate(ProblemData const &data)
 
     for (auto const &route : routes_)
     {
-        if (route.empty())  // First empty route. All subsequent routes are
-            break;          // empty as well.
-
         // Whole solution statistics.
-        numRoutes_++;
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
@@ -33,37 +29,34 @@ void Individual::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-size_t Individual::numRoutes() const { return numRoutes_; }
+size_t Solution::numRoutes() const { return routes_.size(); }
 
-size_t Individual::numClients() const { return numClients_; }
+size_t Solution::numClients() const { return numClients_; }
 
-Routes const &Individual::getRoutes() const { return routes_; }
+Routes const &Solution::getRoutes() const { return routes_; }
 
-std::vector<std::pair<Client, Client>> const &Individual::getNeighbours() const
+std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
 {
     return neighbours;
 }
 
-bool Individual::isFeasible() const
-{
-    return !hasExcessLoad() && !hasTimeWarp();
-}
+bool Solution::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Individual::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Individual::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
-Distance Individual::distance() const { return distance_; }
+Distance Solution::distance() const { return distance_; }
 
-Load Individual::excessLoad() const { return excessLoad_; }
+Load Solution::excessLoad() const { return excessLoad_; }
 
-Cost Individual::prizes() const { return prizes_; }
+Cost Solution::prizes() const { return prizes_; }
 
-Cost Individual::uncollectedPrizes() const { return uncollectedPrizes_; }
+Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
-Duration Individual::timeWarp() const { return timeWarp_; }
+Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Individual::makeNeighbours()
+void Solution::makeNeighbours()
 {
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
@@ -72,7 +65,7 @@ void Individual::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-bool Individual::operator==(Individual const &other) const
+bool Solution::operator==(Solution const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the neighbours are all equal.
@@ -80,13 +73,13 @@ bool Individual::operator==(Individual const &other) const
     return distance_ == other.distance_
         && excessLoad_ == other.excessLoad_
         && timeWarp_ == other.timeWarp_
-        && numRoutes_ == other.numRoutes_
+        && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours;
     // clang-format on
 }
 
-Individual::Individual(ProblemData const &data, XorShift128 &rng)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
+Solution::Solution(ProblemData const &data, XorShift128 &rng)
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -99,21 +92,23 @@ Individual::Individual(ProblemData const &data, XorShift128 &rng)
     auto const numClients = data.numClients();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
     auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
-    std::vector<std::vector<Client>> routes(data.numVehicles());
+    std::vector<std::vector<Client>> routes(numRoutes);
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
+    routes_.reserve(numRoutes);
+    for (size_t idx = 0; idx != numRoutes; ++idx)
+        routes_.emplace_back(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
 }
 
-Individual::Individual(ProblemData const &data,
-                       std::vector<std::vector<Client>> const &routes)
-    : routes_(data.numVehicles()), neighbours(data.numClients() + 1, {0, 0})
+Solution::Solution(ProblemData const &data,
+                   std::vector<std::vector<Client>> const &routes)
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
@@ -143,20 +138,17 @@ Individual::Individual(ProblemData const &data,
         }
     }
 
+    // Only store non-empty routes
+    routes_.reserve(routes.size());
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        routes_[idx] = Route(data, routes[idx]);
-
-    // a precedes b only when a is not empty and b is. Combined with a stable
-    // sort, this ensures we keep the original sorting as much as possible, but
-    // also make sure all empty routes are at the end of routes_.
-    auto comp = [](auto &a, auto &b) { return !a.empty() && b.empty(); };
-    std::stable_sort(routes_.begin(), routes_.end(), comp);
+        if (!routes[idx].empty())
+            routes_.emplace_back(data, routes[idx]);
 
     makeNeighbours();
     evaluate(data);
 }
 
-Individual::Route::Route(ProblemData const &data, Visits const visits)
+Solution::Route::Route(ProblemData const &data, Visits const visits)
     : visits_(std::move(visits)), centroid_({0, 0})
 {
     if (visits_.empty())
@@ -196,88 +188,83 @@ Individual::Route::Route(ProblemData const &data, Visits const visits)
                       : 0;
 }
 
-bool Individual::Route::empty() const { return visits_.empty(); }
+bool Solution::Route::empty() const { return visits_.empty(); }
 
-size_t Individual::Route::size() const { return visits_.size(); }
+size_t Solution::Route::size() const { return visits_.size(); }
 
-Client Individual::Route::operator[](size_t idx) const { return visits_[idx]; }
+Client Solution::Route::operator[](size_t idx) const { return visits_[idx]; }
 
-Visits::const_iterator Individual::Route::begin() const
+Visits::const_iterator Solution::Route::begin() const
 {
     return visits_.cbegin();
 }
 
-Visits::const_iterator Individual::Route::end() const { return visits_.cend(); }
+Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
 
-Visits::const_iterator Individual::Route::cbegin() const
+Visits::const_iterator Solution::Route::cbegin() const
 {
     return visits_.cbegin();
 }
 
-Visits::const_iterator Individual::Route::cend() const
-{
-    return visits_.cend();
-}
+Visits::const_iterator Solution::Route::cend() const { return visits_.cend(); }
 
-Visits const &Individual::Route::visits() const { return visits_; }
+Visits const &Solution::Route::visits() const { return visits_; }
 
-Distance Individual::Route::distance() const { return distance_; }
+Distance Solution::Route::distance() const { return distance_; }
 
-Load Individual::Route::demand() const { return demand_; }
+Load Solution::Route::demand() const { return demand_; }
 
-Load Individual::Route::excessLoad() const { return excessLoad_; }
+Load Solution::Route::excessLoad() const { return excessLoad_; }
 
-Duration Individual::Route::travelDuration() const { return travel_; }
+Duration Solution::Route::travelDuration() const { return travel_; }
 
-Duration Individual::Route::serviceDuration() const { return service_; }
+Duration Solution::Route::serviceDuration() const { return service_; }
 
-Duration Individual::Route::timeWarp() const { return tws_.timeWarp(); }
+Duration Solution::Route::timeWarp() const { return tws_.timeWarp(); }
 
-Duration Individual::Route::waitDuration() const
+Duration Solution::Route::waitDuration() const
 {
     return tws_.duration() - travel_ - service_;
 }
 
-Duration Individual::Route::duration() const { return tws_.duration(); }
+Duration Solution::Route::duration() const { return tws_.duration(); }
 
-Duration Individual::Route::earliestStart() const { return tws_.twEarly(); }
+Duration Solution::Route::earliestStart() const { return tws_.twEarly(); }
 
-Duration Individual::Route::latestStart() const { return tws_.twLate(); }
+Duration Solution::Route::latestStart() const { return tws_.twLate(); }
 
-Duration Individual::Route::slack() const
+Duration Solution::Route::slack() const
 {
     return tws_.twLate() - tws_.twEarly();
 }
 
-Cost Individual::Route::prizes() const { return prizes_; }
+Cost Solution::Route::prizes() const { return prizes_; }
 
-std::pair<double, double> const &Individual::Route::centroid() const
+std::pair<double, double> const &Solution::Route::centroid() const
 {
     return centroid_;
 }
 
-bool Individual::Route::isFeasible() const
+bool Solution::Route::isFeasible() const
 {
     return !hasExcessLoad() && !hasTimeWarp();
 }
 
-bool Individual::Route::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Individual::Route::hasTimeWarp() const { return tws_.timeWarp() > 0; }
+bool Solution::Route::hasTimeWarp() const { return tws_.timeWarp() > 0; }
 
-std::ostream &operator<<(std::ostream &out, Individual const &indiv)
+std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {
-    auto const &routes = indiv.getRoutes();
+    auto const &routes = sol.getRoutes();
 
-    for (size_t idx = 0; idx != indiv.numRoutes(); ++idx)
+    for (size_t idx = 0; idx != routes.size(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
-    out << "Distance: " << indiv.distance() << '\n';
-    out << "Prizes: " << indiv.prizes() << '\n';
     return out;
 }
 
-std::ostream &operator<<(std::ostream &out, Individual::Route const &route)
+std::ostream &operator<<(std::ostream &out, Solution::Route const &route)
 {
     for (Client const client : route)
         out << client << ' ';

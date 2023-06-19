@@ -4,26 +4,23 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Client, Individual, ProblemData, Route, XorShift128
+from pyvrp import Client, ProblemData, Route, Solution, XorShift128
 from pyvrp.tests.helpers import read
 
 
-def test_route_constructor_sorts_by_empty():
+def test_route_constructor_filters_empty():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[3, 4], [], [1, 2]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[3, 4], [], [1, 2]])
+    routes = sol.get_routes()
 
-    # num_routes() should show two non-empty routes. However, we passed in
-    # three routes, so len(routes) should not have changed.
-    assert_equal(indiv.num_routes(), 2)
-    assert_equal(len(routes), 3)
+    # num_routes() and len(routes) should show two non-empty routes.
+    assert_equal(sol.num_routes(), 2)
+    assert_equal(len(routes), 2)
 
-    # We expect Individual to sort the routes such that all non-empty routes
-    # are in the lower indices.
+    # The only two non-empty routes should now each have two clients.
     assert_equal(len(routes[0]), 2)
     assert_equal(len(routes[1]), 2)
-    assert_equal(len(routes[2]), 0)
 
 
 def test_random_constructor_cycles_over_routes():
@@ -33,13 +30,13 @@ def test_random_constructor_cycles_over_routes():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=42)
 
-    indiv = Individual.make_random(data, rng)
-    routes = indiv.get_routes()
+    sol = Solution.make_random(data, rng)
+    routes = sol.get_routes()
 
-    assert_equal(indiv.num_routes(), 2)
-    assert_equal(len(routes), 3)
+    assert_equal(sol.num_routes(), 2)
+    assert_equal(len(routes), 2)
 
-    for idx, size in enumerate([2, 2, 0]):
+    for idx, size in enumerate([2, 2]):
         assert_equal(len(routes[idx]), size)
 
 
@@ -48,34 +45,33 @@ def test_route_constructor_raises_too_many_vehicles():
 
     assert_equal(data.num_vehicles, 3)
 
-    # Only two routes should not raise. But we should always get num_vehicles
-    # routes back.
-    individual = Individual(data, [[1, 2], [4, 3]])
-    assert_equal(len(individual.get_routes()), data.num_vehicles)
+    # Only two routes should not raise.
+    sol = Solution(data, [[1, 2], [4, 3]])
+    assert_equal(len(sol.get_routes()), 2)
 
     # Empty third route should not raise.
-    Individual(data, [[1, 2], [4, 3], []])
+    Solution(data, [[1, 2], [4, 3], []])
 
     # More than three routes should raise, since we only have three vehicles.
     with assert_raises(RuntimeError):
-        Individual(data, [[1], [2], [3], [4]])
+        Solution(data, [[1], [2], [3], [4]])
 
 
 def test_route_constructor_raises_for_invalid_routes():
     data = read("data/OkSmall.txt")
     with assert_raises(RuntimeError):
-        Individual(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
+        Solution(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
 
     data = read("data/OkSmallPrizes.txt")
     with assert_raises(RuntimeError):
-        Individual(data, [[2], [3, 4]])  # 1 is required but not visited
+        Solution(data, [[2], [3, 4]])  # 1 is required but not visited
 
 
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[3, 4], [], [1, 2]])
-    neighbours = indiv.get_neighbours()
+    sol = Solution(data, [[3, 4], [], [1, 2]])
+    neighbours = sol.get_neighbours()
 
     expected = [
         (0, 0),  # 0: is depot
@@ -95,38 +91,36 @@ def test_feasibility():
     data = read("data/OkSmall.txt")
 
     # This solution is infeasible due to both load and time window violations.
-    indiv = Individual(data, [[1, 2, 3, 4]])
-    assert_(not indiv.is_feasible())
+    sol = Solution(data, [[1, 2, 3, 4]])
+    assert_(not sol.is_feasible())
 
     # First route has total load 18, but vehicle capacity is only 10.
-    assert_(indiv.has_excess_load())
+    assert_(sol.has_excess_load())
 
     # Client 4 has TW [8400, 15300], but client 2 cannot be visited before
     # 15600, so there must be time warp on the single-route solution.
-    assert_(indiv.has_time_warp())
+    assert_(sol.has_time_warp())
 
     # Let's try another solution that's actually feasible.
-    indiv = Individual(data, [[1, 2], [3], [4]])
-    assert_(indiv.is_feasible())
-    assert_(not indiv.has_excess_load())
-    assert_(not indiv.has_time_warp())
+    sol = Solution(data, [[1, 2], [3], [4]])
+    assert_(sol.is_feasible())
+    assert_(not sol.has_excess_load())
+    assert_(not sol.has_time_warp())
 
 
 def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[1, 2], [3], [4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 2], [3], [4]])
+    routes = sol.get_routes()
 
     # Solution is feasible, so all its routes should also be feasible.
-    assert_(indiv.is_feasible())
+    assert_(sol.is_feasible())
     assert_(all(route.is_feasible() for route in routes))
 
     # Solution distance should be equal to all routes' distances. These we
     # check separately.
-    assert_allclose(
-        indiv.distance(), sum(route.distance() for route in routes)
-    )
+    assert_allclose(sol.distance(), sum(route.distance() for route in routes))
 
     expected = data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0)
     assert_allclose(routes[0].distance(), expected)
@@ -141,28 +135,28 @@ def test_distance_calculation():
 def test_excess_load_calculation():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[4, 3, 1, 2]])
-    assert_(indiv.has_excess_load())
-    assert_(not indiv.has_time_warp())
+    sol = Solution(data, [[4, 3, 1, 2]])
+    assert_(sol.has_excess_load())
+    assert_(not sol.has_time_warp())
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10. This has a non-zero
     # load penalty
-    assert_equal(indiv.excess_load(), 18 - data.vehicle_capacity)
+    assert_equal(sol.excess_load(), 18 - data.vehicle_capacity)
 
 
 def test_route_access_methods():
     data = read("data/OkSmall.txt")
-    indiv = Individual(data, [[1, 3], [2, 4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
 
     # Test route access: getting the route plan should return a simple list, as
-    # given to the individual above.
+    # given to the solution above.
     assert_equal(routes[0].visits(), [1, 3])
     assert_equal(routes[1].visits(), [2, 4])
 
     # There's no excess load, so all excess load should be zero.
-    assert_(not indiv.has_excess_load())
+    assert_(not sol.has_excess_load())
     assert_allclose(routes[0].excess_load(), 0)
     assert_allclose(routes[1].excess_load(), 0)
 
@@ -187,20 +181,20 @@ def test_route_access_methods():
 
 def test_route_time_warp_and_start_time_calculations():
     data = read("data/OkSmall.txt")
-    indiv = Individual(data, [[1, 3], [2, 4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
 
     # There's only time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
     # starts at 15'600, and completes at 15'600 + 360. Then we drive for
     # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
     # window). This is where we incur time warp: we need to 'warp' to 15'300.
-    assert_(indiv.has_time_warp())
+    assert_(sol.has_time_warp())
     assert_(routes[0].has_time_warp())
     assert_(not routes[1].has_time_warp())
     assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
     assert_allclose(routes[1].time_warp(), 0)
-    assert_allclose(indiv.time_warp(), routes[0].time_warp())
+    assert_allclose(sol.time_warp(), routes[0].time_warp())
 
     # In both routes, there is no waiting time.
     assert_equal(routes[0].wait_duration(), 0)
@@ -222,8 +216,8 @@ def test_route_time_warp_and_start_time_calculations():
 
 def test_route_wait_time_calculations():
     data = read("data/OkSmallWaitTime.txt")
-    indiv = Individual(data, [[1, 3], [2, 4]])
-    routes = indiv.get_routes()
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
 
     # In route 1, the latest start of service for client 2 is 15'000, then
     # adding 360 service and 1'090 travel we arrive at client 4 at 16'450 and
@@ -237,8 +231,8 @@ def test_route_wait_time_calculations():
 
     # Additionally, we will test that we can have both wait time and time warp
     # in a single route, and it holds that duration = travel + service + wait
-    indiv = Individual(data, [[1, 3, 2, 4]])
-    route = indiv.get_routes()[0]
+    sol = Solution(data, [[1, 3, 2, 4]])
+    route = sol.get_routes()[0]
 
     assert_(route.has_time_warp())
     assert_(route.time_warp() > 0)
@@ -288,13 +282,13 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
     # This solution directly visits the second client from the depot, which is
     # not time window feasible.
-    infeasible = Individual(data, [[1], [2]])
+    infeasible = Solution(data, [[1], [2]])
     assert_(infeasible.has_time_warp())
     assert_(not infeasible.has_excess_load())
     assert_(not infeasible.is_feasible())
 
     # But visiting the second client after the first is feasible.
-    feasible = Individual(data, [[1, 2]])
+    feasible = Solution(data, [[1, 2]])
     assert_(not feasible.has_time_warp())
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
@@ -319,10 +313,10 @@ def test_time_warp_return_to_depot():
     )
     # Travel from depot to client and back gives duration 1 + 1 = 2
     # This is 1 more than the depot time window 1, giving a time warp of 1
-    individual = Individual(data, [[1]])
-    routes = individual.get_routes()
+    sol = Solution(data, [[1]])
+    routes = sol.get_routes()
     assert_equal(routes[0].duration(), 2)
-    assert_equal(individual.time_warp(), 1)
+    assert_equal(sol.time_warp(), 1)
 
 
 # TODO test all time warp cases
@@ -331,91 +325,84 @@ def test_time_warp_return_to_depot():
 def test_copy():
     data = read("data/OkSmall.txt")
 
-    indiv = Individual(data, [[1, 2, 3, 4]])
-    copy_indiv = copy(indiv)
-    deepcopy_indiv = deepcopy(indiv)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    copy_sol = copy(sol)
+    deepcopy_sol = deepcopy(sol)
 
-    # Copied individuals are equal to the original individual
-    assert_(indiv == copy_indiv)
-    assert_(indiv == deepcopy_indiv)
+    # Copied solutions are equal to the original solution
+    assert_(sol == copy_sol)
+    assert_(sol == deepcopy_sol)
 
     # But they are not the same object
-    assert_(indiv is not copy_indiv)
-    assert_(indiv is not deepcopy_indiv)
+    assert_(sol is not copy_sol)
+    assert_(sol is not deepcopy_sol)
 
 
 def test_eq():
     data = read("data/OkSmall.txt")
 
-    indiv1 = Individual(data, [[1, 2, 3, 4]])
-    indiv2 = Individual(data, [[1, 2], [3], [4]])
-    indiv3 = Individual(data, [[1, 2, 3, 4]])
+    sol1 = Solution(data, [[1, 2, 3, 4]])
+    sol2 = Solution(data, [[1, 2], [3], [4]])
+    sol3 = Solution(data, [[1, 2, 3, 4]])
 
-    assert_(indiv1 == indiv1)  # individuals should be equal to themselves
-    assert_(indiv2 == indiv2)
-    assert_(indiv1 != indiv2)  # different routes, so should not be equal
-    assert_(indiv1 == indiv3)  # same solution, different individual
+    assert_(sol1 == sol1)  # Solutions should be equal to themselves
+    assert_(sol2 == sol2)
+    assert_(sol1 != sol2)  # different routes, so should not be equal
+    assert_(sol1 == sol3)  # same routes, different solution
 
-    indiv4 = Individual(data, [[1, 2, 3], [], [4]])
-    indiv5 = Individual(data, [[4], [1, 2, 3], []])
+    sol4 = Solution(data, [[1, 2, 3], [], [4]])
+    sol5 = Solution(data, [[4], [1, 2, 3], []])
 
-    assert_(indiv4 == indiv5)  # routes are the same, but in different order
+    assert_(sol4 == sol5)  # routes are the same, but in different order
 
-    # And a few tests against things that are not Individuals, just to be sure
+    # And a few tests against things that are not solutions, just to be sure
     # there's also a type check in there somewhere.
-    assert_(indiv4 != 1)
-    assert_(indiv4 != "abc")
-    assert_(indiv5 != 5)
-    assert_(indiv5 != "cd")
+    assert_(sol4 != 1)
+    assert_(sol4 != "abc")
+    assert_(sol5 != 5)
+    assert_(sol5 != "cd")
 
 
-def test_str_contains_essential_information():
+def test_str_contains_routes():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
-        individual = Individual.make_random(data, rng)
-        str_representation = str(individual).splitlines()
+        sol = Solution.make_random(data, rng)
+        str_representation = str(sol).splitlines()
+        routes = sol.get_routes()
 
-        routes = individual.get_routes()
-        num_routes = individual.num_routes()
+        # There should be no more than len(routes) lines (each detailing a
+        # single route).
+        assert_equal(len(str_representation), len(routes))
 
-        # There should be no more than num_routes lines (each detailing a
-        # single route), and two final lines containing distance and prizes.
-        assert_equal(len(str_representation), num_routes + 2)
-
-        # The first num_routes lines should each contain a route, where each
-        # route should contain every client that is in the route as returned
-        # by get_routes().
-        for route, str_route in zip(routes[:num_routes], str_representation):
+        # Each line should contain a route, where each route should contain
+        # every client that is in the route as returned by get_routes().
+        for route, str_route in zip(routes, str_representation):
             for client in route:
                 assert_(str(client) in str_route)
-
-        # Last lines should contain the travel distance and collected prizes.
-        assert_(str(int(individual.distance())) in str_representation[-2])
-        assert_(str(int(individual.prizes())) in str_representation[-1])
 
 
 def test_hash():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=2)
 
-    indiv1 = Individual.make_random(data, rng)
-    indiv2 = Individual.make_random(data, rng)
+    sol1 = Solution.make_random(data, rng)
+    sol2 = Solution.make_random(data, rng)
 
-    hash1 = hash(indiv1)
-    hash2 = hash(indiv2)
+    hash1 = hash(sol1)
+    hash2 = hash(sol2)
 
     # Two random solutions. They're not the same, so the hashes should not be
     # the same either.
-    assert_(indiv1 != indiv2)
+    assert_(sol1 != sol2)
     assert_(hash1 != hash2)
 
-    indiv3 = deepcopy(indiv2)  # is a direct copy
+    sol3 = deepcopy(sol2)  # is a direct copy
 
     # These two are the same solution, so their hashes should be the same too.
-    assert_equal(indiv2, indiv3)
-    assert_equal(hash(indiv2), hash(indiv3))
+    assert_equal(sol2, sol3)
+    assert_equal(hash(sol2), hash(sol3))
 
 
 def test_route_centroid():

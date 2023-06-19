@@ -1,6 +1,6 @@
 #include "diversity.h"
 
-double brokenPairsDistance(Individual const &first, Individual const &second)
+double brokenPairsDistance(Solution const &first, Solution const &second)
 {
     auto const &fNeighbours = first.getNeighbours();
     auto const &sNeighbours = second.getNeighbours();

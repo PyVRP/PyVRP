@@ -1,8 +1,8 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
-from pyvrp.educate import (
+from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp.search import (
     LocalSearch,
     MoveTwoClientsReversed,
     NeighbourhoodParams,
@@ -24,26 +24,26 @@ def test_single_route_OkSmall():
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
-    individual = Individual(data, [[1, 4, 2, 3]])
-    improved_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [[1, 4, 2, 3]])
+    improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(improved_individual.num_routes(), 1)
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_equal(improved_sol.num_routes(), 1)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
 
     # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
     # after 4 as 2 -> 4 -> 3 -> 1.
-    expected = Individual(data, [[2, 4, 3, 1]])
-    assert_equal(improved_individual, expected)
+    expected = Solution(data, [[2, 4, 3, 1]])
+    assert_equal(improved_sol, expected)
 
     # These two-route solutions can all be created by MoveTwoClientsReversed
     # from the returned solution. So they must have a cost that's at best equal
     # to the returned solution's cost.
     for routes in ([[3, 1], [4, 2]], [[2, 1], [3, 4]], [[2, 4], [1, 3]]):
-        other = Individual(data, routes)
-        improved_cost = cost_evaluator.penalised_cost(improved_individual)
+        other = Solution(data, routes)
+        improved_cost = cost_evaluator.penalised_cost(improved_sol)
         other_cost = cost_evaluator.penalised_cost(other)
         assert_(improved_cost <= other_cost)
 
@@ -59,10 +59,10 @@ def test_RC208_instance(seed: int):
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, [single_route])
-    improved_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [single_route])
+    improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)

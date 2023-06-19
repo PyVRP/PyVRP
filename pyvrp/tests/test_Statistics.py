@@ -11,8 +11,8 @@ def test_csv_serialises_correctly(tmp_path):
     rng = XorShift128(seed=42)
     pop = Population(broken_pairs_distance)
 
-    for individual in make_random_solutions(10, data, rng):
-        pop.add(individual, cost_evaluator)
+    for sol in make_random_solutions(10, data, rng):
+        pop.add(sol, cost_evaluator)
 
     collected_stats = Statistics()
 

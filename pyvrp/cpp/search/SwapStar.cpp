@@ -87,9 +87,9 @@ std::pair<Cost, Node *> SwapStar::getBestInsertPoint(
     return std::make_pair(deltaCost, p(V));
 }
 
-void SwapStar::init(Individual const &indiv)
+void SwapStar::init(Solution const &solution)
 {
-    LocalSearchOperator<Route>::init(indiv);
+    LocalSearchOperator<Route>::init(solution);
     std::fill(updated.begin(), updated.end(), true);
 }
 

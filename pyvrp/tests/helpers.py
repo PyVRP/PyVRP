@@ -2,7 +2,7 @@ import pathlib
 import time
 from functools import lru_cache
 
-from pyvrp import Individual
+from pyvrp import Solution
 from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
@@ -42,4 +42,4 @@ def make_random_solutions(num_sols, data, rng):
     """
     Returns a list of ``num_sols`` random solutions.
     """
-    return [Individual.make_random(data, rng) for _ in range(num_sols)]
+    return [Solution.make_random(data, rng) for _ in range(num_sols)]

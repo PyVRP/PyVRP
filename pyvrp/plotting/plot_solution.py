@@ -3,11 +3,11 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp import Individual, ProblemData
+from pyvrp import ProblemData, Solution
 
 
 def plot_solution(
-    solution: Individual,
+    solution: Solution,
     data: ProblemData,
     plot_customers: bool = False,
     ax: Optional[plt.Axes] = None,
@@ -39,19 +39,18 @@ def plot_solution(
     ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
 
     for idx, route in enumerate(solution.get_routes(), 1):
-        if route:
-            x = x_coords[route]
-            y = y_coords[route]
+        x = x_coords[route]
+        y = y_coords[route]
 
-            # Coordinates of customers served by this route.
-            if len(route) == 1 or plot_customers:
-                ax.scatter(x, y, label=f"Route {idx}", zorder=3, s=75)
-            ax.plot(x, y)
+        # Coordinates of customers served by this route.
+        if len(route) == 1 or plot_customers:
+            ax.scatter(x, y, label=f"Route {idx}", zorder=3, s=75)
+        ax.plot(x, y)
 
-            # Edges from and to the depot, very thinly dashed.
-            kwargs = dict(ls=(0, (5, 15)), linewidth=0.25, color="grey")
-            ax.plot([x_coords[0], x[0]], [y_coords[0], y[0]], **kwargs)
-            ax.plot([x[-1], x_coords[0]], [y[-1], y_coords[0]], **kwargs)
+        # Edges from and to the depot, very thinly dashed.
+        kwargs = dict(ls=(0, (5, 15)), linewidth=0.25, color="grey")
+        ax.plot([x_coords[0], x[0]], [y_coords[0], y[0]], **kwargs)
+        ax.plot([x[-1], x_coords[0]], [y[-1], y_coords[0]], **kwargs)
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
 

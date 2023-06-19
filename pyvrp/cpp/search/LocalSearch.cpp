@@ -11,14 +11,10 @@
 
 using TWS = TimeWindowSegment;
 
-Individual LocalSearch::search(Individual &individual,
-                               CostEvaluator const &costEvaluator)
+Solution LocalSearch::search(Solution &solution,
+                             CostEvaluator const &costEvaluator)
 {
-    loadIndividual(individual);
-
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+    loadSolution(solution);
 
     if (nodeOps.empty())
         throw std::runtime_error("No known node operators.");
@@ -86,20 +82,16 @@ Individual LocalSearch::search(Individual &individual,
         }
     }
 
-    return exportIndividual();
+    return exportSolution();
 }
 
-Individual LocalSearch::intensify(Individual &individual,
-                                  CostEvaluator const &costEvaluator,
-                                  int overlapToleranceDegrees)
+Solution LocalSearch::intensify(Solution &solution,
+                                CostEvaluator const &costEvaluator,
+                                int overlapToleranceDegrees)
 {
-    loadIndividual(individual);
+    loadSolution(solution);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
-
-    // Shuffling the order beforehand adds diversity to the search
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
 
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
@@ -143,7 +135,16 @@ Individual LocalSearch::intensify(Individual &individual,
         }
     }
 
-    return exportIndividual();
+    return exportSolution();
+}
+
+void LocalSearch::shuffle(XorShift128 &rng)
+{
+    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
+    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+
+    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
+    std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Node *U,
@@ -268,7 +269,7 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
-void LocalSearch::loadIndividual(Individual const &individual)
+void LocalSearch::loadSolution(Solution const &solution)
 {
     for (size_t client = 0; client <= data.numClients(); client++)
     {
@@ -276,7 +277,7 @@ void LocalSearch::loadIndividual(Individual const &individual)
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 
-    auto const &routesIndiv = individual.getRoutes();
+    auto const &solRoutes = solution.getRoutes();
 
     for (size_t r = 0; r != data.numVehicles(); r++)
     {
@@ -297,19 +298,19 @@ void LocalSearch::loadIndividual(Individual const &individual)
 
         Route *route = &routes[r];
 
-        if (!routesIndiv[r].empty())
+        if (r < solRoutes.size())
         {
-            Node *client = &clients[routesIndiv[r][0]];
+            Node *client = &clients[solRoutes[r][0]];
             client->route = route;
 
             client->prev = startDepot;
             startDepot->next = client;
 
-            for (size_t idx = 1; idx < routesIndiv[r].size(); idx++)
+            for (size_t idx = 1; idx < solRoutes[r].size(); idx++)
             {
                 Node *prev = client;
 
-                client = &clients[routesIndiv[r][idx]];
+                client = &clients[solRoutes[r][idx]];
                 client->route = route;
 
                 client->prev = prev;
@@ -324,12 +325,12 @@ void LocalSearch::loadIndividual(Individual const &individual)
     }
 
     for (auto *routeOp : routeOps)
-        routeOp->init(individual);
+        routeOp->init(solution);
 }
 
-Individual LocalSearch::exportIndividual()
+Solution LocalSearch::exportSolution() const
 {
-    std::vector<std::vector<int>> indivRoutes(data.numVehicles());
+    std::vector<std::vector<int>> solRoutes(data.numVehicles());
 
     for (size_t r = 0; r < data.numVehicles(); r++)
     {
@@ -337,12 +338,12 @@ Individual LocalSearch::exportIndividual()
 
         while (!node->isDepot())
         {
-            indivRoutes[r].push_back(node->client);
+            solRoutes[r].push_back(node->client);
             node = node->next;
         }
     }
 
-    return {data, indivRoutes};
+    return {data, solRoutes};
 }
 
 void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
@@ -377,13 +378,13 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
     this->neighbours = neighbours;
 }
 
-LocalSearch::Neighbours LocalSearch::getNeighbours() { return neighbours; }
+LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
+{
+    return neighbours;
+}
 
-LocalSearch::LocalSearch(ProblemData &data,
-                         XorShift128 &rng,
-                         Neighbours neighbours)
+LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      rng(rng),
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),

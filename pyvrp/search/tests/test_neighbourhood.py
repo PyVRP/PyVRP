@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp.educate import NeighbourhoodParams, compute_neighbours
+from pyvrp.search import NeighbourhoodParams, compute_neighbours
 from pyvrp.tests.helpers import read
 
 

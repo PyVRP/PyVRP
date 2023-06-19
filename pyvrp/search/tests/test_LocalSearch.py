@@ -1,8 +1,8 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Individual, XorShift128
-from pyvrp.educate import (
+from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp.search import (
     Exchange10,
     Exchange11,
     LocalSearch,
@@ -10,6 +10,7 @@ from pyvrp.educate import (
     Neighbours,
     compute_neighbours,
 )
+from pyvrp.search._LocalSearch import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import read
 
 
@@ -19,13 +20,13 @@ def test_local_search_raises_when_there_are_no_operators():
     rng = XorShift128(seed=42)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    individual = Individual.make_random(data, rng)
+    sol = Solution.make_random(data, rng)
 
     with assert_raises(RuntimeError):
-        ls.search(individual, cost_evaluator)
+        ls.search(sol, cost_evaluator)
 
     with assert_raises(RuntimeError):
-        ls.intensify(individual, cost_evaluator)
+        ls.intensify(sol, cost_evaluator)
 
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():
@@ -94,9 +95,7 @@ def test_local_search_set_get_neighbours(
     symmetric_neighbours: bool,
 ):
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-
-    seed = 42
-    rng = XorShift128(seed=seed)
+    rng = XorShift128(seed=42)
 
     params = NeighbourhoodParams(nb_granular=1)
     prev_neighbours = compute_neighbours(data, params)
@@ -130,7 +129,7 @@ def test_local_search_set_get_neighbours(
 
 def test_reoptimize_changed_objective_timewarp_OkSmall():
     """
-    This test reproduces a bug where loadIndividual in LocalSearch.cpp would
+    This test reproduces a bug where loadSolution in LocalSearch.cpp would
     reset the timewarp for a route to 0 if the route was not changed. This
     would cause improving moves with a smaller timewarp not to be considered
     because the current cost doesn't count the current time warp.
@@ -138,7 +137,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=42)
 
-    individual = Individual(data, [[1, 2, 3, 4]])
+    sol = Solution(data, [[1, 2, 3, 4]])
 
     # We make neighbours only contain 1 -> 2, so the only feasible move
     # is changing [1, 2, 3, 4] into [2, 1, 3, 4] or moving one of the nodes
@@ -149,19 +148,19 @@ def test_reoptimize_changed_objective_timewarp_OkSmall():
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(Exchange10(data))
 
-    # With 0 timewarp penalty, the individual should not change since
+    # With 0 timewarp penalty, the solution should not change since
     # the solution [2, 1, 3, 4] has larger distance
-    improved_indiv = ls.search(individual, CostEvaluator(0, 0))
-    assert_equal(individual, improved_indiv)
+    improved_sol = ls.search(sol, CostEvaluator(0, 0))
+    assert_equal(sol, improved_sol)
 
     # Now doing it again with a large TW penalty, we must find the alternative
     # solution
     # (previously this was not the case since due to caching the current TW was
     # computed as being zero, causing the move to be evaluated as worse)
     cost_evaluator_tw = CostEvaluator(0, 1000)
-    improved_indiv = ls.search(individual, cost_evaluator_tw)
-    improved_cost = cost_evaluator_tw.penalised_cost(improved_indiv)
-    assert_(improved_cost < cost_evaluator_tw.penalised_cost(individual))
+    improved_sol = ls.search(sol, cost_evaluator_tw)
+    improved_cost = cost_evaluator_tw.penalised_cost(improved_sol)
+    assert_(improved_cost < cost_evaluator_tw.penalised_cost(sol))
 
 
 def test_prize_collecting():
@@ -172,19 +171,43 @@ def test_prize_collecting():
     rng = XorShift128(seed=42)
     cost_evaluator = CostEvaluator(1, 1)
 
-    individual = Individual.make_random(data, rng)
-    individual_cost = cost_evaluator.penalised_cost(individual)
+    sol = Solution.make_random(data, rng)
+    sol_cost = cost_evaluator.penalised_cost(sol)
 
     # Random solutions are complete...
-    assert_equal(individual.num_clients(), data.num_clients)
+    assert_equal(sol.num_clients(), data.num_clients)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))  # relocate
     ls.add_node_operator(Exchange11(data))  # swap
 
-    improved = ls.search(individual, cost_evaluator)
+    improved = ls.search(sol, cost_evaluator)
     improved_cost = cost_evaluator.penalised_cost(improved)
 
     # ...but an optimised prize-collecting solution is likely not complete.
-    assert_(improved.num_clients() < individual.num_clients())
-    assert_(improved_cost < individual_cost)
+    assert_(improved.num_clients() < sol.num_clients())
+    assert_(improved_cost < sol_cost)
+
+
+def test_cpp_shuffle_results_in_different_solution():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    ls = cpp_LocalSearch(data, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+    ls.add_node_operator(Exchange11(data))
+
+    cost_evaluator = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # LocalSearch::search is deterministic, so two calls with the same base
+    # solution should result in the same improved solution.
+    improved1 = ls.search(sol, cost_evaluator)
+    improved2 = ls.search(sol, cost_evaluator)
+    assert_(improved1 == improved2)
+
+    # But the shuffle method changes the order in which moves are evaluated,
+    # which should result in a very different search trajectory.
+    ls.shuffle(rng)
+    improved3 = ls.search(sol, cost_evaluator)
+    assert_(improved3 != improved1)

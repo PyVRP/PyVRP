@@ -1,9 +1,9 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Client, CostEvaluator, Individual, ProblemData, XorShift128
-from pyvrp.educate import LocalSearch, NeighbourhoodParams, compute_neighbours
-from pyvrp.educate._Exchange import (
+from pyvrp import Client, CostEvaluator, ProblemData, Solution, XorShift128
+from pyvrp.search import LocalSearch, NeighbourhoodParams, compute_neighbours
+from pyvrp.search._Exchange import (
     Exchange10,
     Exchange11,
     Exchange20,
@@ -43,13 +43,13 @@ def test_swap_single_route_stays_single_route(operator):
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, [single_route])
-    improved_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [single_route])
+    improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
-    assert_equal(improved_individual.num_routes(), 1)
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_equal(improved_sol.num_routes(), 1)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
 
 
@@ -75,14 +75,14 @@ def test_relocate_uses_empty_routes(operator):
     ls.add_node_operator(operator(data))
 
     single_route = list(range(1, data.num_clients + 1))
-    individual = Individual(data, [single_route])
-    improved_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [single_route])
+    improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
-    assert_(improved_individual.num_routes() > 1)
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    assert_(improved_sol.num_routes() > 1)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
 
 
@@ -111,10 +111,10 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    individual = Individual(data, [[1, 2], [3], [4]])
-    new_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [[1, 2], [3], [4]])
+    new_sol = ls.search(sol, cost_evaluator)
 
-    assert_equal(new_individual, individual)
+    assert_equal(new_sol, sol)
 
 
 @mark.parametrize("operator", [Exchange32, Exchange33])
@@ -131,10 +131,10 @@ def test_cannot_exchange_when_segments_overlap(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    individual = Individual(data, [[1, 2, 3, 4]])
-    new_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    new_sol = ls.search(sol, cost_evaluator)
 
-    assert_equal(new_individual, individual)
+    assert_equal(new_sol, sol)
 
 
 def test_cannot_swap_adjacent_segments():
@@ -153,10 +153,10 @@ def test_cannot_swap_adjacent_segments():
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
-    individual = Individual(data, [[1, 2, 3, 4]])
-    new_individual = ls.search(individual, cost_evaluator)
+    sol = Solution(data, [[1, 2, 3, 4]])
+    new_sol = ls.search(sol, cost_evaluator)
 
-    assert_equal(new_individual, individual)
+    assert_equal(new_sol, sol)
 
 
 def test_swap_between_routes_OkSmall():
@@ -172,13 +172,13 @@ def test_swap_between_routes_OkSmall():
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(Exchange21(data))
 
-    individual = Individual(data, [[1, 2], [3, 4]])
-    improved_individual = ls.search(individual, cost_evaluator)
-    expected = Individual(data, [[3, 4, 2], [1]])
-    assert_equal(improved_individual, expected)
+    sol = Solution(data, [[1, 2], [3, 4]])
+    improved_sol = ls.search(sol, cost_evaluator)
+    expected = Solution(data, [[3, 4, 2], [1]])
+    assert_equal(improved_sol, expected)
 
-    current_cost = cost_evaluator.penalised_cost(individual)
-    improved_cost = cost_evaluator.penalised_cost(improved_individual)
+    current_cost = cost_evaluator.penalised_cost(sol)
+    improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
 
 
@@ -201,12 +201,12 @@ def test_relocate_after_depot_should_work():
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(Exchange10(data))
 
-    # This individual can be improved by moving 3 into its own route, that is,
+    # This solution can be improved by moving 3 into its own route, that is,
     # inserting it after the depot of an empty route. Before the bug was fixed,
     # (1, 0)-exchange never performed this move.
-    individual = Individual(data, [[1, 2, 3], [4]])
-    expected = Individual(data, [[1, 2], [3], [4]])
-    assert_equal(ls.search(individual, cost_evaluator), expected)
+    sol = Solution(data, [[1, 2, 3], [4]])
+    expected = Solution(data, [[1, 2], [3], [4]])
+    assert_equal(ls.search(sol, cost_evaluator), expected)
 
 
 def test_relocate_only_happens_when_distance_and_duration_allow_it():
@@ -241,8 +241,8 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     # We also consider a distance-optimal solution that is not feasible. Since
     # we have non-zero time warp penalty, this solution should be improved into
     # the duration optimal solution.
-    duration_optimal = Individual(data, [[2, 1]])
-    distance_optimal = Individual(data, [[1, 2]])
+    duration_optimal = Solution(data, [[2, 1]])
+    distance_optimal = Solution(data, [[1, 2]])
 
     assert_(distance_optimal.distance() < duration_optimal.distance())
     assert_(duration_optimal.time_warp() < distance_optimal.time_warp())

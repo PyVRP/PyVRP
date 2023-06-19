@@ -14,32 +14,32 @@ SubPopulation::SubPopulation(DiversityMeasure divOp,
 SubPopulation::~SubPopulation()
 {
     for (auto &item : items)
-        delete item.individual;
+        delete item.solution;
 }
 
-void SubPopulation::add(Individual const *individual,
+void SubPopulation::add(Solution const *solution,
                         CostEvaluator const &costEvaluator)
 {
-    // Copy the given individual into a new memory location, and use that from
+    // Copy the given solution into a new memory location, and use that from
     // now on.
-    individual = new Individual(*individual);
-    Item item = {&params, individual, 0.0, {}};
+    solution = new Solution(*solution);
+    Item item = {&params, solution, 0.0, {}};
 
-    for (auto &other : items)  // update distance to other individuals
+    for (auto &other : items)  // update distance to other solutions
     {
-        auto const div = divOp(*individual, *other.individual);
+        auto const div = divOp(*solution, *other.solution);
         auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
 
         auto &oProx = other.proximity;
         auto place = std::lower_bound(oProx.begin(), oProx.end(), div, cmp);
-        oProx.emplace(place, div, individual);
+        oProx.emplace(place, div, solution);
 
         auto &iProx = item.proximity;
         place = std::lower_bound(iProx.begin(), iProx.end(), div, cmp);
-        iProx.emplace(place, div, other.individual);
+        iProx.emplace(place, div, other.solution);
     }
 
-    items.push_back(item);  // add individual
+    items.push_back(item);  // add solution
 
     if (size() > params.maxPopSize())
         purge(costEvaluator);
@@ -58,17 +58,17 @@ const_iter SubPopulation::cend() const { return items.cend(); }
 
 void SubPopulation::remove(iter const &iterator)
 {
-    for (auto &[params, individual, fitness, proximity] : items)
-        // Remove individual from other proximities.
+    for (auto &[params, solution, fitness, proximity] : items)
+        // Remove solution from other proximities.
         for (size_t idx = 0; idx != proximity.size(); ++idx)
-            if (proximity[idx].second == iterator->individual)
+            if (proximity[idx].second == iterator->solution)
             {
                 proximity.erase(proximity.begin() + idx);
                 break;
             }
 
-    delete iterator->individual;  // dispose of manually allocated memory
-    items.erase(iterator);        // before the item is removed.
+    delete iterator->solution;  // dispose of manually allocated memory
+    items.erase(iterator);      // before the item is removed.
 }
 
 void SubPopulation::purge(CostEvaluator const &costEvaluator)
@@ -79,7 +79,7 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
         // Remove duplicates from the subpopulation (if they exist)
         auto const pred = [&](auto &iterator) {
             return !iterator.proximity.empty()
-                   && *iterator.proximity[0].second == *iterator.individual;
+                   && *iterator.proximity[0].second == *iterator.solution;
         };
 
         auto const duplicate = std::find_if(items.begin(), items.end(), pred);
@@ -112,8 +112,8 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
     std::iota(byCost.begin(), byCost.end(), 0);
 
     std::stable_sort(byCost.begin(), byCost.end(), [&](size_t a, size_t b) {
-        return costEvaluator.penalisedCost(*items[a].individual)
-               < costEvaluator.penalisedCost(*items[b].individual);
+        return costEvaluator.penalisedCost(*items[a].solution)
+               < costEvaluator.penalisedCost(*items[b].solution);
     });
 
     std::vector<std::pair<double, size_t>> diversity;

@@ -1,8 +1,8 @@
 #ifndef PYVRP_COSTEVALUATOR_H
 #define PYVRP_COSTEVALUATOR_H
 
-#include "Individual.h"
 #include "Measure.h"
+#include "Solution.h"
 
 /**
  * Cost evaluator class that computes penalty values for timewarp and load.
@@ -33,15 +33,15 @@ public:
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
 
     /**
-     * Computes a smoothed objective (penalised cost) for a given individual.
+     * Computes a smoothed objective (penalised cost) for a given solution.
      */
-    [[nodiscard]] Cost penalisedCost(Individual const &individual) const;
+    [[nodiscard]] Cost penalisedCost(Solution const &solution) const;
 
     /**
-     * Computes the objective for a given individual. Returns the largest
-     * representable cost value if the individual is infeasible.
+     * Computes the objective for a given solution. Returns the largest
+     * representable cost value if the solution is infeasible.
      */
-    [[nodiscard]] Cost cost(Individual const &individual) const;
+    [[nodiscard]] Cost cost(Solution const &solution) const;
 };
 
 Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
