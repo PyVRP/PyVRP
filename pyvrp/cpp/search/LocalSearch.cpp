@@ -202,30 +202,32 @@ void LocalSearch::maybeInsert(Node *U,
 {
     assert(!U->route && V->route);
 
-    Distance const deltaDist = data.dist(V->client, U->client)
-                               + data.dist(U->client, n(V)->client)
-                               - data.dist(V->client, n(V)->client);
-
+    auto const *route = V->route;
     auto const &uClient = data.client(U->client);
-    Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
-    deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
-                                           V->route->capacity());
-    deltaCost
-        -= costEvaluator.loadPenalty(V->route->load(), V->route->capacity());
+    auto const currentCost = route->penalisedCost(costEvaluator);
 
-    // If this is true, adding U cannot decrease time warp in V's route enough
-    // to offset the deltaCost.
-    if (deltaCost >= costEvaluator.twPenalty(V->route->timeWarp()))
+    auto const dist = route->dist() + data.dist(V->client, U->client)
+                      + data.dist(U->client, n(V)->client)
+                      - data.dist(V->client, n(V)->client);
+    auto const load = route->load() + uClient.demand;
+
+    auto const lbCost = costEvaluator.penalisedRouteCost(
+        dist, load, 0, 0, route->vehicleType());
+
+    // Currently, client U is not served so we incur the prize as 'cost'
+    // First check that if we insert, without timing considerations the cost of
+    // cost of inserting the client is not too high
+    if (lbCost >= currentCost + uClient.prize)
         return;
 
-    auto const vTWS
+    // Add timing information for route to get actual cost
+    auto const twData
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
+    auto const cost = costEvaluator.penalisedRouteCost(
+        dist, load, twData, route->vehicleType());
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
-
-    if (deltaCost < 0)
+    if (cost < currentCost + uClient.prize)
     {
         U->insertAfter(V);           // U has no route, so there's nothing to
         update(V->route, V->route);  // update there.
@@ -236,29 +238,35 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
-    Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
-                               - data.dist(p(U)->client, U->client)
-                               - data.dist(U->client, n(U)->client);
-
+    auto const *route = U->route;
     auto const &uClient = data.client(U->client);
-    Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
-    deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
-                                           U->route->capacity());
-    deltaCost
-        -= costEvaluator.loadPenalty(U->route->load(), U->route->capacity());
+    auto const currentCost = route->penalisedCost(costEvaluator);
 
-    auto uTWS
+    auto const dist = route->dist() + data.dist(p(U)->client, n(U)->client)
+                      - data.dist(p(U)->client, U->client)
+                      - data.dist(U->client, n(U)->client);
+    auto const load = route->load() - uClient.demand;
+
+    auto const lbCost = costEvaluator.penalisedRouteCost(
+        dist, load, 0, 0, route->vehicleType());
+
+    // First check that if we remove, without timing considerations we gain
+    // sufficiently to be worth incurring the cost of lozing the prize
+    if (lbCost + uClient.prize >= currentCost)
+        return;
+
+    // Add timing information for route to get actual cost
+    auto const twData
         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
+    auto const cost = costEvaluator.penalisedRouteCost(
+        dist, load, twData, route->vehicleType());
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
-
-    if (deltaCost < 0)
+    if (cost + uClient.prize < currentCost)
     {
-        auto *route = U->route;  // after U->remove(), U->route is a nullptr
+        auto *routePtr = U->route;  // after U->remove(), U->route is a nullptr
         U->remove();
-        update(route, route);
+        update(routePtr, routePtr);
     }
 }
 

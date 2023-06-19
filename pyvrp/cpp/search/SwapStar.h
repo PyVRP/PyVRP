@@ -64,10 +64,10 @@ class SwapStar : public LocalSearchOperator<Route>
         Cost cost = 0;
 
         Node *U = nullptr;
-        Node *UAfter = nullptr;
+        Node *UAfter = nullptr;  // Node in route V after which to insert U
 
         Node *V = nullptr;
-        Node *VAfter = nullptr;
+        Node *VAfter = nullptr;  // Node in route U after which to insert V
     };
 
     // Updates the removal costs of clients in the given route
@@ -88,6 +88,13 @@ class SwapStar : public LocalSearchOperator<Route>
     std::vector<bool> updated;
 
     BestMove best;
+
+    // Evaluates the route V, when inserting U after UAfter while simultaneously
+    // removing V
+    Cost evaluateRouteCost(Node *V,
+                           Node *U,
+                           Node *UAfter,
+                           CostEvaluator const &costEvaluator);
 
 public:
     void init(Solution const &solution) override;

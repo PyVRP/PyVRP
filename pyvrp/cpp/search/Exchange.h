@@ -86,82 +86,83 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
     assert(posU > 0);
     auto *endU = N == 1 ? U : (*U->route)[posU + N - 1];
 
-    Distance const current = U->route->distBetween(posU - 1, posU + N)
-                             + data.dist(V->client, n(V)->client);
-
-    Distance const proposed = data.dist(V->client, U->client)
-                              + U->route->distBetween(posU, posU + N - 1)
-                              + data.dist(endU->client, n(V)->client)
-                              + data.dist(p(U)->client, n(endU)->client);
-
-    Cost deltaCost = static_cast<Cost>(proposed - current);
+    auto const deltaDistU = data.dist(p(U)->client, n(endU)->client)
+                            - U->route->distBetween(posU - 1, posU + N);
+    auto const deltaDistV = data.dist(V->client, U->client)
+                            + U->route->distBetween(posU, posU + N - 1)
+                            + data.dist(endU->client, n(V)->client)
+                            - data.dist(V->client, n(V)->client);
 
     if (U->route != V->route)
     {
-        if (U->route->isFeasible() && deltaCost >= 0)
-            return deltaCost;
+        auto const currentCost = U->route->penalisedCost(costEvaluator)
+                                 + V->route->penalisedCost(costEvaluator);
 
+        // Compute lower bound for new cost based on distance and load
+        auto const distU = U->route->dist() + deltaDistU;
+        auto const distV = V->route->dist() + deltaDistV;
+
+        auto const deltaLoad = U->route->loadBetween(posU, posU + N - 1);
+        auto const loadU = U->route->load() - deltaLoad;
+        auto const loadV = V->route->load() + deltaLoad;
+
+        auto const lbCostU = costEvaluator.penalisedRouteCost(
+            distU, loadU, 0, 0, U->route->vehicleType());
+        auto const lbCostV = costEvaluator.penalisedRouteCost(
+            distV, loadV, 0, 0, V->route->vehicleType());
+
+        if (lbCostU + lbCostV >= currentCost)
+            return 0;
+
+        // Add time warp for route U to get actual cost
         auto uTWS = TWS::merge(
             data.durationMatrix(), p(U)->twBefore, n(endU)->twAfter);
+        auto const costU = costEvaluator.penalisedRouteCost(
+            distU, loadU, uTWS, U->route->vehicleType());
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+        // Small optimization, check intermediate bound
+        if (costU + lbCostV >= currentCost)
+            return 0;
 
-        auto const loadDiff = U->route->loadBetween(posU, posU + N - 1);
-
-        deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               U->route->capacity());
-        deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               U->route->capacity());
-
-        if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good.
-
-        deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               V->route->capacity());
-        deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               V->route->capacity());
-
+        // Add timing information for route V to get actual cost
         auto vTWS = TWS::merge(data.durationMatrix(),
                                V->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(V)->twAfter);
+        auto const costV = costEvaluator.penalisedRouteCost(
+            distV, loadV, vTWS, V->route->vehicleType());
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
+        return costU + costV - currentCost;
     }
     else  // within same route
     {
         auto const *route = U->route;
+        auto const currentCost = route->penalisedCost(costEvaluator);
+        auto const dist = route->dist() + deltaDistU + deltaDistV;
 
-        if (!route->hasTimeWarp() && deltaCost >= 0)
-            return deltaCost;
+        // First compute bound based on dist and load
+        auto const lbCost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), 0, 0, route->vehicleType());
+        if (lbCost >= currentCost)
+            return 0;
 
-        if (posU < posV)
-        {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        p(U)->twBefore,
-                                        route->twBetween(posU + N, posV),
-                                        route->twBetween(posU, posU + N - 1),
-                                        n(V)->twAfter);
+        // Add timing information for route to get actual cost
+        auto const tws = (posU < posV)
+                             ? TWS::merge(data.durationMatrix(),
+                                          p(U)->twBefore,
+                                          route->twBetween(posU + N, posV),
+                                          route->twBetween(posU, posU + N - 1),
+                                          n(V)->twAfter)
+                             : TWS::merge(data.durationMatrix(),
+                                          V->twBefore,
+                                          route->twBetween(posU, posU + N - 1),
+                                          route->twBetween(posV + 1, posU - 1),
+                                          n(endU)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-        }
-        else
-        {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        V->twBefore,
-                                        route->twBetween(posU, posU + N - 1),
-                                        route->twBetween(posV + 1, posU - 1),
-                                        n(endU)->twAfter);
-
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-        }
-
-        deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+        auto const cost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), tws, route->vehicleType());
+        return cost - currentCost;
     }
-
-    return deltaCost;
 }
 
 template <size_t N, size_t M>
@@ -178,90 +179,93 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
 
     assert(U->route && V->route);
 
-    Distance const current = U->route->distBetween(posU - 1, posU + N)
-                             + V->route->distBetween(posV - 1, posV + M);
+    //   p(U) -> V -> ... -> endV -> n(endU)
+    // - p(U) -> ... -> n(endU)
+    auto const deltaDistU = data.dist(p(U)->client, V->client)
+                            + V->route->distBetween(posV, posV + M - 1)
+                            + data.dist(endV->client, n(endU)->client)
+                            - U->route->distBetween(posU - 1, posU + N);
 
-    Distance const proposed
-        //   p(U) -> V -> ... -> endV -> n(endU)
-        // + p(V) -> U -> ... -> endU -> n(endV)
-        = data.dist(p(U)->client, V->client)
-          + V->route->distBetween(posV, posV + M - 1)
-          + data.dist(endV->client, n(endU)->client)
-          + data.dist(p(V)->client, U->client)
-          + U->route->distBetween(posU, posU + N - 1)
-          + data.dist(endU->client, n(endV)->client);
-
-    Cost deltaCost = static_cast<Cost>(proposed - current);
+    // + p(V) -> U -> ... -> endU -> n(endV)
+    // - p(V) -> ... -> n(endV)
+    auto const deltaDistV = data.dist(p(V)->client, U->client)
+                            + U->route->distBetween(posU, posU + N - 1)
+                            + data.dist(endU->client, n(endV)->client)
+                            - V->route->distBetween(posV - 1, posV + M);
 
     if (U->route != V->route)
     {
-        if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
-            return deltaCost;
+        auto const currentCost = U->route->penalisedCost(costEvaluator)
+                                 + V->route->penalisedCost(costEvaluator);
 
+        // Compute lower bound for new cost based on distance and load
+        auto const distU = U->route->dist() + deltaDistU;
+        auto const distV = V->route->dist() + deltaDistV;
+
+        auto const deltaLoad = U->route->loadBetween(posU, posU + N - 1)
+                               - V->route->loadBetween(posV, posV + M - 1);
+        auto const loadU = U->route->load() - deltaLoad;
+        auto const loadV = V->route->load() + deltaLoad;
+
+        auto const lbCostU = costEvaluator.penalisedRouteCost(
+            distU, loadU, 0, 0, U->route->vehicleType());
+        auto const lbCostV = costEvaluator.penalisedRouteCost(
+            distV, loadV, 0, 0, V->route->vehicleType());
+
+        if (lbCostU + lbCostV >= currentCost)
+            return 0;
+
+        // Add timing information for route U to get actual cost
         auto uTWS = TWS::merge(data.durationMatrix(),
                                p(U)->twBefore,
                                V->route->twBetween(posV, posV + M - 1),
                                n(endU)->twAfter);
+        auto const costU = costEvaluator.penalisedRouteCost(
+            distU, loadU, uTWS, U->route->vehicleType());
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+        if (costU + lbCostV >= currentCost)
+            return 0;
 
-        auto const loadU = U->route->loadBetween(posU, posU + N - 1);
-        auto const loadV = V->route->loadBetween(posV, posV + M - 1);
-        auto const loadDiff = loadU - loadV;
-
-        deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               U->route->capacity());
-        deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               U->route->capacity());
-
+        // Add timing information for route V to get actual cost
         auto vTWS = TWS::merge(data.durationMatrix(),
                                p(V)->twBefore,
                                U->route->twBetween(posU, posU + N - 1),
                                n(endV)->twAfter);
+        auto const costV = costEvaluator.penalisedRouteCost(
+            distV, loadV, vTWS, V->route->vehicleType());
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
-
-        deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               V->route->capacity());
-        deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               V->route->capacity());
+        return costU + costV - currentCost;
     }
     else  // within same route
     {
         auto const *route = U->route;
+        auto const currentCost = route->penalisedCost(costEvaluator);
+        auto const dist = route->dist() + deltaDistU + deltaDistV;
 
-        if (!route->hasTimeWarp() && deltaCost >= 0)
-            return deltaCost;
+        // First compute bound based on dist and load
+        auto const lbCost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), 0, 0, route->vehicleType());
+        if (lbCost >= currentCost)
+            return 0;
 
-        if (posU < posV)
-        {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        p(U)->twBefore,
-                                        route->twBetween(posV, posV + M - 1),
-                                        route->twBetween(posU + N, posV - 1),
-                                        route->twBetween(posU, posU + N - 1),
-                                        n(endV)->twAfter);
+        auto const tws = (posU < posV)
+                             ? TWS::merge(data.durationMatrix(),
+                                          p(U)->twBefore,
+                                          route->twBetween(posV, posV + M - 1),
+                                          route->twBetween(posU + N, posV - 1),
+                                          route->twBetween(posU, posU + N - 1),
+                                          n(endV)->twAfter)
+                             : TWS::merge(data.durationMatrix(),
+                                          p(V)->twBefore,
+                                          route->twBetween(posU, posU + N - 1),
+                                          route->twBetween(posV + M, posU - 1),
+                                          route->twBetween(posV, posV + M - 1),
+                                          n(endU)->twAfter);
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-        }
-        else
-        {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        p(V)->twBefore,
-                                        route->twBetween(posU, posU + N - 1),
-                                        route->twBetween(posV + M, posU - 1),
-                                        route->twBetween(posV, posV + M - 1),
-                                        n(endU)->twAfter);
-
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-        }
-
-        deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
+        auto const cost = costEvaluator.penalisedRouteCost(
+            dist, route->load(), tws, route->vehicleType());
+        return cost - currentCost;
     }
-
-    return deltaCost;
 }
 
 template <size_t N, size_t M>

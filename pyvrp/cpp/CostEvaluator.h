@@ -41,9 +41,20 @@ public:
      */
     [[nodiscard]] inline Cost
     penalisedRouteCost(Distance const distance,
-                       Load load,
-                       TimeWindowSegment const tws,
-                       ProblemData::VehicleType vehicleType) const;
+                       Load const load,
+                       TimeWindowSegment const &tws,
+                       ProblemData::VehicleType const &vehicleType) const;
+
+    /**
+     * Computes the objective (penalised cost) for a route given set of
+     * properties.
+     */
+    [[nodiscard]] inline Cost
+    penalisedRouteCost(Distance const distance,
+                       Load const load,
+                       Duration const duration,
+                       Duration const timeWarp,
+                       ProblemData::VehicleType const &vehicleType) const;
 
     /**
      * Computes the objective (penalised cost) for a given solution.
@@ -83,16 +94,27 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 
 Cost CostEvaluator::penalisedRouteCost(
     Distance const distance,
-    Load load,
-    TimeWindowSegment const tws,
-    ProblemData::VehicleType vehicleType) const
+    Load const load,
+    TimeWindowSegment const &tws,
+    ProblemData::VehicleType const &vehicleType) const
+{
+    return penalisedRouteCost(
+        distance, load, tws.totalDuration(), tws.totalTimeWarp(), vehicleType);
+}
+
+Cost CostEvaluator::penalisedRouteCost(
+    Distance const distance,
+    Load const load,
+    Duration const duration,
+    Duration const timeWarp,
+    ProblemData::VehicleType const &vehicleType) const
 {
     auto const loadPen = loadPenalty(load, vehicleType.capacity);
-    auto const twPen = twPenalty(tws.totalTimeWarp());
+    auto const twPen = twPenalty(timeWarp);
     auto const distanceCost
         = vehicleType.costPerDistance * static_cast<Cost>(distance);
     auto const durationCost
-        = vehicleType.costPerDuration * static_cast<Cost>(tws.totalDuration());
+        = vehicleType.costPerDuration * static_cast<Cost>(duration);
 
     return distanceCost + durationCost + loadPen + twPen;
 }

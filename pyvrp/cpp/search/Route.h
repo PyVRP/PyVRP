@@ -172,7 +172,7 @@ TimeWindowSegment Route::tws() const { return tws_; }
 Cost Route::penalisedCost(CostEvaluator costEvaluator) const
 {
     // return penalisedCost_;
-    return costEvaluator.penalisedRouteCost(dist_, load_, tws_, vehicleType);
+    return costEvaluator.penalisedRouteCost(dist_, load_, tws_, vehicleType_);
 }
 
 bool Route::empty() const { return size() == 0; }
