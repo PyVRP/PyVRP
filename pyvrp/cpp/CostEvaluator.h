@@ -2,7 +2,11 @@
 #define PYVRP_COSTEVALUATOR_H
 
 #include "Measure.h"
+#include "ProblemData.h"
 #include "Solution.h"
+#include "TimeWindowSegment.h"
+
+using VehicleType = ProblemData::VehicleType;
 
 /**
  * Cost evaluator class that computes penalty values for timewarp and load.
@@ -32,7 +36,17 @@ public:
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
 
     /**
-     * Computes a smoothed objective (penalised cost) for a given solution.
+     * Computes the objective (penalised cost) for a route given set of
+     * properties.
+     */
+    [[nodiscard]] inline Cost
+    penalisedRouteCost(Distance const distance,
+                       Load load,
+                       TimeWindowSegment const tws,
+                       ProblemData::VehicleType vehicleType) const;
+
+    /**
+     * Computes the objective (penalised cost) for a given solution.
      */
     [[nodiscard]] Cost penalisedCost(Solution const &solution) const;
 
@@ -65,6 +79,22 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #else
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
+}
+
+Cost CostEvaluator::penalisedRouteCost(
+    Distance const distance,
+    Load load,
+    TimeWindowSegment const tws,
+    ProblemData::VehicleType vehicleType) const
+{
+    auto const loadPen = loadPenalty(load, vehicleType.capacity);
+    auto const twPen = twPenalty(tws.totalTimeWarp());
+    auto const distanceCost
+        = vehicleType.costPerDistance * static_cast<Cost>(distance);
+    auto const durationCost
+        = vehicleType.costPerDuration * static_cast<Cost>(tws.totalDuration());
+
+    return distanceCost + durationCost + loadPen + twPen;
 }
 
 #endif  // PYVRP_COSTEVALUATOR_H

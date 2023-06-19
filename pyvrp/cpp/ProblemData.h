@@ -34,8 +34,10 @@ public:
 
     struct VehicleType
     {
-        Load capacity;        // Capacity (max total demand) of the vehicle
-        size_t numAvailable;  // Number of available vehicles of this type
+        Load capacity;             // Capacity (max total demand) of the vehicle
+        size_t numAvailable;       // Number of available vehicles of this type
+        Cost costPerDistance = 1;  // Cost per distance unit
+        Cost costPerDuration = 0;  // Cost per duration unit (not yet supported)
     };
 
 private:

@@ -125,8 +125,8 @@ void Route::update()
     load_ = nodes.back()->cumulatedLoad;
     isLoadFeasible_ = load_ <= capacity();
 
-    timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
-    isTimeWarpFeasible_ = timeWarp_ == 0;
+    tws_ = nodes.back()->twBefore;
+    isTimeWarpFeasible_ = tws_.totalTimeWarp() == 0;
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

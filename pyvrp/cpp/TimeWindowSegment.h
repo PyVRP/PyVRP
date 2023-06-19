@@ -32,6 +32,12 @@ public:
      */
     [[nodiscard]] inline Duration totalTimeWarp() const;
 
+    /**
+     * Total duration along the segment, that is, travel duration, waiting time
+     * and service time.
+     */
+    [[nodiscard]] inline Duration totalDuration() const;
+
     TimeWindowSegment() = default;  // TODO at least require client index
 
     inline TimeWindowSegment(int idxFirst,
@@ -49,14 +55,14 @@ TimeWindowSegment TimeWindowSegment::merge(
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
-    auto const arcDuration = durationMatrix(idxLast, other.idxFirst);
-    auto const diff = duration - timeWarp + arcDuration;
+    auto const travelDuration = durationMatrix(idxLast, other.idxFirst);
+    auto const diff = duration - timeWarp + travelDuration;
     auto const diffWait = std::max<Duration>(other.twEarly - diff - twLate, 0);
     auto const diffTw = std::max<Duration>(twEarly + diff - other.twLate, 0);
 
     return {idxFirst,
             other.idxLast,
-            duration + other.duration + arcDuration + diffWait,
+            duration + other.duration + travelDuration + diffWait,
             timeWarp + other.timeWarp + diffTw,
             std::max(other.twEarly - diff, twEarly) - diffWait,
             std::min(other.twLate - diff, twLate) + diffTw};
@@ -83,6 +89,8 @@ TimeWindowSegment TimeWindowSegment::merge(
 }
 
 Duration TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
+
+Duration TimeWindowSegment::totalDuration() const { return duration; }
 
 TimeWindowSegment::TimeWindowSegment(int idxFirst,
                                      int idxLast,

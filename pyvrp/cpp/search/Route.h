@@ -2,6 +2,7 @@
 #define PYVRP_ROUTE_H
 
 #include "CircleSector.h"
+#include "CostEvaluator.h"
 #include "Node.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
@@ -19,10 +20,10 @@ class Route
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
 
-    Load load_;            // Current route load.
-    bool isLoadFeasible_;  // Whether current load is feasible.
-
-    Duration timeWarp_;        // Current route time warp.
+    Distance dist_;            // Current route dist.
+    Load load_;                // Current route load.
+    bool isLoadFeasible_;      // Whether current load is feasible.
+    TimeWindowSegment tws_;    // Current route time window information.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
 
     // Populates the nodes vector.
@@ -65,6 +66,11 @@ public:                // TODO make fields private
     [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
+     * @return Total distance of this route.
+     */
+    [[nodiscard]] inline Distance dist() const;
+
+    /**
      * @return Total load on this route.
      */
     [[nodiscard]] inline Load load() const;
@@ -73,6 +79,16 @@ public:                // TODO make fields private
      * @return Total time warp on this route.
      */
     [[nodiscard]] inline Duration timeWarp() const;
+
+    /**
+     * @return Time window segment corresponding to this route.
+     */
+    [[nodiscard]] inline TimeWindowSegment tws() const;
+
+    /**
+     * @return Total penalised cost of this route.
+     */
+    [[nodiscard]] inline Cost penalisedCost(CostEvaluator costEvaluator) const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -145,9 +161,19 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
+Distance Route::dist() const { return dist_; }
+
 Load Route::load() const { return load_; }
 
-Duration Route::timeWarp() const { return timeWarp_; }
+Duration Route::timeWarp() const { return tws_.totalTimeWarp(); }
+
+TimeWindowSegment Route::tws() const { return tws_; }
+
+Cost Route::penalisedCost(CostEvaluator costEvaluator) const
+{
+    // return penalisedCost_;
+    return costEvaluator.penalisedRouteCost(dist_, load_, tws_, vehicleType);
+}
 
 bool Route::empty() const { return size() == 0; }
 
