@@ -128,20 +128,20 @@ def test_srex_heterogeneous_greedy_repair():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them, and create a heterogeneous version for each
-    indiv1 = Solution(data, [[3, 4], [1, 2]])
-    indiv1h = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
-    indiv2 = Solution(data, [[2, 3], [4, 1]])
-    indiv2h = Solution(data, [Route(data, [2, 3], 0), Route(data, [4, 1], 1)])
+    sol1 = Solution(data, [[3, 4], [1, 2]])
+    sol1h = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+    sol2 = Solution(data, [[2, 3], [4, 1]])
+    sol2h = Solution(data, [Route(data, [2, 3], 0), Route(data, [4, 1], 1)])
 
     # The start indices do not change because there are no improving moves.
-    # So, indiv1's route [3, 4] will be replaced by indiv2's route [2, 3].
+    # So, sol1's route [3, 4] will be replaced by sol2's route [2, 3].
     # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
     # which are both repaired using greedy repair. After repair, we obtain the
     # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
     # cost 9725. The first one is returned since it has the lowest cost.
 
-    # The offspring solution should have the routes according to indiv1
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (0, 0), 1)
+    # The offspring solution should have the routes according to sol1
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [2, 3, 4])
@@ -149,24 +149,24 @@ def test_srex_heterogeneous_greedy_repair():
     assert_equal(routes[1].visits(), [1])
     assert_equal(routes[1].vehicle_type(), 0)
 
-    # Even if indiv2 is heterogeneous
-    offspring = cpp_srex((indiv1, indiv2h), data, cost_evaluator, (0, 0), 1)
+    # Even if sol2 is heterogeneous
+    offspring = cpp_srex((sol1, sol2h), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
     assert_equal(routes[0].visits(), [2, 3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].visits(), [1])
     assert_equal(routes[1].vehicle_type(), 0)
 
-    # If indiv1 is heterogeneous, the result should be so too
-    offspring = cpp_srex((indiv1h, indiv2), data, cost_evaluator, (0, 0), 1)
+    # If sol1 is heterogeneous, the result should be so too
+    offspring = cpp_srex((sol1h, sol2), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
     assert_equal(routes[0].visits(), [2, 3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].visits(), [1])
     assert_equal(routes[1].vehicle_type(), 1)
 
-    # Same if indiv2 is also heterogeneous
-    offspring = cpp_srex((indiv1h, indiv2h), data, cost_evaluator, (0, 0), 1)
+    # Same if sol2 is also heterogeneous
+    offspring = cpp_srex((sol1h, sol2h), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
     assert_equal(routes[0].visits(), [2, 3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
@@ -210,23 +210,23 @@ def test_srex_heterogeneous_changed_start_indices():
 
     # We create the routes sorted by angle such that SREX sorting doesn't
     # affect them
-    indiv1 = Solution(data, [[4], [1, 2, 3]])
-    indiv1h = Solution(data, [Route(data, [4], 0), Route(data, [1, 2, 3], 1)])
-    indiv2 = Solution(data, [[3], [1, 2, 4]])
-    indiv2h = Solution(data, [Route(data, [3], 0), Route(data, [1, 2, 4], 1)])
+    sol1 = Solution(data, [[4], [1, 2, 3]])
+    sol1h = Solution(data, [Route(data, [4], 0), Route(data, [1, 2, 3], 1)])
+    sol2 = Solution(data, [[3], [1, 2, 4]])
+    sol2h = Solution(data, [Route(data, [3], 0), Route(data, [1, 2, 4], 1)])
 
-    # We will start with idx1 = 1 and idx2 = 1 (1 for both indivs)
+    # We will start with idx1 = 1 and idx2 = 1 (1 for both sols)
     # Note that the indices relate to the indices of the non-empty routes!
     # The difference for A to move left (= right) is -1. The difference for B
     # to move left (= right) is 1. The new indices become idx1 = 0 and
     # idx2 = 1. There are no improving moves in this position since the
     # difference for A to move is 1 and difference for B to move is 1.
-    # So, indiv1's route [4] will be replaced by indiv2's route [1, 2, 4].
+    # So, sol1's route [4] will be replaced by sol2's route [1, 2, 4].
     # This results in two candidate offspring, [[1, 2, 4], [3]] with cost
     # 10195, and [[4], [1, 2, 3]] with cost 31029. The first candidate is
     # returned since it has the lowest cost.
 
-    offspring = cpp_srex((indiv1, indiv2), data, cost_evaluator, (1, 1), 1)
+    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (1, 1), 1)
     routes = offspring.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [1, 2, 4])
@@ -234,7 +234,7 @@ def test_srex_heterogeneous_changed_start_indices():
     assert_equal(routes[1].visits(), [3])
     assert_equal(routes[1].vehicle_type(), 0)
 
-    offspring = cpp_srex((indiv1, indiv2h), data, cost_evaluator, (1, 1), 1)
+    offspring = cpp_srex((sol1, sol2h), data, cost_evaluator, (1, 1), 1)
     routes = offspring.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [1, 2, 4])
@@ -242,7 +242,7 @@ def test_srex_heterogeneous_changed_start_indices():
     assert_equal(routes[1].visits(), [3])
     assert_equal(routes[1].vehicle_type(), 0)
 
-    offspring = cpp_srex((indiv1h, indiv2), data, cost_evaluator, (1, 1), 1)
+    offspring = cpp_srex((sol1h, sol2), data, cost_evaluator, (1, 1), 1)
     routes = offspring.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [1, 2, 4])
@@ -250,7 +250,7 @@ def test_srex_heterogeneous_changed_start_indices():
     assert_equal(routes[1].visits(), [3])
     assert_equal(routes[1].vehicle_type(), 1)
 
-    offspring = cpp_srex((indiv1h, indiv2h), data, cost_evaluator, (1, 1), 1)
+    offspring = cpp_srex((sol1h, sol2h), data, cost_evaluator, (1, 1), 1)
     routes = offspring.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [1, 2, 4])
