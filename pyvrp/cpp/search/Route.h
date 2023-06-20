@@ -1,7 +1,6 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
-#include "CircleSector.h"
 #include "Node.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
@@ -15,8 +14,8 @@ class Route
 {
     ProblemData const &data;
 
-    std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
-    CircleSector sector;        // Circle sector of the route's clients
+    std::vector<Node *> nodes;           // List of (ordered) nodes in route.
+    std::pair<double, double> centroid;  // Center point of route's clients.
 
     Load load_;            // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
@@ -100,11 +99,10 @@ public:           // TODO make fields private
     [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
-     * Tests if this route overlaps with the other route, that is, whether
-     * their circle sectors overlap with a given tolerance.
+     * Tests if this route potentially overlaps with the other route, subject
+     * to a tolerance in [0, 1].
      */
-    [[nodiscard]] bool overlapsWith(Route const &other,
-                                    int const tolerance) const;
+    [[nodiscard]] bool overlapsWith(Route const &other, double tolerance) const;
 
     /**
      * Updates this route. To be called after swapping nodes/changing the

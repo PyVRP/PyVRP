@@ -3,12 +3,13 @@
 
 #include "Route.h"
 
+#include <cassert>
 #include <cmath>
 #include <ostream>
 
 using TWS = TimeWindowSegment;
 
-Route::Route(ProblemData const &data) : data(data) {}
+Route::Route(ProblemData const &data) : data(data), centroid({0, 0}) {}
 
 void Route::setupNodes()
 {
@@ -28,14 +29,6 @@ void Route::setupSector()
         return;
 
     auto const &depotData = data.client(0);
-    auto const &clientData = data.client(n(depot)->client);
-
-    auto const diffX = static_cast<double>(clientData.x - depotData.x);
-    auto const diffY = static_cast<double>(clientData.y - depotData.y);
-    auto const angle = CircleSector::positive_mod(
-        static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
-
-    sector.initialize(angle);
 
     for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
     {
@@ -43,13 +36,8 @@ void Route::setupSector()
         assert(!node->isDepot());
 
         auto const &clientData = data.client(node->client);
-
-        auto const diffX = static_cast<double>(clientData.x - depotData.x);
-        auto const diffY = static_cast<double>(clientData.y - depotData.y);
-        auto const angle = CircleSector::positive_mod(
-            static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
-
-        sector.extend(angle);
+        centroid.first += static_cast<double>(clientData.x) / size();
+        centroid.second += static_cast<double>(clientData.y) / size();
     }
 }
 
@@ -66,9 +54,18 @@ void Route::setupRouteTimeWindows()
     } while (!node->isDepot());
 }
 
-bool Route::overlapsWith(Route const &other, int const tolerance) const
+bool Route::overlapsWith(Route const &other, double tolerance) const
 {
-    return CircleSector::overlap(sector, other.sector, tolerance);
+    assert(0 <= tolerance && tolerance <= 1);
+
+    auto const [dataX, dataY] = data.centroid();
+    auto const [thisX, thisY] = centroid;
+    auto const [otherX, otherY] = other.centroid;
+
+    auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
+    auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
+
+    return std::abs(thisAngle - otherAngle) <= tolerance * M_PI;
 }
 
 void Route::update()

@@ -91,7 +91,7 @@ Solution LocalSearch::intensify(Solution &solution,
 {
     loadSolution(solution);
 
-    auto const overlapTolerance = overlapToleranceDegrees * 65536;
+    auto const overlapTolerance = overlapToleranceDegrees / 360.;
 
     if (routeOps.empty())
         throw std::runtime_error("No known route operators.");
