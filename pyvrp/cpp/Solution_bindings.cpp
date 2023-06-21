@@ -72,10 +72,12 @@ PYBIND11_MODULE(_Solution, m)
         });
 
     py::class_<Solution>(m, "Solution")
-        // Note, order of constructors is important, since Route implements
-        // __len__ and __index__, it can also be converted to std::vector<int>
-        // and thus passing a list of Route objects is also valid for the
-        // second constructor. PyBind will use the first matching one.
+        // Note, the order of constructors is important! Since Solution::Route
+        // implements __len__ and __index__, it can also be converted to
+        // std::vector<int> and thus a list of Routes is a valid argument for
+        // both constructors. We want to avoid using the second constructor
+        // since that would loose the vehicle types associations. As PyBind
+        // will use the first matching constructor we put this one first.
         .def(py::init<ProblemData const &,
                       std::vector<Solution::Route> const &>(),
              py::arg("data"),
