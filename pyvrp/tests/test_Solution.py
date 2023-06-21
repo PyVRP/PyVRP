@@ -39,8 +39,23 @@ def test_route_constructor_heterogeneous():
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
+    assert_equal(routes[0], Route(data, [3, 4], 0))
     assert_equal(routes[1].visits(), [1, 2])
     assert_equal(routes[1].vehicle_type(), 1)
+    assert_equal(routes[0], Route(data, [1, 2], 1))
+
+
+def test_route_equal():
+    data = read("data/OkSmall.txt")
+
+    route = Route(data, [1, 2], 0)
+    route1 = Route(data, [1, 2], 0)
+    route2 = Route(data, [1, 2], 1)
+    route3 = Route(data, [2, 1], 0)
+    assert_equal(route, route1)
+    assert_(route == route1)
+    assert_(route != route2)
+    assert_(route != route3)
 
 
 def test_random_constructor_cycles_over_routes():

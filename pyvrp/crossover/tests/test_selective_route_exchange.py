@@ -144,34 +144,26 @@ def test_srex_heterogeneous_greedy_repair():
     offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
     assert_equal(len(routes), 2)
-    assert_equal(routes[0].visits(), [2, 3, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [1])
-    assert_equal(routes[1].vehicle_type(), 0)
+    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
+    assert_equal(routes[1], Route(data, [1], 0))
 
     # Even if sol2 is heterogeneous
     offspring = cpp_srex((sol1, sol2h), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
-    assert_equal(routes[0].visits(), [2, 3, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [1])
-    assert_equal(routes[1].vehicle_type(), 0)
+    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
+    assert_equal(routes[1], Route(data, [1], 0))
 
     # If sol1 is heterogeneous, the result should be so too
     offspring = cpp_srex((sol1h, sol2), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
-    assert_equal(routes[0].visits(), [2, 3, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [1])
-    assert_equal(routes[1].vehicle_type(), 1)
+    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
+    assert_equal(routes[1], Route(data, [1], 1))
 
     # Same if sol2 is also heterogeneous
     offspring = cpp_srex((sol1h, sol2h), data, cost_evaluator, (0, 0), 1)
     routes = offspring.get_routes()
-    assert_equal(routes[0].visits(), [2, 3, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [1])
-    assert_equal(routes[1].vehicle_type(), 1)
+    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
+    assert_equal(routes[1], Route(data, [1], 1))
 
 
 def test_srex_changed_start_indices():

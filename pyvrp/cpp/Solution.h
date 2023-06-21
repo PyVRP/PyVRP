@@ -63,6 +63,8 @@ public:
         [[nodiscard]] bool hasExcessLoad() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
+        bool operator==(Route const &other) const;
+
         Route() = default;  // default is empty
         Route(ProblemData const &data,
               Visits const visits,

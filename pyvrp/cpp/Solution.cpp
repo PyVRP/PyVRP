@@ -316,6 +316,22 @@ bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
 bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 
+bool Solution::Route::operator==(Solution::Route const &other) const
+{
+    // First compare simple attributes, since that's a quick and cheap check.
+    // Only when these are the same we test if the visits are all equal.
+    // Note that vehicleType must be checked for correctness!
+
+    // clang-format off
+    return distance_ == other.distance_
+        && demand_ == other.demand_
+        && timeWarp_ == other.timeWarp_
+        && vehicleType_ == other.vehicleType_
+        && visits_.size() == other.visits_.size()
+        && visits_ == other.visits_;
+    // clang-format on
+}
+
 std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {
     auto const &routes = sol.getRoutes();

@@ -65,6 +65,7 @@ PYBIND11_MODULE(_Solution, m)
                 return route[idx];
             },
             py::arg("idx"))
+        .def(py::self == py::self)  // this is __eq__
         .def("__str__", [](Solution::Route const &route) {
             std::stringstream stream;
             stream << route;
