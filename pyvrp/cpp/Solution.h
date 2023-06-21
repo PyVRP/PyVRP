@@ -109,13 +109,6 @@ public:
     [[nodiscard]] size_t numRoutes() const;
 
     /**
-     * Returns the number of (non-empty) routes in this solution for a specific
-     * vehicle type. Equal to the length of the vector of routes returned by
-     * ``getRoutesForVehicleType`` for the same vehicle type.
-     */
-    [[nodiscard]] size_t numRoutesForVehicleType(size_t vehicleType) const;
-
-    /**
      * Number of clients in the solution.
      */
     [[nodiscard]] size_t numClients() const;
@@ -124,12 +117,6 @@ public:
      * Returns the routing decisions.
      */
     [[nodiscard]] Routes const &getRoutes() const;
-
-    /**
-     * Returns this solution's routing decisions for a specific vehicle type.
-     */
-    [[nodiscard]] Routes const &
-    getRoutesForVehicleType(size_t vehicleType) const;
 
     /**
      * Returns a vector of [pred, succ] clients for each client (index) in this

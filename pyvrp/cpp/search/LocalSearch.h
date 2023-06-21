@@ -48,10 +48,6 @@ class LocalSearch
     // Export the LS solution back into a solution.
     Solution exportSolution() const;
 
-    // Tests the node U with empty routes.
-    bool applyNodeOpsWithEmptyRoutes(Node *U,
-                                     CostEvaluator const &costEvaluator);
-
     // Tests the node pair (U, V).
     bool applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
 
