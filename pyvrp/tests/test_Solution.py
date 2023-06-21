@@ -522,7 +522,7 @@ def test_route_centroid():
     x = np.array([data.client(client).x for client in range(5)])
     y = np.array([data.client(client).y for client in range(5)])
 
-    routes = [Route(data, [1, 2]), Route(data, [3]), Route(data, [4])]
+    routes = [Route(data, [1, 2], 0), Route(data, [3], 0), Route(data, [4], 0)]
 
     for route in routes:
         x_center, y_center = route.centroid()
