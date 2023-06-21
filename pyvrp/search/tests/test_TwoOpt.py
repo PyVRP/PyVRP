@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
@@ -72,7 +73,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     cost1 = cost_evaluator.penalised_cost(sol1)
     cost2 = cost_evaluator.penalised_cost(sol2)
 
-    assert_(cost1 != cost2)
+    assert_(not np.allclose(cost1, cost2))
 
     # Using the local search, the result should not get worse
     improved_sol1 = ls.search(sol1, cost_evaluator)
