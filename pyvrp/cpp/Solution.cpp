@@ -117,12 +117,12 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
 
     routes_.reserve(numRoutes);
     size_t count = 0;
-    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
-        auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
+        auto const numAvailable = data.vehicleType(vehType).numAvailable;
         for (size_t i = 0; i != numAvailable; ++i)
             if (count < routes.size())
-                routes_.emplace_back(data, routes[count++], typeIdx);
+                routes_.emplace_back(data, routes[count++], vehType);
     }
 
     makeNeighbours();
@@ -171,13 +171,13 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             visits[client]++;
     }
 
-    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
-        if (usedVehicles[typeIdx] > data.vehicleType(typeIdx).numAvailable)
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+        if (usedVehicles[vehType] > data.vehicleType(vehType).numAvailable)
         {
             std::ostringstream msg;
-            auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
+            auto const numAvailable = data.vehicleType(vehType).numAvailable;
             msg << "Used more than " << numAvailable << " vehicles of type "
-                << typeIdx << '.';
+                << vehType << '.';
             throw std::runtime_error(msg.str());
         }
 

@@ -118,7 +118,7 @@ public:           // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data, size_t const idx, size_t const typeIdx);
+    Route(ProblemData const &data, size_t const idx, size_t const vehType);
 };
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }

@@ -348,9 +348,9 @@ Solution LocalSearch::exportSolution() const
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
     size_t start = 0;
-    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
     {
-        auto const end = start + data.vehicleType(typeIdx).numAvailable;
+        auto const end = start + data.vehicleType(vehType).numAvailable;
 
         for (size_t r = start; r != end; r++)
         {
@@ -363,7 +363,7 @@ Solution LocalSearch::exportSolution() const
                 node = node->next;
             }
             if (!visits.empty())
-                solRoutes.emplace_back(data, visits, typeIdx);
+                solRoutes.emplace_back(data, visits, vehType);
         }
         start = end;
     }
@@ -428,12 +428,12 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
-    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
-        auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
+        auto const numAvailable = data.vehicleType(vehType).numAvailable;
         for (size_t i = 0; i != numAvailable; ++i)
         {
-            routes.emplace_back(data, rIdx, typeIdx);
+            routes.emplace_back(data, rIdx, vehType);
             routes[rIdx].idx = rIdx;
             routes[rIdx].depot = &startDepots[rIdx];
 

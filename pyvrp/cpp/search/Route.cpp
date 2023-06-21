@@ -8,8 +8,8 @@
 
 using TWS = TimeWindowSegment;
 
-Route::Route(ProblemData const &data, size_t const idx, size_t const typeIdx)
-    : data(data), vehicleType(data.vehicleType(typeIdx)), idx(idx)
+Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
+    : data(data), vehicleType(data.vehicleType(vehType)), idx(idx)
 {
 }
 
