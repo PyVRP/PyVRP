@@ -66,12 +66,12 @@ public:
         Route() = default;  // default is empty
         Route(ProblemData const &data,
               Visits const visits,
-              size_t const vehicleType_);
+              size_t const vehicleType);
     };
 
 private:
     using Routes = std::vector<Route>;
-    using RouteType = int;
+    using VehicleType = int;
 
     size_t numClients_ = 0;       // Number of clients in the solution
     Distance distance_ = 0;       // Total distance
@@ -83,7 +83,8 @@ private:
     Routes routes_;  // Routes - only includes non-empty routes
     std::vector<Routes> routesPerVehicleType_;  // Routes per vehicle type
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
-    std::vector<RouteType> assignedVehicleTypes;  // Client assigned veh. types
+    std::vector<VehicleType>
+        assignedVehicleTypes;  // Client assigned veh. types
 
     // Determines the [pred, succ] pairs for each client.
     void makeNeighbours();
@@ -143,7 +144,8 @@ public:
      * Returns a vector of assigned vehicle types for each client (index) in
      * this solution's routes. Includes the depot at index 0.
      */
-    [[nodiscard]] std::vector<RouteType> const &getAssignedVehicleTypes() const;
+    [[nodiscard]] std::vector<VehicleType> const &
+    getAssignedVehicleTypes() const;
 
     /**
      * @return True when this solution is feasible; false otherwise.
@@ -202,9 +204,8 @@ public:
     Solution(ProblemData const &data, XorShift128 &rng);
 
     /**
-     * Constructs a solution having routes given as lists of client indices
-     * as its solution. This constructor will assume all of the routes are
-     * for the first vehicle type.
+     * Constructs a solution using routes given as lists of client indices.
+     * This constructor assumes all routes use vehicles having vehicle type 0.
      *
      * @param data   Data instance describing the problem that's being solved.
      * @param routes Solution's route list.
@@ -213,12 +214,10 @@ public:
              std::vector<std::vector<Client>> const &routes);
 
     /**
-     * Constructs a solution having routes given as Route objects. This allows
-     * constructing solutions with heterogeneous vehicle types.
+     * Constructs a solution from the given list of Routes.
      *
-     * @param data           Data instance describing the problem that's being
-     *                       solved.
-     * @param routes         Solution's route list.
+     * @param data   Data instance describing the problem that's being solved.
+     * @param routes Solution's route list.
      */
     Solution(ProblemData const &data, std::vector<Route> const &routes);
 };

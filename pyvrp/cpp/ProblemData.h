@@ -35,7 +35,7 @@ public:
     struct VehicleType
     {
         Load capacity;        // Capacity (max total demand) of the vehicle
-        size_t numAvailable;  // Qty available of this vehicle type
+        size_t numAvailable;  // Number of available vehicles of this type
     };
 
 private:
@@ -43,7 +43,7 @@ private:
     Matrix<Distance> const dist_;            // Distance matrix (+depot)
     Matrix<Duration> const dur_;             // Duration matrix (+depot)
     std::vector<Client> clients_;            // Client (+depot) information
-    std::vector<VehicleType> vehicleTypes_;  // Routes information per route
+    std::vector<VehicleType> vehicleTypes_;  // Vehicle type information
 
     size_t const numClients_;
     size_t const numVehicles_;
@@ -67,10 +67,11 @@ public:
     [[nodiscard]] std::pair<double, double> const &centroid() const;
 
     /**
-     * @param idx Index of the vehicle type to return.
-     * @return A struct containing the vehicle type.
+     * @param vehicle_type Vehicle type whose data to return.
+     * @return A struct containing the vehicle type's information.
      */
-    [[nodiscard]] inline VehicleType const &vehicleType(size_t idx) const;
+    [[nodiscard]] inline VehicleType const &
+    vehicleType(size_t vehicle_type) const;
 
     /**
      * Returns the distance between the indicated two clients.
@@ -114,11 +115,6 @@ public:
      * @return Total number of vehicles available in this instance.
      */
     [[nodiscard]] size_t numVehicles() const;
-
-    /**
-     * @return If instance is heterogeneous, which means > 1 vehicle type.
-     */
-    [[nodiscard]] bool isHeterogeneous() const;
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the list of

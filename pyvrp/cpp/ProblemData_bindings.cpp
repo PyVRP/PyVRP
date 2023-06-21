@@ -81,8 +81,6 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
         .def_property_readonly("num_vehicle_types",
                                &ProblemData::numVehicleTypes)
-        .def_property_readonly("is_heterogeneous",
-                               &ProblemData::isHeterogeneous)
         .def("client",
              &ProblemData::client,
              py::arg("client"),

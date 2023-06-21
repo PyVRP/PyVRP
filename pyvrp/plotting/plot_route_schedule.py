@@ -41,6 +41,7 @@ def plot_route_schedule(
     """
     if not ax:
         _, ax = plt.subplots()
+
     vehicle_type = data.vehicle_type(route.vehicle_type())
     depot = data.client(0)  # For readability, define variable
     horizon = depot.tw_late - depot.tw_early

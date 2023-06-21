@@ -54,8 +54,6 @@ size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-bool ProblemData::isHeterogeneous() const { return numVehicleTypes_ > 1; }
-
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> const distMat,
@@ -66,12 +64,13 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       clients_(clients),
       vehicleTypes_(vehicleTypes),
       numClients_(std::max<size_t>(clients.size(), 1) - 1),
-      numVehicles_(std::accumulate(vehicleTypes.begin(),
-                                   vehicleTypes.end(),
-                                   0,
-                                   [](int sum, VehicleType const &vehicleType) {
-                                       return sum + vehicleType.numAvailable;
-                                   })),
+      numVehicles_(
+          std::accumulate(vehicleTypes.begin(),
+                          vehicleTypes.end(),
+                          size_t(0),
+                          [](size_t sum, VehicleType const &vehicleType) {
+                              return sum + vehicleType.numAvailable;
+                          })),
       numVehicleTypes_(vehicleTypes.size())
 {
     for (size_t idx = 1; idx <= numClients(); ++idx)

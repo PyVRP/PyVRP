@@ -5,13 +5,11 @@
 #include <fstream>
 #include <numeric>
 #include <sstream>
-#include <vector>
 
 using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
-using RouteType = int;
-
+using VehicleType = int;
 void Solution::evaluate(ProblemData const &data)
 {
     Cost allPrizes = 0;
@@ -52,7 +50,7 @@ std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
     return neighbours;
 }
 
-std::vector<RouteType> const &Solution::getAssignedVehicleTypes() const
+std::vector<VehicleType> const &Solution::getAssignedVehicleTypes() const
 {
     return assignedVehicleTypes;
 }
@@ -147,12 +145,13 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
         routes[idx / perRoute].push_back(clients[idx]);
 
     routes_.reserve(numRoutes);
+    size_t count = 0;
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
         auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
         for (size_t i = 0; i != numAvailable; ++i)
-            if (routes_.size() < routes.size())
-                routes_.emplace_back(data, routes[routes_.size()], typeIdx);
+            if (count < routes.size())
+                routes_.emplace_back(data, routes[count++], typeIdx);
     }
 
     makeNeighbours();
@@ -161,15 +160,14 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
     evaluate(data);
 }
 
-std::vector<Solution::Route>
-Solution::transformRoutes(ProblemData const &data,
-                          std::vector<std::vector<Client>> const &routes)
+Routes Solution::transformRoutes(ProblemData const &data,
+                                 std::vector<std::vector<Client>> const &routes)
 {
     std::vector<Route> transformedRoutes;
     std::transform(routes.begin(),
                    routes.end(),
                    std::back_inserter(transformedRoutes),
-                   [&data](const std::vector<Client> &visits) {
+                   [&data](std::vector<Client> const &visits) {
                        return Route(data, visits, 0);
                    });
     return transformedRoutes;
@@ -193,7 +191,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     }
 
     std::vector<size_t> visits(data.numClients() + 1, 0);
-    std::vector<size_t> used_vehicles(data.numVehicleTypes(), 0);
+    std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
         if (route.empty())
@@ -202,17 +200,18 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             msg << "Solution should not contain empty routes.";
             throw std::runtime_error(msg.str());
         }
-        used_vehicles[route.vehicleType()]++;
+        usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
             visits[client]++;
     }
 
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
-        if (used_vehicles[typeIdx] > data.vehicleType(typeIdx).numAvailable)
+        if (usedVehicles[typeIdx] > data.vehicleType(typeIdx).numAvailable)
         {
             std::ostringstream msg;
-            msg << "Used more than " << data.vehicleType(typeIdx).numAvailable
-                << " vehicles of type " << typeIdx << ".";
+            auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
+            msg << "Used more than " << numAvailable << " vehicles of type "
+                << typeIdx << '.';
             throw std::runtime_error(msg.str());
         }
 
@@ -239,7 +238,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         if (!route.empty())
             routes_.push_back(route);
 
-    if (data.isHeterogeneous())
+    if (data.numVehicleTypes() > 1)
     {
         // We sort routes by vehicle types. Combined with a stable sort, this
         // ensures we keep the original sorting as much as possible.

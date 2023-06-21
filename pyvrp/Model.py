@@ -171,7 +171,8 @@ class Model:
         Raises
         ------
         ValueError
-            When the number available or capacity is not a positive value.
+            When the number of available vehicles or capacity is not a positive
+            value.
         """
         if capacity < 0:
             raise ValueError("Cannot have negative vehicle capacity.")

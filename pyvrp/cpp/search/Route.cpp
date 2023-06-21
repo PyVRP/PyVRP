@@ -121,7 +121,7 @@ void Route::update()
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;
-    isLoadFeasible_ = static_cast<size_t>(load_) <= vehicleType.capacity;
+    isLoadFeasible_ = load_ <= vehicleType.capacity;
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;

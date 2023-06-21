@@ -125,14 +125,14 @@ class ProblemData:
         tuple
             Centroid of all client locations.
         """
-    def vehicle_type(self, idx: int) -> VehicleType:
+    def vehicle_type(self, vehicle_type: int) -> VehicleType:
         """
-        Returns vehicle type for the index of the vehicle type.
+        Returns vehicle type data for the given vehicle type.
 
         Parameters
         ----------
-        idx
-            Index of the vehicle type.
+        vehicle_type
+            Vehicle type number whose information to retrieve.
 
         Returns
         -------
@@ -202,15 +202,4 @@ class ProblemData:
         -------
         int
             Number of vehicle types in this problem instance.
-        """
-    @property
-    def is_heterogeneous(self) -> bool:
-        """
-        Flag indicating if this problem instance is heterogeneous, which means
-        it has more than one vehicle type.
-
-        Returns
-        -------
-        bool
-            Whether this problem instance is heterogeneous.
         """

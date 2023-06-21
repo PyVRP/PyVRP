@@ -80,7 +80,7 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * @return the capacity for this route.
+     * @return The load capacity of this route.
      */
     [[nodiscard]] inline Load capacity() const;
 

@@ -71,9 +71,8 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     sol2 = Solution(data, [Route(data, [1, 4], 0), Route(data, [2, 3], 1)])
     cost1 = cost_evaluator.penalised_cost(sol1)
     cost2 = cost_evaluator.penalised_cost(sol2)
-    # worse_cost = cost_evaluator.penalised_cost(worse_sol)
-    # assert(worse_cost > current_cost)
-    assert cost1 != cost2
+
+    assert_(cost1 != cost2)
 
     # Using the local search, the result should not get worse
     improved_sol1 = ls.search(sol1, cost_evaluator)

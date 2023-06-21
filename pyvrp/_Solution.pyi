@@ -59,7 +59,7 @@ class Route:
         """
     def vehicle_type(self) -> int:
         """
-        Idx of the type of the vehicle used for this route.
+        Index of the type of vehicle used on this route.
         """
 
 class Solution:
