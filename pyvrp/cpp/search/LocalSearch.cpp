@@ -77,7 +77,7 @@ Solution LocalSearch::search(Solution &solution,
                     auto empty = std::find_if(begin, end, pred);
                     begin = end;  // Set begin for next iteration
 
-                    if (empty == routes.end())
+                    if (empty == end)
                         continue;
 
                     if (U->route)  // try inserting U into the empty route.
