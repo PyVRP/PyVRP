@@ -115,17 +115,6 @@ class Solution:
             A list of ``(pred, succ)`` tuples that encode for each client their
             predecessor and successors in this solutions's routes.
         """
-    def get_assigned_vehicle_types(self) -> List[int]:
-        """
-        Returns a list of vehicle type assignments for each client, by index.
-        Also includes the depot at index 0, which gets value -1 (unassigned).
-
-        Returns
-        -------
-        list
-            A list of index values that encode for each client the index of the
-            vehicle type of the route they are assigned to.
-        """
     def get_routes(self) -> List[Route]:
         """
         The solution's routing decisions.

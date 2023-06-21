@@ -155,30 +155,6 @@ def test_get_neighbours():
         assert_equal(neighbours[client], expected[client])
 
 
-def test_get_assigned_vehicle_types():
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
-
-    # One route of both vehicle types should not raise.
-    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)])
-
-    # Depot has -1 as assigned vehicle type
-    expected = [-1, 0, 0, 1, 1]
-    assert_equal(sol.get_assigned_vehicle_types(), expected)
-
-
-def test_get_assigned_vehicle_types_unassigned():
-    # Test if we have -1 as vehicle type for unassigned clients when prize
-    # collecting.
-    data = read("data/OkSmallPrizes.txt")
-
-    sol = Solution(data, [[1], [3, 4]])  # 2 not visited
-
-    # Depot and uncollected clients have -1 as assigned vehicle type
-    expected = [-1, 0, -1, 0, 0]
-    assert_equal(sol.get_assigned_vehicle_types(), expected)
-
-
 def test_feasibility():
     data = read("data/OkSmall.txt")
 

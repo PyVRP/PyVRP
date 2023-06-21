@@ -14,6 +14,7 @@ class Solution
     friend struct std::hash<Solution>;  // friend struct to enable hashing
 
     using Client = int;
+    using VehicleType = size_t;
 
 public:
     /**
@@ -34,7 +35,7 @@ public:
         Cost prizes_ = 0;        // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
-        size_t vehicleType_ = 0;              // Type of vehicle of this route
+        VehicleType vehicleType_ = 0;         // Type of vehicle of this route
 
     public:
         [[nodiscard]] bool empty() const;
@@ -57,7 +58,7 @@ public:
         [[nodiscard]] Cost prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;
-        [[nodiscard]] size_t vehicleType() const;
+        [[nodiscard]] VehicleType vehicleType() const;
 
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
@@ -68,12 +69,11 @@ public:
         Route() = default;  // default is empty
         Route(ProblemData const &data,
               Visits const visits,
-              size_t const vehicleType);
+              VehicleType const vehicleType);
     };
 
 private:
     using Routes = std::vector<Route>;
-    using VehicleType = int;
 
     size_t numClients_ = 0;       // Number of clients in the solution
     Distance distance_ = 0;       // Total distance
@@ -82,16 +82,11 @@ private:
     Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
     Duration timeWarp_ = 0;       // Total time warp over all routes
 
-    Routes routes_;  // Routes - only includes non-empty routes
+    Routes routes_;
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
-    std::vector<VehicleType>
-        assignedVehicleTypes;  // Client assigned veh. types
 
     // Determines the [pred, succ] pairs for each client.
     void makeNeighbours();
-
-    // Determines assigned route types for each client.
-    void makeAssignedVehicleTypes();
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
@@ -124,13 +119,6 @@ public:
      */
     [[nodiscard]] std::vector<std::pair<Client, Client>> const &
     getNeighbours() const;
-
-    /**
-     * Returns a vector of assigned vehicle types for each client (index) in
-     * this solution's routes. Includes the depot at index 0.
-     */
-    [[nodiscard]] std::vector<VehicleType> const &
-    getAssignedVehicleTypes() const;
 
     /**
      * @return True when this solution is feasible; false otherwise.

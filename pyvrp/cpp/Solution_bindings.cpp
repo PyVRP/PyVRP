@@ -106,9 +106,6 @@ PYBIND11_MODULE(_Solution, m)
         .def("get_neighbours",
              &Solution::getNeighbours,
              py::return_value_policy::reference_internal)
-        .def("get_assigned_vehicle_types",
-             &Solution::getAssignedVehicleTypes,
-             py::return_value_policy::reference_internal)
         .def("is_feasible", &Solution::isFeasible)
         .def("has_excess_load", &Solution::hasExcessLoad)
         .def("has_time_warp", &Solution::hasTimeWarp)

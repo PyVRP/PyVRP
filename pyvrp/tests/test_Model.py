@@ -118,7 +118,7 @@ def test_get_locations():
     depot = model.add_depot(0, 0)
     client2 = model.add_client(0, 2)
 
-    # Test that depot is always first and we can get them by index
+    # Test that depot is always first and that we can get the clients by index.
     assert_equal(model.locations[0], depot)
     assert_equal(model.locations[1], client1)
     assert_equal(model.locations[2], client2)
@@ -129,7 +129,7 @@ def test_get_vehicle_types():
     vehicle_type1 = model.add_vehicle_type(1, 2)
     vehicle_type2 = model.add_vehicle_type(1, 3)
 
-    # Test that depot is always first and we can get them by index
+    # Test that we can get the vehicle types by index.
     assert_equal(model.vehicle_types[0], vehicle_type1)
     assert_equal(model.vehicle_types[1], vehicle_type2)
 

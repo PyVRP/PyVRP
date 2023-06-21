@@ -3,13 +3,11 @@
 
 #include <fstream>
 #include <numeric>
+#include <unordered_map>
 
 using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
-using VehicleType = int;
-
-int const UNASSIGNED = -1;  // default value
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -41,11 +39,6 @@ std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
     return neighbours;
 }
 
-std::vector<VehicleType> const &Solution::getAssignedVehicleTypes() const
-{
-    return assignedVehicleTypes;
-}
-
 bool Solution::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
 bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
@@ -71,33 +64,39 @@ void Solution::makeNeighbours()
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
 
-void Solution::makeAssignedVehicleTypes()
-{
-    for (auto const &route : routes_)
-        for (size_t idx = 0; idx != route.size(); ++idx)
-            assignedVehicleTypes[route[idx]] = route.vehicleType();
-}
-
 bool Solution::operator==(Solution const &other) const
 {
-    // First compare simple attributes, since that's a quick and cheap check.
-    // Only when these are the same we test if the neighbours are all equal.
-    // Only when that is also the case, we check if the assigned vehicle types
-    // (capacities) are equal for the heterogeneous case.
+    // First compare simple attributes, since that's quick and cheap.
+    bool const simpleChecks = distance_ == other.distance_
+                              && excessLoad_ == other.excessLoad_
+                              && timeWarp_ == other.timeWarp_
+                              && routes_.size() == other.routes_.size();
 
-    // clang-format off
-    return distance_ == other.distance_
-        && excessLoad_ == other.excessLoad_
-        && timeWarp_ == other.timeWarp_
-        && routes_.size() == other.routes_.size()
-        && neighbours == other.neighbours
-        && assignedVehicleTypes == other.assignedVehicleTypes;
-    // clang-format on
+    if (!simpleChecks)
+        return false;
+
+    // Now test if the neighbours are all equal. If that's the case we have
+    // the same visit structure across routes.
+    if (neighbours != other.neighbours)
+        return false;
+
+    // The visits are the same for both solutions, but the vehicle assignments
+    // need not be. We check this via a mapping from the first client in each
+    // route to the vehicle type of that route. We need to base this on the
+    // visits since the routes need not be in the same order between solutions.
+    std::unordered_map<Client, VehicleType> client2vehType;
+    for (auto const &route : routes_)
+        client2vehType[route.visits()[0]] = route.vehicleType();
+
+    for (auto const &route : other.routes_)
+        if (client2vehType[route.visits()[0]] != route.vehicleType())
+            return false;
+
+    return true;
 }
 
 Solution::Solution(ProblemData const &data, XorShift128 &rng)
-    : neighbours(data.numClients() + 1, {0, 0}),
-      assignedVehicleTypes(data.numClients() + 1, UNASSIGNED)
+    : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -127,7 +126,6 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
     }
 
     makeNeighbours();
-    makeAssignedVehicleTypes();
     evaluate(data);
 }
 
@@ -143,9 +141,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes),
-      neighbours(data.numClients() + 1, {0, 0}),
-      assignedVehicleTypes(data.numClients() + 1, UNASSIGNED)
+    : routes_(routes), neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
@@ -197,7 +193,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     }
 
     makeNeighbours();
-    makeAssignedVehicleTypes();
     evaluate(data);
 }
 
