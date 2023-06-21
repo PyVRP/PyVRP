@@ -362,27 +362,21 @@ Solution LocalSearch::exportSolution() const
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
-    size_t start = 0;
-    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+    for (size_t r = 0; r < data.numVehicles(); r++)
     {
-        auto const end = start + data.vehicleType(vehType).numAvailable;
+        if (routes[r].empty())
+            continue;
 
-        for (size_t r = start; r != end; r++)
+        std::vector<int> visits;
+        Node *node = startDepots[r].next;
+
+        while (!node->isDepot())
         {
-            Node *node = startDepots[r].next;
-            std::vector<int> visits;
-
-            while (!node->isDepot())
-            {
-                visits.push_back(node->client);
-                node = node->next;
-            }
-
-            if (!visits.empty())
-                solRoutes.emplace_back(data, visits, vehType);
+            visits.push_back(node->client);
+            node = node->next;
         }
 
-        start = end;
+        solRoutes.emplace_back(data, visits, routes[r].vehicleType());
     }
 
     return {data, solRoutes};

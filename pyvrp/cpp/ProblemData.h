@@ -67,11 +67,11 @@ public:
     [[nodiscard]] std::pair<double, double> const &centroid() const;
 
     /**
-     * @param vehicle_type Vehicle type whose data to return.
+     * @param vehicleType Vehicle type whose data to return.
      * @return A struct containing the vehicle type's information.
      */
     [[nodiscard]] inline VehicleType const &
-    vehicleType(size_t vehicle_type) const;
+    vehicleType(size_t vehicleType) const;
 
     /**
      * Returns the distance between the indicated two clients.
@@ -138,9 +138,9 @@ ProblemData::Client const &ProblemData::client(size_t client) const
 }
 
 ProblemData::VehicleType const &
-ProblemData::vehicleType(size_t vehicle_type) const
+ProblemData::vehicleType(size_t vehicleType) const
 {
-    return vehicleTypes_[vehicle_type];
+    return vehicleTypes_[vehicleType];
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const

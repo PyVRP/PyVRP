@@ -9,7 +9,7 @@
 using TWS = TimeWindowSegment;
 
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
-    : data(data), vehicleType(data.vehicleType(vehType)), idx(idx)
+    : data(data), vehicleType_(vehType), idx(idx)
 {
 }
 
@@ -69,6 +69,8 @@ void Route::setupRouteTimeWindows()
     } while (!node->isDepot());
 }
 
+size_t Route::vehicleType() const { return vehicleType_; }
+
 bool Route::overlapsWith(Route const &other, int const tolerance) const
 {
     return CircleSector::overlap(sector, other.sector, tolerance);
@@ -121,7 +123,7 @@ void Route::update()
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;
-    isLoadFeasible_ = load_ <= vehicleType.capacity;
+    isLoadFeasible_ = load_ <= capacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;

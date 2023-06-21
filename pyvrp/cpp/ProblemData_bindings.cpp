@@ -93,7 +93,7 @@ PYBIND11_MODULE(_ProblemData, m)
              py::return_value_policy::reference_internal)
         .def("vehicle_type",
              &ProblemData::vehicleType,
-             py::arg("idx"),
+             py::arg("vehicle_type"),
              py::return_value_policy::reference_internal)
         .def(
             "dist",

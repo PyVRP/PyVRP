@@ -155,9 +155,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     {
         if (route.empty())
         {
-            std::ostringstream msg;
-            msg << "Solution should not contain empty routes.";
-            throw std::runtime_error(msg.str());
+            auto const msg = "Solution should not contain empty routes.";
+            throw std::runtime_error(msg);
         }
 
         usedVehicles[route.vehicleType()]++;

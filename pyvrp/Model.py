@@ -45,16 +45,18 @@ class Model:
     def locations(self) -> List[Client]:
         """
         Returns all locations (depots and clients) in the current model. The
-        routes returned by :meth:`~solve` can be used to index these locations.
+        clients in the routes of the solution returned by :meth:`~solve` can be
+        used to index these locations.
         """
         return self._depots + self._clients
 
     @property
     def vehicle_types(self) -> List[VehicleType]:
         """
-        Returns the vehicle types in the current model. The routes returned by
-        :meth:`~solve` have a property `vehicle_type()` that returns an
-        integer that can be used to index these vehicle types.
+        Returns the vehicle types in the current model. The routes of the
+        solution returned by :meth:`~solve` have a property
+        :meth:`~pyvrp._Solution.Route.vehicle_type()` that can be used to index
+        these vehicle types.
         """
         return self._vehicle_types
 
@@ -187,9 +189,7 @@ class Model:
             raise ValueError("Cannot have negative vehicle capacity.")
 
         if num_available <= 0:
-            raise ValueError(
-                "Must have positive number of available vehicles."
-            )
+            raise ValueError("Must have positive number of vehicles.")
 
         vehicle_type = VehicleType(capacity, num_available)
         self._vehicle_types.append(vehicle_type)

@@ -14,7 +14,7 @@
 class Route
 {
     ProblemData const &data;
-    ProblemData::VehicleType const &vehicleType;
+    size_t const vehicleType_;
 
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
@@ -106,6 +106,11 @@ public:                // TODO make fields private
     [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
+     * @return This route's vehicle type.
+     */
+    [[nodiscard]] size_t vehicleType() const;
+
+    /**
      * Tests if this route overlaps with the other route, that is, whether
      * their circle sectors overlap with a given tolerance.
      */
@@ -146,7 +151,7 @@ Duration Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
 
-Load Route::capacity() const { return vehicleType.capacity; }
+Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
 size_t Route::size() const
 {
