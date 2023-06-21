@@ -81,7 +81,6 @@ private:
     Duration timeWarp_ = 0;       // Total time warp over all routes
 
     Routes routes_;  // Routes - only includes non-empty routes
-    std::vector<Routes> routesPerVehicleType_;  // Routes per vehicle type
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
     std::vector<VehicleType>
         assignedVehicleTypes;  // Client assigned veh. types
@@ -91,9 +90,6 @@ private:
 
     // Determines assigned route types for each client.
     void makeAssignedVehicleTypes();
-
-    // Creates vector with routes per vehicle type
-    void makeRoutesPerVehicleType();
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);

@@ -29,19 +29,9 @@ void Solution::evaluate(ProblemData const &data)
 
 size_t Solution::numRoutes() const { return routes_.size(); }
 
-size_t Solution::numRoutesForVehicleType(size_t vehicleType) const
-{
-    return routesPerVehicleType_[vehicleType].size();
-}
-
 size_t Solution::numClients() const { return numClients_; }
 
 Routes const &Solution::getRoutes() const { return routes_; }
-
-Routes const &Solution::getRoutesForVehicleType(size_t vehicleType) const
-{
-    return routesPerVehicleType_[vehicleType];
-}
 
 std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
 {
@@ -87,22 +77,6 @@ void Solution::makeAssignedVehicleTypes()
             assignedVehicleTypes[route[idx]] = route.vehicleType();
 }
 
-void Solution::makeRoutesPerVehicleType()
-{
-    if (routes_.empty())
-        return;
-    auto start = routes_.begin();
-    for (auto it = routes_.begin(); it != routes_.end(); ++it)
-    {
-        if (it->vehicleType() != start->vehicleType())
-        {
-            routesPerVehicleType_[start->vehicleType()].assign(start, it);
-            start = it;
-        }
-    }
-    routesPerVehicleType_[start->vehicleType()].assign(start, routes_.end());
-}
-
 bool Solution::operator==(Solution const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
@@ -121,8 +95,7 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, XorShift128 &rng)
-    : routesPerVehicleType_(data.numVehicleTypes()),
-      neighbours(data.numClients() + 1, {0, 0}),
+    : neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
     // Shuffle clients (to create random routes)
@@ -154,7 +127,6 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
 
     makeNeighbours();
     makeAssignedVehicleTypes();
-    makeRoutesPerVehicleType();
     evaluate(data);
 }
 
@@ -175,8 +147,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routesPerVehicleType_(data.numVehicleTypes()),
-      neighbours(data.numClients() + 1, {0, 0}),
+    : neighbours(data.numClients() + 1, {0, 0}),
       assignedVehicleTypes(data.numClients() + 1)
 {
     if (routes.size() > data.numVehicles())
@@ -246,7 +217,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
     makeNeighbours();
     makeAssignedVehicleTypes();
-    makeRoutesPerVehicleType();
     evaluate(data);
 }
 

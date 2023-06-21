@@ -96,17 +96,10 @@ PYBIND11_MODULE(_Solution, m)
                     py::arg("rng"));
             })
         .def("num_routes", &Solution::numRoutes)
-        .def("num_routes_for_vehicle_type",
-             &Solution::numRoutesForVehicleType,
-             py::arg("vehicle_type"))
         .def("num_clients", &Solution::numClients)
         .def("get_routes",
              &Solution::getRoutes,
              py::return_value_policy::reference_internal)
-        .def("get_routes_for_vehicle_type",
-             &Solution::getRoutesForVehicleType,
-             py::return_value_policy::reference_internal,
-             py::arg("vehicle_type"))
         .def("get_neighbours",
              &Solution::getNeighbours,
              py::return_value_policy::reference_internal)
