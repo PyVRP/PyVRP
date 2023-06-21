@@ -66,10 +66,26 @@ Solution LocalSearch::search(Solution &solution,
                 }
             }
 
-            // Empty route moves are not tested in the first iteration to avoid
-            // increasing the fleet size too much.
-            if (step > 0 && applyNodeOpsWithEmptyRoutes(U, costEvaluator))
-                continue;
+            if (step > 0)  // empty moves are not tested initially to avoid
+            {              // using too many routes.
+                // Check move involving empty route for each vehicle type
+                auto begin = routes.begin();
+                for (size_t t = 0; t != data.numVehicleTypes(); t++)
+                {
+                    auto const end = begin + data.vehicleType(t).numAvailable;
+                    auto pred = [](auto const &route) { return route.empty(); };
+                    auto empty = std::find_if(begin, end, pred);
+                    begin = end;  // Set begin for next iteration
+
+                    if (empty == routes.end())
+                        continue;
+
+                    if (U->route)  // try inserting U into the empty route.
+                        applyNodeOps(U, empty->depot, costEvaluator);
+                    else  // U is not in the solution, so again try inserting.
+                        maybeInsert(U, empty->depot, costEvaluator);
+                }
+            }
         }
     }
 
@@ -136,38 +152,6 @@ void LocalSearch::shuffle(XorShift128 &rng)
 
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
-}
-
-bool LocalSearch::applyNodeOpsWithEmptyRoutes(
-    Node *U, CostEvaluator const &costEvaluator)
-{
-    bool success = false;
-    // Loop over vehicle types and try to insert in empty route
-    auto pred = [](auto const &route) { return route.empty(); };
-    for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
-    {
-        auto start = routes.begin() + typeOffsets[typeIdx];
-        auto end = start + data.vehicleType(typeIdx).numAvailable;
-        auto empty = std::find_if(start, end, pred);
-
-        if (empty == end)
-            continue;
-
-        // Note: if the operation is succesful, we still continue
-        // checking operations with other empty routes, similar to
-        // how a move involving U, V will still check U, V' afterwards
-        if (U->route)
-        {  // try inserting U into the empty route.
-            if (applyNodeOps(U, empty->depot, costEvaluator))
-                success = true;
-        }
-        else
-        {  // U is not in the solution, so again try inserting.
-            if (maybeInsert(U, empty->depot, costEvaluator))
-                success = true;
-        }
-    }
-    return success;
 }
 
 bool LocalSearch::applyNodeOps(Node *U,
@@ -363,11 +347,10 @@ Solution LocalSearch::exportSolution() const
 {
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
-
+    size_t start = 0;
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); typeIdx++)
     {
-        auto start = typeOffsets[typeIdx];
-        auto end = start + data.vehicleType(typeIdx).numAvailable;
+        auto const end = start + data.vehicleType(typeIdx).numAvailable;
 
         for (size_t r = start; r != end; r++)
         {
@@ -382,6 +365,7 @@ Solution LocalSearch::exportSolution() const
             if (!visits.empty())
                 solRoutes.emplace_back(data, visits, typeIdx);
         }
+        start = end;
     }
 
     return {data, solRoutes};
@@ -431,8 +415,6 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1),
       clients(data.numClients() + 1),
-      routes(),
-      typeOffsets(data.numVehicleTypes()),
       startDepots(data.numVehicles()),
       endDepots(data.numVehicles())
 {
@@ -444,14 +426,10 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     for (size_t i = 0; i <= data.numClients(); i++)
         clients[i].client = i;
 
-    // For convenience, we create a vector with offset/starting indexes for
-    // each vehicle type.
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
     for (size_t typeIdx = 0; typeIdx != data.numVehicleTypes(); ++typeIdx)
     {
-        typeOffsets[typeIdx] = rIdx;
-
         auto const numAvailable = data.vehicleType(typeIdx).numAvailable;
         for (size_t i = 0; i != numAvailable; ++i)
         {
