@@ -292,8 +292,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 
-    auto const &solRoutes = solution.getRoutes();
-
+    // First empty all routes
     for (size_t r = 0; r != data.numVehicles(); r++)
     {
         Node *startDepot = &startDepots[r];
@@ -310,34 +309,48 @@ void LocalSearch::loadSolution(Solution const &solution)
 
         endDepot->tw = clients[0].tw;
         endDepot->twAfter = clients[0].tw;
+    }
 
+    // Determine offsets for vehicle types
+    std::vector<size_t> offsets(data.numVehicleTypes(), 0);
+    for (size_t t = 1; t < data.numVehicleTypes(); t++)
+        offsets[t] = offsets[t - 1] + data.vehicleType(t).numAvailable;
+
+    // Load routes from solution
+    for (auto const &solRoute : solution.getRoutes())
+    {
+        // Determine index of next route of this type to load, where we rely
+        // on Solution to be valid to not exceed the number of vehicles per
+        // vehicle type
+        auto const r = offsets[solRoute.vehicleType()]++;
         Route *route = &routes[r];
+        Node *startDepot = &startDepots[r];
+        Node *endDepot = &endDepots[r];
 
-        if (r < solRoutes.size())
+        Node *client = &clients[solRoute[0]];
+        client->route = route;
+
+        client->prev = startDepot;
+        startDepot->next = client;
+
+        for (size_t idx = 1; idx < solRoute.size(); idx++)
         {
-            Node *client = &clients[solRoutes[r][0]];
+            Node *prev = client;
+
+            client = &clients[solRoute[idx]];
             client->route = route;
 
-            client->prev = startDepot;
-            startDepot->next = client;
-
-            for (size_t idx = 1; idx < solRoutes[r].size(); idx++)
-            {
-                Node *prev = client;
-
-                client = &clients[solRoutes[r][idx]];
-                client->route = route;
-
-                client->prev = prev;
-                prev->next = client;
-            }
-
-            client->next = endDepot;
-            endDepot->prev = client;
+            client->prev = prev;
+            prev->next = client;
         }
 
-        route->update();
+        client->next = endDepot;
+        endDepot->prev = client;
     }
+
+    // Update all routes after the solution has been loaded
+    for (auto &route : routes)
+        route.update();
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);

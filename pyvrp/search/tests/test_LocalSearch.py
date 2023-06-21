@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
 from pyvrp.search import (
     Exchange10,
     Exchange11,
@@ -11,7 +11,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._LocalSearch import LocalSearch as cpp_LocalSearch
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 def test_local_search_raises_when_there_are_no_operators():
@@ -211,3 +211,38 @@ def test_cpp_shuffle_results_in_different_solution():
     ls.shuffle(rng)
     improved3 = ls.search(sol, cost_evaluator)
     assert_(improved3 != improved1)
+
+
+def test_preserving_vehicle_types():
+    # This test tests that we will preserve vehicle types
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = cpp_LocalSearch(data, neighbours)
+    ls.add_node_operator(Exchange10(data))
+    ls.add_node_operator(Exchange11(data))
+
+    cost_evaluator = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # LocalSearch::search is deterministic, so two calls with the same base
+    # solution should result in the same improved solution.
+    improved = ls.search(sol, cost_evaluator)
+
+    # Now make the instance heterogeneous and update the local search
+    data = make_heterogeneous(
+        data, [VehicleType(1000, 25), VehicleType(1000, 25)]
+    )
+    ls = cpp_LocalSearch(data, neighbours)
+    ls.add_node_operator(Exchange10(data))
+    ls.add_node_operator(Exchange11(data))
+
+    # Update the improved (locally optimal) solution with vehicles of type 1
+    routes = [Route(data, r.visits(), 1) for r in improved.get_routes()]
+    improved = Solution(data, routes)
+
+    # Doing the search should not find any further improvements thus not change
+    # the solution, especially not change the vehicle types
+    further_improved = ls.search(improved, cost_evaluator)
+    assert_equal(further_improved, improved)
