@@ -455,34 +455,6 @@ def test_eq_heterogeneous_vehicle():
     assert_(sol1 != sol3)
 
 
-def test_heterogeneous_route_sorting():
-    """
-    Tests that solution sorts routes by vehicle type.
-    """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(
-        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
-    )
-
-    # These routes should remain unchanged in their order
-    sol1 = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
-    routes1 = sol1.get_routes()
-    assert_equal(routes1[0].vehicle_type(), 0)
-    assert_equal(routes1[1].vehicle_type(), 1)
-    assert_equal(routes1[0].visits(), [1, 2])
-    assert_equal(routes1[1].visits(), [3, 4])
-
-    # These routes should be sorted
-    sol2 = Solution(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
-    routes2 = sol2.get_routes()
-    assert_equal(routes2[0].vehicle_type(), 0)
-    assert_equal(routes2[1].vehicle_type(), 1)
-    assert_equal(routes2[0].visits(), [1, 2])
-    assert_equal(routes2[1].visits(), [3, 4])
-    # The solutions should be equal
-    assert_equal(sol1, sol2)
-
-
 def test_duplicate_vehicle_types():
     """
     Tests that even though it is not useful it is allowed to have duplicate

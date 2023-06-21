@@ -204,17 +204,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         if (!route.empty())
             routes_.push_back(route);
 
-    if (data.numVehicleTypes() > 1)
-    {
-        // We sort routes by vehicle types. Combined with a stable sort, this
-        // ensures we keep the original sorting as much as possible.
-        auto comp = [](auto &a, auto &b) {
-            // If same type, empty vehicles first
-            return a.vehicleType() < b.vehicleType();
-        };
-        std::stable_sort(routes_.begin(), routes_.end(), comp);
-    }
-
     makeNeighbours();
     makeAssignedVehicleTypes();
     evaluate(data);
