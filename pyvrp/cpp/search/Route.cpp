@@ -59,10 +59,11 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
     auto const [thisX, thisY] = centroid;
     auto const [otherX, otherY] = other.centroid;
 
+    // Each angle is in [-pi, pi], since that's what atan2 returns. So if the
+    // tolerance is 100%, we should allow values up to 2 * pi.
     auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
     auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
-
-    return std::abs(thisAngle - otherAngle) <= tolerance * M_PI;
+    return std::abs(thisAngle - otherAngle) <= tolerance * 2 * M_PI;
 }
 
 void Route::update()
