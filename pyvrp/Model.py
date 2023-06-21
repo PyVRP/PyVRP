@@ -49,6 +49,15 @@ class Model:
         """
         return self._depots + self._clients
 
+    @property
+    def vehicle_types(self) -> List[VehicleType]:
+        """
+        Returns the vehicle types in the current model. The routes returned by
+        :meth:`~solve` have a property `vehicle_type()` that returns an
+        integer that can be used to index these vehicle types.
+        """
+        return self._vehicle_types
+
     @classmethod
     def from_data(cls, data: ProblemData) -> "Model":
         """
@@ -194,7 +203,7 @@ class Model:
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
-        vehicle_types = self._vehicle_types
+        vehicle_types = self.vehicle_types
 
         max_data_value = max(max(e.distance, e.duration) for e in self._edges)
         if max_data_value > MAX_USER_VALUE:
