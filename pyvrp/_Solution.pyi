@@ -216,15 +216,6 @@ class Solution:
         int
             Value of uncollected prizes.
         """
-    def vehicle_type(self) -> int:
-        """
-        Index of the vehicle type corresponding to this route.
-
-        Returns
-        -------
-        int
-            Index of the vehicle type of this route.
-        """
     def is_feasible(self) -> bool:
         """
         Whether this solution is feasible. This is a shorthand for checking

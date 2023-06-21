@@ -3,7 +3,6 @@
 
 #include <fstream>
 #include <numeric>
-#include <sstream>
 
 using Client = int;
 using Visits = std::vector<Client>;
