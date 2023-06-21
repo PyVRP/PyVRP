@@ -203,8 +203,6 @@ class Model:
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
-        vehicle_types = self.vehicle_types
-
         max_data_value = max(max(e.distance, e.duration) for e in self._edges)
         if max_data_value > MAX_USER_VALUE:
             msg = """
@@ -226,7 +224,7 @@ class Model:
 
         return ProblemData(
             locs,
-            vehicle_types,
+            self.vehicle_types,
             distances,
             durations,
         )

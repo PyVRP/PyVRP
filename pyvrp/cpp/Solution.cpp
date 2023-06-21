@@ -8,6 +8,9 @@ using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
 using VehicleType = int;
+
+int const UNASSIGNED = -1;  // default value
+
 void Solution::evaluate(ProblemData const &data)
 {
     Cost allPrizes = 0;
@@ -70,8 +73,6 @@ void Solution::makeNeighbours()
 
 void Solution::makeAssignedVehicleTypes()
 {
-    assignedVehicleTypes.assign(assignedVehicleTypes.size(), -1);  // unassigned
-
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
             assignedVehicleTypes[route[idx]] = route.vehicleType();
@@ -96,7 +97,7 @@ bool Solution::operator==(Solution const &other) const
 
 Solution::Solution(ProblemData const &data, XorShift128 &rng)
     : neighbours(data.numClients() + 1, {0, 0}),
-      assignedVehicleTypes(data.numClients() + 1)
+      assignedVehicleTypes(data.numClients() + 1, UNASSIGNED)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<int>(data.numClients());
@@ -130,25 +131,21 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
     evaluate(data);
 }
 
-Routes Solution::transformRoutes(ProblemData const &data,
-                                 std::vector<std::vector<Client>> const &routes)
+Solution::Solution(ProblemData const &data,
+                   std::vector<std::vector<Client>> const &routes)
 {
     Routes transformedRoutes;
     transformedRoutes.reserve(routes.size());
     for (auto const &visits : routes)
         transformedRoutes.emplace_back(data, visits, 0);
-    return transformedRoutes;
-}
 
-Solution::Solution(ProblemData const &data,
-                   std::vector<std::vector<Client>> const &routes)
-    : Solution(data, transformRoutes(data, routes))
-{
+    *this = Solution(data, transformedRoutes);
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : neighbours(data.numClients() + 1, {0, 0}),
-      assignedVehicleTypes(data.numClients() + 1)
+    : routes_(routes),
+      neighbours(data.numClients() + 1, {0, 0}),
+      assignedVehicleTypes(data.numClients() + 1, UNASSIGNED)
 {
     if (routes.size() > data.numVehicles())
     {
@@ -166,6 +163,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             msg << "Solution should not contain empty routes.";
             throw std::runtime_error(msg.str());
         }
+
         usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
             visits[client]++;
@@ -197,12 +195,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             throw std::runtime_error(msg.str());
         }
     }
-
-    // Only store non-empty routes
-    routes_.reserve(routes.size());
-    for (auto const &route : routes)
-        if (!route.empty())
-            routes_.push_back(route);
 
     makeNeighbours();
     makeAssignedVehicleTypes();
@@ -320,14 +312,12 @@ bool Solution::Route::operator==(Solution::Route const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the visits are all equal.
-    // Note that vehicleType must be checked for correctness!
 
     // clang-format off
     return distance_ == other.distance_
         && demand_ == other.demand_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
-        && visits_.size() == other.visits_.size()
         && visits_ == other.visits_;
     // clang-format on
 }
@@ -337,11 +327,7 @@ std::ostream &operator<<(std::ostream &out, Solution const &sol)
     auto const &routes = sol.getRoutes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
-    {
-        out << "Route #" << idx + 1;
-        out << " (type " << routes[idx].vehicleType() << ")";
-        out << ": " << routes[idx] << '\n';
-    }
+        out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
     return out;
 }

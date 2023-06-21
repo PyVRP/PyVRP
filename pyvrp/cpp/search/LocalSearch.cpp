@@ -68,14 +68,15 @@ Solution LocalSearch::search(Solution &solution,
 
             if (step > 0)  // empty moves are not tested initially to avoid
             {              // using too many routes.
-                // Check move involving empty route for each vehicle type
                 auto begin = routes.begin();
                 for (size_t t = 0; t != data.numVehicleTypes(); t++)
                 {
+                    // Check move involving empty route of each vehicle type
+                    // (if such a route exists).
                     auto const end = begin + data.vehicleType(t).numAvailable;
                     auto pred = [](auto const &route) { return route.empty(); };
                     auto empty = std::find_if(begin, end, pred);
-                    begin = end;  // Set begin for next iteration
+                    begin = end;
 
                     if (empty == end)
                         continue;
@@ -125,7 +126,7 @@ Solution LocalSearch::intensify(Solution &solution,
 
             // Shuffling in this loop should not matter much as we are
             // already randomizing the routes U.
-            for (int rV = 0; rV != U.idx; ++rV)
+            for (size_t rV = 0; rV != U.idx; ++rV)
             {
                 auto &V = routes[rV];
 
@@ -195,7 +196,7 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-bool LocalSearch::maybeInsert(Node *U,
+void LocalSearch::maybeInsert(Node *U,
                               Node *V,
                               CostEvaluator const &costEvaluator)
 {
@@ -216,7 +217,7 @@ bool LocalSearch::maybeInsert(Node *U,
     // If this is true, adding U cannot decrease time warp in V's route enough
     // to offset the deltaCost.
     if (deltaCost >= costEvaluator.twPenalty(V->route->timeWarp()))
-        return false;
+        return;
 
     auto const vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
@@ -224,15 +225,14 @@ bool LocalSearch::maybeInsert(Node *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
-    if (deltaCost >= 0)
-        return false;
-
-    U->insertAfter(V);           // U has no route, so there's nothing to
-    update(V->route, V->route);  // update there.
-    return true;
+    if (deltaCost < 0)
+    {
+        U->insertAfter(V);           // U has no route, so there's nothing to
+        update(V->route, V->route);  // update there.
+    }
 }
 
-bool LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
+void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
@@ -254,13 +254,12 @@ bool LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
-    if (deltaCost >= 0)
-        return false;
-
-    auto *route = U->route;  // after U->remove(), U->route is a nullptr
-    U->remove();
-    update(route, route);
-    return true;
+    if (deltaCost < 0)
+    {
+        auto *route = U->route;  // after U->remove(), U->route is a nullptr
+        U->remove();
+        update(route, route);
+    }
 }
 
 void LocalSearch::update(Route *U, Route *V)
@@ -311,18 +310,21 @@ void LocalSearch::loadSolution(Solution const &solution)
         endDepot->twAfter = clients[0].tw;
     }
 
-    // Determine offsets for vehicle types
-    std::vector<size_t> offsets(data.numVehicleTypes(), 0);
-    for (size_t t = 1; t < data.numVehicleTypes(); t++)
-        offsets[t] = offsets[t - 1] + data.vehicleType(t).numAvailable;
+    // Determine offsets for vehicle types.
+    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    {
+        auto const available = data.vehicleType(vehType).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + available;
+    }
 
-    // Load routes from solution
+    // Load routes from solution.
     for (auto const &solRoute : solution.getRoutes())
     {
         // Determine index of next route of this type to load, where we rely
-        // on Solution to be valid to not exceed the number of vehicles per
-        // vehicle type
-        auto const r = offsets[solRoute.vehicleType()]++;
+        // on solution to be valid to not exceed the number of vehicles per
+        // vehicle type.
+        auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route *route = &routes[r];
         Node *startDepot = &startDepots[r];
         Node *endDepot = &endDepots[r];
@@ -348,7 +350,6 @@ void LocalSearch::loadSolution(Solution const &solution)
         endDepot->prev = client;
     }
 
-    // Update all routes after the solution has been loaded
     for (auto &route : routes)
         route.update();
 
@@ -360,6 +361,7 @@ Solution LocalSearch::exportSolution() const
 {
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
+
     size_t start = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
     {
@@ -375,9 +377,11 @@ Solution LocalSearch::exportSolution() const
                 visits.push_back(node->client);
                 node = node->next;
             }
+
             if (!visits.empty())
                 solRoutes.emplace_back(data, visits, vehType);
         }
+
         start = end;
     }
 

@@ -14,7 +14,7 @@ PYBIND11_MODULE(_Solution, m)
         .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
-             py::arg("vehicleType"))
+             py::arg("vehicle_type"))
         .def("visits",
              &Solution::Route::visits,
              py::return_value_policy::reference_internal)
@@ -74,10 +74,10 @@ PYBIND11_MODULE(_Solution, m)
 
     py::class_<Solution>(m, "Solution")
         // Note, the order of constructors is important! Since Solution::Route
-        // implements __len__ and __index__, it can also be converted to
+        // implements __len__ and __getitem__, it can also be converted to
         // std::vector<int> and thus a list of Routes is a valid argument for
         // both constructors. We want to avoid using the second constructor
-        // since that would loose the vehicle types associations. As PyBind
+        // since that would loose the vehicle types associations. As pybind
         // will use the first matching constructor we put this one first.
         .def(py::init<ProblemData const &,
                       std::vector<Solution::Route> const &>(),

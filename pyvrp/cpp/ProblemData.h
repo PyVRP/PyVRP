@@ -46,8 +46,8 @@ private:
     std::vector<VehicleType> vehicleTypes_;  // Vehicle type information
 
     size_t const numClients_;
-    size_t const numVehicles_;
     size_t const numVehicleTypes_;
+    size_t numVehicles_;  // Number of vehicles - derived from vehicle types
 
 public:
     /**
@@ -137,9 +137,10 @@ ProblemData::Client const &ProblemData::client(size_t client) const
     return clients_[client];
 }
 
-ProblemData::VehicleType const &ProblemData::vehicleType(size_t idx) const
+ProblemData::VehicleType const &
+ProblemData::vehicleType(size_t vehicle_type) const
 {
-    return vehicleTypes_[idx];
+    return vehicleTypes_[vehicle_type];
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const

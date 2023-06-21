@@ -96,15 +96,15 @@ private:
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
 
-    // Transforms vector of vector of clients to vector of Route objects
-    std::vector<Route>
-    transformRoutes(ProblemData const &data,
-                    std::vector<std::vector<Client>> const &routes);
+    // These are only available within a solution; from the outside a solution
+    // is immutable.
+    Solution &operator=(Solution const &other) = default;
+    Solution &operator=(Solution &&other) = default;
 
 public:
     /**
-     * Returns the number of (non-empty) routes in this solution. Equal to the
-     * length of the vector of routes returned by ``getRoutes``.
+     * Returns the number of routes in this solution. Equal to the length of
+     * the vector of routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
 
@@ -173,9 +173,6 @@ public:
     [[nodiscard]] Duration timeWarp() const;
 
     bool operator==(Solution const &other) const;
-
-    Solution &operator=(Solution const &other) = delete;  // is immutable
-    Solution &operator=(Solution &&other) = delete;       // is immutable
 
     Solution(Solution const &other) = default;
     Solution(Solution &&other) = default;

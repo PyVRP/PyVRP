@@ -213,7 +213,7 @@ def test_cpp_shuffle_results_in_different_solution():
     assert_(improved3 != improved1)
 
 
-def test_preserving_vehicle_types():
+def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     # This test tests that we will preserve vehicle types
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = XorShift128(seed=42)

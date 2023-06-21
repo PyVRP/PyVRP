@@ -58,10 +58,10 @@ class LocalSearch
     void update(Route *U, Route *V);
 
     // Test inserting U after V. Called if U is not currently in the solution.
-    bool maybeInsert(Node *U, Node *V, CostEvaluator const &costEvaluator);
+    void maybeInsert(Node *U, Node *V, CostEvaluator const &costEvaluator);
 
     // Test removing U from the solution. Called when U can be removed.
-    bool maybeRemove(Node *U, CostEvaluator const &costEvaluator);
+    void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
 
 public:
     /**
