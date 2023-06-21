@@ -1,7 +1,6 @@
 #include "Solution.h"
 #include "ProblemData.h"
 
-#include <algorithm>
 #include <fstream>
 #include <numeric>
 #include <sstream>
@@ -163,13 +162,10 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
 Routes Solution::transformRoutes(ProblemData const &data,
                                  std::vector<std::vector<Client>> const &routes)
 {
-    std::vector<Route> transformedRoutes;
-    std::transform(routes.begin(),
-                   routes.end(),
-                   std::back_inserter(transformedRoutes),
-                   [&data](std::vector<Client> const &visits) {
-                       return Route(data, visits, 0);
-                   });
+    Routes transformedRoutes;
+    transformedRoutes.reserve(routes.size());
+    for (auto const &visits : routes)
+        transformedRoutes.emplace_back(data, visits, 0);
     return transformedRoutes;
 }
 
