@@ -26,8 +26,8 @@ class Route
     // Populates the nodes vector.
     void setupNodes();
 
-    // Sets the sector data.
-    void setupSector();
+    // Recomputes the route's center point.
+    void setupCentroid();
 
     // Sets forward node time windows.
     void setupRouteTimeWindows();

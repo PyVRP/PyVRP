@@ -23,8 +23,10 @@ void Route::setupNodes()
     } while (!node->isDepot());
 }
 
-void Route::setupSector()
+void Route::setupCentroid()
 {
+    centroid = {0, 0};
+
     for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
     {
         auto const *node = *it;
@@ -106,7 +108,7 @@ void Route::update()
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
     }
 
-    setupSector();
+    setupCentroid();
     setupRouteTimeWindows();
 
     load_ = nodes.back()->cumulatedLoad;
