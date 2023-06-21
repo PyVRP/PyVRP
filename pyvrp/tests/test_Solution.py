@@ -34,7 +34,7 @@ def test_route_constructor_heterogeneous():
     assert_equal(sol.num_routes(), 2)
 
     # We expect Solution to remove empty routes and return routes with the
-    # correct vehicle types;
+    # correct vehicle types.
     routes = sol.get_routes()
     assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [3, 4])
@@ -45,17 +45,24 @@ def test_route_constructor_heterogeneous():
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
 
-def test_route_equal():
+def test_route_eq():
     data = read("data/OkSmall.txt")
 
-    route = Route(data, [1, 2], 0)
     route1 = Route(data, [1, 2], 0)
-    route2 = Route(data, [1, 2], 1)
-    route3 = Route(data, [2, 1], 0)
-    assert_equal(route, route1)
-    assert_(route == route1)
-    assert_(route != route2)
-    assert_(route != route3)
+    assert_(route1 == route1)  # should equal self
+
+    route2 = Route(data, [1, 2], 0)
+    assert_equal(route1, route2)  # same route/vehicle type; different object
+
+    route3 = Route(data, [1, 2], 1)
+    assert_(route2 != route3)  # different vehicle type
+
+    route4 = Route(data, [2, 1], 0)
+    assert_(route2 != route4)  # same vehicle type, different visits
+
+    assert_(route1 != "test")
+    assert_(route1 != 0)
+    assert_(route1 != -1.0)
 
 
 def test_random_constructor_cycles_over_routes():

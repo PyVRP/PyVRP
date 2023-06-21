@@ -46,7 +46,7 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_readonly("required", &ProblemData::Client::required);
 
     py::class_<ProblemData::VehicleType>(m, "VehicleType")
-        .def(py::init<int, size_t>(),
+        .def(py::init<Value, size_t>(),
              py::arg("capacity"),
              py::arg("num_available"))
         .def_property_readonly("capacity",

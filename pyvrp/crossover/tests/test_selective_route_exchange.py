@@ -219,36 +219,19 @@ def test_srex_heterogeneous_changed_start_indices():
     # returned since it has the lowest cost.
 
     offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (1, 1), 1)
-    routes = offspring.get_routes()
-    assert_equal(len(routes), 2)
-    assert_equal(routes[0].visits(), [1, 2, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [3])
-    assert_equal(routes[1].vehicle_type(), 0)
+    expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 0)]
+    assert_equal(offspring.get_routes(), expected)
 
     offspring = cpp_srex((sol1, sol2h), data, cost_evaluator, (1, 1), 1)
-    routes = offspring.get_routes()
-    assert_equal(len(routes), 2)
-    assert_equal(routes[0].visits(), [1, 2, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [3])
-    assert_equal(routes[1].vehicle_type(), 0)
+    expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 0)]
+    assert_equal(offspring.get_routes(), expected)
 
     offspring = cpp_srex((sol1h, sol2), data, cost_evaluator, (1, 1), 1)
-    routes = offspring.get_routes()
-    assert_equal(len(routes), 2)
-    assert_equal(routes[0].visits(), [1, 2, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [3])
-    assert_equal(routes[1].vehicle_type(), 1)
+    expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 1)]
+    assert_equal(offspring.get_routes(), expected)
 
     offspring = cpp_srex((sol1h, sol2h), data, cost_evaluator, (1, 1), 1)
-    routes = offspring.get_routes()
-    assert_equal(len(routes), 2)
-    assert_equal(routes[0].visits(), [1, 2, 4])
-    assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[1].visits(), [3])
-    assert_equal(routes[1].vehicle_type(), 1)
+    expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 1)]
 
 
 def test_srex_a_right_move():

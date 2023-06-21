@@ -78,7 +78,8 @@ class Solution:
     ------
     RuntimeError
         When the number of routes in the ``routes`` argument exceeds
-        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
+        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`, or when an
+        empty route has been passed as part of ``routes``.
     """
 
     def __init__(
@@ -133,8 +134,7 @@ class Solution:
 
            The length of this list is equal to the number of non-empty routes,
            which is at most equal to
-           :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`. Routes are
-           sorted by vehicle type.
+           :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
 
         Returns
         -------
@@ -221,12 +221,12 @@ class Solution:
         """
     def num_routes(self) -> int:
         """
-        Number of (non-empty) routes in this solution.
+        Number of routes in this solution.
 
         Returns
         -------
         int
-            Number of (non-empty) routes.
+            Number of routes.
         """
     def num_clients(self) -> int:
         """
