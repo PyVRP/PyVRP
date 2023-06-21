@@ -34,9 +34,9 @@ class Route
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:           // TODO make fields private
-    int idx;      // Route index
-    Node *depot;  // Pointer to the associated depot
+public:             // TODO make fields private
+    int const idx;  // Route index
+    Node *depot;    // Pointer to the associated depot
 
     /**
      * @return The client or depot node at the given position.

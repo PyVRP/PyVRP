@@ -434,7 +434,6 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
         for (size_t i = 0; i != numAvailable; ++i)
         {
             routes.emplace_back(data, rIdx, vehType);
-            routes[rIdx].idx = rIdx;
             routes[rIdx].depot = &startDepots[rIdx];
 
             startDepots[rIdx].client = 0;
