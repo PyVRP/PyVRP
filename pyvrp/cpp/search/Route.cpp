@@ -69,8 +69,6 @@ void Route::setupRouteTimeWindows()
     } while (!node->isDepot());
 }
 
-size_t Route::vehicleType() const { return vehicleType_; }
-
 bool Route::overlapsWith(Route const &other, int const tolerance) const
 {
     return CircleSector::overlap(sector, other.sector, tolerance);

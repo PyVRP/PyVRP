@@ -124,7 +124,7 @@ public:                // TODO make fields private
     /**
      * @return This route's vehicle type.
      */
-    [[nodiscard]] size_t vehicleType() const;
+    [[nodiscard]] inline size_t vehicleType() const;
 
     /**
      * Tests if this route overlaps with the other route, that is, whether
@@ -172,7 +172,8 @@ TimeWindowSegment Route::tws() const { return tws_; }
 Cost Route::penalisedCost(CostEvaluator costEvaluator) const
 {
     // return penalisedCost_;
-    return costEvaluator.penalisedRouteCost(dist_, load_, tws_, vehicleType_);
+    return costEvaluator.penalisedRouteCost(
+        dist_, load_, tws_, data.vehicleType(vehicleType_));
 }
 
 bool Route::empty() const { return size() == 0; }
@@ -222,6 +223,8 @@ Load Route::loadBetween(size_t start, size_t end) const
 
     return endLoad - startLoad + atStart;
 }
+
+size_t Route::vehicleType() const { return vehicleType_; }
 
 // Outputs a route into a given ostream in CVRPLib format
 std::ostream &operator<<(std::ostream &out, Route const &route);

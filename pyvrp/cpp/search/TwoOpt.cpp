@@ -13,6 +13,7 @@ Cost TwoOpt::evalWithinRoute(Node *U,
         return 0;
 
     auto const *route = U->route;
+    auto const &vehicleType = data.vehicleType(route->vehicleType());
     auto const currentCost = route->penalisedCost(costEvaluator);
 
     Distance deltaDist = data.dist(U->client, V->client)
@@ -25,7 +26,7 @@ Cost TwoOpt::evalWithinRoute(Node *U,
     // First compute bound based on dist and load
     auto const dist = route->dist() + deltaDist;
     auto const lbCost = costEvaluator.penalisedRouteCost(
-        dist, route->load(), 0, 0, route->vehicleType());
+        dist, route->load(), 0, 0, vehicleType);
     if (lbCost >= currentCost)
         return 0;
 
@@ -41,7 +42,7 @@ Cost TwoOpt::evalWithinRoute(Node *U,
     tws = TWS::merge(data.durationMatrix(), tws, n(V)->twAfter);
 
     auto const cost = costEvaluator.penalisedRouteCost(
-        dist, route->load(), tws, route->vehicleType());
+        dist, route->load(), tws, vehicleType);
     return cost - currentCost;
 }
 
@@ -52,6 +53,9 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
     auto const currentCost = U->route->penalisedCost(costEvaluator)
                              + V->route->penalisedCost(costEvaluator);
 
+    auto const &vehicleTypeU = data.vehicleType(U->route->vehicleType());
+    auto const &vehicleTypeV = data.vehicleType(V->route->vehicleType());
+
     // Compute lower bound for new cost based on distance and load
     auto const distU = U->cumulatedDistance + data.dist(U->client, n(V)->client)
                        + V->route->dist() - n(V)->cumulatedDistance;
@@ -61,10 +65,10 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
     auto const loadU = U->cumulatedLoad + V->route->load() - V->cumulatedLoad;
     auto const loadV = V->cumulatedLoad + U->route->load() - U->cumulatedLoad;
 
-    auto const lbCostU = costEvaluator.penalisedRouteCost(
-        distU, loadU, 0, 0, U->route->vehicleType());
-    auto const lbCostV = costEvaluator.penalisedRouteCost(
-        distV, loadV, 0, 0, V->route->vehicleType());
+    auto const lbCostU
+        = costEvaluator.penalisedRouteCost(distU, loadU, 0, 0, vehicleTypeU);
+    auto const lbCostV
+        = costEvaluator.penalisedRouteCost(distV, loadV, 0, 0, vehicleTypeV);
 
     if (lbCostU + lbCostV >= currentCost)
         return 0;
@@ -72,8 +76,8 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
     // Add time warp for route U to get actual cost
     auto const uTWS
         = TWS::merge(data.durationMatrix(), U->twBefore, n(V)->twAfter);
-    auto const costU = costEvaluator.penalisedRouteCost(
-        distU, loadU, uTWS, U->route->vehicleType());
+    auto const costU
+        = costEvaluator.penalisedRouteCost(distU, loadU, uTWS, vehicleTypeU);
 
     if (costU + lbCostV >= currentCost)
         return 0;
@@ -81,8 +85,8 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
     // Add time warp for route V to get actual cost
     auto const vTWS
         = TWS::merge(data.durationMatrix(), V->twBefore, n(U)->twAfter);
-    auto const costV = costEvaluator.penalisedRouteCost(
-        distV, loadV, vTWS, V->route->vehicleType());
+    auto const costV
+        = costEvaluator.penalisedRouteCost(distV, loadV, vTWS, vehicleTypeV);
 
     return costU + costV - currentCost;
 }

@@ -30,6 +30,9 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto const currentCost = U->route->penalisedCost(costEvaluator)
                                  + V->route->penalisedCost(costEvaluator);
 
+        auto const &vehicleTypeU = data.vehicleType(U->route->vehicleType());
+        auto const &vehicleTypeV = data.vehicleType(V->route->vehicleType());
+
         // Compute lower bound for new cost based on distance and load
         auto const distU = U->route->dist() + deltaDistU;
         auto const distV = V->route->dist() + deltaDistV;
@@ -39,9 +42,9 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto const loadV = V->route->load() + deltaLoad;
 
         auto const lbCostU = costEvaluator.penalisedRouteCost(
-            distU, loadU, 0, 0, U->route->vehicleType());
+            distU, loadU, 0, 0, vehicleTypeU);
         auto const lbCostV = costEvaluator.penalisedRouteCost(
-            distV, loadV, 0, 0, V->route->vehicleType());
+            distV, loadV, 0, 0, vehicleTypeV);
 
         if (lbCostU + lbCostV >= currentCost)
             return 0;
@@ -50,7 +53,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto uTWS = TWS::merge(
             data.durationMatrix(), p(U)->twBefore, n(n(U))->twAfter);
         auto const costU = costEvaluator.penalisedRouteCost(
-            distU, loadU, uTWS, U->route->vehicleType());
+            distU, loadU, uTWS, vehicleTypeU);
 
         // Small optimization, check intermediate bound
         if (costU + lbCostV >= currentCost)
@@ -60,19 +63,20 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto vTWS = TWS::merge(
             data.durationMatrix(), V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
         auto const costV = costEvaluator.penalisedRouteCost(
-            distV, loadV, vTWS, V->route->vehicleType());
+            distV, loadV, vTWS, vehicleTypeV);
 
         return costU + costV - currentCost;
     }
     else  // within same route
     {
         auto const *route = U->route;
+        auto const &vehicleType = data.vehicleType(route->vehicleType());
         auto const currentCost = route->penalisedCost(costEvaluator);
         auto const dist = route->dist() + deltaDistU + deltaDistV;
 
         // First compute bound based on dist and load
         auto const lbCost = costEvaluator.penalisedRouteCost(
-            dist, route->load(), 0, 0, route->vehicleType());
+            dist, route->load(), 0, 0, vehicleType);
         if (lbCost >= currentCost)
             return 0;
 
@@ -92,7 +96,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
                                           n(n(U))->twAfter);
 
         auto const cost = costEvaluator.penalisedRouteCost(
-            dist, route->load(), tws, route->vehicleType());
+            dist, route->load(), tws, vehicleType);
         return cost - currentCost;
     }
 }

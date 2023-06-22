@@ -203,6 +203,7 @@ void LocalSearch::maybeInsert(Node *U,
     assert(!U->route && V->route);
 
     auto const *route = V->route;
+    auto const &vehicleType = data.vehicleType(route->vehicleType());
     auto const &uClient = data.client(U->client);
 
     auto const currentCost = route->penalisedCost(costEvaluator);
@@ -212,8 +213,8 @@ void LocalSearch::maybeInsert(Node *U,
                       - data.dist(V->client, n(V)->client);
     auto const load = route->load() + uClient.demand;
 
-    auto const lbCost = costEvaluator.penalisedRouteCost(
-        dist, load, 0, 0, route->vehicleType());
+    auto const lbCost
+        = costEvaluator.penalisedRouteCost(dist, load, 0, 0, vehicleType);
 
     // Currently, client U is not served so we incur the prize as 'cost'
     // First check that if we insert, without timing considerations the cost of
@@ -224,8 +225,8 @@ void LocalSearch::maybeInsert(Node *U,
     // Add timing information for route to get actual cost
     auto const twData
         = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
-    auto const cost = costEvaluator.penalisedRouteCost(
-        dist, load, twData, route->vehicleType());
+    auto const cost
+        = costEvaluator.penalisedRouteCost(dist, load, twData, vehicleType);
 
     if (cost < currentCost + uClient.prize)
     {
@@ -239,6 +240,7 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     assert(U->route);
 
     auto const *route = U->route;
+    auto const &vehicleType = data.vehicleType(route->vehicleType());
     auto const &uClient = data.client(U->client);
 
     auto const currentCost = route->penalisedCost(costEvaluator);
@@ -248,8 +250,8 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
                       - data.dist(U->client, n(U)->client);
     auto const load = route->load() - uClient.demand;
 
-    auto const lbCost = costEvaluator.penalisedRouteCost(
-        dist, load, 0, 0, route->vehicleType());
+    auto const lbCost
+        = costEvaluator.penalisedRouteCost(dist, load, 0, 0, vehicleType);
 
     // First check that if we remove, without timing considerations we gain
     // sufficiently to be worth incurring the cost of lozing the prize
@@ -259,8 +261,8 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     // Add timing information for route to get actual cost
     auto const twData
         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
-    auto const cost = costEvaluator.penalisedRouteCost(
-        dist, load, twData, route->vehicleType());
+    auto const cost
+        = costEvaluator.penalisedRouteCost(dist, load, twData, vehicleType);
 
     if (cost + uClient.prize < currentCost)
     {
