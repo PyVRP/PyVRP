@@ -32,6 +32,7 @@ class LocalSearch
 
     std::vector<Node> clients;  // Note that clients[0] is a sentinel value
     std::vector<Route> routes;
+
     std::vector<Node> startDepots;  // These mark the start of routes
     std::vector<Node> endDepots;    // These mark the end of routes
 

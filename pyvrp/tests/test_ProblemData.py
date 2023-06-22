@@ -3,7 +3,7 @@ from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_raises
 from pytest import mark
 
-from pyvrp import Client, ProblemData
+from pyvrp import Client, ProblemData, VehicleType
 from pyvrp.tests.helpers import read
 
 
@@ -68,8 +68,7 @@ def test_depot_is_first_client():
 
     data = ProblemData(
         clients=[Client(x=0, y=0), Client(x=0, y=1)],
-        num_vehicles=1,
-        vehicle_cap=1,
+        vehicle_types=[VehicleType(1, 2)],
         distance_matrix=mat,
         duration_matrix=mat,
     )
@@ -105,8 +104,7 @@ def test_matrix_access():
 
     data = ProblemData(
         clients=clients,
-        num_vehicles=1,
-        vehicle_cap=1,
+        vehicle_types=[VehicleType(1, 2)],
         distance_matrix=dist_mat,  # type: ignore
         duration_matrix=dur_mat,  # type: ignore
     )

@@ -127,14 +127,14 @@ Cost SwapStar::evaluate(Route *routeU,
             auto const loadDiff = uDemand - vDemand;
 
             deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
-                                                   data.vehicleCapacity());
+                                                   U->route->capacity());
             deltaCost -= costEvaluator.loadPenalty(routeU->load(),
-                                                   data.vehicleCapacity());
+                                                   U->route->capacity());
 
             deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
-                                                   data.vehicleCapacity());
+                                                   V->route->capacity());
             deltaCost -= costEvaluator.loadPenalty(routeV->load(),
-                                                   data.vehicleCapacity());
+                                                   V->route->capacity());
 
             deltaCost += removalCosts(routeU->idx, U->client);
             deltaCost += removalCosts(routeV->idx, V->client);
@@ -274,14 +274,12 @@ Cost SwapStar::evaluate(Route *routeU,
     auto const vDemand = data.client(best.V->client).demand;
 
     deltaCost += costEvaluator.loadPenalty(routeU->load() - uDemand + vDemand,
-                                           data.vehicleCapacity());
-    deltaCost
-        -= costEvaluator.loadPenalty(routeU->load(), data.vehicleCapacity());
+                                           routeU->capacity());
+    deltaCost -= costEvaluator.loadPenalty(routeU->load(), routeU->capacity());
 
     deltaCost += costEvaluator.loadPenalty(routeV->load() + uDemand - vDemand,
-                                           data.vehicleCapacity());
-    deltaCost
-        -= costEvaluator.loadPenalty(routeV->load(), data.vehicleCapacity());
+                                           routeV->capacity());
+    deltaCost -= costEvaluator.loadPenalty(routeV->load(), routeV->capacity());
 
     return deltaCost;
 }

@@ -50,6 +50,23 @@ class Client:
         required: bool = True,
     ) -> None: ...
 
+class VehicleType:
+    """
+    Simple data object storing all vehicle type data as properties.
+
+    Attributes
+    ----------
+    capacity
+        Capacity (maximum total demand) of this vehicle type.
+    num_available
+        Number of vehicles of this type that are available.
+    """
+
+    capacity: int
+    num_available: int
+
+    def __init__(self, capacity: int, num_available: int) -> None: ...
+
 class ProblemData:
     """
     Creates a problem data instance. This instance contains all information
@@ -61,10 +78,8 @@ class ProblemData:
         List of clients. The first client (at index 0) is assumed to be the
         depot. The time window for the depot is assumed to describe the overall
         time horizon. The depot should have 0 demand and 0 service duration.
-    num_vehicles
-        The number of vehicles in this problem instance.
-    vehicle_cap
-        Homogenous vehicle capacity for all vehicles in the problem instance.
+    vehicle_types
+        List of vehicle types in the problem instance.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0).
@@ -73,8 +88,7 @@ class ProblemData:
     def __init__(
         self,
         clients: List[Client],
-        num_vehicles: int,
-        vehicle_cap: int,
+        vehicle_types: List[VehicleType],
         distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
@@ -110,6 +124,20 @@ class ProblemData:
         -------
         tuple
             Centroid of all client locations.
+        """
+    def vehicle_type(self, vehicle_type: int) -> VehicleType:
+        """
+        Returns vehicle type data for the given vehicle type.
+
+        Parameters
+        ----------
+        vehicle_type
+            Vehicle type number whose information to retrieve.
+
+        Returns
+        -------
+        VehicleType
+            A simple data object containing the vehicle type information.
         """
     def dist(self, first: int, second: int) -> int:
         """
@@ -163,16 +191,15 @@ class ProblemData:
         Returns
         -------
         int
-            Number of vehicles in the instance.
+            Number of vehicles in this problem instance.
         """
     @property
-    def vehicle_capacity(self) -> int:
+    def num_vehicle_types(self) -> int:
         """
-        Returns the homogenous vehicle capacities of all vehicles in this
-        problem data instance.
+        Number of vehicle types in this problem instance.
 
         Returns
         -------
         int
-            Capacity of each vehicle in the instance.
+            Number of vehicle types in this problem instance.
         """

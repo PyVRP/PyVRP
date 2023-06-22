@@ -14,6 +14,7 @@ class Solution
     friend struct std::hash<Solution>;  // friend struct to enable hashing
 
     using Client = int;
+    using VehicleType = size_t;
 
 public:
     /**
@@ -34,6 +35,7 @@ public:
         Cost prizes_ = 0;        // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
+        VehicleType vehicleType_ = 0;         // Type of vehicle of this route
 
     public:
         [[nodiscard]] bool empty() const;
@@ -56,13 +58,18 @@ public:
         [[nodiscard]] Cost prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;
+        [[nodiscard]] VehicleType vehicleType() const;
 
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
+        bool operator==(Route const &other) const;
+
         Route() = default;  // default is empty
-        Route(ProblemData const &data, Visits const visits);
+        Route(ProblemData const &data,
+              Visits const visits,
+              VehicleType const vehicleType);
     };
 
 private:
@@ -75,7 +82,7 @@ private:
     Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
     Duration timeWarp_ = 0;       // Total time warp over all routes
 
-    Routes routes_;  // Routes - only includes non-empty routes
+    Routes routes_;
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
 
     // Determines the [pred, succ] pairs for each client.
@@ -84,10 +91,15 @@ private:
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
 
+    // These are only available within a solution; from the outside a solution
+    // is immutable.
+    Solution &operator=(Solution const &other) = default;
+    Solution &operator=(Solution &&other) = default;
+
 public:
     /**
-     * Returns the number of (non-empty) routes in this solution. Equal to the
-     * length of the vector of routes returned by ``getRoutes``.
+     * Returns the number of routes in this solution. Equal to the length of
+     * the vector of routes returned by ``getRoutes``.
      */
     [[nodiscard]] size_t numRoutes() const;
 
@@ -150,9 +162,6 @@ public:
 
     bool operator==(Solution const &other) const;
 
-    Solution &operator=(Solution const &other) = delete;  // is immutable
-    Solution &operator=(Solution &&other) = delete;       // is immutable
-
     Solution(Solution const &other) = default;
     Solution(Solution &&other) = default;
 
@@ -165,13 +174,22 @@ public:
     Solution(ProblemData const &data, XorShift128 &rng);
 
     /**
-     * Constructs a solution with the given routes.
+     * Constructs a solution using routes given as lists of client indices.
+     * This constructor assumes all routes use vehicles having vehicle type 0.
      *
      * @param data   Data instance describing the problem that's being solved.
      * @param routes Solution's route list.
      */
     Solution(ProblemData const &data,
              std::vector<std::vector<Client>> const &routes);
+
+    /**
+     * Constructs a solution from the given list of Routes.
+     *
+     * @param data   Data instance describing the problem that's being solved.
+     * @param routes Solution's route list.
+     */
+    Solution(ProblemData const &data, std::vector<Route> const &routes);
 };
 
 std::ostream &operator<<(std::ostream &out, Solution const &sol);

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 from ._ProblemData import ProblemData
 from ._XorShift128 import XorShift128
@@ -8,7 +8,9 @@ class Route:
     A simple class that stores the route plan and some statistics.
     """
 
-    def __init__(self, data: ProblemData, visits: List[int]) -> None: ...
+    def __init__(
+        self, data: ProblemData, visits: List[int], vehicle_type: int
+    ) -> None: ...
     def __getitem__(self, idx: int) -> int: ...
     def __iter__(self) -> Iterator[int]: ...
     def __len__(self) -> int: ...
@@ -55,6 +57,10 @@ class Route:
         """
         Center point of the client locations on this route.
         """
+    def vehicle_type(self) -> int:
+        """
+        Index of the type of vehicle used on this route.
+        """
 
 class Solution:
     """
@@ -65,19 +71,21 @@ class Solution:
     data
         Data instance.
     routes
-        Route list to use.
+        Route list to use. Should be a list of Route objects, or list of list
+        of ints representing clients.
 
     Raises
     ------
     RuntimeError
         When the number of routes in the ``routes`` argument exceeds
-        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`.
+        :py:attr:`~pyvrp._ProblemData.ProblemData.num_vehicles`, or when an
+        empty route has been passed as part of ``routes``.
     """
 
     def __init__(
         self,
         data: ProblemData,
-        routes: List[List[int]],
+        routes: List[Union[Route, List[int]]],
     ) -> None: ...
     @classmethod
     def make_random(cls, data: ProblemData, rng: XorShift128) -> Solution:
@@ -202,12 +210,12 @@ class Solution:
         """
     def num_routes(self) -> int:
         """
-        Number of (non-empty) routes in this solution.
+        Number of routes in this solution.
 
         Returns
         -------
         int
-            Number of (non-empty) routes.
+            Number of routes.
         """
     def num_clients(self) -> int:
         """

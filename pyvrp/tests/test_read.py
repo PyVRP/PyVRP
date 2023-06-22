@@ -42,7 +42,8 @@ def test_reading_OkSmall_instance():
     # From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
     assert_equal(data.num_clients, 4)
     assert_equal(data.num_vehicles, 3)
-    assert_equal(data.vehicle_capacity, 10)
+    assert_equal(data.num_vehicle_types, 1)
+    assert_equal(data.vehicle_type(0).capacity, 10)
 
     # From the NODE_COORD_SECTION in the file
     expected = [
@@ -103,7 +104,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
     assert_equal(data.num_clients, 21)
-    assert_equal(data.vehicle_capacity, 6_000)
+    assert_equal(data.vehicle_type(0).capacity, 6_000)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
     assert_equal(data.depot().x, 1450)  # depot [x, y] location
@@ -136,7 +137,7 @@ def test_reading_RC208_instance():  # Solomon style instance
     )
 
     assert_equal(data.num_clients, 100)  # Excl. depot
-    assert_equal(data.vehicle_capacity, 1_000)
+    assert_equal(data.vehicle_type(0).capacity, 1_000)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision
     assert_equal(data.depot().x, 400)  # depot [x, y] location

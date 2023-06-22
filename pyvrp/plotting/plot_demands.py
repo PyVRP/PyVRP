@@ -34,9 +34,17 @@ def plot_demands(
     ax.bar(np.arange(1, dim), demand)
 
     if title is None:
+        num_types = data.num_vehicle_types
+        weights = [
+            data.vehicle_type(idx).num_available for idx in range(num_types)
+        ]
+        capacities = [
+            data.vehicle_type(idx).capacity for idx in range(num_types)
+        ]
+        mean_capacity = np.average(capacities, weights=weights)
         title = (
-            f"Demands (cap = {data.vehicle_capacity}, "
-            + f"{data.vehicle_capacity / demand.mean():.2f} stops/route)"
+            f"Demands (avg. cap = {mean_capacity:.2f}, "
+            + f"{mean_capacity / demand.mean():.2f} stops/route)"
         )
 
     ax.set_title(title)
