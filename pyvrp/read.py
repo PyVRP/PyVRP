@@ -10,7 +10,7 @@ import vrplib
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
-from ._ProblemData import Client, ProblemData
+from ._ProblemData import Client, ProblemData, VehicleType
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -168,6 +168,7 @@ def read(
         )
         for idx in range(dimension)
     ]
+    vehicle_types = [VehicleType(capacity, num_vehicles)]
 
     if max(distances.max(), durations.max()) > MAX_USER_VALUE:
         msg = """
@@ -178,8 +179,7 @@ def read(
 
     return ProblemData(
         clients,
-        num_vehicles,
-        capacity,
+        vehicle_types,
         distances,
         durations,
     )

@@ -95,4 +95,5 @@ def test_plot_instance():
 def test_plot_route_schedule():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    plotting.plot_route_schedule(data, bks[0])
+    sol = Solution(data, bks)
+    plotting.plot_route_schedule(data, sol.get_routes()[0])

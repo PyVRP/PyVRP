@@ -41,17 +41,17 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto const loadDiff = U->route->loadBetween(posU, posU + 1);
 
         deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               data.vehicleCapacity());
+                                               U->route->capacity());
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               data.vehicleCapacity());
+                                               U->route->capacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               data.vehicleCapacity());
+                                               V->route->capacity());
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               data.vehicleCapacity());
+                                               V->route->capacity());
 
         auto vTWS = TWS::merge(
             data.durationMatrix(), V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);

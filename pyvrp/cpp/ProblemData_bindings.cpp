@@ -45,36 +45,42 @@ PYBIND11_MODULE(_ProblemData, m)
                                })
         .def_readonly("required", &ProblemData::Client::required);
 
+    py::class_<ProblemData::VehicleType>(m, "VehicleType")
+        .def(py::init<Value, size_t>(),
+             py::arg("capacity"),
+             py::arg("num_available"))
+        .def_property_readonly("capacity",
+                               [](ProblemData::VehicleType const &vehicleType) {
+                                   return vehicleType.capacity.get();
+                               })
+        .def_readonly("num_available", &ProblemData::VehicleType::numAvailable);
+
     py::class_<ProblemData>(m, "ProblemData")
-        .def(py::init([](std::vector<ProblemData::Client> const &clients,
-                         int numVehicles,
-                         Value vehicleCap,
-                         std::vector<std::vector<Value>> const &dist,
-                         std::vector<std::vector<Value>> const &dur) {
-                 Matrix<Distance> distMat(clients.size());
-                 Matrix<Duration> durMat(clients.size());
+        .def(py::init(
+                 [](std::vector<ProblemData::Client> const &clients,
+                    std::vector<ProblemData::VehicleType> const &vehicleTypes,
+                    std::vector<std::vector<Value>> const &dist,
+                    std::vector<std::vector<Value>> const &dur) {
+                     Matrix<Distance> distMat(clients.size());
+                     Matrix<Duration> durMat(clients.size());
 
-                 for (size_t row = 0; row != clients.size(); ++row)
-                     for (size_t col = 0; col != clients.size(); ++col)
-                     {
-                         distMat(row, col) = dist[row][col];
-                         durMat(row, col) = dur[row][col];
-                     }
+                     for (size_t row = 0; row != clients.size(); ++row)
+                         for (size_t col = 0; col != clients.size(); ++col)
+                         {
+                             distMat(row, col) = dist[row][col];
+                             durMat(row, col) = dur[row][col];
+                         }
 
-                 return ProblemData(
-                     clients, numVehicles, vehicleCap, distMat, durMat);
-             }),
+                     return ProblemData(clients, vehicleTypes, distMat, durMat);
+                 }),
              py::arg("clients"),
-             py::arg("num_vehicles"),
-             py::arg("vehicle_cap"),
+             py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
-        .def_property_readonly("vehicle_capacity",
-                               [](ProblemData const &data) {
-                                   return data.vehicleCapacity().get();
-                               })
+        .def_property_readonly("num_vehicle_types",
+                               &ProblemData::numVehicleTypes)
         .def("client",
              &ProblemData::client,
              py::arg("client"),
@@ -84,6 +90,10 @@ PYBIND11_MODULE(_ProblemData, m)
              py::return_value_policy::reference_internal)
         .def("centroid",
              &ProblemData::centroid,
+             py::return_value_policy::reference_internal)
+        .def("vehicle_type",
+             &ProblemData::vehicleType,
+             py::arg("vehicle_type"),
              py::return_value_policy::reference_internal)
         .def(
             "dist",

@@ -4,23 +4,65 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Client, ProblemData, Route, Solution, XorShift128
-from pyvrp.tests.helpers import read
+from pyvrp import (
+    Client,
+    ProblemData,
+    Route,
+    Solution,
+    VehicleType,
+    XorShift128,
+)
+from pyvrp.tests.helpers import make_heterogeneous, read
 
 
-def test_route_constructor_filters_empty():
+def test_route_constructor_raises_for_empty_routes():
     data = read("data/OkSmall.txt")
 
-    sol = Solution(data, [[3, 4], [], [1, 2]])
-    routes = sol.get_routes()
+    with assert_raises(RuntimeError):
+        Solution(data, [[3, 4], [1, 2], []])
+    with assert_raises(RuntimeError):
+        Solution(data, [[3, 4], [], [1, 2]])
 
-    # num_routes() and len(routes) should show two non-empty routes.
+
+def test_route_constructor_heterogeneous():
+    data = read("data/OkSmall.txt")
+    # Test heterogeneous case
+    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
+    sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+
+    # num_routes() should show two non-empty routes.
     assert_equal(sol.num_routes(), 2)
-    assert_equal(len(routes), 2)
 
-    # The only two non-empty routes should now each have two clients.
-    assert_equal(len(routes[0]), 2)
-    assert_equal(len(routes[1]), 2)
+    # We expect Solution to remove empty routes and return routes with the
+    # correct vehicle types.
+    routes = sol.get_routes()
+    assert_equal(len(routes), 2)
+    assert_equal(routes[0].visits(), [3, 4])
+    assert_equal(routes[0].vehicle_type(), 0)
+    assert_equal(routes[0], Route(data, [3, 4], 0))
+    assert_equal(routes[1].visits(), [1, 2])
+    assert_equal(routes[1].vehicle_type(), 1)
+    assert_equal(routes[1], Route(data, [1, 2], 1))
+
+
+def test_route_eq():
+    data = read("data/OkSmall.txt")
+
+    route1 = Route(data, [1, 2], 0)
+    assert_(route1 == route1)  # should equal self
+
+    route2 = Route(data, [1, 2], 0)
+    assert_equal(route1, route2)  # same route/vehicle type; different object
+
+    route3 = Route(data, [1, 2], 1)
+    assert_(route2 != route3)  # different vehicle type
+
+    route4 = Route(data, [2, 1], 0)
+    assert_(route2 != route4)  # same vehicle type, different visits
+
+    assert_(route1 != "test")
+    assert_(route1 != 0)
+    assert_(route1 != -1.0)
 
 
 def test_random_constructor_cycles_over_routes():
@@ -49,12 +91,38 @@ def test_route_constructor_raises_too_many_vehicles():
     sol = Solution(data, [[1, 2], [4, 3]])
     assert_equal(len(sol.get_routes()), 2)
 
-    # Empty third route should not raise.
-    Solution(data, [[1, 2], [4, 3], []])
+    # Three routes should not raise.
+    Solution(data, [[1, 2], [4], [3]])
 
     # More than three routes should raise, since we only have three vehicles.
     with assert_raises(RuntimeError):
         Solution(data, [[1], [2], [3], [4]])
+
+    # Now test heterogeneous case
+    data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
+
+    # Only two routes (of type 0) should not raise.
+    sol = Solution(data, [[1, 2], [4, 3]])
+    assert_equal(len(sol.get_routes()), 2)
+
+    # One route of both vehicle types should not raise.
+    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)])
+    assert_equal(len(sol.get_routes()), 2)
+
+    # Two routes of type 1 and one of type 2 should not raise as we have those.
+    sol = Solution(
+        data,
+        [Route(data, [1], 0), Route(data, [2], 0), Route(data, [4, 3], 1)],
+    )
+    assert_equal(len(sol.get_routes()), 3)
+
+    # Two routes of vehicle type 1 should raise since we have only one.
+    with assert_raises(RuntimeError):
+        sol = Solution(data, [Route(data, [1, 2], 1), Route(data, [4, 3], 1)])
+
+    # Three routes should raise since they are considered to be type 0.
+    with assert_raises(RuntimeError):
+        Solution(data, [[1, 2], [4], [3]])
 
 
 def test_route_constructor_raises_for_invalid_routes():
@@ -70,7 +138,7 @@ def test_route_constructor_raises_for_invalid_routes():
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
 
-    sol = Solution(data, [[3, 4], [], [1, 2]])
+    sol = Solution(data, [[3, 4], [1, 2]])
     neighbours = sol.get_neighbours()
 
     expected = [
@@ -140,9 +208,27 @@ def test_excess_load_calculation():
     assert_(not sol.has_time_warp())
 
     # All clients are visited on the same route/by the same vehicle. The total
-    # demand is 18, but the vehicle capacity is only 10. This has a non-zero
-    # load penalty
-    assert_equal(sol.excess_load(), 18 - data.vehicle_capacity)
+    # demand is 18, but the vehicle capacity is only 10.
+    assert_equal(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
+
+
+def test_heterogeneous_capacity_excess_load_calculation():
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    )
+
+    # This instance has capacities 10 and 20 for vehicle type 0 and 1. The
+    # total demand is 18 so if all demand is put in vehicle type 0 the
+    # excess_load is 18 - 10 = 8.
+    sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    assert_(sol.has_excess_load())
+    assert_equal(sol.excess_load(), 8)
+
+    # With vehicle type 1, the capacity 20 is larger than 18.
+    sol = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+    assert_(not sol.has_excess_load())
+    assert_equal(sol.excess_load(), 0)
 
 
 def test_route_access_methods():
@@ -230,8 +316,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
-        num_vehicles=2,
-        vehicle_cap=0,
+        vehicle_types=[VehicleType(0, 2)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
     )
@@ -256,6 +341,41 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
 
 # TODO test all time warp cases
+
+
+def test_num_routes_calculation():
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    )
+
+    sol = Solution(data, [[1, 2, 3, 4]])
+    assert_equal(sol.num_routes(), 1)
+
+    sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    assert_equal(sol.num_routes(), 1)
+
+    sol = Solution(data, [[1, 2], [3, 4]])
+    assert_equal(sol.num_routes(), 2)
+
+    with assert_raises(RuntimeError):
+        # This raises since we don't specify route types, which means we create
+        # 3 routes of type 0 whereas we only have 2 available.
+        sol = Solution(data, [[1], [2], [3, 4]])
+
+    # It works if we specify the correct vehicle types
+    sol = Solution(
+        data,
+        [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)],
+    )
+    assert_equal(sol.num_routes(), 3)
+
+    # But not if we violate the qty available per vehicle type
+    with assert_raises(RuntimeError):
+        sol = Solution(
+            data,
+            [Route(data, [1], 0), Route(data, [2], 1), Route(data, [3, 4], 1)],
+        )
 
 
 def test_copy():
@@ -286,8 +406,8 @@ def test_eq():
     assert_(sol1 != sol2)  # different routes, so should not be equal
     assert_(sol1 == sol3)  # same routes, different solution
 
-    sol4 = Solution(data, [[1, 2, 3], [], [4]])
-    sol5 = Solution(data, [[4], [1, 2, 3], []])
+    sol4 = Solution(data, [[1, 2, 3], [4]])
+    sol5 = Solution(data, [[4], [1, 2, 3]])
 
     assert_(sol4 == sol5)  # routes are the same, but in different order
 
@@ -299,8 +419,62 @@ def test_eq():
     assert_(sol5 != "cd")
 
 
-def test_str_contains_routes():
+def test_eq_heterogeneous_vehicle():
+    """
+    Tests that two solutions are not considered equal if they have the same
+    routes (orders of clients) but served by different vehicle types.
+    """
     data = read("data/OkSmall.txt")
+    # Make sure capacities are different but large enough (>18) to have no
+    # violations so have the same attributes, such that we actually test if the
+    # assignments are used for the equality comparison.
+    data = make_heterogeneous(
+        data, vehicle_types=[VehicleType(20, 2), VehicleType(30, 1)]
+    )
+
+    # These two should be the same
+    sol1 = Solution(data, [[1, 2, 3, 4]])
+    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    # Create solution with different vehicle type
+    sol3 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+
+    # First two solution have one route with the same vehicle type
+    assert_(sol1 == sol2)
+    # Solution 3 is different since the route has a different vehicle type
+    assert_(sol1 != sol3)
+
+    # Order should not matter so these should be the same
+    sol1 = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
+    sol2 = Solution(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
+    assert_(sol1 == sol2)
+
+    # But changing the vehicle types should be different
+    sol3 = Solution(data, [Route(data, [1, 2], 1), Route(data, [3, 4], 0)])
+    assert_(sol1 != sol3)
+
+
+def test_duplicate_vehicle_types():
+    """
+    Tests that even though it is not useful it is allowed to have duplicate
+    vehicle types which will be considered different.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 1)])
+
+    sol1 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+
+    assert_(sol1 != sol2)
+
+
+@mark.parametrize(
+    "vehicle_types",
+    [[VehicleType(10, 3)], [VehicleType(10, 2), VehicleType(20, 1)]],
+)
+def test_str_contains_routes(vehicle_types):
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, vehicle_types)
+
     rng = XorShift128(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
@@ -346,7 +520,7 @@ def test_route_centroid():
     x = np.array([data.client(client).x for client in range(5)])
     y = np.array([data.client(client).y for client in range(5)])
 
-    routes = [Route(data, [1, 2]), Route(data, [3]), Route(data, [4])]
+    routes = [Route(data, [1, 2], 0), Route(data, [3], 0), Route(data, [4], 0)]
 
     for route in routes:
         x_center, y_center = route.centroid()

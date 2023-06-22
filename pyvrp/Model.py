@@ -7,7 +7,7 @@ from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
-from pyvrp._ProblemData import Client, ProblemData
+from pyvrp._ProblemData import Client, ProblemData, VehicleType
 from pyvrp._Solution import Solution
 from pyvrp._XorShift128 import XorShift128
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
@@ -30,15 +30,6 @@ class Edge:
         self.duration = duration
 
 
-class VehicleType:
-
-    __slots__ = ["number", "capacity"]
-
-    def __init__(self, number: int, capacity: int):
-        self.number = number
-        self.capacity = capacity
-
-
 class Model:
     """
     A simple interface for modelling vehicle routing problems with PyVRP.
@@ -54,9 +45,20 @@ class Model:
     def locations(self) -> List[Client]:
         """
         Returns all locations (depots and clients) in the current model. The
-        routes returned by :meth:`~solve` can be used to index these locations.
+        clients in the routes of the solution returned by :meth:`~solve` can be
+        used to index these locations.
         """
         return self._depots + self._clients
+
+    @property
+    def vehicle_types(self) -> List[VehicleType]:
+        """
+        Returns the vehicle types in the current model. The routes of the
+        solution returned by :meth:`~solve` have a property
+        :meth:`~pyvrp._Solution.Route.vehicle_type()` that can be used to index
+        these vehicle types.
+        """
+        return self._vehicle_types
 
     @classmethod
     def from_data(cls, data: ProblemData) -> "Model":
@@ -89,7 +91,9 @@ class Model:
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
-        vehicle_types = [VehicleType(data.num_vehicles, data.vehicle_capacity)]
+        vehicle_types = [
+            data.vehicle_type(i) for i in range(data.num_vehicle_types)
+        ]
         self._vehicle_types = vehicle_types
 
         return self
@@ -168,32 +172,26 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_vehicle_type(self, number: int, capacity: int) -> VehicleType:
+    def add_vehicle_type(
+        self, capacity: int, num_available: int
+    ) -> VehicleType:
         """
-        Adds a vehicle type with the given number of vehicles of given capacity
-        to the model. Returns the created vehicle type.
-
-        .. warning::
-
-           PyVRP does not yet support heterogeneous fleet VRPs. For now, only
-           one vehicle type can be added to the model.
+        Adds a vehicle type with the given number of available vehicles of
+        given capacity to the model. Returns the created vehicle type.
 
         Raises
         ------
         ValueError
-            When either the vehicle number or capacity is not a positive value.
+            When the number of available vehicles or capacity is not a positive
+            value.
         """
-        if len(self._vehicle_types) >= 1:
-            msg = "PyVRP does not yet support heterogeneous fleet VRPs."
-            raise ValueError(msg)
-
-        if number <= 0:
-            raise ValueError("Must have positive number of vehicles.")
-
         if capacity < 0:
             raise ValueError("Cannot have negative vehicle capacity.")
 
-        vehicle_type = VehicleType(number, capacity)
+        if num_available <= 0:
+            raise ValueError("Must have positive number of vehicles.")
+
+        vehicle_type = VehicleType(capacity, num_available)
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
@@ -204,9 +202,6 @@ class Model:
         """
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
-
-        num_vehicles = self._vehicle_types[0].number
-        vehicle_capacity = self._vehicle_types[0].capacity
 
         max_data_value = max(max(e.distance, e.duration) for e in self._edges)
         if max_data_value > MAX_USER_VALUE:
@@ -229,8 +224,7 @@ class Model:
 
         return ProblemData(
             locs,
-            num_vehicles,
-            vehicle_capacity,
+            self.vehicle_types,
             distances,
             durations,
         )

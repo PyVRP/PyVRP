@@ -8,10 +8,10 @@ from pyvrp.tests.helpers import read
 def test_broken_pairs_distance():
     data = read("data/OkSmall.txt")
 
-    sol1 = Solution(data, [[1, 2, 3, 4], [], []])
+    sol1 = Solution(data, [[1, 2, 3, 4]])
     sol2 = Solution(data, [[1, 2], [3], [4]])
-    sol3 = Solution(data, [[3], [4, 1, 2], []])
-    sol4 = Solution(data, [[4, 3, 2, 1], [], []])
+    sol3 = Solution(data, [[3], [4, 1, 2]])
+    sol4 = Solution(data, [[4, 3, 2, 1]])
 
     # BPD of a solution and itself should be zero.
     for sol in [sol1, sol2, sol3, sol4]:
