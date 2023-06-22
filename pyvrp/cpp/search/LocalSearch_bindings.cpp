@@ -35,6 +35,6 @@ PYBIND11_MODULE(_LocalSearch, m)
              &LocalSearch::intensify,
              py::arg("solution"),
              py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance_degrees") = 0)
+             py::arg("overlap_tolerance") = 0.1)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 }

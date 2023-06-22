@@ -176,7 +176,7 @@ class GeneticAlgorithm:
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
                 sol = self._ls.intensify(
-                    sol, self._cost_evaluator, overlap_tolerance_degrees=360
+                    sol, self._cost_evaluator, overlap_tolerance=1
                 )
 
                 if is_new_best(sol):
@@ -202,7 +202,7 @@ class GeneticAlgorithm:
                     sol = self._ls.intensify(
                         sol,
                         self._pm.get_booster_cost_evaluator(),
-                        overlap_tolerance_degrees=360,
+                        overlap_tolerance=1,
                     )
 
                     if is_new_best(sol):

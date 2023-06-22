@@ -249,7 +249,7 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     assert_equal(further_improved, improved)
 
 
-def test_intensify_overlap_tolerance_degrees():
+def test_intensify_overlap_tolerance():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = XorShift128(seed=42)
 
@@ -262,11 +262,27 @@ def test_intensify_overlap_tolerance_degrees():
 
     # Overlap tolerance is zero, so no routes should have overlap and thus
     # no intensification should take place.
-    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance_degrees=0)
+    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance=0)
     assert_equal(unchanged, sol)
 
     # But with full overlap tolerance, all routes should be checked. That
     # should lead to an improvement over the random solution.
-    better = ls.intensify(sol, cost_eval, overlap_tolerance_degrees=360)
+    better = ls.intensify(sol, cost_eval, overlap_tolerance=1)
     assert_(better != sol)
     assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
+
+
+@mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
+def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_route_operator(RelocateStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
+        ls.intensify(sol, cost_eval, overlap_tolerance=tol)
