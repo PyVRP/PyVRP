@@ -8,6 +8,7 @@ from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
     Neighbours,
+    RelocateStar,
     compute_neighbours,
 )
 from pyvrp.search._LocalSearch import LocalSearch as cpp_LocalSearch
@@ -246,3 +247,26 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     # the solution, especially not change the vehicle types
     further_improved = ls.search(improved, cost_evaluator)
     assert_equal(further_improved, improved)
+
+
+def test_intensify_overlap_tolerance_degrees():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_route_operator(RelocateStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # Overlap tolerance is zero, so no routes should have overlap and thus
+    # no intensification should take place.
+    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance_degrees=0)
+    assert_equal(unchanged, sol)
+
+    # But with full overlap tolerance, all routes should be checked. That
+    # should lead to an improvement over the random solution.
+    better = ls.intensify(sol, cost_eval, overlap_tolerance_degrees=360)
+    assert_(better != sol)
+    assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
