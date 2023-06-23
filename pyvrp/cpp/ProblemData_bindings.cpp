@@ -8,10 +8,11 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<Value, Value, Value, Value, Value, Value, Value, bool>(),
+        .def(py::init<Value, Value, Value, Value, Value, Value, Value, Value, bool>(),
              py::arg("x"),
              py::arg("y"),
-             py::arg("demand") = 0,
+             py::arg("demandWeight") = 0,
+             py::arg("demandVolume") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = 0,
@@ -23,9 +24,13 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_property_readonly(
             "y",
             [](ProblemData::Client const &client) { return client.y.get(); })
-        .def_property_readonly("demand",
+        .def_property_readonly("demandWeight",
                                [](ProblemData::Client const &client) {
-                                   return client.demand.get();
+                                   return client.demandWeight.get();
+                               })
+        .def_property_readonly("demandVolume",
+                               [](ProblemData::Client const &client) {
+                                   return client.demandVolume.get();
                                })
         .def_property_readonly("service_duration",
                                [](ProblemData::Client const &client) {
@@ -48,7 +53,8 @@ PYBIND11_MODULE(_ProblemData, m)
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init([](std::vector<ProblemData::Client> const &clients,
                          int numVehicles,
-                         Value vehicleCap,
+                         Value weightCap,
+                         Value volumeCap,
                          std::vector<std::vector<Value>> const &dist,
                          std::vector<std::vector<Value>> const &dur) {
                  Matrix<Distance> distMat(clients.size());
@@ -62,18 +68,23 @@ PYBIND11_MODULE(_ProblemData, m)
                      }
 
                  return ProblemData(
-                     clients, numVehicles, vehicleCap, distMat, durMat);
+                     clients, numVehicles, weightCap, volumeCap, distMat, durMat);
              }),
              py::arg("clients"),
              py::arg("num_vehicles"),
-             py::arg("vehicle_cap"),
+             py::arg("weight_cap"),
+             py::arg("volume_cap"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients", &ProblemData::numClients)
         .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
-        .def_property_readonly("vehicle_capacity",
+        .def_property_readonly("weight_capacity",
                                [](ProblemData const &data) {
-                                   return data.vehicleCapacity().get();
+                                   return data.weightCapacity().get();
+                               })
+        .def_property_readonly("volume_capacity",
+                               [](ProblemData const &data) {
+                                   return data.volumeCapacity().get();
                                })
         .def("client",
              &ProblemData::client,

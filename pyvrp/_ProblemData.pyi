@@ -12,8 +12,10 @@ class Client:
     y
         Vertical coordinate of this client, that is, the 'y' part of the
         client's (x, y) location tuple.
-    demand
-        The amount this client's demanding. Default 0.
+    weight_demand
+        The weight amount this client's demanding. Default 0.
+    voolume_demand
+        The volume amount this client's demanding. Default 0.
     service_duration
         This client's service duration, that is, the amount of time we need to
         visit the client for. Service should start (but not necessarily end)
@@ -31,7 +33,8 @@ class Client:
 
     x: int
     y: int
-    demand: int
+    weight_demand: int
+    volume_demand: int
     service_duration: int
     tw_early: int
     tw_late: int
@@ -42,7 +45,8 @@ class Client:
         self,
         x: int,
         y: int,
-        demand: int = 0,
+        weight_demand: int = 0,
+        volume_demand: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = 0,
@@ -60,11 +64,13 @@ class ProblemData:
     clients
         List of clients. The first client (at index 0) is assumed to be the
         depot. The time window for the depot is assumed to describe the overall
-        time horizon. The depot should have 0 demand and 0 service duration.
+        time horizon. The depot should have 0 weight and volume demand and 0 service duration.
     num_vehicles
         The number of vehicles in this problem instance.
-    vehicle_cap
-        Homogenous vehicle capacity for all vehicles in the problem instance.
+    weight_cap
+        Homogenous vehicle weight capacity for all vehicles in the problem instance.
+    volume_cap
+        Homogenous vehicle volume capacity for all vehicles in the problem instance.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0).
@@ -166,13 +172,23 @@ class ProblemData:
             Number of vehicles in the instance.
         """
     @property
-    def vehicle_capacity(self) -> int:
+    def weight_capacity(self) -> int:
         """
-        Returns the homogenous vehicle capacities of all vehicles in this
+        Returns the homogenous vehicle weight capacities of all vehicles in this
         problem data instance.
 
         Returns
         -------
         int
-            Capacity of each vehicle in the instance.
+            Weight capacity of each vehicle in the instance.
         """
+    @property
+    def volume_capacity(self) -> int:
+        """
+        Returns the homogenous vehicle volume capacities of all vehicles in this
+        problem data instance.
+        
+        Returns
+        -------
+        int
+            Volume capacity of each vehicle in the instance.

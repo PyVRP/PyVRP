@@ -201,10 +201,14 @@ void LocalSearch::maybeInsert(Node *U,
     auto const &uClient = data.client(U->client);
     Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
-    deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
-                                           data.vehicleCapacity());
+    deltaCost += costEvaluator.weightPenalty(V->route->weight() + uClient.demandWeight,
+                                           data.weightCapacity());
+    deltaCost += costEvaluator.volumePenalty(V->route->volume() + uClient.demandVolume,
+                                           data.volumeCapacity());
     deltaCost
-        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
+        -= costEvaluator.weightPenalty(V->route->weight(), data.weightCapacity());
+    deltaCost
+        -= costEvaluator.volumePenalty(V->route->volume(), data.volumeCapacity());
 
     // If this is true, adding U cannot decrease time warp in V's route enough
     // to offset the deltaCost.
@@ -235,10 +239,14 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     auto const &uClient = data.client(U->client);
     Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
-    deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
-                                           data.vehicleCapacity());
+    deltaCost += costEvaluator.weightPenalty(U->route->weight() - uClient.demandWeight,
+                                           data.weightCapacity());
+    deltaCost += costEvaluator.volumePenalty(U->route->volume() - uClient.demandVolume,
+                                           data.volumeCapacity());
     deltaCost
-        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
+        -= costEvaluator.weightPenalty(U->route->weight(), data.weightCapacity());
+    deltaCost
+        -= costEvaluator.volumePenalty(U->route->volume(), data.volumeCapacity());
 
     auto uTWS
         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);

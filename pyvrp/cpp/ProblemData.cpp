@@ -8,7 +8,8 @@
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
-                            Load demand,
+                            Load demandWeight,
+                            Load demandVolume,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -16,15 +17,19 @@ ProblemData::Client::Client(Coordinate x,
                             bool required)
     : x(x),
       y(y),
-      demand(demand),
+      demandWeight(demandWeight),
+      demandVolume(demandVolume),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
       prize(prize),
       required(required)
 {
-    if (demand < 0)
-        throw std::invalid_argument("demand must be >= 0");
+    if (demandWeight < 0)
+        throw std::invalid_argument("demandWeight must be >= 0");
+
+    if (demandVolume < 0)
+        throw std::invalid_argument("demandVolume must be >= 0");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0");
@@ -51,11 +56,14 @@ size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-Load ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
+Load ProblemData::weightCapacity() const { return weightCapacity_; }
+
+Load ProblemData::volumeCapacity() const { return volumeCapacity_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          size_t numVehicles,
-                         Load vehicleCap,
+                         Load weightCap,
+                         Load volumeCap,
                          Matrix<Distance> const distMat,
                          Matrix<Duration> const durMat)
     : centroid_({0, 0}),
@@ -64,7 +72,8 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       clients_(clients),
       numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicles_(numVehicles),
-      vehicleCapacity_(vehicleCap)
+      weightCapacity_(weightCap),
+      volumeCapacity_(volumeCap)
 {
     for (size_t idx = 1; idx <= numClients(); ++idx)
     {

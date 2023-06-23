@@ -22,7 +22,8 @@ void Solution::evaluate(ProblemData const &data)
         prizes_ += route.prizes();
         distance_ += route.distance();
         timeWarp_ += route.timeWarp();
-        excessLoad_ += route.excessLoad();
+        excessWeight_ += route.excessWeight();
+        excessVolume_ += route.excessVolume();
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
@@ -39,15 +40,17 @@ std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
     return neighbours;
 }
 
-bool Solution::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
+bool Solution::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasTimeWarp(); }
 
-bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::hasExcessWeight() const { return excessWeight_ > 0; }
+bool Solution::hasExcessVolume() const { return excessVolume_ > 0; }
 
 bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
 Distance Solution::distance() const { return distance_; }
 
-Load Solution::excessLoad() const { return excessLoad_; }
+Load Solution::excessWeight() const { return excessWeight_; }
+Load Solution::excessVolume() const { return excessVolume_; }
 
 Cost Solution::prizes() const { return prizes_; }
 
@@ -70,7 +73,8 @@ bool Solution::operator==(Solution const &other) const
     // Only when these are the same we test if the neighbours are all equal.
     // clang-format off
     return distance_ == other.distance_
-        && excessLoad_ == other.excessLoad_
+        && excessWeight_ == other.excessWeight_
+        && excessVolume_ == other.excessVolume_
         && timeWarp_ == other.timeWarp_
         && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours;
@@ -162,7 +166,8 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
 
         distance_ += data.dist(prevClient, visits_[idx]);
         duration_ += data.duration(prevClient, visits_[idx]);
-        demand_ += clientData.demand;
+        demandWeight_ += clientData.demandWeight;
+        demandVolume_ += clientData.demandVolume;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
@@ -194,8 +199,12 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
     time += data.client(last).serviceDuration + data.duration(last, 0);
     timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
 
-    excessLoad_ = data.vehicleCapacity() < demand_
-                      ? demand_ - data.vehicleCapacity()
+    excessWeight_ = data.weightCapacity() < demandWeight_
+                      ? demandWeight_ - data.weightCapacity()
+                      : 0;
+
+    excessVolume_ = data.volumeCapacity() < demandVolume_
+                      ? demandVolume_ - data.volumeCapacity()
                       : 0;
 }
 
@@ -223,9 +232,13 @@ Visits const &Solution::Route::visits() const { return visits_; }
 
 Distance Solution::Route::distance() const { return distance_; }
 
-Load Solution::Route::demand() const { return demand_; }
+Load Solution::Route::demandWeight() const { return demandWeight_; }
 
-Load Solution::Route::excessLoad() const { return excessLoad_; }
+Load Solution::Route::demandVolume() const { return demandVolume_; }
+
+Load Solution::Route::excessWeight() const { return excessWeight_; }
+
+Load Solution::Route::excessVolume() const { return excessVolume_; }
 
 Duration Solution::Route::duration() const { return duration_; }
 
@@ -244,10 +257,12 @@ std::pair<double, double> const &Solution::Route::centroid() const
 
 bool Solution::Route::isFeasible() const
 {
-    return !hasExcessLoad() && !hasTimeWarp();
+    return !hasExcessWeight() && !hasExcessVolume() && !hasTimeWarp();
 }
 
-bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::Route::hasExcessWeight() const { return excessWeight_ > 0; }
+
+bool Solution::Route::hasExcessVolume() const { return excessVolume_ > 0; }
 
 bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 

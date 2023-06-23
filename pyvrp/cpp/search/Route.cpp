@@ -76,7 +76,8 @@ void Route::update()
     auto const oldNodes = nodes;
     setupNodes();
 
-    Load load = 0;
+    Load weight = 0;
+    Load volume = 0;
     Distance distance = 0;
     Distance reverseDistance = 0;
     bool foundChange = false;
@@ -91,7 +92,8 @@ void Route::update()
 
             if (pos > 0)  // change at pos, so everything before is the same
             {             // and we can re-use cumulative calculations
-                load = nodes[pos - 1]->cumulatedLoad;
+                weight = nodes[pos - 1]->cumulatedWeight;
+                volume = nodes[pos - 1]->cumulatedVolume;
                 distance = nodes[pos - 1]->cumulatedDistance;
                 reverseDistance = nodes[pos - 1]->cumulatedReversalDistance;
             }
@@ -100,14 +102,16 @@ void Route::update()
         if (!foundChange)
             continue;
 
-        load += data.client(node->client).demand;
+        weight += data.client(node->client).demandWeight;
+        volume += data.client(node->client).demandVolume;
         distance += data.dist(p(node)->client, node->client);
 
         reverseDistance += data.dist(node->client, p(node)->client);
         reverseDistance -= data.dist(p(node)->client, node->client);
 
         node->position = pos + 1;
-        node->cumulatedLoad = load;
+        node->cumulatedWeight = weight;
+        node->cumulatedVolume = volume;
         node->cumulatedDistance = distance;
         node->cumulatedReversalDistance = reverseDistance;
         node->twBefore
@@ -117,8 +121,10 @@ void Route::update()
     setupSector();
     setupRouteTimeWindows();
 
-    load_ = nodes.back()->cumulatedLoad;
-    isLoadFeasible_ = static_cast<size_t>(load_) <= data.vehicleCapacity();
+    weight_ = nodes.back()->cumulatedWeight;
+    volume_ = nodes.back()->cumulatedVolume;
+    isWeightFeasible_ = static_cast<size_t>(weight_) <= data.weightCapacity();
+    isVolumeFeasible_ = static_cast<size_t>(volume_) <= data.volumeCapacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;

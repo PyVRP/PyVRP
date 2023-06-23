@@ -66,17 +66,26 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
-    auto const deltaLoad = U->cumulatedLoad - V->cumulatedLoad;
+    auto const deltaWeight = U->cumulatedWeight - V->cumulatedWeight;
+    auto const deltaVolume = U->cumulatedVolume - V->cumulatedVolume;
 
-    deltaCost += costEvaluator.loadPenalty(U->route->load() - deltaLoad,
-                                           data.vehicleCapacity());
+    deltaCost += costEvaluator.weightPenalty(U->route->weight() - deltaWeight,
+                                           data.weightCapacity());
+    deltaCost += costEvaluator.volumePenalty(U->route->volume() - deltaVolume,
+                                           data.volumeCapacity());
     deltaCost
-        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
+        -= costEvaluator.weightPenalty(U->route->weight(), data.weightCapacity());
+    deltaCost
+        -= costEvaluator.volumePenalty(U->route->volume(), data.volumeCapacity());
 
-    deltaCost += costEvaluator.loadPenalty(V->route->load() + deltaLoad,
-                                           data.vehicleCapacity());
+    deltaCost += costEvaluator.weightPenalty(V->route->weight() + deltaWeight,
+                                           data.weightCapacity());
+    deltaCost += costEvaluator.volumePenalty(V->route->volume() + deltaVolume,
+                                           data.volumeCapacity());
     deltaCost
-        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
+        -= costEvaluator.weightPenalty(V->route->weight(), data.weightCapacity());
+    deltaCost
+        -= costEvaluator.volumePenalty(V->route->volume(), data.volumeCapacity());
 
     return deltaCost;
 }

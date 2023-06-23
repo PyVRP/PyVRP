@@ -161,7 +161,9 @@ class GeneticAlgorithm:
 
         def add_and_register(sol):
             self._pop.add(sol, self._cost_evaluator)
-            self._pm.register_load_feasible(not sol.has_excess_load())
+            # self._pm.register_load_feasible(not sol.has_excess_load())
+            self._pm.register_weight_feasible(not sol.has_excess_weight())
+            self._pm.register_volume_feasible(not sol.has_excess_volume())
             self._pm.register_time_feasible(not sol.has_time_warp())
 
         intensify_prob = self._params.intensify_probability

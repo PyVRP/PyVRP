@@ -15,7 +15,8 @@ struct Node
     Route *route;     // Pointer towards the associated route
 
     // TODO can these data fields be moved to Route?
-    Load cumulatedLoad;                  // Load depot -> client (incl)
+    Load cumulatedWeight;                  // Weight depot -> client (incl)
+    Load cumulatedVolume;                  // Volume depot -> client (incl)
     Distance cumulatedDistance;          // Dist depot -> client (incl)
     Distance cumulatedReversalDistance;  // Dist if (0..client) is reversed
 

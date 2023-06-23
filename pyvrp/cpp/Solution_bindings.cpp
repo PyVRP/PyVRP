@@ -20,11 +20,17 @@ PYBIND11_MODULE(_Solution, m)
         .def(
             "distance",
             [](Solution::Route const &route) { return route.distance().get(); })
-        .def("demand",
-             [](Solution::Route const &route) { return route.demand().get(); })
-        .def("excess_load",
+        .def("demandWeight",
+             [](Solution::Route const &route) { return route.demandWeight().get(); })
+        .def("demandVolume",
+             [](Solution::Route const &route) { return route.demandVolume().get(); })
+        .def("excess_weight",
              [](Solution::Route const &route) {
-                 return route.excessLoad().get();
+                 return route.excessWeight().get();
+             })
+        .def("excess_volume",
+             [](Solution::Route const &route) {
+                 return route.excessVolume().get();
              })
         .def(
             "duration",
@@ -44,7 +50,8 @@ PYBIND11_MODULE(_Solution, m)
              [](Solution::Route const &route) { return route.prizes().get(); })
         .def("centroid", &Solution::Route::centroid)
         .def("is_feasible", &Solution::Route::isFeasible)
-        .def("has_excess_load", &Solution::Route::hasExcessLoad)
+        .def("has_excess_weight", &Solution::Route::hasExcessWeight)
+        .def("has_excess_volume", &Solution::Route::hasExcessVolume)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)
         .def("__len__", &Solution::Route::size)
         .def(
@@ -94,12 +101,15 @@ PYBIND11_MODULE(_Solution, m)
              &Solution::getNeighbours,
              py::return_value_policy::reference_internal)
         .def("is_feasible", &Solution::isFeasible)
-        .def("has_excess_load", &Solution::hasExcessLoad)
+        .def("has_excess_weight", &Solution::hasExcessWeight)
+        .def("has_excess_volume", &Solution::hasExcessVolume)
         .def("has_time_warp", &Solution::hasTimeWarp)
         .def("distance",
              [](Solution const &sol) { return sol.distance().get(); })
-        .def("excess_load",
-             [](Solution const &sol) { return sol.excessLoad().get(); })
+        .def("excess_weight",
+             [](Solution const &sol) { return sol.excessWeight().get(); })
+        .def("excess_volume",
+             [](Solution const &sol) { return sol.excessVolume().get(); })
         .def("time_warp",
              [](Solution const &sol) { return sol.timeWarp().get(); })
         .def("prizes", [](Solution const &sol) { return sol.prizes().get(); })

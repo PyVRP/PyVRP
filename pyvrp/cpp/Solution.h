@@ -25,8 +25,10 @@ public:
 
         Visits visits_ = {};     // Client visits on this route
         Distance distance_ = 0;  // Total travel distance on this route
-        Load demand_ = 0;        // Total demand served on this route
-        Load excessLoad_ = 0;    // Excess demand (wrt vehicle capacity)
+        Load demandWeight_ = 0;        // Total weight demand served on this route
+        Load demandVolume_ = 0;        // Total volume demand served on this route
+        Load excessWeight_ = 0;    // Excess weight demand (wrt vehicle weight capacity)
+        Load excessVolume_ = 0;    // Excess volume demand (wrt vehicle volume capacity)
         Duration duration_ = 0;  // Total travel duration on this route
         Duration service_ = 0;   // Total service duration on this route
         Duration timeWarp_ = 0;  // Total time warp on this route
@@ -47,8 +49,10 @@ public:
 
         [[nodiscard]] Visits const &visits() const;
         [[nodiscard]] Distance distance() const;
-        [[nodiscard]] Load demand() const;
-        [[nodiscard]] Load excessLoad() const;
+        [[nodiscard]] Load demandWeight() const;
+        [[nodiscard]] Load demandVolume() const;
+        [[nodiscard]] Load excessWeight() const;
+        [[nodiscard]] Load excessVolume() const;
         [[nodiscard]] Duration duration() const;
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
@@ -58,7 +62,8 @@ public:
         [[nodiscard]] std::pair<double, double> const &centroid() const;
 
         [[nodiscard]] bool isFeasible() const;
-        [[nodiscard]] bool hasExcessLoad() const;
+        [[nodiscard]] bool hasExcessWeight() const;
+        [[nodiscard]] bool hasExcessVolume() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
@@ -70,7 +75,8 @@ private:
 
     size_t numClients_ = 0;       // Number of clients in the solution
     Distance distance_ = 0;       // Total distance
-    Load excessLoad_ = 0;         // Total excess load over all routes
+    Load excessWeight_ = 0;         // Total excess weight load over all routes
+    Load excessVolume_ = 0;         // Total excess volume load over all routes
     Cost prizes_ = 0;             // Total collected prize value
     Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
     Duration timeWarp_ = 0;       // Total time warp over all routes
@@ -114,9 +120,14 @@ public:
     [[nodiscard]] bool isFeasible() const;
 
     /**
-     * @return True if the solution violates load constraints.
+     * @return True if the solution violates weight constraints.
      */
-    [[nodiscard]] bool hasExcessLoad() const;
+    [[nodiscard]] bool hasExcessWeight() const;
+
+    /**
+     * @return True if the solution violates volume constraints.
+     */
+    [[nodiscard]] bool hasExcessVolume() const;
 
     /**
      * @return True if the solution violates time window constraints.
@@ -129,9 +140,14 @@ public:
     [[nodiscard]] Distance distance() const;
 
     /**
-     * @return Total excess load over all routes.
+     * @return Total excess load weight over all routes.
      */
-    [[nodiscard]] Load excessLoad() const;
+    [[nodiscard]] Load excessWeight() const;
+
+    /**
+     * @return Total excess load volume over all routes.
+     */
+    [[nodiscard]] Load excessVolume() const;
 
     /**
      * @return Total collected prize value over all routes.
@@ -186,7 +202,8 @@ template <> struct hash<Solution>
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(sol.routes_.size());
         res = res * 31 + std::hash<Distance>()(sol.distance_);
-        res = res * 31 + std::hash<Load>()(sol.excessLoad_);
+        res = res * 31 + std::hash<Load>()(sol.excessWeight_);
+        res = res * 31 + std::hash<Load>()(sol.excessVolume_);
         res = res * 31 + std::hash<Duration>()(sol.timeWarp_);
 
         return res;

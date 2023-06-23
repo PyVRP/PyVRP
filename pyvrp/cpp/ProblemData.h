@@ -15,7 +15,8 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        Load const demand;
+        Load const demandWeight;
+        Load const demandVolume;
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
@@ -24,7 +25,8 @@ public:
 
         Client(Coordinate x,
                Coordinate y,
-               Load demand = 0,
+               Load demandWeight = 0,
+               Load demandVolume = 0,
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = 0,
@@ -40,7 +42,8 @@ private:
 
     size_t const numClients_;
     size_t const numVehicles_;
-    Load const vehicleCapacity_;
+    Load const weightCapacity_;
+    Load const volumeCapacity_;
 
 public:
     /**
@@ -98,9 +101,14 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
-     * @return Capacity of each vehicle in this instance.
+     * @return Weight capacity of each vehicle in this instance.
      */
-    [[nodiscard]] Load vehicleCapacity() const;
+    [[nodiscard]] Load weightCapacity() const;
+
+    /**
+     * @return Volume capacity of each vehicle in this instance.
+     */
+    [[nodiscard]] Load volumeCapacity() const;
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the list of
@@ -109,13 +117,15 @@ public:
      *
      * @param clients      List of clients (including depot at index 0).
      * @param numVehicles  Number of vehicles.
-     * @param vehicleCap   Vehicle capacity.
+     * @param weightCap   Vehicle weight capacity.
+     * @param volumeCap   Vehicle volume capacity.
      * @param distMat      Distance matrix.
      * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
                 size_t numVehicles,
-                Load vehicleCap,
+                Load weightCap,
+                Load volumeCap,
                 Matrix<Distance> const distMat,
                 Matrix<Duration> const durMat);
 };

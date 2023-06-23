@@ -18,8 +18,10 @@ class Route
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
 
-    Load load_;            // Current route load.
-    bool isLoadFeasible_;  // Whether current load is feasible.
+    Load weight_;            // Current route weight load.
+    Load volume_;            // Current route volume load.
+    bool isWeightFeasible_;  // Whether current weight load is feasible.
+    bool isVolumeFeasible_;  // Whether current volume load is feasible.
 
     Duration timeWarp_;        // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
@@ -50,11 +52,18 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool isFeasible() const;
 
     /**
-     * Determines whether this route is load-feasible.
+     * Determines whether this route is weight load-feasible.
      *
-     * @return true if the route exceeds the vehicle capacity, false otherwise.
+     * @return true if the route exceeds the vehicle weight capacity, false otherwise.
      */
-    [[nodiscard]] inline bool hasExcessLoad() const;
+    [[nodiscard]] inline bool hasExcessWeight() const;
+
+    /**
+     * Determines whether this route is volume load-feasible.
+     *
+     * @return true if the route exceeds the vehicle volume capacity, false otherwise.
+     */
+    [[nodiscard]] inline bool hasExcessVolume() const;
 
     /**
      * Determines whether this route is time-feasible.
@@ -64,9 +73,14 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
-     * @return Total load on this route.
+     * @return Total weight load on this route.
      */
-    [[nodiscard]] inline Load load() const;
+    [[nodiscard]] inline Load weight() const;
+
+    /**
+     * @return Total volume load on this route.
+     */
+    [[nodiscard]] inline Load volume() const;
 
     /**
      * @return Total time warp on this route.
@@ -97,7 +111,12 @@ public:           // TODO make fields private
     /**
      * Calculates the load for segment [start, end].
      */
-    [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline Load weightBetween(size_t start, size_t end) const;
+
+    /**
+     * Calculates the load for segment [start, end].
+     */
+    [[nodiscard]] inline Load volumeBetween(size_t start, size_t end) const;
 
     /**
      * Tests if this route overlaps with the other route, that is, whether
@@ -115,9 +134,11 @@ public:           // TODO make fields private
     Route(ProblemData const &data);
 };
 
-bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
+bool Route::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasTimeWarp(); }
 
-bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
+bool Route::hasExcessWeight() const { return !isWeightFeasible_; }
+
+bool Route::hasExcessVolume() const { return !isVolumeFeasible_; }
 
 bool Route::hasTimeWarp() const
 {
@@ -134,7 +155,9 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
-Load Route::load() const { return load_; }
+Load Route::weight() const { return weight_; }
+
+Load Route::volume() const { return volume_; }
 
 Duration Route::timeWarp() const { return timeWarp_; }
 
@@ -170,18 +193,32 @@ Distance Route::distBetween(size_t start, size_t end) const
     return endDist - startDist;
 }
 
-Load Route::loadBetween(size_t start, size_t end) const
+Load Route::weightBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
     auto const *startNode = start == 0 ? depot : nodes[start - 1];
-    auto const atStart = data.client(startNode->client).demand;
-    auto const startLoad = startNode->cumulatedLoad;
-    auto const endLoad = nodes[end - 1]->cumulatedLoad;
+    auto const atStart = data.client(startNode->client).demandWeight;
+    auto const startWeight = startNode->cumulatedWeight;
+    auto const endWeight = nodes[end - 1]->cumulatedWeight;
 
-    assert(startLoad <= endLoad);
+    assert(startWeight <= endWeight);
 
-    return endLoad - startLoad + atStart;
+    return endWeight - startWeight + atStart;
+}
+
+Load Route::volumeBetween(size_t start, size_t end) const
+{   
+    assert(start <= end && end <= nodes.size());
+    
+    auto const *startNode = start == 0 ? depot : nodes[start - 1];
+    auto const atStart = data.client(startNode->client).demandVolume;
+    auto const startVolume = startNode->cumulatedVolume;
+    auto const endVolume = nodes[end - 1]->cumulatedVolume;
+    
+    assert(startVolume <= endVolume);
+     
+    return endVolume - startVolume + atStart;
 }
 
 // Outputs a route into a given ostream in CVRPLib format

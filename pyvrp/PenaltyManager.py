@@ -12,9 +12,13 @@ class PenaltyParams:
 
     Parameters
     ----------
-    init_capacity_penalty
-        Initial penalty on excess capacity. This is the amount by which one
-        unit of excess load capacity is penalised in the objective, at the
+    init_weight_capacity_penalty
+        Initial penalty on excess weight capacity. This is the amount by which
+        one unit of excess weight capacity is penalised in the objective, at the
+        start of the search.
+    init_volume_capacity_penalty
+        Initial penalty on excess volume capacity. This is the amount by which
+        one unit of excess volume capacity is penalised in the objective, at the
         start of the search.
     init_time_warp_penalty
         Initial penalty on time warp. This is the amount by which one unit of
@@ -54,8 +58,10 @@ class PenaltyParams:
 
     Attributes
     ----------
-    init_capacity_penalty
-        Initial penalty on excess capacity.
+    init_weight_capacity_penalty
+        Initial penalty on excess weight capacity.
+    init_volume_capacity_penalty
+        Initial penalty on excess volume capacity.
     init_time_warp_penalty
         Initial penalty on time warp.
     repair_booster
@@ -78,7 +84,8 @@ class PenaltyParams:
         registrations.
     """
 
-    init_capacity_penalty: int = 20
+    init_weight_capacity_penalty: int = 20
+    init_volume_capacity_penalty: int = 20
     init_time_warp_penalty: int = 6
     repair_booster: int = 12
     num_registrations_between_penalty_updates: int = 50
@@ -120,25 +127,31 @@ class PenaltyManager:
         params: PenaltyParams = PenaltyParams(),
     ):
         self._params = params
-        self._load_feas: List[bool] = []  # tracks recent load feasibility
+        self._weight_feas: List[bool] = []  # tracks recent volume load feasibility
+        self._volume_feas: List[bool] = []  # tracks recent weight load feasibility
         self._time_feas: List[bool] = []  # track recent time feasibility
-        self._capacity_penalty = params.init_capacity_penalty
+        self._weight_capacity_penalty = params.init_weight_capacity_penalty
+        self._volume_capacity_penalty = params.init_volume_capacity_penalty
         self._tw_penalty = params.init_time_warp_penalty
         self._cost_evaluator = CostEvaluator(
-            self._capacity_penalty, self._tw_penalty
+            self._weight_capacity_penalty,  self._volume_capacity_penalty,
+            self._tw_penalty
         )
         self._booster_cost_evaluator = CostEvaluator(
-            self._capacity_penalty * self._params.repair_booster,
+            self._weight_capacity_penalty * self._params.repair_booster,
+            self._volume_capacity_penalty * self._params.repair_booster,
             self._tw_penalty * self._params.repair_booster,
         )
 
     def _update_cost_evaluators(self):
         # Updates the cost evaluators given new penalty values
         self._cost_evaluator = CostEvaluator(
-            self._capacity_penalty, self._tw_penalty
+            self._weight_capacity_penalty, self._volume_capacity_penalty,
+            self._tw_penalty
         )
         self._booster_cost_evaluator = CostEvaluator(
-            self._capacity_penalty * self._params.repair_booster,
+            self._weight_capacity_penalty * self._params.repair_booster,
+            self._volume_capacity_penalty * self._params.repair_booster,
             self._tw_penalty * self._params.repair_booster,
         )
 
@@ -159,26 +172,47 @@ class PenaltyManager:
         else:
             return int(max(self._params.penalty_decrease * penalty - 1, 1.0))
 
-    def register_load_feasible(self, is_load_feasible: bool):
+    def register_weight_feasible(self, is_weight_feasible: bool):
         """
-        Registers another capacity feasibility result. The current load penalty
+        Registers another capacity feasibility result. The current weight penalty
         is updated once sufficiently many results have been gathered.
 
         Parameters
         ----------
-        is_load_feasible
+        is_weight_feasible
             Boolean indicating whether the last solution was feasible w.r.t.
             the capacity constraint.
         """
-        self._load_feas.append(is_load_feasible)
+        self._weight_feas.append(is_weight_feasible)
         if (
-            len(self._load_feas)
+            len(self._weight_feas)
             == self._params.num_registrations_between_penalty_updates
         ):
-            avg = fmean(self._load_feas)
-            self._capacity_penalty = self._compute(self._capacity_penalty, avg)
+            avg = fmean(self._weight_feas)
+            self._weight_capacity_penalty = self._compute(self._weight_capacity_penalty, avg)
             self._update_cost_evaluators()
-            self._load_feas.clear()
+            self._weight_feas.clear()
+
+    def register_volume_feasible(self, is_volume_feasible: bool):
+        """
+        Registers another capacity feasibility result. The current volume penalty
+        is updated once sufficiently many results have been gathered. 
+        
+        Parameters
+        ----------
+        is_volume_feasible
+            Boolean indicating whether the last solution was feasible w.r.t. 
+            the capacity constraint.
+        """
+        self._volume_feas.append(is_volume_feasible)
+        if ( 
+            len(self._volume_feas)
+            == self._params.num_registrations_between_penalty_updates
+        ):
+            avg = fmean(self._volume_feas)
+            self._volume_capacity_penalty = self._compute(self._volume_capacity_penalty, avg)
+            self._update_cost_evaluators()
+            self._volume_feas.clear()
 
     def register_time_feasible(self, is_time_feasible: bool):
         """

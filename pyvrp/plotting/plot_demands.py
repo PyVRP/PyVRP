@@ -5,9 +5,9 @@ import numpy as np
 
 from pyvrp import ProblemData
 
-
 def plot_demands(
     data: ProblemData,
+    demand_type: str,
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
 ):
@@ -22,23 +22,23 @@ def plot_demands(
         Title to add to the plot.
     ax, optional
         Axes object to draw the plot on. One will be created if not provided.
+    demand_type
+        String specifying the type of demand to plot. 'weight' or 'volume'.
     """
-    if not ax:
-        _, ax = plt.subplots()
-
     dim = data.num_clients + 1
-    # Exclude depot
-    demand = np.array([data.client(client).demand for client in range(1, dim)])
-    demand = np.sort(demand)
+    if demand_type == 'weight':
+        demands = np.array([data.client(client).demandWeight for client in range(1, dim)])
+    elif demand_type == 'volume':
+        demands = np.array([data.client(client).demandVolume for client in range(1, dim)])
+    else:
+        raise ValueError("Invalid demand type. Choose 'weight' or 'volume'.")
 
-    ax.bar(np.arange(1, dim), demand)
+    demands = np.sort(demands)
 
-    if title is None:
-        title = (
-            f"Demands (cap = {data.vehicle_capacity}, "
-            + f"{data.vehicle_capacity / demand.mean():.2f} stops/route)"
-        )
-
+    if not ax:
+        fig, ax = plt.subplots()
+        
+    ax.bar(np.arange(1, dim), demands, color='blue')
     ax.set_title(title)
     ax.set_xlabel("Client (sorted by demand)")
     ax.set_ylabel("Demand")

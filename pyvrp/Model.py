@@ -32,11 +32,12 @@ class Edge:
 
 class VehicleType:
 
-    __slots__ = ["number", "capacity"]
+    __slots__ = ["number", "weight_capacity", "volume_capacity"]
 
-    def __init__(self, number: int, capacity: int):
+    def __init__(self, number: int, weight_capacity: int, volume_capacity: int):
         self.number = number
-        self.capacity = capacity
+        self.weight_capacity = weight_capacity
+        self.volume_capacity = volume_capacity
 
 
 class Model:
@@ -74,6 +75,7 @@ class Model:
             A model instance representing the given data.
         """
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]
+        centroid = data.centroid
         edges = [
             Edge(
                 clients[frm],
@@ -89,7 +91,8 @@ class Model:
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
-        vehicle_types = [VehicleType(data.num_vehicles, data.vehicle_capacity)]
+        self._centroid = centroid
+        vehicle_types = [VehicleType(data.num_vehicles, data.weight_capacity, data.volume_capacity)]
         self._vehicle_types = vehicle_types
 
         return self
@@ -98,7 +101,8 @@ class Model:
         self,
         x: int,
         y: int,
-        demand: int = 0,
+        weight_demand: int = 0,
+        volume_demand: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = 0,
@@ -112,7 +116,8 @@ class Model:
         client = Client(
             x,
             y,
-            demand,
+            weight_demand,
+            volume_demand,
             service_duration,
             tw_early,
             tw_late,
@@ -168,10 +173,10 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_vehicle_type(self, number: int, capacity: int) -> VehicleType:
+    def add_vehicle_type(self, number: int, weight_capacity: int, volume_capacity: int) -> VehicleType:
         """
-        Adds a vehicle type with the given number of vehicles of given capacity
-        to the model. Returns the created vehicle type.
+        Adds a vehicle type with the given number of vehicles of given weigh and 
+        volume capacity to the model. Returns the created vehicle type.
 
         .. warning::
 
@@ -181,7 +186,7 @@ class Model:
         Raises
         ------
         ValueError
-            When either the vehicle number or capacity is not a positive value.
+            When either the vehicle number or weight/volume capacity is not a positive value.
         """
         if len(self._vehicle_types) >= 1:
             msg = "PyVRP does not yet support heterogeneous fleet VRPs."
@@ -190,10 +195,13 @@ class Model:
         if number <= 0:
             raise ValueError("Must have positive number of vehicles.")
 
-        if capacity < 0:
-            raise ValueError("Cannot have negative vehicle capacity.")
+        if weight_capacity < 0:
+            raise ValueError("Cannot have negative vehicle weight capacity.")
 
-        vehicle_type = VehicleType(number, capacity)
+        if volume_capacity < 0:
+            raise ValueError("Cannot have negative vehicle volume capacity.")
+
+        vehicle_type = VehicleType(number, weight_capacity, volume_capacity)
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
@@ -206,7 +214,8 @@ class Model:
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         num_vehicles = self._vehicle_types[0].number
-        vehicle_capacity = self._vehicle_types[0].capacity
+        weight_capacity = self._vehicle_types[0].weight_capacity
+        volume_capacity = self._vehicle_types[0].volume_capacity
 
         max_data_value = max(max(e.distance, e.duration) for e in self._edges)
         if max_data_value > MAX_USER_VALUE:
@@ -227,12 +236,19 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
+        # Compute centroid
+        x = sum(loc.x for loc in locs) / len(locs)
+        y = sum(loc.y for loc in locs) / len(locs)
+        centroid = (x, y)
+
         return ProblemData(
             locs,
             num_vehicles,
-            vehicle_capacity,
+            weight_capacity,
+            volume_capacity,
             distances,
             durations,
+            centroid,
         )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:

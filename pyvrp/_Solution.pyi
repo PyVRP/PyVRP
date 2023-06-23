@@ -13,15 +13,20 @@ class Route:
     def __iter__(self) -> Iterator[int]: ...
     def __len__(self) -> int: ...
     def is_feasible(self) -> bool: ...
-    def has_excess_load(self) -> bool: ...
+    def has_excess_weight(self) -> bool: ...
+    def has_excess_volume(self) -> bool: ...
     def has_time_warp(self) -> bool: ...
     def demand(self) -> int:
         """
         Total client demand on this route.
         """
-    def excess_load(self) -> int:
+    def excess_weight(self) -> int:
         """
-        Demand in excess of the vehicle's capacity.
+        Demand in excess of the vehicle's weight capacity.
+        """
+    def excess_volume(self) -> int:
+        """
+        Demand in excess of the vehicle's volume capacity.
         """
     def distance(self) -> int:
         """
@@ -124,14 +129,23 @@ class Solution:
             ends at the depot (0), but that is implicit: the depot is not part
             of the returned routes.
         """
-    def has_excess_load(self) -> bool:
+    def has_excess_weight(self) -> bool:
         """
-        Returns whether this solution violates capacity constraints.
+        Returns whether this solution violates weight capacity constraints.
 
         Returns
         -------
         bool
-            True if the solution is not capacity feasible, False otherwise.
+            True if the solution is not weight capacity feasible, False otherwise.
+        """
+    def has_excess_volume(self) -> bool:
+        """
+        Returns whether this solution violates volume capacity constraints.
+
+        Returns
+        -------
+        bool
+            True if the solution is not volume capacity feasible, False otherwise.
         """
     def has_time_warp(self) -> bool:
         """
@@ -152,14 +166,23 @@ class Solution:
         int
             Total distance over all routes.
         """
-    def excess_load(self) -> int:
+    def excess_weight(self) -> int:
         """
-        Returns the total excess load over all routes.
+        Returns the total excess weight over all routes.
 
         Returns
         -------
         int
-            Total excess load over all routes.
+            Total excess weight over all routes.
+        """
+    def excess_volume(self) -> int:
+        """
+        Returns the total excess volume over all routes.
+
+        Returns
+        -------
+        int
+            Total excess volume over all routes.
         """
     def time_warp(self) -> int:
         """
@@ -191,7 +214,7 @@ class Solution:
     def is_feasible(self) -> bool:
         """
         Whether this solution is feasible. This is a shorthand for checking
-        that :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
+        that :meth:`~has_excess_weight` and :meth:`~has_excess_volume` and :meth:`~has_time_warp` both return
         false.
 
         Returns

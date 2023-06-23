@@ -91,20 +91,28 @@ def read(
     if "dimension" in instance:
         dimension: int = instance["dimension"]
     else:
-        if "demand" not in instance:
-            raise ValueError("File should either contain dimension or demands")
-        dimension = len(instance["demand"])
+        if "weight_demand" not in instance:
+            raise ValueError("File should either contain dimension or weight demands")
+        if "volume_demand" not in instance:
+            raise ValueError("File should either contain dimension or volume demands")
+        dimension = len(instance["weight_demand"])
 
     depots: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
-    capacity: int = instance.get("capacity", _INT_MAX)
+    weight_capacity: int = instance.get("weight_capacity", _INT_MAX)
+    volume_capacity: int = instance.get("volume_capacity", _INT_MAX)
 
     distances: np.ndarray = round_func(instance["edge_weight"])
 
-    if "demand" in instance:
-        demands: np.ndarray = instance["demand"]
+    if "weight_demand" in instance:
+        weight_demands: np.ndarray = instance["weight_demand"]
     else:
-        demands = np.zeros(dimension, dtype=int)
+        weight_demands = np.zeros(dimension, dtype=int)
+
+    if "volume_demand" in instance:
+        volume_demands: np.ndarray = instance["volume_demand"]
+    else:
+        volume_demands = np.zeros(dimension, dtype=int)
 
     if "node_coord" in instance:
         coords: np.ndarray = round_func(instance["node_coord"])
@@ -143,8 +151,11 @@ def read(
             + "(depot index should be 0 after subtracting offset 1)"
         )
 
-    if demands[0] != 0:
-        raise ValueError("Demand of depot must be 0")
+    if weight_demands[0] != 0:
+        raise ValueError("Weight demand of depot must be 0")
+
+    if volume_demands[0] != 0:
+        raise ValueError("Volume demand of depot must be 0")
 
     if time_windows[0, 0] != 0:
         raise ValueError("Depot start of time window must be 0")
@@ -159,7 +170,8 @@ def read(
         Client(
             coords[idx][0],  # x
             coords[idx][1],  # y
-            demands[idx],
+            weight_demands[idx],
+            volume_demands[idx],
             service_times[idx],
             time_windows[idx][0],  # TW early
             time_windows[idx][1],  # TW late
@@ -179,7 +191,8 @@ def read(
     return ProblemData(
         clients,
         num_vehicles,
-        capacity,
+        weight_capacity,
+        volume_capacity,
         distances,
         durations,
     )
