@@ -68,7 +68,8 @@ def test_add_client_attributes():
         service_duration=4,
         tw_early=5,
         tw_late=6,
-        prize=7,
+        release_time=7,
+        prize=8,
         required=False,
     )
 
@@ -78,7 +79,8 @@ def test_add_client_attributes():
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
-    assert_equal(client.prize, 7)
+    assert_equal(client.release_time, 7)
+    assert_equal(client.prize, 8)
     assert_(not client.required)
 
 

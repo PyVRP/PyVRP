@@ -134,6 +134,11 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
 
+    if "release_time" in instance:
+        release_times: np.ndarray = round_func(instance["release_time"])
+    else:
+        release_times = np.zeros(dimension, dtype=int)
+
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
@@ -163,6 +168,7 @@ def read(
             service_times[idx],
             time_windows[idx][0],  # TW early
             time_windows[idx][1],  # TW late
+            release_times[idx],
             prizes[idx],
             np.isclose(prizes[idx], 0),  # required only when prize is zero
         )
