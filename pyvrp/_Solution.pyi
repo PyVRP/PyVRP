@@ -49,6 +49,10 @@ class Route:
         """
         Total waiting duration on this route.
         """
+    def release_time(self) -> int:
+        """
+        Release time (i.e., earliest dispatch time) of this route.
+        """
     def prizes(self) -> int:
         """
         Total prize value collected on this route.

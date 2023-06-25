@@ -32,6 +32,7 @@ public:
         Duration service_ = 0;   // Total service duration on this route
         Duration timeWarp_ = 0;  // Total time warp on this route
         Duration wait_ = 0;      // Total waiting duration on this route
+        Duration release_ = 0;   // Release time of this route
         Cost prizes_ = 0;        // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
@@ -55,6 +56,7 @@ public:
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
         [[nodiscard]] Duration waitDuration() const;
+        [[nodiscard]] Duration releaseTime() const;
         [[nodiscard]] Cost prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;

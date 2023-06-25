@@ -290,6 +290,15 @@ def test_route_time_warp_and_wait_duration():
     assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
 
 
+def test_route_release_time():
+    data = read("data/OkSmallReleaseTimes.txt")
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
+
+    assert_allclose(routes[0].release_time(), 10000)
+    assert_allclose(routes[1].release_time(), 5000)
+
+
 @mark.parametrize(
     "dist_mat",
     [
