@@ -151,13 +151,13 @@ def read(
     if demands[0] != 0:
         raise ValueError("Demand of depot must be 0")
 
-    if time_windows[0, 0] != 0:
+    if time_windows[0, 0] != 0:  # TODO why?
         raise ValueError("Depot start of time window must be 0")
 
     if service_times[0] != 0:
         raise ValueError("Depot service duration must be 0")
 
-    if release_times[0] != 0:
+    if release_times[0] != 0:  # TODO why?
         raise ValueError("Depot release time must be 0")
 
     if (time_windows[:, 0] > time_windows[:, 1]).any():
