@@ -11,6 +11,7 @@ class TimeWindowSegment:
         time_warp: int,
         tw_early: int,
         tw_late: int,
+        release_time: int,
     ) -> None:
         """
         Creates a time window segment.
@@ -18,9 +19,9 @@ class TimeWindowSegment:
         Parameters
         ----------
         idx_first
-            Index of the first customer in the route segment.
+            Index of the first client in the route segment.
         idx_last
-            Index of the last customer in the route segment.
+            Index of the last client in the route segment.
         duration
             Total duration, including waiting time.
         time_warp
@@ -29,6 +30,8 @@ class TimeWindowSegment:
             Earliest visit moment of the first client.
         tw_late
             Latest visit moment of the last client.
+        release_time
+            Earliest moment to start the route segment.
         """
     @overload
     @staticmethod
