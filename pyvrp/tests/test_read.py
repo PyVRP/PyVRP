@@ -16,6 +16,7 @@ from pyvrp.tests.helpers import read
         ("data/MoreThanOneDepot.txt", ValueError),
         ("data/NonZeroDepotServiceDuration.txt", ValueError),
         ("data/NonZeroDepotOpenTimeWindow.txt", ValueError),
+        ("data/NonZeroDepotReleaseTime.txt", ValueError),
         ("data/NonZeroDepotDemand.txt", ValueError),
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
