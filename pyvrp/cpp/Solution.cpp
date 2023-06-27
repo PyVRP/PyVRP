@@ -207,7 +207,6 @@ Solution::Route::Route(ProblemData const &data,
     for (size_t idx = 0; idx != size(); ++idx)
         release_ = std::max(release_, data.client(visits_[idx]).releaseTime);
 
-    // TODO depot release and twEarly are practically the same what to do here?
     Duration time = std::max(release_, data.depot().twEarly);
     int prevClient = 0;
 
