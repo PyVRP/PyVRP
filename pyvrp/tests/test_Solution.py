@@ -176,6 +176,18 @@ def test_feasibility():
     assert_(not sol.has_time_warp())
 
 
+def test_feasibility_release_times():
+    data = read("data/OkSmallReleaseTimes.txt")
+
+    # Client 1 is released at 20000, but client 2 time window ends at 19500.
+    sol = Solution(data, [[1, 2], [3], [4]])
+    assert_(not sol.is_feasible())
+
+    # Visiting clients 2 and 3 together is feasible.
+    sol = Solution(data, [[1], [2, 3], [4]])
+    assert_(sol.is_feasible())
+
+
 def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
@@ -295,7 +307,7 @@ def test_route_release_time():
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
 
-    assert_allclose(routes[0].release_time(), 10000)
+    assert_allclose(routes[0].release_time(), 20000)
     assert_allclose(routes[1].release_time(), 5000)
 
 
