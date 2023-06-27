@@ -3,7 +3,6 @@
 
 #include "Matrix.h"
 #include "Measure.h"
-#include <algorithm>
 
 class TimeWindowSegment
 {
