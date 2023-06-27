@@ -14,8 +14,8 @@ class TimeWindowSegment
     Duration duration = 0;     // Total duration, incl. waiting and servicing
     Duration timeWarp = 0;     // Cumulative time warp
     Duration twEarly = 0;      // Earliest visit moment of first client
-    Duration twLate = 0;       // Latest visit moment of last client
-    Duration releaseTime = 0;  // Earliest moment to leave the depot
+    Duration twLate = 0;       // Latest visit moment of first client
+    Duration releaseTime = 0;  // Earliest allowed moment to leave the depot
 
     [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
                                    TWS const &other) const;
