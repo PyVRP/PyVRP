@@ -130,7 +130,12 @@ class Model:
         return client
 
     def add_depot(
-        self, x: int, y: int, tw_early: int = 0, tw_late: int = 0
+        self,
+        x: int,
+        y: int,
+        tw_early: int = 0,
+        tw_late: int = 0,
+        release_time: int = 0,
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
@@ -145,7 +150,9 @@ class Model:
             msg = "PyVRP does not yet support multi-depot VRPs."
             raise ValueError(msg)
 
-        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late)
+        depot = Depot(
+            x, y, tw_early=tw_early, tw_late=tw_late, release_time=release_time
+        )
         self._depots.append(depot)
         return depot
 

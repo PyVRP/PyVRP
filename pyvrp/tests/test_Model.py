@@ -86,12 +86,13 @@ def test_add_client_attributes():
 
 def test_add_depot_attributes():
     model = Model()
-    depot = model.add_depot(x=1, y=0, tw_early=3, tw_late=5)
+    depot = model.add_depot(x=1, y=0, tw_early=3, tw_late=5, release_time=7)
 
     assert_equal(depot.x, 1)
     assert_equal(depot.y, 0)
     assert_equal(depot.tw_early, 3)
     assert_equal(depot.tw_late, 5)
+    assert_equal(depot.release_time, 7)
 
 
 def test_add_edge():
