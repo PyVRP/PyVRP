@@ -51,7 +51,7 @@ class Route:
         """
     def release_time(self) -> int:
         """
-        Release time (i.e., earliest dispatch time) of this route.
+        Release time (that is, earliest time to leave depot) of this route.
         """
     def prizes(self) -> int:
         """

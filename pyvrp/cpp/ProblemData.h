@@ -19,7 +19,7 @@ public:
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
-        Duration const releaseTime;  // Earliest possible start of dispatch
+        Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize = 0;        // Prize for visiting this client
         bool const required = true;  // Must client be in solution?
 
