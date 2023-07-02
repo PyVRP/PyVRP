@@ -14,6 +14,7 @@
 class Route
 {
     ProblemData const &data;
+    size_t const vehicleType_;
 
     std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
     CircleSector sector;        // Circle sector of the route's clients
@@ -33,9 +34,9 @@ class Route
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
-public:           // TODO make fields private
-    int idx;      // Route index
-    Node *depot;  // Pointer to the associated depot
+public:                // TODO make fields private
+    size_t const idx;  // Route index
+    Node *depot;       // Pointer to the associated depot
 
     /**
      * @return The client or depot node at the given position.
@@ -52,7 +53,7 @@ public:           // TODO make fields private
     /**
      * Determines whether this route is load-feasible.
      *
-     * @return true if the route exceeds the vehicle capacity, false otherwise.
+     * @return true if the route exceeds the capacity, false otherwise.
      */
     [[nodiscard]] inline bool hasExcessLoad() const;
 
@@ -79,6 +80,11 @@ public:           // TODO make fields private
     [[nodiscard]] inline bool empty() const;
 
     /**
+     * @return The load capacity of this route.
+     */
+    [[nodiscard]] inline Load capacity() const;
+
+    /**
      * @return Number of clients in this route.
      */
     [[nodiscard]] inline size_t size() const;
@@ -100,6 +106,11 @@ public:           // TODO make fields private
     [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
+     * @return This route's vehicle type.
+     */
+    [[nodiscard]] size_t vehicleType() const;
+
+    /**
      * Tests if this route overlaps with the other route, that is, whether
      * their circle sectors overlap with a given tolerance.
      */
@@ -112,7 +123,7 @@ public:           // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data);
+    Route(ProblemData const &data, size_t const idx, size_t const vehType);
 };
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
@@ -139,6 +150,8 @@ Load Route::load() const { return load_; }
 Duration Route::timeWarp() const { return timeWarp_; }
 
 bool Route::empty() const { return size() == 0; }
+
+Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
 size_t Route::size() const
 {

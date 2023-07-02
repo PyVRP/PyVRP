@@ -49,23 +49,26 @@ Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return numClients_; }
 
+size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
+
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-Load ProblemData::vehicleCapacity() const { return vehicleCapacity_; }
-
 ProblemData::ProblemData(std::vector<Client> const &clients,
-                         size_t numVehicles,
-                         Load vehicleCap,
+                         std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> const distMat,
                          Matrix<Duration> const durMat)
     : centroid_({0, 0}),
       dist_(std::move(distMat)),
       dur_(std::move(durMat)),
       clients_(clients),
+      vehicleTypes_(vehicleTypes),
       numClients_(std::max<size_t>(clients.size(), 1) - 1),
-      numVehicles_(numVehicles),
-      vehicleCapacity_(vehicleCap)
+      numVehicleTypes_(vehicleTypes.size()),
+      numVehicles_(0)
 {
+    for (auto const &vehicleType : vehicleTypes)
+        numVehicles_ += vehicleType.numAvailable;
+
     for (size_t idx = 1; idx <= numClients(); ++idx)
     {
         centroid_.first += static_cast<double>(clients[idx].x) / numClients();

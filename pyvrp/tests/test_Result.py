@@ -39,7 +39,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 )
 def test_init_raises_invalid_arguments(num_iterations, runtime):
     data = read("data/OkSmall.txt")
-    sol = Solution(data, [[1, 2, 3, 4], [], []])
+    sol = Solution(data, [[1, 2, 3, 4]])
 
     with assert_raises(ValueError):
         Result(sol, Statistics(), num_iterations, runtime)
@@ -82,6 +82,6 @@ def test_str_contains_essential_information(routes):
     else:
         assert_("INFEASIBLE" in str_representation)
 
-    # And make sure that all (non-empty) routes are printed as well.
+    # And make sure that all routes are printed as well.
     for route in sol.get_routes():
         assert_(str(route) in str_representation)

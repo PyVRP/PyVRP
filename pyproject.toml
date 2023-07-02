@@ -78,11 +78,10 @@ pytest = ">=6.0.0"
 pytest-cov = ">=2.6.1"
 codecov = "*"
 
-# These are used in the build script: for compiling the library (meson, ninja,
-# and pybind11) and for generating type stubs (mypy).
+# These are used in the build script: for compiling the library (meson, ninja)
+# and for generating type stubs (mypy).
 meson = "^1.0.0"
 ninja = "^1.11.1"
-pybind11 = {extras = ["global"], version = "^2.10.3"}
 mypy = "^0.991"
 
 
@@ -142,6 +141,6 @@ script = "build_extensions.py"
 
 
 [build-system]
-# pybind11, meson, and ninja are needed to build the C++ extensions.
-requires = ["poetry-core", "pybind11", "meson", "ninja"]
+# meson and ninja are needed to build the C++ extensions.
+requires = ["poetry-core", "meson", "ninja"]
 build-backend = "poetry.core.masonry.api"

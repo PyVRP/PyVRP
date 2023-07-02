@@ -11,9 +11,10 @@ namespace py = pybind11;
 PYBIND11_MODULE(_Solution, m)
 {
     py::class_<Solution::Route>(m, "Route")
-        .def(py::init<ProblemData const &, std::vector<int>>(),
+        .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
-             py::arg("visits"))
+             py::arg("visits"),
+             py::arg("vehicle_type"))
         .def("visits",
              &Solution::Route::visits,
              py::return_value_policy::reference_internal)
@@ -43,6 +44,7 @@ PYBIND11_MODULE(_Solution, m)
         .def("prizes",
              [](Solution::Route const &route) { return route.prizes().get(); })
         .def("centroid", &Solution::Route::centroid)
+        .def("vehicle_type", &Solution::Route::vehicleType)
         .def("is_feasible", &Solution::Route::isFeasible)
         .def("has_excess_load", &Solution::Route::hasExcessLoad)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)
@@ -63,6 +65,7 @@ PYBIND11_MODULE(_Solution, m)
                 return route[idx];
             },
             py::arg("idx"))
+        .def(py::self == py::self)  // this is __eq__
         .def("__str__", [](Solution::Route const &route) {
             std::stringstream stream;
             stream << route;
@@ -70,6 +73,16 @@ PYBIND11_MODULE(_Solution, m)
         });
 
     py::class_<Solution>(m, "Solution")
+        // Note, the order of constructors is important! Since Solution::Route
+        // implements __len__ and __getitem__, it can also be converted to
+        // std::vector<int> and thus a list of Routes is a valid argument for
+        // both constructors. We want to avoid using the second constructor
+        // since that would loose the vehicle types associations. As pybind
+        // will use the first matching constructor we put this one first.
+        .def(py::init<ProblemData const &,
+                      std::vector<Solution::Route> const &>(),
+             py::arg("data"),
+             py::arg("routes"))
         .def(py::init<ProblemData const &,
                       std::vector<std::vector<int>> const &>(),
              py::arg("data"),
