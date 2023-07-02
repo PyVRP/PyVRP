@@ -65,8 +65,14 @@ libcommon = static_library(
 
 # Next we get the extension dependencies.
 py = import('python').find_installation()
-pybind11 = dependency('pybind11')
-dependencies = [py.dependency(), pybind11]
+dependencies = [
+    py.dependency(), 
+    dependency('pybind11'),
+    dependency(
+        'croaring', 
+        default_options: ['werror=false', 'warning_level=0']
+    ),
+]
 
 # Extension as [extension name, subdirectory]. Here 'extension name' names the
 # eventual module name and the bindings source file, and 'subdirectory' gives 
