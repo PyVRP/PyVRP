@@ -80,8 +80,8 @@ Solution selectiveRouteExchange(
     auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
     auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
-    DynamicBitset selectedA;
-    DynamicBitset selectedB;
+    DynamicBitset selectedA(data.numClients() + 1);
+    DynamicBitset selectedB(data.numClients() + 1);
 
     // Routes are sorted on polar angle, so selecting adjacent routes in both
     // parents should result in a large overlap when the start indices are
@@ -89,10 +89,10 @@ Solution selectiveRouteExchange(
     for (size_t r = 0; r < numMovedRoutes; r++)
     {
         for (Client c : routesA[(startA + r) % nRoutesA])
-            selectedA.insert(static_cast<uint32_t>(c));
+            selectedA[c] = true;
 
         for (Client c : routesB[(startB + r) % nRoutesB])
-            selectedB.insert(static_cast<uint32_t>(c));
+            selectedB[c] = true;
     }
 
     // For the selection, we want to minimize |A\B| as these need replanning
@@ -102,37 +102,37 @@ Solution selectiveRouteExchange(
         int differenceALeft = 0;
 
         for (Client c : routesA[(startA - 1 + nRoutesA) % nRoutesA])
-            differenceALeft += !selectedB.contains(c);
+            differenceALeft += !selectedB[c];
 
         for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
-            differenceALeft -= !selectedB.contains(c);
+            differenceALeft -= !selectedB[c];
 
         // Difference for moving 'right' in parent A
         int differenceARight = 0;
 
         for (Client c : routesA[(startA + numMovedRoutes) % nRoutesA])
-            differenceARight += !selectedB.contains(c);
+            differenceARight += !selectedB[c];
 
         for (Client c : routesA[startA])
-            differenceARight -= !selectedB.contains(c);
+            differenceARight -= !selectedB[c];
 
         // Difference for moving 'left' in parent B
         int differenceBLeft = 0;
 
         for (Client c : routesB[(startB - 1 + numMovedRoutes) % nRoutesB])
-            differenceBLeft += selectedA.contains(c);
+            differenceBLeft += selectedA[c];
 
         for (Client c : routesB[(startB - 1 + nRoutesB) % nRoutesB])
-            differenceBLeft -= selectedA.contains(c);
+            differenceBLeft -= selectedA[c];
 
         // Difference for moving 'right' in parent B
         int differenceBRight = 0;
 
         for (Client c : routesB[startB])
-            differenceBRight += selectedA.contains(c);
+            differenceBRight += selectedA[c];
 
         for (Client c : routesB[(startB + numMovedRoutes) % nRoutesB])
-            differenceBRight -= selectedA.contains(c);
+            differenceBRight -= selectedA[c];
 
         int const bestDifference = std::min({differenceALeft,
                                              differenceARight,
@@ -145,43 +145,43 @@ Solution selectiveRouteExchange(
         if (bestDifference == differenceALeft)
         {
             for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
-                selectedA.remove(static_cast<uint32_t>(c));
+                selectedA[c] = false;
 
             startA = (startA - 1 + nRoutesA) % nRoutesA;
             for (Client c : routesA[startA])
-                selectedA.insert(static_cast<uint32_t>(c));
+                selectedA[c] = true;
         }
         else if (bestDifference == differenceARight)
         {
             for (Client c : routesA[startA])
-                selectedA.remove(static_cast<uint32_t>(c));
+                selectedA[c] = false;
 
             startA = (startA + 1) % nRoutesA;
             for (Client c : routesA[(startA + numMovedRoutes - 1) % nRoutesA])
-                selectedA.insert(static_cast<uint32_t>(c));
+                selectedA[c] = true;
         }
         else if (bestDifference == differenceBLeft)
         {
             for (Client c : routesB[(startB + numMovedRoutes - 1) % nRoutesB])
-                selectedB.remove(static_cast<uint32_t>(c));
+                selectedB[c] = false;
 
             startB = (startB - 1 + nRoutesB) % nRoutesB;
             for (Client c : routesB[startB])
-                selectedB.insert(static_cast<uint32_t>(c));
+                selectedB[c] = true;
         }
         else if (bestDifference == differenceBRight)
         {
             for (Client c : routesB[startB])
-                selectedB.remove(static_cast<uint32_t>(c));
+                selectedB[c] = false;
 
             startB = (startB + 1) % nRoutesB;
             for (Client c : routesB[(startB + numMovedRoutes - 1) % nRoutesB])
-                selectedB.insert(static_cast<uint32_t>(c));
+                selectedB[c] = true;
         }
     }
 
     // Identify differences between route sets
-    auto const selectedBNotA = selectedB - selectedA;
+    auto const selectedBNotA = selectedB & (~selectedA);
 
     std::vector<std::vector<Client>> visits1(nRoutesA);
     std::vector<std::vector<Client>> visits2(nRoutesA);
@@ -196,7 +196,7 @@ Solution selectiveRouteExchange(
         {
             visits1[indexA].push_back(c);  // c in B
 
-            if (!selectedBNotA.contains(static_cast<uint32_t>(c)))
+            if (!selectedBNotA[c])
                 visits2[indexA].push_back(c);  // c in A^B
         }
     }
@@ -208,7 +208,7 @@ Solution selectiveRouteExchange(
 
         for (Client c : routesA[indexA])
         {
-            if (!selectedBNotA.contains(static_cast<uint32_t>(c)))
+            if (!selectedBNotA[c])
                 visits1[indexA].push_back(c);  // c in Ac\B
 
             visits2[indexA].push_back(c);  // c in Ac
@@ -217,8 +217,12 @@ Solution selectiveRouteExchange(
 
     // Insert unplanned clients (those that were in the removed routes of A, but
     // not the inserted routes of B).
-    auto const selectedANotB = selectedA - selectedB;
-    Clients unplanned = {selectedANotB.begin(), selectedANotB.end()};
+    auto const selectedANotB = selectedA & (~selectedB);
+    Clients unplanned;
+    unplanned.reserve(selectedANotB.count());
+    for (Client c = 1; c != data.numClients() + 1; ++c)
+        if (selectedANotB[c])
+            unplanned.push_back(c);
 
     crossover::greedyRepair(visits1, unplanned, data, costEvaluator);
     crossover::greedyRepair(visits2, unplanned, data, costEvaluator);

@@ -1,121 +1,114 @@
 #ifndef PYVRP_DYNAMICBITSET_H
 #define PYVRP_DYNAMICBITSET_H
 
-#include <roaring.hh>
+#include <bitset>
+#include <cassert>
+#include <vector>
 
 /**
- * A thin wrapper around CRoaring's ``Roaring`` bitset.
+ * A simple dynamic bitset implementation, on top of a vector of bitsets.
  */
 class DynamicBitset
 {
-    roaring::Roaring bitset;
+    static constexpr size_t BLOCK_SIZE = 64;
+    using Block = std::bitset<BLOCK_SIZE>;
+
+    std::vector<Block> data_;
 
 public:
-    DynamicBitset() = default;
+    DynamicBitset(size_t numBits)
+    {
+        auto const q = numBits / BLOCK_SIZE;
+        auto const r = numBits % BLOCK_SIZE;
+        data_ = {q + r > 0, 0};
+    };
 
-    DynamicBitset(roaring::Roaring bitset) : bitset(std::move(bitset)){};
+    DynamicBitset(std::vector<Block> data) : data_(std::move(data)){};
 
-    DynamicBitset(size_t n, uint32_t const *data) : bitset(n, data){};
+    [[nodiscard]] inline bool operator==(DynamicBitset const &other) const
+    {
+        return data_ == other.data_;
+    }
 
-    inline void insert(uint32_t val);
+    [[nodiscard]] inline bool operator[](size_t idx) const
+    {
+        auto const q = idx / BLOCK_SIZE;
+        auto const r = idx % BLOCK_SIZE;
+        return data_[q][r];
+    }
 
-    [[nodiscard]] inline bool contains(uint32_t val) const;
+    [[nodiscard]] inline Block::reference operator[](size_t idx)
+    {
+        auto const q = idx / BLOCK_SIZE;
+        auto const r = idx % BLOCK_SIZE;
+        return data_[q][r];
+    }
 
-    inline void remove(uint32_t val);
+    [[nodiscard]] inline size_t count() const
+    {
+        size_t count = 0;
+        for (auto const &bitset : data_)
+            count += bitset.count();
+        return count;
+    }
 
-    [[nodiscard]] inline bool empty() const;
+    [[nodiscard]] inline size_t size() const { return 64 * data_.size(); }
 
-    [[nodiscard]] inline size_t size() const;
+    DynamicBitset &operator&=(DynamicBitset const &other)
+    {
+        assert(size() == other.size());  // assumed true during runtime
 
-    [[nodiscard]] inline bool operator==(DynamicBitset const &other) const;
+        for (size_t idx = 0; idx != data_.size(); ++idx)
+            data_[idx] &= other.data_[idx];
 
-    [[nodiscard]] DynamicBitset operator-(DynamicBitset const &other) const;
-    DynamicBitset &operator-=(DynamicBitset const &other);
+        return *this;
+    }
 
-    [[nodiscard]] DynamicBitset operator|(DynamicBitset const &other) const;
-    DynamicBitset &operator|=(DynamicBitset const &other);
+    DynamicBitset &operator|=(DynamicBitset const &other)
+    {
+        assert(size() == other.size());  // assumed true during runtime
 
-    [[nodiscard]] DynamicBitset operator&(DynamicBitset const &other) const;
-    DynamicBitset &operator&=(DynamicBitset const &other);
+        for (size_t idx = 0; idx != data_.size(); ++idx)
+            data_[idx] |= other.data_[idx];
 
-    [[nodiscard]] DynamicBitset operator^(DynamicBitset const &other) const;
-    DynamicBitset &operator^=(DynamicBitset const &other);
+        return *this;
+    }
 
-    [[nodiscard]] inline roaring::RoaringSetBitForwardIterator begin() const;
+    DynamicBitset &operator^=(DynamicBitset const &other)
+    {
+        assert(size() == other.size());  // assumed true during runtime
 
-    [[nodiscard]] inline roaring::RoaringSetBitForwardIterator end() const;
+        for (size_t idx = 0; idx != data_.size(); ++idx)
+            data_[idx] ^= other.data_[idx];
+
+        return *this;
+    }
+
+    DynamicBitset operator~() const
+    {
+        std::vector<Block> copy(data_);
+        for (size_t idx = 0; idx != copy.size(); ++idx)
+            copy[idx] = ~copy[idx];
+        return copy;
+    }
+
+    [[nodiscard]] DynamicBitset operator|(DynamicBitset const &other) const
+    {
+        std::vector<Block> copy(data_);
+        return DynamicBitset(copy) |= other;
+    }
+
+    [[nodiscard]] DynamicBitset operator&(DynamicBitset const &other) const
+    {
+        std::vector<Block> copy(data_);
+        return DynamicBitset(copy) &= other;
+    }
+
+    [[nodiscard]] DynamicBitset operator^(DynamicBitset const &other) const
+    {
+        std::vector<Block> copy(data_);
+        return DynamicBitset(copy) ^= other;
+    }
 };
-
-void DynamicBitset::insert(uint32_t val) { bitset.add(val); }
-
-bool DynamicBitset::contains(uint32_t val) const
-{
-    return bitset.contains(val);
-}
-
-void DynamicBitset::remove(uint32_t val) { return bitset.remove(val); }
-
-bool DynamicBitset::empty() const { return bitset.isEmpty(); }
-
-size_t DynamicBitset::size() const { return bitset.cardinality(); }
-
-bool DynamicBitset::operator==(DynamicBitset const &other) const
-{
-    return bitset == other.bitset;
-}
-
-DynamicBitset DynamicBitset::operator-(DynamicBitset const &other) const
-{
-    return bitset - other.bitset;
-}
-
-DynamicBitset &DynamicBitset::operator-=(DynamicBitset const &other)
-{
-    bitset -= other.bitset;
-    return *this;
-}
-
-DynamicBitset DynamicBitset::operator|(DynamicBitset const &other) const
-{
-    return bitset | other.bitset;
-}
-
-DynamicBitset &DynamicBitset::operator|=(DynamicBitset const &other)
-{
-    bitset |= other.bitset;
-    return *this;
-}
-
-DynamicBitset DynamicBitset::operator&(DynamicBitset const &other) const
-{
-    return bitset & other.bitset;
-}
-
-DynamicBitset &DynamicBitset::operator&=(DynamicBitset const &other)
-{
-    bitset &= other.bitset;
-    return *this;
-}
-
-DynamicBitset DynamicBitset::operator^(DynamicBitset const &other) const
-{
-    return bitset ^ other.bitset;
-}
-
-DynamicBitset &DynamicBitset::operator^=(DynamicBitset const &other)
-{
-    bitset ^= other.bitset;
-    return *this;
-}
-
-roaring::RoaringSetBitForwardIterator DynamicBitset::begin() const
-{
-    return bitset.begin();
-}
-
-roaring::RoaringSetBitForwardIterator DynamicBitset::end() const
-{
-    return bitset.end();
-}
 
 #endif  // PYVRP_DYNAMICBITSET_H
