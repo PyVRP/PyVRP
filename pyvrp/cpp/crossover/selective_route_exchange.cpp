@@ -2,9 +2,7 @@
 
 #include "DynamicBitset.h"
 
-#include <cassert>
 #include <cmath>
-#include <unordered_set>
 
 using Client = int;
 using Clients = std::vector<Client>;
