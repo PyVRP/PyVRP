@@ -1,10 +1,10 @@
 #include "DynamicBitset.h"
 
 DynamicBitset::DynamicBitset(size_t numBits)
+    // numBits / BLOCK_SIZE blocks, with an adjustment in case the division of
+    // numBits by BLOCK_SIZE is not perfect. Zero initialise each block.
+    : data_(numBits / BLOCK_SIZE + (numBits % BLOCK_SIZE != 0), 0)
 {
-    auto const q = numBits / BLOCK_SIZE;
-    auto const r = numBits % BLOCK_SIZE;
-    data_ = {q + r > 0, 0};  // + 1 if the division is not perfect
 }
 
 DynamicBitset::DynamicBitset(std::vector<Block> data) : data_(std::move(data))
@@ -34,7 +34,7 @@ size_t DynamicBitset::count() const
     return count;
 }
 
-size_t DynamicBitset::size() const { return 64 * data_.size(); }
+size_t DynamicBitset::size() const { return BLOCK_SIZE * data_.size(); }
 
 DynamicBitset &DynamicBitset::operator|=(DynamicBitset const &other)
 {
@@ -59,8 +59,8 @@ DynamicBitset &DynamicBitset::operator^=(DynamicBitset const &other)
 DynamicBitset DynamicBitset::operator~() const
 {
     std::vector<Block> copy(data_);
-    for (size_t idx = 0; idx != copy.size(); ++idx)
-        copy[idx] = ~copy[idx];
+    for (size_t idx = 0; idx != data_.size(); ++idx)
+        copy[idx] = ~data_[idx];
     return copy;
 }
 

@@ -74,6 +74,7 @@ dependencies = [py.dependency(), dependency('pybind11')]
 extensions = [
     ['Matrix', ''],
     ['CostEvaluator', ''],
+    ['DynamicBitset', ''],
     ['ProblemData', ''],
     ['SubPopulation', ''],
     ['TimeWindowSegment', ''],
