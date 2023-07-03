@@ -217,13 +217,7 @@ Solution selectiveRouteExchange(
 
     // Insert unplanned clients (those that were in the removed routes of A, but
     // not the inserted routes of B).
-    auto const selectedANotB = selectedA & (~selectedB);
-    Clients unplanned;
-    unplanned.reserve(selectedANotB.count());
-    for (Client c = 1; c != data.numClients() + 1; ++c)
-        if (selectedANotB[c])
-            unplanned.push_back(c);
-
+    auto const unplanned = selectedA & (~selectedB);
     crossover::greedyRepair(visits1, unplanned, data, costEvaluator);
     crossover::greedyRepair(visits2, unplanned, data, costEvaluator);
 

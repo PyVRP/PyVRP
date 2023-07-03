@@ -63,7 +63,7 @@ libcommon = static_library(
     include_directories: INCLUDES,
 )
 
-# Next we gather all extension dependencies.
+# Next we get the extension dependencies.
 py = import('python').find_installation()
 dependencies = [py.dependency(), dependency('pybind11')]
 

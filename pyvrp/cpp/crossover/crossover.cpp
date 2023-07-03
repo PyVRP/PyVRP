@@ -59,7 +59,7 @@ Cost deltaCost(Client client,
 }  // namespace
 
 void crossover::greedyRepair(Routes &routes,
-                             std::vector<Client> const &unplanned,
+                             DynamicBitset const &unplanned,
                              ProblemData const &data,
                              CostEvaluator const &costEvaluator)
 {
@@ -78,8 +78,11 @@ void crossover::greedyRepair(Routes &routes,
             centroids[rIdx].second += y / size;
         }
 
-    for (Client client : unplanned)
+    for (size_t client = 1; client != data.numClients() + 1; ++client)
     {
+        if (!unplanned[client])
+            continue;
+
         auto const x = static_cast<double>(data.client(client).x);
         auto const y = static_cast<double>(data.client(client).y);
 
