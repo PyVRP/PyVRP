@@ -1,5 +1,7 @@
 #include "DynamicBitset.h"
 
+#include <cassert>
+
 DynamicBitset::DynamicBitset(size_t numBits)
     // numBits / BLOCK_SIZE blocks, with an adjustment in case the division of
     // numBits by BLOCK_SIZE is not perfect. Zero initialise each block.

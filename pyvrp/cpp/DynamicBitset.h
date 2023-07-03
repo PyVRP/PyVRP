@@ -2,7 +2,6 @@
 #define PYVRP_DYNAMICBITSET_H
 
 #include <bitset>
-#include <cassert>
 #include <vector>
 
 /**
@@ -26,7 +25,6 @@ public:
     [[nodiscard]] inline Block::reference operator[](size_t idx);
 
     [[nodiscard]] size_t count() const;
-
     [[nodiscard]] size_t size() const;
 
     DynamicBitset &operator&=(DynamicBitset const &other);
