@@ -68,9 +68,13 @@ py = import('python').find_installation()
 dependencies = [
     py.dependency(), 
     dependency('pybind11'),
-    dependency(
+    dependency(  # TODO https://github.com/mesonbuild/meson/issues/8636
         'croaring', 
-        default_options: ['werror=false', 'warning_level=0']
+        default_options: [
+            'werror=false', 
+            'warning_level=0',
+            'default_library=static',
+        ],
     ),
 ]
 
