@@ -45,6 +45,7 @@ libcommon = static_library(
     'common',
     [
         SRC_DIR / 'CostEvaluator.cpp',
+        SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'XorShift128.cpp',
         SRC_DIR / 'Solution.cpp',
