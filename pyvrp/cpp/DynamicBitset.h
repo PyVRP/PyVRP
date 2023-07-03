@@ -1,7 +1,7 @@
 #ifndef PYVRP_DYNAMICBITSET_H
 #define PYVRP_DYNAMICBITSET_H
 
-#include "roaring.hh"
+#include <roaring.hh>
 
 /**
  * A thin wrapper around CRoaring's ``Roaring`` bitset.
@@ -19,7 +19,7 @@ public:
 
     inline void insert(uint32_t val);
 
-    [[nodiscard]] inline bool contains(uint32_t val);
+    [[nodiscard]] inline bool contains(uint32_t val) const;
 
     inline void remove(uint32_t val);
 
@@ -40,11 +40,18 @@ public:
 
     [[nodiscard]] DynamicBitset operator^(DynamicBitset const &other) const;
     DynamicBitset &operator^=(DynamicBitset const &other);
+
+    [[nodiscard]] inline roaring::RoaringSetBitForwardIterator begin() const;
+
+    [[nodiscard]] inline roaring::RoaringSetBitForwardIterator end() const;
 };
 
 void DynamicBitset::insert(uint32_t val) { bitset.add(val); }
 
-bool DynamicBitset::contains(uint32_t val) { return bitset.contains(val); }
+bool DynamicBitset::contains(uint32_t val) const
+{
+    return bitset.contains(val);
+}
 
 void DynamicBitset::remove(uint32_t val) { return bitset.remove(val); }
 
@@ -98,7 +105,17 @@ DynamicBitset DynamicBitset::operator^(DynamicBitset const &other) const
 DynamicBitset &DynamicBitset::operator^=(DynamicBitset const &other)
 {
     bitset ^= other.bitset;
-    return bitset;
+    return *this;
+}
+
+roaring::RoaringSetBitForwardIterator DynamicBitset::begin() const
+{
+    return bitset.begin();
+}
+
+roaring::RoaringSetBitForwardIterator DynamicBitset::end() const
+{
+    return bitset.end();
 }
 
 #endif  // PYVRP_DYNAMICBITSET_H

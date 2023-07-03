@@ -34,6 +34,21 @@ if get_option('precision') == 'double'  # default is integer
     add_project_arguments('-DPYVRP_DOUBLE_PRECISION', language: 'cpp')
 endif
 
+# First we gather all extension dependencies.
+py = import('python').find_installation()
+dependencies = [
+    py.dependency(), 
+    dependency('pybind11'),
+    dependency(  # TODO https://github.com/mesonbuild/meson/issues/8636
+        'croaring', 
+        default_options: [
+            'werror=false', 
+            'warning_level=0',
+            'default_library=static',
+        ],
+    ),
+]
+
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
 # installation directories here, as a shorthand.
@@ -61,22 +76,8 @@ libcommon = static_library(
         SRC_DIR / 'search' / 'SwapStar.cpp',
     ],
     include_directories: INCLUDES,
+    dependencies: dependencies,
 )
-
-# Next we get the extension dependencies.
-py = import('python').find_installation()
-dependencies = [
-    py.dependency(), 
-    dependency('pybind11'),
-    dependency(  # TODO https://github.com/mesonbuild/meson/issues/8636
-        'croaring', 
-        default_options: [
-            'werror=false', 
-            'warning_level=0',
-            'default_library=static',
-        ],
-    ),
-]
 
 # Extension as [extension name, subdirectory]. Here 'extension name' names the
 # eventual module name and the bindings source file, and 'subdirectory' gives 
