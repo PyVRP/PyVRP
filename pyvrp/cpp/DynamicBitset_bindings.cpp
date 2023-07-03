@@ -20,5 +20,9 @@ PYBIND11_MODULE(_DynamicBitset, m)
                 bitset[idx] = value;
             },
             py::arg("idx"),
-            py::arg("value"));
+            py::arg("value"))
+        .def("__or__", &DynamicBitset::operator|, py::arg("other"))
+        .def("__and__", &DynamicBitset::operator&, py::arg("other"))
+        .def("__xor__", &DynamicBitset::operator^, py::arg("other"))
+        .def("__invert__", &DynamicBitset::operator~);
 }
