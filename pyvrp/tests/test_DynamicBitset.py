@@ -22,6 +22,20 @@ def test_init_all_zero():
     assert_equal(bitset.count(), 0)
 
 
+def test_eq():
+    bitset1 = DynamicBitset(64)
+    bitset2 = DynamicBitset(64)
+    assert_(bitset1 == bitset2)  # both empty, equal size - should be the same
+
+    bitset2[0] = True
+    assert_(bitset1 != bitset2)  # 2 is no longer empty; should not be the same
+
+    # Test against a few things that are not bitsets, to make sure __eq__ can
+    # handle that as well.
+    assert_(bitset1 != 0)
+    assert_(bitset1 != "test")
+
+
 def test_get_set_item():
     bitset = DynamicBitset(128)
     indices = [0, 1, 63, 64, 126, 127]
