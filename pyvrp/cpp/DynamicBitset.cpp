@@ -5,10 +5,11 @@ DynamicBitset::DynamicBitset(size_t numBits)
     auto const q = numBits / BLOCK_SIZE;
     auto const r = numBits % BLOCK_SIZE;
     data_ = {q + r > 0, 0};  // + 1 if the division is not perfect
-};
+}
 
-DynamicBitset::DynamicBitset(std::vector<Block> data)
-    : data_(std::move(data)){};
+DynamicBitset::DynamicBitset(std::vector<Block> data) : data_(std::move(data))
+{
+}
 
 bool DynamicBitset::operator==(DynamicBitset const &other) const
 {
