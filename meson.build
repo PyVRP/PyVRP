@@ -84,7 +84,6 @@ dependencies = [
 extensions = [
     ['Matrix', ''],
     ['CostEvaluator', ''],
-    ['DynamicBitset', ''],
     ['ProblemData', ''],
     ['SubPopulation', ''],
     ['TimeWindowSegment', ''],
