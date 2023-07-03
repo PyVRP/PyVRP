@@ -25,7 +25,7 @@ class Client:
         Latest time at which we can visit this client. Default 0.
     release_time
         Earliest time at which this client is released, that is, the earliest
-        time at which a vehicle that visits this client may leave the depot.
+        time at which a vehicle may leave the depot to visit this client.
         Default 0.
     prize
         Prize collected by visiting this client. Default 0.
