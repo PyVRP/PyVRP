@@ -40,8 +40,8 @@ def alternating_exchange(
     ----------
     .. [1] TODO.
     """
-    tour1 = make_giant_tour(parents[0].get_routes())
-    tour2 = make_giant_tour(parents[1].get_routes())
+    tour1 = make_giant_tour([rte.visits() for rte in parents[0].get_routes()])
+    tour2 = make_giant_tour([rte.visits() for rte in parents[1].get_routes()])
 
     visited = set()
     tour = []

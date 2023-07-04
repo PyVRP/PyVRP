@@ -21,8 +21,8 @@ def ordered_exchange(
     of consecutive clients from the first parent, and the rest comes from the
     second parent.
     """
-    tour1 = make_giant_tour(parents[0].get_routes())
-    tour2 = make_giant_tour(parents[1].get_routes())
+    tour1 = make_giant_tour([rte.visits() for rte in parents[0].get_routes()])
+    tour2 = make_giant_tour([rte.visits() for rte in parents[1].get_routes()])
 
     start, end = _get_start_end(data.num_clients, rng)
     tour = _ordered_exchange(tour1, tour2, data, (start, end))
