@@ -1,8 +1,8 @@
 from typing import Tuple
 
 from pyvrp._CostEvaluator import CostEvaluator
-from pyvrp._Individual import Individual
 from pyvrp._ProblemData import ProblemData
+from pyvrp._Solution import Solution
 from pyvrp._XorShift128 import XorShift128
 
 from .make_giant_tour import make_giant_tour
@@ -10,11 +10,11 @@ from .split_giant_tour import split_giant_tour
 
 
 def alternating_exchange(
-    parents: Tuple[Individual, Individual],
+    parents: Tuple[Solution, Solution],
     data: ProblemData,
     cost_evaluator: CostEvaluator,
     rng: XorShift128,
-) -> Individual:
+) -> Solution:
     """
     Creates an offspring by selecting alternately the next client of the first
     parent and the next client of the second parent, omitting clients already
@@ -33,15 +33,12 @@ def alternating_exchange(
 
     Returns
     -------
-    Individual
-        A new offspring.
+    Solution
+        A new offspring solution.
 
     References
     ----------
-    .. [1] Nagata, Y., & Kobayashi, S. (2010). A Memetic Algorithm for the
-           Pickup and Delivery Problem with Time Windows Using Selective Route
-           Exchange Crossover. *Parallel Problem Solving from Nature*, PPSN XI,
-           536 - 545.
+    .. [1] TODO.
     """
     tour1 = make_giant_tour(parents[0].get_routes())
     tour2 = make_giant_tour(parents[1].get_routes())
@@ -58,4 +55,4 @@ def alternating_exchange(
             tour.append(tour2[idx])
             visited.add(tour2[idx])
 
-    return Individual(data, split_giant_tour(tour, data))
+    return Solution(data, split_giant_tour(tour, data))  # type: ignore

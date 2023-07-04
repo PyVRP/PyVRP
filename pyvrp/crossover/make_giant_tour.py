@@ -1,6 +1,6 @@
 from typing import List
 
-from pyvrp._Individual import Route
+from pyvrp._Solution import Route
 
 
 def make_giant_tour(routes: List[Route]) -> List[int]:

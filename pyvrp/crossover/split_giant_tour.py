@@ -36,7 +36,8 @@ def split_giant_tour(tour: List[int], data: ProblemData) -> List[List[int]]:
         depot_arrive = client_finish + data.duration(client, depot)
 
         if (
-            route.load + data.client(client).demand > data.vehicle_capacity
+            route.load + data.client(client).demand
+            > data.vehicle_type(0).capacity
             or client_arrive > data.client(client).tw_late
             or depot_arrive > data.client(depot).tw_late
         ):
