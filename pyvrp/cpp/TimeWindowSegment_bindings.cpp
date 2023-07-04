@@ -22,7 +22,7 @@ template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
 PYBIND11_MODULE(_TimeWindowSegment, m)
 {
     py::class_<TWS>(m, "TimeWindowSegment")
-        .def(py::init<int, int, int, int, int, int, int>(),
+        .def(py::init<int, int, Value, Value, Value, Value, Value>(),
              py::arg("idx_first"),
              py::arg("idx_last"),
              py::arg("duration"),
