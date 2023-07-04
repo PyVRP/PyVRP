@@ -5,10 +5,10 @@ from pyvrp.crossover import alternating_exchange as aex
 from pyvrp.tests.helpers import read
 
 
-def test_same_parents_same_offspring():
+def test_same_feasible_parents_same_offspring():
     """
     Tests that AEX produces identical offspring when both parents are the
-    same.
+    same and feasible.
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
