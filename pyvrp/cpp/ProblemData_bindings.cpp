@@ -8,13 +8,22 @@ namespace py = pybind11;
 PYBIND11_MODULE(_ProblemData, m)
 {
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<Value, Value, Value, Value, Value, Value, Value, bool>(),
+        .def(py::init<Value,
+                      Value,
+                      Value,
+                      Value,
+                      Value,
+                      Value,
+                      Value,
+                      Value,
+                      bool>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = 0,
+             py::arg("release_time") = 0,
              py::arg("prize") = 0,
              py::arg("required") = true)
         .def_property_readonly(
@@ -38,6 +47,10 @@ PYBIND11_MODULE(_ProblemData, m)
         .def_property_readonly("tw_late",
                                [](ProblemData::Client const &client) {
                                    return client.twLate.get();
+                               })
+        .def_property_readonly("release_time",
+                               [](ProblemData::Client const &client) {
+                                   return client.releaseTime.get();
                                })
         .def_property_readonly("prize",
                                [](ProblemData::Client const &client) {

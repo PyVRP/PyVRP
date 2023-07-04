@@ -20,7 +20,6 @@ Depot = Client
 
 
 class Edge:
-
     __slots__ = ["frm", "to", "distance", "duration"]
 
     def __init__(self, frm: Client, to: Client, distance: int, duration: int):
@@ -106,6 +105,7 @@ class Model:
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = 0,
+        release_time: int = 0,
         prize: int = 0,
         required: bool = True,
     ) -> Client:
@@ -120,6 +120,7 @@ class Model:
             service_duration,
             tw_early,
             tw_late,
+            release_time,
             prize,
             required,
         )
@@ -128,7 +129,11 @@ class Model:
         return client
 
     def add_depot(
-        self, x: int, y: int, tw_early: int = 0, tw_late: int = 0
+        self,
+        x: int,
+        y: int,
+        tw_early: int = 0,
+        tw_late: int = 0,
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the

@@ -47,9 +47,7 @@ def plot_route_schedule(
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
-    t = 0
-    wait_time = 0
-    time_warp = 0
+    t = route.release_time()
     drive_time = 0
     serv_time = 0
     dist = 0
@@ -89,12 +87,10 @@ def plot_route_schedule(
         add_traces(dist, t, drive_time, serv_time, load)
 
         if t < stop.tw_early:
-            wait_time += stop.tw_early - t
             t = stop.tw_early
 
         slack = min(slack, stop.tw_late - t)
         if t > stop.tw_late:
-            time_warp += t - stop.tw_late
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
 
