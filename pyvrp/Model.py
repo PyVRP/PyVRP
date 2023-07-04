@@ -20,7 +20,6 @@ Depot = Client
 
 
 class Edge:
-
     __slots__ = ["frm", "to", "distance", "duration"]
 
     def __init__(self, frm: Client, to: Client, distance: int, duration: int):
@@ -135,7 +134,6 @@ class Model:
         y: int,
         tw_early: int = 0,
         tw_late: int = 0,
-        release_time: int = 0,
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
@@ -150,9 +148,7 @@ class Model:
             msg = "PyVRP does not yet support multi-depot VRPs."
             raise ValueError(msg)
 
-        depot = Depot(
-            x, y, tw_early=tw_early, tw_late=tw_late, release_time=release_time
-        )
+        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late)
         self._depots.append(depot)
         return depot
 
