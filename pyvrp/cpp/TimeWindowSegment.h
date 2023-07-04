@@ -87,8 +87,7 @@ TimeWindowSegment TimeWindowSegment::merge(
 
 Duration TimeWindowSegment::totalTimeWarp() const
 {
-    auto const startDiff = releaseTime - twLate;
-    return timeWarp + std::max(startDiff, static_cast<Duration>(0));
+    return timeWarp + std::max<Duration>(releaseTime - twLate, 0);
 }
 
 TimeWindowSegment::TimeWindowSegment(int idxFirst,
