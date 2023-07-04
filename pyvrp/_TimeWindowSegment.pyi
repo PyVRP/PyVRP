@@ -29,7 +29,7 @@ class TimeWindowSegment:
         tw_early
             Earliest visit moment of the first client.
         tw_late
-            Latest visit moment of the last client.
+            Latest visit moment of the first client.
         release_time
             Earliest moment to start the route segment.
         """
