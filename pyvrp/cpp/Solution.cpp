@@ -203,7 +203,6 @@ Solution::Route::Route(ProblemData const &data,
     if (visits_.empty())
         return;
 
-    release_ = std::max(release_, data.depot().releaseTime);
     for (size_t idx = 0; idx != size(); ++idx)
         release_ = std::max(release_, data.client(visits_[idx]).releaseTime);
 
