@@ -122,7 +122,7 @@ omit = [
 [tool.coverage.report]
 exclude_lines = [
     # This excludes all abstract methods from code coverage checks as they are
-    # never instantiated directly anyway
+    # never instantiated directly anyway.
     "pragma: no cover",
     "@abstract",
 ]
@@ -130,7 +130,8 @@ exclude_lines = [
 
 [tool.cibuildwheel]
 # We do not support old Python versions (<3.8) and somewhat uncommon platforms.
-skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
+# For musllinux-based builds we assume users can compile the thing themselves.
+skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-verbosity = "3"
 build-frontend = "build"
 
