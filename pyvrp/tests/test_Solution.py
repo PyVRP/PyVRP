@@ -315,6 +315,9 @@ def test_route_release_time():
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
 
+    # The client release times are 20'000, 5'000, 5'000 and 1'000.
+    # So the first route has a release time of max(20'000, 5'000) = 20'000,
+    # and the second route has a release time of max(5'000, 1'000) = 5'000.
     assert_allclose(routes[0].release_time(), 20000)
     assert_allclose(routes[1].release_time(), 5000)
 
