@@ -7,20 +7,19 @@ CostEvaluator::CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty)
 {
 }
 
-Cost CostEvaluator::penalisedCost(Individual const &individual) const
+Cost CostEvaluator::penalisedCost(Solution const &solution) const
 {
     // Standard objective plus penalty terms for capacity- and time-related
     // infeasibilities.
-    return static_cast<Cost>(individual.distance())
-           + individual.uncollectedPrizes()
-           + loadPenaltyExcess(individual.excessLoad())
-           + twPenalty(individual.timeWarp());
+    return static_cast<Cost>(solution.distance()) + solution.uncollectedPrizes()
+           + loadPenaltyExcess(solution.excessLoad())
+           + twPenalty(solution.timeWarp());
 }
 
-Cost CostEvaluator::cost(Individual const &individual) const
+Cost CostEvaluator::cost(Solution const &solution) const
 {
-    // Penalties are zero when individual is feasible, so we can fall back to
+    // Penalties are zero when the solution is feasible, so we can fall back to
     // penalised cost in that case.
-    return individual.isFeasible() ? penalisedCost(individual)
-                                   : std::numeric_limits<Cost>::max();
+    return solution.isFeasible() ? penalisedCost(solution)
+                                 : std::numeric_limits<Cost>::max();
 }

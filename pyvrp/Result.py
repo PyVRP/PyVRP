@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from .Statistics import Statistics
 from ._CostEvaluator import CostEvaluator
-from ._Individual import Individual
+from ._Solution import Solution
 
 
 @dataclass
@@ -30,7 +30,7 @@ class Result:
         When the number of iterations or runtime are negative.
     """
 
-    best: Individual
+    best: Solution
     stats: Statistics
     num_iterations: int
     runtime: float

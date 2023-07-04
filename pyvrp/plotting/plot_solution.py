@@ -3,11 +3,11 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp import Individual, ProblemData
+from pyvrp import ProblemData, Solution
 
 
 def plot_solution(
-    solution: Individual,
+    solution: Solution,
     data: ProblemData,
     plot_customers: bool = False,
     ax: Optional[plt.Axes] = None,

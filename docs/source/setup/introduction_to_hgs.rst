@@ -1,40 +1,45 @@
-A brief introduction to HGS for VRP
-===================================
+A brief introduction to HGS
+===========================
 
-The PyVRP library provides an implementation of the Hybrid Genetic Search (HGS) algorithm largely based on `Vidal et al. (2013) <https://www.sciencedirect.com/science/article/pii/S0305054812001645>`_.
-HGS combines the global search capabilities of genetic algorithms with the fine-tuning efficiency of local search methods.
+PyVRP provides a high-performance implementation of the hybrid genetic search (HGS) algorithm for vehicle routing problems (VRPs).
+HGS combines the global search capabilities of genetic algorithms with the fine-tuning efficiency of (local) search methods.
 This hybrid approach allows for effective exploration and exploitation of the search space, leading to high-quality solutions.
 
-The HGS algorithm can be broken down into several key components:
-- **Initialization**: The algorithm starts with a randomly generated initial population of solutions (routes) for the given VRP, which are further divided into feasible and infeasible sub-populations.
-- **Offspring generation**: The HGS algorithm employs a combination of selection and crossover operators to generate new offspring solutions. The selection process ensures that fitter individuals have a higher probability of being chosen as parents for the next generation. The crossover operator combines features of parent solutions.
-- **Local search**: To enhance the quality of solutions, the algorithm applies a local search method, such as 2-opt or 3-opt, to each offspring solution. These methods involve swapping or relocating nodes within a route to improve its overall cost. By incorporating local search, the HGS algorithm can effectively explore the solution space while also refining the solutions it generates.
-- **Replacement**: A replacement strategy is used to maintain diversity in the population and ensure the search progresses towards better solutions. Offspring solutions are compared to their parents, and the better individuals are retained in the population. This process allows the algorithm to maintain a balance between exploration and exploitation. If the population size surpasses its maximum limit, it is reduced to a minimum size by favoring solutions with the highest biased fitness.
+.. note::
 
-The algorithm continues until a provided stopping criterion is met, at which point it returns the best solution found. In pseudocode, HGS works as follows:
+   For a more thorough introduction to HGS for VRPs, we refer to the papers by `Vidal et al. (2013) <https://www.sciencedirect.com/science/article/pii/S0305054812001645>`_ and `Vidal (2022) <https://www.sciencedirect.com/science/article/pii/S030505482100349X>`_.
 
-.. line-block::
+The HGS algorithm works as follows.
+HGS maintains a population of solutions, which is initialised by a set of initial solutions given as input to the algorithm.
+In every iteration of the search loop, the algorithm selects two existing parent solutions from the population using a *k*-ary tournament, favouring solutions with higher fitness.
+A crossover operator then uses these two parent solutions to generate an offspring solution that inherits features from both parents.
+After the crossover, the offspring solution is further improved using a search procedure.
+The resulting candidate solution is first added to the population.
+If the candidate solution improves over the best solution found so far, it is also registered as the new best solution.
+Upon reaching the maximum population size, a survivor selection mechanism removes the least fit solutions until the population is back at the minimum size.
+The algorithm continues until a provided stopping criterion is met, at which point it returns the best solution found. 
 
-    *****Input:** initial solutions :math:`s_1, \dots, s_{n}`
-    **Output:** the best found solution :math:`s^*`
-    :math:`s^* \gets s`
-    **repeat** until stopping criteria is met:
-        Select two parent solutions :math:`(p_1, p_2)` from the population using :math:`k`-ary tournament.
-        Apply an crossover operator :math:`XO` to produce an offspring solution :math:`s^o=XO(p_1, p_2)`.
-        Use a local search procedure :math:`LS` to improve the offspring :math:`s^c=LS(s^o)`.
+In pseudocode, HGS works as follows:
 
-        **if** :math:`s^c` has a better objective value than :math:`s^*`:
-            :math:`s^* \gets s^c`
+    .. line-block::
 
-        Add the candidate solution to the population.
+       **Input:** initial solutions :math:`s_1, \dots, s_{n}`
+       **Output:** the best-found solution :math:`s^*`
+       Set :math:`s^*` to the initial solution with the best objective value
+       **repeat** until stopping criterion is met:
+           Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
+           Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
+           Improve the offspring using a search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
+           Add the candidate solution to the population.
+           **if** :math:`s^c` has a better objective value than :math:`s^*`:
+               :math:`s^* \gets s^c`
+           **if** population size exceeds maximum size:
+               Remove the solutions with the lowest fitness until the population is at minimum size
+       **return** :math:`s^*`
 
-        **if** population size exceeds maximum size:
-            purge the solutions with lowest biased fitness until population size is minimum
-
-    **return** :math:`s^*`
-
-The `pyvrp` package provides the HGS algorithm, crossover operators, stopping criteria, and numerous local search operators.
-You only need provide the initial solutions, for which we suggest to take random initial solutions to ensure diversity in the search.
+The ``pyvrp`` package provides the HGS algorithm, crossover operators, stopping criteria, and various search procedures and operators.
+You only need to provide the initial solutions, for which we suggest taking random initial solutions to ensure diversity in the search.
 
 .. hint::
-    See the examples :doc:`Vehicle Routing Problem with Time Windows <../examples/vrptw>` and :doc:`Capacitated Vehicle Routing Problem <../examples/cvrp>` on how to setup HGS to solve these VRPs.
+
+   See the examples :doc:`capacitated VRP <../examples/cvrp>` and :doc:`VRP with time windows <../examples/vrptw>` on how to setup HGS to solve these VRPs.

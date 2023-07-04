@@ -14,13 +14,11 @@ PYBIND11_MODULE(_CostEvaluator, m)
              py::arg("tw_penalty") = 0)
         .def(
             "load_penalty",
-            [](CostEvaluator const &evaluator,
-               Value load,
-               Value vehicleCapacity) {
-                return evaluator.loadPenalty(load, vehicleCapacity).get();
+            [](CostEvaluator const &evaluator, Value load, Value capacity) {
+                return evaluator.loadPenalty(load, capacity).get();
             },
             py::arg("load"),
-            py::arg("vehicle_capacity"))
+            py::arg("capacity"))
         .def(
             "tw_penalty",
             [](CostEvaluator const &evaluator, Value const timeWarp) {
@@ -29,14 +27,14 @@ PYBIND11_MODULE(_CostEvaluator, m)
             py::arg("time_warp"))
         .def(
             "penalised_cost",
-            [](CostEvaluator const &evaluator, Individual const &individual) {
-                return evaluator.penalisedCost(individual).get();
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.penalisedCost(solution).get();
             },
-            py::arg("individual"))
+            py::arg("solution"))
         .def(
             "cost",
-            [](CostEvaluator const &evaluator, Individual const &individual) {
-                return evaluator.cost(individual).get();
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.cost(solution).get();
             },
-            py::arg("individual"));
+            py::arg("solution"));
 }

@@ -42,13 +42,12 @@ def plot_route_schedule(
     if not ax:
         _, ax = plt.subplots()
 
+    vehicle_type = data.vehicle_type(route.vehicle_type())
     depot = data.client(0)  # For readability, define variable
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
-    t = 0
-    wait_time = 0
-    time_warp = 0
+    t = route.release_time()
     drive_time = 0
     serv_time = 0
     dist = 0
@@ -88,12 +87,10 @@ def plot_route_schedule(
         add_traces(dist, t, drive_time, serv_time, load)
 
         if t < stop.tw_early:
-            wait_time += stop.tw_early - t
             t = stop.tw_early
 
         slack = min(slack, stop.tw_late - t)
         if t > stop.tw_late:
-            time_warp += t - stop.tw_late
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
 
@@ -151,12 +148,12 @@ def plot_route_schedule(
     twin1.fill_between(
         *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
     )
-    twin1.set_ylim([0, data.vehicle_capacity])
+    twin1.set_ylim([0, vehicle_type.capacity])
 
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {data.vehicle_capacity:.0f})")
+    twin1.set_ylabel(f"Load (capacity = {vehicle_type.capacity:.0f})")
 
     if legend:
         twin1.legend(loc="upper right")

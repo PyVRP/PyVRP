@@ -1,8 +1,8 @@
 #ifndef PYVRP_COSTEVALUATOR_H
 #define PYVRP_COSTEVALUATOR_H
 
-#include "Individual.h"
 #include "Measure.h"
+#include "Solution.h"
 
 /**
  * Cost evaluator class that computes penalty values for timewarp and load.
@@ -16,14 +16,13 @@ public:
     CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty);
 
     /**
-     * Computes the total excess capacity penalty for the given vehicle load.
+     * Computes the total excess capacity penalty for the given load.
      */
-    [[nodiscard]] inline Cost loadPenalty(Load load,
-                                          Load vehicleCapacity) const;
+    [[nodiscard]] inline Cost loadPenalty(Load load, Load capacity) const;
 
     /**
      * Computes the excess capacity penalty for the given excess load, that is,
-     * the part of the load that exceeds the vehicle capacity.
+     * the part of the load that exceeds the capacity.
      */
     [[nodiscard]] inline Cost loadPenaltyExcess(Load excessLoad) const;
 
@@ -33,15 +32,15 @@ public:
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
 
     /**
-     * Computes a smoothed objective (penalised cost) for a given individual.
+     * Computes a smoothed objective (penalised cost) for a given solution.
      */
-    [[nodiscard]] Cost penalisedCost(Individual const &individual) const;
+    [[nodiscard]] Cost penalisedCost(Solution const &solution) const;
 
     /**
-     * Computes the objective for a given individual. Returns the largest
-     * representable cost value if the individual is infeasible.
+     * Computes the objective for a given solution. Returns the largest
+     * representable cost value if the solution is infeasible.
      */
-    [[nodiscard]] Cost cost(Individual const &individual) const;
+    [[nodiscard]] Cost cost(Solution const &solution) const;
 };
 
 Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
@@ -49,14 +48,14 @@ Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
     return static_cast<Cost>(excessLoad) * capacityPenalty;
 }
 
-Cost CostEvaluator::loadPenalty(Load load, Load vehicleCapacity) const
+Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
     // Branchless for performance: when load > capacity we return the excess
-    // load penalty; else zero. Note that when load - vehicleCapacity wraps
-    // around, we return zero because load > vehicleCapacity evaluates as zero
+    // load penalty; else zero. Note that when load - capacity wraps
+    // around, we return zero because load > capacity evaluates as zero
     // (so there is no issue here due to unsignedness).
-    Cost penalty = loadPenaltyExcess(load - vehicleCapacity);
-    return Cost(load > vehicleCapacity) * penalty;
+    Cost penalty = loadPenaltyExcess(load - capacity);
+    return Cost(load > capacity) * penalty;
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const

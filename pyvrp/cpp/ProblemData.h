@@ -19,6 +19,7 @@ public:
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
+        Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize = 0;        // Prize for visiting this client
         bool const required = true;  // Must client be in solution?
 
@@ -28,19 +29,27 @@ public:
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = 0,
+               Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true);
     };
 
+    struct VehicleType
+    {
+        Load capacity;        // Capacity (max total demand) of the vehicle
+        size_t numAvailable;  // Number of available vehicles of this type
+    };
+
 private:
-    std::pair<double, double> centroid_;  // Centroid of client locations
-    Matrix<Distance> const dist_;         // Distance matrix (+depot)
-    Matrix<Duration> const dur_;          // Duration matrix (+depot)
-    std::vector<Client> clients_;         // Client (+depot) information
+    std::pair<double, double> centroid_;     // Centroid of client locations
+    Matrix<Distance> const dist_;            // Distance matrix (+depot)
+    Matrix<Duration> const dur_;             // Duration matrix (+depot)
+    std::vector<Client> clients_;            // Client (+depot) information
+    std::vector<VehicleType> vehicleTypes_;  // Vehicle type information
 
     size_t const numClients_;
-    size_t const numVehicles_;
-    Load const vehicleCapacity_;
+    size_t const numVehicleTypes_;
+    size_t numVehicles_;  // Number of vehicles - derived from vehicle types
 
 public:
     /**
@@ -58,6 +67,13 @@ public:
      * @return Centroid of client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
+
+    /**
+     * @param vehicleType Vehicle type whose data to return.
+     * @return A struct containing the vehicle type's information.
+     */
+    [[nodiscard]] inline VehicleType const &
+    vehicleType(size_t vehicleType) const;
 
     /**
      * Returns the distance between the indicated two clients.
@@ -93,14 +109,14 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
+     * @return Total number of vehicle types in this instance.
+     */
+    [[nodiscard]] size_t numVehicleTypes() const;
+
+    /**
      * @return Total number of vehicles available in this instance.
      */
     [[nodiscard]] size_t numVehicles() const;
-
-    /**
-     * @return Capacity of each vehicle in this instance.
-     */
-    [[nodiscard]] Load vehicleCapacity() const;
 
     /**
      * Constructs a ProblemData object with the given data. Assumes the list of
@@ -108,14 +124,12 @@ public:
      * number of clients.
      *
      * @param clients      List of clients (including depot at index 0).
-     * @param numVehicles  Number of vehicles.
-     * @param vehicleCap   Vehicle capacity.
+     * @param vehicleTypes List of vehicle types.
      * @param distMat      Distance matrix.
      * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
-                size_t numVehicles,
-                Load vehicleCap,
+                std::vector<VehicleType> const &vehicleTypes,
                 Matrix<Distance> const distMat,
                 Matrix<Duration> const durMat);
 };
@@ -123,6 +137,12 @@ public:
 ProblemData::Client const &ProblemData::client(size_t client) const
 {
     return clients_[client];
+}
+
+ProblemData::VehicleType const &
+ProblemData::vehicleType(size_t vehicleType) const
+{
+    return vehicleTypes_[vehicleType];
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const
