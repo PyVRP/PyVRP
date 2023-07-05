@@ -11,8 +11,6 @@
 
 class Solution
 {
-    friend struct std::hash<Solution>;  // friend struct to enable hashing
-
     using Client = int;
     using VehicleType = size_t;
 
@@ -204,10 +202,10 @@ template <> struct hash<Solution>
     size_t operator()(Solution const &sol) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(sol.routes_.size());
-        res = res * 31 + std::hash<Distance>()(sol.distance_);
-        res = res * 31 + std::hash<Load>()(sol.excessLoad_);
-        res = res * 31 + std::hash<Duration>()(sol.timeWarp_);
+        res = res * 31 + std::hash<size_t>()(sol.numRoutes());
+        res = res * 31 + std::hash<Distance>()(sol.distance());
+        res = res * 31 + std::hash<Load>()(sol.excessLoad());
+        res = res * 31 + std::hash<Duration>()(sol.timeWarp());
 
         return res;
     }
