@@ -3,10 +3,6 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
-from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.Population import Population, PopulationParams
-from pyvrp.Result import Result
 from pyvrp._ProblemData import Client, ProblemData, VehicleType
 from pyvrp._Solution import Solution
 from pyvrp._XorShift128 import XorShift128
@@ -14,6 +10,10 @@ from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
+from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from pyvrp.PenaltyManager import PenaltyManager
+from pyvrp.Population import Population, PopulationParams
+from pyvrp.Result import Result
 from pyvrp.stop import StoppingCriterion
 
 Depot = Client

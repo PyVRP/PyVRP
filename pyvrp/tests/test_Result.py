@@ -4,9 +4,9 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import CostEvaluator, Population, Solution, XorShift128
+from pyvrp.diversity import broken_pairs_distance
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
-from pyvrp.diversity import broken_pairs_distance
 from pyvrp.tests.helpers import read
 
 

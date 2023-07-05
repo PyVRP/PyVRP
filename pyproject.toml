@@ -93,10 +93,14 @@ pyvrp = "pyvrp.cli:main"
 line-length = 79
 
 
-[tool.isort]
-case_sensitive = true
-line_length = 79
-profile = "black"
+[tool.ruff]
+ignore-init-module-imports = true
+line-length = 79
+select = ["E", "F", "I", "NPY", "RET", "RSE", "RUF", "SLF", "SIM", "TCH"]
+
+
+[tool.ruff.isort]
+known-first-party = ["pyvrp"]
 
 
 [tool.mypy]

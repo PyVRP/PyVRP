@@ -1,5 +1,3 @@
-from typing import overload
-
 from pyvrp._Solution import Solution
 
 class CostEvaluator:

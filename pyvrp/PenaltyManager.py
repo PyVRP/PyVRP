@@ -156,8 +156,8 @@ class PenaltyManager:
             return int(
                 min(self._params.penalty_increase * penalty + 1, 1000.0)
             )
-        else:
-            return int(max(self._params.penalty_decrease * penalty - 1, 1.0))
+
+        return int(max(self._params.penalty_decrease * penalty - 1, 1.0))
 
     def register_load_feasible(self, is_load_feasible: bool):
         """

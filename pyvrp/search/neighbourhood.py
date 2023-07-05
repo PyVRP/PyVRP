@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import numpy as np
 
-from pyvrp._ProblemData import ProblemData
-
-Neighbours = List[List[int]]
+if TYPE_CHECKING:
+    from pyvrp._ProblemData import ProblemData
 
 
 @dataclass
@@ -56,7 +55,7 @@ class NeighbourhoodParams:
 
 def compute_neighbours(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
-) -> Neighbours:
+) -> List[List[int]]:
     """
     Computes neighbours defining the neighbourhood for a problem instance.
 
@@ -92,7 +91,7 @@ def compute_neighbours(
     top_k = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
 
     if not params.symmetric_neighbours:
-        return [[]] + top_k.tolist()
+        return [[], *top_k.tolist()]
 
     # Construct a symmetric adjacency matrix and return the adjacent clients
     # as the neighbourhood structure.

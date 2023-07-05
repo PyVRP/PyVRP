@@ -71,6 +71,14 @@ def read(
               decimal;
             * ``'none'`` does no rounding. This is the default.
 
+    Raises
+    ------
+    TypeError
+        When ``round_func`` does not name a rounding function, or is not
+        callable.
+    ValueError
+        When the data file does not provide information on the problem size.
+
     Returns
     -------
     ProblemData
@@ -80,7 +88,7 @@ def read(
         round_func = ROUND_FUNCS[key]
 
     if not callable(round_func):
-        raise ValueError(
+        raise TypeError(
             f"round_func = {round_func} is not understood. Can be a function,"
             f" or one of {ROUND_FUNCS.keys()}."
         )

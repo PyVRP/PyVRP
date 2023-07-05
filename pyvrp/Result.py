@@ -1,9 +1,9 @@
 import math
 from dataclasses import dataclass
 
-from .Statistics import Statistics
 from ._CostEvaluator import CostEvaluator
 from ._Solution import Solution
+from .Statistics import Statistics
 
 
 @dataclass

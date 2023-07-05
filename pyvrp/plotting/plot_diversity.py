@@ -3,8 +3,8 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp.Result import Result
 from pyvrp.exceptions import StatisticsNotCollectedError
+from pyvrp.Result import Result
 
 
 def plot_diversity(result: Result, ax: Optional[plt.Axes] = None):

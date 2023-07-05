@@ -9,10 +9,10 @@ from pyvrp import (
     XorShift128,
     plotting,
 )
-from pyvrp.Result import Result
-from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
 from pyvrp.exceptions import StatisticsNotCollectedError
+from pyvrp.Result import Result
+from pyvrp.Statistics import Statistics
 from pyvrp.tests.helpers import make_random_solutions, read, read_solution
 
 IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")

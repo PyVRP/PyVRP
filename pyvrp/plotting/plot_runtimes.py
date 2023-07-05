@@ -3,8 +3,8 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp.Result import Result
 from pyvrp.exceptions import StatisticsNotCollectedError
+from pyvrp.Result import Result
 
 
 def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
@@ -35,7 +35,7 @@ def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
     ax.plot(x, result.stats.runtimes)
 
     if result.num_iterations > 1:  # need data to plot a trendline
-        b, c = np.polyfit(x, result.stats.runtimes, 1)  # noqa
+        b, c = np.polyfit(x, result.stats.runtimes, 1)
         ax.plot(b * x + c)
 
     ax.set_xlim(left=0)
