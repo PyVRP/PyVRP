@@ -23,6 +23,10 @@ class Client:
         Earliest time at which we can visit this client. Default 0.
     tw_late
         Latest time at which we can visit this client. Default 0.
+    release_time
+        Earliest time at which this client is released, that is, the earliest
+        time at which a vehicle may leave the depot to visit this client.
+        Default 0.
     prize
         Prize collected by visiting this client. Default 0.
     required
@@ -35,9 +39,9 @@ class Client:
     service_duration: int
     tw_early: int
     tw_late: int
+    release_time: int
     prize: int
     required: bool
-
     def __init__(
         self,
         x: int,
@@ -46,6 +50,7 @@ class Client:
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = 0,
+        release_time: int = 0,
         prize: int = 0,
         required: bool = True,
     ) -> None: ...
@@ -64,7 +69,6 @@ class VehicleType:
 
     capacity: int
     num_available: int
-
     def __init__(self, capacity: int, num_available: int) -> None: ...
 
 class ProblemData:

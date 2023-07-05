@@ -134,6 +134,11 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
 
+    if "release_time" in instance:
+        release_times: np.ndarray = round_func(instance["release_time"])
+    else:
+        release_times = np.zeros(dimension, dtype=int)
+
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
@@ -152,6 +157,9 @@ def read(
     if service_times[0] != 0:
         raise ValueError("Depot service duration must be 0")
 
+    if release_times[0] != 0:
+        raise ValueError("Depot release time must be 0")
+
     if (time_windows[:, 0] > time_windows[:, 1]).any():
         raise ValueError("Time window cannot start after end")
 
@@ -163,6 +171,7 @@ def read(
             service_times[idx],
             time_windows[idx][0],  # TW early
             time_windows[idx][1],  # TW late
+            release_times[idx],
             prizes[idx],
             np.isclose(prizes[idx], 0),  # required only when prize is zero
         )

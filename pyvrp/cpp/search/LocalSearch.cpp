@@ -286,7 +286,8 @@ void LocalSearch::loadSolution(Solution const &solution)
                               data.client(client).serviceDuration,
                               0,
                               data.client(client).twEarly,
-                              data.client(client).twLate};
+                              data.client(client).twLate,
+                              data.client(client).releaseTime};
 
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }

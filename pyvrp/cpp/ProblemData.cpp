@@ -12,6 +12,7 @@ ProblemData::Client::Client(Coordinate x,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
+                            Duration releaseTime,
                             Cost prize,
                             bool required)
     : x(x),
@@ -20,6 +21,7 @@ ProblemData::Client::Client(Coordinate x,
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
+      releaseTime(releaseTime),
       prize(prize),
       required(required)
 {
