@@ -36,20 +36,20 @@ public:
 
     struct VehicleType
     {
-        Load capacity;        // Capacity (max total demand) of the vehicle
-        size_t numAvailable;  // Number of available vehicles of this type
+        Load const capacity;        // This type's vehicle capacity
+        size_t const numAvailable;  // Available vehicles of this type
     };
 
 private:
-    std::pair<double, double> centroid_;     // Centroid of client locations
-    Matrix<Distance> const dist_;            // Distance matrix (+depot)
-    Matrix<Duration> const dur_;             // Duration matrix (+depot)
-    std::vector<Client> clients_;            // Client (+depot) information
-    std::vector<VehicleType> vehicleTypes_;  // Vehicle type information
+    std::pair<double, double> centroid_;           // Center of client locations
+    Matrix<Distance> const dist_;                  // Distance matrix
+    Matrix<Duration> const dur_;                   // Duration matrix
+    std::vector<Client> const clients_;            // Client/depot information
+    std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
 
     size_t const numClients_;
     size_t const numVehicleTypes_;
-    size_t numVehicles_;  // Number of vehicles - derived from vehicle types
+    size_t const numVehicles_;
 
 public:
     /**

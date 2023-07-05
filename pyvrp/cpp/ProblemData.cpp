@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -66,11 +67,13 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       vehicleTypes_(vehicleTypes),
       numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicleTypes_(vehicleTypes.size()),
-      numVehicles_(0)
+      numVehicles_(std::accumulate(vehicleTypes.begin(),
+                                   vehicleTypes.end(),
+                                   0,
+                                   [](auto sum, VehicleType const &type) {
+                                       return sum + type.numAvailable;
+                                   }))
 {
-    for (auto const &vehicleType : vehicleTypes)
-        numVehicles_ += vehicleType.numAvailable;
-
     for (size_t idx = 1; idx <= numClients(); ++idx)
     {
         centroid_.first += static_cast<double>(clients[idx].x) / numClients();
