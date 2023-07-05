@@ -181,7 +181,7 @@ Solution selectiveRouteExchange(
     }
 
     // Identify differences between route sets
-    auto const selectedBNotA = selectedB & (~selectedA);
+    auto const selectedBNotA = selectedB & ~selectedA;
 
     std::vector<std::vector<Client>> visits1(nRoutesA);
     std::vector<std::vector<Client>> visits2(nRoutesA);
@@ -217,7 +217,7 @@ Solution selectiveRouteExchange(
 
     // Insert unplanned clients (those that were in the removed routes of A, but
     // not the inserted routes of B).
-    auto const unplanned = selectedA & (~selectedB);
+    auto const unplanned = selectedA & ~selectedB;
     crossover::greedyRepair(visits1, unplanned, data, costEvaluator);
     crossover::greedyRepair(visits2, unplanned, data, costEvaluator);
 
