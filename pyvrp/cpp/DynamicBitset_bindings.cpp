@@ -9,7 +9,7 @@ PYBIND11_MODULE(_DynamicBitset, m)
 {
     py::class_<DynamicBitset>(m, "DynamicBitset")
         .def(py::init<size_t>(), py::arg("num_bits"))
-        .def(py::self == py::self)  // this is __eq__
+        .def(py::self == py::self, py::arg("other"))  // this is __eq__
         .def("count", &DynamicBitset::count)
         .def("__len__", &DynamicBitset::size)
         .def(
