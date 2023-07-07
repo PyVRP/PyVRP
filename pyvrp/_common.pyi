@@ -361,7 +361,7 @@ class Solution:
     def __init__(
         self,
         data: ProblemData,
-        routes: List[Union[Route, List[int]]],
+        routes: Union[List[Route], List[List[int]]],
     ) -> None: ...
     @classmethod
     def make_random(cls, data: ProblemData, rng: XorShift128) -> Solution:
