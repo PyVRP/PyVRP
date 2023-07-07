@@ -68,40 +68,28 @@ py = import('python').find_installation()
 pybind11 = dependency('pybind11')
 dependencies = [py.dependency(), pybind11]
 
-# Extension as [extension name, subdirectory]. Here 'extension name' names the
-# eventual module name and the bindings source file, and 'subdirectory' gives 
-# the source and installation directories (relative to SRC_DIR and INST_DIR).
+# Extension as [extension name, subdirectory]. The 'extension name' names the
+# eventual module name, and 'subdirectory' gives the source and installation 
+# directories (relative to SRC_DIR and INST_DIR).
 extensions = [
-    ['Matrix', ''],
-    ['CostEvaluator', ''],
-    ['ProblemData', ''],
-    ['SubPopulation', ''],
-    ['TimeWindowSegment', ''],
-    ['XorShift128', ''],
-    ['Solution', ''],
-    ['selective_route_exchange', 'crossover'],
-    ['broken_pairs_distance', 'diversity'],
-    ['LocalSearch', 'search'],
-    ['Exchange', 'search'],
-    ['MoveTwoClientsReversed', 'search'],
-    ['TwoOpt', 'search'],
-    ['RelocateStar', 'search'],
-    ['SwapStar', 'search'],
+    ['_common', ''],
+    ['_crossover', 'crossover'],
+    ['_diversity', 'diversity'],
+    ['_search', 'search'],
 ]
 
-foreach extension : extensions  # extension[0] = name, extension[1] = subdir
-    message('Going to build ' + extension[0])
+foreach extension : extensions
+    name = extension[0]
+    subdir = extension[1]
 
-    source_dir = '/'.join([SRC_DIR, extension[1]])
-    install_dir = '/'.join([INST_DIR, extension[1]])
-
+    message('Going to build ' + subdir / name)
     py.extension_module(
-        '_' + extension[0],  # native extensions are prepended by an underscore
-        source_dir / extension[0] + '_bindings.cpp',
+        name,
+        SRC_DIR / subdir / 'bindings.cpp',
         dependencies: dependencies,
         link_with: libcommon,
         install: true,
-        subdir: install_dir,
+        subdir: INST_DIR / subdir,
         include_directories: INCLUDES,
     )
 endforeach

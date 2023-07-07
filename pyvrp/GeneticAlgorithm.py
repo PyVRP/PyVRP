@@ -1,23 +1,24 @@
+from __future__ import annotations
+
 import time
 from dataclasses import dataclass
-from typing import Callable, Collection, Tuple
+from typing import TYPE_CHECKING, Callable, Collection, Tuple
 
-from pyvrp.search.LocalSearch import LocalSearch
-from pyvrp.stop import StoppingCriterion
-
-from .PenaltyManager import PenaltyManager
-from .Population import Population
 from .Result import Result
 from .Statistics import Statistics
-from ._CostEvaluator import CostEvaluator
-from ._ProblemData import ProblemData
-from ._Solution import Solution
-from ._XorShift128 import XorShift128
 
-_Parents = Tuple[Solution, Solution]
-CrossoverOperator = Callable[
-    [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
-]
+if TYPE_CHECKING:
+    from pyvrp.search.LocalSearch import LocalSearch
+    from pyvrp.stop import StoppingCriterion
+
+    from .PenaltyManager import PenaltyManager
+    from .Population import Population
+    from ._common import CostEvaluator, ProblemData, Solution, XorShift128
+
+    _Parents = Tuple[Solution, Solution]
+    CrossoverOperator = Callable[
+        [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
+    ]
 
 
 @dataclass

@@ -1,4 +1,4 @@
-from pyvrp._Solution import Solution
+from pyvrp._common import Solution
 
 def broken_pairs_distance(first: Solution, second: Solution) -> float:
     """

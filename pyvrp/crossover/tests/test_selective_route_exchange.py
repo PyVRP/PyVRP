@@ -5,9 +5,7 @@ from pytest import mark
 
 from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.crossover._selective_route_exchange import (
-    selective_route_exchange as cpp_srex,
-)
+from pyvrp.crossover._crossover import selective_route_exchange as cpp_srex
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
