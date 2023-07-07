@@ -7,6 +7,7 @@ from .Statistics import Statistics
 from ._common import (
     Client,
     CostEvaluator,
+    DynamicBitset,
     Matrix,
     ProblemData,
     Route,

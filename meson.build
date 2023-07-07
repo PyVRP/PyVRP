@@ -1,6 +1,7 @@
 project(
-    'pyvrp', 
-    'cpp', 
+    'pyvrp',
+    'cpp',
+    version: run_command('poetry', 'version', '--short', check : true).stdout(),
     default_options : [
         'cpp_std=c++20',
         'b_lto=true',  # sets -flto
@@ -45,6 +46,7 @@ libcommon = static_library(
     'common',
     [
         SRC_DIR / 'CostEvaluator.cpp',
+        SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'XorShift128.cpp',
         SRC_DIR / 'Solution.cpp',
@@ -65,8 +67,7 @@ libcommon = static_library(
 
 # Next we get the extension dependencies.
 py = import('python').find_installation()
-pybind11 = dependency('pybind11')
-dependencies = [py.dependency(), pybind11]
+dependencies = [py.dependency(), dependency('pybind11')]
 
 # Extension as [extension name, subdirectory]. The 'extension name' names the
 # eventual module name, and 'subdirectory' gives the source and installation 
