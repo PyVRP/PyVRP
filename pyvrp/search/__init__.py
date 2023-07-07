@@ -34,24 +34,3 @@ ROUTE_OPERATORS = [
     RelocateStar,
     SwapStar,
 ]
-
-__all__ = [
-    "LocalSearch",
-    "Exchange10",
-    "Exchange11",
-    "Exchange20",
-    "Exchange21",
-    "Exchange22",
-    "Exchange30",
-    "Exchange31",
-    "Exchange32",
-    "Exchange33",
-    "MoveTwoClientsReversed",
-    "RelocateStar",
-    "SwapStar",
-    "TwoOpt",
-    "compute_neighbours",
-    "NeighbourhoodParams",
-    "NODE_OPERATORS",
-    "ROUTE_OPERATORS",
-]

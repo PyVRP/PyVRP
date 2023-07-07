@@ -8,16 +8,3 @@ from .plot_route_schedule import plot_route_schedule
 from .plot_runtimes import plot_runtimes
 from .plot_solution import plot_solution
 from .plot_time_windows import plot_time_windows
-
-__all__ = [
-    "plot_coordinates",
-    "plot_demands",
-    "plot_diversity",
-    "plot_instance",
-    "plot_objectives",
-    "plot_result",
-    "plot_route_schedule",
-    "plot_runtimes",
-    "plot_solution",
-    "plot_time_windows",
-]
