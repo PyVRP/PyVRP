@@ -24,6 +24,25 @@ def test_same_parents_same_offspring():
     assert_equal(offspring, solution)
 
 
+def test_srex_empty_solution():
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    cost_evaluator = CostEvaluator(20, 6)
+    rng = XorShift128(seed=42)
+
+    empty = Solution(data, [])
+    nonempty = Solution(data, [[1, 2, 3, 4]])
+
+    # If both parents are empty the returned offspring must also be empty.
+    offspring = srex((empty, empty), data, cost_evaluator, rng)
+    assert_equal(offspring, empty)
+
+    # If one of the two parents is empty but the other is not, the returned
+    # solution is the nonempty parent.
+    for parents in [(empty, nonempty), (nonempty, empty)]:
+        offspring = srex(parents, data, cost_evaluator, rng)
+        assert_equal(offspring, nonempty)
+
+
 @mark.parametrize(
     "idx1, idx2, num_moved_routes",
     [
