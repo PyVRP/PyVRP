@@ -27,6 +27,8 @@ from pyvrp.tests.helpers import make_random_solutions, read, read_solution
         (-0.25, True, 0.5, True, 0),  # repair_probability < 0
         (1.25, True, 0.5, True, 0),  # repair_probability > 1
         (0.0, True, 0.5, True, -1),  # nb_iter_no_improvement < 0
+        (0.0, True, -0.25, True, 1),  # intensify_probability < 0
+        (0.0, True, 1.25, True, 1),  # intensify_probability > 1
     ],
 )
 def test_params_constructor_throws_when_arguments_invalid(
