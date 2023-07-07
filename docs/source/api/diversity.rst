@@ -10,6 +10,6 @@ This difference provides a measure of diversity: a :class:`~pyvrp.Population.Pop
 At the same time, one also wants to balance diversity with quality: the solutions should also be good.
 That balance is maintained by computing a fitness score for each solution, which balances the diversity with the objective value.
 
-.. autoapimodule:: pyvrp.diversity._diversity
+.. automodule:: pyvrp.diversity._diversity
 
    .. autoapifunction:: broken_pairs_distance

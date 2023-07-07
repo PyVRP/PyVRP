@@ -12,11 +12,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(_search, m)
 {
-    py::class_<LocalSearchOperator<Node>>(
-        m, "NodeOperator", py::module_local());
-
-    py::class_<LocalSearchOperator<Route>>(
-        m, "RouteOperator", py::module_local());
+    py::class_<LocalSearchOperator<Node>>(m, "NodeOperator");
+    py::class_<LocalSearchOperator<Route>>(m, "RouteOperator");
 
     py::class_<Exchange<1, 0>, LocalSearchOperator<Node>>(m, "Exchange10")
         .def(py::init<ProblemData const &>(),

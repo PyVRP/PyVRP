@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import DynamicBitset
+from pyvrp._common import DynamicBitset
 
 
 @mark.parametrize(

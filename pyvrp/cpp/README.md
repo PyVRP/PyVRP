@@ -11,4 +11,4 @@ starting with the `PYVRP_` prefix. PyVRP reserves any such global declarations
 for internal use.
 
 We use `pybind11` to generate the Python bindings for the C++ codebase. These
-bindings are generated in the `bindings.cpp` source files of each folder. 
+bindings are generated from the `bindings.cpp` source files of each folder. 
