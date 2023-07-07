@@ -1,4 +1,5 @@
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "Matrix.h"
 #include "ProblemData.h"
 #include "Solution.h"

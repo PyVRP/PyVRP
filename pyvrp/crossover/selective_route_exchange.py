@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
+from pyvrp._common import CostEvaluator, ProblemData, Solution, XorShift128
 
 from ._crossover import selective_route_exchange as _srex
 
