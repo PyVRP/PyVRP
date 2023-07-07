@@ -100,7 +100,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           gcov: true
-          gcov_include: *pyvrp*
+          gcov_include: '*pyvrp*'
       - if: matrix.compiler == 'gcc'
         name: Install Valgrind
         run: sudo apt install valgrind
