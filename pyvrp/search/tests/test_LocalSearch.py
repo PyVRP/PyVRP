@@ -7,10 +7,9 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
-    Neighbours,
     compute_neighbours,
 )
-from pyvrp.search._LocalSearch import LocalSearch as cpp_LocalSearch
+from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
@@ -144,7 +143,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall():
     # into its own route. Since those solutions have larger distance but
     # smaller time warp, they are considered improving moves with a
     # sufficiently large time warp penalty.
-    neighbours: Neighbours = [[], [2], [], [], []]  # 1 -> 2 only
+    neighbours = [[], [2], [], [], []]  # 1 -> 2 only
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(Exchange10(data))
 

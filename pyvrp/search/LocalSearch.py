@@ -1,13 +1,9 @@
 from typing import List
 
-from pyvrp._CostEvaluator import CostEvaluator
-from pyvrp._ProblemData import ProblemData
-from pyvrp._Solution import Solution
-from pyvrp._XorShift128 import XorShift128
+from pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
 
-from ._LocalSearch import LocalSearch as _LocalSearch
-
-Neighbours = List[List[int]]
+from ._search import LocalSearch as _LocalSearch
+from ._search import NodeOperator, RouteOperator
 
 
 class LocalSearch:
@@ -27,12 +23,12 @@ class LocalSearch:
     """
 
     def __init__(
-        self, data: ProblemData, rng: XorShift128, neighbours: Neighbours
+        self, data: ProblemData, rng: XorShift128, neighbours: List[List[int]]
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng
 
-    def add_node_operator(self, op):
+    def add_node_operator(self, op: NodeOperator):
         """
         Adds a node operator to this local search object. The node operator
         will be used by :meth:`~search` to improve a solution.
@@ -44,7 +40,7 @@ class LocalSearch:
         """
         self._ls.add_node_operator(op)
 
-    def add_route_operator(self, op):
+    def add_route_operator(self, op: RouteOperator):
         """
         Adds a route operator to this local search object. The route operator
         will be used by :meth:`~intensify` to improve a solution using more
@@ -57,7 +53,7 @@ class LocalSearch:
         """
         self._ls.add_route_operator(op)
 
-    def set_neighbours(self, neighbours: Neighbours):
+    def set_neighbours(self, neighbours: List[List[int]]):
         """
         Convenience method to replace the current granular neighbourhood used
         by the local search object.
@@ -69,7 +65,7 @@ class LocalSearch:
         """
         self._ls.set_neighbours(neighbours)
 
-    def get_neighbours(self) -> Neighbours:
+    def get_neighbours(self) -> List[List[int]]:
         """
         Returns the granular neighbourhood currently used by the local search.
 

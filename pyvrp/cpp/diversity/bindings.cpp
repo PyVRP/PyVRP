@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_broken_pairs_distance, m)
+PYBIND11_MODULE(_diversity, m)
 {
     m.def("broken_pairs_distance",
           &brokenPairsDistance,
