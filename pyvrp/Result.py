@@ -1,8 +1,7 @@
 import math
 from dataclasses import dataclass
 
-from ._CostEvaluator import CostEvaluator
-from ._Solution import Solution
+from ._common import CostEvaluator, Solution
 from .Statistics import Statistics
 
 

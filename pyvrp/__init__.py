@@ -1,8 +1,14 @@
-from ._CostEvaluator import CostEvaluator
-from ._Matrix import Matrix
-from ._ProblemData import Client, ProblemData, VehicleType
-from ._Solution import Route, Solution
-from ._XorShift128 import XorShift128
+from ._common import (
+    Client,
+    CostEvaluator,
+    DynamicBitset,
+    Matrix,
+    ProblemData,
+    Route,
+    Solution,
+    VehicleType,
+    XorShift128,
+)
 from .GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
 from .Model import Model
 from .PenaltyManager import PenaltyManager, PenaltyParams

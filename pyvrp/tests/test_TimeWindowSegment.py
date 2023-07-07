@@ -1,8 +1,7 @@
 from numpy.testing import assert_equal
 from pytest import mark
 
-from pyvrp._Matrix import Matrix
-from pyvrp._TimeWindowSegment import TimeWindowSegment
+from pyvrp._common import Matrix, TimeWindowSegment
 
 
 @mark.parametrize("existing_time_warp", [2, 5, 10])

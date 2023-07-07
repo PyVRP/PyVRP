@@ -27,7 +27,7 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    from pyvrp.search import NODE_OPERATORS
 
 
-.. automodule:: pyvrp.search._Exchange
+.. automodule:: pyvrp.search._search
 
    .. autoapiclass:: Exchange10
       :members:
@@ -56,12 +56,8 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoapiclass:: Exchange33
       :members:
 
-.. automodule:: pyvrp.search._MoveTwoClientsReversed
-
    .. autoapiclass:: MoveTwoClientsReversed
       :members:
-
-.. automodule:: pyvrp.search._TwoOpt
 
    .. autoapiclass:: TwoOpt
       :members:
@@ -77,12 +73,11 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    from pyvrp.search import ROUTE_OPERATORS
 
 
-.. automodule:: pyvrp.search._RelocateStar
+.. automodule:: pyvrp.search._search
+   :noindex:
 
    .. autoapiclass:: RelocateStar
       :members:
-
-.. automodule:: pyvrp.search._SwapStar
 
    .. autoapiclass:: SwapStar
       :members:

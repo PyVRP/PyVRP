@@ -5,9 +5,7 @@ from pytest import mark
 
 from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
 from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.crossover._selective_route_exchange import (
-    selective_route_exchange as cpp_srex,
-)
+from pyvrp.crossover._crossover import selective_route_exchange as cpp_srex
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
@@ -24,6 +22,25 @@ def test_same_parents_same_offspring():
     offspring = srex((solution, solution), data, cost_evaluator, rng)
 
     assert_equal(offspring, solution)
+
+
+def test_srex_empty_solution():
+    data = read("data/p06-2-50.vrp", round_func="dimacs")
+    cost_evaluator = CostEvaluator(20, 6)
+    rng = XorShift128(seed=42)
+
+    empty = Solution(data, [])
+    nonempty = Solution(data, [[1, 2, 3, 4]])
+
+    # If both parents are empty the returned offspring must also be empty.
+    offspring = srex((empty, empty), data, cost_evaluator, rng)
+    assert_equal(offspring, empty)
+
+    # If one of the two parents is empty but the other is not, the returned
+    # solution is the nonempty parent.
+    for parents in [(empty, nonempty), (nonempty, empty)]:
+        offspring = srex(parents, data, cost_evaluator, rng)
+        assert_equal(offspring, nonempty)
 
 
 @mark.parametrize(

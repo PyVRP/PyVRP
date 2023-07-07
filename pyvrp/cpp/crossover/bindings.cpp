@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_selective_route_exchange, m)
+PYBIND11_MODULE(_crossover, m)
 {
     m.def("selective_route_exchange",
           &selectiveRouteExchange,

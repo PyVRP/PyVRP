@@ -10,7 +10,7 @@ import vrplib
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
-from ._ProblemData import Client, ProblemData, VehicleType
+from ._common import Client, ProblemData, VehicleType
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]

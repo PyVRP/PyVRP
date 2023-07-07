@@ -3,9 +3,13 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp._ProblemData import Client, ProblemData, VehicleType
-from pyvrp._Solution import Solution
-from pyvrp._XorShift128 import XorShift128
+from pyvrp._common import (
+    Client,
+    ProblemData,
+    Solution,
+    VehicleType,
+    XorShift128,
+)
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
@@ -34,7 +38,7 @@ class Model:
     A simple interface for modelling vehicle routing problems with PyVRP.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._clients: List[Client] = []
         self._depots: List[Depot] = []
         self._edges: List[Edge] = []
@@ -54,7 +58,7 @@ class Model:
         """
         Returns the vehicle types in the current model. The routes of the
         solution returned by :meth:`~solve` have a property
-        :meth:`~pyvrp._Solution.Route.vehicle_type()` that can be used to index
+        :meth:`~pyvrp._common.Route.vehicle_type()` that can be used to index
         these vehicle types.
         """
         return self._vehicle_types
@@ -111,7 +115,7 @@ class Model:
     ) -> Client:
         """
         Adds a client with the given attributes to the model. Returns the
-        created :class:`~pyvrp._ProblemData.Client` instance.
+        created :class:`~pyvrp._common.Client` instance.
         """
         client = Client(
             x,
@@ -137,7 +141,7 @@ class Model:
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
-        created :class:`~pyvrp._ProblemData.Client` instance.
+        created :class:`~pyvrp._common.Client` instance.
 
         .. warning::
 
@@ -202,7 +206,7 @@ class Model:
 
     def data(self) -> ProblemData:
         """
-        Creates and returns a :class:`~pyvrp._ProblemData.ProblemData` instance
+        Creates and returns a :class:`~pyvrp._common.ProblemData` instance
         from this model's attributes.
         """
         locs = self.locations
@@ -227,12 +231,7 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        return ProblemData(
-            locs,
-            self.vehicle_types,
-            distances,
-            durations,
-        )
+        return ProblemData(locs, self.vehicle_types, distances, durations)
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
         """
@@ -263,11 +262,11 @@ class Model:
         rng = XorShift128(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))
 
-        for op in NODE_OPERATORS:
-            ls.add_node_operator(op(data))
+        for node_op in NODE_OPERATORS:
+            ls.add_node_operator(node_op(data))
 
-        for op in ROUTE_OPERATORS:
-            ls.add_route_operator(op(data))
+        for route_op in ROUTE_OPERATORS:
+            ls.add_route_operator(route_op(data))
 
         pm = PenaltyManager()
         pop_params = PopulationParams()
@@ -278,5 +277,6 @@ class Model:
         ]
 
         gen_params = GeneticAlgorithmParams(collect_statistics=True)
-        algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, gen_params)
+        gen_args = (data, pm, rng, pop, ls, srex, init, gen_params)
+        algo = GeneticAlgorithm(*gen_args)  # type: ignore
         return algo.run(stop)

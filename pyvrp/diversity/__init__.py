@@ -1,1 +1,1 @@
-from ._broken_pairs_distance import broken_pairs_distance
+from ._diversity import broken_pairs_distance

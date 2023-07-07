@@ -2,6 +2,7 @@
 #define PYVRP_CROSSOVER_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
 #include "XorShift128.h"
@@ -16,7 +17,7 @@ namespace crossover
  * client.
  */
 void greedyRepair(std::vector<std::vector<int>> &routes,
-                  std::vector<int> const &unplanned,
+                  DynamicBitset const &unplanned,
                   ProblemData const &data,
                   CostEvaluator const &costEvaluator);
 }  // namespace crossover

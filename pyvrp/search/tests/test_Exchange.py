@@ -10,8 +10,7 @@ from pyvrp import (
     VehicleType,
     XorShift128,
 )
-from pyvrp.search import LocalSearch, NeighbourhoodParams, compute_neighbours
-from pyvrp.search._Exchange import (
+from pyvrp.search import (
     Exchange10,
     Exchange11,
     Exchange20,
@@ -21,6 +20,9 @@ from pyvrp.search._Exchange import (
     Exchange31,
     Exchange32,
     Exchange33,
+    LocalSearch,
+    NeighbourhoodParams,
+    compute_neighbours,
 )
 from pyvrp.tests.helpers import make_heterogeneous, read
 

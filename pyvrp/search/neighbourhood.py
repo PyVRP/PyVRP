@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List
 import numpy as np
 
 if TYPE_CHECKING:
-    from pyvrp._ProblemData import ProblemData
+    from pyvrp import ProblemData
 
 
 @dataclass
@@ -68,7 +68,7 @@ def compute_neighbours(
 
     Returns
     -------
-    Neighbours
+    list
         A list of list of integers representing the neighbours for each client.
         The first element represents the depot and is an empty list.
     """

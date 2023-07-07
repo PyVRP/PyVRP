@@ -139,15 +139,15 @@ def solve(
     if "node_ops" in config:
         node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
 
-    for op in node_ops:
-        ls.add_node_operator(op(data))
+    for node_op in node_ops:
+        ls.add_node_operator(node_op(data))
 
     route_ops = ROUTE_OPERATORS
     if "route_ops" in config:
         route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
 
-    for op in route_ops:
-        ls.add_route_operator(op(data))
+    for route_op in route_ops:
+        ls.add_route_operator(route_op(data))
 
     init = [
         Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
