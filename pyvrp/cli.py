@@ -7,6 +7,7 @@ import numpy as np
 
 try:
     import tomli
+    from tqdm import tqdm
     from tqdm.contrib.concurrent import process_map
 except ModuleNotFoundError as exc:
     msg = "Install 'tqdm' and 'tomli' to use the command line program."
@@ -197,7 +198,7 @@ def benchmark_solve(instance: str, **kwargs):
     )
 
 
-def benchmark(instances: List[str], **kwargs):
+def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.
@@ -206,20 +207,21 @@ def benchmark(instances: List[str], **kwargs):
     ----------
     instances
         Paths to the VRPLIB instances to solve.
+    num_procs
+        Number of processors to use. Default 1.
+    kwargs
+        Any additional keyword arguments to pass to the solving function.
     """
     maybe_mkdir(kwargs.get("stats_dir", ""))
     maybe_mkdir(kwargs.get("sol_dir", ""))
 
-    if len(instances) == 1:
-        res = solve(instances[0], **kwargs)
-        print(res)
-        return
-
     func = partial(benchmark_solve, **kwargs)
-    func_args = sorted(instances)
+    args = sorted(instances)
 
-    tqdm_kwargs = dict(max_workers=kwargs.get("num_procs", 1), unit="instance")
-    data = process_map(func, func_args, **tqdm_kwargs)
+    if len(instances) == 1 or num_procs == 1:
+        res = [func(arg) for arg in tqdm(args, unit="instance")]
+    else:
+        res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [
         ("inst", "U37"),
@@ -229,7 +231,7 @@ def benchmark(instances: List[str], **kwargs):
         ("time", float),
     ]
 
-    data = np.asarray(data, dtype=dtypes)
+    data = np.asarray(res, dtype=dtypes)
     headers = ["Instance", "OK", "Obj.", "Iters. (#)", "Time (s)"]
 
     print("\n", tabulate(headers, data), "\n", sep="")
