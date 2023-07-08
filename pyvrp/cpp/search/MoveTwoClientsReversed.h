@@ -3,6 +3,8 @@
 
 #include "LocalSearchOperator.h"
 
+namespace pyvrp::search
+{
 /**
  * Inserts U -> X after V (as V -> X -> U), if that is an improving move.
  */
@@ -16,5 +18,6 @@ public:
 
     void apply(Node *U, Node *V) const override;
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_MOVETWOCLIENTSREVERSED_H

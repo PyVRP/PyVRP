@@ -193,10 +193,11 @@ public:
      */
     Solution(ProblemData const &data, std::vector<Route> const &routes);
 };
-
-std::ostream &operator<<(std::ostream &out, Solution const &sol);
-std::ostream &operator<<(std::ostream &out, Solution::Route const &route);
 }  // namespace pyvrp
+
+std::ostream &operator<<(std::ostream &out, pyvrp::Solution const &sol);
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::Solution::Route const &route);
 
 namespace std
 {

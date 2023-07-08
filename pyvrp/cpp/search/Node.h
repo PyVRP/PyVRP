@@ -4,6 +4,8 @@
 #include "Measure.h"
 #include "TimeWindowSegment.h"
 
+namespace pyvrp::search
+{
 class Route;
 
 struct Node
@@ -52,5 +54,6 @@ inline Node *p(Node *node) { return node->prev; }
  * Convenience method accessing the node directly after the argument.
  */
 inline Node *n(Node *node) { return node->next; }
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_NODE_H

@@ -177,14 +177,14 @@ Measure<Type> operator/(Measure<Type> const lhs, Measure<Type> const rhs)
 {
     return lhs.get() / rhs.get();
 }
+}  // namespace pyvrp
 
 // For printing.
-template <MeasureType Type>
-std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
+template <pyvrp::MeasureType Type>
+std::ostream &operator<<(std::ostream &out, pyvrp::Measure<Type> const measure)
 {
     return out << measure.get();
 }
-}  // namespace pyvrp
 
 // Specialisations for hashing and numerical limits.
 namespace std
