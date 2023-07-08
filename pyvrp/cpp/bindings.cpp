@@ -16,16 +16,24 @@
 
 namespace py = pybind11;
 
-using namespace pyvrp;
-using TWS = TimeWindowSegment;
+using pyvrp::CostEvaluator;
+using pyvrp::DynamicBitset;
+using pyvrp::Matrix;
+using pyvrp::PopulationParams;
+using pyvrp::ProblemData;
+using pyvrp::Solution;
+using pyvrp::SubPopulation;
+using pyvrp::XorShift128;
+using TWS = pyvrp::TimeWindowSegment;
 
-template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
+template <typename... Args>
+TWS merge(Matrix<pyvrp::Value> const &mat, Args... args)
 {
-    Matrix<Duration> durMat(mat.numRows(), mat.numCols());
+    Matrix<pyvrp::Duration> durMat(mat.numRows(), mat.numCols());
 
-    // Copy the Matrix<int> over to Matrix<Duration>. That's not very efficient,
-    // but since this class is internal to PyVRP that does not matter much. We
-    // only expose it to Python for testing.
+    // Copy the Matrix<pyvrp::Value> over to Matrix<Duration>. That's not
+    // efficient, but since this class is internal to PyVRP that does not matter
+    // much. We only expose it to Python for testing.
     for (size_t row = 0; row != durMat.numRows(); ++row)
         for (size_t col = 0; col != durMat.numCols(); ++col)
             durMat(row, col) = mat(row, col);
@@ -43,14 +51,16 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_penalty") = 0)
         .def(
             "load_penalty",
-            [](CostEvaluator const &evaluator, Value load, Value capacity) {
+            [](CostEvaluator const &evaluator,
+               pyvrp::Value load,
+               pyvrp::Value capacity) {
                 return evaluator.loadPenalty(load, capacity).get();
             },
             py::arg("load"),
             py::arg("capacity"))
         .def(
             "tw_penalty",
-            [](CostEvaluator const &evaluator, Value const timeWarp) {
+            [](CostEvaluator const &evaluator, pyvrp::Value const timeWarp) {
                 return evaluator.twPenalty(timeWarp).get();
             },
             py::arg("time_warp"))
@@ -88,37 +98,37 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__xor__", &DynamicBitset::operator^, py::arg("other"))
         .def("__invert__", &DynamicBitset::operator~);
 
-    py::class_<Matrix<int>>(m, "Matrix")
+    py::class_<Matrix<pyvrp::Value>>(m, "Matrix")
         .def(py::init<size_t>(), py::arg("dimension"))
         .def(py::init<size_t, size_t>(), py::arg("n_rows"), py::arg("n_cols"))
-        .def(py::init<std::vector<std::vector<int>>>(), py::arg("data"))
-        .def_property_readonly("num_cols", &Matrix<int>::numCols)
-        .def_property_readonly("num_rows", &Matrix<int>::numRows)
+        .def(py::init<std::vector<std::vector<pyvrp::Value>>>(),
+             py::arg("data"))
+        .def_property_readonly("num_cols", &Matrix<pyvrp::Value>::numCols)
+        .def_property_readonly("num_rows", &Matrix<pyvrp::Value>::numRows)
         .def(
             "__getitem__",
-            [](Matrix<int> &m, std::pair<size_t, size_t> idx) -> int {
-                return m(idx.first, idx.second);
-            },
+            [](Matrix<pyvrp::Value> &m, std::pair<size_t, size_t> idx)
+                -> pyvrp::Value { return m(idx.first, idx.second); },
             py::arg("idx"))
         .def(
             "__setitem__",
-            [](Matrix<int> &m, std::pair<size_t, size_t> idx, int value) {
-                m(idx.first, idx.second) = value;
-            },
+            [](Matrix<pyvrp::Value> &m,
+               std::pair<size_t, size_t> idx,
+               pyvrp::Value value) { m(idx.first, idx.second) = value; },
             py::arg("idx"),
             py::arg("value"))
-        .def("max", &Matrix<int>::max)
-        .def("size", &Matrix<int>::size);
+        .def("max", &Matrix<pyvrp::Value>::max)
+        .def("size", &Matrix<pyvrp::Value>::size);
 
     py::class_<ProblemData::Client>(m, "Client")
-        .def(py::init<Value,
-                      Value,
-                      Value,
-                      Value,
-                      Value,
-                      Value,
-                      Value,
-                      Value,
+        .def(py::init<pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
                       bool>(),
              py::arg("x"),
              py::arg("y"),
@@ -162,7 +172,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("required", &ProblemData::Client::required);
 
     py::class_<ProblemData::VehicleType>(m, "VehicleType")
-        .def(py::init<Value, size_t>(),
+        .def(py::init<pyvrp::Value, size_t>(),
              py::arg("capacity"),
              py::arg("num_available"))
         .def_property_readonly("capacity",
@@ -175,10 +185,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init(
                  [](std::vector<ProblemData::Client> const &clients,
                     std::vector<ProblemData::VehicleType> const &vehicleTypes,
-                    std::vector<std::vector<Value>> const &dist,
-                    std::vector<std::vector<Value>> const &dur) {
-                     Matrix<Distance> distMat(clients.size());
-                     Matrix<Duration> durMat(clients.size());
+                    std::vector<std::vector<pyvrp::Value>> const &dist,
+                    std::vector<std::vector<pyvrp::Value>> const &dur) {
+                     Matrix<pyvrp::Distance> distMat(clients.size());
+                     Matrix<pyvrp::Duration> durMat(clients.size());
 
                      for (size_t row = 0; row != clients.size(); ++row)
                          for (size_t col = 0; col != clients.size(); ++col)
@@ -375,7 +385,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
-        .def(py::init<diversity::DiversityMeasure, PopulationParams const &>(),
+        .def(py::init<pyvrp::diversity::DiversityMeasure,
+                      PopulationParams const &>(),
              py::arg("diversity_op"),
              py::arg("params"),
              py::keep_alive<1, 3>())  // keep params alive
@@ -407,7 +418,13 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("cost_evaluator"));
 
     py::class_<TWS>(m, "TimeWindowSegment")
-        .def(py::init<int, int, Value, Value, Value, Value, Value>(),
+        .def(py::init<int,
+                      int,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value,
+                      pyvrp::Value>(),
              py::arg("idx_first"),
              py::arg("idx_last"),
              py::arg("duration"),

@@ -4,16 +4,15 @@
 
 #include <cmath>
 
-using namespace pyvrp;
 using Client = int;
 using Clients = std::vector<Client>;
-using Route = Solution::Route;
+using Route = pyvrp::Solution::Route;
 using Routes = std::vector<Route>;
 
 namespace
 {
 // Angle of the given route w.r.t. the centroid of all client locations.
-double routeAngle(ProblemData const &data, Route const &route)
+double routeAngle(pyvrp::ProblemData const &data, Route const &route)
 {
     // This computes a pseudo-angle that sorts roughly equivalently to the atan2
     // angle, but is much faster to compute. See the following post for details:
@@ -25,7 +24,7 @@ double routeAngle(ProblemData const &data, Route const &route)
     return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
 }
 
-Routes sortByAscAngle(ProblemData const &data, Routes routes)
+Routes sortByAscAngle(pyvrp::ProblemData const &data, Routes routes)
 {
     auto cmp = [&data](Route a, Route b) {
         return routeAngle(data, a) < routeAngle(data, b);
@@ -36,7 +35,7 @@ Routes sortByAscAngle(ProblemData const &data, Routes routes)
 }
 }  // namespace
 
-Solution crossover::selectiveRouteExchange(
+pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
     CostEvaluator const &costEvaluator,

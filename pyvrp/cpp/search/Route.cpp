@@ -6,9 +6,8 @@
 #include <cmath>
 #include <ostream>
 
-using namespace pyvrp;
-using namespace pyvrp::search;
-using TWS = TimeWindowSegment;
+using pyvrp::search::Route;
+using TWS = pyvrp::TimeWindowSegment;
 
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data), vehicleType_(vehType), idx(idx)
