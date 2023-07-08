@@ -17,7 +17,7 @@
 namespace py = pybind11;
 
 using namespace pyvrp;
-using TWS = pyvrp::TimeWindowSegment;
+using TWS = TimeWindowSegment;
 
 template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
 {
