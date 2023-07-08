@@ -1,5 +1,7 @@
 #include "SwapStar.h"
 
+using namespace pyvrp;
+using namespace pyvrp::search;
 using TWS = TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)

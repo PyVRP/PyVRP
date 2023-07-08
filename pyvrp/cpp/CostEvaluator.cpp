@@ -2,6 +2,8 @@
 
 #include <limits>
 
+using namespace pyvrp;
+
 CostEvaluator::CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty)
     : capacityPenalty(capacityPenalty), timeWarpPenalty(timeWarpPenalty)
 {

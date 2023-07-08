@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+namespace pyvrp::search
+{
 using TWS = TimeWindowSegment;
 
 /**
@@ -317,5 +319,6 @@ template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V) const
         V = n(V);
     }
 }
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_EXCHANGE_H

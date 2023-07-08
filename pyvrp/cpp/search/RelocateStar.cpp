@@ -1,8 +1,10 @@
 #include "RelocateStar.h"
 
-Cost RelocateStar::evaluate(Route *U,
-                            Route *V,
-                            CostEvaluator const &costEvaluator)
+using namespace pyvrp::search;
+
+pyvrp::Cost RelocateStar::evaluate(Route *U,
+                                   Route *V,
+                                   pyvrp::CostEvaluator const &costEvaluator)
 {
     move = {};
 

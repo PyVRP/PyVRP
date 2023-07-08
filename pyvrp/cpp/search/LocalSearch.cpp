@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <vector>
 
+using namespace pyvrp;
+using namespace pyvrp::search;
 using TWS = TimeWindowSegment;
 
 Solution LocalSearch::search(Solution &solution,

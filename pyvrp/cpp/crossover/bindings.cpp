@@ -7,7 +7,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(_crossover, m)
 {
     m.def("selective_route_exchange",
-          &selectiveRouteExchange,
+          &pyvrp::crossover::selectiveRouteExchange,
           py::arg("parents"),
           py::arg("data"),
           py::arg("cost_evaluator"),

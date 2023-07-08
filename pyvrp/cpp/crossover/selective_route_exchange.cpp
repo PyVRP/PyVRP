@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+using namespace pyvrp;
 using Client = int;
 using Clients = std::vector<Client>;
 using Route = Solution::Route;
@@ -35,7 +36,7 @@ Routes sortByAscAngle(ProblemData const &data, Routes routes)
 }
 }  // namespace
 
-Solution selectiveRouteExchange(
+Solution crossover::selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
     CostEvaluator const &costEvaluator,

@@ -1,6 +1,8 @@
 #ifndef PYVRP_CIRCLESECTOR_H
 #define PYVRP_CIRCLESECTOR_H
 
+namespace pyvrp::search
+{
 // Data structure to represent circle sectors
 // Angles are measured in [0,65535] instead of [0,359], in such a way that
 // modulo operations are much faster (since 2^16 = 65536) Credit to Fabian
@@ -78,5 +80,6 @@ struct CircleSector
         }
     }
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_CIRCLESECTOR_H

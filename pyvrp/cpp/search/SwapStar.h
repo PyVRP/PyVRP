@@ -9,6 +9,8 @@
 #include <limits>
 #include <vector>
 
+namespace pyvrp::search
+{
 /**
  * Explores the SWAP* neighbourhood of [1]. The SWAP* neighbourhood explores
  * free form re-insertions of nodes U and V in the given routes (so the nodes
@@ -107,5 +109,6 @@ public:
     {
     }
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_SWAPSTAR_H

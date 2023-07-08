@@ -3,6 +3,8 @@
 
 #include "LocalSearchOperator.h"
 
+namespace pyvrp::search
+{
 /**
  * 2-OPT moves.
  *
@@ -31,5 +33,6 @@ public:
 
     void apply(Node *U, Node *V) const override;
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_TWOOPT_H

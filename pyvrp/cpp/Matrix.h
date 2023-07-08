@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace pyvrp
+{
 template <typename T> class Matrix
 {
     size_t cols_;          // The number of columns of the matrix
@@ -109,5 +111,6 @@ template <typename T> T Matrix<T>::max() const
 }
 
 template <typename T> size_t Matrix<T>::size() const { return data_.size(); }
+}  // namespace pyvrp
 
 #endif  // PYVRP_MATRIX_H
