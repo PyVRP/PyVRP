@@ -4,7 +4,9 @@
 #include <cmath>
 #include <limits>
 
-using namespace pyvrp;
+using pyvrp::Cost;
+using pyvrp::Duration;
+
 using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
@@ -15,8 +17,8 @@ namespace
 Cost deltaCost(Client client,
                Client prev,
                Client next,
-               ProblemData const &data,
-               [[maybe_unused]] CostEvaluator const &costEvaluator)
+               pyvrp::ProblemData const &data,
+               [[maybe_unused]] pyvrp::CostEvaluator const &costEvaluator)
 {
     auto const currDist = data.dist(prev, next);
     auto const propDist = data.dist(prev, client) + data.dist(client, next);
@@ -59,10 +61,10 @@ Cost deltaCost(Client client,
 }
 }  // namespace
 
-void crossover::greedyRepair(Routes &routes,
-                             DynamicBitset const &unplanned,
-                             ProblemData const &data,
-                             CostEvaluator const &costEvaluator)
+void pyvrp::crossover::greedyRepair(Routes &routes,
+                                    pyvrp::DynamicBitset const &unplanned,
+                                    pyvrp::ProblemData const &data,
+                                    pyvrp::CostEvaluator const &costEvaluator)
 {
     auto const numRoutes = routes.size();
 

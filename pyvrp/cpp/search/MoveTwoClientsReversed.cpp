@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-using namespace pyvrp::search;
+using pyvrp::search::MoveTwoClientsReversed;
 using TWS = pyvrp::TimeWindowSegment;
 
 pyvrp::Cost MoveTwoClientsReversed::evaluate(

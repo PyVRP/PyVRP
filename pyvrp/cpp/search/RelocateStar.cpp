@@ -1,6 +1,7 @@
 #include "RelocateStar.h"
 
-using namespace pyvrp::search;
+using pyvrp::search::RelocateStar;
+using pyvrp::search::Route;
 
 pyvrp::Cost RelocateStar::evaluate(Route *U,
                                    Route *V,

@@ -19,11 +19,11 @@ namespace py = pybind11;
 using namespace pyvrp;
 using TWS = TimeWindowSegment;
 
-template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
+template <typename... Args> TWS merge(Matrix<Value> const &mat, Args... args)
 {
     Matrix<Duration> durMat(mat.numRows(), mat.numCols());
 
-    // Copy the Matrix<int> over to Matrix<Duration>. That's not very efficient,
+    // Copy the Matrix<Value> over to Matrix<Duration>. That's not efficient,
     // but since this class is internal to PyVRP that does not matter much. We
     // only expose it to Python for testing.
     for (size_t row = 0; row != durMat.numRows(); ++row)
@@ -88,27 +88,27 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__xor__", &DynamicBitset::operator^, py::arg("other"))
         .def("__invert__", &DynamicBitset::operator~);
 
-    py::class_<Matrix<int>>(m, "Matrix")
+    py::class_<Matrix<Value>>(m, "Matrix")
         .def(py::init<size_t>(), py::arg("dimension"))
         .def(py::init<size_t, size_t>(), py::arg("n_rows"), py::arg("n_cols"))
-        .def(py::init<std::vector<std::vector<int>>>(), py::arg("data"))
-        .def_property_readonly("num_cols", &Matrix<int>::numCols)
-        .def_property_readonly("num_rows", &Matrix<int>::numRows)
+        .def(py::init<std::vector<std::vector<Value>>>(), py::arg("data"))
+        .def_property_readonly("num_cols", &Matrix<Value>::numCols)
+        .def_property_readonly("num_rows", &Matrix<Value>::numRows)
         .def(
             "__getitem__",
-            [](Matrix<int> &m, std::pair<size_t, size_t> idx) -> int {
+            [](Matrix<Value> &m, std::pair<size_t, size_t> idx) -> Value {
                 return m(idx.first, idx.second);
             },
             py::arg("idx"))
         .def(
             "__setitem__",
-            [](Matrix<int> &m, std::pair<size_t, size_t> idx, int value) {
+            [](Matrix<Value> &m, std::pair<size_t, size_t> idx, Value value) {
                 m(idx.first, idx.second) = value;
             },
             py::arg("idx"),
             py::arg("value"))
-        .def("max", &Matrix<int>::max)
-        .def("size", &Matrix<int>::size);
+        .def("max", &Matrix<Value>::max)
+        .def("size", &Matrix<Value>::size);
 
     py::class_<ProblemData::Client>(m, "Client")
         .def(py::init<Value,

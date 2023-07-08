@@ -1,6 +1,6 @@
 #include "Node.h"
 
-using namespace pyvrp::search;
+using pyvrp::search::Node;
 
 void Node::insertAfter(Node *other)
 {
