@@ -5,7 +5,12 @@
 #include <numeric>
 #include <unordered_map>
 
-using namespace pyvrp;
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+using pyvrp::Solution;
+
 using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;

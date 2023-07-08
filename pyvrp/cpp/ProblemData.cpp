@@ -1,13 +1,11 @@
 #include "ProblemData.h"
 
-#include <cmath>
-#include <fstream>
 #include <numeric>
-#include <sstream>
-#include <string>
-#include <vector>
 
-using namespace pyvrp;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Matrix;
+using pyvrp::ProblemData;
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,

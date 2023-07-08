@@ -9,9 +9,9 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace pyvrp;
-using namespace pyvrp::search;
-using TWS = TimeWindowSegment;
+using pyvrp::Solution;
+using pyvrp::search::LocalSearch;
+using TWS = pyvrp::TimeWindowSegment;
 
 Solution LocalSearch::search(Solution &solution,
                              CostEvaluator const &costEvaluator)

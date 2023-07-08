@@ -10,58 +10,71 @@
 
 namespace py = pybind11;
 
-using namespace pyvrp::search;
+using pyvrp::search::Exchange;
+using pyvrp::search::LocalSearch;
+using pyvrp::search::LocalSearchOperator;
+using pyvrp::search::MoveTwoClientsReversed;
+using pyvrp::search::RelocateStar;
+using pyvrp::search::SwapStar;
+using pyvrp::search::TwoOpt;
 
 PYBIND11_MODULE(_search, m)
 {
-    py::class_<LocalSearchOperator<Node>>(m, "NodeOperator");
-    py::class_<LocalSearchOperator<Route>>(m, "RouteOperator");
+    using NodeOp = LocalSearchOperator<pyvrp::search::Node>;
+    using RouteOp = LocalSearchOperator<pyvrp::search::Route>;
 
-    py::class_<Exchange<1, 0>, LocalSearchOperator<Node>>(m, "Exchange10")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
-    py::class_<Exchange<2, 0>, LocalSearchOperator<Node>>(m, "Exchange20")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
-    py::class_<Exchange<3, 0>, LocalSearchOperator<Node>>(m, "Exchange30")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
-    py::class_<Exchange<1, 1>, LocalSearchOperator<Node>>(m, "Exchange11")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
-    py::class_<Exchange<2, 1>, LocalSearchOperator<Node>>(m, "Exchange21")
+    py::class_<NodeOp>(m, "NodeOperator");
+    py::class_<RouteOp>(m, "RouteOperator");
+
+    py::class_<Exchange<1, 0>, NodeOp>(m, "Exchange10")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<Exchange<3, 1>, LocalSearchOperator<Node>>(m, "Exchange31")
+    py::class_<Exchange<2, 0>, NodeOp>(m, "Exchange20")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<Exchange<2, 2>, LocalSearchOperator<Node>>(m, "Exchange22")
+    py::class_<Exchange<3, 0>, NodeOp>(m, "Exchange30")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<Exchange<3, 2>, LocalSearchOperator<Node>>(m, "Exchange32")
+    py::class_<Exchange<1, 1>, NodeOp>(m, "Exchange11")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<Exchange<3, 3>, LocalSearchOperator<Node>>(m, "Exchange33")
+    py::class_<Exchange<2, 1>, NodeOp>(m, "Exchange21")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
+
+    py::class_<Exchange<3, 1>, NodeOp>(m, "Exchange31")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
+
+    py::class_<Exchange<2, 2>, NodeOp>(m, "Exchange22")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
+
+    py::class_<Exchange<3, 2>, NodeOp>(m, "Exchange32")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
+
+    py::class_<Exchange<3, 3>, NodeOp>(m, "Exchange33")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
@@ -98,26 +111,25 @@ PYBIND11_MODULE(_search, m)
              py::arg("overlap_tolerance_degrees") = 0)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
-    py::class_<MoveTwoClientsReversed, LocalSearchOperator<Node>>(
-        m, "MoveTwoClientsReversed")
+    py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<RelocateStar, LocalSearchOperator<Route>>(m, "RelocateStar")
+    py::class_<RelocateStar, RouteOp>(m, "RelocateStar")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<SwapStar, LocalSearchOperator<Route>>(m, "SwapStar")
+    py::class_<SwapStar, RouteOp>(m, "SwapStar")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<TwoOpt, LocalSearchOperator<Node>>(m, "TwoOpt")
+    py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
