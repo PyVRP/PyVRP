@@ -15,6 +15,8 @@
 #include <sstream>
 
 namespace py = pybind11;
+
+using namespace pyvrp;
 using TWS = TimeWindowSegment;
 
 template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
@@ -373,7 +375,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
 
     py::class_<SubPopulation>(m, "SubPopulation")
-        .def(py::init<DiversityMeasure, PopulationParams const &>(),
+        .def(py::init<diversity::DiversityMeasure, PopulationParams const &>(),
              py::arg("diversity_op"),
              py::arg("params"),
              py::keep_alive<1, 3>())  // keep params alive

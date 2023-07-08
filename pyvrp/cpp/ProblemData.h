@@ -8,6 +8,8 @@
 #include <iosfwd>
 #include <vector>
 
+namespace pyvrp
+{
 class ProblemData
 {
 public:
@@ -154,5 +156,6 @@ Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

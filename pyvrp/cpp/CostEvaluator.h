@@ -4,6 +4,8 @@
 #include "Measure.h"
 #include "Solution.h"
 
+namespace pyvrp
+{
 /**
  * Cost evaluator class that computes penalty values for timewarp and load.
  */
@@ -66,5 +68,6 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_COSTEVALUATOR_H

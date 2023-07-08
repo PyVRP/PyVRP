@@ -1,5 +1,7 @@
 #include "XorShift128.h"
 
+using pyvrp::XorShift128;
+
 XorShift128::XorShift128(uint32_t seed)
 {
     state_[0] = seed;

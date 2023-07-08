@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+using namespace pyvrp;
+
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
                             Load demand,

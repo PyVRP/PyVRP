@@ -10,11 +10,9 @@ project(
     ]
 )
 
-# The following lines define compiler and linker options for the debug build.
-# In particular, we also set up debug builds to provide coverage results.
-compiler = meson.get_compiler('cpp')
-
 if get_option('buildtype') == 'debug'
+    compiler = meson.get_compiler('cpp')
+
     if compiler.has_argument('-fprofile-abs-path')
         # clang does not have this particular flag, so we only add it when
         # compiling with gcc. It's helpful in determining code coverage.

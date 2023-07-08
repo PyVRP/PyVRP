@@ -9,6 +9,8 @@
 #include <iosfwd>
 #include <vector>
 
+namespace pyvrp
+{
 class Solution
 {
     using Client = int;
@@ -191,21 +193,23 @@ public:
      */
     Solution(ProblemData const &data, std::vector<Route> const &routes);
 };
+}  // namespace pyvrp
 
-std::ostream &operator<<(std::ostream &out, Solution const &sol);
-std::ostream &operator<<(std::ostream &out, Solution::Route const &route);
+std::ostream &operator<<(std::ostream &out, pyvrp::Solution const &sol);
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::Solution::Route const &route);
 
 namespace std
 {
-template <> struct hash<Solution>
+template <> struct hash<pyvrp::Solution>
 {
-    size_t operator()(Solution const &sol) const
+    size_t operator()(pyvrp::Solution const &sol) const
     {
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(sol.numRoutes());
-        res = res * 31 + std::hash<Distance>()(sol.distance());
-        res = res * 31 + std::hash<Load>()(sol.excessLoad());
-        res = res * 31 + std::hash<Duration>()(sol.timeWarp());
+        res = res * 31 + std::hash<pyvrp::Distance>()(sol.distance());
+        res = res * 31 + std::hash<pyvrp::Load>()(sol.excessLoad());
+        res = res * 31 + std::hash<pyvrp::Duration>()(sol.timeWarp());
 
         return res;
     }

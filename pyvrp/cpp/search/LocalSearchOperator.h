@@ -8,6 +8,8 @@
 #include "Route.h"
 #include "Solution.h"
 
+namespace pyvrp::search
+{
 template <typename Arg> class LocalSearchOperatorBase
 {
     // Can only be specialised into either a Node or Route operator; there
@@ -74,5 +76,6 @@ public:
      */
     virtual void update([[maybe_unused]] Route *U){};
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_LOCALSEARCHOPERATOR_H
