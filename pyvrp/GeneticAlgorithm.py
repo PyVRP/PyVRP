@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from pyvrp.search.LocalSearch import LocalSearch
     from pyvrp.stop import StoppingCriterion
 
-    from ._common import CostEvaluator, ProblemData, Solution, XorShift128
+    from ._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
     from .PenaltyManager import PenaltyManager
     from .Population import Population
 

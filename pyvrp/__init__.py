@@ -1,4 +1,4 @@
-from ._common import (
+from ._pyvrp import (
     Client,
     CostEvaluator,
     DynamicBitset,

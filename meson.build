@@ -73,7 +73,7 @@ dependencies = [py.dependency(), dependency('pybind11')]
 # eventual module name, and 'subdirectory' gives the source and installation 
 # directories (relative to SRC_DIR and INST_DIR).
 extensions = [
-    ['_common', ''],
+    ['_pyvrp', ''],
     ['_crossover', 'crossover'],
     ['_diversity', 'diversity'],
     ['_search', 'search'],

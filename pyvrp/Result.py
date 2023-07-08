@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 
-from ._common import CostEvaluator, Solution
+from ._pyvrp import CostEvaluator, Solution
 from .Statistics import Statistics
 
 

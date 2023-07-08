@@ -31,7 +31,7 @@ template <typename... Args> TWS merge(Matrix<int> const &mat, Args... args)
     return TWS::merge(durMat, args...);
 }
 
-PYBIND11_MODULE(_common, m)
+PYBIND11_MODULE(_pyvrp, m)
 {
     py::class_<CostEvaluator>(m, "CostEvaluator")
         .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {

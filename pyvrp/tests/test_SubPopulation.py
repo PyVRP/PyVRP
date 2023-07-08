@@ -3,7 +3,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
 from pyvrp import CostEvaluator, PopulationParams, Solution, XorShift128
-from pyvrp._common import SubPopulation
+from pyvrp._pyvrp import SubPopulation
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
 

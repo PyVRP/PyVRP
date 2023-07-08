@@ -6,7 +6,7 @@ from statistics import fmean
 from time import perf_counter
 from typing import List, Union
 
-from ._common import CostEvaluator
+from ._pyvrp import CostEvaluator
 from .Population import Population, SubPopulation
 
 _FEAS_CSV_PREFIX = "feas_"
