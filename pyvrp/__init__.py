@@ -4,7 +4,7 @@ from .PenaltyManager import PenaltyManager, PenaltyParams
 from .Population import Population, PopulationParams
 from .Result import Result
 from .Statistics import Statistics
-from ._common import (
+from ._pyvrp import (
     Client,
     CostEvaluator,
     DynamicBitset,

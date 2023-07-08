@@ -1,6 +1,6 @@
 from typing import List
 
-from pyvrp._common import CostEvaluator, ProblemData, Solution, XorShift128
+from pyvrp._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
 
 class NodeOperator:
     def __init__(self, *args, **kwargs) -> None: ...

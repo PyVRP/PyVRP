@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from statistics import fmean
 from typing import List
 
-from pyvrp._common import CostEvaluator
+from pyvrp._pyvrp import CostEvaluator
 
 
 @dataclass

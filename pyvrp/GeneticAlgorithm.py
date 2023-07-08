@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from .PenaltyManager import PenaltyManager
     from .Population import Population
-    from ._common import CostEvaluator, ProblemData, Solution, XorShift128
+    from ._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
 
     _Parents = Tuple[Solution, Solution]
     CrossoverOperator = Callable[

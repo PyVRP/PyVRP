@@ -6,7 +6,7 @@ PyVRP
 =====
 
 The top-level :mod:`pyvrp` module exposes several core classes needed to run the VRP solver.
-These include the core :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`, and the :class:`~pyvrp.Population.Population` that manages a :class:`~pyvrp._common.Solution` pool.
+These include the core :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`, and the :class:`~pyvrp.Population.Population` that manages a :class:`~pyvrp._pyvrp.Solution` pool.
 Most classes take parameter objects that allow for advanced configuration - but sensible defaults are also provided.
 Finally, after running, the :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm` returns a :class:`~pyvrp.Result.Result` object.
 This object can be used to obtain the best observed solution, and detailed runtime statistics.
@@ -60,7 +60,7 @@ This object can be used to obtain the best observed solution, and detailed runti
 .. automodule:: pyvrp.Statistics
    :members:
 
-.. automodule:: pyvrp._common
+.. automodule:: pyvrp._pyvrp
 
    .. autoapiclass:: CostEvaluator
       :members:

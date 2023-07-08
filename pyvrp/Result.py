@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass
 
 from .Statistics import Statistics
-from ._common import CostEvaluator, Solution
+from ._pyvrp import CostEvaluator, Solution
 
 
 @dataclass
