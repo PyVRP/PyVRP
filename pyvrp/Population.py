@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Callable, Generator, Tuple
 from warnings import warn
 
-from ._common import (
+from ._pyvrp import (
     CostEvaluator,
     PopulationParams,
     Solution,

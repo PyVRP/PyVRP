@@ -7,7 +7,7 @@ from time import perf_counter
 from typing import List, Union
 
 from .Population import Population, SubPopulation
-from ._common import CostEvaluator
+from ._pyvrp import CostEvaluator
 
 _FEAS_CSV_PREFIX = "feas_"
 _INFEAS_CSV_PREFIX = "infeas_"

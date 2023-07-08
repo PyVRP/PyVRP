@@ -7,7 +7,7 @@ from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
-from pyvrp._common import (
+from pyvrp._pyvrp import (
     Client,
     ProblemData,
     Solution,
@@ -58,7 +58,7 @@ class Model:
         """
         Returns the vehicle types in the current model. The routes of the
         solution returned by :meth:`~solve` have a property
-        :meth:`~pyvrp._common.Route.vehicle_type()` that can be used to index
+        :meth:`~pyvrp._pyvrp.Route.vehicle_type()` that can be used to index
         these vehicle types.
         """
         return self._vehicle_types
@@ -115,7 +115,7 @@ class Model:
     ) -> Client:
         """
         Adds a client with the given attributes to the model. Returns the
-        created :class:`~pyvrp._common.Client` instance.
+        created :class:`~pyvrp._pyvrp.Client` instance.
         """
         client = Client(
             x,
@@ -141,7 +141,7 @@ class Model:
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
-        created :class:`~pyvrp._common.Client` instance.
+        created :class:`~pyvrp._pyvrp.Client` instance.
 
         .. warning::
 
@@ -206,7 +206,7 @@ class Model:
 
     def data(self) -> ProblemData:
         """
-        Creates and returns a :class:`~pyvrp._common.ProblemData` instance
+        Creates and returns a :class:`~pyvrp._pyvrp.ProblemData` instance
         from this model's attributes.
         """
         locs = self.locations
