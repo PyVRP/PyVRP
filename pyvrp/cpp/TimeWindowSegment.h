@@ -4,6 +4,8 @@
 #include "Matrix.h"
 #include "Measure.h"
 
+namespace pyvrp
+{
 class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
@@ -106,5 +108,6 @@ TimeWindowSegment::TimeWindowSegment(int idxFirst,
       releaseTime(releaseTime)
 {
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_TIMEWINDOWSEGMENT_H

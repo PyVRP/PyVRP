@@ -4,6 +4,8 @@
 
 namespace py = pybind11;
 
+using namespace pyvrp::diversity;
+
 PYBIND11_MODULE(_diversity, m)
 {
     m.def("broken_pairs_distance",

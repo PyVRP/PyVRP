@@ -1,6 +1,9 @@
 #include "diversity.h"
 
-double brokenPairsDistance(Solution const &first, Solution const &second)
+using namespace pyvrp;
+
+double diversity::brokenPairsDistance(Solution const &first,
+                                      Solution const &second)
 {
     auto const &fNeighbours = first.getNeighbours();
     auto const &sNeighbours = second.getNeighbours();

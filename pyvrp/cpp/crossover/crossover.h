@@ -10,7 +10,7 @@
 #include <functional>
 #include <vector>
 
-namespace crossover
+namespace pyvrp::crossover
 {
 /**
  * Greedily inserts each unplanned client into the route that's nearest to the
@@ -20,7 +20,6 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
                   DynamicBitset const &unplanned,
                   ProblemData const &data,
                   CostEvaluator const &costEvaluator);
-}  // namespace crossover
 
 /**
  * Performs two SREX crossovers of the given parents. SREX is a method that
@@ -51,5 +50,6 @@ Solution selectiveRouteExchange(
     CostEvaluator const &costEvaluator,
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes);
+}  // namespace pyvrp::crossover
 
 #endif  // PYVRP_CROSSOVER_H

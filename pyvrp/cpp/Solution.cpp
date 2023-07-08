@@ -5,6 +5,7 @@
 #include <numeric>
 #include <unordered_map>
 
+using namespace pyvrp;
 using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;

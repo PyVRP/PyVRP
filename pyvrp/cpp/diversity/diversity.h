@@ -6,6 +6,8 @@
 
 #include <functional>
 
+namespace pyvrp::diversity
+{
 typedef std::function<double(Solution const &, Solution const &)>
     DiversityMeasure;
 
@@ -19,5 +21,6 @@ typedef std::function<double(Solution const &, Solution const &)>
  * @return The (symmetric) broken pairs distance between the two solutions.
  */
 double brokenPairsDistance(Solution const &first, Solution const &second);
+}  // namespace pyvrp::diversity
 
 #endif  // PYVRP_DIVERSITY_H

@@ -4,6 +4,8 @@
 #include <bitset>
 #include <vector>
 
+namespace pyvrp
+{
 /**
  * A simple dynamic bitset implementation, on top of a vector of bitsets. See
  * https://en.cppreference.com/w/cpp/utility/bitset for details.
@@ -50,5 +52,6 @@ DynamicBitset::Block::reference DynamicBitset::operator[](size_t idx)
     auto const r = idx % BLOCK_SIZE;
     return data_[q][r];
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_DYNAMICBITSET_H

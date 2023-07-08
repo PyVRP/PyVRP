@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 
+using namespace pyvrp;
 using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;

@@ -2,10 +2,11 @@
 
 #include <numeric>
 
+using namespace pyvrp;
 using const_iter = std::vector<SubPopulation::Item>::const_iterator;
 using iter = std::vector<SubPopulation::Item>::iterator;
 
-SubPopulation::SubPopulation(DiversityMeasure divOp,
+SubPopulation::SubPopulation(diversity::DiversityMeasure divOp,
                              PopulationParams const &params)
     : divOp(divOp), params(params)
 {

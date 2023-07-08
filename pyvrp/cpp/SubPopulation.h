@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace pyvrp
+{
 struct PopulationParams
 {
     size_t minPopSize;
@@ -50,7 +52,7 @@ struct PopulationParams
 
 class SubPopulation
 {
-    DiversityMeasure divOp;
+    diversity::DiversityMeasure divOp;
     PopulationParams const &params;  // owned by Population, on the Python side
 
 public:
@@ -81,7 +83,8 @@ private:
     void remove(std::vector<Item>::iterator const &iterator);
 
 public:
-    SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
+    SubPopulation(diversity::DiversityMeasure divOp,
+                  PopulationParams const &params);
 
     ~SubPopulation();
 
@@ -101,5 +104,6 @@ public:
     // This is called whenever a solution is added or removed.
     void updateFitness(CostEvaluator const &costEvaluator);
 };
+}  // namespace pyvrp
 
 #endif  // PYVRP_SUBPOPULATION_H
