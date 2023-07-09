@@ -27,9 +27,9 @@ We provide some example notebooks that show how the `pyvrp` package may be used 
 These include:
 
 - The vehicle routing problem with time windows (VRPTW), [here][4].
-  We solve several instances from the literature, including a large 1000 customer instance.
+  We solve several instances from the literature, including a large instance of 1000 clients.
 - The capacitated vehicle routing problem (CVRP), [here][5].
-  We solve an instance with 439 customers to near optimality within 30 seconds.
+  We solve an instance with 438 clients to near optimality within 30 seconds.
 
 ### Contributing
 
