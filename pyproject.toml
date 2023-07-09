@@ -61,7 +61,6 @@ numpydoc = ">=1.5.0"
 sphinx_rtd_theme = ">=0.5.1"
 sphinx-autoapi = ">=2.0.1"
 docutils = "==0.16"
-ipykernel = "^6.24.0"
 
 
 [tool.poetry.group.examples]
