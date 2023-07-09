@@ -42,4 +42,4 @@ You only need to provide the initial solutions, for which we suggest taking rand
 
 .. hint::
 
-   See the examples :doc:`capacitated VRP <../examples/cvrp>` and :doc:`VRP with time windows <../examples/vrptw>` on how to setup HGS to solve these VRPs.
+   See the :doc:`examples <../examples/basic_vrps>` on how to get started with PyVRP.
