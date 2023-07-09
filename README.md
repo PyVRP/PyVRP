@@ -35,6 +35,8 @@ These include:
 - A notebook solving classical VRP variants, [here][4].
   In this notebook we solve several benchmark instances of the CVRP and VRPTW problems.
   We also demonstrate how to use the plotting tools available in PyVRP to visualise the instance and statistics collected during the search procedure. 
+- A notebook implementing a `solve` method using PyVRP's components, [here][9].
+  This notebook is a great way to dive deeper into how PyVRP works under the hood.
 
 ### Contributing
 
@@ -67,3 +69,5 @@ TODO
 [7]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_hgs.html
 
 [8]: https://github.com/vidalt/HGS-CVRP/
+
+[9]: https://pyvrp.readthedocs.io/en/latest/examples/using_pyvrp_components.html
