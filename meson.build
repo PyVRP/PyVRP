@@ -63,8 +63,10 @@ libcommon = static_library(
     include_directories: INCLUDES,
 )
 
-# Next we get the extension dependencies.
-py = import('python').find_installation()
+# Next we get the extension dependencies. We should be precise about the Python
+# version we depend on: that's the one in the current environment.
+py_program = run_command('poetry', 'env', 'info', '--executable', check : true)
+py = import('python').find_installation(py_program.stdout().strip())
 dependencies = [py.dependency(), dependency('pybind11')]
 
 # Extension as [extension name, subdirectory]. The 'extension name' names the
