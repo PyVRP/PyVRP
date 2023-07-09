@@ -42,4 +42,4 @@ You only need to provide the initial solutions, for which we suggest taking rand
 
 .. hint::
 
-   See the :doc:`examples <../examples/basic_vrps>` on how to get started with PyVRP.
+   See the :doc:`tutorial <../examples/getting_started>` page to get started with PyVRP.

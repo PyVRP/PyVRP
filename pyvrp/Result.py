@@ -69,7 +69,7 @@ class Result:
     def has_statistics(self) -> bool:
         """
         Returns whether detailed statistics were collected. If statistics are
-        not availabe, the plotting methods cannot be used.
+        not available, the plotting methods cannot be used.
 
         Returns
         -------
