@@ -26,10 +26,11 @@ The documentation is available [here][1].
 We provide some example notebooks that show how the `pyvrp` package may be used to solve vehicle routing problems.
 These include:
 
-- The vehicle routing problem with time windows (VRPTW), [here][4].
-  We solve several instances from the literature, including a large instance of 1000 clients.
-- The capacitated vehicle routing problem (CVRP), [here][5].
-  We solve an instance with 438 clients to near optimality within 30 seconds.
+- A short tutorial and introduction to PyVRP's modelling interface, [here][5].
+  This is a great way to get started with PyVRP.
+- A notebook solving classical VRP variants, [here][4].
+  In this notebook we solve several benchmark instances of the CVRP and VRPTW problems.
+  We also demonstrate how to use the plotting tools available in PyVRP to visualise the instance and statistics collected during the search procedure. 
 
 ### Contributing
 
@@ -53,9 +54,9 @@ TODO
 
 [3]: https://pyvrp.readthedocs.io/en/latest/setup/getting_help.html
 
-[4]: https://pyvrp.readthedocs.io/en/latest/examples/vrptw.html
+[4]: https://pyvrp.readthedocs.io/en/latest/examples/basic_vrps.html
 
-[5]: https://pyvrp.readthedocs.io/en/latest/examples/cvrp.html
+[5]: https://pyvrp.readthedocs.io/en/latest/examples/getting_started.html
 
 [6]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_vrp.html
 

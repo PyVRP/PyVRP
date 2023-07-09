@@ -39,8 +39,7 @@ Contents
    :maxdepth: 1
    :caption: Examples
 
-   examples/vrptw
-   examples/cvrp
+   examples/basic_vrps
 
 .. toctree::
    :maxdepth: 1
