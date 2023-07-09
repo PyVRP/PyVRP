@@ -53,7 +53,6 @@ extensions = [
     "sphinx_rtd_theme",
     "nbsphinx",
     "numpydoc",
-    "sphinxcontrib.spelling",
 ]
 
 exclude_patterns = ["_build", "**.ipynb_checkpoints"]
