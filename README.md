@@ -6,7 +6,11 @@
 [![codecov](https://codecov.io/gh/PyVRP/PyVRP/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/PyVRP/PyVRP)
 
 The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
-It currently supports the capacitated VRP (CVRP), the VRP with time windows (VRPTW), and prize-collecting. 
+It currently supports VRPs with:
+- Client demands (capacitated VRP);
+- Vehicles of different capacities;
+- Time windows, client service durations, and release times (VRP with time windows and release times);
+- Optional clients with prizes for visiting (prize-collecting).
 
 The implementation builds on Thibaut Vidal's [HGS-CVRP][8], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
