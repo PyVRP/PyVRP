@@ -36,7 +36,7 @@ These include:
   In this notebook we solve several benchmark instances of the CVRP and VRPTW problems.
   We also demonstrate how to use the plotting tools available in PyVRP to visualise the instance and statistics collected during the search procedure. 
 - A notebook implementing a `solve` method using PyVRP's components, [here][9].
-  This notebook is a great way to dive deeper into how PyVRP works under the hood.
+  This notebook is a great way to dive deeper into how PyVRP works internally.
 
 ### Contributing
 
