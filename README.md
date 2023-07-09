@@ -5,7 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pyvrp/badge/?version=latest)](https://pyvrp.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/PyVRP/PyVRP/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/PyVRP/PyVRP)
 
-The `pyvrp` package is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports VRPs with:
 - Client demands (capacitated VRP);
 - Vehicles of different capacities;
@@ -16,7 +16,7 @@ The implementation builds on Thibaut Vidal's [HGS-CVRP][8], but has been complet
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
 Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install `pyvrp` directly from the source code.
 
-`pyvrp` may be installed in the usual way as
+The `pyvrp` package may be installed in the usual way as
 ```
 pip install pyvrp
 ```
@@ -27,7 +27,7 @@ The documentation is available [here][1].
 
 ### Examples
 
-We provide some example notebooks that show how the `pyvrp` package may be used to solve vehicle routing problems.
+We provide some example notebooks that show how PyVRP may be used to solve vehicle routing problems.
 These include:
 
 - A short tutorial and introduction to PyVRP's modelling interface, [here][5].
