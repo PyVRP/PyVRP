@@ -41,7 +41,7 @@ numpydoc_class_members_toctree = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
-nbsphinx_execute = ["always"]
+nbsphinx_execute = "always"
 
 # -- General configuration
 extensions = [
