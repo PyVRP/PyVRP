@@ -30,6 +30,7 @@ Contents
 
    setup/introduction_to_vrp
    setup/introduction_to_hgs
+   examples/getting_started
    setup/installation
    setup/getting_help
    setup/benchmarks
