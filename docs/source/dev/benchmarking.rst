@@ -25,7 +25,8 @@ Particularly:
 The time limit should be scaled by the PassMark score of your CPU.
 Each instance is run ten times with different seeds.
 Each run is performed on a single core.
-For each instance, we take the average objectives/gaps of these ten runs with different seeds.
+For each instance, we take the average objectives of these ten runs with different seeds.
+These are compared against the most recent best-known solutions in the ``PyVRP/Instances`` repository.
 
 To get the benchmark instance sets quickly, the ``PyVRP/Instances`` repository may be initialised as a submodule:
 

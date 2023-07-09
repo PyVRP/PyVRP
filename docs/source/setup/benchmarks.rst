@@ -6,7 +6,8 @@ See the :doc:`benchmarking instructions <../dev/benchmarking>` for how these ben
 
 PyVRP
 -----
-The table below contains the benchmark results obtained by each new significant version of PyVRP. The reported values represent the average gaps to the best-known solutions over ten seeds.
+The table below contains the benchmark results obtained by each new significant version of PyVRP.
+The reported values represent the gap with respect to the most recent best-known solutions at the time of the benchmark, averaged over ten seeds.
 The configuration files used for benchmarking are `configs/cvrp.toml` (for CVRP) and `configs/vrptw.toml` (for VRPTW and PC-VRPTW).
 
 .. list-table::
