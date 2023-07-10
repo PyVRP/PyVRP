@@ -135,9 +135,12 @@ class GeneticAlgorithm:
             curr_best = self._cost_evaluator.cost(self._best)
 
             parents = self._pop.select(self._rng, self._cost_evaluator)
+            # print("Parent 1:", parents[0])
+            # print("Parent 2:", parents[1])
             offspring = self._op(
                 parents, self._data, self._cost_evaluator, self._rng
             )
+            # print("Offspring:", offspring)
             self._search(offspring)
 
             new_best = self._cost_evaluator.cost(self._best)
@@ -161,9 +164,9 @@ class GeneticAlgorithm:
 
         def add_and_register(sol):
             self._pop.add(sol, self._cost_evaluator)
-            # self._pm.register_load_feasible(not sol.has_excess_load())
             self._pm.register_weight_feasible(not sol.has_excess_weight())
             self._pm.register_volume_feasible(not sol.has_excess_volume())
+            self._pm.register_volume_feasible(not sol.has_excess_salvage())
             self._pm.register_time_feasible(not sol.has_time_warp())
 
         intensify_prob = self._params.intensify_probability

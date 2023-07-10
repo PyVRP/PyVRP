@@ -27,13 +27,16 @@ public:
         Distance distance_ = 0;  // Total travel distance on this route
         Load demandWeight_ = 0;        // Total weight demand served on this route
         Load demandVolume_ = 0;        // Total volume demand served on this route
+        Salvage demandSalvage_ = 0;    // Total number of nonterminal salvage stops on this route
         Load excessWeight_ = 0;    // Excess weight demand (wrt vehicle weight capacity)
         Load excessVolume_ = 0;    // Excess volume demand (wrt vehicle volume capacity)
+        Salvage excessSalvage_ = 0; // Number of excess salvage stops on this route above max (0)
         Duration duration_ = 0;  // Total travel duration on this route
         Duration service_ = 0;   // Total service duration on this route
         Duration timeWarp_ = 0;  // Total time warp on this route
         Duration wait_ = 0;      // Total waiting duration on this route
         Cost prizes_ = 0;        // Total value of prizes on this route
+        bool salvageBeforeDelivery_ = false; // Apart from excess salvage, salvage must be sequenced properly
 
         std::pair<double, double> centroid_;  // center of the route
 
@@ -51,8 +54,10 @@ public:
         [[nodiscard]] Distance distance() const;
         [[nodiscard]] Load demandWeight() const;
         [[nodiscard]] Load demandVolume() const;
+        [[nodiscard]] Salvage demandSalvage() const;
         [[nodiscard]] Load excessWeight() const;
         [[nodiscard]] Load excessVolume() const;
+        [[nodiscard]] Salvage excessSalvage() const;
         [[nodiscard]] Duration duration() const;
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
@@ -64,6 +69,8 @@ public:
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessWeight() const;
         [[nodiscard]] bool hasExcessVolume() const;
+        [[nodiscard]] bool hasExcessSalvage() const;
+        [[nodiscard]] bool hasSalvageBeforeDelivery() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
         Route() = default;  // default is empty
@@ -77,6 +84,8 @@ private:
     Distance distance_ = 0;       // Total distance
     Load excessWeight_ = 0;         // Total excess weight load over all routes
     Load excessVolume_ = 0;         // Total excess volume load over all routes
+    Salvage excessSalvage_ = 0; // Total excess salvage stop over all routes
+    bool salvageBeforeDelivery_ = false; // Does the route contain a salvage before delivery
     Cost prizes_ = 0;             // Total collected prize value
     Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
     Duration timeWarp_ = 0;       // Total time warp over all routes
@@ -130,6 +139,16 @@ public:
     [[nodiscard]] bool hasExcessVolume() const;
 
     /**
+     * @return True if the solution violates salvage constraints.
+     */
+    [[nodiscard]] bool hasExcessSalvage() const;
+
+    /**
+     * @return True if the solution sequence violates salvage constraints.
+     */
+    [[nodiscard]] bool hasSalvageBeforeDelivery() const;
+
+    /**
      * @return True if the solution violates time window constraints.
      */
     [[nodiscard]] bool hasTimeWarp() const;
@@ -143,6 +162,11 @@ public:
      * @return Total excess load weight over all routes.
      */
     [[nodiscard]] Load excessWeight() const;
+
+    /**
+     * @return Total excess salvage stops over all routes.
+     */
+    [[nodiscard]] Salvage excessSalvage() const;
 
     /**
      * @return Total excess load volume over all routes.
@@ -204,6 +228,7 @@ template <> struct hash<Solution>
         res = res * 31 + std::hash<Distance>()(sol.distance_);
         res = res * 31 + std::hash<Load>()(sol.excessWeight_);
         res = res * 31 + std::hash<Load>()(sol.excessVolume_);
+        res = res * 31 + std::hash<Salvage>()(sol.excessSalvage_);
         res = res * 31 + std::hash<Duration>()(sol.timeWarp_);
 
         return res;

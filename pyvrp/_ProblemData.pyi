@@ -14,8 +14,10 @@ class Client:
         client's (x, y) location tuple.
     weight_demand
         The weight amount this client's demanding. Default 0.
-    voolume_demand
+    volume_demand
         The volume amount this client's demanding. Default 0.
+    salvage_demand
+	1 if salvage pickup is required. Default 0.
     service_duration
         This client's service duration, that is, the amount of time we need to
         visit the client for. Service should start (but not necessarily end)
@@ -35,6 +37,7 @@ class Client:
     y: int
     weight_demand: int
     volume_demand: int
+    salvage_demand: int
     service_duration: int
     tw_early: int
     tw_late: int
@@ -47,6 +50,7 @@ class Client:
         y: int,
         weight_demand: int = 0,
         volume_demand: int = 0,
+        salvage_demand: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = 0,
@@ -71,6 +75,8 @@ class ProblemData:
         Homogenous vehicle weight capacity for all vehicles in the problem instance.
     volume_cap
         Homogenous vehicle volume capacity for all vehicles in the problem instance.
+    salvage_cap
+        Homogenous route nonterminal pickup stops capacity for all routes in the problem instance.
     duration_matrix
         A matrix that gives the travel times between clients (and the depot at
         index 0).
@@ -81,6 +87,7 @@ class ProblemData:
         clients: List[Client],
         num_vehicles: int,
         vehicle_cap: int,
+        salvage_cap: int,
         distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
@@ -192,3 +199,13 @@ class ProblemData:
         -------
         int
             Volume capacity of each vehicle in the instance.
+    @property
+    def salvage_capacity(self) -> int:
+        """
+        Returns the homogenous nonterminal salvage pickups capacity of all routes in this
+        problem data instance.
+        
+        Returns
+        -------
+        int
+            Non-terminal salvage pickup capacity of each route in the instance.

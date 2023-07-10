@@ -15,7 +15,20 @@ class Route:
     def is_feasible(self) -> bool: ...
     def has_excess_weight(self) -> bool: ...
     def has_excess_volume(self) -> bool: ...
+    def has_excess_salvage(self) -> bool: ...
     def has_time_warp(self) -> bool: ...
+    def demandWeight(self) -> int:
+        """
+        Total weight demand on this route.
+        """
+    def demandVolume(self) -> int:
+        """
+        Total volume demand on this route.
+        """
+    def demandSalvage(self) -> int:
+        """
+        Total salvage demand on this route.
+        """
     def demand(self) -> int:
         """
         Total client demand on this route.
@@ -27,6 +40,10 @@ class Route:
     def excess_volume(self) -> int:
         """
         Demand in excess of the vehicle's volume capacity.
+        """
+    def excess_salvage(self) -> int:
+        """
+        Number of salvage stops above the salvage capacity.
         """
     def distance(self) -> int:
         """
@@ -147,6 +164,15 @@ class Solution:
         bool
             True if the solution is not volume capacity feasible, False otherwise.
         """
+    def has_excess_salvage(self) -> bool:
+        """
+        Returns whether this solution violates the salvage stops capacity constraint
+
+        Returns
+        -------
+        bool
+            True if the solution is not salvage feasible, False otherwise.
+        """
     def has_time_warp(self) -> bool:
         """
         Returns whether this solution violates time window constraints.
@@ -184,6 +210,15 @@ class Solution:
         int
             Total excess volume over all routes.
         """
+    def excess_salvage(self) -> int:
+        """
+        Returns the total nonterminal salvage pickups over all routes.
+
+        Returns
+        -------
+        int
+            Total nonterminal salvage over all routes.
+        """
     def time_warp(self) -> int:
         """
         Returns the total time warp load over all routes.
@@ -214,14 +249,15 @@ class Solution:
     def is_feasible(self) -> bool:
         """
         Whether this solution is feasible. This is a shorthand for checking
-        that :meth:`~has_excess_weight` and :meth:`~has_excess_volume` and :meth:`~has_time_warp` both return
+        that :meth:`~has_excess_weight` and :meth:`~has_excess_volume` and 
+        :meth:`~has_nonterminal_salvage` and :meth:`~has_time_warp` all return
         false.
 
         Returns
         -------
         bool
-            Whether the solution of this solution is feasible with respect to
-            capacity and time window constraints.
+            Whether this solution is feasible with respect to
+            capacity, salvage and time window constraints.
         """
     def num_routes(self) -> int:
         """

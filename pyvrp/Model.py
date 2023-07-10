@@ -75,7 +75,6 @@ class Model:
             A model instance representing the given data.
         """
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]
-        centroid = data.centroid
         edges = [
             Edge(
                 clients[frm],
@@ -91,7 +90,6 @@ class Model:
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
-        self._centroid = centroid
         vehicle_types = [VehicleType(data.num_vehicles, data.weight_capacity, data.volume_capacity)]
         self._vehicle_types = vehicle_types
 
@@ -236,19 +234,13 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        # Compute centroid
-        x = sum(loc.x for loc in locs) / len(locs)
-        y = sum(loc.y for loc in locs) / len(locs)
-        centroid = (x, y)
-
         return ProblemData(
             locs,
             num_vehicles,
             weight_capacity,
             volume_capacity,
             distances,
-            durations,
-            centroid,
+            durations
         )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:

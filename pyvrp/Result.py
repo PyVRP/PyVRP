@@ -82,6 +82,27 @@ class Result:
             and self.num_iterations == self.stats.num_iterations
         )
 
+#     def __str__(self) -> str:
+#         obj_str = f"{self.cost():.2f}" if self.is_feasible() else "INFEASIBLE"
+#         summary = [
+#             "Solution results",
+#             "================",
+#             f"    # routes: {self.best.num_routes()}",
+#             f"   # clients: {self.best.num_clients()}",
+#             f"   objective: {obj_str}",
+#             f"# iterations: {self.num_iterations}",
+#             f"    run-time: {self.runtime:.2f} seconds",
+#             "",
+#             "Routes",
+#             "------",
+#         ]
+# 
+#         for idx, route in enumerate(self.best.get_routes(), 1):
+#             if route:
+#                 summary.append(f"Route {idx:>2}: {route}")
+# 
+#         return "\n".join(summary)
+
     def __str__(self) -> str:
         obj_str = f"{self.cost():.2f}" if self.is_feasible() else "INFEASIBLE"
         summary = [
@@ -99,6 +120,52 @@ class Result:
 
         for idx, route in enumerate(self.best.get_routes(), 1):
             if route:
-                summary.append(f"Route {idx:>2}: {route}")
+                route_info = [f"Route {idx:>2}: {route}"]
+                route_info.append(f"Excess weight: {route.excess_weight()}")
+                route_info.append(f"Excess volume: {route.excess_volume()}")
+                route_info.append(f"Excess salvage: {route.excess_salvage()}")
+                route_info.append(f"Demand Weight: {route.demandWeight()}")
+                route_info.append(f"Demand Volume: {route.demandVolume()}")
+                route_info.append(f"Demand Salvage: {route.demandSalvage()}")
+                route_info.append(f"hasSalvageBeforeDelivery: {route.has_salvage_before_deliver()}")
+
+                summary.append(", ".join(route_info))
 
         return "\n".join(summary)
+
+
+#  public:
+#         [[nodiscard]] bool empty() const;
+#         [[nodiscard]] size_t size() const;
+#         [[nodiscard]] Client operator[](size_t idx) const;
+# 
+#         Visits::const_iterator begin() const;
+#         Visits::const_iterator end() const;
+#         Visits::const_iterator cbegin() const;
+#         Visits::const_iterator cend() const;
+# 
+#         [[nodiscard]] Visits const &visits() const;
+#         [[nodiscard]] Distance distance() const;
+#         [[nodiscard]] Load demandWeight() const;
+#         [[nodiscard]] Load demandVolume() const;
+#         [[nodiscard]] Salvage demandSalvage() const;
+#         [[nodiscard]] Load excessWeight() const;
+#         [[nodiscard]] Load excessVolume() const;
+#         [[nodiscard]] Salvage excessSalvage() const;
+#         [[nodiscard]] Duration duration() const;
+#         [[nodiscard]] Duration serviceDuration() const;
+#         [[nodiscard]] Duration timeWarp() const;
+#         [[nodiscard]] Duration waitDuration() const;
+#         [[nodiscard]] Cost prizes() const;
+# 
+#         [[nodiscard]] std::pair<double, double> const &centroid() const;
+# 
+#         [[nodiscard]] bool isFeasible() const;
+#         [[nodiscard]] bool hasExcessWeight() const;
+#         [[nodiscard]] bool hasExcessVolume() const;
+#         [[nodiscard]] bool hasExcessSalvage() const;
+#         [[nodiscard]] bool hasSalvageBeforeDelivery() const;
+#         [[nodiscard]] bool hasTimeWarp() const;
+# 
+#         Route() = default;  // default is empty
+#         Route(ProblemData const &data, Visits const visits);

@@ -205,10 +205,14 @@ void LocalSearch::maybeInsert(Node *U,
                                            data.weightCapacity());
     deltaCost += costEvaluator.volumePenalty(V->route->volume() + uClient.demandVolume,
                                            data.volumeCapacity());
+    deltaCost += costEvaluator.salvagePenalty(V->route->salvage() + uClient.demandSalvage,
+                                           data.salvageCapacity());
     deltaCost
         -= costEvaluator.weightPenalty(V->route->weight(), data.weightCapacity());
     deltaCost
         -= costEvaluator.volumePenalty(V->route->volume(), data.volumeCapacity());
+    deltaCost
+        -= costEvaluator.salvagePenalty(V->route->salvage(), data.salvageCapacity());
 
     // If this is true, adding U cannot decrease time warp in V's route enough
     // to offset the deltaCost.
@@ -243,10 +247,14 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
                                            data.weightCapacity());
     deltaCost += costEvaluator.volumePenalty(U->route->volume() - uClient.demandVolume,
                                            data.volumeCapacity());
+    deltaCost += costEvaluator.salvagePenalty(U->route->salvage() - uClient.demandSalvage,
+                                           data.salvageCapacity());
     deltaCost
         -= costEvaluator.weightPenalty(U->route->weight(), data.weightCapacity());
     deltaCost
         -= costEvaluator.volumePenalty(U->route->volume(), data.volumeCapacity());
+    deltaCost
+        -= costEvaluator.salvagePenalty(U->route->salvage(), data.salvageCapacity());
 
     auto uTWS
         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);

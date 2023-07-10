@@ -7,11 +7,15 @@ namespace py = pybind11;
 PYBIND11_MODULE(_CostEvaluator, m)
 {
     py::class_<CostEvaluator>(m, "CostEvaluator")
-        .def(py::init([](unsigned int weightCapacityPenalty, unsigned int volumeCapacityPenalty, unsigned int twPenalty) {
-                 return CostEvaluator(weightCapacityPenalty, volumeCapacityPenalty, twPenalty);
+        .def(py::init([](unsigned int weightCapacityPenalty, 
+                         unsigned int volumeCapacityPenalty, 
+                         unsigned int salvageCapacityPenalty, 
+                         unsigned int twPenalty) {
+                 return CostEvaluator(weightCapacityPenalty, volumeCapacityPenalty, salvageCapacityPenalty, twPenalty);
              }),
              py::arg("weight_capacity_penalty") = 0,
              py::arg("volume_capacity_penalty") = 0,
+             py::arg("salvage_capacity_penalty") = 0,
              py::arg("tw_penalty") = 0)
         .def(
             "load_weight_penalty",
@@ -31,6 +35,15 @@ PYBIND11_MODULE(_CostEvaluator, m)
             },
             py::arg("load_volume"),
             py::arg("volume_capacity"))
+        .def(
+            "load_salvage_penalty",
+            [](CostEvaluator const &evaluator,
+               Value load_salvage,
+               Value salvage_capacity) {
+                return evaluator.salvagePenalty(load_salvage, salvage_capacity).get();
+            },
+            py::arg("load_salvage"),
+            py::arg("salvage_capacity"))
         .def(
             "tw_penalty",
             [](CostEvaluator const &evaluator, Value const timeWarp) {

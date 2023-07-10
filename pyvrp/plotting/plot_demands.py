@@ -23,17 +23,20 @@ def plot_demands(
     ax, optional
         Axes object to draw the plot on. One will be created if not provided.
     demand_type
-        String specifying the type of demand to plot. 'weight' or 'volume'.
+        String specifying the type of demand to plot. 'weight', 'volume' or 'salvage.
     """
     dim = data.num_clients + 1
     if demand_type == 'weight':
         demands = np.array([data.client(client).demandWeight for client in range(1, dim)])
     elif demand_type == 'volume':
         demands = np.array([data.client(client).demandVolume for client in range(1, dim)])
+    elif demand_type == 'salvage':
+        demands = np.array([data.client(client).demandSalvage for client in range(1, dim)])
     else:
-        raise ValueError("Invalid demand type. Choose 'weight' or 'volume'.")
+        raise ValueError("Invalid demand type. Choose 'weight', 'volume' or 'salvage'.")
 
-    demands = np.sort(demands)
+    if demand_type != 'salvage':
+        demands = np.sort(demands)
 
     if not ax:
         fig, ax = plt.subplots()

@@ -12,7 +12,7 @@ from .plot_solution import plot_solution
 
 
 def plot_result(
-    result: Result, data: ProblemData, fig: Optional[plt.Figure] = None
+    result: Result, data: ProblemData, fig: Optional[plt.Figure] = None, salvage: dict = {}
 ):
     """
     Plots the results of a run, including the best solution and detailed
@@ -44,4 +44,4 @@ def plot_result(
         plot_objectives(result, ax=fig.add_subplot(gs[1, 0], sharex=ax_div))
         plot_runtimes(result, ax=fig.add_subplot(gs[2, 0], sharex=ax_div))
 
-    plot_solution(result.best, data, ax=fig.add_subplot(gs[:, 1]))
+    plot_solution(result.best, data, ax=fig.add_subplot(gs[:, 1]), salvage=salvage)

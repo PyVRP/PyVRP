@@ -97,10 +97,14 @@ def read(
             raise ValueError("File should either contain dimension or volume demands")
         dimension = len(instance["weight_demand"])
 
+    if "salvage_demand" not in instance:
+        raise ValueError("File should contain salvage demands")
+
     depots: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     weight_capacity: int = instance.get("weight_capacity", _INT_MAX)
     volume_capacity: int = instance.get("volume_capacity", _INT_MAX)
+    salvage_capacity: int = instance.get("salvage_capacity", _INT_MAX)
 
     distances: np.ndarray = round_func(instance["edge_weight"])
 
@@ -113,6 +117,11 @@ def read(
         volume_demands: np.ndarray = instance["volume_demand"]
     else:
         volume_demands = np.zeros(dimension, dtype=int)
+
+    if "salvage_demand" in instance:
+        salvage_demands: np.ndarray = instance["salvage_demand"]
+    else:
+        salvage_demands = np.zeros(dimension, dtype=int)
 
     if "node_coord" in instance:
         coords: np.ndarray = round_func(instance["node_coord"])
@@ -157,6 +166,9 @@ def read(
     if volume_demands[0] != 0:
         raise ValueError("Volume demand of depot must be 0")
 
+    if salvage_demands[0] != 0:
+        raise ValueError("Salvage demand of depot must be 0")
+
     if time_windows[0, 0] != 0:
         raise ValueError("Depot start of time window must be 0")
 
@@ -172,6 +184,7 @@ def read(
             coords[idx][1],  # y
             weight_demands[idx],
             volume_demands[idx],
+            salvage_demands[idx],
             service_times[idx],
             time_windows[idx][0],  # TW early
             time_windows[idx][1],  # TW late
@@ -193,8 +206,9 @@ def read(
         num_vehicles,
         weight_capacity,
         volume_capacity,
+        salvage_capacity,
         distances,
-        durations,
+        durations
     )
 
 

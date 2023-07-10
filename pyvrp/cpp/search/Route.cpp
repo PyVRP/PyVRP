@@ -73,6 +73,7 @@ bool Route::overlapsWith(Route const &other, int const tolerance) const
 
 void Route::update()
 {
+    std::cout << "###### Enter Route:update" << std::endl;
     auto const oldNodes = nodes;
     setupNodes();
 
@@ -81,17 +82,25 @@ void Route::update()
     Distance distance = 0;
     Distance reverseDistance = 0;
     bool foundChange = false;
+    bool foundSalvage = false;
+    bool isSalvage = false;
+    bool salvageBeforeDelivery = false;
+    bool isDelivery = false;
+    Salvage salvageCount = 0;
 
+    // std::cout << std::endl;
+    // std::cout << "Before Loop " << "salvageBeforeDelivery: " << salvageBeforeDelivery << ", salvageCount: " << salvageCount << std::endl;
     for (size_t pos = 0; pos != nodes.size(); ++pos)
     {
+        // std::cout << "Position: " << pos << std::endl;
         auto *node = nodes[pos];
 
         if (!foundChange && (pos >= oldNodes.size() || node != oldNodes[pos]))
         {
             foundChange = true;
 
-            if (pos > 0)  // change at pos, so everything before is the same
-            {             // and we can re-use cumulative calculations
+            if (pos > 0)
+            {
                 weight = nodes[pos - 1]->cumulatedWeight;
                 volume = nodes[pos - 1]->cumulatedVolume;
                 distance = nodes[pos - 1]->cumulatedDistance;
@@ -104,6 +113,46 @@ void Route::update()
 
         weight += data.client(node->client).demandWeight;
         volume += data.client(node->client).demandVolume;
+
+        if (data.client(node->client).demandSalvage)
+        {
+            isSalvage = true;
+        }
+
+        if (data.client(node->client).demandWeight || data.client(node->client).demandVolume)
+        {
+            isDelivery = true;
+        }
+    
+        if (isDelivery && foundSalvage)
+        {
+            salvageBeforeDelivery = true;
+        }
+
+        salvageCount = data.client(node->client).demandSalvage ? salvageCount + Salvage(1) : salvageCount;
+
+        if (isSalvage)
+        {
+            if (!foundSalvage)
+                foundSalvage = true;
+        }
+
+
+        // if (data.client(node->client).demandSalvage == 1) {
+        //     // std::cout << "demandSalvage == 1 for client: " << node->client << std::endl;
+        //     if (!foundDelivery) {
+        //         // std::cout << "foundDelivery State: " << foundDelivery << std::endl;
+        //         // std::cout << "SalvageCount Before: " << salvageCount << std::endl;
+        //         salvageCount = data.salvageCapacity() + Salvage(1);
+        //         // std::cout << "SalvageCount After: " << salvageCount << std::endl;
+        //         // break;
+        //     }
+        //     salvageCount = salvageCount + Salvage(1);
+        // }
+        // else if(!foundDelivery){
+        //     foundDelivery = true;
+        // }
+
         distance += data.dist(p(node)->client, node->client);
 
         reverseDistance += data.dist(node->client, p(node)->client);
@@ -114,10 +163,27 @@ void Route::update()
         node->cumulatedVolume = volume;
         node->cumulatedDistance = distance;
         node->cumulatedReversalDistance = reverseDistance;
+
+        // Debug prints
+        // std::cout << "Node: " << node->client 
+        //           << ", Position: " << node->position 
+        //           << ", CumulatedWeight: " << node->cumulatedWeight 
+        //           << ", CumulatedVolume: " << node->cumulatedVolume << std::endl;
+
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
-    }
 
+        std::cout << "Route Constructor Node: " << pos
+            << " salvageCount: " << salvageCount
+            << " demandVolume: " << data.client(node->client).demandVolume
+            << " demandSalvage: " << data.client(node->client).demandSalvage
+            << " foundSalvage: " << foundSalvage
+            << " SalvageBefore: " << salvageBeforeDelivery
+            << std::endl;
+
+        // std::cout << "Inside Loop " << "salvageBeforeDelivery: " << salvageBeforeDelivery << ", salvageCount: " << salvageCount << std::endl;
+    }
+    // std::cout << "After Loop" << std::endl;
     setupSector();
     setupRouteTimeWindows();
 
@@ -128,6 +194,18 @@ void Route::update()
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;
+
+    isSalvageCapacityFeasible_ = salvageCount <= data.salvageCapacity();
+    isSalvageSequenceFeasible_ = !salvageBeforeDelivery;
+
+    // Debug prints
+    std::cout << "SalvageCount: " << salvageCount 
+              << ", isSalvageCapacityFeasible: " << isSalvageCapacityFeasible_ << ", isSalvageSequenceFeasible: " << isSalvageSequenceFeasible_ << std::endl;
+    std::cout << "Final weight: " << weight_
+              << ", isWeightFeasible: " << isWeightFeasible_
+              << ", Final volume: " << volume_
+              << ", isVolumeFeasible: " << isVolumeFeasible_ << std::endl;
+    std::cout << "###### Exit Route:Update" << std::endl << std::endl;
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

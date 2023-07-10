@@ -109,15 +109,20 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
 
         auto const weightDiff = U->route->weightBetween(posU, posU + N - 1);
         auto const volumeDiff = U->route->volumeBetween(posU, posU + N - 1);
+        auto const salvageDiff = U->route->salvageBetween(posU, posU + N - 1);
 
         deltaCost += costEvaluator.weightPenalty(U->route->weight() - weightDiff,
                                                data.weightCapacity());
         deltaCost += costEvaluator.volumePenalty(U->route->volume() - volumeDiff,
                                                data.volumeCapacity());
+        deltaCost += costEvaluator.salvagePenalty(U->route->salvage() - salvageDiff,
+                                               data.salvageCapacity());
         deltaCost -= costEvaluator.weightPenalty(U->route->weight(),
                                                data.weightCapacity());
         deltaCost -= costEvaluator.volumePenalty(U->route->volume(),
                                                data.volumeCapacity());
+        deltaCost -= costEvaluator.salvagePenalty(U->route->salvage(),
+                                               data.salvageCapacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good.
@@ -126,10 +131,14 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
                                                data.weightCapacity());
         deltaCost += costEvaluator.volumePenalty(V->route->volume() + volumeDiff,
                                                data.volumeCapacity());
+        deltaCost += costEvaluator.salvagePenalty(V->route->salvage() + salvageDiff,
+                                               data.salvageCapacity());
         deltaCost -= costEvaluator.weightPenalty(V->route->weight(),
                                                data.weightCapacity());
         deltaCost -= costEvaluator.volumePenalty(V->route->volume(),
                                                data.volumeCapacity());
+        deltaCost -= costEvaluator.salvagePenalty(V->route->salvage(),
+                                               data.salvageCapacity());
 
         auto vTWS = TWS::merge(data.durationMatrix(),
                                V->twBefore,
@@ -217,19 +226,26 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
 
         auto const weightU = U->route->weightBetween(posU, posU + N - 1);
         auto const volumeU = U->route->volumeBetween(posU, posU + N - 1);
+        auto const salvageU = U->route->salvageBetween(posU, posU + N - 1);
         auto const weightV = V->route->weightBetween(posV, posV + M - 1);
         auto const volumeV = V->route->volumeBetween(posV, posV + M - 1);
+        auto const salvageV = V->route->salvageBetween(posV, posV + M - 1);
         auto const weightDiff = weightU - weightV;
         auto const volumeDiff = volumeU - volumeV;
+        auto const salvageDiff = salvageU - salvageV;
 
         deltaCost += costEvaluator.weightPenalty(U->route->weight() - weightDiff,
                                                data.weightCapacity());
         deltaCost += costEvaluator.volumePenalty(U->route->volume() - volumeDiff,
                                                data.volumeCapacity());
+        deltaCost += costEvaluator.salvagePenalty(U->route->salvage() - salvageDiff,
+                                               data.salvageCapacity());
         deltaCost -= costEvaluator.weightPenalty(U->route->weight(),
                                                data.weightCapacity());
         deltaCost -= costEvaluator.volumePenalty(U->route->volume(),
                                                data.volumeCapacity());
+        deltaCost -= costEvaluator.salvagePenalty(U->route->salvage(),
+                                               data.salvageCapacity());
 
         auto vTWS = TWS::merge(data.durationMatrix(),
                                p(V)->twBefore,
@@ -243,10 +259,14 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
                                                data.weightCapacity());
         deltaCost += costEvaluator.volumePenalty(V->route->volume() + volumeDiff,
                                                data.volumeCapacity());
+        deltaCost += costEvaluator.salvagePenalty(V->route->salvage() + salvageDiff,
+                                               data.salvageCapacity());
         deltaCost -= costEvaluator.weightPenalty(V->route->weight(),
                                                data.weightCapacity());
         deltaCost -= costEvaluator.volumePenalty(V->route->volume(),
                                                data.volumeCapacity());
+        deltaCost -= costEvaluator.salvagePenalty(V->route->salvage(),
+                                               data.salvageCapacity());
     }
     else  // within same route
     {

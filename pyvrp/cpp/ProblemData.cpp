@@ -10,6 +10,7 @@ ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
                             Load demandWeight,
                             Load demandVolume,
+                            Salvage demandSalvage,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -19,6 +20,7 @@ ProblemData::Client::Client(Coordinate x,
       y(y),
       demandWeight(demandWeight),
       demandVolume(demandVolume),
+      demandSalvage(demandSalvage),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -30,6 +32,9 @@ ProblemData::Client::Client(Coordinate x,
 
     if (demandVolume < 0)
         throw std::invalid_argument("demandVolume must be >= 0");
+
+    if (demandSalvage < 0)
+        throw std::invalid_argument("demandSalvage must be >= 0");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0");
@@ -60,10 +65,13 @@ Load ProblemData::weightCapacity() const { return weightCapacity_; }
 
 Load ProblemData::volumeCapacity() const { return volumeCapacity_; }
 
+Salvage ProblemData::salvageCapacity() const { return salvageCapacity_; }
+
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          size_t numVehicles,
                          Load weightCap,
                          Load volumeCap,
+                         Salvage salvageCap,
                          Matrix<Distance> const distMat,
                          Matrix<Duration> const durMat)
     : centroid_({0, 0}),
@@ -73,7 +81,8 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicles_(numVehicles),
       weightCapacity_(weightCap),
-      volumeCapacity_(volumeCap)
+      volumeCapacity_(volumeCap),
+      salvageCapacity_(salvageCap)
 {
     for (size_t idx = 1; idx <= numClients(); ++idx)
     {

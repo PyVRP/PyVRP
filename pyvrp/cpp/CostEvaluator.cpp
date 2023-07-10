@@ -2,18 +2,25 @@
 
 #include <limits>
 
-CostEvaluator::CostEvaluator(Cost weightCapacityPenalty, Cost volumeCapacityPenalty, Cost timeWarpPenalty)
-    : weightCapacityPenalty(weightCapacityPenalty), volumeCapacityPenalty(volumeCapacityPenalty), timeWarpPenalty(timeWarpPenalty)
+CostEvaluator::CostEvaluator(Cost weightCapacityPenalty, 
+                             Cost volumeCapacityPenalty, 
+                             Cost salvageCapacityPenalty, 
+                             Cost timeWarpPenalty)
+    : weightCapacityPenalty(weightCapacityPenalty), 
+      volumeCapacityPenalty(volumeCapacityPenalty), 
+      salvageCapacityPenalty(salvageCapacityPenalty), 
+      timeWarpPenalty(timeWarpPenalty)
 {
 }
 
 Cost CostEvaluator::penalisedCost(Solution const &solution) const
 {
-    // Standard objective plus penalty terms for weight-, volume-, and time-related
+    // Standard objective plus penalty terms for weight, volume, salvage and time-related
     // infeasibilities.
     return static_cast<Cost>(solution.distance()) + solution.uncollectedPrizes()
            + weightPenaltyExcess(solution.excessWeight())
            + volumePenaltyExcess(solution.excessVolume())
+           + salvagePenaltyExcess(solution.excessSalvage())
            + twPenalty(solution.timeWarp());
 }
 

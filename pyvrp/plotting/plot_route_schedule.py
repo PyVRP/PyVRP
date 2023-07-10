@@ -58,6 +58,7 @@ def plot_route_schedule(
     dist = 0
     weight_load = sum([data.client(idx).weight_demand for idx in route])
     volume_load = sum([data.client(idx).volume_demand for idx in route])
+    salvage_load = sum([data.client(idx).salvage_demand for idx in route])
     slack = horizon
 
     # Traces and objects used for plotting
@@ -66,22 +67,24 @@ def plot_route_schedule(
     trace_drive_serv = []
     trace_weight_load = []
     trace_volume_load = []
+    trace_salvage_load = []
     timewindow_lines = []
     timewarp_lines = []
 
-    def add_traces(dist, t, drive_time, serv_time, weight_load, volume_load):
+    def add_traces(dist, t, drive_time, serv_time, weight_load, volume_load, salvage_load):
         trace_time.append((dist, t))
         trace_drive.append((dist, drive_time))
         trace_drive_serv.append((dist, drive_time + serv_time))
         trace_weight_load.append((dist, weight_load))
         trace_volume_load.append((dist, volume_load))
+        trace_salvage_load.append((dist, salvage_load))
 
-    add_traces(dist, t, drive_time, serv_time, weight_load, volume_load)
+    add_traces(dist, t, drive_time, serv_time, weight_load, volume_load, salvage_load)
 
     t += depot.service_duration
     serv_time += depot.service_duration
 
-    add_traces(dist, t, drive_time, serv_time, weight_load, volume_load)
+    add_traces(dist, t, drive_time, serv_time, weight_load, volume_load, salvage_load)
 
     prev_idx = 0  # depot
     for idx in list(route) + [0]:
@@ -92,7 +95,7 @@ def plot_route_schedule(
         drive_time += delta_time
         dist += delta_dist
 
-        add_traces(dist, t, drive_time, serv_time, weight_load, volume_load)
+        add_traces(dist, t, drive_time, serv_time, weight_load, volume_load, salvage_load)
 
         if t < stop.tw_early:
             wait_time += stop.tw_early - t
@@ -106,14 +109,15 @@ def plot_route_schedule(
 
         weight_load -= stop.weight_demand
         volume_load -= stop.volume_demand
+        salvage_load -= stop.salvage_demand
 
-        add_traces(dist, t, drive_time, serv_time, weight_load, volume_load)
+        add_traces(dist, t, drive_time, serv_time, weight_load, volume_load, salvage_load)
 
         if idx != 0:  # Don't plot service and timewindow for return to depot
             t += stop.service_duration
             serv_time += stop.service_duration
 
-            add_traces(dist, t, drive_time, serv_time, weight_load, volume_load)
+            add_traces(dist, t, drive_time, serv_time, weight_load, volume_load, salvage_load)
 
             timewindow_lines.append(
                 ((dist, stop.tw_early), (dist, stop.tw_late))
@@ -167,17 +171,28 @@ def plot_route_schedule(
         *zip(*trace_volume_load), color="blue", alpha=0.1, label="Volume load in vehicle"
     )
     twin2.set_ylim([0, data.volume_capacity])
+
+    # Plot remaining salvage load on third axis
+    twin3 = ax[1].twinx()
+    twin3.fill_between(
+        *zip(*trace_salvage_load), color="blue", alpha=0.1, label="Volume load in vehicle"
+    )
+    twin3.set_ylim([0, data.salvage_capacity])
     
     # Set labels for both axes
     twin1.set_ylabel(f"Weight Load (weight_capacity = {data.weight_capacity:.0f})")
     twin2.set_ylabel(f"Volume Load (volume_capacity = {data.volume_capacity:.0f})")
+    twin3.set_ylabel(f"Volume Load (salvage_capacity = {data.salvage_capacity:.0f})")
 
     if legend:
         twin1.legend(loc="upper right")
         twin2.legend(loc="upper left")
+        twin2.legend(loc="upper right")
         ax[0].legend(loc="upper left")
         ax[1].legend(loc="lower left")
+        ax[2].legend(loc="lower left")
 
     if title:
         ax[0].set_title(f"{title} - Weight Load")
         ax[1].set_title(f"{title} - Volume Load")
+        ax[2].set_title(f"{title} - Salvage Load")

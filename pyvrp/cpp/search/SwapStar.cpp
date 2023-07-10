@@ -130,23 +130,35 @@ Cost SwapStar::evaluate(Route *routeU,
             auto const vVolumeDemand = data.client(V->client).demandVolume;
             auto const volumeDiff = uVolumeDemand - vVolumeDemand;
 
+            auto const uSalvageDemand = data.client(U->client).demandSalvage;
+            auto const vSalvageDemand = data.client(V->client).demandSalvage;
+            auto const salvageDiff = uSalvageDemand - vSalvageDemand;
+
             deltaCost += costEvaluator.weightPenalty(routeU->weight() - weightDiff,
                                                    data.weightCapacity());
             deltaCost += costEvaluator.volumePenalty(routeU->volume() - volumeDiff,
                                                    data.volumeCapacity());
+            deltaCost += costEvaluator.salvagePenalty(routeU->salvage() - salvageDiff,
+                                                   data.salvageCapacity());
             deltaCost -= costEvaluator.weightPenalty(routeU->weight(),
                                                    data.weightCapacity());
             deltaCost -= costEvaluator.volumePenalty(routeU->volume(),
                                                    data.volumeCapacity());
+            deltaCost -= costEvaluator.salvagePenalty(routeU->salvage(),
+                                                   data.salvageCapacity());
 
             deltaCost += costEvaluator.weightPenalty(routeV->weight() + weightDiff,
                                                    data.weightCapacity());
             deltaCost += costEvaluator.volumePenalty(routeV->volume() + volumeDiff,
                                                    data.volumeCapacity());
+            deltaCost += costEvaluator.salvagePenalty(routeV->salvage() + salvageDiff,
+                                                   data.salvageCapacity());
             deltaCost -= costEvaluator.weightPenalty(routeV->weight(),
                                                    data.weightCapacity());
             deltaCost -= costEvaluator.volumePenalty(routeV->volume(),
                                                    data.volumeCapacity());
+            deltaCost -= costEvaluator.salvagePenalty(routeV->salvage(),
+                                                   data.salvageCapacity());
 
             deltaCost += removalCosts(routeU->idx, U->client);
             deltaCost += removalCosts(routeV->idx, V->client);
@@ -285,24 +297,34 @@ Cost SwapStar::evaluate(Route *routeU,
     auto const vWeightDemand = data.client(best.V->client).demandWeight;
     auto const uVolumeDemand = data.client(best.U->client).demandVolume;
     auto const vVolumeDemand = data.client(best.V->client).demandVolume;
+    auto const uSalvageDemand = data.client(best.U->client).demandSalvage;
+    auto const vSalvageDemand = data.client(best.V->client).demandSalvage;
 
     deltaCost += costEvaluator.weightPenalty(routeU->weight() - uWeightDemand + vWeightDemand,
                                            data.weightCapacity());
     deltaCost += costEvaluator.volumePenalty(routeU->volume() - uVolumeDemand + vVolumeDemand,
                                            data.volumeCapacity());
+    deltaCost += costEvaluator.salvagePenalty(routeU->salvage() - uSalvageDemand + vSalvageDemand,
+                                           data.salvageCapacity());
     deltaCost
         -= costEvaluator.weightPenalty(routeU->weight(), data.weightCapacity());
     deltaCost
         -= costEvaluator.volumePenalty(routeU->volume(), data.volumeCapacity());
+    deltaCost
+        -= costEvaluator.salvagePenalty(routeU->salvage(), data.salvageCapacity());
 
     deltaCost += costEvaluator.weightPenalty(routeV->weight() + uWeightDemand - vWeightDemand,
                                            data.weightCapacity());
     deltaCost += costEvaluator.volumePenalty(routeV->volume() + uVolumeDemand - vVolumeDemand,
                                            data.volumeCapacity());
+    deltaCost += costEvaluator.salvagePenalty(routeV->salvage() + uSalvageDemand - vSalvageDemand,
+                                           data.salvageCapacity());
     deltaCost
         -= costEvaluator.weightPenalty(routeV->weight(), data.weightCapacity());
     deltaCost
         -= costEvaluator.volumePenalty(routeV->volume(), data.volumeCapacity());
+    deltaCost
+        -= costEvaluator.salvagePenalty(routeV->salvage(), data.salvageCapacity());
 
     return deltaCost;
 }

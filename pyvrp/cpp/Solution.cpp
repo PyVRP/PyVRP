@@ -24,6 +24,9 @@ void Solution::evaluate(ProblemData const &data)
         timeWarp_ += route.timeWarp();
         excessWeight_ += route.excessWeight();
         excessVolume_ += route.excessVolume();
+        excessSalvage_ += route.excessSalvage();
+        if (route.hasSalvageBeforeDelivery())
+            salvageBeforeDelivery_ = true;
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
@@ -40,17 +43,19 @@ std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
     return neighbours;
 }
 
-bool Solution::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasTimeWarp(); }
+bool Solution::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasSalvageBeforeDelivery() && !hasTimeWarp(); }
 
 bool Solution::hasExcessWeight() const { return excessWeight_ > 0; }
 bool Solution::hasExcessVolume() const { return excessVolume_ > 0; }
-
+bool Solution::hasExcessSalvage() const { return excessSalvage_ > 0; }
+bool Solution::hasSalvageBeforeDelivery() const { return salvageBeforeDelivery_; }
 bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
 Distance Solution::distance() const { return distance_; }
 
 Load Solution::excessWeight() const { return excessWeight_; }
 Load Solution::excessVolume() const { return excessVolume_; }
+Salvage Solution::excessSalvage() const { return excessSalvage_; }
 
 Cost Solution::prizes() const { return prizes_; }
 
@@ -75,6 +80,7 @@ bool Solution::operator==(Solution const &other) const
     return distance_ == other.distance_
         && excessWeight_ == other.excessWeight_
         && excessVolume_ == other.excessVolume_
+        && excessSalvage_ == other.excessSalvage_
         && timeWarp_ == other.timeWarp_
         && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours;
@@ -160,6 +166,12 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
     Duration time = data.depot().twEarly;
     int prevClient = 0;
 
+    bool foundSalvage = false;
+    bool isSalvage = false;
+    bool isDelivery = false;
+    Salvage salvageCount = 0;
+
+    std::cout << "###### Enter Solution:Route" << std::endl << std::endl;
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const &clientData = data.client(visits_[idx]);
@@ -168,6 +180,7 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
         duration_ += data.duration(prevClient, visits_[idx]);
         demandWeight_ += clientData.demandWeight;
         demandVolume_ += clientData.demandVolume;
+        demandSalvage_ += clientData.demandSalvage;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
@@ -189,6 +202,46 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
             time = clientData.twLate;
         }
 
+        if (clientData.demandSalvage) 
+        {
+            isSalvage = true;
+        }
+
+        if (clientData.demandWeight || clientData.demandVolume)
+        {
+            isDelivery = true;
+        }
+
+        if (isDelivery && foundSalvage)
+        {
+            salvageBeforeDelivery_ = true;
+        }
+
+        salvageCount = clientData.demandSalvage ? salvageCount + Salvage(1) : salvageCount;
+
+        if (isSalvage)
+        {
+            if (!foundSalvage)
+                foundSalvage = true;
+        }
+
+//        if (clientData.demandSalvage && foundDelivery) 
+//        {
+//            salvageBeforeDelivery_ = true;
+//        }
+//
+//        if (!clientData.demandSalvage) 
+//        {
+//            foundDelivery = true;
+//        }
+
+        std::cout << "Route Constructor Node: " << idx
+            << " salvageCount: " << salvageCount
+            << " clientData.demandVolume: " << clientData.demandVolume
+            << " clientData.demandSalvage: " << clientData.demandSalvage
+            << " foundSalvage: " << foundSalvage
+            << " SalvageBefore: " << salvageBeforeDelivery_
+            << std::endl;
         prevClient = visits_[idx];
     }
 
@@ -206,7 +259,18 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
     excessVolume_ = data.volumeCapacity() < demandVolume_
                       ? demandVolume_ - data.volumeCapacity()
                       : 0;
+
+    excessSalvage_ = data.salvageCapacity() < demandSalvage_
+                      ? demandSalvage_ - data.salvageCapacity()
+                      : 0;
+
+    // Debug prints
+    std::cout << "In Solution:Route: excessWeight_: " << excessWeight_
+              << ", excessVolume_: " << excessVolume_
+              << ", excessSalvage_: " << excessSalvage_ << std::endl;
+    std::cout << "###### Exit Solution:Route" << std::endl << std::endl;
 }
+
 
 bool Solution::Route::empty() const { return visits_.empty(); }
 
@@ -236,9 +300,13 @@ Load Solution::Route::demandWeight() const { return demandWeight_; }
 
 Load Solution::Route::demandVolume() const { return demandVolume_; }
 
+Salvage Solution::Route::demandSalvage() const { return demandSalvage_; }
+
 Load Solution::Route::excessWeight() const { return excessWeight_; }
 
 Load Solution::Route::excessVolume() const { return excessVolume_; }
+
+Salvage Solution::Route::excessSalvage() const { return excessSalvage_; }
 
 Duration Solution::Route::duration() const { return duration_; }
 
@@ -257,21 +325,46 @@ std::pair<double, double> const &Solution::Route::centroid() const
 
 bool Solution::Route::isFeasible() const
 {
-    return !hasExcessWeight() && !hasExcessVolume() && !hasTimeWarp();
+    return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasSalvageBeforeDelivery() && !hasTimeWarp();
 }
 
 bool Solution::Route::hasExcessWeight() const { return excessWeight_ > 0; }
 
 bool Solution::Route::hasExcessVolume() const { return excessVolume_ > 0; }
 
+bool Solution::Route::hasExcessSalvage() const { return excessSalvage_ > 0; }
+
+bool Solution::Route::hasSalvageBeforeDelivery() const { return salvageBeforeDelivery_; }
+
 bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
+
+// std::ostream &operator<<(std::ostream &out, Solution const &sol)
+// {
+//     auto const &routes = sol.getRoutes();
+// 
+//     for (size_t idx = 0; idx != routes.size(); ++idx)
+//         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
+// 
+//     return out;
+// }
 
 std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {
     auto const &routes = sol.getRoutes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
+    {
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
+
+        if (routes[idx].hasExcessWeight())
+            out << "Excess weight: " << routes[idx].excessWeight() << '\n';
+
+        if (routes[idx].hasExcessVolume())
+            out << "Excess volume: " << routes[idx].excessVolume() << '\n';
+
+        if (routes[idx].hasExcessSalvage())
+            out << "Excess salvage: " << routes[idx].excessSalvage() << '\n';
+    }
 
     return out;
 }

@@ -17,6 +17,7 @@ public:
         Coordinate const y;
         Load const demandWeight;
         Load const demandVolume;
+        Salvage const demandSalvage;
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
@@ -27,6 +28,7 @@ public:
                Coordinate y,
                Load demandWeight = 0,
                Load demandVolume = 0,
+               Salvage demandSalvage = 0,
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = 0,
@@ -44,6 +46,7 @@ private:
     size_t const numVehicles_;
     Load const weightCapacity_;
     Load const volumeCapacity_;
+    Salvage const salvageCapacity_;
 
 public:
     /**
@@ -111,6 +114,11 @@ public:
     [[nodiscard]] Load volumeCapacity() const;
 
     /**
+     * @return Number of nonterminal salvage pickup capacity for each route in this instance.
+     */
+    [[nodiscard]] Salvage salvageCapacity() const;
+
+    /**
      * Constructs a ProblemData object with the given data. Assumes the list of
      * clients contains the depot, such that each vector is one longer than the
      * number of clients.
@@ -119,6 +127,7 @@ public:
      * @param numVehicles  Number of vehicles.
      * @param weightCap   Vehicle weight capacity.
      * @param volumeCap   Vehicle volume capacity.
+     * @param salvageCap   Route nonterminal salvage capacity.
      * @param distMat      Distance matrix.
      * @param durMat       Duration matrix.
      */
@@ -126,6 +135,7 @@ public:
                 size_t numVehicles,
                 Load weightCap,
                 Load volumeCap,
+                Salvage salvageCap,
                 Matrix<Distance> const distMat,
                 Matrix<Duration> const durMat);
 };
