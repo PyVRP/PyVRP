@@ -14,13 +14,14 @@ It currently supports VRPs with:
 
 The implementation builds on Thibaut Vidal's [HGS-CVRP][8], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
-Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install `pyvrp` directly from the source code.
+Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install PyVRP directly from the source code.
 
-The `pyvrp` package may be installed in the usual way as
+PyVRP is available on the Python package index as `pyvrp`.
+It may be installed in the usual way as
 ```
 pip install pyvrp
 ```
-This also resolves the few core dependencies `pyvrp` has.
+This also resolves the few core dependencies PyVRP has.
 The documentation is available [here][1].
 
 > If you are new to vehicle routing or metaheuristics, you might benefit from first reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
