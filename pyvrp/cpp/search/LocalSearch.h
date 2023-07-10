@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace pyvrp::search
+{
 class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Node>;
@@ -109,5 +111,6 @@ public:
 
     LocalSearch(ProblemData const &data, Neighbours neighbours);
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_LOCALSEARCH_H

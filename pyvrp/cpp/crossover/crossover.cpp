@@ -4,6 +4,9 @@
 #include <cmath>
 #include <limits>
 
+using pyvrp::Cost;
+using pyvrp::Duration;
+
 using Client = int;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
@@ -14,8 +17,8 @@ namespace
 Cost deltaCost(Client client,
                Client prev,
                Client next,
-               ProblemData const &data,
-               [[maybe_unused]] CostEvaluator const &costEvaluator)
+               pyvrp::ProblemData const &data,
+               [[maybe_unused]] pyvrp::CostEvaluator const &costEvaluator)
 {
     auto const currDist = data.dist(prev, next);
     auto const propDist = data.dist(prev, client) + data.dist(client, next);
@@ -58,10 +61,10 @@ Cost deltaCost(Client client,
 }
 }  // namespace
 
-void crossover::greedyRepair(Routes &routes,
-                             std::vector<Client> const &unplanned,
-                             ProblemData const &data,
-                             CostEvaluator const &costEvaluator)
+void pyvrp::crossover::greedyRepair(Routes &routes,
+                                    pyvrp::DynamicBitset const &unplanned,
+                                    pyvrp::ProblemData const &data,
+                                    pyvrp::CostEvaluator const &costEvaluator)
 {
     auto const numRoutes = routes.size();
 
@@ -78,8 +81,11 @@ void crossover::greedyRepair(Routes &routes,
             centroids[rIdx].second += y / size;
         }
 
-    for (Client client : unplanned)
+    for (size_t client = 1; client != data.numClients() + 1; ++client)
     {
+        if (!unplanned[client])
+            continue;
+
         auto const x = static_cast<double>(data.client(client).x);
         auto const y = static_cast<double>(data.client(client).y);
 
@@ -102,27 +108,27 @@ void crossover::greedyRepair(Routes &routes,
         }
 
         // Find best insertion point in selected route.
-        auto &bestRoute = routes[bestRouteIdx];
         Cost bestCost = std::numeric_limits<Cost>::max();
+        auto &route = routes[bestRouteIdx];
         auto offset = 0;
-        for (size_t idx = 0; idx <= bestRoute.size(); ++idx)
+        for (size_t idx = 0; idx <= route.size() && !route.empty(); ++idx)
         {
             Client prev, next;
 
             if (idx == 0)  // try after depot
             {
                 prev = 0;
-                next = bestRoute[0];
+                next = route[0];
             }
-            else if (idx == bestRoute.size())  // try before depot
+            else if (idx == route.size())  // try before depot
             {
-                prev = bestRoute.back();
+                prev = route.back();
                 next = 0;
             }
             else  // try between [idx - 1] and [idx]
             {
-                prev = bestRoute[idx - 1];
-                next = bestRoute[idx];
+                prev = route[idx - 1];
+                next = route[idx];
             }
 
             auto cost = deltaCost(client, prev, next, data, costEvaluator);
@@ -134,10 +140,10 @@ void crossover::greedyRepair(Routes &routes,
         }
 
         // Update route centroid and insert client into route.
-        auto const size = static_cast<double>(bestRoute.size());
+        auto const size = static_cast<double>(route.size());
         auto const [routeX, routeY] = centroids[bestRouteIdx];
         centroids[bestRouteIdx].first = (routeX * size + x) / (size + 1);
         centroids[bestRouteIdx].second = (routeY * size + y) / (size + 1);
-        bestRoute.insert(bestRoute.begin() + offset, client);
+        route.insert(route.begin() + offset, client);
     }
 }

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.3.0"
+version = "0.4.4"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -15,6 +15,7 @@ include = [
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
     { path = "build_extensions.py", format = "sdist" },
+    { path = "subprojects/*.wrap", format = "sdist" },
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
@@ -121,16 +122,16 @@ omit = [
 
 [tool.coverage.report]
 exclude_lines = [
-    # This excludes all abstract methods from code coverage checks as they are
-    # never instantiated directly anyway
     "pragma: no cover",
     "@abstract",
+    "if TYPE_CHECKING:",
 ]
 
 
 [tool.cibuildwheel]
 # We do not support old Python versions (<3.8) and somewhat uncommon platforms.
-skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
+# For musllinux-based builds we assume users can compile the thing themselves.
+skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-verbosity = "3"
 build-frontend = "build"
 
@@ -141,6 +142,6 @@ script = "build_extensions.py"
 
 
 [build-system]
-# meson and ninja are needed to build the C++ extensions.
-requires = ["poetry-core", "meson", "ninja"]
+# We need meson and ninja to build the C++ extensions.
+requires = ["poetry", "meson", "ninja"]
 build-backend = "poetry.core.masonry.api"

@@ -8,6 +8,8 @@
 #include <iosfwd>
 #include <vector>
 
+namespace pyvrp
+{
 class ProblemData
 {
 public:
@@ -19,6 +21,7 @@ public:
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
+        Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize = 0;        // Prize for visiting this client
         bool const required = true;  // Must client be in solution?
 
@@ -28,26 +31,27 @@ public:
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = 0,
+               Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true);
     };
 
     struct VehicleType
     {
-        Load capacity;        // Capacity (max total demand) of the vehicle
-        size_t numAvailable;  // Number of available vehicles of this type
+        Load const capacity;        // This type's vehicle capacity
+        size_t const numAvailable;  // Available vehicles of this type
     };
 
 private:
-    std::pair<double, double> centroid_;     // Centroid of client locations
-    Matrix<Distance> const dist_;            // Distance matrix (+depot)
-    Matrix<Duration> const dur_;             // Duration matrix (+depot)
-    std::vector<Client> clients_;            // Client (+depot) information
-    std::vector<VehicleType> vehicleTypes_;  // Vehicle type information
+    std::pair<double, double> centroid_;           // Center of client locations
+    Matrix<Distance> const dist_;                  // Distance matrix
+    Matrix<Duration> const dur_;                   // Duration matrix
+    std::vector<Client> const clients_;            // Client/depot information
+    std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
 
     size_t const numClients_;
     size_t const numVehicleTypes_;
-    size_t numVehicles_;  // Number of vehicles - derived from vehicle types
+    size_t const numVehicles_;
 
 public:
     /**
@@ -152,5 +156,6 @@ Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

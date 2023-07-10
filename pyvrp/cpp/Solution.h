@@ -9,10 +9,10 @@
 #include <iosfwd>
 #include <vector>
 
+namespace pyvrp
+{
 class Solution
 {
-    friend struct std::hash<Solution>;  // friend struct to enable hashing
-
     using Client = int;
     using VehicleType = size_t;
 
@@ -32,6 +32,7 @@ public:
         Duration service_ = 0;   // Total service duration on this route
         Duration timeWarp_ = 0;  // Total time warp on this route
         Duration wait_ = 0;      // Total waiting duration on this route
+        Duration release_ = 0;   // Release time of this route
         Cost prizes_ = 0;        // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
@@ -55,6 +56,7 @@ public:
         [[nodiscard]] Duration serviceDuration() const;
         [[nodiscard]] Duration timeWarp() const;
         [[nodiscard]] Duration waitDuration() const;
+        [[nodiscard]] Duration releaseTime() const;
         [[nodiscard]] Cost prizes() const;
 
         [[nodiscard]] std::pair<double, double> const &centroid() const;
@@ -191,21 +193,23 @@ public:
      */
     Solution(ProblemData const &data, std::vector<Route> const &routes);
 };
+}  // namespace pyvrp
 
-std::ostream &operator<<(std::ostream &out, Solution const &sol);
-std::ostream &operator<<(std::ostream &out, Solution::Route const &route);
+std::ostream &operator<<(std::ostream &out, pyvrp::Solution const &sol);
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::Solution::Route const &route);
 
 namespace std
 {
-template <> struct hash<Solution>
+template <> struct hash<pyvrp::Solution>
 {
-    size_t operator()(Solution const &sol) const
+    size_t operator()(pyvrp::Solution const &sol) const
     {
         size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(sol.routes_.size());
-        res = res * 31 + std::hash<Distance>()(sol.distance_);
-        res = res * 31 + std::hash<Load>()(sol.excessLoad_);
-        res = res * 31 + std::hash<Duration>()(sol.timeWarp_);
+        res = res * 31 + std::hash<size_t>()(sol.numRoutes());
+        res = res * 31 + std::hash<pyvrp::Distance>()(sol.distance());
+        res = res * 31 + std::hash<pyvrp::Load>()(sol.excessLoad());
+        res = res * 31 + std::hash<pyvrp::Duration>()(sol.timeWarp());
 
         return res;
     }

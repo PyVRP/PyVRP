@@ -9,7 +9,9 @@
 #include <stdexcept>
 #include <vector>
 
-using TWS = TimeWindowSegment;
+using pyvrp::Solution;
+using pyvrp::search::LocalSearch;
+using TWS = pyvrp::TimeWindowSegment;
 
 Solution LocalSearch::search(Solution &solution,
                              CostEvaluator const &costEvaluator)
@@ -287,7 +289,8 @@ void LocalSearch::loadSolution(Solution const &solution)
                               data.client(client).serviceDuration,
                               0,
                               data.client(client).twEarly,
-                              data.client(client).twLate};
+                              data.client(client).twLate,
+                              data.client(client).releaseTime};
 
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }

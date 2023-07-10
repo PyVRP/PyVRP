@@ -2,6 +2,7 @@
 #define PYVRP_CROSSOVER_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
 #include "XorShift128.h"
@@ -9,17 +10,16 @@
 #include <functional>
 #include <vector>
 
-namespace crossover
+namespace pyvrp::crossover
 {
 /**
  * Greedily inserts each unplanned client into the route that's nearest to the
  * client.
  */
 void greedyRepair(std::vector<std::vector<int>> &routes,
-                  std::vector<int> const &unplanned,
+                  DynamicBitset const &unplanned,
                   ProblemData const &data,
                   CostEvaluator const &costEvaluator);
-}  // namespace crossover
 
 /**
  * Performs two SREX crossovers of the given parents. SREX is a method that
@@ -50,5 +50,6 @@ Solution selectiveRouteExchange(
     CostEvaluator const &costEvaluator,
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes);
+}  // namespace pyvrp::crossover
 
 #endif  // PYVRP_CROSSOVER_H

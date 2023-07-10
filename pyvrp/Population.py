@@ -3,10 +3,13 @@ from __future__ import annotations
 from typing import Callable, Generator, Tuple
 from warnings import warn
 
-from ._CostEvaluator import CostEvaluator
-from ._Solution import Solution
-from ._SubPopulation import PopulationParams, SubPopulation
-from ._XorShift128 import XorShift128
+from ._pyvrp import (
+    CostEvaluator,
+    PopulationParams,
+    Solution,
+    SubPopulation,
+    XorShift128,
+)
 from .exceptions import EmptySolutionWarning
 
 

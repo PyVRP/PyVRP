@@ -5,9 +5,7 @@ from typing import List
 
 import numpy as np
 
-from pyvrp._ProblemData import ProblemData
-
-Neighbours = List[List[int]]
+from pyvrp import ProblemData
 
 
 @dataclass
@@ -56,7 +54,7 @@ class NeighbourhoodParams:
 
 def compute_neighbours(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
-) -> Neighbours:
+) -> List[List[int]]:
     """
     Computes neighbours defining the neighbourhood for a problem instance.
 
@@ -69,7 +67,7 @@ def compute_neighbours(
 
     Returns
     -------
-    Neighbours
+    list
         A list of list of integers representing the neighbours for each client.
         The first element represents the depot and is an empty list.
     """

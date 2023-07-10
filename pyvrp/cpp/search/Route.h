@@ -10,6 +10,8 @@
 #include <cassert>
 #include <iosfwd>
 
+namespace pyvrp::search
+{
 class Route
 {
     ProblemData const &data;
@@ -194,8 +196,9 @@ Load Route::loadBetween(size_t start, size_t end) const
 
     return endLoad - startLoad + atStart;
 }
+}  // namespace pyvrp::search
 
 // Outputs a route into a given ostream in CVRPLib format
-std::ostream &operator<<(std::ostream &out, Route const &route);
+std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
 
 #endif  // PYVRP_ROUTE_H

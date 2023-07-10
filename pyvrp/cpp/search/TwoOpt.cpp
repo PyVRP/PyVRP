@@ -3,7 +3,9 @@
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
-using TWS = TimeWindowSegment;
+using pyvrp::Cost;
+using pyvrp::search::TwoOpt;
+using TWS = pyvrp::TimeWindowSegment;
 
 Cost TwoOpt::evalWithinRoute(Node *U,
                              Node *V,

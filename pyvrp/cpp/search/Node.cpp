@@ -1,5 +1,7 @@
 #include "Node.h"
 
+using pyvrp::search::Node;
+
 void Node::insertAfter(Node *other)
 {
     if (route)  // If we're in a route, we first stitch up the current route.

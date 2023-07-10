@@ -2,8 +2,7 @@ import math
 from dataclasses import dataclass
 
 from .Statistics import Statistics
-from ._CostEvaluator import CostEvaluator
-from ._Solution import Solution
+from ._pyvrp import CostEvaluator, Solution
 
 
 @dataclass
@@ -95,10 +94,7 @@ class Result:
             "",
             "Routes",
             "------",
+            str(self.best),
         ]
-
-        for idx, route in enumerate(self.best.get_routes(), 1):
-            if route:
-                summary.append(f"Route {idx:>2}: {route}")
 
         return "\n".join(summary)

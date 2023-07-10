@@ -1,8 +1,6 @@
 from typing import Tuple
 
-from pyvrp._CostEvaluator import CostEvaluator
-from pyvrp._ProblemData import ProblemData
-from pyvrp._Solution import Solution
+from pyvrp import CostEvaluator, ProblemData, Solution
 
 def selective_route_exchange(
     parents: Tuple[Solution, Solution],

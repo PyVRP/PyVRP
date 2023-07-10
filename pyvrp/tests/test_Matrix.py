@@ -1,6 +1,6 @@
 from numpy.testing import assert_equal, assert_raises
 
-from pyvrp._Matrix import Matrix
+from pyvrp._pyvrp import Matrix
 
 
 def test_dimension_constructor():

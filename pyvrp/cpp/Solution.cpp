@@ -5,6 +5,12 @@
 #include <numeric>
 #include <unordered_map>
 
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+using pyvrp::Solution;
+
 using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
@@ -203,7 +209,10 @@ Solution::Route::Route(ProblemData const &data,
     if (visits_.empty())
         return;
 
-    Duration time = data.depot().twEarly;
+    for (size_t idx = 0; idx != size(); ++idx)
+        release_ = std::max(release_, data.client(visits_[idx]).releaseTime);
+
+    Duration time = std::max(release_, data.depot().twEarly);
     int prevClient = 0;
 
     for (size_t idx = 0; idx != size(); ++idx)
@@ -283,6 +292,8 @@ Duration Solution::Route::serviceDuration() const { return service_; }
 Duration Solution::Route::timeWarp() const { return timeWarp_; }
 
 Duration Solution::Route::waitDuration() const { return wait_; }
+
+Duration Solution::Route::releaseTime() const { return release_; }
 
 Cost Solution::Route::prizes() const { return prizes_; }
 
