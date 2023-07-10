@@ -94,7 +94,7 @@ class Result:
             "",
             "Routes",
             "------",
+            str(self.best),
         ]
-        summary.extend(str(self.best).splitlines())
 
         return "\n".join(summary)
