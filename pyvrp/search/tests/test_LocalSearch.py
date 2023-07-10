@@ -7,8 +7,8 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
-    compute_neighbours,
     RelocateStar,
+    compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
