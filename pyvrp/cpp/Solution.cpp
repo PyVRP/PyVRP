@@ -25,8 +25,7 @@ void Solution::evaluate(ProblemData const &data)
         excessWeight_ += route.excessWeight();
         excessVolume_ += route.excessVolume();
         excessSalvage_ += route.excessSalvage();
-        if (route.hasSalvageBeforeDelivery())
-            salvageBeforeDelivery_ = true;
+        excessSalvageSequence_ += route.excessSalvageSequence();
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
@@ -43,11 +42,13 @@ std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
     return neighbours;
 }
 
-bool Solution::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasSalvageBeforeDelivery() && !hasTimeWarp(); }
+bool Solution::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasTimeWarp(); } // !hasSalvageBeforeDelivery() && !hasTimeWarp(); }
+// bool Solution::isFeasible() const { return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasExcessSalvageSequence() && !hasTimeWarp(); }
 
 bool Solution::hasExcessWeight() const { return excessWeight_ > 0; }
 bool Solution::hasExcessVolume() const { return excessVolume_ > 0; }
 bool Solution::hasExcessSalvage() const { return excessSalvage_ > 0; }
+bool Solution::hasExcessSalvageSequence() const { return excessSalvageSequence_ > 0; }
 bool Solution::hasSalvageBeforeDelivery() const { return salvageBeforeDelivery_; }
 bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
@@ -56,6 +57,7 @@ Distance Solution::distance() const { return distance_; }
 Load Solution::excessWeight() const { return excessWeight_; }
 Load Solution::excessVolume() const { return excessVolume_; }
 Salvage Solution::excessSalvage() const { return excessSalvage_; }
+Salvage Solution::excessSalvageSequence() const { return excessSalvageSequence_; }
 
 Cost Solution::prizes() const { return prizes_; }
 
@@ -81,6 +83,7 @@ bool Solution::operator==(Solution const &other) const
         && excessWeight_ == other.excessWeight_
         && excessVolume_ == other.excessVolume_
         && excessSalvage_ == other.excessSalvage_
+        && excessSalvageSequence_ == other.excessSalvageSequence_
         && timeWarp_ == other.timeWarp_
         && routes_.size() == other.routes_.size()
         && neighbours == other.neighbours;
@@ -170,6 +173,7 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
     bool isSalvage = false;
     bool isDelivery = false;
     Salvage salvageCount = 0;
+    Salvage salvageSequenceViolations = 0;
 
     std::cout << "###### Enter Solution:Route" << std::endl << std::endl;
     for (size_t idx = 0; idx != size(); ++idx)
@@ -215,6 +219,7 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
         if (isDelivery && foundSalvage)
         {
             salvageBeforeDelivery_ = true;
+            salvageSequenceViolations += 1;
         }
 
         salvageCount = clientData.demandSalvage ? salvageCount + Salvage(1) : salvageCount;
@@ -264,10 +269,15 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
                       ? demandSalvage_ - data.salvageCapacity()
                       : 0;
 
+    excessSalvageSequence_ = salvageBeforeDelivery_
+                      ? salvageSequenceViolations
+                      : 0;
+
     // Debug prints
     std::cout << "In Solution:Route: excessWeight_: " << excessWeight_
               << ", excessVolume_: " << excessVolume_
-              << ", excessSalvage_: " << excessSalvage_ << std::endl;
+              << ", excessSalvage_: " << excessSalvage_ 
+              << ", excessSalvageSequence_: " << excessSalvageSequence_ << std::endl;
     std::cout << "###### Exit Solution:Route" << std::endl << std::endl;
 }
 
@@ -308,6 +318,8 @@ Load Solution::Route::excessVolume() const { return excessVolume_; }
 
 Salvage Solution::Route::excessSalvage() const { return excessSalvage_; }
 
+Salvage Solution::Route::excessSalvageSequence() const { return excessSalvageSequence_; }
+
 Duration Solution::Route::duration() const { return duration_; }
 
 Duration Solution::Route::serviceDuration() const { return service_; }
@@ -325,7 +337,8 @@ std::pair<double, double> const &Solution::Route::centroid() const
 
 bool Solution::Route::isFeasible() const
 {
-    return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasSalvageBeforeDelivery() && !hasTimeWarp();
+    return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasTimeWarp(); // !hasSalvageBeforeDelivery() && !hasTimeWarp();
+    // return !hasExcessWeight() && !hasExcessVolume() && !hasExcessSalvage() && !hasTimeWarp() && !hasExcessSalvageSequence();
 }
 
 bool Solution::Route::hasExcessWeight() const { return excessWeight_ > 0; }
@@ -333,6 +346,8 @@ bool Solution::Route::hasExcessWeight() const { return excessWeight_ > 0; }
 bool Solution::Route::hasExcessVolume() const { return excessVolume_ > 0; }
 
 bool Solution::Route::hasExcessSalvage() const { return excessSalvage_ > 0; }
+
+bool Solution::Route::hasExcessSalvageSequence() const { return excessSalvageSequence_ > 0; }
 
 bool Solution::Route::hasSalvageBeforeDelivery() const { return salvageBeforeDelivery_; }
 
@@ -364,6 +379,9 @@ std::ostream &operator<<(std::ostream &out, Solution const &sol)
 
         if (routes[idx].hasExcessSalvage())
             out << "Excess salvage: " << routes[idx].excessSalvage() << '\n';
+
+        if (routes[idx].hasExcessSalvageSequence())
+            out << "Excess salvage sequence: " << routes[idx].excessSalvageSequence() << '\n';
     }
 
     return out;

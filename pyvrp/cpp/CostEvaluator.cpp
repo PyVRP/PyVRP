@@ -5,10 +5,12 @@
 CostEvaluator::CostEvaluator(Cost weightCapacityPenalty, 
                              Cost volumeCapacityPenalty, 
                              Cost salvageCapacityPenalty, 
+                             // Cost salvageRouteSequencePenalty, 
                              Cost timeWarpPenalty)
     : weightCapacityPenalty(weightCapacityPenalty), 
       volumeCapacityPenalty(volumeCapacityPenalty), 
       salvageCapacityPenalty(salvageCapacityPenalty), 
+      // salvageRouteSequencePenalty(salvageRouteSequencePenalty), 
       timeWarpPenalty(timeWarpPenalty)
 {
 }
@@ -21,6 +23,7 @@ Cost CostEvaluator::penalisedCost(Solution const &solution) const
            + weightPenaltyExcess(solution.excessWeight())
            + volumePenaltyExcess(solution.excessVolume())
            + salvagePenaltyExcess(solution.excessSalvage())
+           // + salvageSequencePenaltyExcess(solution.excessSalvageSequence())
            + twPenalty(solution.timeWarp());
 }
 

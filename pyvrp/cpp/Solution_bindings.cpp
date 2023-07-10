@@ -38,6 +38,10 @@ PYBIND11_MODULE(_Solution, m)
              [](Solution::Route const &route) {
                  return route.excessSalvage().get();
              })
+        .def("excess_salvage_sequence",
+             [](Solution::Route const &route) {
+                 return route.excessSalvageSequence().get();
+             })
         .def(
             "duration",
             [](Solution::Route const &route) { return route.duration().get(); })
@@ -122,6 +126,8 @@ PYBIND11_MODULE(_Solution, m)
              [](Solution const &sol) { return sol.excessVolume().get(); })
         .def("excess_salvage",
              [](Solution const &sol) { return sol.excessSalvage().get(); })
+        .def("excess_salvage_sequence",
+             [](Solution const &sol) { return sol.excessSalvageSequence().get(); })
         .def("time_warp",
              [](Solution const &sol) { return sol.timeWarp().get(); })
         .def("prizes", [](Solution const &sol) { return sol.prizes().get(); })

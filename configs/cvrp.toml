@@ -48,6 +48,7 @@ symmetric_neighbours = true
 init_weight_capacity_penalty = 20
 init_volume_capacity_penalty = 20
 init_salvage_penalty = 20
+init_salvage_sequence_penalty = 20
 init_backhaul_penalty = 20
 init_time_warp_penalty = 0
 repair_booster = 12
