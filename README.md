@@ -62,7 +62,7 @@ TODO
 
 [4]: https://pyvrp.readthedocs.io/en/latest/examples/basic_vrps.html
 
-[5]: https://pyvrp.readthedocs.io/en/latest/examples/getting_started.html
+[5]: https://pyvrp.readthedocs.io/en/latest/examples/quick_tutorial.html
 
 [6]: https://pyvrp.readthedocs.io/en/latest/setup/introduction_to_vrp.html
 
