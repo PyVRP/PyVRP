@@ -95,9 +95,6 @@ class Result:
             "Routes",
             "------",
         ]
-
-        for idx, route in enumerate(self.best.get_routes(), 1):
-            if route:
-                summary.append(f"Route {idx:>2}: {route}")
+        summary.extend(str(self.best).splitlines())
 
         return "\n".join(summary)
