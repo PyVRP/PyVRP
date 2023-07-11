@@ -82,19 +82,23 @@ html_theme_options = {
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",
+            "primary": "orange",
+            "accent": "yellow",
             "scheme": "default",
             "toggle": {
                 "icon": "material/lightbulb-outline",
                 "name": "Switch to dark mode",
-            }
+            },
         },
         {
             "media": "(prefers-color-scheme: dark)",
+            "primary": "orange",
+            "accent": "yellow",
             "scheme": "slate",
             "toggle": {
                 "icon": "material/lightbulb",
                 "name": "Switch to light mode",
-            }
+            },
         },
     ],
 }
