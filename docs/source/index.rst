@@ -1,4 +1,4 @@
-.. figure:: assets/images/PyVRP.svg
+.. figure:: assets/images/logo.svg
    :alt: PyVRP logo
    :figwidth: 100%
 
