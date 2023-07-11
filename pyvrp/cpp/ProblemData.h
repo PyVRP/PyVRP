@@ -38,8 +38,10 @@ public:
 
     struct VehicleType
     {
-        Load const capacity;        // This type's vehicle capacity
-        size_t const numAvailable;  // Available vehicles of this type
+        Load const capacity;          // This type's vehicle capacity
+        size_t const numAvailable;    // Available vehicles of this type
+        size_t const startDepot = 0;  // Departure depot location
+        size_t const endDepot = 0;    // Return depot location
     };
 
 private:

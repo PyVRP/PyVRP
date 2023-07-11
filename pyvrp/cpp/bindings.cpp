@@ -172,9 +172,11 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("required", &ProblemData::Client::required);
 
     py::class_<ProblemData::VehicleType>(m, "VehicleType")
-        .def(py::init<pyvrp::Value, size_t>(),
+        .def(py::init<pyvrp::Value, size_t, size_t, size_t>(),
              py::arg("capacity"),
-             py::arg("num_available"))
+             py::arg("num_available"),
+             py::arg("start_depot") = 0,
+             py::arg("end_depot") = 0)
         .def_property_readonly("capacity",
                                [](ProblemData::VehicleType const &vehicleType) {
                                    return vehicleType.capacity.get();
