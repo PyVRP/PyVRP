@@ -72,5 +72,32 @@ add_module_names = False
 # -- Options for HTML output
 html_theme = "sphinx_immaterial"
 
+html_theme_options = {
+    "site_url": "https://pyvrp.readthedocs.io/",
+    "repo_url": "https://github.com/PyVRP/PyVRP/",
+    "icon": {
+        "repo": "fontawesome/brands/github",
+        "edit": "material/file-edit-outline",
+    },
+    "palette": [
+        {
+            "media": "(prefers-color-scheme: light)",
+            "scheme": "default",
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to dark mode",
+            }
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "scheme": "slate",
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to light mode",
+            }
+        },
+    ],
+}
+
 # -- Options for EPUB output
 epub_show_urls = "footnote"
