@@ -16,7 +16,7 @@ def plot_route_schedule(
 ):
     """
     Plots a route schedule. This function plots multiple time statistics
-    as a function of distance traveled:
+    as a function of distance travelled:
 
     * Solid: earliest possible trajectory / time, using time warp if the route
       is infeasible.
