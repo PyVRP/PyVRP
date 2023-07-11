@@ -1,9 +1,6 @@
-.. figure:: assets/images/PyVRP.svg
+.. figure:: assets/images/logo.svg
    :alt: PyVRP logo
-
-.. raw:: html
-
-   <section id="index">
+   :figwidth: 100%
 
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports VRPs with:
@@ -28,10 +25,6 @@ It can be installed through *pip* via
 
     If you are new to vehicle routing or metaheuristics, you might benefit from first reading the :doc:`introduction to VRP <setup/introduction_to_vrp>`, :doc:`introduction to HGS <setup/introduction_to_hgs>`, and :doc:`tutorial <../examples/quick_tutorial>` pages.
     To set up an installation from source, or to run the examples listed below yourself, please have a look at the :doc:`installation instructions <setup/installation>`.
-
-.. raw:: html
-
-   </section>
 
 Contents
 --------
