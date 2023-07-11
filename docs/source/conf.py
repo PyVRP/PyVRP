@@ -50,7 +50,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "autoapi.extension",
     "sphinx.ext.intersphinx",
-    "sphinx_rtd_theme",
+    "sphinx_immaterial",
     "nbsphinx",
     "numpydoc",
 ]
@@ -70,7 +70,7 @@ templates_path = ["_templates"]
 add_module_names = False
 
 # -- Options for HTML output
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_immaterial"
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
