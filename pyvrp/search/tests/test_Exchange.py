@@ -222,7 +222,7 @@ def test_relocate_after_depot_should_work():
 def test_relocate_only_happens_when_distance_and_duration_allow_it():
     """
     Tests that (1, 0)-exchange checks the duration matrix for time-window
-    feasibility before applying a move that improves the traveled distance.
+    feasibility before applying a move that improves the travelled distance.
     """
     clients = [
         Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10),

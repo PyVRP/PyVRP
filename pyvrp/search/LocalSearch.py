@@ -149,7 +149,7 @@ class LocalSearch:
             This method evaluates improving moves between route pairs. To limit
             computational efforts, by default not all route pairs are
             considered: only those route pairs that share some overlap when
-            considering their center's angle from the depot are evaluted.
+            considering their center's angle from the depot are evaluated.
             This parameter controls the amount of overlap needed before two
             routes are evaluated.
 
