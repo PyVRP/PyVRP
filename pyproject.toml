@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.4.2"
+version = "0.4.4"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -15,6 +15,7 @@ include = [
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
     { path = "build_extensions.py", format = "sdist" },
+    { path = "subprojects/*.wrap", format = "sdist" },
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
@@ -54,7 +55,6 @@ optional = true
 
 
 [tool.poetry.group.docs.dependencies]
-tomli = ">=2.0.1"
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
@@ -149,6 +149,6 @@ script = "build_extensions.py"
 
 
 [build-system]
-# meson and ninja are needed to build the C++ extensions.
-requires = ["poetry-core", "meson", "ninja"]
+# We need meson and ninja to build the C++ extensions.
+requires = ["poetry", "meson", "ninja"]
 build-backend = "poetry.core.masonry.api"

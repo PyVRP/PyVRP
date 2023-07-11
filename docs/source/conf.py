@@ -1,14 +1,11 @@
 import datetime
-import glob
 import os
 import shutil
 import sys
-from pathlib import Path
 
 import tomli
 
 # -- Project information
-
 sys.path.insert(0, os.path.abspath("../../"))
 
 now = datetime.date.today()
@@ -21,14 +18,10 @@ with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
     release = version = pyproj["tool"]["poetry"]["version"]
 
-for file in glob.iglob("../../examples/*.ipynb"):
-    path = Path(file)
+print("Copying example notebooks into docs/source/examples/")
+shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
 
-    print(f"Copy {path.name} into docs/source/examples/")
-    shutil.copy2(path, f"examples/{path.name}")
-
-# -- Autoapi and autodoc
-
+# -- API documentation
 autoapi_type = "python"
 autoapi_dirs = ["../../pyvrp"]
 autoapi_options = ["members", "undoc-members", "special-members"]
@@ -40,21 +33,17 @@ autoapi_add_objects_to_toctree = False
 
 autoapi_python_class_content = "class"
 autoapi_member_order = "bysource"
-
 autodoc_typehints = "signature"
 
-# -- Numpydoc
-
+# -- numpydoc
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
-
-nbsphinx_execute = "never"
+nbsphinx_execute = "always"
 
 # -- General configuration
-
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
@@ -81,7 +70,6 @@ templates_path = ["_templates"]
 add_module_names = False
 
 # -- Options for HTML output
-
 html_theme = "sphinx_rtd_theme"
 
 # -- Options for EPUB output

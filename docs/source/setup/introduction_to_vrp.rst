@@ -29,7 +29,6 @@ The vertex set :math:`V` is partitioned into :math:`V=\{0\} \cup V_c`, where :ma
 Each arc :math:`(i, j) \in A` has a weight :math:`d_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
 A fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot.
 
-
 Capacitated vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -39,10 +38,6 @@ It is also assumed that the fleet of vehicles :math:`K` is homogeneous, meaning 
 
 A feasible solution to the CVRP consists of a set of routes that all begin and end at the depot, such that each client is visited exactly once and none of the routes exceeds the vehicle capacity.
 The objective is to find a feasible solution that minimises the total travelling cost.
-
-.. hint::
-
-   Check out :ref:`this example notebook </examples/cvrp.ipynb>` in which we solve a CVRP instance.
 
 Vehicle routing problem with time windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -58,8 +53,7 @@ The objective is to find a feasible solution that minimises the total travel cos
 
 .. hint::
 
-   Check out :ref:`this example notebook </examples/vrptw.ipynb>` in which we solve a VRPTW instance.
-
+   Check out :ref:`this example notebook </examples/basic_vrps.ipynb>` in which we solve CVRP and VRPTW instances.
 
 Prize-collecting vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
