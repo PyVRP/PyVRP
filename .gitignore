@@ -165,7 +165,6 @@ dmypy.json
 # Compiled or generated assets
 debug/
 release/
-_readthedocs/
 
 # Profiler results
 *.prof

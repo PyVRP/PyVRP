@@ -73,7 +73,7 @@ add_module_names = False
 html_theme = "sphinx_immaterial"
 html_logo = "assets/images/icon.svg"
 html_theme_options = {
-    "site_url": "https://pyvrp.readthedocs.io/",
+    "site_url": "https://pyvrp.org/",
     "repo_url": "https://github.com/PyVRP/PyVRP/",
     "icon": {
         "repo": "fontawesome/brands/github",
