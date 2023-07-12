@@ -88,6 +88,7 @@ def compute_neighbours(
     proximity[0, :] = np.inf  # depot has no neighbours
     proximity[:, 0] = np.inf  # clients do not neighbour depot
 
+    # TODO depot
     top_k = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
 
     if not params.symmetric_neighbours:

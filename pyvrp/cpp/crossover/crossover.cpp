@@ -34,6 +34,7 @@ Cost deltaCost(Client client,
     auto const nextLate = data.client(next).twLate;
 
     // Determine the earliest time we can depart from prev.
+    // TODO what about depot != 0 here?
     auto const prevStart = std::max(data.duration(0, prev), prevData.twEarly);
     auto const prevFinish = prevStart + prevData.serviceDuration;
 

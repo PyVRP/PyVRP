@@ -75,8 +75,8 @@ def plot_route_schedule(
 
     add_traces(dist, t, drive_time, serv_time, load)
 
-    prev_idx = 0  # depot
-    for idx in [*list(route), 0]:
+    prev_idx = 0  # TODO depot idx
+    for idx in [*list(route), 0]:  # TODO depot idx
         stop = data.client(idx)
         delta_time = data.duration(prev_idx, idx)
         delta_dist = data.dist(prev_idx, idx)
