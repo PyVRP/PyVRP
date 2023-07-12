@@ -214,7 +214,7 @@ def test_best_initial_solution():
     pop = Population(bpd)
 
     bks = Solution(data, read_solution("data/RC208.sol"))
-    init = [bks] + make_random_solutions(24, data, rng)
+    init = [bks, *make_random_solutions(24, data, rng)]
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)

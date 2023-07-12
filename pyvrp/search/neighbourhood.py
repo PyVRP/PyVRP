@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import numpy as np
 
-from pyvrp import ProblemData
+if TYPE_CHECKING:
+    from pyvrp import ProblemData
 
 
 @dataclass
@@ -90,7 +91,7 @@ def compute_neighbours(
     top_k = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
 
     if not params.symmetric_neighbours:
-        return [[]] + top_k.tolist()
+        return [[], *top_k.tolist()]
 
     # Construct a symmetric adjacency matrix and return the adjacent clients
     # as the neighbourhood structure.

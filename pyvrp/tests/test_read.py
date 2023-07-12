@@ -29,7 +29,7 @@ def test_raises_invalid_file(where: str, exception: Exception):
 
 
 def test_raises_unknown_round_func():
-    with assert_raises(ValueError):
+    with assert_raises(TypeError):
         # Unknown round_func, so should raise.
         read("data/OkSmall.txt", round_func="asdbsadfas")
 
