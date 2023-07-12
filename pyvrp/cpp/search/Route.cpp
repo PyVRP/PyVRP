@@ -9,15 +9,23 @@
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
-    : data(data), vehicleType_(vehType), idx(idx)
+Route::Route(ProblemData const &data,
+             size_t const idx,
+             size_t const vehType,
+             Node *startDepot,
+             Node *endDepot)
+    : data(data),
+      vehicleType_(vehType),
+      idx(idx),
+      startDepot(startDepot),
+      endDepot(endDepot)
 {
 }
 
 void Route::setupNodes()
 {
     nodes.clear();
-    auto *node = depot;
+    auto *node = startDepot;
 
     do
     {
@@ -32,7 +40,7 @@ void Route::setupSector()
         return;
 
     auto const &depotData = data.client(0);
-    auto const &clientData = data.client(n(depot)->client);
+    auto const &clientData = data.client(n(startDepot)->client);
 
     auto const diffX = static_cast<double>(clientData.x - depotData.x);
     auto const diffY = static_cast<double>(clientData.y - depotData.y);
@@ -133,7 +141,7 @@ void Route::update()
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx + 1 << ":";  // route number
-    for (auto *node = n(route.depot); !node->isDepot(); node = n(node))
+    for (auto *node = n(route.startDepot); !node->isDepot(); node = n(node))
         out << ' ' << node->client;  // client index
     out << '\n';
 

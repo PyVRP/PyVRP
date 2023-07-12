@@ -13,7 +13,7 @@
 
 namespace pyvrp::search
 {
-class Route
+class Route  // TODO implement iteration for Route
 {
     ProblemData const &data;
     size_t const vehicleType_;
@@ -38,7 +38,8 @@ class Route
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
-    Node *depot;       // Pointer to the associated depot
+    Node *startDepot;  // Departure depot for this route
+    Node *endDepot;    // Return depot for this route
 
     /**
      * @return The client or depot node at the given position.
@@ -125,7 +126,11 @@ public:                // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data, size_t const idx, size_t const vehType);
+    Route(ProblemData const &data,
+          size_t const idx,
+          size_t const vehType,
+          Node *startDepot,
+          Node *endDepot);
 };
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
@@ -189,7 +194,7 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
-    auto const *startNode = start == 0 ? depot : nodes[start - 1];
+    auto const *startNode = start == 0 ? startDepot : nodes[start - 1];
     auto const atStart = data.client(startNode->client).demand;
     auto const startLoad = startNode->cumulatedLoad;
     auto const endLoad = nodes[end - 1]->cumulatedLoad;

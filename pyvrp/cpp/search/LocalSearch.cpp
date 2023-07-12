@@ -84,9 +84,9 @@ Solution LocalSearch::search(Solution &solution,
                         continue;
 
                     if (U->route)  // try inserting U into the empty route.
-                        applyNodeOps(U, empty->depot, costEvaluator);
+                        applyNodeOps(U, empty->startDepot, costEvaluator);
                     else  // U is not in the solution, so again try inserting.
-                        maybeInsert(U, empty->depot, costEvaluator);
+                        maybeInsert(U, empty->startDepot, costEvaluator);
                 }
             }
         }
@@ -442,18 +442,21 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
-    for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
+    for (size_t vehTypeIdx = 0; vehTypeIdx != data.numVehicleTypes();
+         ++vehTypeIdx)
     {
-        auto const numAvailable = data.vehicleType(vehType).numAvailable;
+        auto const &vehType = data.vehicleType(vehTypeIdx);
+        auto const numAvailable = vehType.numAvailable;
+
         for (size_t i = 0; i != numAvailable; ++i)
         {
-            routes.emplace_back(data, rIdx, vehType);
-            routes[rIdx].depot = &startDepots[rIdx];
+            routes.emplace_back(
+                data, rIdx, vehTypeIdx, &startDepots[rIdx], &endDepots[rIdx]);
 
-            startDepots[rIdx].client = 0;
+            startDepots[rIdx].client = vehType.startDepot;
             startDepots[rIdx].route = &routes[rIdx];
 
-            endDepots[rIdx].client = 0;
+            endDepots[rIdx].client = vehType.endDepot;
             endDepots[rIdx].route = &routes[rIdx];
 
             rIdx++;

@@ -7,7 +7,7 @@ using TWS = pyvrp::TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 {
-    for (Node *U = n(R1->depot); !U->isDepot(); U = n(U))
+    for (Node *U = n(R1->startDepot); !U->isDepot(); U = n(U))
     {
         auto twData
             = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
@@ -33,20 +33,23 @@ void SwapStar::updateInsertionCost(Route *R,
     insertPositions.shouldUpdate = false;
 
     // Insert cost of U just after the depot (0 -> U -> ...)
-    auto twData = TWS::merge(
-        data.durationMatrix(), R->depot->twBefore, U->tw, n(R->depot)->twAfter);
+    auto twData = TWS::merge(data.durationMatrix(),
+                             R->startDepot->twBefore,
+                             U->tw,
+                             n(R->startDepot)->twAfter);
 
-    Distance deltaDist = data.dist(0, U->client)
-                         + data.dist(U->client, n(R->depot)->client)
-                         - data.dist(0, n(R->depot)->client);
+    Distance deltaDist
+        = data.dist(R->startDepot->client, U->client)
+          + data.dist(U->client, n(R->startDepot)->client)
+          - data.dist(R->startDepot->client, n(R->startDepot)->client);
 
     Cost deltaCost = static_cast<Cost>(deltaDist)
                      + costEvaluator.twPenalty(twData.totalTimeWarp())
                      - costEvaluator.twPenalty(R->timeWarp());
 
-    insertPositions.maybeAdd(deltaCost, R->depot);
+    insertPositions.maybeAdd(deltaCost, R->startDepot);
 
-    for (Node *V = n(R->depot); !V->isDepot(); V = n(V))
+    for (Node *V = n(R->startDepot); !V->isDepot(); V = n(V))
     {
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(
@@ -120,8 +123,8 @@ Cost SwapStar::evaluate(Route *routeU,
             cache(routeU->idx, idx).shouldUpdate = true;
     }
 
-    for (Node *U = n(routeU->depot); !U->isDepot(); U = n(U))
-        for (Node *V = n(routeV->depot); !V->isDepot(); V = n(V))
+    for (Node *U = n(routeU->startDepot); !U->isDepot(); U = n(U))
+        for (Node *V = n(routeV->startDepot); !V->isDepot(); V = n(V))
         {
             Cost deltaCost = 0;
 

@@ -10,7 +10,8 @@ class Route;
 
 struct Node
 {
-    int client;       // Client represented with this node
+    // TODO rename client to location/loc
+    int client;       // Location represented by this node
     size_t position;  // Position in the route
     Node *next;       // Next node in the route order
     Node *prev;       // Previous node in the route order
@@ -43,7 +44,7 @@ struct Node
     void remove();
 };
 
-bool Node::isDepot() const { return client == 0; }
+bool Node::isDepot() const { return client == 0; }  // TODO remove
 
 /**
  * Convenience method accessing the node directly before the argument.
