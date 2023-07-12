@@ -116,6 +116,7 @@ void pyvrp::crossover::greedyRepair(Routes &routes,
         {
             Client prev, next;
 
+            // TODO hardcoded depot
             if (idx == 0)  // try after depot
             {
                 prev = 0;

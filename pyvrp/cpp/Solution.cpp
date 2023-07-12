@@ -251,7 +251,8 @@ Solution::Route::Route(ProblemData const &data,
     distance_ += data.dist(last, vehType.endDepot);
     duration_ += data.duration(last, vehType.endDepot);
 
-    time += data.client(last).serviceDuration + data.duration(last, 0);
+    time += data.client(last).serviceDuration
+            + data.duration(last, vehType.endDepot);
     timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
 
     auto const capacity = vehType.capacity;
