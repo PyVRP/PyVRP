@@ -256,10 +256,10 @@ def test_tournament_ranks_by_fitness(k: int):
 
     # Since this test requires the fitness values of the solutions, we have
     # to access the underlying infeasible subpopulation directly.
-    infeas_pop = pop._infeas
+    infeas_pop = pop._infeas  # noqa: SLF001
     infeas_pop.update_fitness(cost_evaluator)
 
-    items = [item for item in pop._infeas]
+    items = [item for item in infeas_pop]
     by_fitness = sorted(items, key=lambda item: item.fitness)
     sol2idx = {item.solution: idx for idx, item in enumerate(by_fitness)}
     infeas_count = np.zeros(len(infeas_pop))

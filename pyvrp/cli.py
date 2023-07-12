@@ -9,9 +9,9 @@ try:
     import tomli
     from tqdm import tqdm
     from tqdm.contrib.concurrent import process_map
-except ModuleNotFoundError:
+except ModuleNotFoundError as exc:
     msg = "Install 'tqdm' and 'tomli' to use the command line program."
-    raise ModuleNotFoundError(msg)
+    raise ModuleNotFoundError(msg) from exc
 
 import pyvrp.search
 from pyvrp import (
@@ -55,7 +55,7 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
     ]
 
     content = [
-        "  ".join(f"{str(c):>{ln}s}" for ln, c in zip(lens, r)) for r in rows
+        "  ".join(f"{c!s:>{ln}s}" for ln, c in zip(lens, r)) for r in rows
     ]
 
     return "\n".join(header + content)
