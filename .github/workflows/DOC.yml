@@ -1,9 +1,7 @@
 name: DOC
 
 on:
-  # push:
-  #   branches: [ main ]
-  pull_request:
+  push:
     branches: [ main ]
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
