@@ -7,7 +7,7 @@ If you want to build the documentation, make sure to install that group (using `
 
 The Makefile in this directory can be used to build the documentation.
 Running the command `poetry run make help` from this directory provides an overview of the available options.
-In particular `poetry run make html` is useful, as that will build the documentation in the exact same way as it will be displayed on readthedocs later.
+In particular `poetry run make html` is useful, as that will build the documentation in the exact same way as it will be displayed on the website later.
 
 > Alternatively, one can run `poetry run make html --directory=docs` from the project root as well.
 
