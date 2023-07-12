@@ -1,7 +1,7 @@
 Benchmarking
 ============
 
-To run a benchmark, one can use the command line interface ``PyVRP`` provides.
+To run a benchmark, one can use the command line interface PyVRP provides.
 After installation, it is available as ``pyvrp`` from the command line.
 To find out about available options, run
 
@@ -9,7 +9,7 @@ To find out about available options, run
 
    pyvrp --help
 
-To benchmark ``pyvrp``, we mostly use instances from `CRVPLIB <http://vrp.atd-lab.inf.puc-rio.br/index.php/en/>`_ instances.
+To benchmark PyVRP, we mostly use instances from `CRVPLIB <http://vrp.atd-lab.inf.puc-rio.br/index.php/en/>`_ instances.
 Particularly:
 
 * For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
