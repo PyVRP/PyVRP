@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/pyvrp.svg)](https://badge.fury.io/py/pyvrp)
 [![CI](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
-[![DOC](https://github.com/PyVRP/PyVRP/actions/workflows/DOC.yml/badge.svg?branch=main)](https://github.com/PyVRP/PyVRP/actions/workflows/DOC.yml)
+[![DOC](https://github.com/PyVRP/PyVRP/actions/workflows/DOC.yml/badge.svg?branch=main)](https://pyvrp.org/)
 [![codecov](https://codecov.io/gh/PyVRP/PyVRP/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/PyVRP/PyVRP)
 
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
