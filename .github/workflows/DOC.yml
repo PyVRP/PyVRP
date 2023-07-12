@@ -1,0 +1,60 @@
+name: DOC
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup pages
+        uses: actions/configure-pages@v3
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        id: cache-python
+        with:
+          path: ~/.cache/pypoetry
+          key: python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+      - name: Install Python dependencies
+        if: steps.cache-python.outputs.cache-hit != 'true'
+        run: poetry install --no-root --with docs,examples
+      - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: ${{ matrix.compiler-version }}
+      - name: Build PyVRP
+        run: poetry install --only-root
+      - name: Build documentation
+        run: poetry run make html --directory=docs
+      - name: Upload documentation
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload entire repository
+          path: 'docs/build/html'
+      - name: Deploy documentation
+        id: deployment
+        uses: actions/deploy-pages@v2
