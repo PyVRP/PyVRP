@@ -102,7 +102,7 @@ select = ["E", "F", "I", "NPY", "RET", "RSE", "RUF", "SLF", "SIM", "TCH"]
 
 
 [tool.ruff.isort]
-# case-sensitive = true
+case-sensitive = true
 known-first-party = ["pyvrp"]
 
 

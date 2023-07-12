@@ -1,3 +1,4 @@
+from .LocalSearch import LocalSearch
 from ._search import (
     Exchange10,
     Exchange11,
@@ -15,7 +16,6 @@ from ._search import (
     SwapStar,
     TwoOpt,
 )
-from .LocalSearch import LocalSearch
 from .neighbourhood import NeighbourhoodParams, compute_neighbours
 
 NODE_OPERATORS = [

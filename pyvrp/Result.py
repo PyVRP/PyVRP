@@ -1,8 +1,8 @@
 import math
 from dataclasses import dataclass
 
-from ._pyvrp import CostEvaluator, Solution
 from .Statistics import Statistics
+from ._pyvrp import CostEvaluator, Solution
 
 
 @dataclass
