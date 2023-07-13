@@ -124,11 +124,11 @@ class Result:
                 route_info.append(f"Excess weight: {route.excess_weight()}")
                 route_info.append(f"Excess volume: {route.excess_volume()}")
                 route_info.append(f"Excess salvage: {route.excess_salvage()}")
-                route_info.append(f"Excess salvage sequence: {route.excess_salvage_sequence()}")
+                # route_info.append(f"Excess salvage sequence: {route.excess_salvage_sequence()}")
                 route_info.append(f"Demand Weight: {route.demandWeight()}")
                 route_info.append(f"Demand Volume: {route.demandVolume()}")
                 route_info.append(f"Demand Salvage: {route.demandSalvage()}")
-                route_info.append(f"hasSalvageBeforeDelivery: {route.has_salvage_before_deliver()}")
+#                route_info.append(f"hasSalvageBeforeDelivery: {route.has_salvage_before_deliver()}")
 
                 summary.append(", ".join(route_info))
 

@@ -109,6 +109,16 @@ void crossover::greedyRepair(Routes &routes,
         {
             Client prev, next;
 
+            if (idx != 0)
+            {
+                prev = bestRoute[idx - 1];
+            }
+
+            if (idx != bestRoute.size())
+            {
+                next = bestRoute[idx];
+            }
+
             if (idx == 0)  // try after depot
             {
                 prev = 0;
@@ -128,8 +138,14 @@ void crossover::greedyRepair(Routes &routes,
             auto cost = deltaCost(client, prev, next, data, costEvaluator);
             if (cost < bestCost)
             {
-                bestCost = cost;
-                offset = idx;
+                bool prevClientViolation = checkSalvageSequenceConstraint(data, prev, client);
+                bool clientNextViolation = checkSalvageSequenceConstraint(data, client, next);
+
+                if (!prevClientViolation && !clientNextViolation)
+                {
+                   bestCost = cost;
+                   offset = idx;
+                }
             }
         }
 
@@ -140,4 +156,33 @@ void crossover::greedyRepair(Routes &routes,
         centroids[bestRouteIdx].second = (routeY * size + y) / (size + 1);
         bestRoute.insert(bestRoute.begin() + offset, client);
     }
+}
+
+bool crossover::checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) 
+{
+    // These sequences should violate the constraint
+    // S-B
+    // S-D
+    // B-B
+    // B-D
+    bool uIsClientDelivery = (data.client(U).demandWeight || data.client(U).demandVolume);
+    bool uIsClientSalvage = (data.client(U).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
+
+    bool vIsClientDelivery = (data.client(V).demandWeight || data.client(V).demandVolume);
+    bool vIsClientSalvage = (data.client(V).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
+
+    // bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
+    // bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
+
+    // S-B or S-D
+    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth))) //|| nextVClientDelivery))
+        return true;
+
+    // B-B or B-D
+    if (uIsBoth && ((vIsBoth || vIsClientDelivery))) // || nextUClientDelivery))
+        return true;
+
+    return false;
 }

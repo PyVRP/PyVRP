@@ -9,6 +9,11 @@ Cost TwoOpt::evalWithinRoute(Node *U,
                              Node *V,
                              CostEvaluator const &costEvaluator) const
 {
+
+    if (checkSalvageSequenceConstraint(U, V)) {
+        return std::numeric_limits<Cost>::max() / 1000;
+    }
+
     if (U->position + 1 >= V->position)
         return 0;
 
@@ -44,8 +49,13 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
                                Node *V,
                                CostEvaluator const &costEvaluator) const
 {
+
+    if (checkSalvageSequenceConstraint(U, V)) {
+        return std::numeric_limits<Cost>::max() / 1000;
+    }
+
     Distance const current = data.dist(U->client, n(U)->client)
-                             + data.dist(V->client, n(V)->client);
+                            + data.dist(V->client, n(V)->client);
     Distance const proposed = data.dist(U->client, n(V)->client)
                               + data.dist(V->client, n(U)->client);
 
@@ -99,6 +109,35 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
         -= costEvaluator.salvagePenalty(V->route->salvage(), data.salvageCapacity());
 
     return deltaCost;
+}
+
+bool TwoOpt::checkSalvageSequenceConstraint(Node *U, Node *V) const
+{
+    // These sequences should violate the constraint
+    // S-B
+    // S-D
+    // B-B
+    // B-D
+    bool uIsClientDelivery = (data.client(U->client).demandWeight || data.client(U->client).demandVolume);
+    bool uIsClientSalvage = (data.client(U->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
+
+    bool vIsClientDelivery = (data.client(V->client).demandWeight || data.client(V->client).demandVolume);
+    bool vIsClientSalvage = (data.client(V->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
+
+    bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
+    bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
+
+    // S-B or S-D
+    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth) || nextVClientDelivery))
+        return true;
+
+    // B-B or B-D
+    if (uIsBoth && ((vIsBoth || vIsClientDelivery) || nextUClientDelivery))
+        return true;
+
+    return false;
 }
 
 void TwoOpt::applyWithinRoute(Node *U, Node *V) const

@@ -5,12 +5,12 @@
 CostEvaluator::CostEvaluator(Cost weightCapacityPenalty, 
                              Cost volumeCapacityPenalty, 
                              Cost salvageCapacityPenalty, 
-                             // Cost salvageRouteSequencePenalty, 
+//                             Cost salvageRouteSequencePenalty, 
                              Cost timeWarpPenalty)
     : weightCapacityPenalty(weightCapacityPenalty), 
       volumeCapacityPenalty(volumeCapacityPenalty), 
       salvageCapacityPenalty(salvageCapacityPenalty), 
-      // salvageRouteSequencePenalty(salvageRouteSequencePenalty), 
+//      salvageRouteSequencePenalty(salvageRouteSequencePenalty), 
       timeWarpPenalty(timeWarpPenalty)
 {
 }
@@ -19,12 +19,17 @@ Cost CostEvaluator::penalisedCost(Solution const &solution) const
 {
     // Standard objective plus penalty terms for weight, volume, salvage and time-related
     // infeasibilities.
-    return static_cast<Cost>(solution.distance()) + solution.uncollectedPrizes()
+    Cost cur_cost =  static_cast<Cost>(solution.distance()) + solution.uncollectedPrizes()
            + weightPenaltyExcess(solution.excessWeight())
            + volumePenaltyExcess(solution.excessVolume())
            + salvagePenaltyExcess(solution.excessSalvage())
-           // + salvageSequencePenaltyExcess(solution.excessSalvageSequence())
+//           + salvageSequencePenaltyExcess(solution.excessSalvageSequence())
            + twPenalty(solution.timeWarp());
+    // std::cout << "Distance: " << solution.distance() << " Weight: " << weightPenaltyExcess(solution.excessWeight())
+     //    << " Volume: " << volumePenaltyExcess(solution.excessVolume()) << " SalvageCapacity: " << salvagePenaltyExcess(solution.excessSalvage())
+      //   << " SalvageSeq: " << salvageSequencePenaltyExcess(solution.excessSalvageSequence()) << " TW: " << twPenalty(solution.timeWarp()) << std::endl;
+    std::cout << "Cost: " << cur_cost << std::endl;
+    return cur_cost;
 }
 
 Cost CostEvaluator::cost(Solution const &solution) const

@@ -62,6 +62,10 @@ class LocalSearch
     // Test removing U from the solution. Called when U can be removed.
     void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
 
+    // Enforce salvage sequence constraint
+    bool checkSalvageSequenceConstraint(Node *U,
+                                        Node *V) const;
+
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.

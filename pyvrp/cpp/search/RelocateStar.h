@@ -3,6 +3,7 @@
 
 #include "Exchange.h"
 #include "LocalSearchOperator.h"
+#include "Measure.h"
 
 /**
  * Performs the best (1, 0)-exchange move between routes U and V. Tests both
@@ -19,6 +20,8 @@ class RelocateStar : public LocalSearchOperator<Route>
 
     Exchange<1, 0> relocate;
     Move move;
+    bool checkSalvageSequenceConstraint(Node *U,
+                                        Node *V) const;
 
 public:
     Cost

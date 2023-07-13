@@ -38,6 +38,9 @@ class Route
     // Sets forward node time windows.
     void setupRouteTimeWindows();
 
+    // Clone routine
+    Route* clone() const;
+
 public:           // TODO make fields private
     int idx;      // Route index
     Node *depot;  // Pointer to the associated depot

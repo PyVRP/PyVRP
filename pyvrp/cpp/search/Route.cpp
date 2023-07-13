@@ -79,6 +79,7 @@ void Route::update()
 
     Load weight = 0;
     Load volume = 0;
+    Salvage salvage = 0;
     Distance distance = 0;
     Distance reverseDistance = 0;
     bool foundChange = false;
@@ -103,6 +104,7 @@ void Route::update()
             {
                 weight = nodes[pos - 1]->cumulatedWeight;
                 volume = nodes[pos - 1]->cumulatedVolume;
+                salvage = nodes[pos - 1]->cumulatedSalvage;
                 distance = nodes[pos - 1]->cumulatedDistance;
                 reverseDistance = nodes[pos - 1]->cumulatedReversalDistance;
             }
@@ -113,6 +115,7 @@ void Route::update()
 
         weight += data.client(node->client).demandWeight;
         volume += data.client(node->client).demandVolume;
+        salvage += data.client(node->client).demandSalvage;
 
         if (data.client(node->client).demandSalvage)
         {
@@ -161,6 +164,7 @@ void Route::update()
         node->position = pos + 1;
         node->cumulatedWeight = weight;
         node->cumulatedVolume = volume;
+        node->cumulatedSalvage = salvage;
         node->cumulatedDistance = distance;
         node->cumulatedReversalDistance = reverseDistance;
 
@@ -189,13 +193,16 @@ void Route::update()
 
     weight_ = nodes.back()->cumulatedWeight;
     volume_ = nodes.back()->cumulatedVolume;
+    salvage_ = nodes.back()->cumulatedSalvage;
+
     isWeightFeasible_ = static_cast<size_t>(weight_) <= data.weightCapacity();
     isVolumeFeasible_ = static_cast<size_t>(volume_) <= data.volumeCapacity();
 
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;
 
-    isSalvageCapacityFeasible_ = salvageCount <= data.salvageCapacity();
+    // isSalvageCapacityFeasible_ = salvageCount <= data.salvageCapacity();
+    isSalvageCapacityFeasible_ = static_cast<size_t>(salvage_) <= data.salvageCapacity();
     isSalvageSequenceFeasible_ = !salvageBeforeDelivery;
 
     // Debug prints
@@ -206,6 +213,38 @@ void Route::update()
               << ", Final volume: " << volume_
               << ", isVolumeFeasible: " << isVolumeFeasible_ << std::endl;
     std::cout << "###### Exit Route:Update" << std::endl << std::endl;
+}
+
+Route* Route::clone() const
+{
+    // Create a new Route object.
+    Route* clonedRoute = new Route(this->data);
+
+    // Copy simple data members.
+    clonedRoute->weight_ = this->weight_;
+    clonedRoute->volume_ = this->volume_;
+    clonedRoute->salvage_ = this->salvage_;
+    clonedRoute->isWeightFeasible_ = this->isWeightFeasible_;
+    clonedRoute->isVolumeFeasible_ = this->isVolumeFeasible_;
+    clonedRoute->isSalvageCapacityFeasible_ = this->isSalvageCapacityFeasible_;
+    clonedRoute->isSalvageSequenceFeasible_ = this->isSalvageSequenceFeasible_;
+    clonedRoute->timeWarp_ = this->timeWarp_;
+    clonedRoute->isTimeWarpFeasible_ = this->isTimeWarpFeasible_;
+    clonedRoute->idx = this->idx;
+    clonedRoute->depot = this->depot;
+
+    // Copy nodes.
+    for (auto &node : this->nodes) {
+        Node* clonedNode = new Node(*node);
+        clonedRoute->nodes.push_back(clonedNode);
+    }
+
+    // Set up the sector, nodes, and time windows.
+    clonedRoute->setupSector();
+    clonedRoute->setupNodes();
+    clonedRoute->setupRouteTimeWindows();
+
+    return clonedRoute;
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

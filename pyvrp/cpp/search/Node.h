@@ -41,6 +41,9 @@ struct Node
      * Removes this node and updates the relevant links.
      */
     void remove();
+
+    // Clone routine.
+    Node* clone() const;
 };
 
 bool Node::isDepot() const { return client == 0; }

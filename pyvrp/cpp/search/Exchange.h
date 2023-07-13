@@ -37,12 +37,46 @@ template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
     Cost
     evalSwapMove(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
 
+    // Enforce salvage sequence constraint
+    bool checkSalvageSequenceConstraint(Node *U,
+                                        Node *V) const;
+
 public:
     Cost
     evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
 
     void apply(Node *U, Node *V) const override;
 };
+
+template <size_t N, size_t M>
+bool Exchange<N, M>::checkSalvageSequenceConstraint(Node *U, Node *V) const
+{
+    // These sequences should violate the constraint
+    // S-B
+    // S-D
+    // B-B
+    // B-D
+    bool uIsClientDelivery = (data.client(U->client).demandWeight || data.client(U->client).demandVolume);
+    bool uIsClientSalvage = (data.client(U->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
+
+    bool vIsClientDelivery = (data.client(V->client).demandWeight || data.client(V->client).demandVolume);
+    bool vIsClientSalvage = (data.client(V->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
+
+    bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
+    bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
+
+    // S-B or S-D
+    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth) || nextVClientDelivery))
+        return true;
+
+    // B-B or B-D
+    if (uIsBoth && ((vIsBoth || vIsClientDelivery) || nextUClientDelivery))
+        return true;
+
+    return false;
+}
 
 template <size_t N, size_t M>
 bool Exchange<N, M>::containsDepot(Node *node, size_t segLength) const
@@ -93,6 +127,10 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
                               + U->route->distBetween(posU, posU + N - 1)
                               + data.dist(endU->client, n(V)->client)
                               + data.dist(p(U)->client, n(endU)->client);
+
+    if (checkSalvageSequenceConstraint(U, V)) {
+        return std::numeric_limits<Cost>::max() / 1000;
+    }
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
@@ -208,6 +246,10 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
           + data.dist(p(V)->client, U->client)
           + U->route->distBetween(posU, posU + N - 1)
           + data.dist(endU->client, n(endV)->client);
+
+    if (checkSalvageSequenceConstraint(U, V)) {
+        return std::numeric_limits<Cost>::max() / 1000;
+    }
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 

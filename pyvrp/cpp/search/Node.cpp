@@ -50,3 +50,26 @@ void Node::remove()
     next = nullptr;
     route = nullptr;
 }
+
+Node* Node::clone() const 
+{
+    Node* clonedNode = new Node;
+
+    clonedNode->client = this->client;
+    clonedNode->position = this->position;
+    clonedNode->route = nullptr;
+    clonedNode->next = nullptr;
+    clonedNode->prev = nullptr;
+    
+    clonedNode->cumulatedWeight = this->cumulatedWeight;
+    clonedNode->cumulatedVolume = this->cumulatedVolume;
+    clonedNode->cumulatedSalvage = this->cumulatedSalvage;
+    clonedNode->cumulatedDistance = this->cumulatedDistance;
+    clonedNode->cumulatedReversalDistance = this->cumulatedReversalDistance;
+    
+    clonedNode->tw = this->tw;
+    clonedNode->twBefore = this->twBefore;
+    clonedNode->twAfter = this->twAfter;
+    
+    return clonedNode;
+}

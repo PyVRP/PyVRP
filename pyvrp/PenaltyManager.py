@@ -94,7 +94,7 @@ class PenaltyParams:
     init_weight_capacity_penalty: int = 20
     init_volume_capacity_penalty: int = 20
     init_salvage_penalty: int = 20
-    init_salvage_sequence_penalty: int = 20
+#    init_salvage_sequence_penalty: int = 20
     init_time_warp_penalty: int = 6
     repair_booster: int = 12
     num_registrations_between_penalty_updates: int = 50
@@ -139,25 +139,25 @@ class PenaltyManager:
         self._weight_feas: List[bool] = []  # tracks recent volume load feasibility
         self._volume_feas: List[bool] = []  # tracks recent weight load feasibility
         self._salvage_feas: List[bool] = []  # tracks recent salvage feasibility
-        self._salvage_sequence_feas: List[bool] = []  # tracks recent salvage feasibility
+#        self._salvage_sequence_feas: List[bool] = []  # tracks recent salvage feasibility
         self._time_feas: List[bool] = []  # track recent time feasibility
         self._weight_capacity_penalty = params.init_weight_capacity_penalty
         self._volume_capacity_penalty = params.init_volume_capacity_penalty
         self._salvage_penalty = params.init_salvage_penalty
-        self._salvage_sequence_penalty = params.init_salvage_sequence_penalty
+#        self._salvage_sequence_penalty = params.init_salvage_sequence_penalty
         self._tw_penalty = params.init_time_warp_penalty
         self._cost_evaluator = CostEvaluator(
             self._weight_capacity_penalty, 
             self._volume_capacity_penalty,
             self._salvage_penalty,
-            # self._salvage_sequence_penalty,
+#            self._salvage_sequence_penalty,
             self._tw_penalty
         )
         self._booster_cost_evaluator = CostEvaluator(
             self._weight_capacity_penalty * self._params.repair_booster,
             self._volume_capacity_penalty * self._params.repair_booster,
             self._salvage_penalty * self._params.repair_booster,
-            # self._salvage_sequence_penalty * self._params.repair_booster,
+#            self._salvage_sequence_penalty * self._params.repair_booster,
             self._tw_penalty * self._params.repair_booster,
         )
 
@@ -167,14 +167,14 @@ class PenaltyManager:
             self._weight_capacity_penalty, 
             self._volume_capacity_penalty,
             self._salvage_penalty,
-            # self._salvage_sequence_penalty,
+#            self._salvage_sequence_penalty,
             self._tw_penalty
         )
         self._booster_cost_evaluator = CostEvaluator(
             self._weight_capacity_penalty * self._params.repair_booster,
             self._volume_capacity_penalty * self._params.repair_booster,
             self._salvage_penalty * self._params.repair_booster,
-            # self._salvage_sequence_penalty * self._params.repair_booster,
+#            self._salvage_sequence_penalty * self._params.repair_booster,
             self._tw_penalty * self._params.repair_booster,
         )
 
@@ -213,6 +213,7 @@ class PenaltyManager:
         ):
             avg = fmean(self._weight_feas)
             self._weight_capacity_penalty = self._compute(self._weight_capacity_penalty, avg)
+            print("REGISTER WEIGHT", self._weight_capacity_penalty)
             self._update_cost_evaluators()
             self._weight_feas.clear()
 
@@ -255,29 +256,31 @@ class PenaltyManager:
         ):
             avg = fmean(self._salvage_feas)
             self._salvage_penalty = self._compute(self._salvage_penalty, avg)
+            print("REGISTER SALVAGE CAP", self._salvage_penalty)
             self._update_cost_evaluators()
             self._salvage_feas.clear()
 
-    # def register_salvage_sequence_feasible(self, is_salvage_sequence_feasible: bool):
-    #     """
-    #     Registers salvage feasibility result. The current salvage penalty
-    #     is updated once sufficiently many results have been gathered.
-    #     
-    #     Parameters
-    #     ----------
-    #     is_salvage_sequence_feasible 
-    #         Boolean indicating whether the last solution was feasible w.r.t.
-    #         the salvage constraint. 
-    #     """
-    #     self._salvage_sequence_feas.append(is_salvage_sequence_feasible)
-    #     if (
-    #         len(self._salvage_sequence_feas)
-    #         == self._params.num_registrations_between_penalty_updates
-    #     ):
-    #         avg = fmean(self._salvage_sequence_feas)
-    #         self._salvage_sequence_penalty = self._compute(self._salvage_sequence_penalty, avg)
-    #         self._update_cost_evaluators()
-    #         self._salvage_sequence_feas.clear()
+#    def register_salvage_sequence_feasible(self, is_salvage_sequence_feasible: bool):
+#        """
+#        Registers salvage feasibility result. The current salvage penalty
+#        is updated once sufficiently many results have been gathered.
+#        
+#        Parameters
+#        ----------
+#        is_salvage_sequence_feasible 
+#            Boolean indicating whether the last solution was feasible w.r.t.
+#            the salvage constraint. 
+#        """
+#        self._salvage_sequence_feas.append(is_salvage_sequence_feasible)
+#        if (
+#            len(self._salvage_sequence_feas)
+#            == self._params.num_registrations_between_penalty_updates
+#        ):
+#            avg = fmean(self._salvage_sequence_feas)
+#            self._salvage_sequence_penalty = self._compute(self._salvage_sequence_penalty, avg)
+#            print("REGISTER SALVAGE SEQ", self._salvage_sequence_penalty)
+#            self._update_cost_evaluators()
+#            self._salvage_sequence_feas.clear()
 
     def register_time_feasible(self, is_time_feasible: bool):
         """

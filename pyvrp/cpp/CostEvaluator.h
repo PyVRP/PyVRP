@@ -19,7 +19,7 @@ public:
     CostEvaluator(Cost weightCapacityPenalty, 
                   Cost volumeCapacityPenalty, 
                   Cost salvageCapacityPenalty, 
- //                 Cost salvageRouteSequencePenalty,
+//                  Cost salvageRouteSequencePenalty,
                   Cost timeWarpPenalty);
 
     /**
@@ -57,12 +57,12 @@ public:
     /**
      * Computes the total salvage capacity penalty for the current route.
      */
-    // [[nodiscard]] inline Cost salvageSequencePenalty(Salvage salvage, Salvage salvageCapacity) const;
+//    [[nodiscard]] inline Cost salvageSequencePenalty(void) const;
 
     /**
      * Computes the excess salvage capacity penalty for the given route.
      */
-    // [[nodiscard]] inline Cost salvageSequencePenaltyExcess(Salvage excessSalvage) const;
+//    [[nodiscard]] inline Cost salvageSequencePenaltyExcess(Salvage excessSalvage) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
@@ -133,14 +133,14 @@ Cost CostEvaluator::salvagePenalty(Salvage salvage, Salvage salvageCapacity) con
 //     return static_cast<Cost>(excessSalvage) * salvageRouteSequencePenalty;
 // }
 
-// Cost CostEvaluator::salvageSequencePenalty(Salvage salvage, Salvage salvageCapacity) const
+// Cost CostEvaluator::salvageSequencePenalty(void) const
 // {
-//     // Branchless for performance: when salvage > salvageCapacity we return the
-//     // salvage penalty; else zero. Note that when salvage - salvageCapacity wraps
-//     // around, we return zero because salvage > salvageCapacity evaluates as zero
-//     // (so there is no issue here due to unsignedness).
-//     Cost penalty = salvageSequencePenaltyExcess(salvage - salvageCapacity);
-//     return Cost(salvage > salvageCapacity) * penalty;
+    // Branchless for performance: when salvage > salvageCapacity we return the
+    // salvage penalty; else zero. Note that when salvage - salvageCapacity wraps
+    // around, we return zero because salvage > salvageCapacity evaluates as zero
+    // (so there is no issue here due to unsignedness).
+//     Cost penalty = salvageSequencePenaltyExcess(Measure<MeasureType::SALVAGE>(10));
+//     return penalty;
 // }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
