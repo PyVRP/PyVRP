@@ -179,7 +179,9 @@ PYBIND11_MODULE(_pyvrp, m)
                                [](ProblemData::VehicleType const &vehicleType) {
                                    return vehicleType.capacity.get();
                                })
-        .def_readonly("num_available", &ProblemData::VehicleType::numAvailable);
+        .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
+        .def_readonly("start_depot", &ProblemData::VehicleType::startDepot)
+        .def_readonly("end_depot", &ProblemData::VehicleType::endDepot);
 
     py::class_<ProblemData>(m, "ProblemData")
         .def(py::init(

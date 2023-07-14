@@ -81,6 +81,7 @@ def compute_neighbours(
     if params.symmetric_proximity:
         proximity = np.minimum(proximity, proximity.T)
 
+    # TODO generalise this when we have multiple depots
     n = len(proximity)
     k = min(params.nb_granular, n - 2)  # excl. depot and self
 
@@ -88,7 +89,6 @@ def compute_neighbours(
     proximity[0, :] = np.inf  # depot has no neighbours
     proximity[:, 0] = np.inf  # clients do not neighbour depot
 
-    # TODO depot
     top_k = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
 
     if not params.symmetric_neighbours:
