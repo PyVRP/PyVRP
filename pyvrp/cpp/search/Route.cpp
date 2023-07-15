@@ -14,6 +14,7 @@ Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
 {
     startDepot.client = data.vehicleType(vehType).depot;
     startDepot.route = this;
+    startDepot.position = 0;
 
     endDepot.client = data.vehicleType(vehType).depot;
     endDepot.route = this;

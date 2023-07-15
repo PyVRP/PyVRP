@@ -308,9 +308,6 @@ void LocalSearch::loadSolution(Solution const &solution)
         endDepot->prev = startDepot;
         endDepot->next = startDepot;
 
-        startDepot->position = 0;
-        endDepot->position = 1;
-
         startDepot->tw = clients[vehicleType.depot].tw;
         startDepot->twBefore = clients[vehicleType.depot].tw;
 
