@@ -13,13 +13,15 @@
 
 namespace pyvrp::search
 {
-class Route  // TODO implement iteration for Route
+class Route
 {
     ProblemData const &data;
     size_t const vehicleType_;
 
-    std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
-    CircleSector sector;        // Circle sector of the route's clients
+    // List of nodes (in order) in this solution. Start depot is not included;
+    // last element is the endDepot. See LS for details.
+    std::vector<Node *> nodes;
+    CircleSector sector;  // Circle sector of the route's clients
 
     Load load_;            // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
@@ -45,6 +47,12 @@ public:                // TODO make fields private
      * @return The client or depot node at the given position.
      */
     [[nodiscard]] inline Node *operator[](size_t position) const;
+
+    [[nodiscard]] inline std::vector<Node *>::const_iterator cbegin() const;
+    [[nodiscard]] inline std::vector<Node *>::const_iterator cend() const;
+
+    [[nodiscard]] inline std::vector<Node *>::iterator begin();
+    [[nodiscard]] inline std::vector<Node *>::iterator end();
 
     /**
      * Tests if this route is feasible.
@@ -150,6 +158,21 @@ Node *Route::operator[](size_t position) const
 {
     assert(position > 0);
     return nodes[position - 1];
+}
+
+std::vector<Node *>::const_iterator Route::cbegin() const
+{
+    return nodes.cbegin();
+}
+std::vector<Node *>::const_iterator Route::cend() const
+{
+    return nodes.cend() - 1;  // excl. depot
+}
+
+std::vector<Node *>::iterator Route::begin() { return nodes.begin(); }
+std::vector<Node *>::iterator Route::end()
+{
+    return nodes.end() - 1;  // excl. depot
 }
 
 Load Route::load() const { return load_; }

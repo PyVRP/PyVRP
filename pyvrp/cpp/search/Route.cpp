@@ -146,8 +146,8 @@ void Route::update()
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx + 1 << ":";  // route number
-    for (auto *node = n(route.startDepot); !node->isDepot(); node = n(node))
-        out << ' ' << node->client;  // client index
+    for (auto node = route.cbegin(); node != route.cend(); ++node)
+        out << ' ' << (*node)->client;  // client index
     out << '\n';
 
     return out;

@@ -123,8 +123,8 @@ Cost SwapStar::evaluate(Route *routeU,
             cache(routeU->idx, idx).shouldUpdate = true;
     }
 
-    for (Node *U = n(routeU->startDepot); !U->isDepot(); U = n(U))
-        for (Node *V = n(routeV->startDepot); !V->isDepot(); V = n(V))
+    for (auto *U : *routeU)
+        for (auto *V : *routeV)
         {
             Cost deltaCost = 0;
 
