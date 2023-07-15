@@ -20,6 +20,11 @@ Route::Route(ProblemData const &data,
       startDepot(startDepot),
       endDepot(endDepot)
 {
+    startDepot->client = data.vehicleType(vehType).depot;
+    startDepot->route = this;
+
+    endDepot->client = data.vehicleType(vehType).depot;
+    endDepot->route = this;
 }
 
 void Route::setupNodes()

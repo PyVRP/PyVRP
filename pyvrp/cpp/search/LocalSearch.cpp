@@ -452,13 +452,6 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
         {
             routes.emplace_back(
                 data, rIdx, vehTypeIdx, &startDepots[rIdx], &endDepots[rIdx]);
-
-            startDepots[rIdx].client = vehType.startDepot;
-            startDepots[rIdx].route = &routes[rIdx];
-
-            endDepots[rIdx].client = vehType.endDepot;
-            endDepots[rIdx].route = &routes[rIdx];
-
             rIdx++;
         }
     }

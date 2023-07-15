@@ -130,16 +130,13 @@ class VehicleType:
         Capacity (maximum total demand) of this vehicle type.
     num_available
         Number of vehicles of this type that are available.
-    start_depot
-        Depot from which these vehicles depart.
-    end_depot
-        Depot to which these vehicles return.
+    depot
+        Depot associated with these vehicles.
     """
 
     capacity: int
     num_available: int
-    start_depot: int
-    end_depot: int
+    depot: int
     def __init__(self, capacity: int, num_available: int) -> None: ...
 
 class ProblemData:

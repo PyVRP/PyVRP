@@ -214,7 +214,7 @@ Solution::Route::Route(ProblemData const &data,
 
     ProblemData::VehicleType const &vehType = data.vehicleType(vehicleType);
     Duration time = std::max(release_, data.depot().twEarly);
-    size_t prevClient = vehType.startDepot;
+    size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
@@ -248,11 +248,11 @@ Solution::Route::Route(ProblemData const &data,
     }
 
     Client const last = visits_.back();  // last client has depot as successor
-    distance_ += data.dist(last, vehType.endDepot);
-    duration_ += data.duration(last, vehType.endDepot);
+    distance_ += data.dist(last, vehType.depot);
+    duration_ += data.duration(last, vehType.depot);
 
     time += data.client(last).serviceDuration
-            + data.duration(last, vehType.endDepot);
+            + data.duration(last, vehType.depot);
     timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
 
     auto const capacity = vehType.capacity;
