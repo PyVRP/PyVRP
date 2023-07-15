@@ -257,8 +257,7 @@ Solution::Route::Route(ProblemData const &data,
             + data.duration(last, vehType.depot);
     timeWarp_ += std::max<Duration>(time - depot.twLate, 0);
 
-    auto const capacity = vehType.capacity;
-    excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;
+    excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
 }
 
 bool Solution::Route::empty() const { return visits_.empty(); }
