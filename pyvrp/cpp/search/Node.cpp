@@ -5,7 +5,7 @@ using pyvrp::search::Node;
 
 bool Node::isDepot() const
 {
-    return this == &route->startDepot || this == &route->endDepot;
+    return this == &route->endDepot || this == &route->startDepot;
 }
 
 void Node::insertAfter(Node *other)
