@@ -45,8 +45,6 @@ public:
 
         Visits::const_iterator begin() const;
         Visits::const_iterator end() const;
-        Visits::const_iterator cbegin() const;
-        Visits::const_iterator cend() const;
 
         [[nodiscard]] Visits const &visits() const;
         [[nodiscard]] Distance distance() const;

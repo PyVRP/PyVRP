@@ -272,13 +272,6 @@ Visits::const_iterator Solution::Route::begin() const
 
 Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
 
-Visits::const_iterator Solution::Route::cbegin() const
-{
-    return visits_.cbegin();
-}
-
-Visits::const_iterator Solution::Route::cend() const { return visits_.cend(); }
-
 Visits const &Solution::Route::visits() const { return visits_; }
 
 Distance Solution::Route::distance() const { return distance_; }
