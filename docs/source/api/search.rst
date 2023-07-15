@@ -20,6 +20,7 @@ Node operators
 --------------
 
 Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_node_operator` method.
+Each node operator inherits from :class:`~pyvrp.search._search.NodeOperator`.
 As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``NODE_OPERATORS``:
 
 .. code-block:: python
@@ -28,6 +29,9 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
 
 .. automodule:: pyvrp.search._search
+
+   .. autoapiclass:: NodeOperator
+      :members:
 
    .. autoapiclass:: Exchange10
       :members:
@@ -66,6 +70,7 @@ Route operators
 ---------------
 
 Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_route_operator` method.
+Each route operator inherits from :class:`~pyvrp.search._search.RouteOperator`.
 As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``ROUTE_OPERATORS``:
 
 .. code-block:: python
@@ -75,6 +80,9 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
 .. automodule:: pyvrp.search._search
    :noindex:
+
+   .. autoapiclass:: RouteOperator
+      :members:
 
    .. autoapiclass:: RelocateStar
       :members:
