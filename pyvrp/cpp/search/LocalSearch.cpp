@@ -295,10 +295,12 @@ void LocalSearch::loadSolution(Solution const &solution)
     }
 
     // First empty all routes
-    for (size_t r = 0; r != data.numVehicles(); r++)
+    for (auto &route : routes)
     {
-        Node *startDepot = &startDepots[r];
-        Node *endDepot = &endDepots[r];
+        auto const &vehicleType = data.vehicleType(route.vehicleType());
+
+        Node *startDepot = route.startDepot;
+        Node *endDepot = route.endDepot;
 
         startDepot->prev = endDepot;
         startDepot->next = endDepot;
@@ -306,11 +308,11 @@ void LocalSearch::loadSolution(Solution const &solution)
         endDepot->prev = startDepot;
         endDepot->next = startDepot;
 
-        startDepot->tw = clients[0].tw;
-        startDepot->twBefore = clients[0].tw;
+        startDepot->tw = clients[vehicleType.depot].tw;
+        startDepot->twBefore = clients[vehicleType.depot].tw;
 
-        endDepot->tw = clients[0].tw;
-        endDepot->twAfter = clients[0].tw;
+        endDepot->tw = clients[vehicleType.depot].tw;
+        endDepot->twAfter = clients[vehicleType.depot].tw;
     }
 
     // Determine offsets for vehicle types.
@@ -329,14 +331,12 @@ void LocalSearch::loadSolution(Solution const &solution)
         // vehicle type.
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route *route = &routes[r];
-        Node *startDepot = &startDepots[r];
-        Node *endDepot = &endDepots[r];
 
         Node *client = &clients[solRoute[0]];
         client->route = route;
 
-        client->prev = startDepot;
-        startDepot->next = client;
+        client->prev = route->startDepot;
+        route->startDepot->next = client;
 
         for (size_t idx = 1; idx < solRoute.size(); idx++)
         {
@@ -349,8 +349,8 @@ void LocalSearch::loadSolution(Solution const &solution)
             prev->next = client;
         }
 
-        client->next = endDepot;
-        endDepot->prev = client;
+        client->next = route->endDepot;
+        route->endDepot->prev = client;
     }
 
     for (auto &route : routes)
@@ -365,13 +365,13 @@ Solution LocalSearch::exportSolution() const
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (auto const &route : routes)
     {
-        if (routes[r].empty())
+        if (route.empty())
             continue;
 
         std::vector<int> visits;
-        Node *node = startDepots[r].next;
+        Node *node = route.startDepot->next;
 
         while (!node->isDepot())
         {
@@ -379,7 +379,7 @@ Solution LocalSearch::exportSolution() const
             node = node->next;
         }
 
-        solRoutes.emplace_back(data, visits, routes[r].vehicleType());
+        solRoutes.emplace_back(data, visits, route.vehicleType());
     }
 
     return {data, solRoutes};

@@ -7,7 +7,7 @@ using TWS = pyvrp::TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 {
-    for (Node *U = n(R1->startDepot); !U->isDepot(); U = n(U))
+    for (auto *U : *R1)
     {
         auto twData
             = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
@@ -49,7 +49,7 @@ void SwapStar::updateInsertionCost(Route *R,
 
     insertPositions.maybeAdd(deltaCost, R->startDepot);
 
-    for (Node *V = n(R->startDepot); !V->isDepot(); V = n(V))
+    for (auto *V : *R)
     {
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(
