@@ -63,8 +63,7 @@ class LocalSearch
     void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
 
     // Enforce salvage sequence constraint
-    bool checkSalvageSequenceConstraint(Node *U,
-                                        Node *V) const;
+    bool checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) const;
 
 public:
     /**

@@ -58,6 +58,150 @@ Cost deltaCost(Client client,
 }
 }  // namespace
 
+
+void printRouteAsBinary(Route const &route, ProblemData const &data, size_t routeIndex, Client client, Cost cost) {
+    for (Client c : route) {
+        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
+        // bool isSalvage = (data.client(c).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+        bool isSalvage = (data.client(c).demandSalvage == 1);
+        if (client == c)
+            std::cout << "-";
+        if (isDelivery && isSalvage) {
+            std::cout << "2";
+        } else if (isSalvage && !isDelivery) {
+            std::cout << "1";
+        } else if (isDelivery && !isSalvage) {
+            std::cout << "0";
+        } else
+            std::cout << "X";
+        if (client == c)
+            std::cout << "-";
+    }
+
+    std::cout << " Best Cost[" << cost << "], Route[" << routeIndex << "], Client[" << client << "] " 
+              << data.client(client).demandWeight << " " << data.client(client).demandVolume 
+              << " " << data.client(client).demandSalvage << " ";
+    for (Client c : route) {
+        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
+        // bool isSalvage = (data.client(c).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+        bool isSalvage = (data.client(c).demandSalvage == 1);
+        if (isDelivery && isSalvage) {
+            std::cout << c << ":2 ";
+        } else if (isSalvage && !isDelivery) {
+            std::cout << c << ":1 ";
+        } else if (isDelivery && !isSalvage) {
+            std::cout << c << ":0 ";
+        } else
+            std::cout << c << ":X ";
+    }
+    std::cout << std::endl;
+}
+
+bool checkSequence(ProblemData const &data, Route const &route)
+{
+    std::cout << "Enter checkSequence" << std::endl;
+    bool foundDelivery = false;
+    bool foundBoth = false;
+    bool foundSalvage = false;
+
+    for (Client c : route) {
+        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
+        bool isSalvage = (data.client(c).demandSalvage == 1);
+        bool isBoth = (isDelivery && isSalvage);
+
+        std::cout << "Client: " << c 
+           << " Dem Salv: " << data.client(c).demandSalvage 
+           << " Dem Weig: " << data.client(c).demandWeight
+           << " Dem Volu: " << data.client(c).demandVolume
+           << " Salv is: " << isSalvage 
+           << " Salv fo: " << foundSalvage << " Both is: " 
+           << isBoth << " Both fo: " << foundBoth << " Del is: " 
+          << isDelivery << " Del fo: " << isDelivery << std::endl;
+
+        if (isBoth && (foundBoth || foundSalvage))
+        { 
+            std::cout << "Failed (isBoth && (foundBoth || foundSalvage))" << std::endl;
+            std::cout << "Exit checkSequence" << std::endl;
+            return false;
+        }
+        if (isDelivery && (foundBoth || foundSalvage))
+        {
+            std::cout << "Failed (isDelivery && (foundBoth || foundSalvage))" << std::endl;
+            std::cout << "Exit checkSequence" << std::endl;
+            return false;
+        }
+        if (isSalvage && foundBoth)
+        {
+            std::cout << "Failed (isSalvage && foundBoth)" << std::endl;
+            std::cout << "Exit checkSequence" << std::endl;
+            return false;
+        }
+
+        if (isSalvage)
+        {   
+            if (!foundSalvage) 
+                foundSalvage = true;
+        }
+        
+        if (isDelivery)
+        {   
+            if (!foundDelivery) 
+                foundDelivery = true;
+        }
+        
+        if(isBoth)
+        {   
+            if (!foundBoth) 
+                foundBoth = true;
+        }
+
+        continue;
+    }
+    std::cout << "Exit checkSequence" << std::endl;
+    return true;
+}
+
+void crossover::reorderRoutes(std::vector<std::vector<Client>> &routes, ProblemData const &data)
+{
+
+    std::cout << "Enter reorderRoutes" << std::endl;
+    for (auto &route : routes)
+    {
+        size_t s = 0;
+        Cost t = 0;
+        Client c = 0;
+        std::cout << "BEFORE REORDER " << std::endl;
+        printRouteAsBinary(route, data, s, c, t);
+
+        std::vector<int> deliveryRoute, salvageRoute;
+
+        for (const auto &client : route)
+        {
+            std::cout << "IN REORDER Route: " << " Client: " << client << std::endl;
+            printRouteAsBinary(route, data, s, client, t);
+            bool isDelivery = (data.client(client).demandWeight || data.client(client).demandVolume);
+            bool isSalvage = (data.client(client).demandSalvage == 1);
+            bool isBoth = (isDelivery && isSalvage);
+
+            if (isDelivery && !isBoth)
+            {
+                deliveryRoute.push_back(client);
+            }
+            else 
+            {
+                salvageRoute.push_back(client);
+            }
+        }
+
+        route.clear();
+        route.insert(route.end(), deliveryRoute.begin(), deliveryRoute.end());
+        route.insert(route.end(), salvageRoute.begin(), salvageRoute.end());
+        std::cout << "AFTER REORDER " << std::endl;
+        printRouteAsBinary(route, data, s, c, t);
+    }
+    std::cout << "Exit reorderRoutes" << std::endl;
+}
+
 void crossover::greedyRepair(Routes &routes,
                              std::vector<Client> const &unplanned,
                              ProblemData const &data,
@@ -136,16 +280,32 @@ void crossover::greedyRepair(Routes &routes,
             }
 
             auto cost = deltaCost(client, prev, next, data, costEvaluator);
-            if (cost < bestCost)
-            {
-                bool prevClientViolation = checkSalvageSequenceConstraint(data, prev, client);
-                bool clientNextViolation = checkSalvageSequenceConstraint(data, client, next);
 
-                if (!prevClientViolation && !clientNextViolation)
+            Route potentialRoute = bestRoute;
+            potentialRoute.insert(potentialRoute.begin() + idx, client);
+            bool isValid = checkSequence(data, potentialRoute);
+
+            if (isValid)
+            {
+                if (cost < bestCost)
                 {
-                   bestCost = cost;
-                   offset = idx;
+                    std::cout << "No violation, New best cost found at idx " << idx << ", Cost: " << cost << ": ";
+                    printRouteAsBinary(potentialRoute, data, bestRouteIdx, client, cost);
+                    bestCost = cost;
+                    offset = idx;
                 }
+                else
+                {
+                    std::cout << "No violation, But higher cost at idx " << idx << ", Cost: " << cost << ": ";
+                    printRouteAsBinary(potentialRoute, data, bestRouteIdx, client, bestCost);
+                }
+            }
+            else
+            {
+                std::cout << "Violation at idx " << idx << ", Cost: " << cost << ": ";
+                printRouteAsBinary(potentialRoute, data, bestRouteIdx, client, bestCost);
+                bestCost = std::numeric_limits<Cost>::max(); // Reset the bestCost if sequence is invalid
+                // offset = -1; // Set offset to -1 to indicate no valid insertion point found
             }
         }
 
@@ -155,34 +315,9 @@ void crossover::greedyRepair(Routes &routes,
         centroids[bestRouteIdx].first = (routeX * size + x) / (size + 1);
         centroids[bestRouteIdx].second = (routeY * size + y) / (size + 1);
         bestRoute.insert(bestRoute.begin() + offset, client);
+
+        std::cout << "Final best route: ";
+        printRouteAsBinary(bestRoute, data, bestRouteIdx, client, bestCost);
+        std::cout << std::endl;
     }
-}
-
-bool crossover::checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) 
-{
-    // These sequences should violate the constraint
-    // S-B
-    // S-D
-    // B-B
-    // B-D
-    bool uIsClientDelivery = (data.client(U).demandWeight || data.client(U).demandVolume);
-    bool uIsClientSalvage = (data.client(U).demandSalvage != Measure<MeasureType::SALVAGE>(0));
-    bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
-
-    bool vIsClientDelivery = (data.client(V).demandWeight || data.client(V).demandVolume);
-    bool vIsClientSalvage = (data.client(V).demandSalvage != Measure<MeasureType::SALVAGE>(0));
-    bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
-
-    // bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
-    // bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
-
-    // S-B or S-D
-    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth))) //|| nextVClientDelivery))
-        return true;
-
-    // B-B or B-D
-    if (uIsBoth && ((vIsBoth || vIsClientDelivery))) // || nextUClientDelivery))
-        return true;
-
-    return false;
 }

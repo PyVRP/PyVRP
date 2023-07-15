@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <unordered_set>
+#include <random>
 
 using Client = int;
 using Clients = std::vector<Client>;
@@ -36,6 +37,70 @@ Routes sortByAscAngle(ProblemData const &data, Routes routes)
 }
 }  // namespace
 
+bool checkSequence(ProblemData const &data, const Route &route)
+{
+    std::cout << "SELECT enter" << std::endl;
+    bool foundDelivery = false;
+    bool foundBoth = false;
+    bool foundSalvage = false;
+
+    for (Client c : route) {
+        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
+        bool isSalvage = (data.client(c).demandSalvage == 1);
+        bool isBoth = (isDelivery && isSalvage);
+
+        std::cout << "SELECT Client: " << c
+           << " Dem Salv: " << data.client(c).demandSalvage
+           << " Dem Weig: " << data.client(c).demandWeight
+           << " Dem Volu: " << data.client(c).demandVolume
+           << " Salv is: " << isSalvage
+           << " Salv fo: " << foundSalvage << " Both is: "
+           << isBoth << " Both fo: " << foundBoth << " Del is: "
+          << isDelivery << " Del fo: " << isDelivery << std::endl;
+
+        if (isBoth && (foundBoth || foundSalvage))
+        {
+            std::cout << "SELECT Failed (isBoth && (foundBoth || foundSalvage))" << std::endl;
+            std::cout << "SELECT Exit Selective checkSequence" << std::endl;
+            return false;
+        }
+        if (isDelivery && (foundBoth || foundSalvage))
+        {
+            std::cout << "SELECT Failed (isDelivery && (foundBoth || foundSalvage))" << std::endl;
+            std::cout << "SELECT Exit Selective checkSequence" << std::endl;
+            return false;
+        }
+        if (isSalvage && foundBoth)
+        {
+            std::cout << "SELECT Failed (isSalvage && foundBoth)" << std::endl;
+            std::cout << "SELECT Exit Selective checkSequence" << std::endl;
+            return false;
+        }
+
+        if (isSalvage)
+        {
+            if (!foundSalvage)
+                foundSalvage = true;
+        }
+
+        if (isDelivery)
+        {
+            if (!foundDelivery)
+                foundDelivery = true;
+        }
+
+        if(isBoth)
+        {
+            if (!foundBoth)
+                foundBoth = true;
+        }
+
+        continue;
+    }
+    std::cout << "SELECT Exit Selective checkSequence" << std::endl;
+    return true;
+}
+
 Solution selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
@@ -43,6 +108,8 @@ Solution selectiveRouteExchange(
     std::pair<size_t, size_t> const startIndices,
     size_t const numMovedRoutes)
 {
+
+    std::mt19937 rng;
     // We create two candidate offsprings, both based on parent A:
     // Let A and B denote the set of customers selected from parents A and B
     // Ac and Bc denote the complements: the customers not selected
@@ -231,7 +298,50 @@ Solution selectiveRouteExchange(
     Solution sol1{data, routes1};
     Solution sol2{data, routes2};
 
-    auto const cost1 = costEvaluator.penalisedCost(sol1);
-    auto const cost2 = costEvaluator.penalisedCost(sol2);
-    return cost1 < cost2 ? sol1 : sol2;
+    bool sol1ConstraintsPassed = false;
+    bool sol2ConstraintsPassed = false;
+
+    sol1ConstraintsPassed = std::all_of(sol1.getRoutes().begin(), sol1.getRoutes().end(), 
+        [&data](const Route &route){ return checkSequence(data, route); });
+
+    sol2ConstraintsPassed = std::all_of(sol2.getRoutes().begin(), sol2.getRoutes().end(), 
+        [&data](const Route &route){ return checkSequence(data, route); });
+
+    if (sol1ConstraintsPassed && sol2ConstraintsPassed) {
+        auto const cost1 = costEvaluator.penalisedCost(sol1);
+        auto const cost2 = costEvaluator.penalisedCost(sol2);
+        return cost1 < cost2 ? sol1 : sol2;
+    } else if (sol1ConstraintsPassed) {
+        return sol1;
+    } else if (sol2ConstraintsPassed) {
+        return sol2;
+    } else {
+        bool repairedConstraintsPassed = false;
+        std::vector<std::vector<Client>> toRepair = rng() % 2 ? routes1 : routes2;
+ 
+        crossover::reorderRoutes(toRepair, data);
+ 
+        std::cout << "HERE" << std::endl;
+        std::unique_ptr<Solution> final_sol;
+  
+        if (toRepair == routes1) {
+            final_sol = std::make_unique<Solution>(data, toRepair);
+        } else {
+            final_sol = std::make_unique<Solution>(data, toRepair);
+        }
+  
+        std::cout << "HERE 1" << std::endl;
+        repairedConstraintsPassed = std::all_of(final_sol->getRoutes().begin(), final_sol->getRoutes().end(),
+            [&data](const Solution::Route &route){ return checkSequence(data, route); });
+  
+        std::cout << "HERE 2" << std::endl;
+        if (repairedConstraintsPassed) {
+            std::cout << "Passed repairedConstraintsPassed" << std::endl;
+            std::cout << "HERE 3" << std::endl;
+        }
+        return Solution{data, toRepair};
+        // } else {
+        //    throw std::runtime_error("Could not repair solution to meet constraints.");
+        //}
+    }
 }

@@ -176,7 +176,7 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
 //    Salvage salvageCount = 0;
 //    Salvage salvageSequenceViolations = 0;
 
-    std::cout << "###### Enter Solution:Route" << std::endl << std::endl;
+//    std::cout << "###### Enter Solution:Route" << std::endl << std::endl;
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const &clientData = data.client(visits_[idx]);
@@ -241,13 +241,13 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
 //            foundDelivery = true;
 //        }
 
-        std::cout << "Route Constructor Node: " << idx
+//        std::cout << "Route Constructor Node: " << idx
 //            << " salvageCount: " << salvageCount
-            << " clientData.demandVolume: " << clientData.demandVolume
-            << " clientData.demandSalvage: " << clientData.demandSalvage
+//          << " clientData.demandVolume: " << clientData.demandVolume
+//          << " clientData.demandSalvage: " << clientData.demandSalvage
 //            << " foundSalvage: " << foundSalvage
 //            << " SalvageBefore: " << salvageBeforeDelivery_
-            << std::endl;
+//          << std::endl;
         prevClient = visits_[idx];
     }
 
@@ -276,11 +276,11 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
 //                      : 0;
 
     // Debug prints
-    std::cout << "In Solution:Route: excessWeight_: " << excessWeight_
-              << ", excessVolume_: " << excessVolume_
-              << ", excessSalvage_: " << excessSalvage_ << std::endl;
+//    std::cout << "In Solution:Route: excessWeight_: " << excessWeight_
+//              << ", excessVolume_: " << excessVolume_
+//              << ", excessSalvage_: " << excessSalvage_ << std::endl;
 //              << ", excessSalvageSequence_: " << excessSalvageSequence_ << std::endl;
-    std::cout << "###### Exit Solution:Route" << std::endl << std::endl;
+//    std::cout << "###### Exit Solution:Route" << std::endl << std::endl;
 }
 
 

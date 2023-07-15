@@ -56,24 +56,29 @@ bool Exchange<N, M>::checkSalvageSequenceConstraint(Node *U, Node *V) const
     // S-D
     // B-B
     // B-D
-    bool uIsClientDelivery = (data.client(U->client).demandWeight || data.client(U->client).demandVolume);
-    bool uIsClientSalvage = (data.client(U->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
-    bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
+    // The loops start from U and V respectively and go up to N and M nodes
+    for(size_t uIndex = 0; uIndex < N; ++uIndex, U = n(U)){
+        for(size_t vIndex = 0; vIndex < M; ++vIndex, V = n(V)){
+            bool uIsClientDelivery = (data.client(U->client).demandWeight || data.client(U->client).demandVolume);
+            bool uIsClientSalvage = (data.client(U->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+            bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
+        
+            bool vIsClientDelivery = (data.client(V->client).demandWeight || data.client(V->client).demandVolume);
+            bool vIsClientSalvage = (data.client(V->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+            bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
+        
+            bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
+            bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
 
-    bool vIsClientDelivery = (data.client(V->client).demandWeight || data.client(V->client).demandVolume);
-    bool vIsClientSalvage = (data.client(V->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
-    bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
-
-    bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
-    bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
-
-    // S-B or S-D
-    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth) || nextVClientDelivery))
-        return true;
-
-    // B-B or B-D
-    if (uIsBoth && ((vIsBoth || vIsClientDelivery) || nextUClientDelivery))
-        return true;
+            // S-B or S-D
+            if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth) || nextVClientDelivery))
+                return true;
+        
+            // B-B or B-D
+            if (uIsBoth && ((vIsBoth || vIsClientDelivery) || nextUClientDelivery))
+                return true;
+        }
+    }
 
     return false;
 }
@@ -127,10 +132,6 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
                               + U->route->distBetween(posU, posU + N - 1)
                               + data.dist(endU->client, n(V)->client)
                               + data.dist(p(U)->client, n(endU)->client);
-
-    if (checkSalvageSequenceConstraint(U, V)) {
-        return std::numeric_limits<Cost>::max() / 1000;
-    }
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
@@ -247,10 +248,6 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
           + U->route->distBetween(posU, posU + N - 1)
           + data.dist(endU->client, n(endV)->client);
 
-    if (checkSalvageSequenceConstraint(U, V)) {
-        return std::numeric_limits<Cost>::max() / 1000;
-    }
-
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
     if (U->route != V->route)
@@ -351,6 +348,9 @@ Cost Exchange<N, M>::evaluate(Node *U,
                               Node *V,
                               CostEvaluator const &costEvaluator)
 {
+    if (checkSalvageSequenceConstraint(U, V))
+        return std::numeric_limits<Cost>::max() / 1000;
+
     if (containsDepot(U, N) || overlap(U, V))
         return 0;
 

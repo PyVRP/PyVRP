@@ -28,7 +28,7 @@ Cost CostEvaluator::penalisedCost(Solution const &solution) const
     // std::cout << "Distance: " << solution.distance() << " Weight: " << weightPenaltyExcess(solution.excessWeight())
      //    << " Volume: " << volumePenaltyExcess(solution.excessVolume()) << " SalvageCapacity: " << salvagePenaltyExcess(solution.excessSalvage())
       //   << " SalvageSeq: " << salvageSequencePenaltyExcess(solution.excessSalvageSequence()) << " TW: " << twPenalty(solution.timeWarp()) << std::endl;
-    std::cout << "Cost: " << cur_cost << std::endl;
+//    std::cout << "Cost: " << cur_cost << std::endl;
     return cur_cost;
 }
 

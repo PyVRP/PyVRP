@@ -73,7 +73,7 @@ bool Route::overlapsWith(Route const &other, int const tolerance) const
 
 void Route::update()
 {
-    std::cout << "###### Enter Route:update" << std::endl;
+    // std::cout << "###### Enter Route:update" << std::endl;
     auto const oldNodes = nodes;
     setupNodes();
 
@@ -83,11 +83,11 @@ void Route::update()
     Distance distance = 0;
     Distance reverseDistance = 0;
     bool foundChange = false;
-    bool foundSalvage = false;
-    bool isSalvage = false;
-    bool salvageBeforeDelivery = false;
-    bool isDelivery = false;
-    Salvage salvageCount = 0;
+    //bool foundSalvage = false;
+    //bool isSalvage = false;
+    //bool salvageBeforeDelivery = false;
+    //bool isDelivery = false;
+    //Salvage salvageCount = 0;
 
     // std::cout << std::endl;
     // std::cout << "Before Loop " << "salvageBeforeDelivery: " << salvageBeforeDelivery << ", salvageCount: " << salvageCount << std::endl;
@@ -117,28 +117,28 @@ void Route::update()
         volume += data.client(node->client).demandVolume;
         salvage += data.client(node->client).demandSalvage;
 
-        if (data.client(node->client).demandSalvage)
-        {
-            isSalvage = true;
-        }
+        // if (data.client(node->client).demandSalvage)
+        // {
+        //     isSalvage = true;
+        // }
 
-        if (data.client(node->client).demandWeight || data.client(node->client).demandVolume)
-        {
-            isDelivery = true;
-        }
+        // if (data.client(node->client).demandWeight || data.client(node->client).demandVolume)
+        // {
+         //    isDelivery = true;
+         //}
     
-        if (isDelivery && foundSalvage)
-        {
-            salvageBeforeDelivery = true;
-        }
+         //if (isDelivery && foundSalvage)
+        // {
+        //     salvageBeforeDelivery = true;
+        // }
 
-        salvageCount = data.client(node->client).demandSalvage ? salvageCount + Salvage(1) : salvageCount;
+        // salvageCount = data.client(node->client).demandSalvage ? salvageCount + Salvage(1) : salvageCount;
 
-        if (isSalvage)
-        {
-            if (!foundSalvage)
-                foundSalvage = true;
-        }
+        //if (isSalvage)
+       // {
+       //     if (!foundSalvage)
+       //         foundSalvage = true;
+       // }
 
 
         // if (data.client(node->client).demandSalvage == 1) {
@@ -177,13 +177,13 @@ void Route::update()
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
 
-        std::cout << "Route Constructor Node: " << pos
-            << " salvageCount: " << salvageCount
-            << " demandVolume: " << data.client(node->client).demandVolume
-            << " demandSalvage: " << data.client(node->client).demandSalvage
-            << " foundSalvage: " << foundSalvage
-            << " SalvageBefore: " << salvageBeforeDelivery
-            << std::endl;
+        // std::cout << "Route Constructor Node: " << pos
+        //     << " salvageCount: " << salvageCount
+        //     << " demandVolume: " << data.client(node->client).demandVolume
+        //     << " demandSalvage: " << data.client(node->client).demandSalvage
+        //     << " foundSalvage: " << foundSalvage
+        //     << " SalvageBefore: " << salvageBeforeDelivery
+        //     << std::endl;
 
         // std::cout << "Inside Loop " << "salvageBeforeDelivery: " << salvageBeforeDelivery << ", salvageCount: " << salvageCount << std::endl;
     }
@@ -201,18 +201,17 @@ void Route::update()
     timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;
 
-    // isSalvageCapacityFeasible_ = salvageCount <= data.salvageCapacity();
     isSalvageCapacityFeasible_ = static_cast<size_t>(salvage_) <= data.salvageCapacity();
-    isSalvageSequenceFeasible_ = !salvageBeforeDelivery;
+    // isSalvageSequenceFeasible_ = !salvageBeforeDelivery;
 
     // Debug prints
-    std::cout << "SalvageCount: " << salvageCount 
-              << ", isSalvageCapacityFeasible: " << isSalvageCapacityFeasible_ << ", isSalvageSequenceFeasible: " << isSalvageSequenceFeasible_ << std::endl;
-    std::cout << "Final weight: " << weight_
-              << ", isWeightFeasible: " << isWeightFeasible_
-              << ", Final volume: " << volume_
-              << ", isVolumeFeasible: " << isVolumeFeasible_ << std::endl;
-    std::cout << "###### Exit Route:Update" << std::endl << std::endl;
+    // std::cout << "SalvageCount: " << salvageCount 
+    //           << ", isSalvageCapacityFeasible: " << isSalvageCapacityFeasible_ << ", isSalvageSequenceFeasible: " << isSalvageSequenceFeasible_ << std::endl;
+    // std::cout << "Final weight: " << weight_
+    //           << ", isWeightFeasible: " << isWeightFeasible_
+    //           << ", Final volume: " << volume_
+    //           << ", isVolumeFeasible: " << isVolumeFeasible_ << std::endl;
+    // std::cout << "###### Exit Route:Update" << std::endl << std::endl;
 }
 
 Route* Route::clone() const

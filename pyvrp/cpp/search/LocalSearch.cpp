@@ -188,30 +188,59 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-bool LocalSearch::checkSalvageSequenceConstraint(Node *U, Node *V) const
+//bool LocalSearch::checkSalvageSequenceConstraint(Node *U, Node *V) const
+//{
+//    // These sequences should violate the constraint
+//    // S-B
+//    // S-D
+//    // B-B
+//    // B-D
+//    bool uIsClientDelivery = (data.client(U->client).demandWeight || data.client(U->client).demandVolume);
+//    bool uIsClientSalvage = (data.client(U->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+//    bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
+//
+//    bool vIsClientDelivery = (data.client(V->client).demandWeight || data.client(V->client).demandVolume);
+//    bool vIsClientSalvage = (data.client(V->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+//    bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
+//
+//    bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
+//    bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
+//
+//    // S-B or S-D
+//    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth) || nextVClientDelivery))
+//        return true;
+//
+//    // B-B or B-D
+//    if (uIsBoth && ((vIsBoth || vIsClientDelivery) || nextUClientDelivery))
+//        return true;
+//
+//    return false;
+//}
+
+bool LocalSearch::checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) const
 {
     // These sequences should violate the constraint
     // S-B
     // S-D
     // B-B
     // B-D
-    bool uIsClientDelivery = (data.client(U->client).demandWeight || data.client(U->client).demandVolume);
-    bool uIsClientSalvage = (data.client(U->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool uIsClientDelivery = (data.client(U).demandWeight || data.client(U).demandVolume);
+    bool uIsClientSalvage = (data.client(U).demandSalvage != Measure<MeasureType::SALVAGE>(0));
     bool uIsBoth = uIsClientDelivery && uIsClientSalvage;
 
-    bool vIsClientDelivery = (data.client(V->client).demandWeight || data.client(V->client).demandVolume);
-    bool vIsClientSalvage = (data.client(V->client).demandSalvage != Measure<MeasureType::SALVAGE>(0));
+    bool vIsClientDelivery = (data.client(V).demandWeight || data.client(V).demandVolume);
+    bool vIsClientSalvage = (data.client(V).demandSalvage != Measure<MeasureType::SALVAGE>(0));
     bool vIsBoth = vIsClientDelivery && vIsClientSalvage;
 
-    bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
-    bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
+    //bool nextUClientDelivery = (data.client(n(U)->client).demandWeight || data.client(n(U)->client).demandVolume);
+    //bool nextVClientDelivery = (data.client(n(V)->client).demandWeight || data.client(n(V)->client).demandVolume);
 
     // S-B or S-D
-    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth) || nextVClientDelivery))
+    if (uIsClientSalvage && !uIsBoth && ((vIsClientDelivery || vIsBoth))) //|| nextVClientDelivery))
         return true;
 
     // B-B or B-D
-    if (uIsBoth && ((vIsBoth || vIsClientDelivery) || nextUClientDelivery))
+    if (uIsBoth && ((vIsBoth || vIsClientDelivery))) // || nextUClientDelivery))
         return true;
 
     return false;
@@ -222,9 +251,6 @@ void LocalSearch::maybeInsert(Node *U,
                               CostEvaluator const &costEvaluator)
 {
     assert(!U->route && V->route);
-
-    // if (checkSalvageSequenceConstraint(U, V))
-    //    return std::numeric_limits<Cost>::max() / 1000; 
 
     Distance const deltaDist = data.dist(V->client, U->client)
                                + data.dist(U->client, n(V)->client)
@@ -258,6 +284,12 @@ void LocalSearch::maybeInsert(Node *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
+    bool prevClientViolation = checkSalvageSequenceConstraint(data, U->client, V->client);
+    bool clientNextViolation = checkSalvageSequenceConstraint(data, V->client, n(U)->client);
+
+    if (!prevClientViolation && !clientNextViolation)
+        deltaCost = std::numeric_limits<Cost>::max() / 1000;
+
     if (deltaCost < 0)
     {
         U->insertAfter(V);           // U has no route, so there's nothing to
@@ -268,9 +300,6 @@ void LocalSearch::maybeInsert(Node *U,
 void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
 {
     assert(U->route);
-
-    // if (checkSalvageSequenceConstraint(nodeU, nodeV))
-    //    return
 
     Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
                                - data.dist(p(U)->client, U->client)
@@ -298,6 +327,9 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
 
+    if (checkSalvageSequenceConstraint(data, p(U)->client, n(U)->client))
+        deltaCost = std::numeric_limits<Cost>::max() / 1000;
+
     if (deltaCost < 0)
     {
         auto *route = U->route;  // after U->remove(), U->route is a nullptr
@@ -305,44 +337,6 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
         update(route, route);
     }
 }
-
-// void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
-// {
-//     assert(U->route);
-// 
-//     Distance const deltaDist = data.dist(p(U)->client, n(U)->client)
-//                                - data.dist(p(U)->client, U->client)
-//                                - data.dist(U->client, n(U)->client);
-// 
-//     auto const &uClient = data.client(U->client);
-//     Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
-// 
-//     deltaCost += costEvaluator.weightPenalty(U->route->weight() - uClient.demandWeight,
-//                                            data.weightCapacity());
-//     deltaCost += costEvaluator.volumePenalty(U->route->volume() - uClient.demandVolume,
-//                                            data.volumeCapacity());
-//     deltaCost += costEvaluator.salvagePenalty(U->route->salvage() - uClient.demandSalvage,
-//                                            data.salvageCapacity());
-//     deltaCost
-//         -= costEvaluator.weightPenalty(U->route->weight(), data.weightCapacity());
-//     deltaCost
-//         -= costEvaluator.volumePenalty(U->route->volume(), data.volumeCapacity());
-//     deltaCost
-//         -= costEvaluator.salvagePenalty(U->route->salvage(), data.salvageCapacity());
-// 
-//     auto uTWS
-//         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
-// 
-//     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-//     deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
-// 
-//     if (deltaCost < 0)
-//     {
-//         auto *route = U->route;  // after U->remove(), U->route is a nullptr
-//         U->remove();
-//         update(route, route);
-//     }
-// }
 
 void LocalSearch::update(Route *U, Route *V)
 {
