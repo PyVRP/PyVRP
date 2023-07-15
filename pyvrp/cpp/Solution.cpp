@@ -212,8 +212,10 @@ Solution::Route::Route(ProblemData const &data,
     for (size_t idx = 0; idx != size(); ++idx)
         release_ = std::max(release_, data.client(visits_[idx]).releaseTime);
 
-    ProblemData::VehicleType const &vehType = data.vehicleType(vehicleType);
-    Duration time = std::max(release_, data.depot().twEarly);
+    auto const &vehType = data.vehicleType(vehicleType);
+    auto const &depot = data.client(vehType.depot);
+
+    Duration time = std::max(release_, depot.twEarly);
     size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
@@ -253,7 +255,7 @@ Solution::Route::Route(ProblemData const &data,
 
     time += data.client(last).serviceDuration
             + data.duration(last, vehType.depot);
-    timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
+    timeWarp_ += std::max<Duration>(time - depot.twLate, 0);
 
     auto const capacity = vehType.capacity;
     excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;

@@ -33,12 +33,9 @@ Cost deltaCost(Client client,
     auto const clientLate = clientData.twLate;
     auto const nextLate = data.client(next).twLate;
 
-    // Determine the earliest time we can depart from prev.
-    // TODO what about depot != 0 here?
-    auto const prevStart = std::max(data.duration(0, prev), prevData.twEarly);
-    auto const prevFinish = prevStart + prevData.serviceDuration;
-
-    // Time warp when we go directly from prev to next (current situation).
+    // Determine the earliest time we can depart from prev, and compute the
+    // time warp when we go directly from prev to next (current situation).
+    auto const prevFinish = prevData.twEarly + prevData.serviceDuration;
     auto const prevNextArrive = prevFinish + data.duration(prev, next);
     auto const currTimeWarp = std::max<Duration>(prevNextArrive - nextLate, 0);
 
@@ -116,16 +113,15 @@ void pyvrp::crossover::greedyRepair(Routes &routes,
         {
             Client prev, next;
 
-            // TODO hardcoded depot
             if (idx == 0)  // try after depot
             {
-                prev = 0;
+                prev = 0;  // TODO hardcoded depot
                 next = route[0];
             }
             else if (idx == route.size())  // try before depot
             {
                 prev = route.back();
-                next = 0;
+                next = 0;  // TODO hardcoded depot
             }
             else  // try between [idx - 1] and [idx]
             {

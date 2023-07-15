@@ -212,9 +212,6 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::client,
              py::arg("client"),
              py::return_value_policy::reference_internal)
-        .def("depot",
-             &ProblemData::depot,
-             py::return_value_policy::reference_internal)
         .def("centroid",
              &ProblemData::centroid,
              py::return_value_policy::reference_internal)
@@ -282,7 +279,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(
             "__iter__",
             [](Solution::Route const &route) {
-                return py::make_iterator(route.cbegin(), route.cend());
+                return py::make_iterator(route.begin(), route.end());
             },
             py::return_value_policy::reference_internal)
         .def(

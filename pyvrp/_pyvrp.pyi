@@ -178,16 +178,6 @@ class ProblemData:
         Client
             A simple data object containing the requested client's information.
         """
-    def depot(self) -> Client:
-        """
-        Returns 'client' information for the depot, which is stored internally
-        as the client with number `0`.
-
-        Returns
-        -------
-        Client
-            A simple data object containing the depot's information.
-        """
     def centroid(self) -> Tuple[float, float]:
         """
         Center point of all client locations (excluding the depot).

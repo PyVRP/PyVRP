@@ -39,8 +39,6 @@ ProblemData::Client::Client(Coordinate x,
         throw std::invalid_argument("prize must be >= 0");
 }
 
-ProblemData::Client const &ProblemData::depot() const { return client(0); }
-
 std::pair<double, double> const &ProblemData::centroid() const
 {
     return centroid_;

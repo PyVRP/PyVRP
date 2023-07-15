@@ -26,7 +26,7 @@ struct Node
     TimeWindowSegment twBefore;  // TWS for (0...client) including self
     TimeWindowSegment twAfter;   // TWS for (client...0) including self
 
-    [[nodiscard]] inline bool isDepot() const;
+    [[nodiscard]] bool isDepot() const;
 
     /**
      * Inserts this node after the other and updates the relevant links.
@@ -43,8 +43,6 @@ struct Node
      */
     void remove();
 };
-
-bool Node::isDepot() const { return client == 0; }  // TODO remove
 
 /**
  * Convenience method accessing the node directly before the argument.

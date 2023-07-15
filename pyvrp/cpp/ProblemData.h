@@ -62,11 +62,6 @@ public:
     [[nodiscard]] inline Client const &client(size_t client) const;
 
     /**
-     * @return A struct containing the depot's information.
-     */
-    [[nodiscard]] Client const &depot() const;
-
-    /**
      * @return Centroid of client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;

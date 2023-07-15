@@ -1,6 +1,12 @@
 #include "Node.h"
+#include "Route.h"
 
 using pyvrp::search::Node;
+
+bool Node::isDepot() const
+{
+    return this == &route->startDepot || this == &route->endDepot;
+}
 
 void Node::insertAfter(Node *other)
 {

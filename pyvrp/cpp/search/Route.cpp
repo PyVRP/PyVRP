@@ -37,7 +37,7 @@ void Route::setupSector()
     if (empty())  // Note: sector has no meaning for empty routes, don't use
         return;
 
-    auto const &depotData = data.client(0);
+    auto const &depotData = data.client(startDepot.client);
     auto const &clientData = data.client(n(&startDepot)->client);
 
     auto const diffX = static_cast<double>(clientData.x - depotData.x);
@@ -47,11 +47,8 @@ void Route::setupSector()
 
     sector.initialize(angle);
 
-    for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
+    for (auto *node : *this)
     {
-        auto const *node = *it;
-        assert(!node->isDepot());
-
         auto const &clientData = data.client(node->client);
 
         auto const diffX = static_cast<double>(clientData.x - depotData.x);

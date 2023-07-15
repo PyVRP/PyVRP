@@ -43,7 +43,7 @@ def plot_route_schedule(
         _, ax = plt.subplots()
 
     vehicle_type = data.vehicle_type(route.vehicle_type())
-    depot = data.client(0)  # For readability, define variable
+    depot = data.client(0)
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
