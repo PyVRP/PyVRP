@@ -87,4 +87,12 @@ This object can be used to obtain the best observed solution, and detailed runti
       :members:
       :special-members:
 
+.. automodule:: pyvrp.exceptions
+
+   .. autoexception:: StatisticsNotCollectedError
+
+   .. autoexception:: EmptySolutionWarning
+
+   .. autoexception:: ScalingWarning
+
 .. TODO add pyvrp CLI, and think about missing files (Matrix, TWS?)
