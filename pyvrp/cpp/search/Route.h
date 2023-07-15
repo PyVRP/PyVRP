@@ -40,8 +40,8 @@ class Route
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
-    Node startDepot;  // Departure depot for this route
-    Node endDepot;    // Return depot for this route
+    Node startDepot;   // Departure depot for this route
+    Node endDepot;     // Return depot for this route
 
     /**
      * @return The client or depot node at the given position.
