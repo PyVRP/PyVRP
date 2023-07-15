@@ -34,20 +34,20 @@ void SwapStar::updateInsertionCost(Route *R,
 
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData = TWS::merge(data.durationMatrix(),
-                             R->startDepot->twBefore,
+                             R->startDepot.twBefore,
                              U->tw,
-                             n(R->startDepot)->twAfter);
+                             n(&R->startDepot)->twAfter);
 
     Distance deltaDist
-        = data.dist(R->startDepot->client, U->client)
-          + data.dist(U->client, n(R->startDepot)->client)
-          - data.dist(R->startDepot->client, n(R->startDepot)->client);
+        = data.dist(R->startDepot.client, U->client)
+          + data.dist(U->client, n(&R->startDepot)->client)
+          - data.dist(R->startDepot.client, n(&R->startDepot)->client);
 
     Cost deltaCost = static_cast<Cost>(deltaDist)
                      + costEvaluator.twPenalty(twData.totalTimeWarp())
                      - costEvaluator.twPenalty(R->timeWarp());
 
-    insertPositions.maybeAdd(deltaCost, R->startDepot);
+    insertPositions.maybeAdd(deltaCost, &R->startDepot);
 
     for (auto *V : *R)
     {

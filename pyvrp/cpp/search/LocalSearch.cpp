@@ -84,9 +84,9 @@ Solution LocalSearch::search(Solution &solution,
                         continue;
 
                     if (U->route)  // try inserting U into the empty route.
-                        applyNodeOps(U, empty->startDepot, costEvaluator);
+                        applyNodeOps(U, &empty->startDepot, costEvaluator);
                     else  // U is not in the solution, so again try inserting.
-                        maybeInsert(U, empty->startDepot, costEvaluator);
+                        maybeInsert(U, &empty->startDepot, costEvaluator);
                 }
             }
         }
@@ -299,14 +299,17 @@ void LocalSearch::loadSolution(Solution const &solution)
     {
         auto const &vehicleType = data.vehicleType(route.vehicleType());
 
-        Node *startDepot = route.startDepot;
-        Node *endDepot = route.endDepot;
+        Node *startDepot = &route.startDepot;
+        Node *endDepot = &route.endDepot;
 
         startDepot->prev = endDepot;
         startDepot->next = endDepot;
 
         endDepot->prev = startDepot;
         endDepot->next = startDepot;
+
+        startDepot->position = 0;
+        endDepot->position = 1;
 
         startDepot->tw = clients[vehicleType.depot].tw;
         startDepot->twBefore = clients[vehicleType.depot].tw;
@@ -335,8 +338,8 @@ void LocalSearch::loadSolution(Solution const &solution)
         Node *client = &clients[solRoute[0]];
         client->route = route;
 
-        client->prev = route->startDepot;
-        route->startDepot->next = client;
+        client->prev = &route->startDepot;
+        route->startDepot.next = client;
 
         for (size_t idx = 1; idx < solRoute.size(); idx++)
         {
@@ -349,8 +352,8 @@ void LocalSearch::loadSolution(Solution const &solution)
             prev->next = client;
         }
 
-        client->next = route->endDepot;
-        route->endDepot->prev = client;
+        client->next = &route->endDepot;
+        route->endDepot.prev = client;
     }
 
     for (auto &route : routes)
@@ -425,9 +428,7 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1),
-      clients(data.numClients() + 1),
-      startDepots(data.numVehicles()),
-      endDepots(data.numVehicles())
+      clients(data.numClients() + 1)
 {
     setNeighbours(neighbours);
 
@@ -447,8 +448,7 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
         for (size_t i = 0; i != numAvailable; ++i)
         {
-            routes.emplace_back(
-                data, rIdx, vehTypeIdx, &startDepots[rIdx], &endDepots[rIdx]);
+            routes.emplace_back(data, rIdx, vehTypeIdx);
             rIdx++;
         }
     }

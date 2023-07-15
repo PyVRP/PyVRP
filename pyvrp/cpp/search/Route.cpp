@@ -9,28 +9,20 @@
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Route(ProblemData const &data,
-             size_t const idx,
-             size_t const vehType,
-             Node *startDepot,
-             Node *endDepot)
-    : data(data),
-      vehicleType_(vehType),
-      idx(idx),
-      startDepot(startDepot),
-      endDepot(endDepot)
+Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
+    : data(data), vehicleType_(vehType), idx(idx)
 {
-    startDepot->client = data.vehicleType(vehType).depot;
-    startDepot->route = this;
+    startDepot.client = data.vehicleType(vehType).depot;
+    startDepot.route = this;
 
-    endDepot->client = data.vehicleType(vehType).depot;
-    endDepot->route = this;
+    endDepot.client = data.vehicleType(vehType).depot;
+    endDepot.route = this;
 }
 
 void Route::setupNodes()
 {
     nodes.clear();
-    auto *node = startDepot;
+    auto *node = &startDepot;
 
     do
     {
@@ -45,7 +37,7 @@ void Route::setupSector()
         return;
 
     auto const &depotData = data.client(0);
-    auto const &clientData = data.client(n(startDepot)->client);
+    auto const &clientData = data.client(n(&startDepot)->client);
 
     auto const diffX = static_cast<double>(clientData.x - depotData.x);
     auto const diffY = static_cast<double>(clientData.y - depotData.y);

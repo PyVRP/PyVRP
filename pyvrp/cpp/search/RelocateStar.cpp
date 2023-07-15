@@ -12,10 +12,11 @@ pyvrp::Cost RelocateStar::evaluate(Route *U,
     for (auto *nodeU : *U)
     {
         // Test inserting U after V's start depot
-        Cost deltaCost = relocate.evaluate(nodeU, V->startDepot, costEvaluator);
+        Cost deltaCost
+            = relocate.evaluate(nodeU, &V->startDepot, costEvaluator);
 
         if (deltaCost < move.deltaCost)
-            move = {deltaCost, nodeU, V->startDepot};
+            move = {deltaCost, nodeU, &V->startDepot};
 
         for (auto *nodeV : *V)
         {
