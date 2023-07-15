@@ -32,25 +32,23 @@ class PenaltyParams:
         such updating occurs.
     penalty_increase
         Amount :math:`p_i \\ge 1` by which the current penalties are
-        increased when insufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
-        registrations. The penalty values :math:`v` are updated as
-        :math:`v \\gets p_i v`.
+        increased when insufficient feasible solutions (see ``target_feasible``)
+        have been found amongst the most recent registrations. The penalty
+        values :math:`v` are updated as :math:`v \\gets p_i v`.
     penalty_decrease
         Amount :math:`p_d \\in [0, 1]` by which the current penalties are
-        decreased when sufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
-        registrations. The penalty values :math:`v` are updated as
-        :math:`v \\gets p_d v`.
+        decreased when sufficient feasible solutions (see ``target_feasible``)
+        have been found amongst the most recent registrations. The penalty
+        values :math:`v` are updated as :math:`v \\gets p_d v`.
     target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
-        in the last :py:attr:`~num_registrations_between_penalty_updates`
-        registrations. This percentage is used to update the penalty terms:
-        when insufficient feasible solutions have been registered, the
-        penalties are increased; similarly, when too many feasible solutions
-        have been registered, the penalty terms are decreased. This ensures a
-        balanced population, with a fraction :math:`p_f` feasible and a
-        fraction :math:`1 - p_f` infeasible solutions.
+        in the last ``num_registrations_between_penalty_updates`` registrations.
+        This percentage is used to update the penalty terms: when insufficient
+        feasible solutions have been registered, the penalties are increased;
+        similarly, when too many feasible solutions have been registered, the
+        penalty terms are decreased. This ensures a balanced population, with a
+        fraction :math:`p_f` feasible and a fraction :math:`1 - p_f` infeasible
+        solutions.
 
     Attributes
     ----------
@@ -65,17 +63,15 @@ class PenaltyParams:
     penalty_increase
         Amount :math:`p_i \\ge 1` by which the current penalties are
         increased when insufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
+        ``target_feasible``) have been found amongst the most recent
         registrations.
     penalty_decrease
         Amount :math:`p_d \\in [0, 1]` by which the current penalties are
-        decreased when sufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
-        registrations.
+        decreased when sufficient feasible solutions (see ``target_feasible``)
+        have been found amongst the most recent registrations.
     target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
-        in the last :py:attr:`~num_registrations_between_penalty_updates`
-        registrations.
+        in the last ``num_registrations_between_penalty_updates`` registrations.
     """
 
     init_capacity_penalty: int = 20

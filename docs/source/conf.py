@@ -79,6 +79,10 @@ html_theme_options = {
         "repo": "fontawesome/brands/github",
         "edit": "material/file-edit-outline",
     },
+    "features": [
+        "navigation.expand",
+        "navigation.top",
+    ],
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",

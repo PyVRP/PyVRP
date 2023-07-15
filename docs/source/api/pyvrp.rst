@@ -19,6 +19,9 @@ This object can be used to obtain the best observed solution, and detailed runti
 
    .. autoclass:: Model
       :members:
+   
+   .. autoclass:: Edge
+      :members:
 
 .. automodule:: pyvrp.GeneticAlgorithm
 

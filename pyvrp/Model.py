@@ -24,6 +24,10 @@ Depot = Client
 
 
 class Edge:
+    """
+    Stores an edge connecting two locations.
+    """
+
     __slots__ = ["frm", "to", "distance", "duration"]
 
     def __init__(self, frm: Client, to: Client, distance: int, duration: int):
