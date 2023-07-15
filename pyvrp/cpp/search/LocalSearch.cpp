@@ -371,13 +371,10 @@ Solution LocalSearch::exportSolution() const
             continue;
 
         std::vector<int> visits;
-        Node *node = route.startDepot->next;
+        visits.reserve(route.size());
 
-        while (!node->isDepot())
-        {
+        for (auto *node : route)
             visits.push_back(node->client);
-            node = node->next;
-        }
 
         solRoutes.emplace_back(data, visits, route.vehicleType());
     }

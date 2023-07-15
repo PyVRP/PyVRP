@@ -48,8 +48,8 @@ public:                // TODO make fields private
      */
     [[nodiscard]] inline Node *operator[](size_t position) const;
 
-    [[nodiscard]] inline std::vector<Node *>::const_iterator cbegin() const;
-    [[nodiscard]] inline std::vector<Node *>::const_iterator cend() const;
+    [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
 
     [[nodiscard]] inline std::vector<Node *>::iterator begin();
     [[nodiscard]] inline std::vector<Node *>::iterator end();
@@ -160,13 +160,13 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
-std::vector<Node *>::const_iterator Route::cbegin() const
+std::vector<Node *>::const_iterator Route::begin() const
 {
-    return nodes.cbegin();
+    return nodes.begin();
 }
-std::vector<Node *>::const_iterator Route::cend() const
+std::vector<Node *>::const_iterator Route::end() const
 {
-    return nodes.cend() - 1;  // excl. depot
+    return nodes.end() - 1;  // excl. depot
 }
 
 std::vector<Node *>::iterator Route::begin() { return nodes.begin(); }
