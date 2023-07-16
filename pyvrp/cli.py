@@ -63,8 +63,8 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
 
 def maybe_mkdir(where: str):
     if where:
-        stats_dir = Path(where)
-        stats_dir.mkdir(parents=True, exist_ok=True)
+        path = Path(where)
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def solve(
