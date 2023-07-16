@@ -116,6 +116,10 @@ void Route::update()
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 }
 
+bool Route::empty() const { return size() == 0; }
+
+size_t Route::size() const { return nodes.size(); }
+
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx + 1 << ":";  // route number

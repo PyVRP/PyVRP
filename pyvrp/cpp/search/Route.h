@@ -78,19 +78,19 @@ public:                // TODO make fields private
     [[nodiscard]] inline Duration timeWarp() const;
 
     /**
-     * @return true if this route is empty, false otherwise.
-     */
-    [[nodiscard]] inline bool empty() const;
-
-    /**
      * @return The load capacity of this route.
      */
     [[nodiscard]] inline Load capacity() const;
 
     /**
+     * @return true if this route is empty, false otherwise.
+     */
+    [[nodiscard]] bool empty() const;
+
+    /**
      * @return Number of clients in this route.
      */
-    [[nodiscard]] inline size_t size() const;
+    [[nodiscard]] size_t size() const;
 
     /**
      * Calculates time window data for segment [start, end].
@@ -131,7 +131,7 @@ public:                // TODO make fields private
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessLoad() const { return load_ <= capacity(); }
+bool Route::hasExcessLoad() const { return load_ > capacity(); }
 
 bool Route::hasTimeWarp() const
 {
@@ -161,11 +161,7 @@ Load Route::load() const { return load_; }
 
 Duration Route::timeWarp() const { return timeWarp_; }
 
-bool Route::empty() const { return size() == 0; }
-
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
-
-size_t Route::size() const { return nodes.size(); }
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
