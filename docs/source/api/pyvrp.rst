@@ -89,8 +89,6 @@ This object can be used to obtain the best observed solution, and detailed runti
 
 .. automodule:: pyvrp.exceptions
 
-   .. autoexception:: StatisticsNotCollectedError
-
    .. autoexception:: EmptySolutionWarning
 
    .. autoexception:: ScalingWarning
