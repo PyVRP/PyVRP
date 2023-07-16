@@ -2,7 +2,6 @@
 #define PYVRP_ROUTE_H
 
 #include "CircleSector.h"
-#include "Node.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
@@ -15,6 +14,46 @@ namespace pyvrp::search
 {
 class Route
 {
+public:
+    struct Node
+    {
+        // TODO rename client to location/loc
+        size_t client;           // Location represented by this node
+        size_t position = 0;     // Position in the route
+        Route *route = nullptr;  // Indicates membership of a route, if any.
+        Node *prev = nullptr;    // Predecessor in route
+        Node *next = nullptr;    // Successor in route
+
+        // TODO can these data fields be moved to Route?
+        Load cumulatedLoad = 0;                  // Load depot -> client (incl)
+        Distance cumulatedDistance = 0;          // Dist depot -> client (incl)
+        Distance cumulatedReversalDistance = 0;  // Dist if reversed
+
+        TimeWindowSegment tw;        // TWS for individual node (client)
+        TimeWindowSegment twBefore;  // TWS for (0...client) including self
+        TimeWindowSegment twAfter;   // TWS for (client...0) including self
+
+        Node(size_t client);
+
+        [[nodiscard]] bool isDepot() const;
+
+        /**
+         * Inserts this node after the other and updates the relevant links.
+         */
+        void insertAfter(Node *other);
+
+        /**
+         * Swaps this node with the other and updates the relevant links.
+         */
+        void swapWith(Node *other);
+
+        /**
+         * Removes this node and updates the relevant links.
+         */
+        void remove();
+    };
+
+private:
     ProblemData const &data;
     size_t const vehicleType_;
 
@@ -129,6 +168,16 @@ public:                // TODO make fields private
     Route(ProblemData const &data, size_t const idx, size_t const vehType);
 };
 
+/**
+ * Convenience method accessing the node directly before the argument.
+ */
+inline Route::Node *p(Route::Node *node) { return node->prev; }
+
+/**
+ * Convenience method accessing the node directly after the argument.
+ */
+inline Route::Node *n(Route::Node *node) { return node->next; }
+
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
 bool Route::hasExcessLoad() const { return load_ > capacity(); }
@@ -138,24 +187,27 @@ bool Route::hasTimeWarp() const
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
-    return timeWarp_ == 0;
+    return timeWarp_ > 0;
 #endif
 }
 
-Node *Route::operator[](size_t position) const
+Route::Node *Route::operator[](size_t position) const
 {
     assert(position > 0);
     return nodes[position - 1];
 }
 
-std::vector<Node *>::const_iterator Route::begin() const
+std::vector<Route::Node *>::const_iterator Route::begin() const
 {
     return nodes.begin();
 }
-std::vector<Node *>::const_iterator Route::end() const { return nodes.end(); }
+std::vector<Route::Node *>::const_iterator Route::end() const
+{
+    return nodes.end();
+}
 
-std::vector<Node *>::iterator Route::begin() { return nodes.begin(); }
-std::vector<Node *>::iterator Route::end() { return nodes.end(); }
+std::vector<Route::Node *>::iterator Route::begin() { return nodes.begin(); }
+std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
 
 Load Route::load() const { return load_; }
 

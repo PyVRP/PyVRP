@@ -7,8 +7,8 @@ using pyvrp::Cost;
 using pyvrp::search::TwoOpt;
 using TWS = pyvrp::TimeWindowSegment;
 
-Cost TwoOpt::evalWithinRoute(Node *U,
-                             Node *V,
+Cost TwoOpt::evalWithinRoute(Route::Node *U,
+                             Route::Node *V,
                              CostEvaluator const &costEvaluator) const
 {
     if (U->position + 1 >= V->position)
@@ -42,8 +42,8 @@ Cost TwoOpt::evalWithinRoute(Node *U,
     return deltaCost;
 }
 
-Cost TwoOpt::evalBetweenRoutes(Node *U,
-                               Node *V,
+Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
+                               Route::Node *V,
                                CostEvaluator const &costEvaluator) const
 {
     Distance const current = data.dist(U->client, n(U)->client)
@@ -83,7 +83,7 @@ Cost TwoOpt::evalBetweenRoutes(Node *U,
     return deltaCost;
 }
 
-void TwoOpt::applyWithinRoute(Node *U, Node *V) const
+void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
 {
     auto *itRoute = V;
     auto *insertionPoint = U;
@@ -98,7 +98,7 @@ void TwoOpt::applyWithinRoute(Node *U, Node *V) const
     }
 }
 
-void TwoOpt::applyBetweenRoutes(Node *U, Node *V) const
+void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
 {
     auto *itRouteU = n(U);
     auto *itRouteV = n(V);
@@ -122,7 +122,9 @@ void TwoOpt::applyBetweenRoutes(Node *U, Node *V) const
     }
 }
 
-Cost TwoOpt::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
+Cost TwoOpt::evaluate(Route::Node *U,
+                      Route::Node *V,
+                      CostEvaluator const &costEvaluator)
 {
     if (U->route->idx > V->route->idx)  // will be tackled in a later iteration
         return 0;                       // - no need to process here already
@@ -131,7 +133,7 @@ Cost TwoOpt::evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator)
                                 : evalBetweenRoutes(U, V, costEvaluator);
 }
 
-void TwoOpt::apply(Node *U, Node *V) const
+void TwoOpt::apply(Route::Node *U, Route::Node *V) const
 {
     if (U->route == V->route)
         applyWithinRoute(U, V);

@@ -20,7 +20,7 @@ using pyvrp::search::TwoOpt;
 
 PYBIND11_MODULE(_search, m)
 {
-    using NodeOp = LocalSearchOperator<pyvrp::search::Node>;
+    using NodeOp = LocalSearchOperator<pyvrp::search::Route::Node>;
     using RouteOp = LocalSearchOperator<pyvrp::search::Route>;
 
     py::class_<NodeOp>(m, "NodeOperator");

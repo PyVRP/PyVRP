@@ -30,9 +30,9 @@ class SwapStar : public LocalSearchOperator<Route>
         std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max()};
-        std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
+        std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
 
-        void maybeAdd(Cost costInsert, Node *placeInsert)
+        void maybeAdd(Cost costInsert, Route::Node *placeInsert)
         {
             if (costInsert >= costs[2])
                 return;
@@ -65,11 +65,11 @@ class SwapStar : public LocalSearchOperator<Route>
     {
         Cost cost = 0;
 
-        Node *U = nullptr;
-        Node *UAfter = nullptr;
+        Route::Node *U = nullptr;
+        Route::Node *UAfter = nullptr;
 
-        Node *V = nullptr;
-        Node *VAfter = nullptr;
+        Route::Node *V = nullptr;
+        Route::Node *VAfter = nullptr;
     };
 
     // Updates the removal costs of clients in the given route
@@ -77,13 +77,14 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).
-    void
-    updateInsertionCost(Route *R, Node *U, CostEvaluator const &costEvaluator);
+    void updateInsertionCost(Route *R,
+                             Route::Node *U,
+                             CostEvaluator const &costEvaluator);
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
-    inline std::pair<Cost, Node *>
-    getBestInsertPoint(Node *U, Node *V, CostEvaluator const &costEvaluator);
+    inline std::pair<Cost, Route::Node *> getBestInsertPoint(
+        Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator);
 
     Matrix<ThreeBest> cache;
     Matrix<Cost> removalCosts;

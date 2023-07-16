@@ -7,14 +7,72 @@
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
-    : data(data), vehicleType_(vehType), idx(idx)
-{
-    startDepot.client = data.vehicleType(vehType).depot;
-    startDepot.route = this;
-    startDepot.position = 0;
+Route::Node::Node(size_t client) : client(client) {}
 
-    endDepot.client = data.vehicleType(vehType).depot;
+bool Route::Node::isDepot() const
+{
+    return this == &route->endDepot || this == &route->startDepot;
+}
+
+void Route::Node::insertAfter(Route::Node *other)
+{
+    if (route)  // If we're in a route, we first stitch up the current route.
+    {           // If we're not in a route, this step should be skipped.
+        prev->next = next;
+        next->prev = prev;
+    }
+
+    prev = other;
+    next = other->next;
+
+    other->next->prev = this;
+    other->next = this;
+
+    route = other->route;
+}
+
+void Route::Node::swapWith(Route::Node *other)
+{
+    auto *VPred = other->prev;
+    auto *VSucc = other->next;
+    auto *UPred = prev;
+    auto *USucc = next;
+
+    auto *routeU = route;
+    auto *routeV = other->route;
+
+    UPred->next = other;
+    USucc->prev = other;
+    VPred->next = this;
+    VSucc->prev = this;
+
+    prev = VPred;
+    next = VSucc;
+    other->prev = UPred;
+    other->next = USucc;
+
+    route = routeV;
+    other->route = routeU;
+}
+
+void Route::Node::remove()
+{
+    prev->next = next;
+    next->prev = prev;
+
+    prev = nullptr;
+    next = nullptr;
+    route = nullptr;
+}
+
+Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
+    : data(data),
+      vehicleType_(vehType),
+      idx(idx),
+      startDepot(data.vehicleType(vehType).depot),
+      endDepot(data.vehicleType(vehType).depot)
+{
+    startDepot.route = this;
     endDepot.route = this;
 }
 

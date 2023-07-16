@@ -8,15 +8,16 @@ namespace pyvrp::search
 /**
  * Inserts U -> X after V (as V -> X -> U), if that is an improving move.
  */
-class MoveTwoClientsReversed : public LocalSearchOperator<Node>
+class MoveTwoClientsReversed : public LocalSearchOperator<Route::Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
 public:
-    Cost
-    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
+    Cost evaluate(Route::Node *U,
+                  Route::Node *V,
+                  CostEvaluator const &costEvaluator) override;
 
-    void apply(Node *U, Node *V) const override;
+    void apply(Route::Node *U, Route::Node *V) const override;
 };
 }  // namespace pyvrp::search
 

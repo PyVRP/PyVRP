@@ -3,7 +3,6 @@
 
 #include "CostEvaluator.h"
 #include "Measure.h"
-#include "Node.h"
 #include "ProblemData.h"
 #include "Route.h"
 #include "Solution.h"
@@ -14,7 +13,7 @@ template <typename Arg> class LocalSearchOperatorBase
 {
     // Can only be specialised into either a Node or Route operator; there
     // are no other types that are expected to work.
-    static_assert(std::is_same<Arg, Node>::value
+    static_assert(std::is_same<Arg, Route::Node>::value
                   || std::is_same<Arg, Route>::value);
 
 protected:
@@ -52,7 +51,8 @@ class LocalSearchOperator : public LocalSearchOperatorBase<Arg>
 };
 
 template <>  // specialisation for node operators
-class LocalSearchOperator<Node> : public LocalSearchOperatorBase<Node>
+class LocalSearchOperator<Route::Node>
+    : public LocalSearchOperatorBase<Route::Node>
 {
     using LocalSearchOperatorBase::LocalSearchOperatorBase;
 };
