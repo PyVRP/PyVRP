@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_raises
+from numpy.testing import assert_allclose, assert_raises
 from pytest import mark
 
 from pyvrp import Client, ProblemData, VehicleType
@@ -63,23 +63,6 @@ def test_raises_for_invalid_client_data(
 ):
     with assert_raises(ValueError):
         Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
-
-
-def test_depot_is_first_client():
-    """
-    The ``depot()`` helper should return the first client, that is,
-    ``client(0)``.
-    """
-    mat = [[0, 1], [1, 0]]
-
-    data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=0, y=1)],
-        vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=mat,
-        duration_matrix=mat,
-    )
-
-    assert_(data.depot() is data.client(0))
 
 
 def test_centroid():

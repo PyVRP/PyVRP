@@ -1,9 +1,7 @@
-#define _USE_MATH_DEFINES  // needed to get M_PI etc. on Windows builds
-// TODO use std::numbers::pi instead of M_PI when C++20 is supported by CIBW
-
 #include "Route.h"
 
 #include <cmath>
+#include <numbers>
 #include <ostream>
 
 using pyvrp::search::Route;
@@ -12,12 +10,18 @@ using TWS = pyvrp::TimeWindowSegment;
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data), vehicleType_(vehType), idx(idx)
 {
+    startDepot.client = data.vehicleType(vehType).depot;
+    startDepot.route = this;
+    startDepot.position = 0;
+
+    endDepot.client = data.vehicleType(vehType).depot;
+    endDepot.route = this;
 }
 
 void Route::setupNodes()
 {
     nodes.clear();
-    auto *node = depot;
+    auto *node = &startDepot;
 
     do
     {
@@ -28,30 +32,27 @@ void Route::setupNodes()
 
 void Route::setupSector()
 {
-    if (empty())  // Note: sector has no meaning for empty routes, don't use
+    if (empty())
         return;
 
-    auto const &depotData = data.client(0);
-    auto const &clientData = data.client(n(depot)->client);
+    auto const &depotData = data.client(startDepot.client);
+    auto const &clientData = data.client(n(&startDepot)->client);
 
     auto const diffX = static_cast<double>(clientData.x - depotData.x);
     auto const diffY = static_cast<double>(clientData.y - depotData.y);
     auto const angle = CircleSector::positive_mod(
-        static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
+        static_cast<int>(32768. * std::atan2(diffY, diffX) / std::numbers::pi));
 
     sector.initialize(angle);
 
-    for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
+    for (auto *node : *this)
     {
-        auto const *node = *it;
-        assert(!node->isDepot());
-
         auto const &clientData = data.client(node->client);
 
         auto const diffX = static_cast<double>(clientData.x - depotData.x);
         auto const diffY = static_cast<double>(clientData.y - depotData.y);
-        auto const angle = CircleSector::positive_mod(
-            static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
+        auto const angle = CircleSector::positive_mod(static_cast<int>(
+            32768. * std::atan2(diffY, diffX) / std::numbers::pi));
 
         sector.extend(angle);
     }
@@ -59,7 +60,7 @@ void Route::setupSector()
 
 void Route::setupRouteTimeWindows()
 {
-    auto *node = nodes.back();
+    auto *node = &endDepot;
 
     do  // forward time window segments
     {
@@ -123,17 +124,17 @@ void Route::update()
     setupSector();
     setupRouteTimeWindows();
 
-    load_ = nodes.back()->cumulatedLoad;
+    load_ = endDepot.cumulatedLoad;
     isLoadFeasible_ = load_ <= capacity();
 
-    timeWarp_ = nodes.back()->twBefore.totalTimeWarp();
+    timeWarp_ = endDepot.twBefore.totalTimeWarp();
     isTimeWarpFeasible_ = timeWarp_ == 0;
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx + 1 << ":";  // route number
-    for (auto *node = n(route.depot); !node->isDepot(); node = n(node))
+    for (auto *node : route)
         out << ' ' << node->client;  // client index
     out << '\n';
 

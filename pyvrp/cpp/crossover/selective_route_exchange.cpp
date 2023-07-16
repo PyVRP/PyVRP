@@ -231,6 +231,7 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     {
         if (!visits1[r].empty())
             routes1.emplace_back(data, visits1[r], routesA[r].vehicleType());
+
         if (!visits2[r].empty())
             routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
     }

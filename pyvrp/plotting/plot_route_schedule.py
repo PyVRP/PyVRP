@@ -43,7 +43,7 @@ def plot_route_schedule(
         _, ax = plt.subplots()
 
     vehicle_type = data.vehicle_type(route.vehicle_type())
-    depot = data.client(0)  # For readability, define variable
+    depot = data.client(vehicle_type.depot)
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
@@ -75,8 +75,8 @@ def plot_route_schedule(
 
     add_traces(dist, t, drive_time, serv_time, load)
 
-    prev_idx = 0  # depot
-    for idx in [*list(route), 0]:
+    prev_idx = vehicle_type.depot
+    for idx in [*list(route), vehicle_type.depot]:
         stop = data.client(idx)
         delta_time = data.duration(prev_idx, idx)
         delta_dist = data.dist(prev_idx, idx)
@@ -98,7 +98,7 @@ def plot_route_schedule(
 
         add_traces(dist, t, drive_time, serv_time, load)
 
-        if idx != 0:  # Don't plot service and timewindow for return to depot
+        if idx != vehicle_type.depot:  # exclude return to depot
             t += stop.service_duration
             serv_time += stop.service_duration
 

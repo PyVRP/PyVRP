@@ -18,8 +18,10 @@ class Route
     ProblemData const &data;
     size_t const vehicleType_;
 
-    std::vector<Node *> nodes;  // List of nodes (in order) in this solution.
-    CircleSector sector;        // Circle sector of the route's clients
+    // List of nodes (in order) in this solution. Start depot is not included;
+    // last element is the endDepot. See LS for details.
+    std::vector<Node *> nodes;
+    CircleSector sector;  // Circle sector of the route's clients
 
     Load load_;            // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
@@ -38,12 +40,19 @@ class Route
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
-    Node *depot;       // Pointer to the associated depot
+    Node startDepot;   // Departure depot for this route
+    Node endDepot;     // Return depot for this route
 
     /**
      * @return The client or depot node at the given position.
      */
     [[nodiscard]] inline Node *operator[](size_t position) const;
+
+    [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
+
+    [[nodiscard]] inline std::vector<Node *>::iterator begin();
+    [[nodiscard]] inline std::vector<Node *>::iterator end();
 
     /**
      * Tests if this route is feasible.
@@ -147,6 +156,21 @@ Node *Route::operator[](size_t position) const
     return nodes[position - 1];
 }
 
+std::vector<Node *>::const_iterator Route::begin() const
+{
+    return nodes.begin();
+}
+std::vector<Node *>::const_iterator Route::end() const
+{
+    return nodes.end() - 1;  // excl. depot
+}
+
+std::vector<Node *>::iterator Route::begin() { return nodes.begin(); }
+std::vector<Node *>::iterator Route::end()
+{
+    return nodes.end() - 1;  // excl. depot
+}
+
 Load Route::load() const { return load_; }
 
 Duration Route::timeWarp() const { return timeWarp_; }
@@ -189,7 +213,7 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size());
 
-    auto const *startNode = start == 0 ? depot : nodes[start - 1];
+    auto const *startNode = start == 0 ? &startDepot : nodes[start - 1];
     auto const atStart = data.client(startNode->client).demand;
     auto const startLoad = startNode->cumulatedLoad;
     auto const endLoad = nodes[end - 1]->cumulatedLoad;
