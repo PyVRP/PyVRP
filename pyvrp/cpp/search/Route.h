@@ -18,19 +18,14 @@ class Route
     ProblemData const &data;
     size_t const vehicleType_;
 
-    // List of nodes (in order) in this solution. Start depot is not included;
-    // last element is the endDepot. See LS for details.
-    std::vector<Node *> nodes;
-    CircleSector sector;  // Circle sector of the route's clients
+    std::vector<Node *> nodes;  // List of nodes in this route, excl. depot
+    CircleSector sector;        // Circle sector of the route's clients
 
     Load load_;            // Current route load.
     bool isLoadFeasible_;  // Whether current load is feasible.
 
     Duration timeWarp_;        // Current route time warp.
     bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
-
-    // Populates the nodes vector.
-    void setupNodes();
 
     // Sets the sector data.
     void setupSector();
@@ -160,16 +155,10 @@ std::vector<Node *>::const_iterator Route::begin() const
 {
     return nodes.begin();
 }
-std::vector<Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;  // excl. depot
-}
+std::vector<Node *>::const_iterator Route::end() const { return nodes.end(); }
 
 std::vector<Node *>::iterator Route::begin() { return nodes.begin(); }
-std::vector<Node *>::iterator Route::end()
-{
-    return nodes.end() - 1;  // excl. depot
-}
+std::vector<Node *>::iterator Route::end() { return nodes.end(); }
 
 Load Route::load() const { return load_; }
 
@@ -179,30 +168,32 @@ bool Route::empty() const { return size() == 0; }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
-size_t Route::size() const
-{
-    return nodes.size() - 1;  // exclude end depot
-}
+size_t Route::size() const { return nodes.size(); }
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
-    assert(0 < start && start <= end && end <= nodes.size());
+    assert(0 < start && start <= end && end <= nodes.size() + 1);
 
     auto tws = nodes[start - 1]->tw;
+    auto *node = nodes[start - 1];
 
     for (size_t step = start; step != end; ++step)
-        tws = TimeWindowSegment::merge(
-            data.durationMatrix(), tws, nodes[step]->tw);
+    {
+        node = n(node);
+        tws = TimeWindowSegment::merge(data.durationMatrix(), tws, node->tw);
+    }
 
     return tws;
 }
 
 Distance Route::distBetween(size_t start, size_t end) const
 {
-    assert(start <= end && end <= nodes.size());
+    assert(start <= end && end <= nodes.size() + 1);
 
     auto const startDist = start == 0 ? 0 : nodes[start - 1]->cumulatedDistance;
-    auto const endDist = nodes[end - 1]->cumulatedDistance;
+    auto const endDist = end == nodes.size() + 1
+                             ? endDepot.cumulatedDistance
+                             : nodes[end - 1]->cumulatedDistance;
 
     assert(startDist <= endDist);
 
@@ -211,12 +202,14 @@ Distance Route::distBetween(size_t start, size_t end) const
 
 Load Route::loadBetween(size_t start, size_t end) const
 {
-    assert(start <= end && end <= nodes.size());
+    assert(start <= end && end <= nodes.size() + 1);
 
     auto const *startNode = start == 0 ? &startDepot : nodes[start - 1];
     auto const atStart = data.client(startNode->client).demand;
     auto const startLoad = startNode->cumulatedLoad;
-    auto const endLoad = nodes[end - 1]->cumulatedLoad;
+    auto const endLoad = end == nodes.size() + 1
+                             ? endDepot.cumulatedLoad
+                             : nodes[end - 1]->cumulatedLoad;
 
     assert(startLoad <= endLoad);
 

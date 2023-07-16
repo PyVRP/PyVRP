@@ -18,18 +18,6 @@ Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     endDepot.route = this;
 }
 
-void Route::setupNodes()
-{
-    nodes.clear();
-    auto *node = &startDepot;
-
-    do
-    {
-        node = n(node);
-        nodes.push_back(node);
-    } while (!node->isDepot());
-}
-
 void Route::setupSector()
 {
     if (empty())
@@ -80,32 +68,17 @@ bool Route::overlapsWith(Route const &other, int const tolerance) const
 
 void Route::update()
 {
-    auto const oldNodes = nodes;
-    setupNodes();
+    nodes.clear();
+    auto *node = n(&startDepot);
 
     Load load = 0;
     Distance distance = 0;
     Distance reverseDistance = 0;
-    bool foundChange = false;
 
-    for (size_t pos = 0; pos != nodes.size(); ++pos)
+    while (!node->isDepot())
     {
-        auto *node = nodes[pos];
-
-        if (!foundChange && (pos >= oldNodes.size() || node != oldNodes[pos]))
-        {
-            foundChange = true;
-
-            if (pos > 0)  // change at pos, so everything before is the same
-            {             // and we can re-use cumulative calculations
-                load = nodes[pos - 1]->cumulatedLoad;
-                distance = nodes[pos - 1]->cumulatedDistance;
-                reverseDistance = nodes[pos - 1]->cumulatedReversalDistance;
-            }
-        }
-
-        if (!foundChange)
-            continue;
+        size_t const position = nodes.size();
+        nodes.push_back(node);
 
         load += data.client(node->client).demand;
         distance += data.dist(p(node)->client, node->client);
@@ -113,13 +86,28 @@ void Route::update()
         reverseDistance += data.dist(node->client, p(node)->client);
         reverseDistance -= data.dist(p(node)->client, node->client);
 
-        node->position = pos + 1;
+        node->position = position + 1;
         node->cumulatedLoad = load;
         node->cumulatedDistance = distance;
         node->cumulatedReversalDistance = reverseDistance;
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
+
+        node = n(node);
     }
+
+    load += data.client(endDepot.client).demand;
+    distance += data.dist(p(&endDepot)->client, endDepot.client);
+
+    reverseDistance += data.dist(endDepot.client, p(&endDepot)->client);
+    reverseDistance -= data.dist(p(&endDepot)->client, endDepot.client);
+
+    endDepot.position = size() + 1;
+    endDepot.cumulatedLoad = load;
+    endDepot.cumulatedDistance = distance;
+    endDepot.cumulatedReversalDistance = reverseDistance;
+    endDepot.twBefore = TWS::merge(
+        data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
     setupSector();
     setupRouteTimeWindows();
