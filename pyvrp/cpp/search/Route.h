@@ -5,8 +5,6 @@
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
-#include <array>
-#include <bit>
 #include <cassert>
 #include <iosfwd>
 
