@@ -9,11 +9,6 @@ using TWS = pyvrp::TimeWindowSegment;
 
 Route::Node::Node(size_t client) : client(client) {}
 
-bool Route::Node::isDepot() const
-{
-    return this == &route->endDepot || this == &route->startDepot;
-}
-
 void Route::Node::insertAfter(Route::Node *other)
 {
     if (route)  // If we're in a route, we first stitch up the current route.
@@ -173,10 +168,6 @@ void Route::update()
     load_ = endDepot.cumulatedLoad;
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 }
-
-bool Route::empty() const { return size() == 0; }
-
-size_t Route::size() const { return nodes.size(); }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {

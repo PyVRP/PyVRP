@@ -33,7 +33,7 @@ public:
 
         Node(size_t client);
 
-        [[nodiscard]] bool isDepot() const;
+        [[nodiscard]] inline bool isDepot() const;
 
         /**
          * Inserts this node after the other and updates the relevant links.
@@ -122,12 +122,12 @@ public:                // TODO make fields private
     /**
      * @return true if this route is empty, false otherwise.
      */
-    [[nodiscard]] bool empty() const;
+    [[nodiscard]] inline bool empty() const;
 
     /**
      * @return Number of clients in this route.
      */
-    [[nodiscard]] size_t size() const;
+    [[nodiscard]] inline size_t size() const;
 
     /**
      * Calculates time window data for segment [start, end].
@@ -176,6 +176,11 @@ inline Route::Node *p(Route::Node *node) { return node->prev; }
  */
 inline Route::Node *n(Route::Node *node) { return node->next; }
 
+bool Route::Node::isDepot() const
+{
+    return this == &route->endDepot || this == &route->startDepot;
+}
+
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
 bool Route::hasExcessLoad() const { return load_ > capacity(); }
@@ -212,6 +217,10 @@ Load Route::load() const { return load_; }
 Duration Route::timeWarp() const { return timeWarp_; }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
+
+bool Route::empty() const { return size() == 0; }
+
+size_t Route::size() const { return nodes.size(); }
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
