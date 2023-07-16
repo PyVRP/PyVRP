@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pyvrp.Result import Result
-from pyvrp.exceptions import StatisticsNotCollectedError
 
 
 def plot_objectives(
@@ -30,17 +29,7 @@ def plot_objectives(
         Bounds the y-axis to ``(best * ylim_adjust[0], best * ylim_adjust[1])``
         where ``best`` denotes the best found feasible objective value. Default
         (0.95, 1.15).
-
-    Raises
-    ------
-    StatisticsNotCollectedError
-        Raised when statistics have not been collected.
     """
-    if not result.has_statistics():
-        raise StatisticsNotCollectedError(
-            "Statistics have not been collected."
-        )
-
     if not ax:
         _, ax = plt.subplots()
 

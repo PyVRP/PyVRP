@@ -3,7 +3,7 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
@@ -280,7 +280,6 @@ class Model:
             for _ in range(pop_params.min_pop_size)
         ]
 
-        gen_params = GeneticAlgorithmParams(collect_statistics=True)
-        gen_args = (data, pm, rng, pop, ls, srex, init, gen_params)
+        gen_args = (data, pm, rng, pop, ls, srex, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
         return algo.run(stop)

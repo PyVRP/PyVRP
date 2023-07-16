@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pyvrp.Result import Result
-from pyvrp.exceptions import StatisticsNotCollectedError
 
 
 def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
@@ -17,17 +16,7 @@ def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
         Result for which to plot runtimes.
     ax, optional
         Axes object to draw the plot on. One will be created if not provided.
-
-    Raises
-    ------
-    StatisticsNotCollectedError
-        Raised when statistics have not been collected.
     """
-    if not result.has_statistics():
-        raise StatisticsNotCollectedError(
-            "Statistics have not been collected."
-        )
-
     if not ax:
         _, ax = plt.subplots()
 

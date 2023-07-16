@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 @dataclass
 class GeneticAlgorithmParams:
     repair_probability: float = 0.80
-    collect_statistics: bool = False
     intensify_probability: float = 0.15
     intensify_on_best: bool = True
     nb_iter_no_improvement: int = 20_000
@@ -148,8 +147,7 @@ class GeneticAlgorithm:
             else:
                 iters_no_improvement += 1
 
-            if self._params.collect_statistics:
-                stats.collect_from(self._pop, self._cost_evaluator)
+            stats.collect_from(self._pop, self._cost_evaluator)
 
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
