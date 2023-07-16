@@ -21,11 +21,8 @@ class Route
     std::vector<Node *> nodes;  // List of nodes in this route, excl. depot
     CircleSector sector;        // Circle sector of the route's clients
 
-    Load load_;            // Current route load.
-    bool isLoadFeasible_;  // Whether current load is feasible.
-
-    Duration timeWarp_;        // Current route time warp.
-    bool isTimeWarpFeasible_;  // Whether current time warp is feasible.
+    Load load_;          // Current route load.
+    Duration timeWarp_;  // Current route time warp.
 
     // Sets the sector data.
     void setupSector();
@@ -134,14 +131,14 @@ public:                // TODO make fields private
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessLoad() const { return !isLoadFeasible_; }
+bool Route::hasExcessLoad() const { return load_ <= capacity(); }
 
 bool Route::hasTimeWarp() const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
-    return !isTimeWarpFeasible_;
+    return timeWarp_ == 0;
 #endif
 }
 
