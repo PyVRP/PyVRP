@@ -153,12 +153,6 @@ class LocalSearch:
             This parameter controls the amount of overlap needed before two
             routes are evaluated.
 
-        Raises
-        ------
-        RuntimeError
-            When this method is called before registering route operators.
-            Operators can be registered using :meth:`~add_route_operator`.
-
         Returns
         -------
         Solution
@@ -183,12 +177,6 @@ class LocalSearch:
             The solution to improve.
         cost_evaluator
             Cost evaluator to use.
-
-        Raises
-        ------
-        RuntimeError
-            When this method is called before registering node operators.
-            Operators can be registered using :meth:`~add_node_operator`.
 
         Returns
         -------
