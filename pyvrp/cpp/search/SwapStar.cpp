@@ -1,7 +1,7 @@
 #include "SwapStar.h"
 
 using pyvrp::Cost;
-using pyvrp::search::Node;
+using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 using TWS = pyvrp::TimeWindowSegment;
 
@@ -24,7 +24,7 @@ void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 }
 
 void SwapStar::updateInsertionCost(Route *R,
-                                   Node *U,
+                                   Route::Node *U,
                                    CostEvaluator const &costEvaluator)
 {
     auto &insertPositions = cache(R->idx, U->client);
@@ -67,8 +67,8 @@ void SwapStar::updateInsertionCost(Route *R,
     }
 }
 
-std::pair<Cost, Node *> SwapStar::getBestInsertPoint(
-    Node *U, Node *V, CostEvaluator const &costEvaluator)
+std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto &best_ = cache(V->route->idx, U->client);
 

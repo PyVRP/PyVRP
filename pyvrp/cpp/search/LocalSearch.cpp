@@ -157,8 +157,8 @@ void LocalSearch::shuffle(XorShift128 &rng)
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
-bool LocalSearch::applyNodeOps(Node *U,
-                               Node *V,
+bool LocalSearch::applyNodeOps(Route::Node *U,
+                               Route::Node *V,
                                CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
@@ -198,8 +198,8 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-void LocalSearch::maybeInsert(Node *U,
-                              Node *V,
+void LocalSearch::maybeInsert(Route::Node *U,
+                              Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
     assert(!U->route && V->route);
@@ -234,7 +234,8 @@ void LocalSearch::maybeInsert(Node *U,
     }
 }
 
-void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
+void LocalSearch::maybeRemove(Route::Node *U,
+                              CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
@@ -299,8 +300,8 @@ void LocalSearch::loadSolution(Solution const &solution)
     {
         auto const &vehicleType = data.vehicleType(route.vehicleType());
 
-        Node *startDepot = &route.startDepot;
-        Node *endDepot = &route.endDepot;
+        auto *startDepot = &route.startDepot;
+        auto *endDepot = &route.endDepot;
 
         startDepot->prev = endDepot;
         startDepot->next = endDepot;
@@ -332,7 +333,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route *route = &routes[r];
 
-        Node *client = &clients[solRoute[0]];
+        auto *client = &clients[solRoute[0]];
         client->route = route;
 
         client->prev = &route->startDepot;
@@ -340,7 +341,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
         for (size_t idx = 1; idx < solRoute.size(); idx++)
         {
-            Node *prev = client;
+            auto *prev = client;
 
             client = &clients[solRoute[idx]];
             client->route = route;
@@ -424,16 +425,16 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1),
-      clients(data.numClients() + 1)
+      lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);
 
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    for (size_t i = 0; i <= data.numClients(); i++)
-        clients[i].client = i;
+    clients.reserve(data.numClients() + 1);
+    for (size_t client = 0; client <= data.numClients(); ++client)
+        clients.emplace_back(client);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
