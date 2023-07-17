@@ -23,9 +23,9 @@ public:
         Node *next = nullptr;    // Successor in route
 
         // TODO can these data fields be moved to Route?
-        Load cumulatedLoad = 0;                  // Load depot -> client (incl)
-        Distance cumulatedDistance = 0;          // Dist depot -> client (incl)
-        Distance cumulatedReversalDistance = 0;  // Delta dist if reversed
+        Load cumulatedLoad = 0;              // Load depot -> client (incl)
+        Distance cumulatedDistance = 0;      // Dist depot - client (incl)
+        Distance deltaReversalDistance = 0;  // Delta of depot - client reversed
 
         TimeWindowSegment tw;        // TWS for individual node (client)
         TimeWindowSegment twBefore;  // TWS for (0...client) including self
