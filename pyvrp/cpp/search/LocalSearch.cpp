@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -16,10 +15,10 @@ using TWS = pyvrp::TimeWindowSegment;
 Solution LocalSearch::search(Solution &solution,
                              CostEvaluator const &costEvaluator)
 {
-    loadSolution(solution);
-
     if (nodeOps.empty())
-        throw std::runtime_error("No known node operators.");
+        return solution;
+
+    loadSolution(solution);
 
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -99,12 +98,12 @@ Solution LocalSearch::intensify(Solution &solution,
                                 CostEvaluator const &costEvaluator,
                                 int overlapToleranceDegrees)
 {
+    if (routeOps.empty())
+        return solution;
+
     loadSolution(solution);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
-
-    if (routeOps.empty())
-        throw std::runtime_error("No known route operators.");
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
