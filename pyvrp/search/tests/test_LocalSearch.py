@@ -13,7 +13,7 @@ from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
-def test_local_search_raises_when_there_are_no_operators():
+def test_local_search_returns_same_solution_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
@@ -21,11 +21,9 @@ def test_local_search_raises_when_there_are_no_operators():
     ls = LocalSearch(data, rng, compute_neighbours(data))
     sol = Solution.make_random(data, rng)
 
-    with assert_raises(RuntimeError):
-        ls.search(sol, cost_evaluator)
-
-    with assert_raises(RuntimeError):
-        ls.intensify(sol, cost_evaluator)
+    # No operators have been added, so these calls should be no-ops.
+    assert_equal(ls.search(sol, cost_evaluator), sol)
+    assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():
