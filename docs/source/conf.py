@@ -105,6 +105,34 @@ html_theme_options = {
             },
         },
     ],
+    "version_dropdown": True,
+    "version_info": [
+        {
+            "version": "/",
+            "title": "Development",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.4.4",
+            "title": "v0.4.4",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.3.0",
+            "title": "v0.3.0",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.2.1",
+            "title": "v0.2.1",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.1.0",
+            "title": "v0.1.0",
+            "aliases": [],
+        },
+    ],
 }
 
 # -- Options for EPUB output
