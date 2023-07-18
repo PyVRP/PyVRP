@@ -133,6 +133,9 @@ class LocalSearch:
         #        continue
 
         #    return solution
+
+        # LARGE_PENALTY = 5000
+        
         while True:
             solution = self.search(solution, cost_evaluator)
 
@@ -147,13 +150,45 @@ class LocalSearch:
             new_cost = cost_evaluator.penalised_cost(new_solution)
 
             print("New cost: ", new_cost, " Current_cost:", current_cost)
+
             if new_cost < current_cost:
+                if not self._ls.solHasValidSequences(new_solution):
+                    print("Invalid sequence detected in new solution. Skipping...")
+                    continue
                 if new_solution == solution:  # Added check for same solution
                     return solution  # Return current solution if intensify() didn't improve
                 solution = new_solution
-                continue
-
             return solution
+
+#        iteration_penalty = 0  # Initialize penalty counter
+#        
+#        while True:
+#            solution = self.search(solution, cost_evaluator)
+#        
+#            if not should_intensify:
+#                return solution
+#        
+#            print("Before intensify")
+#            new_solution = self.intensify(solution, cost_evaluator)
+#            print("After intensify")
+#        
+#            current_cost = cost_evaluator.penalised_cost(solution)
+#            new_cost = cost_evaluator.penalised_cost(new_solution)
+#        
+#            iteration_penalty += 1  # Increment the penalty counter
+#            new_cost += LARGE_PENALTY * iteration_penalty
+#        
+#            if not self._ls.solHasValidSequences(new_solution):
+#                print("Invalid solution, added penalty")
+#        
+#            print("New cost: ", new_cost, " Current_cost:", current_cost)
+#            if new_cost < current_cost:
+#                if new_solution == solution:
+#                    return solution
+#                solution = new_solution
+#                continue
+#        
+#            return solution  # Return the solution when the loop is exited
 
     def intensify(
         self,

@@ -27,3 +27,6 @@ class LocalSearch:
     def search(
         self, solution: Solution, cost_evaluator: CostEvaluator
     ) -> Solution: ...
+    def solHasValidSequences(
+        self, solution: Solution
+    ) -> bool: ...

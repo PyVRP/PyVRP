@@ -115,6 +115,8 @@ public:
     void shuffle(XorShift128 &rng);
 
     LocalSearch(ProblemData const &data, Neighbours neighbours);
+
+    bool solHasValidSequences(const Solution &sol);
 };
 
 #endif  // PYVRP_LOCALSEARCH_H

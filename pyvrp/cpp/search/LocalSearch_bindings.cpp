@@ -36,5 +36,6 @@ PYBIND11_MODULE(_LocalSearch, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::arg("overlap_tolerance_degrees") = 0)
-        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"))
+        .def("solHasValidSequences", &LocalSearch::solHasValidSequences, py::arg("sol"));
 }
