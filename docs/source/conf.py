@@ -108,7 +108,7 @@ html_theme_options = {
     "version_dropdown": True,
     "version_info": [
         {
-            "version": "/",
+            "version": "",
             "title": "Development",
             "aliases": [],
         },
