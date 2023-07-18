@@ -23,6 +23,33 @@ if TYPE_CHECKING:
 
 @dataclass
 class GeneticAlgorithmParams:
+    """
+    Parameters for the genetic algorithm.
+
+    Parameters
+    ----------
+    repair_probability
+        Probability (in :math:`[0, 1]`) of repairing an infeasible solution.
+        If the reparation makes the solution feasible, it is also added to
+        the population in the same iteration.
+    nb_iter_no_improvement
+        Number of iterations without any improvement needed before a restart
+        occurs.
+
+    Attributes
+    ----------
+    repair_probability
+        Probability of repairing an infeasible solution.
+    nb_iter_no_improvement
+        Number of iterations without improvement before a restart occurs.
+
+    Raises
+    ------
+    ValueError
+        When ``repair_probability`` is not in :math:`[0, 1]`, or
+        ``nb_iter_no_improvement`` is negative.
+    """
+
     repair_probability: float = 0.80
     nb_iter_no_improvement: int = 20_000
 
