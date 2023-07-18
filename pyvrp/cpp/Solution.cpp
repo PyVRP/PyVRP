@@ -212,8 +212,11 @@ Solution::Route::Route(ProblemData const &data,
     for (size_t idx = 0; idx != size(); ++idx)
         release_ = std::max(release_, data.client(visits_[idx]).releaseTime);
 
-    Duration time = std::max(release_, data.depot().twEarly);
-    int prevClient = 0;
+    auto const &vehType = data.vehicleType(vehicleType);
+    auto const &depot = data.client(vehType.depot);
+
+    Duration time = std::max(release_, depot.twEarly);
+    size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
@@ -247,14 +250,14 @@ Solution::Route::Route(ProblemData const &data,
     }
 
     Client const last = visits_.back();  // last client has depot as successor
-    distance_ += data.dist(last, 0);
-    duration_ += data.duration(last, 0);
+    distance_ += data.dist(last, vehType.depot);
+    duration_ += data.duration(last, vehType.depot);
 
-    time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
+    time += data.client(last).serviceDuration
+            + data.duration(last, vehType.depot);
+    timeWarp_ += std::max<Duration>(time - depot.twLate, 0);
 
-    auto const capacity = data.vehicleType(vehicleType).capacity;
-    excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;
+    excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
 }
 
 bool Solution::Route::empty() const { return visits_.empty(); }
@@ -269,13 +272,6 @@ Visits::const_iterator Solution::Route::begin() const
 }
 
 Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
-
-Visits::const_iterator Solution::Route::cbegin() const
-{
-    return visits_.cbegin();
-}
-
-Visits::const_iterator Solution::Route::cend() const { return visits_.cend(); }
 
 Visits const &Solution::Route::visits() const { return visits_; }
 

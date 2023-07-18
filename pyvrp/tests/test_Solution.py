@@ -47,6 +47,7 @@ def test_route_constructor_heterogeneous():
 
 def test_route_eq():
     data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
 
     route1 = Route(data, [1, 2], 0)
     assert_(route1 == route1)  # should equal self

@@ -9,9 +9,9 @@ try:
     import tomli
     from tqdm import tqdm
     from tqdm.contrib.concurrent import process_map
-except ModuleNotFoundError:
+except ModuleNotFoundError as exc:
     msg = "Install 'tqdm' and 'tomli' to use the command line program."
-    raise ModuleNotFoundError(msg)
+    raise ModuleNotFoundError(msg) from exc
 
 import pyvrp.search
 from pyvrp import (
@@ -55,7 +55,7 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
     ]
 
     content = [
-        "  ".join(f"{str(c):>{ln}s}" for ln, c in zip(lens, r)) for r in rows
+        "  ".join(f"{c!s:>{ln}s}" for ln, c in zip(lens, r)) for r in rows
     ]
 
     return "\n".join(header + content)
@@ -63,8 +63,8 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
 
 def maybe_mkdir(where: str):
     if where:
-        stats_dir = Path(where)
-        stats_dir.mkdir(parents=True, exist_ok=True)
+        path = Path(where)
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def solve(
@@ -100,8 +100,7 @@ def solve(
         Maximum number of iterations for solving. Either ``max_runtime`` or
         ``max_iterations`` must be specified.
     stats_dir
-        The directory to write runtime statistics to. Enables statistics
-        collection when passed.
+        The directory to write runtime statistics to.
     sol_dir
         The directory to write the best found solutions to.
 
@@ -117,12 +116,6 @@ def solve(
         config = {}
 
     gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
-
-    if stats_dir:
-        # The statistics directory argument trumps whatever we got earlier
-        # from the configuration file.
-        gen_params.collect_statistics = True
-
     pen_params = PenaltyParams(**config.get("penalty", {}))
     pop_params = PopulationParams(**config.get("population", {}))
     nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
@@ -254,8 +247,6 @@ def main():
 
     msg = """
     Directory to store runtime statistics in, as CSV files (one per instance).
-    If passed, this enables collecting runtime statistics (default False), at
-    a slight performance hit.
     """
     parser.add_argument("--stats_dir", help=msg)
 

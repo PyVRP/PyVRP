@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -16,10 +15,10 @@ using TWS = pyvrp::TimeWindowSegment;
 Solution LocalSearch::search(Solution &solution,
                              CostEvaluator const &costEvaluator)
 {
-    loadSolution(solution);
-
     if (nodeOps.empty())
-        throw std::runtime_error("No known node operators.");
+        return solution;
+
+    loadSolution(solution);
 
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -84,9 +83,9 @@ Solution LocalSearch::search(Solution &solution,
                         continue;
 
                     if (U->route)  // try inserting U into the empty route.
-                        applyNodeOps(U, empty->depot, costEvaluator);
+                        applyNodeOps(U, &empty->startDepot, costEvaluator);
                     else  // U is not in the solution, so again try inserting.
-                        maybeInsert(U, empty->depot, costEvaluator);
+                        maybeInsert(U, &empty->startDepot, costEvaluator);
                 }
             }
         }
@@ -99,13 +98,13 @@ Solution LocalSearch::intensify(Solution &solution,
                                 CostEvaluator const &costEvaluator,
                                 double overlapTolerance)
 {
+    if (routeOps.empty())
+        return solution;
+
     loadSolution(solution);
 
     if (overlapTolerance < 0 || overlapTolerance > 1)
         throw std::runtime_error("overlapTolerance must be in [0, 1].");
-
-    if (routeOps.empty())
-        throw std::runtime_error("No known route operators.");
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
@@ -158,8 +157,8 @@ void LocalSearch::shuffle(XorShift128 &rng)
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
-bool LocalSearch::applyNodeOps(Node *U,
-                               Node *V,
+bool LocalSearch::applyNodeOps(Route::Node *U,
+                               Route::Node *V,
                                CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
@@ -199,8 +198,8 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-void LocalSearch::maybeInsert(Node *U,
-                              Node *V,
+void LocalSearch::maybeInsert(Route::Node *U,
+                              Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
     assert(!U->route && V->route);
@@ -235,7 +234,8 @@ void LocalSearch::maybeInsert(Node *U,
     }
 }
 
-void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
+void LocalSearch::maybeRemove(Route::Node *U,
+                              CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
@@ -296,10 +296,12 @@ void LocalSearch::loadSolution(Solution const &solution)
     }
 
     // First empty all routes
-    for (size_t r = 0; r != data.numVehicles(); r++)
+    for (auto &route : routes)
     {
-        Node *startDepot = &startDepots[r];
-        Node *endDepot = &endDepots[r];
+        auto const &vehicleType = data.vehicleType(route.vehicleType());
+
+        auto *startDepot = &route.startDepot;
+        auto *endDepot = &route.endDepot;
 
         startDepot->prev = endDepot;
         startDepot->next = endDepot;
@@ -307,11 +309,11 @@ void LocalSearch::loadSolution(Solution const &solution)
         endDepot->prev = startDepot;
         endDepot->next = startDepot;
 
-        startDepot->tw = clients[0].tw;
-        startDepot->twBefore = clients[0].tw;
+        startDepot->tw = clients[vehicleType.depot].tw;
+        startDepot->twBefore = clients[vehicleType.depot].tw;
 
-        endDepot->tw = clients[0].tw;
-        endDepot->twAfter = clients[0].tw;
+        endDepot->tw = clients[vehicleType.depot].tw;
+        endDepot->twAfter = clients[vehicleType.depot].tw;
     }
 
     // Determine offsets for vehicle types.
@@ -330,18 +332,16 @@ void LocalSearch::loadSolution(Solution const &solution)
         // vehicle type.
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route *route = &routes[r];
-        Node *startDepot = &startDepots[r];
-        Node *endDepot = &endDepots[r];
 
-        Node *client = &clients[solRoute[0]];
+        auto *client = &clients[solRoute[0]];
         client->route = route;
 
-        client->prev = startDepot;
-        startDepot->next = client;
+        client->prev = &route->startDepot;
+        route->startDepot.next = client;
 
         for (size_t idx = 1; idx < solRoute.size(); idx++)
         {
-            Node *prev = client;
+            auto *prev = client;
 
             client = &clients[solRoute[idx]];
             client->route = route;
@@ -350,8 +350,8 @@ void LocalSearch::loadSolution(Solution const &solution)
             prev->next = client;
         }
 
-        client->next = endDepot;
-        endDepot->prev = client;
+        client->next = &route->endDepot;
+        route->endDepot.prev = client;
     }
 
     for (auto &route : routes)
@@ -366,21 +366,18 @@ Solution LocalSearch::exportSolution() const
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (auto const &route : routes)
     {
-        if (routes[r].empty())
+        if (route.empty())
             continue;
 
         std::vector<int> visits;
-        Node *node = startDepots[r].next;
+        visits.reserve(route.size());
 
-        while (!node->isDepot())
-        {
+        for (auto *node : route)
             visits.push_back(node->client);
-            node = node->next;
-        }
 
-        solRoutes.emplace_back(data, visits, routes[r].vehicleType());
+        solRoutes.emplace_back(data, visits, route.vehicleType());
     }
 
     return {data, solRoutes};
@@ -428,35 +425,28 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1),
-      clients(data.numClients() + 1),
-      startDepots(data.numVehicles()),
-      endDepots(data.numVehicles())
+      lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);
 
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    for (size_t i = 0; i <= data.numClients(); i++)
-        clients[i].client = i;
+    clients.reserve(data.numClients() + 1);
+    for (size_t client = 0; client <= data.numClients(); ++client)
+        clients.emplace_back(client);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
-    for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
+    for (size_t vehTypeIdx = 0; vehTypeIdx != data.numVehicleTypes();
+         ++vehTypeIdx)
     {
-        auto const numAvailable = data.vehicleType(vehType).numAvailable;
+        auto const &vehType = data.vehicleType(vehTypeIdx);
+        auto const numAvailable = vehType.numAvailable;
+
         for (size_t i = 0; i != numAvailable; ++i)
         {
-            routes.emplace_back(data, rIdx, vehType);
-            routes[rIdx].depot = &startDepots[rIdx];
-
-            startDepots[rIdx].client = 0;
-            startDepots[rIdx].route = &routes[rIdx];
-
-            endDepots[rIdx].client = 0;
-            endDepots[rIdx].route = &routes[rIdx];
-
+            routes.emplace_back(data, rIdx, vehTypeIdx);
             rIdx++;
         }
     }

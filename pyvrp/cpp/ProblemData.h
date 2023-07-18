@@ -40,6 +40,7 @@ public:
     {
         Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
+        size_t const depot = 0;     // Departure and return depot location
     };
 
 private:
@@ -59,11 +60,6 @@ public:
      * @return A struct containing the indicated client's information.
      */
     [[nodiscard]] inline Client const &client(size_t client) const;
-
-    /**
-     * @return A struct containing the depot's information.
-     */
-    [[nodiscard]] Client const &depot() const;
 
     /**
      * @return Centroid of client locations.

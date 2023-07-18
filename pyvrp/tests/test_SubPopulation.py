@@ -104,7 +104,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
     # The fitness terms should all be bounded to [0, 1], and the values should
     # agree with what we've computed above.
-    assert_(((0 <= actual_fitness) & (actual_fitness <= 1)).all())
+    assert_(((actual_fitness >= 0) & (actual_fitness <= 1)).all())
     assert_allclose(actual_fitness, expected_fitness)
 
 
@@ -140,5 +140,5 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
 
     # The fitness terms should all be bounded to [0, 1], and the values should
     # agree with what we've computed above.
-    assert_(((0 <= actual_fitness) & (actual_fitness <= 1)).all())
+    assert_(((actual_fitness >= 0) & (actual_fitness <= 1)).all())
     assert_allclose(actual_fitness, expected_fitness)

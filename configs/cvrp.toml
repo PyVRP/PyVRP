@@ -20,10 +20,7 @@ route_ops = [
 
 
 [genetic]
-collect_statistics = false
 repair_probability = 0.50
-intensify_probability = 1.00
-intensify_on_best = false
 nb_iter_no_improvement = 20_000
 
 

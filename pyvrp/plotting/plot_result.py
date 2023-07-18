@@ -16,7 +16,7 @@ def plot_result(
 ):
     """
     Plots the results of a run, including the best solution and detailed
-    statistics about the algorithm's performance (if available).
+    statistics about the algorithm's performance.
 
     Parameters
     ----------
@@ -38,10 +38,9 @@ def plot_result(
     # data.
     gs = fig.add_gridspec(3, 2, width_ratios=(2 / 5, 3 / 5))
 
-    if result.has_statistics():
-        ax_div = fig.add_subplot(gs[0, 0])
-        plot_diversity(result, ax=ax_div)
-        plot_objectives(result, ax=fig.add_subplot(gs[1, 0], sharex=ax_div))
-        plot_runtimes(result, ax=fig.add_subplot(gs[2, 0], sharex=ax_div))
+    ax_div = fig.add_subplot(gs[0, 0])
+    plot_diversity(result, ax=ax_div)
+    plot_objectives(result, ax=fig.add_subplot(gs[1, 0], sharex=ax_div))
+    plot_runtimes(result, ax=fig.add_subplot(gs[2, 0], sharex=ax_div))
 
     plot_solution(result.best, data, ax=fig.add_subplot(gs[:, 1]))

@@ -54,7 +54,6 @@ libcommon = static_library(
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
-        SRC_DIR / 'search' / 'Node.cpp',
         SRC_DIR / 'search' / 'MoveTwoClientsReversed.cpp',
         SRC_DIR / 'search' / 'TwoOpt.cpp',
         SRC_DIR / 'search' / 'RelocateStar.cpp',

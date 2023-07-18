@@ -45,10 +45,8 @@ def test_init_raises_invalid_arguments(num_iterations, runtime):
         Result(sol, Statistics(), num_iterations, runtime)
 
 
-@mark.parametrize(
-    "num_iterations, has_statistics", [(0, False), (1, True), (10, True)]
-)
-def test_has_statistics(num_iterations: int, has_statistics: bool):
+@mark.parametrize("num_iterations", [0, 1, 10])
+def test_num_iterations(num_iterations: int):
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
@@ -60,7 +58,6 @@ def test_has_statistics(num_iterations: int, has_statistics: bool):
 
     best = Solution.make_random(data, rng)
     res = Result(best, stats, num_iterations, 0.0)
-    assert_equal(res.has_statistics(), has_statistics)
     assert_equal(res.num_iterations, num_iterations)
 
 

@@ -58,9 +58,8 @@ optional = true
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
-sphinx_rtd_theme = ">=0.5.1"
+sphinx-immaterial = ">=0.11.5"
 sphinx-autoapi = ">=2.0.1"
-docutils = "==0.16"
 
 
 [tool.poetry.group.examples]
@@ -93,10 +92,18 @@ pyvrp = "pyvrp.cli:main"
 line-length = 79
 
 
-[tool.isort]
-case_sensitive = true
-line_length = 79
-profile = "black"
+[tool.ruff]
+line-length = 79
+select = ["E", "F", "I", "NPY", "RET", "RSE", "RUF", "SLF", "SIM", "TCH"]
+
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports
+
+
+[tool.ruff.isort]
+case-sensitive = true
+known-first-party = ["pyvrp"]
 
 
 [tool.mypy]

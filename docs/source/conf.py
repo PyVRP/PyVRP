@@ -50,7 +50,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "autoapi.extension",
     "sphinx.ext.intersphinx",
-    "sphinx_rtd_theme",
+    "sphinx_immaterial",
     "nbsphinx",
     "numpydoc",
 ]
@@ -70,7 +70,42 @@ templates_path = ["_templates"]
 add_module_names = False
 
 # -- Options for HTML output
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_immaterial"
+html_logo = "assets/images/icon.svg"
+html_theme_options = {
+    "site_url": "https://pyvrp.org/",
+    "repo_url": "https://github.com/PyVRP/PyVRP/",
+    "icon": {
+        "repo": "fontawesome/brands/github",
+        "edit": "material/file-edit-outline",
+    },
+    "features": [
+        "navigation.expand",
+        "navigation.top",
+    ],
+    "palette": [
+        {
+            "media": "(prefers-color-scheme: light)",
+            "primary": "orange",
+            "accent": "yellow",
+            "scheme": "default",
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "primary": "orange",
+            "accent": "yellow",
+            "scheme": "slate",
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to light mode",
+            },
+        },
+    ],
+}
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"

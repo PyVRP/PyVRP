@@ -130,10 +130,13 @@ class VehicleType:
         Capacity (maximum total demand) of this vehicle type.
     num_available
         Number of vehicles of this type that are available.
+    depot
+        Depot associated with these vehicles.
     """
 
     capacity: int
     num_available: int
+    depot: int
     def __init__(self, capacity: int, num_available: int) -> None: ...
 
 class ProblemData:
@@ -174,16 +177,6 @@ class ProblemData:
         -------
         Client
             A simple data object containing the requested client's information.
-        """
-    def depot(self) -> Client:
-        """
-        Returns 'client' information for the depot, which is stored internally
-        as the client with number `0`.
-
-        Returns
-        -------
-        Client
-            A simple data object containing the depot's information.
         """
     def centroid(self) -> Tuple[float, float]:
         """
@@ -505,7 +498,6 @@ class Solution:
     def __deepcopy__(self, memo: dict) -> Solution: ...
     def __hash__(self) -> int: ...
     def __eq__(self, other: object) -> bool: ...
-    def __str__(self) -> str: ...
 
 class PopulationParams:
     generation_size: int

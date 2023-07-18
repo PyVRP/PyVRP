@@ -13,7 +13,6 @@ These best-known solutions are tracked in the ``PyVRP/Instances`` repository - s
 The configuration files used for benchmarking are ``configs/cvrp.toml`` (for CVRP) and ``configs/vrptw.toml`` (for VRPTW and PC-VRPTW).
 
 .. list-table::
-   :widths: 20 20 20 20 20
    :header-rows: 1
 
    * - Date
@@ -50,7 +49,6 @@ The table below contains the benchmark results obtained by reference VRP solvers
 The reported values represent the average gaps to the best-known solutions over ten seeds.
 
 .. list-table::
-   :widths: 20 20 20 20 20
    :header-rows: 1
 
    * - Date
