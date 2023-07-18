@@ -18,6 +18,7 @@ class LocalSearch
     using NodeOp = LocalSearchOperator<Node>;
     using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<int>>;
+    using Client = int;
 
     ProblemData const &data;
 
@@ -45,7 +46,7 @@ class LocalSearch
     void loadSolution(Solution const &solution);
 
     // Export the LS solution back into a solution.
-    Solution exportSolution() const;
+    Solution exportSolution(); // const;
 
     // Tests the node pair (U, V).
     bool applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
@@ -63,7 +64,11 @@ class LocalSearch
     void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
 
     // Enforce salvage sequence constraint
-    bool checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) const;
+    // bool checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) const;
+
+    void reorderRoutes(std::vector<std::vector<Client>> &routes, ProblemData const &data);
+    bool checkSequence(ProblemData const &data, const Solution::Route &route);
+    // void printRouteAsBinary(Route const &route, ProblemData const &data, size_t routeIndex, Client client, Cost cost);
 
 public:
     /**

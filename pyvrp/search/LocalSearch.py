@@ -114,18 +114,42 @@ class LocalSearch:
         # implementation of HGS-CVRP and HGS-VRPTW
         # TODO separate load/export solution from c++ implementation
         # so we only need to do it once
+        # while True:
+        #     solution = self.search(solution, cost_evaluator)
+        
+        #    if not should_intensify:
+        #       return solution
+            
+        #    print("Before intensify")
+        #    new_solution = self.intensify(solution, cost_evaluator)
+        #    print("After intensify")
+
+        #    current_cost = cost_evaluator.penalised_cost(solution)
+        #    new_cost = cost_evaluator.penalised_cost(new_solution)
+
+        #    print("New cost: ", new_cost, " Curren_cost:", current_cost)
+        #    if new_cost < current_cost:
+        #        solution = new_solution
+        #        continue
+
+        #    return solution
         while True:
             solution = self.search(solution, cost_evaluator)
 
             if not should_intensify:
                 return solution
 
+            print("Before intensify")
             new_solution = self.intensify(solution, cost_evaluator)
+            print("After intensify")
 
             current_cost = cost_evaluator.penalised_cost(solution)
             new_cost = cost_evaluator.penalised_cost(new_solution)
 
+            print("New cost: ", new_cost, " Current_cost:", current_cost)
             if new_cost < current_cost:
+                if new_solution == solution:  # Added check for same solution
+                    return solution  # Return current solution if intensify() didn't improve
                 solution = new_solution
                 continue
 

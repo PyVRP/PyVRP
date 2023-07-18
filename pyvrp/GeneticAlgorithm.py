@@ -134,14 +134,15 @@ class GeneticAlgorithm:
 
             curr_best = self._cost_evaluator.cost(self._best)
 
+            print("###### SELECT POPULATION ", iters)
             parents = self._pop.select(self._rng, self._cost_evaluator)
-            # print("Parent 1:", parents[0])
-            # print("Parent 2:", parents[1])
+            print("###### PERFORM CROSSOVER", iters)
             offspring = self._op(
                 parents, self._data, self._cost_evaluator, self._rng
             )
-            # print("Offspring:", offspring)
+            print("###### PERFORM LOCALSEARCH", iters)
             self._search(offspring)
+            print("ITERS: ", iters)
 
             new_best = self._cost_evaluator.cost(self._best)
 
@@ -180,12 +181,14 @@ class GeneticAlgorithm:
             # Only intensify feasible, new best solutions. See also the repair
             # step below. TODO Refactor to on_best callback (see issue #111)
             if self._params.intensify_on_best:
+                print("Before Intensify")
                 sol = self._ls.intensify(
                     sol, self._cost_evaluator, overlap_tolerance_degrees=360
                 )
 
                 if is_new_best(sol):
                     self._best = sol
+                print("After Intensify")
 
         add_and_register(sol)
 
@@ -196,9 +199,11 @@ class GeneticAlgorithm:
             and self._rng.rand() < self._params.repair_probability
         ):
             should_intensify = self._rng.rand() < intensify_prob
+            print("Before repair run")
             sol = self._ls.run(
                 sol, self._pm.get_booster_cost_evaluator(), should_intensify
             )
+            print("After repair run")
 
             if is_new_best(sol):
                 self._best = sol
