@@ -178,7 +178,9 @@ inline Route::Node *n(Route::Node *node) { return node->next; }
 
 bool Route::Node::isDepot() const
 {
-    return this == &route->endDepot || this == &route->startDepot;
+    // We need to be in a route to be the depot. If we are, then we need to
+    // be either the route's start or end depot.
+    return route && (this == &route->startDepot || this == &route->endDepot);
 }
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
