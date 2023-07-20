@@ -39,7 +39,7 @@ _SUFFIX = """
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(prog="make_native_docs")
+    parser = argparse.ArgumentParser(prog="extract_docstrings")
 
     parser.add_argument(
         "bindings_loc",
