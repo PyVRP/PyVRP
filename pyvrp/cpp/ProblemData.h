@@ -13,6 +13,50 @@ namespace pyvrp
 class ProblemData
 {
 public:
+    /**
+     * Client(
+     *    x: int,
+     *    y: int,
+     *    demand: int = 0,
+     *    service_duration: int = 0,
+     *    tw_early: int = 0,
+     *    tw_late: int = 0,
+     *    release_time: int = 0,
+     *    prize: int = 0,
+     *    required: bool = True,
+     * )
+     *
+     * Simple data object storing all client data as (read-only) properties.
+     *
+     * Parameters
+     * ----------
+     * x
+     *     Horizontal coordinate of this client, that is, the 'x' part of the
+     *     client's (x, y) location tuple.
+     * y
+     *     Vertical coordinate of this client, that is, the 'y' part of the
+     *     client's (x, y) location tuple.
+     * demand
+     *     The amount this client's demanding. Default 0.
+     * service_duration
+     *     This client's service duration, that is, the amount of time we need
+     *     to visit the client for. Service should start (but not necessarily
+     *     end) within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
+     *     Default 0.
+     * tw_early
+     *     Earliest time at which we can visit this client. Default 0.
+     * tw_late
+     *     Latest time at which we can visit this client. Default 0.
+     * release_time
+     *     Earliest time at which this client is released, that is, the earliest
+     *     time at which a vehicle may leave the depot to visit this client.
+     *     Default 0.
+     * prize
+     *     Prize collected by visiting this client. Default 0.
+     * required
+     *     Whether this client must be part of a feasible solution. Default
+     *     True.
+     */
     struct Client
     {
         Coordinate const x;

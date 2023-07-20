@@ -1,41 +1,13 @@
 from typing import Callable, Iterator, List, Tuple, Union, overload
 
 class CostEvaluator:
-    """
-    Creates a CostEvaluator instance.
-
-    This class contains time warp and load penalties, and can compute penalties
-    for a given time warp and load.
-
-    Parameters
-    ----------
-    capacity_penalty
-        The penalty for each unit of excess load over the vehicle capacity.
-    tw_penalty
-        The penalty for each unit of time warp.
-    """
-
     def __init__(
         self, capacity_penalty: int = 0, tw_penalty: int = 0
     ) -> None: ...
     def load_penalty(self, load: int, vehicle_capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
     def penalised_cost(self, solution: Solution) -> int: ...
-    def cost(self, solution: Solution) -> int:
-        """
-        Evaluates and returns the cost/objective of the given solution.
-        Hand-waving some details, let :math:`x_{ij} \\in \\{ 0, 1 \\}` indicate
-        if edge :math:`(i, j)` is used in the solution encoded by the given
-        solution, and :math:`y_i \\in \\{ 0, 1 \\}` indicate if client
-        :math:`i` is visited. The objective is then given by
-
-        .. math::
-
-           \\sum_{(i, j)} d_{ij} x_{ij} + \\sum_{i} p_i (1 - y_i),
-
-        where the first part lists the distance costs, and the second part the
-        prizes of the unvisited clients.
-        """
+    def cost(self, solution: Solution) -> int: ...
 
 class DynamicBitset:
     def __init__(self, num_bits: int) -> None: ...
@@ -66,38 +38,6 @@ class Matrix:
     def __setitem__(self, idx: Tuple[int, int], value: int) -> None: ...
 
 class Client:
-    """
-    Simple data object storing all client data as (read-only) properties.
-
-    Parameters
-    ----------
-    x
-        Horizontal coordinate of this client, that is, the 'x' part of the
-        client's (x, y) location tuple.
-    y
-        Vertical coordinate of this client, that is, the 'y' part of the
-        client's (x, y) location tuple.
-    demand
-        The amount this client's demanding. Default 0.
-    service_duration
-        This client's service duration, that is, the amount of time we need to
-        visit the client for. Service should start (but not necessarily end)
-        within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
-        Default 0.
-    tw_early
-        Earliest time at which we can visit this client. Default 0.
-    tw_late
-        Latest time at which we can visit this client. Default 0.
-    release_time
-        Earliest time at which this client is released, that is, the earliest
-        time at which a vehicle may leave the depot to visit this client.
-        Default 0.
-    prize
-        Prize collected by visiting this client. Default 0.
-    required
-        Whether this client must be part of a feasible solution. Default True.
-    """
-
     x: int
     y: int
     demand: int

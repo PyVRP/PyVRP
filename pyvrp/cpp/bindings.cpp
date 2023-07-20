@@ -6,6 +6,7 @@
 #include "SubPopulation.h"
 #include "TimeWindowSegment.h"
 #include "XorShift128.h"
+#include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
 #include <pybind11/operators.h>
@@ -43,7 +44,7 @@ TWS merge(Matrix<pyvrp::Value> const &mat, Args... args)
 
 PYBIND11_MODULE(_pyvrp, m)
 {
-    py::class_<CostEvaluator>(m, "CostEvaluator")
+    py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
         .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
                  return CostEvaluator(capacityPenalty, twPenalty);
              }),
@@ -57,25 +58,29 @@ PYBIND11_MODULE(_pyvrp, m)
                 return evaluator.loadPenalty(load, capacity).get();
             },
             py::arg("load"),
-            py::arg("capacity"))
+            py::arg("capacity"),
+            DOC(pyvrp, CostEvaluator, loadPenalty))
         .def(
             "tw_penalty",
             [](CostEvaluator const &evaluator, pyvrp::Value const timeWarp) {
                 return evaluator.twPenalty(timeWarp).get();
             },
-            py::arg("time_warp"))
+            py::arg("time_warp"),
+            DOC(pyvrp, CostEvaluator, twPenalty))
         .def(
             "penalised_cost",
             [](CostEvaluator const &evaluator, Solution const &solution) {
                 return evaluator.penalisedCost(solution).get();
             },
-            py::arg("solution"))
+            py::arg("solution"),
+            DOC(pyvrp, CostEvaluator, penalisedCost))
         .def(
             "cost",
             [](CostEvaluator const &evaluator, Solution const &solution) {
                 return evaluator.cost(solution).get();
             },
-            py::arg("solution"));
+            py::arg("solution"),
+            DOC(pyvrp, CostEvaluator, cost));
 
     py::class_<DynamicBitset>(m, "DynamicBitset")
         .def(py::init<size_t>(), py::arg("num_bits"))
@@ -120,7 +125,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("max", &Matrix<pyvrp::Value>::max)
         .def("size", &Matrix<pyvrp::Value>::size);
 
-    py::class_<ProblemData::Client>(m, "Client")
+    py::class_<ProblemData::Client>(
+        m, "Client", DOC(pyvrp, ProblemData, Client))
         .def(py::init<pyvrp::Value,
                       pyvrp::Value,
                       pyvrp::Value,

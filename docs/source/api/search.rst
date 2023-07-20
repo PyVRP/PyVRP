@@ -16,6 +16,7 @@ This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvr
 .. automodule:: pyvrp.search.neighbourhood
    :members:
 
+
 Node operators
 --------------
 
@@ -65,6 +66,7 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
    .. autoclass:: TwoOpt
       :members:
+
 
 Route operators
 ---------------
