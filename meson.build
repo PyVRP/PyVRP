@@ -89,7 +89,7 @@ foreach extension : extensions
         'docs for ' + name,
         output: rawname + '_docs.h',
         # TODO inputs should reflect actual headers - not bindings.cpp
-        input: ['make_native_docs.py', SRC_DIR / subdir / 'bindings.cpp'],
+        input: ['extract_docstrings.py', SRC_DIR / subdir / 'bindings.cpp'],
         command: ['poetry', 'run', 'python', '@INPUT@', '@OUTPUT@']
     )
 
