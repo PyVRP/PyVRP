@@ -1,6 +1,5 @@
 import argparse
 import pathlib
-from collections import defaultdict
 
 import docblock
 
@@ -44,14 +43,13 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="make_native_docs")
 
     parser.add_argument(
-        "src_dir",
+        "bindings_loc",
         type=pathlib.Path,
-        help="Directory containing source header files.",
+        help="Location of the bindings.cpp file to compile docstrings for.",
     )
     parser.add_argument(
-        "--doc_header_name",
-        default="docstrings.h",
-        help="Header name to write docstrings into. Default 'docstrings.h'.",
+        "doc_header_name",
+        help="Header name to write docstrings into.",
     )
 
     return parser.parse_args()
@@ -72,20 +70,19 @@ def to_cpp_string(name, docstrings):
 
 def main():
     args = parse_args()
-    docstrings = defaultdict(dict)
+    src_dir = args.bindings_loc.parent
+    parsed = {}
 
-    for header in args.src_dir.glob("**/*.h"):
-        parsed = docblock.parse_file(header)
-        docstrings[header.parent].update(parsed)
+    for header in src_dir.glob("*.h"):
+        parsed |= docblock.parse_file(header)
 
-    for dir, docs in docstrings.items():
-        file = dir / args.doc_header_name
-        docs = "\n".join(map(lambda item: to_cpp_string(*item), docs.items()))
+    file = args.doc_header_name
+    docs = "\n".join(map(lambda item: to_cpp_string(*item), parsed.items()))
 
-        with open(file, "w") as fh:
-            for section in [_PREFIX, docs, _SUFFIX]:
-                fh.write(section)
-                fh.write("\n")
+    with open(file, "w") as fh:
+        for section in [_PREFIX, docs, _SUFFIX]:
+            fh.write(section)
+            fh.write("\n")
 
 
 if __name__ == "__main__":

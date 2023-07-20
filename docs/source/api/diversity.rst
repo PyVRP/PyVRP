@@ -12,4 +12,4 @@ That balance is maintained by computing a fitness score for each solution, which
 
 .. automodule:: pyvrp.diversity._diversity
 
-   .. autoapifunction:: broken_pairs_distance
+   .. autofunction:: broken_pairs_distance
