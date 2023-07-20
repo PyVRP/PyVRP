@@ -59,191 +59,6 @@ Cost deltaCost(Client client,
 }  // namespace
 
 
-void printRouteAsBinary(Route const &route, ProblemData const &data, size_t routeIndex, Client client, Cost cost) {
-    std::cout << "                                                  CROSSOVER PRINT Enter" << std::endl;
-    std::cout << "                                                            CROSSOVER PRINT ";
-    for (Client c : route) {
-        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
-        bool isSalvage = (data.client(c).demandSalvage == 1);
-        if (client == c)
-            std::cout << "-";
-        if (isDelivery && isSalvage) {
-            std::cout << "2";
-        } else if (isSalvage && !isDelivery) {
-            std::cout << "1";
-        } else if (isDelivery && !isSalvage) {
-            std::cout << "0";
-        } else
-            std::cout << "X";
-        if (client == c)
-            std::cout << "-";
-    }
-    std::cout << std::endl;
-
-    std::cout << "                                                            CROSSOVER PRINT Best Cost[" << cost << "], Route[" << routeIndex << "], Client[" << client << "] " 
-              << data.client(client).demandWeight << " " << data.client(client).demandVolume 
-              << " " << data.client(client).demandSalvage << std::endl;
-    std::cout << "                                                            CROSSOVER PRINT ";
-    for (Client c : route) {
-        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
-        bool isSalvage = (data.client(c).demandSalvage == 1);
-        if (isDelivery && isSalvage) {
-            std::cout << c << ":2 ";
-        } else if (isSalvage && !isDelivery) {
-            std::cout << c << ":1 ";
-        } else if (isDelivery && !isSalvage) {
-            std::cout << c << ":0 ";
-        } else
-            std::cout << c << ":X ";
-    }
-    std::cout << std::endl;
-    std::cout << "                                                  CROSSOVER PRINT Exit" << std::endl;
-}
-
-bool checkSequence(ProblemData const &data, Route const &route)
-{
-    std::cout << "                              CROSSOVER CHECKSEQUENCE Enter" << std::endl;
-    bool foundDelivery = false;
-    bool foundBoth = false;
-    bool foundSalvage = false;
-
-    for (Client c : route) {
-        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
-        bool isSalvage = (data.client(c).demandSalvage == 1);
-        bool isBoth = (isDelivery && isSalvage);
-
-        std::cout << "                                        CROSSOVER CHECKSEQUENCE Client: " << c 
-           << " Dem Salv: " << data.client(c).demandSalvage 
-           << " Dem Weig: " << data.client(c).demandWeight
-           << " Dem Volu: " << data.client(c).demandVolume
-           << " Salv is: " << isSalvage 
-           << " Salv fo: " << foundSalvage << " Both is: " 
-           << isBoth << " Both fo: " << foundBoth << " Del is: " 
-          << isDelivery << " Del fo: " << isDelivery << std::endl;
-
-        if (isBoth && (foundBoth || foundSalvage))
-        { 
-            std::cout << "                                        CROSSOVER CHECKSEQUENCE Failed (isBoth && (foundBoth || foundSalvage))" << std::endl;
-            std::cout << "                                        CROSSOVER CHECKSEQUENCE Exit checkSequence" << std::endl;
-            return false;
-        }
-        if (isDelivery && (foundBoth || foundSalvage))
-        {
-            std::cout << "                                        CROSSOVER CHECKSEQUENCE Failed (isDelivery && (foundBoth || foundSalvage))" << std::endl;
-            std::cout << "                                        CROSSOVER CHECKSEQUENCE Exit checkSequence" << std::endl;
-            return false;
-        }
-        if (isSalvage && foundBoth)
-        {
-            std::cout << "                                        CROSSOVER CHECKSEQUENCE Failed (isSalvage && foundBoth)" << std::endl;
-            std::cout << "                                        CROSSOVER CHECKSEQUENCE Exit checkSequence" << std::endl;
-            return false;
-        }
-
-        if (isSalvage)
-        {   
-            if (!foundSalvage) 
-                foundSalvage = true;
-        }
-        
-        if (isDelivery)
-        {   
-            if (!foundDelivery) 
-                foundDelivery = true;
-        }
-        
-        if(isBoth)
-        {   
-            if (!foundBoth) 
-                foundBoth = true;
-        }
-
-        continue;
-    }
-    std::cout << "                              CROSSOVER CHECKSEQUENCE Exit" << std::endl;
-    return true;
-}
-
-void crossover::reorderRoutes(std::vector<std::vector<Client>> &routes, ProblemData const &data)
-{
-    std::cout << "                    CROSSOVER REORDER Enter" << std::endl;
-    std::vector<std::vector<Client>> newRoutes;
-
-    int routeCnt = 0;
-
-    for (auto &route : routes)
-    {
-        std::cout << "                              CROSSOVER REORDER Route: " << routeCnt << std::endl;
-        std::vector<Client> deliveryRoute, bothRoute, salvageRoute;
-
-        for (const auto &client : route)
-        {
-            std::cout << "                                        CROSSOVER REORDER  Client: " << client << std::endl;
-            bool isDelivery = (data.client(client).demandWeight || data.client(client).demandVolume);
-            bool isSalvage = (data.client(client).demandSalvage == 1);
-            bool isBoth = (isDelivery && isSalvage);
-
-            if (isDelivery && !isBoth)
-            {
-                deliveryRoute.push_back(client);
-            }
-            else if (isBoth)
-            {
-                bothRoute.push_back(client);
-            }
-            else
-            {
-                salvageRoute.push_back(client);
-            }
-        }
-
-        auto deliveryIter = deliveryRoute.begin();
-        auto bothIter = bothRoute.begin();
-        auto salvageIter = salvageRoute.begin();
-
-        while (deliveryIter != deliveryRoute.end() || bothIter != bothRoute.end() || salvageIter != salvageRoute.end())
-        {
-            std::vector<Client> newRoute;
-
-            // Add Ds
-            while (deliveryIter != deliveryRoute.end())
-            {
-                newRoute.push_back(*deliveryIter);
-                ++deliveryIter;
-            }
-
-            // Add single B if exists
-            if (bothIter != bothRoute.end())
-            {
-                newRoute.push_back(*bothIter);
-                ++bothIter;
-            }
-
-            newRoutes.push_back(newRoute);
-
-            // If no more Bs exist, add remaining Ss to new route
-            if (bothIter == bothRoute.end())
-            {
-                newRoute.clear();
-
-                while (salvageIter != salvageRoute.end())
-                {
-                    newRoute.push_back(*salvageIter);
-                    ++salvageIter;
-                }
-
-                if (!newRoute.empty())
-                {
-                    newRoutes.push_back(newRoute);
-                }
-            }
-        }
-        routeCnt++;
-    }
-    std::cout << "                              CROSSOVER REORDERROUTES Exit" << std::endl;
-    routes = newRoutes;
-}
-
 void crossover::greedyRepair(Routes &routes,
                              std::vector<Client> const &unplanned,
                              ProblemData const &data,
@@ -323,33 +138,12 @@ void crossover::greedyRepair(Routes &routes,
             }
 
             auto cost = deltaCost(client, prev, next, data, costEvaluator);
-
-            Route potentialRoute = bestRoute;
-            potentialRoute.insert(potentialRoute.begin() + idx, client);
-            bool isValid = checkSequence(data, potentialRoute);
-
-            if (isValid)
+            if (cost < bestCost)
             {
-                if (cost < bestCost)
-                {
-                    std::cout << "                              CROSSOVER GREEDY No violation, New best cost found at idx " << idx << ", Cost: " << cost << std::endl;
-                    printRouteAsBinary(potentialRoute, data, bestRouteIdx, client, cost);
-                    bestCost = cost;
-                    offset = idx;
-                }
-                else
-                {
-                    std::cout << "                              CROSSOVER GREEDY No violation, But higher cost at idx " << idx << ", Cost: " << cost << std::endl;
-                    printRouteAsBinary(potentialRoute, data, bestRouteIdx, client, bestCost);
-                }
+                bestCost = cost;
+                offset = idx;
             }
-            else
-            {
-                std::cout << "                              CROSSOVER GREEDY Violation at idx " << idx << ", Cost: " << cost << std::endl;
-                printRouteAsBinary(potentialRoute, data, bestRouteIdx, client, bestCost);
-                bestCost = std::numeric_limits<Cost>::max(); // Reset the bestCost if sequence is invalid
-                // offset = -1; // Set offset to -1 to indicate no valid insertion point found
-            }
+
         }
 
         // Update route centroid and insert client into route.
@@ -359,8 +153,5 @@ void crossover::greedyRepair(Routes &routes,
         centroids[bestRouteIdx].second = (routeY * size + y) / (size + 1);
         bestRoute.insert(bestRoute.begin() + offset, client);
 
-        std::cout << "                              CROSSOVER GREEDY Final best route: " << std::endl;
-        printRouteAsBinary(bestRoute, data, bestRouteIdx, client, bestCost);
     }
-    std::cout << "                    CROSSOVER GREEDY Exit" << std::endl;
 }

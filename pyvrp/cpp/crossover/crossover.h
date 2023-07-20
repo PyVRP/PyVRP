@@ -20,9 +20,9 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
                   ProblemData const &data,
                   CostEvaluator const &costEvaluator);
 
-void reorderRoutes(std::vector<std::vector<int>> &routes, ProblemData const &data);
+// void reorderRoutes(std::vector<std::vector<int>> &routes, ProblemData const &data);
 
-bool checkSalvageSequenceConstraint(ProblemData const &data, int U, int V);
+// bool checkSalvageSequenceConstraint(ProblemData const &data, int U, int V);
 }  // namespace crossover
 
 

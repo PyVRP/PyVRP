@@ -64,11 +64,9 @@ class LocalSearch
     void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
 
     // Enforce salvage sequence constraint
-    // bool checkSalvageSequenceConstraint(ProblemData const &data, int U, int V) const;
 
     void reorderRoutes(std::vector<std::vector<Client>> &routes, ProblemData const &data);
     bool checkSequence(ProblemData const &data, const Solution::Route &route);
-    // void printRouteAsBinary(Route const &route, ProblemData const &data, size_t routeIndex, Client client, Cost cost);
 
 public:
     /**

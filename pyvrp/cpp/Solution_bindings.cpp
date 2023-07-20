@@ -38,10 +38,6 @@ PYBIND11_MODULE(_Solution, m)
              [](Solution::Route const &route) {
                  return route.excessSalvage().get();
              })
-//        .def("excess_salvage_sequence",
-//             [](Solution::Route const &route) {
-//                 return route.excessSalvageSequence().get();
-//             })
         .def(
             "duration",
             [](Solution::Route const &route) { return route.duration().get(); })
@@ -63,7 +59,6 @@ PYBIND11_MODULE(_Solution, m)
         .def("has_excess_weight", &Solution::Route::hasExcessWeight)
         .def("has_excess_volume", &Solution::Route::hasExcessVolume)
         .def("has_excess_salvage", &Solution::Route::hasExcessSalvage)
-//        .def("has_salvage_before_deliver", &Solution::Route::hasSalvageBeforeDelivery)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)
         .def("__len__", &Solution::Route::size)
         .def(
@@ -116,7 +111,6 @@ PYBIND11_MODULE(_Solution, m)
         .def("has_excess_weight", &Solution::hasExcessWeight)
         .def("has_excess_volume", &Solution::hasExcessVolume)
         .def("has_excess_salvage", &Solution::hasExcessSalvage)
-//        .def("has_salvage_before_delivery", &Solution::hasSalvageBeforeDelivery)
         .def("has_time_warp", &Solution::hasTimeWarp)
         .def("distance",
              [](Solution const &sol) { return sol.distance().get(); })
@@ -126,8 +120,6 @@ PYBIND11_MODULE(_Solution, m)
              [](Solution const &sol) { return sol.excessVolume().get(); })
         .def("excess_salvage",
              [](Solution const &sol) { return sol.excessSalvage().get(); })
-//        .def("excess_salvage_sequence",
-//             [](Solution const &sol) { return sol.excessSalvageSequence().get(); })
         .def("time_warp",
              [](Solution const &sol) { return sol.timeWarp().get(); })
         .def("prizes", [](Solution const &sol) { return sol.prizes().get(); })

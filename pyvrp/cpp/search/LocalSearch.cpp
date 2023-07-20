@@ -82,12 +82,6 @@ Solution LocalSearch::search(Solution &solution,
         }
     }
 
-    // bool solConstraintsPassed = false;
-    //solConstraintsPassed = std::all_of(sol1.getRoutes().begin(), sol1.getRoutes().end(),
-    //    [&data](const Route &route){ return checkSequence(data, route); });
-
-//    reorderRoutes(solution, data);
-    
     return exportSolution();
 }
 
@@ -382,11 +376,6 @@ Solution LocalSearch::exportSolution() // const
     if (repairedConstraintsPassed) {
         std::cout << "                    LOCALSEARCH EXPORTSOLUTION repairedConstraintsPassed" << std::endl;
     }
-    //else {
-    //     throw std::runtime_error("                    LOCALSEARCH Could not repair solution to meet constraints.");
-    //}
-
-//    return {data, solRoutes};
     std::cout << "          LOCALSEARCH EXPORTSOLUTION Exit" << std::endl;
     return sol;
 }
@@ -530,45 +519,6 @@ bool LocalSearch::checkSequence(ProblemData const &data, const Solution::Route &
     }
     std::cout << "                    LOCALSEARCH CHECKSEQUENCE Exit" << std::endl;
     return true;
-}
-
-void printRouteAsBinary(Solution::Route const &route, ProblemData const &data, size_t routeIndex, int client, Cost cost) {
-    std::cout << "          LOCALSEARCH PRINT Enter" << std::endl;
-    std::cout << "                    LOCALSEARCH PRINT ";
-    for (int c: route) {
-        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
-        bool isSalvage = (data.client(c).demandSalvage == 1);
-        if (client == c)
-            std::cout << "-";
-        if (isDelivery && isSalvage) {
-            std::cout << "2";
-        } else if (isSalvage && !isDelivery) {
-            std::cout << "1";
-        } else if (isDelivery && !isSalvage) {
-            std::cout << "0";
-        } else
-            std::cout << "X";
-        if (client == c)
-            std::cout << "-";
-    }
-
-    std::cout << "                     LOCALSEARCH PRINT Best Cost[" << cost << "], Route[" << routeIndex << "], Client[" << client << "] "
-              << data.client(client).demandWeight << " " << data.client(client).demandVolume
-              << " " << data.client(client).demandSalvage << " ";
-    std::cout << "                     LOCALSEARCH PRINT ";
-    for (int c : route) {
-        bool isDelivery = (data.client(c).demandWeight || data.client(c).demandVolume);
-        bool isSalvage = (data.client(c).demandSalvage == 1);
-        if (isDelivery && isSalvage) {
-            std::cout << c << ":2 ";
-        } else if (isSalvage && !isDelivery) {
-            std::cout << c << ":1 ";
-        } else if (isDelivery && !isSalvage) {
-            std::cout << c << ":0 ";
-        } else
-            std::cout << c << ":X ";
-    }
-    std::cout << "          LOCALSEARCH PRINT Exit" << std::endl;
 }
 
 void LocalSearch::reorderRoutes(std::vector<std::vector<Client>> &routes, ProblemData const &data)
