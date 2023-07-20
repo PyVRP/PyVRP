@@ -4,6 +4,7 @@
 #include "RelocateStar.h"
 #include "SwapStar.h"
 #include "TwoOpt.h"
+#include "search_docs.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -29,56 +30,56 @@ PYBIND11_MODULE(_search, m)
     py::class_<Exchange<1, 0>, NodeOp>(m, "Exchange10")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<2, 0>, NodeOp>(m, "Exchange20")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<3, 0>, NodeOp>(m, "Exchange30")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<1, 1>, NodeOp>(m, "Exchange11")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<2, 1>, NodeOp>(m, "Exchange21")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<3, 1>, NodeOp>(m, "Exchange31")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<2, 2>, NodeOp>(m, "Exchange22")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<3, 2>, NodeOp>(m, "Exchange32")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<Exchange<3, 3>, NodeOp>(m, "Exchange33")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>(),  // keep data alive
+             DOC(pyvrp, search, Exchange));
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,

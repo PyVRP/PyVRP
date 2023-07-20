@@ -9,9 +9,13 @@
 namespace pyvrp::search
 {
 /**
- * Template class that exchanges N consecutive nodes from U's route (starting at
- * U) with M consecutive nodes from V's route (starting at V). As special cases,
- * (1, 0) is pure relocate, and (1, 1) pure swap.
+ * The :math:`(N, M)`-exchange classes exhange :math:`N` consecutive clients
+ * from :math:`U`'s route (starting at :math:`U`) with :math:`M` consecutive
+ * clients from :math:`V`'s route (starting at :math:`V`). This includes
+ * relocate and swap as special cases.
+ *
+ * The :math:`(N, M)`-exchange class uses C++ templates for different :math:`N`
+ * and :math:`M`.
  */
 template <size_t N, size_t M>
 class Exchange : public LocalSearchOperator<Route::Node>
