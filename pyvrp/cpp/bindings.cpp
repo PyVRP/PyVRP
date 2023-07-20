@@ -177,7 +177,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                })
         .def_readonly("required", &ProblemData::Client::required);
 
-    py::class_<ProblemData::VehicleType>(m, "VehicleType")
+    py::class_<ProblemData::VehicleType>(
+        m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<pyvrp::Value, size_t>(),
              py::arg("capacity"),
              py::arg("num_available"))
@@ -188,7 +189,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot);
 
-    py::class_<ProblemData>(m, "ProblemData")
+    py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init(
                  [](std::vector<ProblemData::Client> const &clients,
                     std::vector<ProblemData::VehicleType> const &vehicleTypes,
@@ -210,74 +211,105 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
-        .def_property_readonly("num_clients", &ProblemData::numClients)
-        .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
+        .def_property_readonly("num_clients",
+                               &ProblemData::numClients,
+                               DOC(pyvrp, ProblemData, numClients))
         .def_property_readonly("num_vehicle_types",
-                               &ProblemData::numVehicleTypes)
+                               &ProblemData::numVehicleTypes,
+                               DOC(pyvrp, ProblemData, numVehicleTypes))
+        .def_property_readonly("num_vehicles",
+                               &ProblemData::numVehicles,
+                               DOC(pyvrp, ProblemData, numVehicles))
         .def("client",
              &ProblemData::client,
              py::arg("client"),
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, client))
         .def("centroid",
              &ProblemData::centroid,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, centroid))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, vehicleType))
         .def(
             "dist",
             [](ProblemData const &data, size_t first, size_t second) {
                 return data.dist(first, second).get();
             },
             py::arg("first"),
-            py::arg("second"))
+            py::arg("second"),
+            DOC(pyvrp, ProblemData, dist))
         .def(
             "duration",
             [](ProblemData const &data, size_t first, size_t second) {
                 return data.duration(first, second).get();
             },
             py::arg("first"),
-            py::arg("second"));
-    py::class_<Solution::Route>(m, "Route")
+            py::arg("second"),
+            DOC(pyvrp, ProblemData, duration));
+
+    py::class_<Solution::Route>(m, "Route", DOC(pyvrp, Solution, Route))
         .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
         .def("visits",
              &Solution::Route::visits,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, Route, visits))
         .def(
             "distance",
-            [](Solution::Route const &route) { return route.distance().get(); })
-        .def("demand",
-             [](Solution::Route const &route) { return route.demand().get(); })
-        .def("excess_load",
-             [](Solution::Route const &route) {
-                 return route.excessLoad().get();
-             })
+            [](Solution::Route const &route) { return route.distance().get(); },
+            DOC(pyvrp, Solution, Route, distance))
+        .def(
+            "demand",
+            [](Solution::Route const &route) { return route.demand().get(); },
+            DOC(pyvrp, Solution, Route, demand))
+        .def(
+            "excess_load",
+            [](Solution::Route const &route) {
+                return route.excessLoad().get();
+            },
+            DOC(pyvrp, Solution, Route, excessLoad))
         .def(
             "duration",
-            [](Solution::Route const &route) { return route.duration().get(); })
-        .def("service_duration",
-             [](Solution::Route const &route) {
-                 return route.serviceDuration().get();
-             })
+            [](Solution::Route const &route) { return route.duration().get(); },
+            DOC(pyvrp, Solution, Route, duration))
+        .def(
+            "service_duration",
+            [](Solution::Route const &route) {
+                return route.serviceDuration().get();
+            },
+            DOC(pyvrp, Solution, Route, serviceDuration))
         .def(
             "time_warp",
-            [](Solution::Route const &route) { return route.timeWarp().get(); })
-        .def("wait_duration",
-             [](Solution::Route const &route) {
-                 return route.waitDuration().get();
-             })
-        .def("release_time",
-             [](Solution::Route const &route) {
-                 return route.releaseTime().get();
-             })
-        .def("prizes",
-             [](Solution::Route const &route) { return route.prizes().get(); })
-        .def("centroid", &Solution::Route::centroid)
-        .def("vehicle_type", &Solution::Route::vehicleType)
+            [](Solution::Route const &route) { return route.timeWarp().get(); },
+            DOC(pyvrp, Solution, Route, timeWarp))
+        .def(
+            "wait_duration",
+            [](Solution::Route const &route) {
+                return route.waitDuration().get();
+            },
+            DOC(pyvrp, Solution, Route, waitDuration))
+        .def(
+            "release_time",
+            [](Solution::Route const &route) {
+                return route.releaseTime().get();
+            },
+            DOC(pyvrp, Solution, Route, releaseTime))
+        .def(
+            "prizes",
+            [](Solution::Route const &route) { return route.prizes().get(); },
+            DOC(pyvrp, Solution, Route, prizes))
+        .def("centroid",
+             &Solution::Route::centroid,
+             DOC(pyvrp, Solution, Route, centroid))
+        .def("vehicle_type",
+             &Solution::Route::vehicleType,
+             DOC(pyvrp, Solution, Route, vehicleType))
         .def("is_feasible", &Solution::Route::isFeasible)
         .def("has_excess_load", &Solution::Route::hasExcessLoad)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)

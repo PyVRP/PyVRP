@@ -18,7 +18,7 @@ class Solution
 
 public:
     /**
-     * A simple Route class that contains the route plan and some statistics.
+     * A simple class that stores the route plan and some statistics.
      */
     class Route
     {
@@ -46,18 +46,64 @@ public:
         Visits::const_iterator begin() const;
         Visits::const_iterator end() const;
 
+        /**
+         * Route visits, as a list of clients.
+         */
         [[nodiscard]] Visits const &visits() const;
+
+        /**
+         * Total distance travelled on this route.
+         */
         [[nodiscard]] Distance distance() const;
+
+        /**
+         * Total client demand on this route.
+         */
         [[nodiscard]] Load demand() const;
+
+        /**
+         * Demand in excess of the vehicle's capacity.
+         */
         [[nodiscard]] Load excessLoad() const;
+
+        /**
+         * Total route duration, including waiting time.
+         */
         [[nodiscard]] Duration duration() const;
+
+        /**
+         * Total duration of service on the route.
+         */
         [[nodiscard]] Duration serviceDuration() const;
+
+        /**
+         * Amount of time warp incurred along the route.
+         */
         [[nodiscard]] Duration timeWarp() const;
+
+        /**
+         * Total waiting duration on this route.
+         */
         [[nodiscard]] Duration waitDuration() const;
+
+        /**
+         * Release time of visits on this route.
+         */
         [[nodiscard]] Duration releaseTime() const;
+
+        /**
+         * Total prize value collected on this route.
+         */
         [[nodiscard]] Cost prizes() const;
 
+        /**
+         * Center point of the client locations on this route.
+         */
         [[nodiscard]] std::pair<double, double> const &centroid() const;
+
+        /**
+         * Index of the type of vehicle used on this route.
+         */
         [[nodiscard]] VehicleType vehicleType() const;
 
         [[nodiscard]] bool isFeasible() const;

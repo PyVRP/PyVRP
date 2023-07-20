@@ -61,42 +61,12 @@ class Client:
     ) -> None: ...
 
 class VehicleType:
-    """
-    Simple data object storing all vehicle type data as properties.
-
-    Attributes
-    ----------
-    capacity
-        Capacity (maximum total demand) of this vehicle type.
-    num_available
-        Number of vehicles of this type that are available.
-    depot
-        Depot associated with these vehicles.
-    """
-
     capacity: int
     num_available: int
     depot: int
     def __init__(self, capacity: int, num_available: int) -> None: ...
 
 class ProblemData:
-    """
-    Creates a problem data instance. This instance contains all information
-    needed to solve the vehicle routing problem.
-
-    Parameters
-    ----------
-    clients
-        List of clients. The first client (at index 0) is assumed to be the
-        depot. The time window for the depot is assumed to describe the overall
-        time horizon. The depot should have 0 demand and 0 service duration.
-    vehicle_types
-        List of vehicle types in the problem instance.
-    duration_matrix
-        A matrix that gives the travel times between clients (and the depot at
-        index 0).
-    """
-
     def __init__(
         self,
         clients: List[Client],
@@ -104,113 +74,19 @@ class ProblemData:
         distance_matrix: List[List[int]],
         duration_matrix: List[List[int]],
     ): ...
-    def client(self, client: int) -> Client:
-        """
-        Returns client data for the given client.
-
-        Parameters
-        ----------
-        client
-            Client number whose information to retrieve.
-
-        Returns
-        -------
-        Client
-            A simple data object containing the requested client's information.
-        """
-    def centroid(self) -> Tuple[float, float]:
-        """
-        Center point of all client locations (excluding the depot).
-
-        Returns
-        -------
-        tuple
-            Centroid of all client locations.
-        """
-    def vehicle_type(self, vehicle_type: int) -> VehicleType:
-        """
-        Returns vehicle type data for the given vehicle type.
-
-        Parameters
-        ----------
-        vehicle_type
-            Vehicle type number whose information to retrieve.
-
-        Returns
-        -------
-        VehicleType
-            A simple data object containing the vehicle type information.
-        """
-    def dist(self, first: int, second: int) -> int:
-        """
-        Returns the travel distance between the first and second argument,
-        according to this instance's travel distance matrix.
-
-        Parameters
-        ----------
-        first
-            Client or depot number.
-        second
-            Client or depot number.
-
-        Returns
-        -------
-        int
-            Travel distance between the given clients.
-        """
-    def duration(self, first: int, second: int) -> int:
-        """
-        Returns the travel duration between the first and second argument,
-        according to this instance's travel duration matrix.
-
-        Parameters
-        ----------
-        first
-            Client or depot number.
-        second
-            Client or depot number.
-
-        Returns
-        -------
-        int
-            Travel duration between the given clients.
-        """
+    def client(self, client: int) -> Client: ...
+    def centroid(self) -> Tuple[float, float]: ...
+    def vehicle_type(self, vehicle_type: int) -> VehicleType: ...
+    def dist(self, first: int, second: int) -> int: ...
+    def duration(self, first: int, second: int) -> int: ...
     @property
-    def num_clients(self) -> int:
-        """
-        Number of clients in this problem instance.
-
-        Returns
-        -------
-        int
-            Number of clients in the instance.
-        """
+    def num_clients(self) -> int: ...
     @property
-    def num_vehicles(self) -> int:
-        """
-        Number of vehicles in this problem instance.
-
-        Returns
-        -------
-        int
-            Number of vehicles in this problem instance.
-        """
+    def num_vehicles(self) -> int: ...
     @property
-    def num_vehicle_types(self) -> int:
-        """
-        Number of vehicle types in this problem instance.
-
-        Returns
-        -------
-        int
-            Number of vehicle types in this problem instance.
-        """
+    def num_vehicle_types(self) -> int: ...
 
 class Route:
-    """
-    A simple class that stores the route plan and some statistics.
-    """
-
     def __init__(
         self, data: ProblemData, visits: List[int], vehicle_type: int
     ) -> None: ...
@@ -220,54 +96,18 @@ class Route:
     def is_feasible(self) -> bool: ...
     def has_excess_load(self) -> bool: ...
     def has_time_warp(self) -> bool: ...
-    def demand(self) -> int:
-        """
-        Total client demand on this route.
-        """
-    def excess_load(self) -> int:
-        """
-        Demand in excess of the vehicle's capacity.
-        """
-    def distance(self) -> int:
-        """
-        Total distance travelled on this route.
-        """
-    def duration(self) -> int:
-        """
-        Total route duration, including waiting time.
-        """
-    def visits(self) -> List[int]:
-        """
-        Route visits, as a list of clients.
-        """
-    def service_duration(self) -> int:
-        """
-        Total duration of service on the route.
-        """
-    def time_warp(self) -> int:
-        """
-        Any time warp incurred along the route.
-        """
-    def wait_duration(self) -> int:
-        """
-        Total waiting duration on this route.
-        """
-    def release_time(self) -> int:
-        """
-        Release time of visits on this route.
-        """
-    def prizes(self) -> int:
-        """
-        Total prize value collected on this route.
-        """
-    def centroid(self) -> Tuple[float, float]:
-        """
-        Center point of the client locations on this route.
-        """
-    def vehicle_type(self) -> int:
-        """
-        Index of the type of vehicle used on this route.
-        """
+    def demand(self) -> int: ...
+    def excess_load(self) -> int: ...
+    def distance(self) -> int: ...
+    def duration(self) -> int: ...
+    def visits(self) -> List[int]: ...
+    def service_duration(self) -> int: ...
+    def time_warp(self) -> int: ...
+    def wait_duration(self) -> int: ...
+    def release_time(self) -> int: ...
+    def prizes(self) -> int: ...
+    def centroid(self) -> Tuple[float, float]: ...
+    def vehicle_type(self) -> int: ...
 
 class Solution:
     """

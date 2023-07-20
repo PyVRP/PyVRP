@@ -10,6 +10,32 @@
 
 namespace pyvrp
 {
+/**
+ * ProblemData(
+ *     clients: List[Client],
+ *     vehicle_types: List[VehicleType],
+ *     distance_matrix: List[List[int]],
+ *     duration_matrix: List[List[int]],
+ * )
+ *
+ * Creates a problem data instance. This instance contains all information
+ * needed to solve the vehicle routing problem.
+ *
+ * Parameters
+ * ----------
+ * clients
+ *     List of clients. The first client (at index 0) is assumed to be the
+ *     depot. The time window for the depot is assumed to describe the overall
+ *     time horizon. The depot should have 0 demand and 0 service duration.
+ * vehicle_types
+ *     List of vehicle types in the problem instance.
+ * distance_matrix
+ *     A matrix that gives the distances between clients (and the depot at
+ *     index 0).
+ * duration_matrix
+ *     A matrix that gives the travel times between clients (and the depot at
+ *     index 0).
+ */
 class ProblemData
 {
 public:
@@ -80,6 +106,20 @@ public:
                bool required = true);
     };
 
+    /**
+     * VehicleType(capacity: int, num_available: int)
+     *
+     * Simple data object storing all vehicle type data as properties.
+     *
+     * Attributes
+     * ----------
+     * capacity
+     *     Capacity (maximum total demand) of this vehicle type.
+     * num_available
+     *     Number of vehicles of this type that are available.
+     * depot
+     *     Depot associated with these vehicles.
+     */
     struct VehicleType
     {
         Load const capacity;        // This type's vehicle capacity
@@ -100,38 +140,79 @@ private:
 
 public:
     /**
-     * @param client Client whose data to return.
-     * @return A struct containing the indicated client's information.
+     * Returns client data for the given client.
+     *
+     * Parameters
+     * ----------
+     * client
+     *     Client number whose information to retrieve.
+     *
+     * Returns
+     * -------
+     * Client
+     *     A simple data object containing the requested client's information.
      */
     [[nodiscard]] inline Client const &client(size_t client) const;
 
     /**
-     * @return Centroid of client locations.
+     * Center point of all client locations (excluding the depot).
+     *
+     * Returns
+     * -------
+     * tuple
+     *     Centroid of all client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
 
     /**
-     * @param vehicleType Vehicle type whose data to return.
-     * @return A struct containing the vehicle type's information.
+     * Returns vehicle type data for the given vehicle type.
+     *
+     * Parameters
+     * ----------
+     * vehicle_type
+     *     Vehicle type number whose information to retrieve.
+     *
+     * Returns
+     * -------
+     * VehicleType
+     *     A simple data object containing the vehicle type information.
      */
     [[nodiscard]] inline VehicleType const &
     vehicleType(size_t vehicleType) const;
 
     /**
-     * Returns the distance between the indicated two clients.
+     * Returns the travel distance between the first and second argument,
+     * according to this instance's travel distance matrix.
      *
-     * @param first  First client.
-     * @param second Second client.
-     * @return distance from the first to the second client.
+     * Parameters
+     * ----------
+     * first
+     *     Client or depot number.
+     * second
+     *     Client or depot number.
+     *
+     * Returns
+     * -------
+     * int
+     *     Travel distance between the given clients.
      */
     [[nodiscard]] inline Distance dist(size_t first, size_t second) const;
 
     /**
-     * Returns the travel duration between the indicated two clients.
+     * Returns the travel duration between the first and second argument,
+     * according to this instance's travel duration matrix.
      *
-     * @param first  First client.
-     * @param second Second client.
-     * @return Travel duration from the first to the second client.
+     * Parameters
+     * ----------
+     * first
+     *     Client or depot number.
+     * second
+     *     Client or depot number.
+     *
+     * Returns
+     * -------
+     * int
+     *     Travel duration between the given clients.
      */
     [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
 
@@ -146,17 +227,32 @@ public:
     [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
 
     /**
-     * @return Total number of clients in this instance.
+     * Number of clients in this problem instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of clients in the instance.
      */
     [[nodiscard]] size_t numClients() const;
 
     /**
-     * @return Total number of vehicle types in this instance.
+     * Number of vehicles in this problem instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of vehicles in this problem instance.
      */
     [[nodiscard]] size_t numVehicleTypes() const;
 
     /**
-     * @return Total number of vehicles available in this instance.
+     * Number of vehicle types in this problem instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of vehicle types in this problem instance.
      */
     [[nodiscard]] size_t numVehicles() const;
 
