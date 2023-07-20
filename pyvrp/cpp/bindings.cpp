@@ -361,23 +361,23 @@ PYBIND11_MODULE(_pyvrp, m)
                         return Solution(data, rng);
                     },
                     py::arg("data"),
-                    py::arg("rng"));
-            },
-            R"doc(
-                Creates a randomly generated solution.
+                    py::arg("rng"),
+                    R"doc(
+                        Creates a randomly generated solution.
 
-                Parameters
-                ----------
-                data
-                    Data instance.
-                rng
-                    Random number generator to use.
+                        Parameters
+                        ----------
+                        data
+                            Data instance.
+                        rng
+                            Random number generator to use.
 
-                Returns
-                -------
-                Solution
-                    The randomly generated solution.
-            )doc")
+                        Returns
+                        -------
+                        Solution
+                            The randomly generated solution.
+                    )doc");
+            }, )
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
         .def("num_clients",
@@ -453,11 +453,47 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<SubPopulation::Item>(m, "SubPopulationItem")
         .def_readonly("solution",
                       &SubPopulation::Item::solution,
-                      py::return_value_policy::reference_internal)
-        .def_readonly("fitness", &SubPopulation::Item::fitness)
-        .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
+                      py::return_value_policy::reference_internal,
+                      R"doc(
+                            Solution for this SubPopulationItem.
 
-    py::class_<SubPopulation>(m, "SubPopulation")
+                            Returns
+                            -------
+                            Solution
+                                Solution for this SubPopulationItem.
+                      )doc")
+        .def_readonly("fitness",
+                      &SubPopulation::Item::fitness,
+                      R"doc(
+                Fitness value for this SubPopulationItem.
+
+                Returns
+                -------
+                float
+                    Fitness value for this SubPopulationItem.
+
+                .. warning::
+
+                This is a cached property that is not automatically updated.
+                Before accessing the property, 
+                :meth:`~SubPopulation.update_fitness` should be called unless 
+                the population has not changed since the last call.
+            )doc")
+        .def("avg_distance_closest",
+             &SubPopulation::Item::avgDistanceClosest,
+             R"doc(
+                Determines the average distance of the solution wrapped by this
+                item to a number of solutions that are most similar to it. This 
+                provides a measure of the relative 'diversity' of the wrapped
+                solution.
+
+                Returns
+                -------
+                float
+                    The average distance/diversity of the wrapped solution.
+             )doc");
+
+    py::class_<SubPopulation>(m, "SubPopulation", DOC(pyvrp, SubPopulation))
         .def(py::init<pyvrp::diversity::DiversityMeasure,
                       PopulationParams const &>(),
              py::arg("diversity_op"),
@@ -466,7 +502,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("add",
              &SubPopulation::add,
              py::arg("solution"),
-             py::arg("cost_evaluator"))
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, SubPopulation, add))
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
@@ -485,12 +522,16 @@ PYBIND11_MODULE(_pyvrp, m)
                 return py::make_iterator(subPop.cbegin(), subPop.cend());
             },
             py::return_value_policy::reference_internal)
-        .def("purge", &SubPopulation::purge, py::arg("cost_evaluator"))
+        .def("purge",
+             &SubPopulation::purge,
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, SubPopulation, purge))
         .def("update_fitness",
              &SubPopulation::updateFitness,
-             py::arg("cost_evaluator"));
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, SubPopulation, updateFitness));
 
-    py::class_<TWS>(m, "TimeWindowSegment")
+    py::class_<TWS>(m, "TimeWindowSegment", DOC(pyvrp, TimeWindowSegment))
         .def(py::init<int,
                       int,
                       pyvrp::Value,
@@ -505,8 +546,10 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_early"),
              py::arg("tw_late"),
              py::arg("release_time"))
-        .def("total_time_warp",
-             [](TWS const &tws) { return tws.totalTimeWarp().get(); })
+        .def(
+            "total_time_warp",
+            [](TWS const &tws) { return tws.totalTimeWarp().get(); },
+            DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
         .def_static("merge",
                     &merge<TWS, TWS>,
                     py::arg("duration_matrix"),

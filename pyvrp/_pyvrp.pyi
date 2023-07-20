@@ -158,101 +158,22 @@ class SubPopulation:
         self,
         diversity_op: Callable[[Solution, Solution], float],
         params: PopulationParams,
-    ) -> None:
-        """
-        Creates a SubPopulation instance.
-
-        This subpopulation manages a collection of solutions, and initiates
-        survivor selection (purging) when their number grows large. A
-        subpopulation's solutions can be accessed via indexing and iteration.
-        Each solution is stored as a tuple of type ``_Item``, which stores
-        the solution itself, a fitness score (higher is worse), and a list
-        of proximity values to the other solutions in the subpopulation.
-
-        Parameters
-        ----------
-        diversity_op
-            Operator to use to determine pairwise diversity between solutions.
-        params
-            Population parameters.
-        """
-    def add(self, solution: Solution, cost_evaluator: CostEvaluator) -> None:
-        """
-        Adds the given solution to the subpopulation. Survivor selection is
-        automatically triggered when the population reaches its maximum size.
-
-        Parameters
-        ----------
-        solution
-            Solution to add to the subpopulation.
-        cost_evaluator
-            CostEvaluator to use to compute the cost.
-        """
-    def purge(self, cost_evaluator: CostEvaluator) -> None:
-        """
-        Performs survivor selection: solutions in the subpopulation are
-        purged until the population is reduced to the ``min_pop_size``.
-        Purging happens to duplicate solutions first, and then to solutions
-        with high biased fitness.
-
-        Parameters
-        ----------
-        cost_evaluator
-            CostEvaluator to use to compute the cost.
-        """
-    def update_fitness(self, cost_evaluator: CostEvaluator) -> None:
-        """
-        Updates the biased fitness scores of solutions in the subpopulation.
-        This fitness depends on the quality of the solution (based on its cost)
-        and the diversity w.r.t. to other solutions in the subpopulation.
-
-        .. warning::
-
-           This function must be called before accessing the
-           :meth:`~SubPopulationItem.fitness` attribute.
-        """
+    ) -> None: ...
+    def add(
+        self, solution: Solution, cost_evaluator: CostEvaluator
+    ) -> None: ...
+    def purge(self, cost_evaluator: CostEvaluator) -> None: ...
+    def update_fitness(self, cost_evaluator: CostEvaluator) -> None: ...
     def __getitem__(self, idx: int) -> SubPopulationItem: ...
     def __iter__(self) -> Iterator[SubPopulationItem]: ...
     def __len__(self) -> int: ...
 
 class SubPopulationItem:
     @property
-    def fitness(self) -> float:
-        """
-        Fitness value for this SubPopulationItem.
-
-        Returns
-        -------
-        float
-            Fitness value for this SubPopulationItem.
-
-        .. warning::
-
-           This is a cached property that is not automatically updated. Before
-           accessing the property, :meth:`~SubPopulation.update_fitness` should
-           be called unless the population has not changed since the last call.
-        """
+    def fitness(self) -> float: ...
     @property
-    def solution(self) -> Solution:
-        """
-        Solution for this SubPopulationItem.
-
-        Returns
-        -------
-        Solution
-            Solution for this SubPopulationItem.
-        """
-    def avg_distance_closest(self) -> float:
-        """
-        Determines the average distance of the solution wrapped by this item
-        to a number of solutions that are most similar to it. This provides a
-        measure of the relative 'diversity' of the wrapped solution.
-
-        Returns
-        -------
-        float
-            The average distance/diversity of the wrapped solution.
-        """
+    def solution(self) -> Solution: ...
+    def avg_distance_closest(self) -> float: ...
 
 class TimeWindowSegment:
     def __init__(
@@ -264,37 +185,14 @@ class TimeWindowSegment:
         tw_early: int,
         tw_late: int,
         release_time: int,
-    ) -> None:
-        """
-        Creates a time window segment.
-
-        Parameters
-        ----------
-        idx_first
-            Index of the first client in the route segment.
-        idx_last
-            Index of the last client in the route segment.
-        duration
-            Total duration, including waiting time.
-        time_warp
-            Total time warp on the route segment.
-        tw_early
-            Earliest visit moment of the first client.
-        tw_late
-            Latest visit moment of the first client.
-        release_time
-            Earliest moment to start the route segment.
-        """
+    ) -> None: ...
     @overload
     @staticmethod
     def merge(
         duration_matrix: Matrix,
         first: TimeWindowSegment,
         second: TimeWindowSegment,
-    ) -> TimeWindowSegment:
-        """
-        Merges two time window segments, in order.
-        """
+    ) -> TimeWindowSegment: ...
     @overload
     @staticmethod
     def merge(
@@ -302,19 +200,8 @@ class TimeWindowSegment:
         first: TimeWindowSegment,
         second: TimeWindowSegment,
         third: TimeWindowSegment,
-    ) -> TimeWindowSegment:
-        """
-        Merges three time window segments, in order.
-        """
-    def total_time_warp(self) -> int:
-        """
-        Returns the total time warp on this route segment.
-
-        Returns
-        -------
-        int
-            Total time warp on this route segment.
-        """
+    ) -> TimeWindowSegment: ...
+    def total_time_warp(self) -> int: ...
 
 class XorShift128:
     def __init__(self, seed: int) -> None: ...
