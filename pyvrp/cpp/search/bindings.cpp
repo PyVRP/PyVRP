@@ -124,7 +124,7 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<SwapStar, RouteOp>(m, "SwapStar")
+    py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
