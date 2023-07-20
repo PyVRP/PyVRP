@@ -59,7 +59,6 @@ nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
 sphinx-immaterial = ">=0.11.5"
-sphinx-autoapi = ">=2.0.1"
 
 
 [tool.poetry.group.examples]
