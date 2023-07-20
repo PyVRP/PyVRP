@@ -1,8 +1,8 @@
 project(
     'pyvrp',
     'cpp',
-    version: run_command('poetry', 'version', '--short', check : true).stdout(),
-    default_options : [
+    version: run_command('poetry', 'version', '--short', check: true).stdout(),
+    default_options: [
         'cpp_std=c++20',
         'b_lto=true',  # sets -flto
         'werror=true',  # sets -Werror
@@ -84,7 +84,7 @@ foreach extension : extensions
     message('Going to build extension module ' + subdir / name + '.')
 
     # Custom target that generates the documentation header files for us. These
-    # are of the form "<name>_docs.h".
+    # documentation headers are of the form "<name>_docs.h".
     docstring_h = custom_target(
         'docs for ' + name,
         output: rawname + '_docs.h',

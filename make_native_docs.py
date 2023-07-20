@@ -74,7 +74,7 @@ def main():
     parsed = {}
 
     for header in src_dir.glob("*.h"):
-        parsed |= docblock.parse_file(header)
+        parsed.update(docblock.parse_file(header))
 
     file = args.doc_header_name
     docs = "\n".join(map(lambda item: to_cpp_string(*item), parsed.items()))
