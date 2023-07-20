@@ -44,44 +44,6 @@ TWS merge(Matrix<pyvrp::Value> const &mat, Args... args)
 
 PYBIND11_MODULE(_pyvrp, m)
 {
-    py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
-        .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
-                 return CostEvaluator(capacityPenalty, twPenalty);
-             }),
-             py::arg("capacity_penalty") = 0,
-             py::arg("tw_penalty") = 0)
-        .def(
-            "load_penalty",
-            [](CostEvaluator const &evaluator,
-               pyvrp::Value load,
-               pyvrp::Value capacity) {
-                return evaluator.loadPenalty(load, capacity).get();
-            },
-            py::arg("load"),
-            py::arg("capacity"),
-            DOC(pyvrp, CostEvaluator, loadPenalty))
-        .def(
-            "tw_penalty",
-            [](CostEvaluator const &evaluator, pyvrp::Value const timeWarp) {
-                return evaluator.twPenalty(timeWarp).get();
-            },
-            py::arg("time_warp"),
-            DOC(pyvrp, CostEvaluator, twPenalty))
-        .def(
-            "penalised_cost",
-            [](CostEvaluator const &evaluator, Solution const &solution) {
-                return evaluator.penalisedCost(solution).get();
-            },
-            py::arg("solution"),
-            DOC(pyvrp, CostEvaluator, penalisedCost))
-        .def(
-            "cost",
-            [](CostEvaluator const &evaluator, Solution const &solution) {
-                return evaluator.cost(solution).get();
-            },
-            py::arg("solution"),
-            DOC(pyvrp, CostEvaluator, cost));
-
     py::class_<DynamicBitset>(m, "DynamicBitset")
         .def(py::init<size_t>(), py::arg("num_bits"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
@@ -353,16 +315,21 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(
-            "make_random",                // this is a bit of a workaround for
-            [](py::object)                // classmethods, because pybind does
-            {                             // not yet support those natively.
-                return py::cpp_function(  // See issue 1693 in the pybind repo.
+            "make_random",            // this is a bit of a workaround for
+            [](py::object)            // classmethods, because pybind does
+            {                         // not yet support those natively.
+                py::options options;  // See issue 1693 in the pybind repo.
+                options.disable_function_signatures();
+
+                return py::cpp_function(
                     [](ProblemData const &data, XorShift128 &rng) {
                         return Solution(data, rng);
                     },
                     py::arg("data"),
                     py::arg("rng"),
                     R"doc(
+                        make_random(data: ProblemData, rng: XorShift128) -> Solution
+
                         Creates a randomly generated solution.
 
                         Parameters
@@ -377,7 +344,7 @@ PYBIND11_MODULE(_pyvrp, m)
                         Solution
                             The randomly generated solution.
                     )doc");
-            }, )
+            })
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
         .def("num_clients",
@@ -433,6 +400,44 @@ PYBIND11_MODULE(_pyvrp, m)
             stream << sol;
             return stream.str();
         });
+
+    py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
+        .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
+                 return CostEvaluator(capacityPenalty, twPenalty);
+             }),
+             py::arg("capacity_penalty") = 0,
+             py::arg("tw_penalty") = 0)
+        .def(
+            "load_penalty",
+            [](CostEvaluator const &evaluator,
+               pyvrp::Value load,
+               pyvrp::Value capacity) {
+                return evaluator.loadPenalty(load, capacity).get();
+            },
+            py::arg("load"),
+            py::arg("capacity"),
+            DOC(pyvrp, CostEvaluator, loadPenalty))
+        .def(
+            "tw_penalty",
+            [](CostEvaluator const &evaluator, pyvrp::Value const timeWarp) {
+                return evaluator.twPenalty(timeWarp).get();
+            },
+            py::arg("time_warp"),
+            DOC(pyvrp, CostEvaluator, twPenalty))
+        .def(
+            "penalised_cost",
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.penalisedCost(solution).get();
+            },
+            py::arg("solution"),
+            DOC(pyvrp, CostEvaluator, penalisedCost))
+        .def(
+            "cost",
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.cost(solution).get();
+            },
+            py::arg("solution"),
+            DOC(pyvrp, CostEvaluator, cost));
 
     py::class_<PopulationParams>(m, "PopulationParams")
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
