@@ -78,7 +78,9 @@ extensions = [
 
 # This command generates the documentation that is embedded into the native
 # extensions.
-run_command('poetry', 'run', 'python', 'make_native_docs.py', SRC_DIR, check : true)
+run_command(
+    'poetry', 'run', 'python', 'make_native_docs.py', SRC_DIR, check : true
+)
 
 foreach extension : extensions
     name = extension[0]
