@@ -362,7 +362,22 @@ PYBIND11_MODULE(_pyvrp, m)
                     },
                     py::arg("data"),
                     py::arg("rng"));
-            })
+            },
+            R"doc(
+                Creates a randomly generated solution.
+
+                Parameters
+                ----------
+                data
+                    Data instance.
+                rng
+                    Random number generator to use.
+
+                Returns
+                -------
+                Solution
+                    The randomly generated solution.
+            )doc")
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
         .def("num_clients",

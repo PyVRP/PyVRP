@@ -116,22 +116,7 @@ class Solution:
         routes: Union[List[Route], List[List[int]]],
     ) -> None: ...
     @classmethod
-    def make_random(cls, data: ProblemData, rng: XorShift128) -> Solution:
-        """
-        Creates a randomly generated solution.
-
-        Parameters
-        ----------
-        data
-            Data instance.
-        rng
-            Random number generator to use.
-
-        Returns
-        -------
-        Solution
-            The randomly generated solution.
-        """
+    def make_random(cls, data: ProblemData, rng: XorShift128) -> Solution: ...
     def get_neighbours(self) -> List[Tuple[int, int]]: ...
     def get_routes(self) -> List[Route]: ...
     def has_excess_load(self) -> bool: ...

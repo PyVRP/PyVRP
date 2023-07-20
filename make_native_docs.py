@@ -60,10 +60,10 @@ def to_cpp_string(name, docstrings):
 
     if len(docstrings) == 1:
         doc = docstrings[0]
-        return f'char const *{name} = R"D(\n{doc}\n)D";'
+        return f'char const *{name} = R"doc(\n{doc}\n)doc";'
 
     return "\n".join(
-        f'char const *{name}_{ctr} = R"D(\n{docstring}\n)D";'
+        f'char const *{name}_{ctr} = R"doc(\n{docstring}\n)doc";'
         for ctr, docstring in enumerate(docstrings, 1)
     )
 
