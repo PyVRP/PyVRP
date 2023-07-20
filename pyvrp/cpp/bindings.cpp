@@ -337,7 +337,7 @@ PYBIND11_MODULE(_pyvrp, m)
             return stream.str();
         });
 
-    py::class_<Solution>(m, "Solution")
+    py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
         // Note, the order of constructors is important! Since Solution::Route
         // implements __len__ and __getitem__, it can also be converted to
         // std::vector<int> and thus a list of Routes is a valid argument for
@@ -363,26 +363,48 @@ PYBIND11_MODULE(_pyvrp, m)
                     py::arg("data"),
                     py::arg("rng"));
             })
-        .def("num_routes", &Solution::numRoutes)
-        .def("num_clients", &Solution::numClients)
+        .def(
+            "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
+        .def("num_clients",
+             &Solution::numClients,
+             DOC(pyvrp, Solution, numClients))
         .def("get_routes",
              &Solution::getRoutes,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, getRoutes))
         .def("get_neighbours",
              &Solution::getNeighbours,
-             py::return_value_policy::reference_internal)
-        .def("is_feasible", &Solution::isFeasible)
-        .def("has_excess_load", &Solution::hasExcessLoad)
-        .def("has_time_warp", &Solution::hasTimeWarp)
-        .def("distance",
-             [](Solution const &sol) { return sol.distance().get(); })
-        .def("excess_load",
-             [](Solution const &sol) { return sol.excessLoad().get(); })
-        .def("time_warp",
-             [](Solution const &sol) { return sol.timeWarp().get(); })
-        .def("prizes", [](Solution const &sol) { return sol.prizes().get(); })
-        .def("uncollected_prizes",
-             [](Solution const &sol) { return sol.uncollectedPrizes().get(); })
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, getNeighbours))
+        .def("is_feasible",
+             &Solution::isFeasible,
+             DOC(pyvrp, Solution, isFeasible))
+        .def("has_excess_load",
+             &Solution::hasExcessLoad,
+             DOC(pyvrp, Solution, hasExcessLoad))
+        .def("has_time_warp",
+             &Solution::hasTimeWarp,
+             DOC(pyvrp, Solution, hasTimeWarp))
+        .def(
+            "distance",
+            [](Solution const &sol) { return sol.distance().get(); },
+            DOC(pyvrp, Solution, distance))
+        .def(
+            "excess_load",
+            [](Solution const &sol) { return sol.excessLoad().get(); },
+            DOC(pyvrp, Solution, excessLoad))
+        .def(
+            "time_warp",
+            [](Solution const &sol) { return sol.timeWarp().get(); },
+            DOC(pyvrp, Solution, timeWarp))
+        .def(
+            "prizes",
+            [](Solution const &sol) { return sol.prizes().get(); },
+            DOC(pyvrp, Solution, prizes))
+        .def(
+            "uncollected_prizes",
+            [](Solution const &sol) { return sol.uncollectedPrizes().get(); },
+            DOC(pyvrp, Solution, uncollectedPrizes))
         .def("__copy__", [](Solution const &sol) { return Solution(sol); })
         .def(
             "__deepcopy__",

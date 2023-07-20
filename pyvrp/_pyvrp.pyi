@@ -110,27 +110,6 @@ class Route:
     def vehicle_type(self) -> int: ...
 
 class Solution:
-    """
-    Encodes VRP solutions.
-
-    Parameters
-    ----------
-    data
-        Data instance.
-    routes
-        Route list to use. Can be a list of :class:`~Route` objects, or a lists
-        of client visits. In case of the latter, all routes are assigned
-        vehicles of the first type. That need not be a feasible assignment!
-
-    Raises
-    ------
-    RuntimeError
-        When the number of routes in the ``routes`` argument exceeds
-        :py:attr:`~ProblemData.num_vehicles`, when an empty route has been
-        passed as part of ``routes``, or when too many vehicles of a particular
-        type have been used.
-    """
-
     def __init__(
         self,
         data: ProblemData,
@@ -153,127 +132,18 @@ class Solution:
         Solution
             The randomly generated solution.
         """
-    def get_neighbours(self) -> List[Tuple[int, int]]:
-        """
-        Returns a list of neighbours for each client, by index. Also includes
-        the depot at index 0, which only neighbours itself.
-
-        Returns
-        -------
-        list
-            A list of ``(pred, succ)`` tuples that encode for each client their
-            predecessor and successors in this solutions's routes.
-        """
-    def get_routes(self) -> List[Route]:
-        """
-        The solution's routing decisions.
-
-        .. note::
-
-           The length of this list is equal to the number of non-empty routes,
-           which is at most equal to :py:attr:`~ProblemData.num_vehicles`.
-
-        Returns
-        -------
-        list
-            A list of routes. Each :class:`~Route` starts and ends at the depot
-            (0), but that is implicit: the depot is not part of the returned
-            routes.
-        """
-    def has_excess_load(self) -> bool:
-        """
-        Returns whether this solution violates capacity constraints.
-
-        Returns
-        -------
-        bool
-            True if the solution is not capacity feasible, False otherwise.
-        """
-    def has_time_warp(self) -> bool:
-        """
-        Returns whether this solution violates time window constraints.
-
-        Returns
-        -------
-        bool
-            True if the solution is not time window feasible, False
-            otherwise.
-        """
-    def distance(self) -> int:
-        """
-        Returns the total distance over all routes.
-
-        Returns
-        -------
-        int
-            Total distance over all routes.
-        """
-    def excess_load(self) -> int:
-        """
-        Returns the total excess load over all routes.
-
-        Returns
-        -------
-        int
-            Total excess load over all routes.
-        """
-    def time_warp(self) -> int:
-        """
-        Returns the total time warp load over all routes.
-
-        Returns
-        -------
-        int
-            Total time warp over all routes.
-        """
-    def prizes(self) -> int:
-        """
-        Returns the total collected prize value over all routes.
-
-        Returns
-        -------
-        int
-            Value of collected prizes.
-        """
-    def uncollected_prizes(self) -> int:
-        """
-        Total prize value of all clients not visited in this solution.
-
-        Returns
-        -------
-        int
-            Value of uncollected prizes.
-        """
-    def is_feasible(self) -> bool:
-        """
-        Whether this solution is feasible. This is a shorthand for checking
-        that :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
-        false.
-
-        Returns
-        -------
-        bool
-            Whether the solution of this solution is feasible with respect to
-            capacity and time window constraints.
-        """
-    def num_routes(self) -> int:
-        """
-        Number of routes in this solution.
-
-        Returns
-        -------
-        int
-            Number of routes.
-        """
-    def num_clients(self) -> int:
-        """
-        Number of clients in this solution.
-
-        Returns
-        -------
-        int
-            Number of clients in this solution.
-        """
+    def get_neighbours(self) -> List[Tuple[int, int]]: ...
+    def get_routes(self) -> List[Route]: ...
+    def has_excess_load(self) -> bool: ...
+    def has_time_warp(self) -> bool: ...
+    def distance(self) -> int: ...
+    def excess_load(self) -> int: ...
+    def time_warp(self) -> int: ...
+    def prizes(self) -> int: ...
+    def uncollected_prizes(self) -> int: ...
+    def is_feasible(self) -> bool: ...
+    def num_routes(self) -> int: ...
+    def num_clients(self) -> int: ...
     def __copy__(self) -> Solution: ...
     def __deepcopy__(self, memo: dict) -> Solution: ...
     def __hash__(self) -> int: ...
