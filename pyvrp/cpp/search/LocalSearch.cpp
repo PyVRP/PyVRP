@@ -319,8 +319,8 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
     for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
     {
-        auto const available = data.vehicleType(vehType).numAvailable;
-        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + available;
+        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
     // Load routes from solution.
