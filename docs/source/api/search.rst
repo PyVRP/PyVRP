@@ -16,6 +16,7 @@ This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvr
 .. automodule:: pyvrp.search.neighbourhood
    :members:
 
+
 Node operators
 --------------
 
@@ -30,41 +31,42 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
 .. automodule:: pyvrp.search._search
 
-   .. autoapiclass:: NodeOperator
+   .. autoclass:: NodeOperator
       :members:
 
-   .. autoapiclass:: Exchange10
+   .. autoclass:: Exchange10
       :members:
 
-   .. autoapiclass:: Exchange20
+   .. autoclass:: Exchange20
       :members:
 
-   .. autoapiclass:: Exchange30
+   .. autoclass:: Exchange30
       :members:
    
-   .. autoapiclass:: Exchange11
+   .. autoclass:: Exchange11
       :members:
 
-   .. autoapiclass:: Exchange21
+   .. autoclass:: Exchange21
       :members:
 
-   .. autoapiclass:: Exchange31
+   .. autoclass:: Exchange31
       :members:
    
-   .. autoapiclass:: Exchange22
+   .. autoclass:: Exchange22
       :members:
 
-   .. autoapiclass:: Exchange32
+   .. autoclass:: Exchange32
       :members:
    
-   .. autoapiclass:: Exchange33
+   .. autoclass:: Exchange33
       :members:
 
-   .. autoapiclass:: MoveTwoClientsReversed
+   .. autoclass:: MoveTwoClientsReversed
       :members:
 
-   .. autoapiclass:: TwoOpt
+   .. autoclass:: TwoOpt
       :members:
+
 
 Route operators
 ---------------
@@ -81,11 +83,11 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 .. automodule:: pyvrp.search._search
    :noindex:
 
-   .. autoapiclass:: RouteOperator
+   .. autoclass:: RouteOperator
       :members:
 
-   .. autoapiclass:: RelocateStar
+   .. autoclass:: RelocateStar
       :members:
 
-   .. autoapiclass:: SwapStar
+   .. autoclass:: SwapStar
       :members:

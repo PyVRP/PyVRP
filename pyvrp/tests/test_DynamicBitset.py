@@ -5,7 +5,7 @@ from pyvrp._pyvrp import DynamicBitset
 
 
 @mark.parametrize(
-    "num_bits, expected_size",
+    ("num_bits", "expected_size"),
     [(0, 0), (1, 64), (64, 64), (65, 128), (128, 128)],
 )
 def test_size(num_bits, expected_size):

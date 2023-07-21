@@ -24,7 +24,7 @@ def test_plot_solution():
     sol = Solution(data, bks)
 
     plotting.plot_solution(sol, data)
-    plotting.plot_solution(sol, data, plot_customers=True)
+    plotting.plot_solution(sol, data, plot_clients=True)
 
 
 @img_comp(["plot_result"], **IMG_KWARGS)

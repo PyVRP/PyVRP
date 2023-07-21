@@ -65,7 +65,7 @@ The script takes a number of command-line arguments, which you can discover usin
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the ``meson.build`` file in the repository root. 
-You should not have to touch this file often: all installation is handled via the ``build_extensions.py`` script.
+You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
 
 
 Committing changes

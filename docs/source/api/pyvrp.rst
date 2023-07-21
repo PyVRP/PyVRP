@@ -41,7 +41,7 @@ This object can be used to obtain the best observed solution, and detailed runti
 
 .. automodule:: pyvrp.Population
 
-   .. autoapiclass:: PopulationParams
+   .. autoclass:: PopulationParams
       :members:
 
    .. autoclass:: Population
@@ -65,25 +65,25 @@ This object can be used to obtain the best observed solution, and detailed runti
 
 .. automodule:: pyvrp._pyvrp
 
-   .. autoapiclass:: CostEvaluator
+   .. autoclass:: CostEvaluator
       :members:
 
-   .. autoapiclass:: Route
+   .. autoclass:: Route
       :members:
 
-   .. autoapiclass:: Solution
+   .. autoclass:: Solution
       :members:
 
-   .. autoapiclass:: Client
+   .. autoclass:: Client
       :members:
    
-   .. autoapiclass:: VehicleType
+   .. autoclass:: VehicleType
       :members:
 
-   .. autoapiclass:: ProblemData
+   .. autoclass:: ProblemData
       :members:
 
-   .. autoapiclass:: XorShift128
+   .. autoclass:: XorShift128
       :members:
       :special-members:
 
@@ -92,5 +92,3 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoexception:: EmptySolutionWarning
 
    .. autoexception:: ScalingWarning
-
-.. TODO add pyvrp CLI, and think about missing files (Matrix, TWS?)

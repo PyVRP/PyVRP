@@ -18,7 +18,7 @@ from pyvrp.tests.helpers import make_random_solutions, read, read_solution
 
 
 @mark.parametrize(
-    "repair_probability, nb_iter_no_improvement",
+    ("repair_probability", "nb_iter_no_improvement"),
     [
         (-0.25, 0),  # repair_probability < 0
         (1.25, 0),  # repair_probability > 1
@@ -37,7 +37,7 @@ def test_params_constructor_raises_when_arguments_invalid(
 
 
 @mark.parametrize(
-    "repair_probability, nb_iter_no_improvement",
+    ("repair_probability", "nb_iter_no_improvement"),
     [
         (0.0, 0),  # nb_iter_no_improvement == 0
         (0.0, 1),  # repair_probability == 0

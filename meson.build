@@ -1,8 +1,8 @@
 project(
     'pyvrp',
     'cpp',
-    version: run_command('poetry', 'version', '--short', check : true).stdout(),
-    default_options : [
+    version: run_command('poetry', 'version', '--short', check: true).stdout(),
+    default_options: [
         'cpp_std=c++20',
         'b_lto=true',  # sets -flto
         'werror=true',  # sets -Werror
@@ -70,20 +70,33 @@ dependencies = [py.dependency(), dependency('pybind11')]
 # eventual module name, and 'subdirectory' gives the source and installation 
 # directories (relative to SRC_DIR and INST_DIR).
 extensions = [
-    ['_pyvrp', ''],
-    ['_crossover', 'crossover'],
-    ['_diversity', 'diversity'],
-    ['_search', 'search'],
+    ['pyvrp', ''],
+    ['crossover', 'crossover'],
+    ['diversity', 'diversity'],
+    ['search', 'search'],
 ]
 
 foreach extension : extensions
-    name = extension[0]
+    rawname = extension[0]
+    name = '_' + rawname
     subdir = extension[1]
 
-    message('Going to build ' + subdir / name)
+    message('Going to build extension module ' + subdir / name + '.')
+
+    # Custom target that generates the documentation header files for us. These
+    # documentation headers are of the form "<name>_docs.h".
+    docstring_h = custom_target(
+        'docs for ' + name,
+        output: rawname + '_docs.h',
+        # TODO inputs should reflect actual headers - not bindings.cpp
+        input: ['extract_docstrings.py', SRC_DIR / subdir / 'bindings.cpp'],
+        command: ['poetry', 'run', 'python', '@INPUT@', '@OUTPUT@']
+    )
+
+    # Register extension module to build.
     py.extension_module(
         name,
-        SRC_DIR / subdir / 'bindings.cpp',
+        [SRC_DIR / subdir / 'bindings.cpp', docstring_h],
         dependencies: dependencies,
         link_with: libcommon,
         install: true,

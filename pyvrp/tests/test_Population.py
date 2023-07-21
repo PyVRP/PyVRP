@@ -21,12 +21,14 @@ from pyvrp.tests.helpers import make_random_solutions, read
 
 
 @mark.parametrize(
-    "min_pop_size,"
-    "generation_size,"
-    "nb_elite,"
-    "nb_close,"
-    "lb_diversity,"
-    "ub_diversity",
+    (
+        "min_pop_size",
+        "generation_size",
+        "nb_elite",
+        "nb_close",
+        "lb_diversity",
+        "ub_diversity",
+    ),
     [
         (1, 1, 1, 1, -1, 1.0),  # -1 lb_diversity
         (1, 1, 1, 1, 2, 1.0),  # 2 lb_diversity
@@ -59,12 +61,14 @@ def test_params_constructor_throws_when_arguments_invalid(
 
 
 @mark.parametrize(
-    "min_pop_size,"
-    "generation_size,"
-    "nb_elite,"
-    "nb_close,"
-    "lb_diversity,"
-    "ub_diversity",
+    (
+        "min_pop_size",
+        "generation_size",
+        "nb_elite",
+        "nb_close",
+        "lb_diversity",
+        "ub_diversity",
+    ),
     [
         (1, 1, 1, 1, 0.0, 0.5),  # >0 min_pop_size
         (1, 0, 1, 1, 0.0, 0.5),  # 0 generation_size

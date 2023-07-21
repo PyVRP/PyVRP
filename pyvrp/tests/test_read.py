@@ -6,7 +6,7 @@ from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
-    "where, exception",
+    ("where", "exception"),
     [
         ("data/UnknownEdgeWeightFmt.txt", ValueError),
         ("data/UnknownEdgeWeightType.txt", ValueError),
