@@ -247,21 +247,25 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     assert_equal(further_improved, improved)
 
 
-def test_loading_vehicle_types():
-    # This tests a previous bug that would crash local search due to an
-    # an incorrect internal mapping of vehicle types to route indices if the
-    # last vehicle type had more vehicles than the previous
-
+def test_bugfix_vehicle_type_offsets():
+    """
+    See https://github.com/PyVRP/PyVRP/pull/292 for details. This exercises a
+    fix to a bug that would crash local search due to an incorrect internal 
+    mapping of vehicle types to route indices if the next vehicle type had
+    more vehicles than the previous.
+    """
     data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(1, 1)
     data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 2)])
 
-    neighbours = compute_neighbours(data)
-    ls = cpp_LocalSearch(data, neighbours)
+    ls = cpp_LocalSearch(data, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
-    sol = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
-    current_cost = cost_evaluator.penalised_cost(sol)
 
-    # The local search should not crash and the result should not be worse
-    improved_sol = ls.search(sol, cost_evaluator)
-    assert_(cost_evaluator.penalised_cost(improved_sol) <= current_cost)
+    cost_evaluator = CostEvaluator(1, 1)
+
+    current = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
+    current_cost = cost_evaluator.penalised_cost(current)
+
+    improved = ls.search(current, cost_evaluator)
+    improved_cost = cost_evaluator.penalised_cost(improved)
+
+    assert_(improved_cost <= current_cost)
