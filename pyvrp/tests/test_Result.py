@@ -11,7 +11,7 @@ from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
-    "routes, num_iterations, runtime",
+    ("routes", "num_iterations", "runtime"),
     [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4]], 100, 54.2)],
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
@@ -31,7 +31,7 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
 
 
 @mark.parametrize(
-    "num_iterations, runtime",
+    ("num_iterations", "runtime"),
     [
         (-1, 0.0),  # num_iterations < 0
         (0, -1.0),  # runtime < 0

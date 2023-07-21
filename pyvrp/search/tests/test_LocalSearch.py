@@ -71,11 +71,13 @@ def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
 
 
 @mark.parametrize(
-    "weight_wait_time,"
-    "weight_time_warp,"
-    "nb_granular,"
-    "symmetric_proximity,"
-    "symmetric_neighbours",
+    (
+        "weight_wait_time",
+        "weight_time_warp",
+        "nb_granular",
+        "symmetric_proximity",
+        "symmetric_neighbours",
+    ),
     [
         (20, 20, 10, True, False),
         (20, 20, 10, True, True),

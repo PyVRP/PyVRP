@@ -46,7 +46,7 @@ def test_add_edge_raises_negative_distance_or_duration():
 
 
 @mark.parametrize(
-    "number, capacity",
+    ("number", "capacity"),
     [
         (0, 1),  # zero vehicles is not OK (but zero capacity is)
         (-1, 1),  # negative vehicles is not OK
