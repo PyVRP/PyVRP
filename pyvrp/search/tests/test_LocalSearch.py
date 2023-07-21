@@ -250,7 +250,7 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
 def test_bugfix_vehicle_type_offsets():
     """
     See https://github.com/PyVRP/PyVRP/pull/292 for details. This exercises a
-    fix to a bug that would crash local search due to an incorrect internal 
+    fix to a bug that would crash local search due to an incorrect internal
     mapping of vehicle types to route indices if the next vehicle type had
     more vehicles than the previous.
     """
