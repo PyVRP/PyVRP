@@ -6,8 +6,6 @@
 #include "Solution.h"
 #include "TimeWindowSegment.h"
 
-using VehicleType = ProblemData::VehicleType;
-
 namespace pyvrp
 {
 /**
@@ -115,7 +113,6 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
 }
-}  // namespace pyvrp
 
 Cost CostEvaluator::penalisedRouteCost(
     Distance const distance,
@@ -143,5 +140,6 @@ Cost CostEvaluator::penalisedRouteCost(
 
     return distanceCost + durationCost + loadPen + twPen;
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_COSTEVALUATOR_H

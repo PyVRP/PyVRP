@@ -101,9 +101,9 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Evaluates the route V, when inserting U after UAfter while simultaneously
     // removing V
-    Cost evaluateRouteCost(Node *V,
-                           Node *U,
-                           Node *UAfter,
+    Cost evaluateRouteCost(Route::Node *V,
+                           Route::Node *U,
+                           Route::Node *UAfter,
                            CostEvaluator const &costEvaluator);
 
 public:

@@ -212,7 +212,7 @@ bool Route::hasTimeWarp() const
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
-    return timeWarp_ > 0;
+    return tws_.totalTimeWarp() > 0;
 #endif
 }
 

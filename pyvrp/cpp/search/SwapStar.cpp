@@ -38,9 +38,9 @@ void SwapStar::updateInsertionCost(Route *R,
 
     // Insert cost of U just after the depot (0 -> U -> ...)
     auto twData = TWS::merge(data.durationMatrix(),
-                             R->startDepot->twBefore,
+                             R->startDepot.twBefore,
                              U->tw,
-                             n(R->startDepot)->twAfter);
+                             n(&R->startDepot)->twAfter);
     auto dist = R->dist() + data.dist(R->startDepot.client, U->client)
                 + data.dist(U->client, n(&R->startDepot)->client)
                 - data.dist(R->startDepot.client, n(&R->startDepot)->client);
@@ -89,9 +89,9 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
     return std::make_pair(cost - currentCost, p(V));
 }
 
-Cost SwapStar::evaluateRouteCost(Node *V,
-                                 Node *U,
-                                 Node *UAfter,
+Cost SwapStar::evaluateRouteCost(Route::Node *V,
+                                 Route::Node *U,
+                                 Route::Node *UAfter,
                                  CostEvaluator const &costEvaluator)
 {
     auto const route = V->route;
