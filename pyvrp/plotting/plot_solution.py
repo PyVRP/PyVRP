@@ -9,7 +9,7 @@ from pyvrp import ProblemData, Solution
 def plot_solution(
     solution: Solution,
     data: ProblemData,
-    plot_customers: bool = False,
+    plot_clients: bool = False,
     ax: Optional[plt.Axes] = None,
 ):
     """
@@ -21,8 +21,8 @@ def plot_solution(
         Solution to plot.
     data
         Data instance underlying the solution.
-    plot_customers, optional
-        Whether to plot customers as dots. Default False, which plots only the
+    plot_clients, optional
+        Whether to plot clients as dots. Default False, which plots only the
         solution's routes.
     ax, optional
         Axes object to draw the plot on. One will be created if not provided.
@@ -42,8 +42,8 @@ def plot_solution(
         x = x_coords[route]
         y = y_coords[route]
 
-        # Coordinates of customers served by this route.
-        if len(route) == 1 or plot_customers:
+        # Coordinates of clients served by this route.
+        if len(route) == 1 or plot_clients:
             ax.scatter(x, y, label=f"Route {idx}", zorder=3, s=75)
         ax.plot(x, y)
 
