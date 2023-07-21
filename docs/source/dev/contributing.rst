@@ -10,7 +10,7 @@ Setting up a local installation
 
 Make sure you have a reasonably modern C++ compiler.
 Any recent version that supports (most of) the C++20 standard should do.
-Once you have a compiler installed, you can proceed by forking the ``pyvrp`` repository from the `GitHub website <https://github.com/PyVRP/PyVRP/fork>`_.
+Once you have a compiler installed, you can proceed by forking the PyVRP repository from the `GitHub website <https://github.com/PyVRP/PyVRP/fork>`_.
 Then, clone your new fork to some local environment:
 
 .. code-block:: shell
@@ -48,7 +48,7 @@ Now make sure everything runs smoothly, by executing the test suite:
 Building the Python extensions
 ------------------------------
 
-For performance, the ``PyVRP`` packages uses a number of Python extensions that are written in C++.
+PyVRP uses a number of Python extensions that are written in C++ for performance.
 These extensions are built every time ``poetry install`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
 These (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
@@ -65,13 +65,13 @@ The script takes a number of command-line arguments, which you can discover usin
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the ``meson.build`` file in the repository root. 
-You should not have to touch this file often: all installation is handled via the ``build_extensions.py`` script.
+You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
 
 
 Committing changes
 ------------------
 
-We use pull requests to develop the ``pyvrp`` package.
+We use pull requests to develop PyVRP.
 For a pull request to be accepted, you must meet the below requirements.
 This greatly reduces the job of maintaining and releasing the software.
 

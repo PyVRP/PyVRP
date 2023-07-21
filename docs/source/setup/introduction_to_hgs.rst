@@ -21,25 +21,23 @@ The algorithm continues until a provided stopping criterion is met, at which poi
 
 In pseudocode, HGS works as follows:
 
-    .. line-block::
+| **Input:** initial solutions :math:`s_1, \dots, s_{n}`
+| **Output:** the best-found solution :math:`s^*`
+| Set :math:`s^*` to the initial solution with the best objective value
+| **repeat** until stopping criterion is met:
+|     Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
+|     Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
+|     Improve the offspring using a search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
+|     Add the candidate solution to the population.
+|     **if** :math:`s^c` has a better objective value than :math:`s^*`:
+|         :math:`s^* \gets s^c`
+|     **if** population size exceeds maximum size:
+|         Remove the solutions with the lowest fitness until the population is at minimum size
+| **return** :math:`s^*`
 
-       **Input:** initial solutions :math:`s_1, \dots, s_{n}`
-       **Output:** the best-found solution :math:`s^*`
-       Set :math:`s^*` to the initial solution with the best objective value
-       **repeat** until stopping criterion is met:
-           Select two parent solutions :math:`(s^{p_1}, s^{p_2})` from the population using :math:`k`-ary tournament.
-           Apply crossover operator :math:`XO` to generate an offspring solution :math:`s^o=XO(s^{p_1}, s^{p_2})`.
-           Improve the offspring using a search procedure :math:`LS` to obtain :math:`s^c=LS(s^o)`.
-           Add the candidate solution to the population.
-           **if** :math:`s^c` has a better objective value than :math:`s^*`:
-               :math:`s^* \gets s^c`
-           **if** population size exceeds maximum size:
-               Remove the solutions with the lowest fitness until the population is at minimum size
-       **return** :math:`s^*`
-
-The ``pyvrp`` package provides the HGS algorithm, crossover operators, stopping criteria, and various search procedures and operators.
+PyVRP provides the HGS algorithm, crossover operators, stopping criteria, and various search procedures and operators.
 You only need to provide the initial solutions, for which we suggest taking random initial solutions to ensure diversity in the search.
 
 .. hint::
 
-   See the examples :doc:`capacitated VRP <../examples/cvrp>` and :doc:`VRP with time windows <../examples/vrptw>` on how to setup HGS to solve these VRPs.
+   See the :doc:`tutorial <../examples/quick_tutorial>` page to get started with PyVRP.

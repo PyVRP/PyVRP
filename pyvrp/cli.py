@@ -7,10 +7,11 @@ import numpy as np
 
 try:
     import tomli
+    from tqdm import tqdm
     from tqdm.contrib.concurrent import process_map
-except ModuleNotFoundError:
+except ModuleNotFoundError as exc:
     msg = "Install 'tqdm' and 'tomli' to use the command line program."
-    raise ModuleNotFoundError(msg)
+    raise ModuleNotFoundError(msg) from exc
 
 import pyvrp.search
 from pyvrp import (
@@ -54,7 +55,7 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
     ]
 
     content = [
-        "  ".join(f"{str(c):>{ln}s}" for ln, c in zip(lens, r)) for r in rows
+        "  ".join(f"{c!s:>{ln}s}" for ln, c in zip(lens, r)) for r in rows
     ]
 
     return "\n".join(header + content)
@@ -62,8 +63,8 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
 
 def maybe_mkdir(where: str):
     if where:
-        stats_dir = Path(where)
-        stats_dir.mkdir(parents=True, exist_ok=True)
+        path = Path(where)
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def solve(
@@ -99,8 +100,7 @@ def solve(
         Maximum number of iterations for solving. Either ``max_runtime`` or
         ``max_iterations`` must be specified.
     stats_dir
-        The directory to write runtime statistics to. Enables statistics
-        collection when passed.
+        The directory to write runtime statistics to.
     sol_dir
         The directory to write the best found solutions to.
 
@@ -116,12 +116,6 @@ def solve(
         config = {}
 
     gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
-
-    if stats_dir:
-        # The statistics directory argument trumps whatever we got earlier
-        # from the configuration file.
-        gen_params.collect_statistics = True
-
     pen_params = PenaltyParams(**config.get("penalty", {}))
     pop_params = PopulationParams(**config.get("population", {}))
     nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
@@ -138,15 +132,15 @@ def solve(
     if "node_ops" in config:
         node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
 
-    for op in node_ops:
-        ls.add_node_operator(op(data))
+    for node_op in node_ops:
+        ls.add_node_operator(node_op(data))
 
     route_ops = ROUTE_OPERATORS
     if "route_ops" in config:
         route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
 
-    for op in route_ops:
-        ls.add_route_operator(op(data))
+    for route_op in route_ops:
+        ls.add_route_operator(route_op(data))
 
     init = [
         Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
@@ -197,7 +191,7 @@ def benchmark_solve(instance: str, **kwargs):
     )
 
 
-def benchmark(instances: List[str], **kwargs):
+def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.
@@ -206,20 +200,21 @@ def benchmark(instances: List[str], **kwargs):
     ----------
     instances
         Paths to the VRPLIB instances to solve.
+    num_procs
+        Number of processors to use. Default 1.
+    kwargs
+        Any additional keyword arguments to pass to the solving function.
     """
     maybe_mkdir(kwargs.get("stats_dir", ""))
     maybe_mkdir(kwargs.get("sol_dir", ""))
 
-    if len(instances) == 1:
-        res = solve(instances[0], **kwargs)
-        print(res)
-        return
-
     func = partial(benchmark_solve, **kwargs)
-    func_args = sorted(instances)
+    args = sorted(instances)
 
-    tqdm_kwargs = dict(max_workers=kwargs.get("num_procs", 1), unit="instance")
-    data = process_map(func, func_args, **tqdm_kwargs)
+    if len(instances) == 1 or num_procs == 1:
+        res = [func(arg) for arg in tqdm(args, unit="instance")]
+    else:
+        res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [
         ("inst", "U37"),
@@ -229,7 +224,7 @@ def benchmark(instances: List[str], **kwargs):
         ("time", float),
     ]
 
-    data = np.asarray(data, dtype=dtypes)
+    data = np.asarray(res, dtype=dtypes)
     headers = ["Instance", "OK", "Obj.", "Iters. (#)", "Time (s)"]
 
     print("\n", tabulate(headers, data), "\n", sep="")
@@ -252,8 +247,6 @@ def main():
 
     msg = """
     Directory to store runtime statistics in, as CSV files (one per instance).
-    If passed, this enables collecting runtime statistics (default False), at
-    a slight performance hit.
     """
     parser.add_argument("--stats_dir", help=msg)
 

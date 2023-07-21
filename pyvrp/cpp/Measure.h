@@ -8,6 +8,8 @@
 #include <limits>
 #include <type_traits>
 
+namespace pyvrp
+{
 #ifdef PYVRP_DOUBLE_PRECISION
 using Value = double;
 #else
@@ -175,10 +177,11 @@ Measure<Type> operator/(Measure<Type> const lhs, Measure<Type> const rhs)
 {
     return lhs.get() / rhs.get();
 }
+}  // namespace pyvrp
 
 // For printing.
-template <MeasureType Type>
-std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
+template <pyvrp::MeasureType Type>
+std::ostream &operator<<(std::ostream &out, pyvrp::Measure<Type> const measure)
 {
     return out << measure.get();
 }
@@ -186,28 +189,34 @@ std::ostream &operator<<(std::ostream &out, Measure<Type> const measure)
 // Specialisations for hashing and numerical limits.
 namespace std
 {
-template <MeasureType Type> struct hash<Measure<Type>>
+template <pyvrp::MeasureType Type> struct hash<pyvrp::Measure<Type>>
 {
-    size_t operator()(Measure<Type> const measure) const
+    size_t operator()(pyvrp::Measure<Type> const measure) const
     {
 #ifdef PYVRP_DOUBLE_PRECISION
         // When using double precision, this hashes 'equal' items differently
         // when they are very close to halfway between an integer value. Not
         // ideal, but this should work well enough for our application.
-        return std::hash<Value>()(std::round(measure.get()));
+        return std::hash<pyvrp::Value>()(std::round(measure.get()));
 #else
-        return std::hash<Value>()(measure.get());
+        return std::hash<pyvrp::Value>()(measure.get());
 #endif
     }
 };
 
-template <MeasureType Type> class numeric_limits<Measure<Type>>
+template <pyvrp::MeasureType Type> class numeric_limits<pyvrp::Measure<Type>>
 {
-public:  // TODO should return type be Measure<Type>?
-    static Value min() { return std::numeric_limits<Value>::min(); }
-    static Value max() { return std::numeric_limits<Value>::max(); }
-};
+public:
+    static pyvrp::Value max()
+    {
+        return std::numeric_limits<pyvrp::Value>::max();
+    }
 
+    static pyvrp::Value min()
+    {
+        return std::numeric_limits<pyvrp::Value>::min();
+    }
+};
 }  // namespace std
 
 #endif  // PYVRP_MEASURE_H

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.3.0"
+version = "0.4.4"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -15,6 +15,7 @@ include = [
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
     { path = "build_extensions.py", format = "sdist" },
+    { path = "subprojects/*.wrap", format = "sdist" },
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
@@ -54,13 +55,10 @@ optional = true
 
 
 [tool.poetry.group.docs.dependencies]
-tomli = ">=2.0.1"
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
-sphinx_rtd_theme = ">=0.5.1"
-sphinx-autoapi = ">=2.0.1"
-docutils = "==0.16"
+sphinx-immaterial = ">=0.11.5"
 
 
 [tool.poetry.group.examples]
@@ -78,12 +76,12 @@ pytest = ">=6.0.0"
 pytest-cov = ">=2.6.1"
 codecov = "*"
 
-# These are used in the build script: for compiling the library (meson, ninja,
-# and pybind11) and for generating type stubs (mypy).
+# These are used in the build script: for compiling the library (meson, ninja)
+# and for generating doc or type stubs (docblock, mypy).
 meson = "^1.0.0"
 ninja = "^1.11.1"
-pybind11 = {extras = ["global"], version = "^2.10.3"}
 mypy = "^0.991"
+docblock = "^0.0.3"
 
 
 [tool.poetry.scripts]
@@ -94,10 +92,20 @@ pyvrp = "pyvrp.cli:main"
 line-length = 79
 
 
-[tool.isort]
-case_sensitive = true
-line_length = 79
-profile = "black"
+[tool.ruff]
+line-length = 79
+select = [
+    "E", "F", "I", "NPY", "PYI", "Q", "RET", "RSE", "RUF", "SLF", "SIM", "TCH"
+]
+
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports
+
+
+[tool.ruff.isort]
+case-sensitive = true
+known-first-party = ["pyvrp"]
 
 
 [tool.mypy]
@@ -112,6 +120,7 @@ testpaths = "pyvrp"
 [tool.coverage.run]
 omit = [
     "build_extensions.py",  # build entrypoint
+    "extract_docstrings.py",  # build script
     "pyvrp/show_versions.py",  # only prints debug information
     "pyvrp/cli.py",  # tested in other ways than unit tests
     "*/tests/*",
@@ -122,16 +131,16 @@ omit = [
 
 [tool.coverage.report]
 exclude_lines = [
-    # This excludes all abstract methods from code coverage checks as they are
-    # never instantiated directly anyway
     "pragma: no cover",
     "@abstract",
+    "if TYPE_CHECKING:",
 ]
 
 
 [tool.cibuildwheel]
 # We do not support old Python versions (<3.8) and somewhat uncommon platforms.
-skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32"
+# For musllinux-based builds we assume users can compile the thing themselves.
+skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-verbosity = "3"
 build-frontend = "build"
 
@@ -142,6 +151,7 @@ script = "build_extensions.py"
 
 
 [build-system]
-# pybind11, meson, and ninja are needed to build the C++ extensions.
-requires = ["poetry-core", "pybind11", "meson", "ninja"]
+# We need meson and ninja to build the C++ extensions, and docblock to extract
+# documentation for the extensions.
+requires = ["poetry", "meson", "ninja", "docblock"]
 build-backend = "poetry.core.masonry.api"

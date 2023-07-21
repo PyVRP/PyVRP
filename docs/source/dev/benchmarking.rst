@@ -1,7 +1,7 @@
 Benchmarking
 ============
 
-To run a benchmark, one can use the command line interface ``PyVRP`` provides.
+To run a benchmark, one can use the command line interface PyVRP provides.
 After installation, it is available as ``pyvrp`` from the command line.
 To find out about available options, run
 
@@ -9,7 +9,7 @@ To find out about available options, run
 
    pyvrp --help
 
-To benchmark ``pyvrp``, we mostly use instances from `CRVPLIB <http://vrp.atd-lab.inf.puc-rio.br/index.php/en/>`_ instances.
+To benchmark PyVRP, we mostly use instances from `CRVPLIB <http://vrp.atd-lab.inf.puc-rio.br/index.php/en/>`_ instances.
 Particularly:
 
 * For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
@@ -25,7 +25,8 @@ Particularly:
 The time limit should be scaled by the PassMark score of your CPU.
 Each instance is run ten times with different seeds.
 Each run is performed on a single core.
-For each instance, we take the average objectives/gaps of these ten runs with different seeds.
+For each instance, we take the average objectives of these ten runs with different seeds.
+These are compared with the best-known solutions tracked in the ``PyVRP/Instances`` `repository <https://github.com/PyVRP/Instances>`_ to compute gaps.
 
 To get the benchmark instance sets quickly, the ``PyVRP/Instances`` repository may be initialised as a submodule:
 

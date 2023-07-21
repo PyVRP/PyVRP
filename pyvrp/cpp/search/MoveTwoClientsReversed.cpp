@@ -4,11 +4,11 @@
 
 #include <cassert>
 
-using TWS = TimeWindowSegment;
+using pyvrp::search::MoveTwoClientsReversed;
+using TWS = pyvrp::TimeWindowSegment;
 
-Cost MoveTwoClientsReversed::evaluate(Node *U,
-                                      Node *V,
-                                      CostEvaluator const &costEvaluator)
+pyvrp::Cost MoveTwoClientsReversed::evaluate(
+    Route::Node *U, Route::Node *V, pyvrp::CostEvaluator const &costEvaluator)
 {
     if (U == n(V) || n(U) == V || n(U)->isDepot())
         return 0;
@@ -101,7 +101,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
     }
 }
 
-void MoveTwoClientsReversed::apply(Node *U, Node *V) const
+void MoveTwoClientsReversed::apply(Route::Node *U, Route::Node *V) const
 {
     auto *X = n(U);  // copy since the insert below changes n(U)
 

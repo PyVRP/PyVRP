@@ -47,6 +47,7 @@ def test_route_constructor_heterogeneous():
 
 def test_route_eq():
     data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
 
     route1 = Route(data, [1, 2], 0)
     assert_(route1 == route1)  # should equal self
@@ -176,6 +177,26 @@ def test_feasibility():
     assert_(not sol.has_time_warp())
 
 
+def test_feasibility_release_times():
+    data = read("data/OkSmallReleaseTimes.txt")
+
+    # Client 1 is released at 20'000, but client 2 time window ends at 19'500,
+    # so this solution must be infeasible due to time-warping. We arrive at
+    # client 1 at time 20'000 + 1'544 = 21'544 before the TW closes (22'500).
+    # We arrive at client 2 at 21'544 + 360 + 1'992 = 23'896, so we incur a
+    # time warp of 23'896 - 19'500 = 4'396.
+    sol = Solution(data, [[1, 2], [3], [4]])
+    assert_(not sol.is_feasible())
+    assert_equal(sol.time_warp(), 4396)
+
+    # Visiting clients 2 and 3 together is feasible: both clients are released
+    # at time 5'000. We arrive at client 2 at 5'000 + 1'944 and wait till the
+    # TW opens (12'000). We arrive at client 3 at 12'000 + 360 + 621 = 12'981,
+    # which is before the TW closes (15'300).
+    sol = Solution(data, [[1], [2, 3], [4]])
+    assert_(sol.is_feasible())
+
+
 def test_distance_calculation():
     data = read("data/OkSmall.txt")
 
@@ -288,6 +309,18 @@ def test_route_time_warp_and_wait_duration():
     # cannot start service until 12'000.
     assert_equal(routes[0].wait_duration(), 15_600 - 1_544)
     assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
+
+
+def test_route_release_time():
+    data = read("data/OkSmallReleaseTimes.txt")
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
+
+    # The client release times are 20'000, 5'000, 5'000 and 1'000.
+    # So the first route has a release time of max(20'000, 5'000) = 20'000,
+    # and the second route has a release time of max(5'000, 1'000) = 5'000.
+    assert_allclose(routes[0].release_time(), 20000)
+    assert_allclose(routes[1].release_time(), 5000)
 
 
 @mark.parametrize(

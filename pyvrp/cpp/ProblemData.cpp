@@ -1,10 +1,11 @@
 #include "ProblemData.h"
 
-#include <cmath>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <numeric>
+
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Matrix;
+using pyvrp::ProblemData;
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
@@ -12,6 +13,7 @@ ProblemData::Client::Client(Coordinate x,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
+                            Duration releaseTime,
                             Cost prize,
                             bool required)
     : x(x),
@@ -20,6 +22,7 @@ ProblemData::Client::Client(Coordinate x,
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
+      releaseTime(releaseTime),
       prize(prize),
       required(required)
 {
@@ -35,8 +38,6 @@ ProblemData::Client::Client(Coordinate x,
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0");
 }
-
-ProblemData::Client const &ProblemData::depot() const { return client(0); }
 
 std::pair<double, double> const &ProblemData::centroid() const
 {
@@ -64,11 +65,13 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       vehicleTypes_(vehicleTypes),
       numClients_(std::max<size_t>(clients.size(), 1) - 1),
       numVehicleTypes_(vehicleTypes.size()),
-      numVehicles_(0)
+      numVehicles_(std::accumulate(vehicleTypes.begin(),
+                                   vehicleTypes.end(),
+                                   0,
+                                   [](auto sum, VehicleType const &type) {
+                                       return sum + type.numAvailable;
+                                   }))
 {
-    for (auto const &vehicleType : vehicleTypes)
-        numVehicles_ += vehicleType.numAvailable;
-
     for (size_t idx = 1; idx <= numClients(); ++idx)
     {
         centroid_.first += static_cast<double>(clients[idx].x) / numClients();

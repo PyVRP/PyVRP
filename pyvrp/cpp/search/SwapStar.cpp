@@ -1,13 +1,16 @@
 #include "SwapStar.h"
 
-using TWS = TimeWindowSegment;
+using pyvrp::Cost;
+using pyvrp::search::Route;
+using pyvrp::search::SwapStar;
+using TWS = pyvrp::TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 {
     auto const currentCost = R1->penalisedCost(costEvaluator);
 
     auto const &vehicleType = data.vehicleType(R1->vehicleType());
-    for (Node *U = n(R1->depot); !U->isDepot(); U = n(U))
+    for (auto *U : *R1)
     {
         auto const twData
             = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
@@ -22,7 +25,7 @@ void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 }
 
 void SwapStar::updateInsertionCost(Route *R,
-                                   Node *U,
+                                   Route::Node *U,
                                    CostEvaluator const &costEvaluator)
 {
     auto &insertPositions = cache(R->idx, U->client);
@@ -34,17 +37,19 @@ void SwapStar::updateInsertionCost(Route *R,
     auto const &vehicleType = data.vehicleType(R->vehicleType());
 
     // Insert cost of U just after the depot (0 -> U -> ...)
-    auto twData = TWS::merge(
-        data.durationMatrix(), R->depot->twBefore, U->tw, n(R->depot)->twAfter);
-    auto dist = R->dist() + data.dist(0, U->client)
-                + data.dist(U->client, n(R->depot)->client)
-                - data.dist(0, n(R->depot)->client);
+    auto twData = TWS::merge(data.durationMatrix(),
+                             R->startDepot->twBefore,
+                             U->tw,
+                             n(R->startDepot)->twAfter);
+    auto dist = R->dist() + data.dist(R->startDepot.client, U->client)
+                + data.dist(U->client, n(&R->startDepot)->client)
+                - data.dist(R->startDepot.client, n(&R->startDepot)->client);
     auto cost = costEvaluator.penalisedRouteCost(
         dist, R->load(), twData, vehicleType);
 
-    insertPositions.maybeAdd(cost - currentCost, R->depot);
+    insertPositions.maybeAdd(cost - currentCost, &R->startDepot);
 
-    for (Node *V = n(R->depot); !V->isDepot(); V = n(V))
+    for (auto *V : *R)
     {
         // Insert cost of U just after V (V -> U -> ...)
         twData = TWS::merge(
@@ -58,8 +63,8 @@ void SwapStar::updateInsertionCost(Route *R,
     }
 }
 
-std::pair<Cost, Node *> SwapStar::getBestInsertPoint(
-    Node *U, Node *V, CostEvaluator const &costEvaluator)
+std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto &best_ = cache(V->route->idx, U->client);
 
@@ -173,8 +178,8 @@ Cost SwapStar::evaluate(Route *routeU,
             cache(routeU->idx, idx).shouldUpdate = true;
     }
 
-    for (Node *U = n(routeU->depot); !U->isDepot(); U = n(U))
-        for (Node *V = n(routeV->depot); !V->isDepot(); V = n(V))
+    for (auto *U : *routeU)
+        for (auto *V : *routeV)
         {
             Cost deltaCost = 0;
 

@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace pyvrp
+{
 struct PopulationParams
 {
     size_t minPopSize;
@@ -48,9 +50,28 @@ struct PopulationParams
     size_t maxPopSize() const { return minPopSize + generationSize; }
 };
 
+/**
+ * SubPopulation(diversity_op: DiversityMeasure, params: PopulationParams)
+ *
+ * Creates a SubPopulation instance.
+ *
+ * This subpopulation manages a collection of solutions, and initiates
+ * survivor selection (purging) when their number grows large. A
+ * subpopulation's solutions can be accessed via indexing and iteration.
+ * Each solution is stored as a tuple of type ``_Item``, which stores
+ * the solution itself, a fitness score (higher is worse), and a list
+ * of proximity values to the other solutions in the subpopulation.
+ *
+ * Parameters
+ * ----------
+ * diversity_op
+ *     Operator to use to determine pairwise diversity between solutions.
+ * params
+ *     Population parameters.
+ */
 class SubPopulation
 {
-    DiversityMeasure divOp;
+    diversity::DiversityMeasure divOp;
     PopulationParams const &params;  // owned by Population, on the Python side
 
 public:
@@ -81,10 +102,22 @@ private:
     void remove(std::vector<Item>::iterator const &iterator);
 
 public:
-    SubPopulation(DiversityMeasure divOp, PopulationParams const &params);
+    SubPopulation(diversity::DiversityMeasure divOp,
+                  PopulationParams const &params);
 
     ~SubPopulation();
 
+    /**
+     * Adds the given solution to the subpopulation. Survivor selection is
+     * automatically triggered when the population reaches its maximum size.
+     *
+     * Parameters
+     * ----------
+     * solution
+     *     Solution to add to the subpopulation.
+     * cost_evaluator
+     *     CostEvaluator to use to compute the cost.
+     */
     void add(Solution const *solution, CostEvaluator const &costEvaluator);
 
     std::vector<Item>::const_iterator cbegin() const;
@@ -95,11 +128,31 @@ public:
 
     Item const &operator[](size_t idx) const;
 
+    /**
+     * Performs survivor selection: solutions in the subpopulation are
+     * purged until the population is reduced to the ``min_pop_size``.
+     * Purging happens to duplicate solutions first, and then to solutions
+     * with high biased fitness.
+     *
+     * Parameters
+     * ----------
+     * cost_evaluator
+     *     CostEvaluator to use to compute the cost.
+     */
     void purge(CostEvaluator const &costEvaluator);
 
-    // Recomputes the fitness of all solutions maintained by this subpopulation.
-    // This is called whenever a solution is added or removed.
+    /**
+     * Updates the biased fitness scores of solutions in the subpopulation.
+     * This fitness depends on the quality of the solution (based on its cost)
+     * and the diversity w.r.t. to other solutions in the subpopulation.
+     *
+     * .. warning::
+     *
+     *    This function must be called before accessing the
+     *    :meth:`~SubPopulationItem.fitness` attribute.
+     */
     void updateFitness(CostEvaluator const &costEvaluator);
 };
+}  // namespace pyvrp
 
 #endif  // PYVRP_SUBPOPULATION_H

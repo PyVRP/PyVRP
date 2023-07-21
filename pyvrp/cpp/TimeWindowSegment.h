@@ -4,16 +4,49 @@
 #include "Matrix.h"
 #include "Measure.h"
 
+namespace pyvrp
+{
+/**
+ * TimeWindowSegment(
+ *     idx_first: int = 0,
+ *     idx_last: int = 0,
+ *     duration: int = 0,
+ *     time_warp: int = 0,
+ *     tw_early: int = 0,
+ *     tw_late: int = 0,
+ *     release_time: int = 0,
+ * )
+ *
+ * Creates a time window segment.
+ *
+ * Parameters
+ * ----------
+ * idx_first
+ *     Index of the first client in the route segment.
+ * idx_last
+ *     Index of the last client in the route segment.
+ * duration
+ *     Total duration, including waiting time.
+ * time_warp
+ *     Total time warp on the route segment.
+ * tw_early
+ *     Earliest visit moment of the first client.
+ * tw_late
+ *     Latest visit moment of the first client.
+ * release_time
+ *     Earliest moment to start the route segment.
+ */
 class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    int idxFirst = 0;       // Index of the first client in the segment
-    int idxLast = 0;        // Index of the last client in the segment
-    Duration duration = 0;  // Total duration, incl. waiting and servicing
-    Duration timeWarp = 0;  // Cumulative time warp
-    Duration twEarly = 0;   // Earliest visit moment of first client
-    Duration twLate = 0;    // Latest visit moment of last client
+    int idxFirst = 0;          // Index of the first client in the segment
+    int idxLast = 0;           // Index of the last client in the segment
+    Duration duration = 0;     // Total duration, incl. waiting and servicing
+    Duration timeWarp = 0;     // Cumulative time warp
+    Duration twEarly = 0;      // Earliest visit moment of first client
+    Duration twLate = 0;       // Latest visit moment of first client
+    Duration releaseTime = 0;  // Earliest allowed moment to leave the depot
 
     [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
                                    TWS const &other) const;
@@ -27,8 +60,12 @@ public:
           Args... args);
 
     /**
-     * Total time warp, that is, the time warp along the the segment, and
-     * potential time warp due to too late a release time.
+     * Returns the total time warp on this route segment.
+     *
+     * Returns
+     * -------
+     * int
+     *     Total time warp on this route segment.
      */
     [[nodiscard]] inline Duration totalTimeWarp() const;
 
@@ -45,7 +82,8 @@ public:
                              Duration duration,
                              Duration timeWarp,
                              Duration twEarly,
-                             Duration twLate);
+                             Duration twLate,
+                             Duration releaseTime);
 };
 
 TimeWindowSegment TimeWindowSegment::merge(
@@ -65,7 +103,8 @@ TimeWindowSegment TimeWindowSegment::merge(
             duration + other.duration + travelDuration + diffWait,
             timeWarp + other.timeWarp + diffTw,
             std::max(other.twEarly - diff, twEarly) - diffWait,
-            std::min(other.twLate - diff, twLate) + diffTw};
+            std::min(other.twLate - diff, twLate) + diffTw,
+            std::max(releaseTime, other.releaseTime)};
 #endif
 }
 
@@ -88,7 +127,10 @@ TimeWindowSegment TimeWindowSegment::merge(
 #endif
 }
 
-Duration TimeWindowSegment::totalTimeWarp() const { return timeWarp; }
+Duration TimeWindowSegment::totalTimeWarp() const
+{
+    return timeWarp + std::max<Duration>(releaseTime - twLate, 0);
+}
 
 Duration TimeWindowSegment::totalDuration() const { return duration; }
 
@@ -97,14 +139,17 @@ TimeWindowSegment::TimeWindowSegment(int idxFirst,
                                      Duration duration,
                                      Duration timeWarp,
                                      Duration twEarly,
-                                     Duration twLate)
+                                     Duration twLate,
+                                     Duration releaseTime)
     : idxFirst(idxFirst),
       idxLast(idxLast),
       duration(duration),
       timeWarp(timeWarp),
       twEarly(twEarly),
-      twLate(twLate)
+      twLate(twLate),
+      releaseTime(releaseTime)
 {
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_TIMEWINDOWSEGMENT_H

@@ -8,8 +8,22 @@
 
 using VehicleType = ProblemData::VehicleType;
 
+namespace pyvrp
+{
 /**
- * Cost evaluator class that computes penalty values for timewarp and load.
+ * CostEvaluator(capacity_penalty: int, tw_penalty: int)
+ *
+ * Creates a CostEvaluator instance.
+ *
+ * This class contains time warp and load penalties, and can compute penalties
+ * for a given time warp and load.
+ *
+ * Parameters
+ * ----------
+ * capacity_penalty
+ *    The penalty for each unit of excess load over the vehicle capacity.
+ * tw_penalty
+ *    The penalty for each unit of time warp.
  */
 class CostEvaluator
 {
@@ -62,8 +76,18 @@ public:
     [[nodiscard]] Cost penalisedCost(Solution const &solution) const;
 
     /**
-     * Computes the objective for a given solution. Returns the largest
-     * representable cost value if the solution is infeasible.
+     * Evaluates and returns the cost/objective of the given solution.
+     * Hand-waving some details, let :math:`x_{ij} \in \{ 0, 1 \}` indicate
+     * if edge :math:`(i, j)` is used in the solution encoded by the given
+     * solution, and :math:`y_i \in \{ 0, 1 \}` indicate if client
+     * :math:`i` is visited. The objective is then given by
+     *
+     * .. math::
+
+     *    \sum_{(i, j)} d_{ij} x_{ij} + \sum_{i} p_i (1 - y_i),
+     *
+     * where the first part lists the distance costs, and the second part the
+     * prizes of the unvisited clients.
      */
     [[nodiscard]] Cost cost(Solution const &solution) const;
 };
@@ -91,6 +115,7 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
 }
+}  // namespace pyvrp
 
 Cost CostEvaluator::penalisedRouteCost(
     Distance const distance,

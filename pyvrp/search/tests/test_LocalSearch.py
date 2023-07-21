@@ -7,14 +7,13 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
-    Neighbours,
     compute_neighbours,
 )
-from pyvrp.search._LocalSearch import LocalSearch as cpp_LocalSearch
+from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
-def test_local_search_raises_when_there_are_no_operators():
+def test_local_search_returns_same_solution_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
@@ -22,11 +21,9 @@ def test_local_search_raises_when_there_are_no_operators():
     ls = LocalSearch(data, rng, compute_neighbours(data))
     sol = Solution.make_random(data, rng)
 
-    with assert_raises(RuntimeError):
-        ls.search(sol, cost_evaluator)
-
-    with assert_raises(RuntimeError):
-        ls.intensify(sol, cost_evaluator)
+    # No operators have been added, so these calls should be no-ops.
+    assert_equal(ls.search(sol, cost_evaluator), sol)
+    assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():
@@ -74,11 +71,13 @@ def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
 
 
 @mark.parametrize(
-    "weight_wait_time,"
-    "weight_time_warp,"
-    "nb_granular,"
-    "symmetric_proximity,"
-    "symmetric_neighbours",
+    (
+        "weight_wait_time",
+        "weight_time_warp",
+        "nb_granular",
+        "symmetric_proximity",
+        "symmetric_neighbours",
+    ),
     [
         (20, 20, 10, True, False),
         (20, 20, 10, True, True),
@@ -144,7 +143,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall():
     # into its own route. Since those solutions have larger distance but
     # smaller time warp, they are considered improving moves with a
     # sufficiently large time warp penalty.
-    neighbours: Neighbours = [[], [2], [], [], []]  # 1 -> 2 only
+    neighbours = [[], [2], [], [], []]  # 1 -> 2 only
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(Exchange10(data))
 

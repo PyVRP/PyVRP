@@ -1,0 +1,60 @@
+name: DOC
+
+on:
+  push:
+    branches: [ main ]
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: "Build and deploy documentation"
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up pages
+        uses: actions/configure-pages@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Pandoc, pip, and poetry
+        run: |
+          sudo apt install pandoc
+          python -m pip install --upgrade pip
+          pip install poetry
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        id: cache-python
+        with:
+          path: ~/.cache/pypoetry
+          key: python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+      - name: Install Python dependencies
+        if: steps.cache-python.outputs.cache-hit != 'true'
+        run: poetry install --no-root --with docs,examples
+      - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 'latest'
+      - name: Build PyVRP
+        run: poetry install --only-root
+      - name: Build documentation
+        run: poetry run make html --directory=docs
+      - name: Upload documentation
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'docs/build/html'
+      - name: Deploy documentation
+        id: deployment
+        uses: actions/deploy-pages@v2

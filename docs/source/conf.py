@@ -1,14 +1,11 @@
 import datetime
-import glob
 import os
 import shutil
 import sys
-from pathlib import Path
 
 import tomli
 
 # -- Project information
-
 sys.path.insert(0, os.path.abspath("../../"))
 
 now = datetime.date.today()
@@ -21,47 +18,29 @@ with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
     release = version = pyproj["tool"]["poetry"]["version"]
 
-for file in glob.iglob("../../examples/*.ipynb"):
-    path = Path(file)
+print("Copying example notebooks into docs/source/examples/")
+shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
 
-    print(f"Copy {path.name} into docs/source/examples/")
-    shutil.copy2(path, f"examples/{path.name}")
-
-# -- Autoapi and autodoc
-
-autoapi_type = "python"
-autoapi_dirs = ["../../pyvrp"]
-autoapi_options = ["members", "undoc-members", "special-members"]
-autoapi_ignore = ["*/tests/*.py"]
-
-autoapi_generate_api_docs = False
-autoapi_add_toctree_entry = False
-autoapi_add_objects_to_toctree = False
-
-autoapi_python_class_content = "class"
-autoapi_member_order = "bysource"
-
+# -- API documentation
+autoclass_content = "class"
+autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 
-# -- Numpydoc
-
+# -- numpydoc
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
-
-nbsphinx_execute = "never"
+nbsphinx_execute = "always"
 
 # -- General configuration
-
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    "autoapi.extension",
     "sphinx.ext.intersphinx",
-    "sphinx_rtd_theme",
+    "sphinx_immaterial",
     "nbsphinx",
     "numpydoc",
 ]
@@ -81,8 +60,70 @@ templates_path = ["_templates"]
 add_module_names = False
 
 # -- Options for HTML output
-
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_immaterial"
+html_logo = "assets/images/icon.svg"
+html_theme_options = {
+    "site_url": "https://pyvrp.org/",
+    "repo_url": "https://github.com/PyVRP/PyVRP/",
+    "icon": {
+        "repo": "fontawesome/brands/github",
+        "edit": "material/file-edit-outline",
+    },
+    "features": [
+        "navigation.expand",
+        "navigation.top",
+    ],
+    "palette": [
+        {
+            "media": "(prefers-color-scheme: light)",
+            "primary": "orange",
+            "accent": "yellow",
+            "scheme": "default",
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "primary": "orange",
+            "accent": "yellow",
+            "scheme": "slate",
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to light mode",
+            },
+        },
+    ],
+    "version_dropdown": True,
+    "version_info": [
+        {
+            "version": "",
+            "title": "Development",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.4.4",
+            "title": "v0.4.4",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.3.0",
+            "title": "v0.3.0",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.2.1",
+            "title": "v0.2.1",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.1.0",
+            "title": "v0.1.0",
+            "aliases": [],
+        },
+    ],
+}
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"

@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_raises
+from numpy.testing import assert_allclose, assert_raises
 from pytest import mark
 
 from pyvrp import Client, ProblemData, VehicleType
@@ -8,14 +8,24 @@ from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
-    "x,y,demand,service_duration,tw_early,tw_late,prize",
+    (
+        "x",
+        "y",
+        "demand",
+        "service_duration",
+        "tw_early",
+        "tw_late",
+        "release_time",
+        "prize",
+    ),
     [
-        (1, 1, 1, 1, 0, 1, 0),  # normal
-        (1, 1, 1, 0, 0, 1, 0),  # zero duration
-        (1, 1, 0, 1, 0, 1, 0),  # zero demand
-        (1, 1, 1, 1, 0, 0, 0),  # zero length time interval
-        (-1, -1, 1, 1, 0, 1, 0),  # negative coordinates
-        (0, 0, 1, 1, 0, 1, 1),  # positive prize
+        (1, 1, 1, 1, 0, 1, 0, 0),  # normal
+        (1, 1, 1, 0, 0, 1, 0, 0),  # zero duration
+        (1, 1, 0, 1, 0, 1, 0, 0),  # zero demand
+        (1, 1, 1, 1, 0, 0, 0, 0),  # zero length time interval
+        (-1, -1, 1, 1, 0, 1, 0, 0),  # negative coordinates
+        (1, 1, 1, 1, 0, 1, 1, 0),  # positive release time
+        (0, 0, 1, 1, 0, 1, 0, 1),  # positive prize
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
@@ -25,55 +35,52 @@ def test_client_constructor_initialises_data_fields_correctly(
     service_duration: int,
     tw_early: int,
     tw_late: int,
+    release_time: int,
     prize: int,
 ):
-    client = Client(x, y, demand, service_duration, tw_early, tw_late, prize)
+    client = Client(
+        x, y, demand, service_duration, tw_early, tw_late, release_time, prize
+    )
     assert_allclose(client.x, x)
     assert_allclose(client.y, y)
     assert_allclose(client.demand, demand)
     assert_allclose(client.service_duration, service_duration)
     assert_allclose(client.tw_early, tw_early)
     assert_allclose(client.tw_late, tw_late)
+    assert_allclose(client.release_time, release_time)
     assert_allclose(client.prize, prize)
 
 
 @mark.parametrize(
-    "x,y,demand,service_duration,tw_early,tw_late,prize",
+    (
+        "x",
+        "y",
+        "demand",
+        "service",
+        "tw_early",
+        "tw_late",
+        "release_time",
+        "prize",
+    ),
     [
-        (1, 1, 1, 1, 1, 0, 0),  # late < early
-        (1, 1, 1, -1, 0, 1, 0),  # negative duration
-        (1, 1, -1, 1, 0, 1, 0),  # negative demand
-        (1, 1, 1, 1, 0, 1, -1),  # negative prize
+        (1, 1, 1, 1, 1, 0, 0, 0),  # late < early
+        (1, 1, 1, -1, 0, 1, 0, 0),  # negative service duration
+        (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
+        (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
     ],
 )
 def test_raises_for_invalid_client_data(
     x: int,
     y: int,
     demand: int,
-    service_duration: int,
+    service: int,
     tw_early: int,
     tw_late: int,
+    release_time: int,
     prize: int,
 ):
     with assert_raises(ValueError):
-        Client(x, y, demand, service_duration, tw_early, tw_late, prize)
-
-
-def test_depot_is_first_client():
-    """
-    The ``depot()`` helper should return the first client, that is,
-    ``client(0)``.
-    """
-    mat = [[0, 1], [1, 0]]
-
-    data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=0, y=1)],
-        vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=mat,
-        duration_matrix=mat,
-    )
-
-    assert_(data.depot() is data.client(0))
+        Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
 
 
 def test_centroid():

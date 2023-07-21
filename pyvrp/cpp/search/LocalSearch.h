@@ -3,7 +3,6 @@
 
 #include "CostEvaluator.h"
 #include "LocalSearchOperator.h"
-#include "Node.h"
 #include "ProblemData.h"
 #include "Route.h"
 #include "Solution.h"
@@ -13,9 +12,11 @@
 #include <stdexcept>
 #include <vector>
 
+namespace pyvrp::search
+{
 class LocalSearch
 {
-    using NodeOp = LocalSearchOperator<Node>;
+    using NodeOp = LocalSearchOperator<Route::Node>;
     using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<int>>;
 
@@ -30,11 +31,8 @@ class LocalSearch
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
-    std::vector<Node> clients;  // Note that clients[0] is a sentinel value
+    std::vector<Route::Node> clients;
     std::vector<Route> routes;
-
-    std::vector<Node> startDepots;  // These mark the start of routes
-    std::vector<Node> endDepots;    // These mark the end of routes
 
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
@@ -49,7 +47,9 @@ class LocalSearch
     Solution exportSolution() const;
 
     // Tests the node pair (U, V).
-    bool applyNodeOps(Node *U, Node *V, CostEvaluator const &costEvaluator);
+    bool applyNodeOps(Route::Node *U,
+                      Route::Node *V,
+                      CostEvaluator const &costEvaluator);
 
     // Tests the route pair (U, V).
     bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
@@ -58,10 +58,12 @@ class LocalSearch
     void update(Route *U, Route *V);
 
     // Test inserting U after V. Called if U is not currently in the solution.
-    void maybeInsert(Node *U, Node *V, CostEvaluator const &costEvaluator);
+    void maybeInsert(Route::Node *U,
+                     Route::Node *V,
+                     CostEvaluator const &costEvaluator);
 
     // Test removing U from the solution. Called when U can be removed.
-    void maybeRemove(Node *U, CostEvaluator const &costEvaluator);
+    void maybeRemove(Route::Node *U, CostEvaluator const &costEvaluator);
 
 public:
     /**
@@ -109,5 +111,6 @@ public:
 
     LocalSearch(ProblemData const &data, Neighbours neighbours);
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_LOCALSEARCH_H

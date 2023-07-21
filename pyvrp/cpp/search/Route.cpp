@@ -1,56 +1,99 @@
-#define _USE_MATH_DEFINES  // needed to get M_PI etc. on Windows builds
-// TODO use std::numbers::pi instead of M_PI when C++20 is supported by CIBW
-
 #include "Route.h"
 
 #include <cmath>
+#include <numbers>
 #include <ostream>
 
-using TWS = TimeWindowSegment;
+using pyvrp::search::Route;
+using TWS = pyvrp::TimeWindowSegment;
 
-Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
-    : data(data), vehicleType_(vehType), idx(idx)
+Route::Node::Node(size_t client) : client(client) {}
+
+void Route::Node::insertAfter(Route::Node *other)
 {
+    if (route)  // If we're in a route, we first stitch up the current route.
+    {           // If we're not in a route, this step should be skipped.
+        prev->next = next;
+        next->prev = prev;
+    }
+
+    prev = other;
+    next = other->next;
+
+    other->next->prev = this;
+    other->next = this;
+
+    route = other->route;
 }
 
-void Route::setupNodes()
+void Route::Node::swapWith(Route::Node *other)
 {
-    nodes.clear();
-    auto *node = depot;
+    auto *VPred = other->prev;
+    auto *VSucc = other->next;
+    auto *UPred = prev;
+    auto *USucc = next;
 
-    do
-    {
-        node = n(node);
-        nodes.push_back(node);
-    } while (!node->isDepot());
+    auto *routeU = route;
+    auto *routeV = other->route;
+
+    UPred->next = other;
+    USucc->prev = other;
+    VPred->next = this;
+    VSucc->prev = this;
+
+    prev = VPred;
+    next = VSucc;
+    other->prev = UPred;
+    other->next = USucc;
+
+    route = routeV;
+    other->route = routeU;
+}
+
+void Route::Node::remove()
+{
+    prev->next = next;
+    next->prev = prev;
+
+    prev = nullptr;
+    next = nullptr;
+    route = nullptr;
+}
+
+Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
+    : data(data),
+      vehicleType_(vehType),
+      idx(idx),
+      startDepot(data.vehicleType(vehType).depot),
+      endDepot(data.vehicleType(vehType).depot)
+{
+    startDepot.route = this;
+    endDepot.route = this;
 }
 
 void Route::setupSector()
 {
-    if (empty())  // Note: sector has no meaning for empty routes, don't use
+    if (empty())
         return;
 
-    auto const &depotData = data.client(0);
-    auto const &clientData = data.client(n(depot)->client);
+    auto const &depotData = data.client(startDepot.client);
+    auto const &clientData = data.client(n(&startDepot)->client);
 
     auto const diffX = static_cast<double>(clientData.x - depotData.x);
     auto const diffY = static_cast<double>(clientData.y - depotData.y);
     auto const angle = CircleSector::positive_mod(
-        static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
+        static_cast<int>(32768. * std::atan2(diffY, diffX) / std::numbers::pi));
 
     sector.initialize(angle);
 
-    for (auto it = nodes.begin(); it != nodes.end() - 1; ++it)
+    for (auto *node : *this)
     {
-        auto const *node = *it;
-        assert(!node->isDepot());
-
         auto const &clientData = data.client(node->client);
 
         auto const diffX = static_cast<double>(clientData.x - depotData.x);
         auto const diffY = static_cast<double>(clientData.y - depotData.y);
-        auto const angle = CircleSector::positive_mod(
-            static_cast<int>(32768. * atan2(diffY, diffX) / M_PI));
+        auto const angle = CircleSector::positive_mod(static_cast<int>(
+            32768. * std::atan2(diffY, diffX) / std::numbers::pi));
 
         sector.extend(angle);
     }
@@ -58,7 +101,7 @@ void Route::setupSector()
 
 void Route::setupRouteTimeWindows()
 {
-    auto *node = nodes.back();
+    auto *node = &endDepot;
 
     do  // forward time window segments
     {
@@ -76,61 +119,58 @@ bool Route::overlapsWith(Route const &other, int const tolerance) const
 
 void Route::update()
 {
-    auto const oldNodes = nodes;
-    setupNodes();
+    nodes.clear();
+    auto *node = n(&startDepot);
 
     Load load = 0;
     Distance distance = 0;
-    Distance reverseDistance = 0;
-    bool foundChange = false;
+    Distance deltaReversalDistance = 0;
 
-    for (size_t pos = 0; pos != nodes.size(); ++pos)
+    while (!node->isDepot())
     {
-        auto *node = nodes[pos];
-
-        if (!foundChange && (pos >= oldNodes.size() || node != oldNodes[pos]))
-        {
-            foundChange = true;
-
-            if (pos > 0)  // change at pos, so everything before is the same
-            {             // and we can re-use cumulative calculations
-                load = nodes[pos - 1]->cumulatedLoad;
-                distance = nodes[pos - 1]->cumulatedDistance;
-                reverseDistance = nodes[pos - 1]->cumulatedReversalDistance;
-            }
-        }
-
-        if (!foundChange)
-            continue;
+        size_t const position = nodes.size();
+        nodes.push_back(node);
 
         load += data.client(node->client).demand;
         distance += data.dist(p(node)->client, node->client);
 
-        reverseDistance += data.dist(node->client, p(node)->client);
-        reverseDistance -= data.dist(p(node)->client, node->client);
+        deltaReversalDistance += data.dist(node->client, p(node)->client);
+        deltaReversalDistance -= data.dist(p(node)->client, node->client);
 
-        node->position = pos + 1;
+        node->position = position + 1;
         node->cumulatedLoad = load;
         node->cumulatedDistance = distance;
-        node->cumulatedReversalDistance = reverseDistance;
+        node->deltaReversalDistance = deltaReversalDistance;
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
+
+        node = n(node);
     }
+
+    load += data.client(endDepot.client).demand;
+    distance += data.dist(p(&endDepot)->client, endDepot.client);
+
+    deltaReversalDistance += data.dist(endDepot.client, p(&endDepot)->client);
+    deltaReversalDistance -= data.dist(p(&endDepot)->client, endDepot.client);
+
+    endDepot.position = size() + 1;
+    endDepot.cumulatedLoad = load;
+    endDepot.cumulatedDistance = distance;
+    endDepot.deltaReversalDistance = deltaReversalDistance;
+    endDepot.twBefore = TWS::merge(
+        data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
     setupSector();
     setupRouteTimeWindows();
 
-    load_ = nodes.back()->cumulatedLoad;
-    isLoadFeasible_ = load_ <= capacity();
-
-    tws_ = nodes.back()->twBefore;
-    isTimeWarpFeasible_ = tws_.totalTimeWarp() == 0;
+    load_ = endDepot.cumulatedLoad;
+    tws_ = endDepot.twBefore.twBefore();
 }
 
-std::ostream &operator<<(std::ostream &out, Route const &route)
+std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx + 1 << ":";  // route number
-    for (auto *node = n(route.depot); !node->isDepot(); node = n(node))
+    for (auto *node : route)
         out << ' ' << node->client;  // client index
     out << '\n';
 

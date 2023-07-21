@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from statistics import fmean
 from typing import List
 
-from pyvrp._CostEvaluator import CostEvaluator
+from pyvrp._pyvrp import CostEvaluator
 
 
 @dataclass
@@ -33,18 +33,17 @@ class PenaltyParams:
     penalty_increase
         Amount :math:`p_i \\ge 1` by which the current penalties are
         increased when insufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
+        ``target_feasible``) have been found amongst the most recent
         registrations. The penalty values :math:`v` are updated as
         :math:`v \\gets p_i v`.
     penalty_decrease
         Amount :math:`p_d \\in [0, 1]` by which the current penalties are
-        decreased when sufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
-        registrations. The penalty values :math:`v` are updated as
-        :math:`v \\gets p_d v`.
+        decreased when sufficient feasible solutions (see ``target_feasible``)
+        have been found amongst the most recent registrations. The penalty
+        values :math:`v` are updated as :math:`v \\gets p_d v`.
     target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
-        in the last :py:attr:`~num_registrations_between_penalty_updates`
+        in the last ``num_registrations_between_penalty_updates``
         registrations. This percentage is used to update the penalty terms:
         when insufficient feasible solutions have been registered, the
         penalties are increased; similarly, when too many feasible solutions
@@ -65,16 +64,15 @@ class PenaltyParams:
     penalty_increase
         Amount :math:`p_i \\ge 1` by which the current penalties are
         increased when insufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
+        ``target_feasible``) have been found amongst the most recent
         registrations.
     penalty_decrease
         Amount :math:`p_d \\in [0, 1]` by which the current penalties are
-        decreased when sufficient feasible solutions (see
-        :py:attr:`~target_feasible`) have been found amongst the most recent
-        registrations.
+        decreased when sufficient feasible solutions (see ``target_feasible``)
+        have been found amongst the most recent registrations.
     target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
-        in the last :py:attr:`~num_registrations_between_penalty_updates`
+        in the last ``num_registrations_between_penalty_updates``
         registrations.
     """
 
@@ -156,8 +154,8 @@ class PenaltyManager:
             return int(
                 min(self._params.penalty_increase * penalty + 1, 1000.0)
             )
-        else:
-            return int(max(self._params.penalty_decrease * penalty - 1, 1.0))
+
+        return int(max(self._params.penalty_decrease * penalty - 1, 1.0))
 
     def register_load_feasible(self, is_load_feasible: bool):
         """

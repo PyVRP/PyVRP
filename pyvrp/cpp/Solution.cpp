@@ -5,6 +5,12 @@
 #include <numeric>
 #include <unordered_map>
 
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+using pyvrp::Solution;
+
 using Client = int;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
@@ -203,8 +209,14 @@ Solution::Route::Route(ProblemData const &data,
     if (visits_.empty())
         return;
 
-    Duration time = data.depot().twEarly;
-    int prevClient = 0;
+    for (size_t idx = 0; idx != size(); ++idx)
+        release_ = std::max(release_, data.client(visits_[idx]).releaseTime);
+
+    auto const &vehType = data.vehicleType(vehicleType);
+    auto const &depot = data.client(vehType.depot);
+
+    Duration time = std::max(release_, depot.twEarly);
+    size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
@@ -238,14 +250,14 @@ Solution::Route::Route(ProblemData const &data,
     }
 
     Client const last = visits_.back();  // last client has depot as successor
-    distance_ += data.dist(last, 0);
-    duration_ += data.duration(last, 0);
+    distance_ += data.dist(last, vehType.depot);
+    duration_ += data.duration(last, vehType.depot);
 
-    time += data.client(last).serviceDuration + data.duration(last, 0);
-    timeWarp_ += std::max<Duration>(time - data.depot().twLate, 0);
+    time += data.client(last).serviceDuration
+            + data.duration(last, vehType.depot);
+    timeWarp_ += std::max<Duration>(time - depot.twLate, 0);
 
-    auto const capacity = data.vehicleType(vehicleType).capacity;
-    excessLoad_ = capacity < demand_ ? demand_ - capacity : 0;
+    excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
 }
 
 bool Solution::Route::empty() const { return visits_.empty(); }
@@ -260,13 +272,6 @@ Visits::const_iterator Solution::Route::begin() const
 }
 
 Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
-
-Visits::const_iterator Solution::Route::cbegin() const
-{
-    return visits_.cbegin();
-}
-
-Visits::const_iterator Solution::Route::cend() const { return visits_.cend(); }
 
 Visits const &Solution::Route::visits() const { return visits_; }
 
@@ -283,6 +288,8 @@ Duration Solution::Route::serviceDuration() const { return service_; }
 Duration Solution::Route::timeWarp() const { return timeWarp_; }
 
 Duration Solution::Route::waitDuration() const { return wait_; }
+
+Duration Solution::Route::releaseTime() const { return release_; }
 
 Cost Solution::Route::prizes() const { return prizes_; }
 
