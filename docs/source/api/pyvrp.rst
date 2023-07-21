@@ -92,5 +92,3 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoexception:: EmptySolutionWarning
 
    .. autoexception:: ScalingWarning
-
-.. TODO add pyvrp CLI, and think about missing files (Matrix, TWS?)
