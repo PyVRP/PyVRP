@@ -18,7 +18,7 @@ void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
 
         removalCosts(R1->idx, U->client)
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(twData.timeWarp())
+              + costEvaluator.twPenalty(twData.totalTimeWarp())
               - costEvaluator.twPenalty(R1->timeWarp());
     }
 }
@@ -44,7 +44,7 @@ void SwapStar::updateInsertionCost(Route *R,
           - data.dist(R->startDepot.client, n(&R->startDepot)->client);
 
     Cost deltaCost = static_cast<Cost>(deltaDist)
-                     + costEvaluator.twPenalty(twData.timeWarp())
+                     + costEvaluator.twPenalty(twData.totalTimeWarp())
                      - costEvaluator.twPenalty(R->timeWarp());
 
     insertPositions.maybeAdd(deltaCost, &R->startDepot);
@@ -60,7 +60,7 @@ void SwapStar::updateInsertionCost(Route *R,
                     - data.dist(V->client, n(V)->client);
 
         deltaCost = static_cast<Cost>(deltaDist)
-                    + costEvaluator.twPenalty(twData.timeWarp())
+                    + costEvaluator.twPenalty(twData.totalTimeWarp())
                     - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
@@ -87,7 +87,7 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
                                + data.dist(U->client, n(V)->client)
                                - data.dist(p(V)->client, n(V)->client);
     Cost const deltaCost = static_cast<Cost>(deltaDist)
-                           + costEvaluator.twPenalty(twData.timeWarp())
+                           + costEvaluator.twPenalty(twData.totalTimeWarp())
                            - costEvaluator.twPenalty(V->route->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
@@ -215,7 +215,7 @@ Cost SwapStar::evaluate(Route *routeU,
                                best.V->tw,
                                n(best.U)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     }
     else if (best.VAfter->position < best.U->position)
     {
@@ -226,7 +226,7 @@ Cost SwapStar::evaluate(Route *routeU,
             routeU->twBetween(best.VAfter->position + 1, best.U->position - 1),
             n(best.U)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     }
     else
     {
@@ -237,7 +237,7 @@ Cost SwapStar::evaluate(Route *routeU,
             best.V->tw,
             n(best.VAfter)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     }
 
     if (best.UAfter->position + 1 == best.V->position)
@@ -248,7 +248,7 @@ Cost SwapStar::evaluate(Route *routeU,
                                best.U->tw,
                                n(best.V)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     }
     else if (best.UAfter->position < best.V->position)
     {
@@ -259,7 +259,7 @@ Cost SwapStar::evaluate(Route *routeU,
             routeV->twBetween(best.UAfter->position + 1, best.V->position - 1),
             n(best.V)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     }
     else
     {
@@ -270,7 +270,7 @@ Cost SwapStar::evaluate(Route *routeU,
             best.U->tw,
             n(best.UAfter)->twAfter);
 
-        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     }
 
     deltaCost -= costEvaluator.twPenalty(routeU->timeWarp());

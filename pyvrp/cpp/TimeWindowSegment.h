@@ -47,7 +47,7 @@ class TimeWindowSegment
     Duration timeWarp_ = 0;  // Cumulative time warp (end - start = dur - tw)
     Duration twEarly_ = 0;   // Earliest moment to start service of first client
     Duration twLate_ = 0;    // Latest moment to start service of first client
-    Duration releaseTime = 0;  // Earliest allowed moment to leave the depot
+    Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
 
     [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
                                    TWS const &other) const;
@@ -67,7 +67,7 @@ public:
     /**
      * The total time warp on this route segment.
      */
-    [[nodiscard]] inline Duration timeWarp() const;
+    [[nodiscard]] inline Duration totalTimeWarp() const;
     /**
      * Earliest start time for this route segment that results in minimum route
      * segment duration.
@@ -78,6 +78,11 @@ public:
      * segment duration.
      */
     [[nodiscard]] inline Duration twLate() const;
+    /**
+     * Earliest possible release time for this segment (latest release time of)
+     * clients in this segment).
+     */
+    [[nodiscard]] inline Duration releaseTime() const;
 
     TimeWindowSegment() = default;  // TODO at least require client index
 
@@ -111,7 +116,7 @@ TimeWindowSegment TimeWindowSegment::merge(
             timeWarp_ + other.timeWarp_ + diffTw,
             std::max(other.twEarly_ - diff, twEarly_) - diffWait,
             std::min(other.twLate_ - diff, twLate_) + diffTw,
-            std::max(releaseTime, other.releaseTime)};
+            std::max(releaseTime_, other.releaseTime_)};
 #endif
 }
 
@@ -136,14 +141,16 @@ TimeWindowSegment TimeWindowSegment::merge(
 
 Duration TimeWindowSegment::duration() const { return duration_; }
 
-Duration TimeWindowSegment::timeWarp() const
+Duration TimeWindowSegment::totalTimeWarp() const
 {
-    return timeWarp_ + std::max<Duration>(releaseTime - twLate, 0);
+    return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
 }
 
 Duration TimeWindowSegment::twEarly() const { return twEarly_; }
 
 Duration TimeWindowSegment::twLate() const { return twLate_; }
+
+Duration TimeWindowSegment::releaseTime() const { return releaseTime_; }
 
 TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
                                      size_t idxLast,
@@ -158,7 +165,7 @@ TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),
-      releaseTime(releaseTime)
+      releaseTime_(releaseTime)
 {
 }
 
@@ -169,7 +176,8 @@ TimeWindowSegment::TimeWindowSegment(size_t idx,
       duration_(client.serviceDuration),
       timeWarp_(0),
       twEarly_(client.twEarly),
-      twLate_(client.twLate)
+      twLate_(client.twLate),
+      releaseTime_(client.releaseTime)
 {
 }
 }  // namespace pyvrp

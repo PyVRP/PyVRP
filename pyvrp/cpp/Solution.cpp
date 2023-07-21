@@ -269,7 +269,7 @@ Duration Solution::Route::travelDuration() const { return travel_; }
 
 Duration Solution::Route::serviceDuration() const { return service_; }
 
-Duration Solution::Route::timeWarp() const { return tws_.timeWarp(); }
+Duration Solution::Route::timeWarp() const { return tws_.totalTimeWarp(); }
 
 Duration Solution::Route::waitDuration() const
 {
@@ -287,7 +287,7 @@ Duration Solution::Route::slack() const
     return tws_.twLate() - tws_.twEarly();
 }
 
-Duration Solution::Route::releaseTime() const { return tws_.release(); }
+Duration Solution::Route::releaseTime() const { return tws_.releaseTime(); }
 
 Cost Solution::Route::prizes() const { return prizes_; }
 
@@ -305,7 +305,7 @@ bool Solution::Route::isFeasible() const
 
 bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Solution::Route::hasTimeWarp() const { return tws_.timeWarp() > 0; }
+bool Solution::Route::hasTimeWarp() const { return tws_.totalTimeWarp() > 0; }
 
 bool Solution::Route::operator==(Solution::Route const &other) const
 {
@@ -315,7 +315,7 @@ bool Solution::Route::operator==(Solution::Route const &other) const
     // clang-format off
     return distance_ == other.distance_
         && demand_ == other.demand_
-        && tws_.timeWarp == other.tws_.timeWarp // TODO compare tws?
+        && tws_.totalTimeWarp() == other.tws_.totalTimeWarp() // TODO compare tws?
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;
     // clang-format on

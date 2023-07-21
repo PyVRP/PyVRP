@@ -575,7 +575,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("release_time"))
         .def(
             "total_time_warp",
-            [](TWS const &tws) { return tws.timeWarp().get(); },
+            [](TWS const &tws) { return tws.totalTimeWarp().get(); },
             DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
         .def_static("merge",
                     &merge<TWS, TWS>,

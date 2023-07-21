@@ -166,7 +166,7 @@ void Route::update()
     setupRouteTimeWindows();
 
     load_ = endDepot.cumulatedLoad;
-    timeWarp_ = endDepot.twBefore.timeWarp();
+    timeWarp_ = endDepot.twBefore.totalTimeWarp();
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
