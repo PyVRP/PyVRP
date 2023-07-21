@@ -16,3 +16,8 @@ We use `pybind11` to generate Python bindings for the C++ codebase. These
 bindings are generated from the `bindings.cpp` source files of each folder. 
 Each `bindings.cpp` file is compiled into a single extension module named after
 the installation folder, prefixed with an underscore.
+
+The bindings depend on header files ending in `_docs.h`. Those header files
+contain docstrings that are automatically extracted from the other header files
+present in this directory. The documentation headers are generated automatically
+by Meson during compilation.

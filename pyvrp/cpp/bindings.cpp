@@ -6,6 +6,7 @@
 #include "SubPopulation.h"
 #include "TimeWindowSegment.h"
 #include "XorShift128.h"
+#include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
 #include <pybind11/operators.h>
@@ -43,40 +44,6 @@ TWS merge(Matrix<pyvrp::Value> const &mat, Args... args)
 
 PYBIND11_MODULE(_pyvrp, m)
 {
-    py::class_<CostEvaluator>(m, "CostEvaluator")
-        .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
-                 return CostEvaluator(capacityPenalty, twPenalty);
-             }),
-             py::arg("capacity_penalty") = 0,
-             py::arg("tw_penalty") = 0)
-        .def(
-            "load_penalty",
-            [](CostEvaluator const &evaluator,
-               pyvrp::Value load,
-               pyvrp::Value capacity) {
-                return evaluator.loadPenalty(load, capacity).get();
-            },
-            py::arg("load"),
-            py::arg("capacity"))
-        .def(
-            "tw_penalty",
-            [](CostEvaluator const &evaluator, pyvrp::Value const timeWarp) {
-                return evaluator.twPenalty(timeWarp).get();
-            },
-            py::arg("time_warp"))
-        .def(
-            "penalised_cost",
-            [](CostEvaluator const &evaluator, Solution const &solution) {
-                return evaluator.penalisedCost(solution).get();
-            },
-            py::arg("solution"))
-        .def(
-            "cost",
-            [](CostEvaluator const &evaluator, Solution const &solution) {
-                return evaluator.cost(solution).get();
-            },
-            py::arg("solution"));
-
     py::class_<DynamicBitset>(m, "DynamicBitset")
         .def(py::init<size_t>(), py::arg("num_bits"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
@@ -120,7 +87,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("max", &Matrix<pyvrp::Value>::max)
         .def("size", &Matrix<pyvrp::Value>::size);
 
-    py::class_<ProblemData::Client>(m, "Client")
+    py::class_<ProblemData::Client>(
+        m, "Client", DOC(pyvrp, ProblemData, Client))
         .def(py::init<pyvrp::Value,
                       pyvrp::Value,
                       pyvrp::Value,
@@ -171,7 +139,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                })
         .def_readonly("required", &ProblemData::Client::required);
 
-    py::class_<ProblemData::VehicleType>(m, "VehicleType")
+    py::class_<ProblemData::VehicleType>(
+        m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<pyvrp::Value, size_t>(),
              py::arg("capacity"),
              py::arg("num_available"))
@@ -182,7 +151,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot);
 
-    py::class_<ProblemData>(m, "ProblemData")
+    py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init(
                  [](std::vector<ProblemData::Client> const &clients,
                     std::vector<ProblemData::VehicleType> const &vehicleTypes,
@@ -204,74 +173,105 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
-        .def_property_readonly("num_clients", &ProblemData::numClients)
-        .def_property_readonly("num_vehicles", &ProblemData::numVehicles)
+        .def_property_readonly("num_clients",
+                               &ProblemData::numClients,
+                               DOC(pyvrp, ProblemData, numClients))
         .def_property_readonly("num_vehicle_types",
-                               &ProblemData::numVehicleTypes)
+                               &ProblemData::numVehicleTypes,
+                               DOC(pyvrp, ProblemData, numVehicleTypes))
+        .def_property_readonly("num_vehicles",
+                               &ProblemData::numVehicles,
+                               DOC(pyvrp, ProblemData, numVehicles))
         .def("client",
              &ProblemData::client,
              py::arg("client"),
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, client))
         .def("centroid",
              &ProblemData::centroid,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, centroid))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, vehicleType))
         .def(
             "dist",
             [](ProblemData const &data, size_t first, size_t second) {
                 return data.dist(first, second).get();
             },
             py::arg("first"),
-            py::arg("second"))
+            py::arg("second"),
+            DOC(pyvrp, ProblemData, dist))
         .def(
             "duration",
             [](ProblemData const &data, size_t first, size_t second) {
                 return data.duration(first, second).get();
             },
             py::arg("first"),
-            py::arg("second"));
-    py::class_<Solution::Route>(m, "Route")
+            py::arg("second"),
+            DOC(pyvrp, ProblemData, duration));
+
+    py::class_<Solution::Route>(m, "Route", DOC(pyvrp, Solution, Route))
         .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
         .def("visits",
              &Solution::Route::visits,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, Route, visits))
         .def(
             "distance",
-            [](Solution::Route const &route) { return route.distance().get(); })
-        .def("demand",
-             [](Solution::Route const &route) { return route.demand().get(); })
-        .def("excess_load",
-             [](Solution::Route const &route) {
-                 return route.excessLoad().get();
-             })
+            [](Solution::Route const &route) { return route.distance().get(); },
+            DOC(pyvrp, Solution, Route, distance))
+        .def(
+            "demand",
+            [](Solution::Route const &route) { return route.demand().get(); },
+            DOC(pyvrp, Solution, Route, demand))
+        .def(
+            "excess_load",
+            [](Solution::Route const &route) {
+                return route.excessLoad().get();
+            },
+            DOC(pyvrp, Solution, Route, excessLoad))
         .def(
             "duration",
-            [](Solution::Route const &route) { return route.duration().get(); })
-        .def("service_duration",
-             [](Solution::Route const &route) {
-                 return route.serviceDuration().get();
-             })
+            [](Solution::Route const &route) { return route.duration().get(); },
+            DOC(pyvrp, Solution, Route, duration))
+        .def(
+            "service_duration",
+            [](Solution::Route const &route) {
+                return route.serviceDuration().get();
+            },
+            DOC(pyvrp, Solution, Route, serviceDuration))
         .def(
             "time_warp",
-            [](Solution::Route const &route) { return route.timeWarp().get(); })
-        .def("wait_duration",
-             [](Solution::Route const &route) {
-                 return route.waitDuration().get();
-             })
-        .def("release_time",
-             [](Solution::Route const &route) {
-                 return route.releaseTime().get();
-             })
-        .def("prizes",
-             [](Solution::Route const &route) { return route.prizes().get(); })
-        .def("centroid", &Solution::Route::centroid)
-        .def("vehicle_type", &Solution::Route::vehicleType)
+            [](Solution::Route const &route) { return route.timeWarp().get(); },
+            DOC(pyvrp, Solution, Route, timeWarp))
+        .def(
+            "wait_duration",
+            [](Solution::Route const &route) {
+                return route.waitDuration().get();
+            },
+            DOC(pyvrp, Solution, Route, waitDuration))
+        .def(
+            "release_time",
+            [](Solution::Route const &route) {
+                return route.releaseTime().get();
+            },
+            DOC(pyvrp, Solution, Route, releaseTime))
+        .def(
+            "prizes",
+            [](Solution::Route const &route) { return route.prizes().get(); },
+            DOC(pyvrp, Solution, Route, prizes))
+        .def("centroid",
+             &Solution::Route::centroid,
+             DOC(pyvrp, Solution, Route, centroid))
+        .def("vehicle_type",
+             &Solution::Route::vehicleType,
+             DOC(pyvrp, Solution, Route, vehicleType))
         .def("is_feasible", &Solution::Route::isFeasible)
         .def("has_excess_load", &Solution::Route::hasExcessLoad)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)
@@ -299,7 +299,7 @@ PYBIND11_MODULE(_pyvrp, m)
             return stream.str();
         });
 
-    py::class_<Solution>(m, "Solution")
+    py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
         // Note, the order of constructors is important! Since Solution::Route
         // implements __len__ and __getitem__, it can also be converted to
         // std::vector<int> and thus a list of Routes is a valid argument for
@@ -315,36 +315,78 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(
-            "make_random",                // this is a bit of a workaround for
-            [](py::object)                // classmethods, because pybind does
-            {                             // not yet support those natively.
-                return py::cpp_function(  // See issue 1693 in the pybind repo.
+            "make_random",            // this is a bit of a workaround for
+            [](py::object)            // classmethods, because pybind does
+            {                         // not yet support those natively.
+                py::options options;  // See issue 1693 in the pybind repo.
+                options.disable_function_signatures();
+
+                return py::cpp_function(
                     [](ProblemData const &data, XorShift128 &rng) {
                         return Solution(data, rng);
                     },
                     py::arg("data"),
-                    py::arg("rng"));
+                    py::arg("rng"),
+                    R"doc(
+                        make_random(data: ProblemData, rng: XorShift128) -> Solution
+
+                        Creates a randomly generated solution.
+
+                        Parameters
+                        ----------
+                        data
+                            Data instance.
+                        rng
+                            Random number generator to use.
+
+                        Returns
+                        -------
+                        Solution
+                            The randomly generated solution.
+                    )doc");
             })
-        .def("num_routes", &Solution::numRoutes)
-        .def("num_clients", &Solution::numClients)
+        .def(
+            "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
+        .def("num_clients",
+             &Solution::numClients,
+             DOC(pyvrp, Solution, numClients))
         .def("get_routes",
              &Solution::getRoutes,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, getRoutes))
         .def("get_neighbours",
              &Solution::getNeighbours,
-             py::return_value_policy::reference_internal)
-        .def("is_feasible", &Solution::isFeasible)
-        .def("has_excess_load", &Solution::hasExcessLoad)
-        .def("has_time_warp", &Solution::hasTimeWarp)
-        .def("distance",
-             [](Solution const &sol) { return sol.distance().get(); })
-        .def("excess_load",
-             [](Solution const &sol) { return sol.excessLoad().get(); })
-        .def("time_warp",
-             [](Solution const &sol) { return sol.timeWarp().get(); })
-        .def("prizes", [](Solution const &sol) { return sol.prizes().get(); })
-        .def("uncollected_prizes",
-             [](Solution const &sol) { return sol.uncollectedPrizes().get(); })
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, getNeighbours))
+        .def("is_feasible",
+             &Solution::isFeasible,
+             DOC(pyvrp, Solution, isFeasible))
+        .def("has_excess_load",
+             &Solution::hasExcessLoad,
+             DOC(pyvrp, Solution, hasExcessLoad))
+        .def("has_time_warp",
+             &Solution::hasTimeWarp,
+             DOC(pyvrp, Solution, hasTimeWarp))
+        .def(
+            "distance",
+            [](Solution const &sol) { return sol.distance().get(); },
+            DOC(pyvrp, Solution, distance))
+        .def(
+            "excess_load",
+            [](Solution const &sol) { return sol.excessLoad().get(); },
+            DOC(pyvrp, Solution, excessLoad))
+        .def(
+            "time_warp",
+            [](Solution const &sol) { return sol.timeWarp().get(); },
+            DOC(pyvrp, Solution, timeWarp))
+        .def(
+            "prizes",
+            [](Solution const &sol) { return sol.prizes().get(); },
+            DOC(pyvrp, Solution, prizes))
+        .def(
+            "uncollected_prizes",
+            [](Solution const &sol) { return sol.uncollectedPrizes().get(); },
+            DOC(pyvrp, Solution, uncollectedPrizes))
         .def("__copy__", [](Solution const &sol) { return Solution(sol); })
         .def(
             "__deepcopy__",
@@ -358,6 +400,44 @@ PYBIND11_MODULE(_pyvrp, m)
             stream << sol;
             return stream.str();
         });
+
+    py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
+        .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
+                 return CostEvaluator(capacityPenalty, twPenalty);
+             }),
+             py::arg("capacity_penalty") = 0,
+             py::arg("tw_penalty") = 0)
+        .def(
+            "load_penalty",
+            [](CostEvaluator const &evaluator,
+               pyvrp::Value load,
+               pyvrp::Value capacity) {
+                return evaluator.loadPenalty(load, capacity).get();
+            },
+            py::arg("load"),
+            py::arg("capacity"),
+            DOC(pyvrp, CostEvaluator, loadPenalty))
+        .def(
+            "tw_penalty",
+            [](CostEvaluator const &evaluator, pyvrp::Value const timeWarp) {
+                return evaluator.twPenalty(timeWarp).get();
+            },
+            py::arg("time_warp"),
+            DOC(pyvrp, CostEvaluator, twPenalty))
+        .def(
+            "penalised_cost",
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.penalisedCost(solution).get();
+            },
+            py::arg("solution"),
+            DOC(pyvrp, CostEvaluator, penalisedCost))
+        .def(
+            "cost",
+            [](CostEvaluator const &evaluator, Solution const &solution) {
+                return evaluator.cost(solution).get();
+            },
+            py::arg("solution"),
+            DOC(pyvrp, CostEvaluator, cost));
 
     py::class_<PopulationParams>(m, "PopulationParams")
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
@@ -378,11 +458,47 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<SubPopulation::Item>(m, "SubPopulationItem")
         .def_readonly("solution",
                       &SubPopulation::Item::solution,
-                      py::return_value_policy::reference_internal)
-        .def_readonly("fitness", &SubPopulation::Item::fitness)
-        .def("avg_distance_closest", &SubPopulation::Item::avgDistanceClosest);
+                      py::return_value_policy::reference_internal,
+                      R"doc(
+                            Solution for this SubPopulationItem.
 
-    py::class_<SubPopulation>(m, "SubPopulation")
+                            Returns
+                            -------
+                            Solution
+                                Solution for this SubPopulationItem.
+                      )doc")
+        .def_readonly("fitness",
+                      &SubPopulation::Item::fitness,
+                      R"doc(
+                Fitness value for this SubPopulationItem.
+
+                Returns
+                -------
+                float
+                    Fitness value for this SubPopulationItem.
+
+                .. warning::
+
+                This is a cached property that is not automatically updated.
+                Before accessing the property, 
+                :meth:`~SubPopulation.update_fitness` should be called unless 
+                the population has not changed since the last call.
+            )doc")
+        .def("avg_distance_closest",
+             &SubPopulation::Item::avgDistanceClosest,
+             R"doc(
+                Determines the average distance of the solution wrapped by this
+                item to a number of solutions that are most similar to it. This 
+                provides a measure of the relative 'diversity' of the wrapped
+                solution.
+
+                Returns
+                -------
+                float
+                    The average distance/diversity of the wrapped solution.
+             )doc");
+
+    py::class_<SubPopulation>(m, "SubPopulation", DOC(pyvrp, SubPopulation))
         .def(py::init<pyvrp::diversity::DiversityMeasure,
                       PopulationParams const &>(),
              py::arg("diversity_op"),
@@ -391,7 +507,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("add",
              &SubPopulation::add,
              py::arg("solution"),
-             py::arg("cost_evaluator"))
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, SubPopulation, add))
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
@@ -410,12 +527,16 @@ PYBIND11_MODULE(_pyvrp, m)
                 return py::make_iterator(subPop.cbegin(), subPop.cend());
             },
             py::return_value_policy::reference_internal)
-        .def("purge", &SubPopulation::purge, py::arg("cost_evaluator"))
+        .def("purge",
+             &SubPopulation::purge,
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, SubPopulation, purge))
         .def("update_fitness",
              &SubPopulation::updateFitness,
-             py::arg("cost_evaluator"));
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, SubPopulation, updateFitness));
 
-    py::class_<TWS>(m, "TimeWindowSegment")
+    py::class_<TWS>(m, "TimeWindowSegment", DOC(pyvrp, TimeWindowSegment))
         .def(py::init<int,
                       int,
                       pyvrp::Value,
@@ -430,8 +551,10 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_early"),
              py::arg("tw_late"),
              py::arg("release_time"))
-        .def("total_time_warp",
-             [](TWS const &tws) { return tws.totalTimeWarp().get(); })
+        .def(
+            "total_time_warp",
+            [](TWS const &tws) { return tws.totalTimeWarp().get(); },
+            DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
         .def_static("merge",
                     &merge<TWS, TWS>,
                     py::arg("duration_matrix"),
