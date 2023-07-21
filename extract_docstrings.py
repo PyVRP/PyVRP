@@ -38,6 +38,15 @@ _SUFFIX = """
 """
 
 
+# A non-exhaustive mapping from C++ operators to Python's equivalents. This
+# is used to give the documentation strings proper variable names. Extend this
+# list if your build complains.
+_OP2DUNDER = {
+    "operator[]": "__getitem__",
+    "operator()": "__call__",
+}
+
+
 def parse_args():
     parser = argparse.ArgumentParser(prog="extract_docstrings")
 
@@ -55,15 +64,20 @@ def parse_args():
 
 
 def to_cpp_string(name, docstrings):
-    name = "__doc_" + name.replace("::", "_")
+    # Turns the fully qualified name into something separated by underscores.
+    # C++ operator overloads are mapped to their Python equivalents because
+    # a C++ operator overload is not a valid variable name.
+    parts = name.split("::")
+    parts[-1] = _OP2DUNDER.get(parts[-1], parts[-1])
+    var_name = "__doc_" + "_".join(parts)
 
     if len(docstrings) == 1:
         doc = docstrings[0]
-        return f'char const *{name} = R"doc(\n{doc}\n)doc";'
+        return f'char const *{var_name} = R"doc(\n{doc}\n)doc";'
 
     return "\n".join(
-        f'char const *{name}_{ctr} = R"doc(\n{docstring}\n)doc";'
-        for ctr, docstring in enumerate(docstrings, 1)
+        f'char const *{var_name}_{ctr} = R"doc(\n{doc}\n)doc";'
+        for ctr, doc in enumerate(docstrings, 1)
     )
 
 
