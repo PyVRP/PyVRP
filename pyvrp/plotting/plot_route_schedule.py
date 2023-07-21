@@ -16,7 +16,7 @@ def plot_route_schedule(
 ):
     """
     Plots a route schedule. This function plots multiple time statistics
-    as a function of distance traveled:
+    as a function of distance travelled:
 
     * Solid: earliest possible trajectory / time, using time warp if the route
       is infeasible.
@@ -42,13 +42,12 @@ def plot_route_schedule(
     if not ax:
         _, ax = plt.subplots()
 
-    depot = data.client(0)  # For readability, define variable
+    vehicle_type = data.vehicle_type(route.vehicle_type())
+    depot = data.client(vehicle_type.depot)
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
-    t = 0
-    wait_time = 0
-    time_warp = 0
+    t = route.release_time()
     drive_time = 0
     serv_time = 0
     dist = 0
@@ -76,8 +75,8 @@ def plot_route_schedule(
 
     add_traces(dist, t, drive_time, serv_time, load)
 
-    prev_idx = 0  # depot
-    for idx in list(route) + [0]:
+    prev_idx = vehicle_type.depot
+    for idx in [*list(route), vehicle_type.depot]:
         stop = data.client(idx)
         delta_time = data.duration(prev_idx, idx)
         delta_dist = data.dist(prev_idx, idx)
@@ -88,12 +87,10 @@ def plot_route_schedule(
         add_traces(dist, t, drive_time, serv_time, load)
 
         if t < stop.tw_early:
-            wait_time += stop.tw_early - t
             t = stop.tw_early
 
         slack = min(slack, stop.tw_late - t)
         if t > stop.tw_late:
-            time_warp += t - stop.tw_late
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
 
@@ -101,7 +98,7 @@ def plot_route_schedule(
 
         add_traces(dist, t, drive_time, serv_time, load)
 
-        if idx != 0:  # Don't plot service and timewindow for return to depot
+        if idx != vehicle_type.depot:  # exclude return to depot
             t += stop.service_duration
             serv_time += stop.service_duration
 
@@ -151,12 +148,12 @@ def plot_route_schedule(
     twin1.fill_between(
         *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
     )
-    twin1.set_ylim([0, data.vehicle_capacity])
+    twin1.set_ylim([0, vehicle_type.capacity])
 
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {data.vehicle_capacity:.0f})")
+    twin1.set_ylabel(f"Load (capacity = {vehicle_type.capacity:.0f})")
 
     if legend:
         twin1.legend(loc="upper right")

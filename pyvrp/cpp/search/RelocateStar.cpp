@@ -1,20 +1,24 @@
 #include "RelocateStar.h"
 
-Cost RelocateStar::evaluate(Route *U,
-                            Route *V,
-                            CostEvaluator const &costEvaluator)
+using pyvrp::search::RelocateStar;
+using pyvrp::search::Route;
+
+pyvrp::Cost RelocateStar::evaluate(Route *U,
+                                   Route *V,
+                                   pyvrp::CostEvaluator const &costEvaluator)
 {
     move = {};
 
-    for (auto *nodeU = n(U->depot); !nodeU->isDepot(); nodeU = n(nodeU))
+    for (auto *nodeU : *U)
     {
-        // Test inserting U after V's depot
-        Cost deltaCost = relocate.evaluate(nodeU, V->depot, costEvaluator);
+        // Test inserting U after V's start depot
+        Cost deltaCost
+            = relocate.evaluate(nodeU, &V->startDepot, costEvaluator);
 
         if (deltaCost < move.deltaCost)
-            move = {deltaCost, nodeU, V->depot};
+            move = {deltaCost, nodeU, &V->startDepot};
 
-        for (auto *nodeV = n(V->depot); !nodeV->isDepot(); nodeV = n(nodeV))
+        for (auto *nodeV : *V)
         {
             // Test inserting U after V
             deltaCost = relocate.evaluate(nodeU, nodeV, costEvaluator);

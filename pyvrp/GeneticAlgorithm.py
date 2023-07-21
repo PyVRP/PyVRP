@@ -1,39 +1,61 @@
+from __future__ import annotations
+
 import time
 from dataclasses import dataclass
-from typing import Callable, Collection, Tuple
+from typing import TYPE_CHECKING, Callable, Collection, Tuple
 
-from pyvrp.search.LocalSearch import LocalSearch
-from pyvrp.stop import StoppingCriterion
-
-from .PenaltyManager import PenaltyManager
-from .Population import Population
 from .Result import Result
 from .Statistics import Statistics
-from ._CostEvaluator import CostEvaluator
-from ._ProblemData import ProblemData
-from ._Solution import Solution
-from ._XorShift128 import XorShift128
 
-_Parents = Tuple[Solution, Solution]
-CrossoverOperator = Callable[
-    [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
-]
+if TYPE_CHECKING:
+    from pyvrp.search.LocalSearch import LocalSearch
+    from pyvrp.stop import StoppingCriterion
+
+    from .PenaltyManager import PenaltyManager
+    from .Population import Population
+    from ._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
+
+    _Parents = Tuple[Solution, Solution]
+    CrossoverOperator = Callable[
+        [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
+    ]
 
 
 @dataclass
 class GeneticAlgorithmParams:
+    """
+    Parameters for the genetic algorithm.
+
+    Parameters
+    ----------
+    repair_probability
+        Probability (in :math:`[0, 1]`) of repairing an infeasible solution.
+        If the reparation makes the solution feasible, it is also added to
+        the population in the same iteration.
+    nb_iter_no_improvement
+        Number of iterations without any improvement needed before a restart
+        occurs.
+
+    Attributes
+    ----------
+    repair_probability
+        Probability of repairing an infeasible solution.
+    nb_iter_no_improvement
+        Number of iterations without improvement before a restart occurs.
+
+    Raises
+    ------
+    ValueError
+        When ``repair_probability`` is not in :math:`[0, 1]`, or
+        ``nb_iter_no_improvement`` is negative.
+    """
+
     repair_probability: float = 0.80
-    collect_statistics: bool = False
-    intensify_probability: float = 0.15
-    intensify_on_best: bool = True
     nb_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
-
-        if not 0 <= self.intensify_probability <= 1:
-            raise ValueError("intensify_probability must be in [0, 1].")
 
         if self.nb_iter_no_improvement < 0:
             raise ValueError("nb_iter_no_improvement < 0 not understood.")
@@ -147,8 +169,7 @@ class GeneticAlgorithm:
             else:
                 iters_no_improvement += 1
 
-            if self._params.collect_statistics:
-                stats.collect_from(self._pop, self._cost_evaluator)
+            stats.collect_from(self._pop, self._cost_evaluator)
 
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
@@ -164,25 +185,11 @@ class GeneticAlgorithm:
             self._pm.register_load_feasible(not sol.has_excess_load())
             self._pm.register_time_feasible(not sol.has_time_warp())
 
-        intensify_prob = self._params.intensify_probability
-        should_intensify = self._rng.rand() < intensify_prob
-
-        sol = self._ls.run(sol, self._cost_evaluator, should_intensify)
+        sol = self._ls.run(sol, self._cost_evaluator)
+        add_and_register(sol)
 
         if is_new_best(sol):
             self._best = sol
-
-            # Only intensify feasible, new best solutions. See also the repair
-            # step below. TODO Refactor to on_best callback (see issue #111)
-            if self._params.intensify_on_best:
-                sol = self._ls.intensify(
-                    sol, self._cost_evaluator, overlap_tolerance_degrees=360
-                )
-
-                if is_new_best(sol):
-                    self._best = sol
-
-        add_and_register(sol)
 
         # Possibly repair if current solution is infeasible. In that case, we
         # penalise infeasibility more using a penalty booster.
@@ -190,23 +197,10 @@ class GeneticAlgorithm:
             not sol.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            should_intensify = self._rng.rand() < intensify_prob
-            sol = self._ls.run(
-                sol, self._pm.get_booster_cost_evaluator(), should_intensify
-            )
-
-            if is_new_best(sol):
-                self._best = sol
-
-                if self._params.intensify_on_best:
-                    sol = self._ls.intensify(
-                        sol,
-                        self._pm.get_booster_cost_evaluator(),
-                        overlap_tolerance_degrees=360,
-                    )
-
-                    if is_new_best(sol):
-                        self._best = sol
+            sol = self._ls.run(sol, self._pm.get_booster_cost_evaluator())
 
             if sol.is_feasible():
                 add_and_register(sol)
+
+            if is_new_best(sol):
+                self._best = sol

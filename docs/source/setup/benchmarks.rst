@@ -6,11 +6,13 @@ See the :doc:`benchmarking instructions <../dev/benchmarking>` for how these ben
 
 PyVRP
 -----
-The table below contains the benchmark results obtained by each new significant version of PyVRP. The reported values represent the average gaps to the best-known solutions over ten seeds.
-The configuration files used for benchmarking are `configs/cvrp.toml` (for CVRP) and `configs/vrptw.toml` (for VRPTW and PC-VRPTW).
+
+The table below contains the benchmark results obtained by each new significant version of PyVRP.
+The reported values represent the percentage gap to the best-known solutions at the time of the benchmark, averaged over ten seeds.
+These best-known solutions are tracked in the ``PyVRP/Instances`` repository - see the :doc:`benchmarking instructions <../dev/benchmarking>` for details.
+The configuration files used for benchmarking are ``configs/cvrp.toml`` (for CVRP) and ``configs/vrptw.toml`` (for VRPTW and PC-VRPTW).
 
 .. list-table::
-   :widths: 20 20 20 20 20
    :header-rows: 1
 
    * - Date
@@ -18,6 +20,11 @@ The configuration files used for benchmarking are `configs/cvrp.toml` (for CVRP)
      - CVRP
      - VRPTW
      - PC-VRPTW
+   * - 9 July 2023
+     - `0.4.2 <https://github.com/PyVRP/PyVRP/tree/f934e0da184dd0bdbd4d83f72ec98b7ef51cd8da>`_
+     - 0.18%
+     - 0.43%
+     - 0.23%
    * - 20 May 2023
      - `0.3.0 <https://github.com/PyVRP/PyVRP/tree/4632ce97cedbc9d58216c2bec43cd679eb1d21c9>`_
      - 0.25%
@@ -35,7 +42,6 @@ The configuration files used for benchmarking are `configs/cvrp.toml` (for CVRP)
      -
 
 
-
 Reference VRP solvers
 ---------------------
 
@@ -43,7 +49,6 @@ The table below contains the benchmark results obtained by reference VRP solvers
 The reported values represent the average gaps to the best-known solutions over ten seeds.
 
 .. list-table::
-   :widths: 20 20 20 20 20
    :header-rows: 1
 
    * - Date

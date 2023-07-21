@@ -6,7 +6,7 @@ from pyvrp.tests.helpers import sleep
 
 
 @mark.parametrize(
-    "max_iterations, max_runtime",
+    ("max_iterations", "max_runtime"),
     [(-1, 0), (-42, 0), (-10_000, 0), (0, -1), (0, -42), (0, -10_000)],
 )
 def test_raise_negative_parameters(max_iterations, max_runtime):
@@ -15,7 +15,7 @@ def test_raise_negative_parameters(max_iterations, max_runtime):
 
 
 @mark.parametrize(
-    "max_iterations, max_runtime", [(0, 0.001), (1, 0.01), (10, 0.0)]
+    ("max_iterations", "max_runtime"), [(0, 0.001), (1, 0.01), (10, 0.0)]
 )
 def test_valid_parameters(max_iterations, max_runtime):
     """

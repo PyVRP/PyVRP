@@ -2,8 +2,7 @@ import math
 from dataclasses import dataclass
 
 from .Statistics import Statistics
-from ._CostEvaluator import CostEvaluator
-from ._Solution import Solution
+from ._pyvrp import CostEvaluator, Solution
 
 
 @dataclass
@@ -17,8 +16,7 @@ class Result:
     best
         The best observed solution.
     stats
-        A Statistics object containing runtime statistics. These are only
-        collected and available if statistics were collected for the given run.
+        A Statistics object containing runtime statistics.
     num_iterations
         Number of iterations performed by the genetic algorithm.
     runtime
@@ -54,6 +52,7 @@ class Result:
         """
         if not self.best.is_feasible():
             return math.inf
+
         return CostEvaluator().cost(self.best)
 
     def is_feasible(self) -> bool:
@@ -66,21 +65,6 @@ class Result:
             True when the solution is feasible, False otherwise.
         """
         return self.best.is_feasible()
-
-    def has_statistics(self) -> bool:
-        """
-        Returns whether detailed statistics were collected. If statistics are
-        not availabe, the plotting methods cannot be used.
-
-        Returns
-        -------
-        bool
-            True when detailed statistics are available, False otherwise.
-        """
-        return (
-            self.num_iterations > 0
-            and self.num_iterations == self.stats.num_iterations
-        )
 
     def __str__(self) -> str:
         obj_str = f"{self.cost():.2f}" if self.is_feasible() else "INFEASIBLE"
@@ -95,10 +79,7 @@ class Result:
             "",
             "Routes",
             "------",
+            str(self.best),
         ]
-
-        for idx, route in enumerate(self.best.get_routes(), 1):
-            if route:
-                summary.append(f"Route {idx:>2}: {route}")
 
         return "\n".join(summary)

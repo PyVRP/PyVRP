@@ -6,6 +6,8 @@
 #include <limits>
 #include <type_traits>
 
+namespace pyvrp
+{
 /**
  * This class implements a XOR-shift pseudo-random number generator. It
  * generates the next number of a sequence by repeatedly taking the 'exclusive
@@ -37,7 +39,7 @@ public:
     static constexpr size_t max();
 
     /**
-     * Generates one pseudo-random integer in the range <code>[min(), max()]
+     * Generates one pseudo-random integer in the range <code>[min(), max())
      * </code>.
      *
      * @return A pseudo-random integer.
@@ -52,7 +54,7 @@ public:
     template <typename T> T rand();
 
     /**
-     * Generates one pseudo-random integer in the range <code>[0, high]</code>.
+     * Generates one pseudo-random integer in the range <code>[0, high)</code>.
      *
      * @param high Upper bound on the integer to generate.
      * @return A pseudo-random integer.
@@ -81,5 +83,6 @@ template <typename T> XorShift128::result_type XorShift128::randint(T high)
     static_assert(std::is_integral<T>::value);
     return operator()() % high;
 }
+}  // namespace pyvrp
 
 #endif  // PYVRP_XORSHIFT128_H

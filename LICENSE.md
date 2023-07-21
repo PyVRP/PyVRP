@@ -1,8 +1,8 @@
 MIT License
 
-Copyright (c) 2020, Thibaut Vidal (HGS-CVRP)
-Copyright (c) 2022, ORTEC and TU/e (HGS-DIMACS)
-Copyright (c) since 2022, PyVRP contributors
+- Copyright (c) 2020, Thibaut Vidal (HGS-CVRP)
+- Copyright (c) 2022, ORTEC (HGS-DIMACS)
+- Copyright (c) since 2022, PyVRP contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

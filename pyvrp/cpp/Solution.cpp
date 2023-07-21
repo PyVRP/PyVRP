@@ -4,7 +4,13 @@
 
 #include <fstream>
 #include <numeric>
-#include <sstream>
+#include <unordered_map>
+
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+using pyvrp::Solution;
 
 using Client = int;
 using Visits = std::vector<Client>;
@@ -67,15 +73,33 @@ void Solution::makeNeighbours()
 
 bool Solution::operator==(Solution const &other) const
 {
-    // First compare simple attributes, since that's a quick and cheap check.
-    // Only when these are the same we test if the neighbours are all equal.
-    // clang-format off
-    return distance_ == other.distance_
-        && excessLoad_ == other.excessLoad_
-        && timeWarp_ == other.timeWarp_
-        && routes_.size() == other.routes_.size()
-        && neighbours == other.neighbours;
-    // clang-format on
+    // First compare simple attributes, since that's quick and cheap.
+    bool const simpleChecks = distance_ == other.distance_
+                              && excessLoad_ == other.excessLoad_
+                              && timeWarp_ == other.timeWarp_
+                              && routes_.size() == other.routes_.size();
+
+    if (!simpleChecks)
+        return false;
+
+    // Now test if the neighbours are all equal. If that's the case we have
+    // the same visit structure across routes.
+    if (neighbours != other.neighbours)
+        return false;
+
+    // The visits are the same for both solutions, but the vehicle assignments
+    // need not be. We check this via a mapping from the first client in each
+    // route to the vehicle type of that route. We need to base this on the
+    // visits since the routes need not be in the same order between solutions.
+    std::unordered_map<Client, VehicleType> client2vehType;
+    for (auto const &route : routes_)
+        client2vehType[route.visits()[0]] = route.vehicleType();
+
+    for (auto const &route : other.routes_)
+        if (client2vehType[route.visits()[0]] != route.vehicleType())
+            return false;
+
+    return true;
 }
 
 Solution::Solution(ProblemData const &data, XorShift128 &rng)
@@ -99,8 +123,14 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
         routes[idx / perRoute].push_back(clients[idx]);
 
     routes_.reserve(numRoutes);
-    for (size_t idx = 0; idx != numRoutes; ++idx)
-        routes_.emplace_back(data, routes[idx]);
+    size_t count = 0;
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
+    {
+        auto const numAvailable = data.vehicleType(vehType).numAvailable;
+        for (size_t i = 0; i != numAvailable; ++i)
+            if (count < routes.size())
+                routes_.emplace_back(data, routes[count++], vehType);
+    }
 
     makeNeighbours();
     evaluate(data);
@@ -108,7 +138,17 @@ Solution::Solution(ProblemData const &data, XorShift128 &rng)
 
 Solution::Solution(ProblemData const &data,
                    std::vector<std::vector<Client>> const &routes)
-    : neighbours(data.numClients() + 1, {0, 0})
+{
+    Routes transformedRoutes;
+    transformedRoutes.reserve(routes.size());
+    for (auto const &visits : routes)
+        transformedRoutes.emplace_back(data, visits, 0);
+
+    *this = Solution(data, transformedRoutes);
+}
+
+Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
+    : routes_(routes), neighbours(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
@@ -117,9 +157,29 @@ Solution::Solution(ProblemData const &data,
     }
 
     std::vector<size_t> visits(data.numClients() + 1, 0);
+    std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
+    {
+        if (route.empty())
+        {
+            auto const msg = "Solution should not contain empty routes.";
+            throw std::runtime_error(msg);
+        }
+
+        usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
             visits[client]++;
+    }
+
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+        if (usedVehicles[vehType] > data.vehicleType(vehType).numAvailable)
+        {
+            std::ostringstream msg;
+            auto const numAvailable = data.vehicleType(vehType).numAvailable;
+            msg << "Used more than " << numAvailable << " vehicles of type "
+                << vehType << '.';
+            throw std::runtime_error(msg.str());
+        }
 
     for (size_t client = 1; client <= data.numClients(); ++client)
     {
@@ -138,27 +198,24 @@ Solution::Solution(ProblemData const &data,
         }
     }
 
-    // Only store non-empty routes
-    routes_.reserve(routes.size());
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        if (!routes[idx].empty())
-            routes_.emplace_back(data, routes[idx]);
-
     makeNeighbours();
     evaluate(data);
 }
 
-Solution::Route::Route(ProblemData const &data, Visits const visits)
-    : visits_(std::move(visits)), centroid_({0, 0})
+Solution::Route::Route(ProblemData const &data,
+                       Visits const visits,
+                       size_t const vehicleType)
+    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
     if (visits_.empty())
         return;
 
-    auto const &depot = data.depot();
+    auto const &vehType = data.vehicleType(vehicleType);
+    auto const &depot = data.client(vehType.depot);
     auto const &durMat = data.durationMatrix();
-    auto const depotTws = TimeWindowSegment(0, depot);
+    auto const depotTws = TimeWindowSegment(vehType.depot, depot);
     tws_ = depotTws;
-    int prevClient = 0;
+    size_t prevClient = vehType.depot;
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
@@ -180,12 +237,11 @@ Solution::Route::Route(ProblemData const &data, Visits const visits)
     }
 
     Client const last = visits_.back();  // last client has depot as successor
-    distance_ += data.dist(last, 0);
-    travel_ += data.duration(last, 0);
+    distance_ += data.dist(last, vehType.depot);
+    travel_ += data.duration(last, vehType.depot);
     tws_ = TimeWindowSegment::merge(durMat, tws_, depotTws);
-    excessLoad_ = data.vehicleCapacity() < demand_
-                      ? demand_ - data.vehicleCapacity()
-                      : 0;
+
+    excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
 }
 
 bool Solution::Route::empty() const { return visits_.empty(); }
@@ -200,13 +256,6 @@ Visits::const_iterator Solution::Route::begin() const
 }
 
 Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
-
-Visits::const_iterator Solution::Route::cbegin() const
-{
-    return visits_.cbegin();
-}
-
-Visits::const_iterator Solution::Route::cend() const { return visits_.cend(); }
 
 Visits const &Solution::Route::visits() const { return visits_; }
 
@@ -238,12 +287,16 @@ Duration Solution::Route::slack() const
     return tws_.twLate() - tws_.twEarly();
 }
 
+Duration Solution::Route::releaseTime() const { return tws_.release(); }
+
 Cost Solution::Route::prizes() const { return prizes_; }
 
 std::pair<double, double> const &Solution::Route::centroid() const
 {
     return centroid_;
 }
+
+size_t Solution::Route::vehicleType() const { return vehicleType_; }
 
 bool Solution::Route::isFeasible() const
 {
@@ -253,6 +306,20 @@ bool Solution::Route::isFeasible() const
 bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
 bool Solution::Route::hasTimeWarp() const { return tws_.timeWarp() > 0; }
+
+bool Solution::Route::operator==(Solution::Route const &other) const
+{
+    // First compare simple attributes, since that's a quick and cheap check.
+    // Only when these are the same we test if the visits are all equal.
+
+    // clang-format off
+    return distance_ == other.distance_
+        && demand_ == other.demand_
+        && tws_.timeWarp == other.tws_.timeWarp // TODO compare tws?
+        && vehicleType_ == other.vehicleType_
+        && visits_ == other.visits_;
+    // clang-format on
+}
 
 std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {

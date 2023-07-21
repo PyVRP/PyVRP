@@ -5,19 +5,20 @@
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-#include <set>
 #include <stdexcept>
 #include <vector>
 
-using TWS = TimeWindowSegment;
+using pyvrp::Solution;
+using pyvrp::search::LocalSearch;
+using TWS = pyvrp::TimeWindowSegment;
 
 Solution LocalSearch::search(Solution &solution,
                              CostEvaluator const &costEvaluator)
 {
-    loadSolution(solution);
-
     if (nodeOps.empty())
-        throw std::runtime_error("No known node operators.");
+        return solution;
+
+    loadSolution(solution);
 
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -68,16 +69,24 @@ Solution LocalSearch::search(Solution &solution,
 
             if (step > 0)  // empty moves are not tested initially to avoid
             {              // using too many routes.
-                auto pred = [](auto const &route) { return route.empty(); };
-                auto empty = std::find_if(routes.begin(), routes.end(), pred);
+                auto begin = routes.begin();
+                for (size_t t = 0; t != data.numVehicleTypes(); t++)
+                {
+                    // Check move involving empty route of each vehicle type
+                    // (if such a route exists).
+                    auto const end = begin + data.vehicleType(t).numAvailable;
+                    auto pred = [](auto const &route) { return route.empty(); };
+                    auto empty = std::find_if(begin, end, pred);
+                    begin = end;
 
-                if (empty == routes.end())
-                    continue;
+                    if (empty == end)
+                        continue;
 
-                if (U->route)  // try inserting U into the empty route.
-                    applyNodeOps(U, empty->depot, costEvaluator);
-                else  // U is not in the solution, so again try inserting.
-                    maybeInsert(U, empty->depot, costEvaluator);
+                    if (U->route)  // try inserting U into the empty route.
+                        applyNodeOps(U, &empty->startDepot, costEvaluator);
+                    else  // U is not in the solution, so again try inserting.
+                        maybeInsert(U, &empty->startDepot, costEvaluator);
+                }
             }
         }
     }
@@ -89,12 +98,12 @@ Solution LocalSearch::intensify(Solution &solution,
                                 CostEvaluator const &costEvaluator,
                                 int overlapToleranceDegrees)
 {
+    if (routeOps.empty())
+        return solution;
+
     loadSolution(solution);
 
     auto const overlapTolerance = overlapToleranceDegrees * 65536;
-
-    if (routeOps.empty())
-        throw std::runtime_error("No known route operators.");
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
@@ -118,7 +127,7 @@ Solution LocalSearch::intensify(Solution &solution,
 
             // Shuffling in this loop should not matter much as we are
             // already randomizing the routes U.
-            for (int rV = 0; rV != U.idx; ++rV)
+            for (size_t rV = 0; rV != U.idx; ++rV)
             {
                 auto &V = routes[rV];
 
@@ -147,8 +156,8 @@ void LocalSearch::shuffle(XorShift128 &rng)
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
 }
 
-bool LocalSearch::applyNodeOps(Node *U,
-                               Node *V,
+bool LocalSearch::applyNodeOps(Route::Node *U,
+                               Route::Node *V,
                                CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
@@ -188,8 +197,8 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-void LocalSearch::maybeInsert(Node *U,
-                              Node *V,
+void LocalSearch::maybeInsert(Route::Node *U,
+                              Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
     assert(!U->route && V->route);
@@ -202,9 +211,9 @@ void LocalSearch::maybeInsert(Node *U,
     Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(V->route->load() + uClient.demand,
-                                           data.vehicleCapacity());
+                                           V->route->capacity());
     deltaCost
-        -= costEvaluator.loadPenalty(V->route->load(), data.vehicleCapacity());
+        -= costEvaluator.loadPenalty(V->route->load(), V->route->capacity());
 
     // If this is true, adding U cannot decrease time warp in V's route enough
     // to offset the deltaCost.
@@ -224,7 +233,8 @@ void LocalSearch::maybeInsert(Node *U,
     }
 }
 
-void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
+void LocalSearch::maybeRemove(Route::Node *U,
+                              CostEvaluator const &costEvaluator)
 {
     assert(U->route);
 
@@ -236,9 +246,9 @@ void LocalSearch::maybeRemove(Node *U, CostEvaluator const &costEvaluator)
     Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
     deltaCost += costEvaluator.loadPenalty(U->route->load() - uClient.demand,
-                                           data.vehicleCapacity());
+                                           U->route->capacity());
     deltaCost
-        -= costEvaluator.loadPenalty(U->route->load(), data.vehicleCapacity());
+        -= costEvaluator.loadPenalty(U->route->load(), U->route->capacity());
 
     auto uTWS
         = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
@@ -277,12 +287,13 @@ void LocalSearch::loadSolution(Solution const &solution)
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 
-    auto const &solRoutes = solution.getRoutes();
-
-    for (size_t r = 0; r != data.numVehicles(); r++)
+    // First empty all routes
+    for (auto &route : routes)
     {
-        Node *startDepot = &startDepots[r];
-        Node *endDepot = &endDepots[r];
+        auto const &vehicleType = data.vehicleType(route.vehicleType());
+
+        auto *startDepot = &route.startDepot;
+        auto *endDepot = &route.endDepot;
 
         startDepot->prev = endDepot;
         startDepot->next = endDepot;
@@ -290,39 +301,53 @@ void LocalSearch::loadSolution(Solution const &solution)
         endDepot->prev = startDepot;
         endDepot->next = startDepot;
 
-        startDepot->tw = clients[0].tw;
-        startDepot->twBefore = clients[0].tw;
+        startDepot->tw = clients[vehicleType.depot].tw;
+        startDepot->twBefore = clients[vehicleType.depot].tw;
 
-        endDepot->tw = clients[0].tw;
-        endDepot->twAfter = clients[0].tw;
+        endDepot->tw = clients[vehicleType.depot].tw;
+        endDepot->twAfter = clients[vehicleType.depot].tw;
+    }
 
+    // Determine offsets for vehicle types.
+    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    {
+        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+    }
+
+    // Load routes from solution.
+    for (auto const &solRoute : solution.getRoutes())
+    {
+        // Determine index of next route of this type to load, where we rely
+        // on solution to be valid to not exceed the number of vehicles per
+        // vehicle type.
+        auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route *route = &routes[r];
 
-        if (r < solRoutes.size())
+        auto *client = &clients[solRoute[0]];
+        client->route = route;
+
+        client->prev = &route->startDepot;
+        route->startDepot.next = client;
+
+        for (size_t idx = 1; idx < solRoute.size(); idx++)
         {
-            Node *client = &clients[solRoutes[r][0]];
+            auto *prev = client;
+
+            client = &clients[solRoute[idx]];
             client->route = route;
 
-            client->prev = startDepot;
-            startDepot->next = client;
-
-            for (size_t idx = 1; idx < solRoutes[r].size(); idx++)
-            {
-                Node *prev = client;
-
-                client = &clients[solRoutes[r][idx]];
-                client->route = route;
-
-                client->prev = prev;
-                prev->next = client;
-            }
-
-            client->next = endDepot;
-            endDepot->prev = client;
+            client->prev = prev;
+            prev->next = client;
         }
 
-        route->update();
+        client->next = &route->endDepot;
+        route->endDepot.prev = client;
     }
+
+    for (auto &route : routes)
+        route.update();
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
@@ -330,17 +355,21 @@ void LocalSearch::loadSolution(Solution const &solution)
 
 Solution LocalSearch::exportSolution() const
 {
-    std::vector<std::vector<int>> solRoutes(data.numVehicles());
+    std::vector<Solution::Route> solRoutes;
+    solRoutes.reserve(data.numVehicles());
 
-    for (size_t r = 0; r < data.numVehicles(); r++)
+    for (auto const &route : routes)
     {
-        Node *node = startDepots[r].next;
+        if (route.empty())
+            continue;
 
-        while (!node->isDepot())
-        {
-            solRoutes[r].push_back(node->client);
-            node = node->next;
-        }
+        std::vector<int> visits;
+        visits.reserve(route.size());
+
+        for (auto *node : route)
+            visits.push_back(node->client);
+
+        solRoutes.emplace_back(data, visits, route.vehicleType());
     }
 
     return {data, solRoutes};
@@ -388,29 +417,29 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       neighbours(data.numClients() + 1),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1),
-      clients(data.numClients() + 1),
-      routes(data.numVehicles(), data),
-      startDepots(data.numVehicles()),
-      endDepots(data.numVehicles())
+      lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);
 
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    for (size_t i = 0; i <= data.numClients(); i++)
-        clients[i].client = i;
+    clients.reserve(data.numClients() + 1);
+    for (size_t client = 0; client <= data.numClients(); ++client)
+        clients.emplace_back(client);
 
-    for (size_t i = 0; i < data.numVehicles(); i++)
+    routes.reserve(data.numVehicles());
+    size_t rIdx = 0;
+    for (size_t vehTypeIdx = 0; vehTypeIdx != data.numVehicleTypes();
+         ++vehTypeIdx)
     {
-        routes[i].idx = i;
-        routes[i].depot = &startDepots[i];
+        auto const &vehType = data.vehicleType(vehTypeIdx);
+        auto const numAvailable = vehType.numAvailable;
 
-        startDepots[i].client = 0;
-        startDepots[i].route = &routes[i];
-
-        endDepots[i].client = 0;
-        endDepots[i].route = &routes[i];
+        for (size_t i = 0; i != numAvailable; ++i)
+        {
+            routes.emplace_back(data, rIdx, vehTypeIdx);
+            rIdx++;
+        }
     }
 }

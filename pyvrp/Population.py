@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Callable, Generator, Tuple
+from typing import TYPE_CHECKING, Callable, Generator, Tuple
 from warnings import warn
 
-from ._CostEvaluator import CostEvaluator
-from ._Solution import Solution
-from ._SubPopulation import PopulationParams, SubPopulation
-from ._XorShift128 import XorShift128
+from ._pyvrp import PopulationParams, SubPopulation
 from .exceptions import EmptySolutionWarning
+
+if TYPE_CHECKING:
+    from ._pyvrp import CostEvaluator, Solution, XorShift128
 
 
 class Population:

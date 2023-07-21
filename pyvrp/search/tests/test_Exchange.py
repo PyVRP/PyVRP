@@ -1,9 +1,16 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import Client, CostEvaluator, ProblemData, Solution, XorShift128
-from pyvrp.search import LocalSearch, NeighbourhoodParams, compute_neighbours
-from pyvrp.search._Exchange import (
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    ProblemData,
+    Route,
+    Solution,
+    VehicleType,
+    XorShift128,
+)
+from pyvrp.search import (
     Exchange10,
     Exchange11,
     Exchange20,
@@ -13,8 +20,11 @@ from pyvrp.search._Exchange import (
     Exchange31,
     Exchange32,
     Exchange33,
+    LocalSearch,
+    NeighbourhoodParams,
+    compute_neighbours,
 )
-from pyvrp.tests.helpers import read
+from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 @mark.parametrize(
@@ -212,7 +222,7 @@ def test_relocate_after_depot_should_work():
 def test_relocate_only_happens_when_distance_and_duration_allow_it():
     """
     Tests that (1, 0)-exchange checks the duration matrix for time-window
-    feasibility before applying a move that improves the traveled distance.
+    feasibility before applying a move that improves the travelled distance.
     """
     clients = [
         Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10),
@@ -222,8 +232,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
 
     data = ProblemData(
         clients=clients,
-        num_vehicles=1,
-        vehicle_cap=0,
+        vehicle_types=[VehicleType(0, 1)],
         distance_matrix=[  # distance-wise, the best route is 0 -> 1 -> 2 -> 0.
             [0, 1, 5],
             [5, 0, 1],
@@ -254,3 +263,36 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
 
     assert_equal(ls.search(duration_optimal, cost_evaluator), duration_optimal)
     assert_equal(ls.search(distance_optimal, cost_evaluator), duration_optimal)
+
+
+def test_relocate_to_heterogeneous_empty_route():
+    """
+    This test asserts that a customer will be relocated to a non-empty route
+    with a different capacity even if there is another empty route in between.
+    """
+    vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
+    data = make_heterogeneous(read("data/OkSmall.txt"), vehicle_types)
+    # Use a huge cost for load penalties to make other aspects irrelevant
+    cost_evaluator = CostEvaluator(100_000, 6)
+    rng = XorShift128(seed=42)
+
+    # This is a non-empty neighbourhood (so LS does not complain), but the only
+    # client moves allowed by it will not improve the initial solution created
+    # below. So the only improvements (1, 0)-exchange can make must come from
+    # moving clients behind the depot of a route.
+    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours[2].append(1)
+
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_node_operator(Exchange10(data))
+
+    # The initial solution has routes with loads [13, 5, 0, 0]
+    # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all
+    # load penalties, but other moves would increase load penalties.
+    # Therefore, this requires moving to an empty route which is not the first.
+    sol = Solution(data, [Route(data, [1, 2, 3], 0), Route(data, [4], 1)])
+    expected = Solution(
+        data,
+        [Route(data, [1, 2], 0), Route(data, [4], 1), Route(data, [3], 3)],
+    )
+    assert_equal(ls.search(sol, cost_evaluator), expected)

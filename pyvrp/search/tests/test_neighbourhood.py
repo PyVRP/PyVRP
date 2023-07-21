@@ -9,11 +9,13 @@ from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
-    "weight_wait_time,"
-    "weight_time_warp,"
-    "nb_granular,"
-    "symmetric_proximity,"
-    "symmetric_neighbours",
+    (
+        "weight_wait_time",
+        "weight_time_warp",
+        "nb_granular",
+        "symmetric_proximity",
+        "symmetric_neighbours",
+    ),
     [
         # empty neighbourhood structure (nb_granular == 0)
         (20, 20, 0, True, False),
@@ -37,11 +39,13 @@ def test_neighbourhood_params_raises_for_invalid_arguments(
 
 
 @mark.parametrize(
-    "weight_wait_time,"
-    "weight_time_warp,"
-    "nb_granular,"
-    "symmetric_proximity,"
-    "symmetric_neighbours",
+    (
+        "weight_wait_time",
+        "weight_time_warp",
+        "nb_granular",
+        "symmetric_proximity",
+        "symmetric_neighbours",
+    ),
     [
         # non-empty neighbourhood structure (nb_granular > 0)
         (20, 20, 1, True, False),
@@ -66,13 +70,15 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
 
 
 @mark.parametrize(
-    "weight_wait_time,"
-    "weight_time_warp,"
-    "nb_granular,"
-    "symmetric_proximity,"
-    "symmetric_neighbours,"
-    "idx_check,"
-    "expected_neighbours_check",
+    (
+        "weight_wait_time",
+        "weight_time_warp",
+        "nb_granular",
+        "symmetric_proximity",
+        "symmetric_neighbours",
+        "idx_check",
+        "expected_neighbours_check",
+    ),
     [
         # fmt: off
         (20, 20, 10, True, False, 2,

@@ -7,7 +7,7 @@ from time import perf_counter
 from typing import List, Union
 
 from .Population import Population, SubPopulation
-from ._CostEvaluator import CostEvaluator
+from ._pyvrp import CostEvaluator
 
 _FEAS_CSV_PREFIX = "feas_"
 _INFEAS_CSV_PREFIX = "infeas_"
@@ -64,11 +64,11 @@ class Statistics:
         # The following lines access private members of the population, but in
         # this case that is mostly OK: we really want to have that access to
         # enable detailed statistics logging.
-        feas_subpop = population._feas  # noqa
+        feas_subpop = population._feas  # noqa: SLF001
         feas_datum = self._collect_from_subpop(feas_subpop, cost_evaluator)
         self.feas_stats.append(feas_datum)
 
-        infeas_subpop = population._infeas  # noqa
+        infeas_subpop = population._infeas  # noqa: SLF001
         infeas_datum = self._collect_from_subpop(infeas_subpop, cost_evaluator)
         self.infeas_stats.append(infeas_datum)
 
@@ -184,7 +184,7 @@ class Statistics:
         ]
 
         with open(where, "w") as fh:
-            header = ["runtime"] + feas_fields + infeas_fields
+            header = ["runtime", *feas_fields, *infeas_fields]
             writer = csv.DictWriter(
                 fh, header, delimiter=delimiter, quoting=quoting, **kwargs
             )

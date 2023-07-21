@@ -4,11 +4,11 @@
 
 #include <cassert>
 
-using TWS = TimeWindowSegment;
+using pyvrp::search::MoveTwoClientsReversed;
+using TWS = pyvrp::TimeWindowSegment;
 
-Cost MoveTwoClientsReversed::evaluate(Node *U,
-                                      Node *V,
-                                      CostEvaluator const &costEvaluator)
+pyvrp::Cost MoveTwoClientsReversed::evaluate(
+    Route::Node *U, Route::Node *V, pyvrp::CostEvaluator const &costEvaluator)
 {
     if (U == n(V) || n(U) == V || n(U)->isDepot())
         return 0;
@@ -41,17 +41,17 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
         auto const loadDiff = U->route->loadBetween(posU, posU + 1);
 
         deltaCost += costEvaluator.loadPenalty(U->route->load() - loadDiff,
-                                               data.vehicleCapacity());
+                                               U->route->capacity());
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
-                                               data.vehicleCapacity());
+                                               U->route->capacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
         deltaCost += costEvaluator.loadPenalty(V->route->load() + loadDiff,
-                                               data.vehicleCapacity());
+                                               V->route->capacity());
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
-                                               data.vehicleCapacity());
+                                               V->route->capacity());
 
         auto vTWS = TWS::merge(
             data.durationMatrix(), V->twBefore, n(U)->tw, U->tw, n(V)->twAfter);
@@ -95,7 +95,7 @@ Cost MoveTwoClientsReversed::evaluate(Node *U,
     return deltaCost;
 }
 
-void MoveTwoClientsReversed::apply(Node *U, Node *V) const
+void MoveTwoClientsReversed::apply(Route::Node *U, Route::Node *V) const
 {
     auto *X = n(U);  // copy since the insert below changes n(U)
 

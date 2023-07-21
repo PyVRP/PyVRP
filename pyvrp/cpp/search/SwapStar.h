@@ -9,16 +9,23 @@
 #include <limits>
 #include <vector>
 
+namespace pyvrp::search
+{
 /**
+ * SwapStar()
+ *
  * Explores the SWAP* neighbourhood of [1]. The SWAP* neighbourhood explores
- * free form re-insertions of nodes U and V in the given routes (so the nodes
- * are exchanged between routes, but they are not necessarily inserted in
- * the same place as the other exchanged node). Our implementation of the
- * neighbourhood follows Algorithm 2 of [1] fairly faithfully.
- * <br />
- * Thibaut Vidal. 2022. Hybrid genetic search for the CVRP: Open-source
- * implementation and SWAP* neighborhood. Comput. Oper. Res. 140.
- * https://doi.org/10.1016/j.cor.2021.105643
+ * free form re-insertions of clients :math:`U` and :math:`V` in the given
+ * routes (so the clients are exchanged between routes, but they are not
+ * necessarily inserted in the place of the other exchanged client). Our
+ * implementation of the SWAP* neighbourhood follows Algorithm 2 of [1] fairly
+ * closely.
+ *
+ * References
+ * ----------
+ * .. [1] Thibaut Vidal. 2022. Hybrid genetic search for the CVRP: Open-source
+ *        implementation and SWAP* neighborhood. *Comput. Oper. Res*. 140.
+ *        https://doi.org/10.1016/j.cor.2021.105643
  */
 class SwapStar : public LocalSearchOperator<Route>
 {
@@ -28,9 +35,9 @@ class SwapStar : public LocalSearchOperator<Route>
         std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max()};
-        std::array<Node *, 3> locs = {nullptr, nullptr, nullptr};
+        std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
 
-        void maybeAdd(Cost costInsert, Node *placeInsert)
+        void maybeAdd(Cost costInsert, Route::Node *placeInsert)
         {
             if (costInsert >= costs[2])
                 return;
@@ -63,11 +70,11 @@ class SwapStar : public LocalSearchOperator<Route>
     {
         Cost cost = 0;
 
-        Node *U = nullptr;
-        Node *UAfter = nullptr;
+        Route::Node *U = nullptr;
+        Route::Node *UAfter = nullptr;
 
-        Node *V = nullptr;
-        Node *VAfter = nullptr;
+        Route::Node *V = nullptr;
+        Route::Node *VAfter = nullptr;
     };
 
     // Updates the removal costs of clients in the given route
@@ -75,13 +82,14 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).
-    void
-    updateInsertionCost(Route *R, Node *U, CostEvaluator const &costEvaluator);
+    void updateInsertionCost(Route *R,
+                             Route::Node *U,
+                             CostEvaluator const &costEvaluator);
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
-    inline std::pair<Cost, Node *>
-    getBestInsertPoint(Node *U, Node *V, CostEvaluator const &costEvaluator);
+    inline std::pair<Cost, Route::Node *> getBestInsertPoint(
+        Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator);
 
     Matrix<ThreeBest> cache;
     Matrix<Cost> removalCosts;
@@ -107,5 +115,6 @@ public:
     {
     }
 };
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_SWAPSTAR_H

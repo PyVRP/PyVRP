@@ -21,12 +21,14 @@ from pyvrp.tests.helpers import make_random_solutions, read
 
 
 @mark.parametrize(
-    "min_pop_size,"
-    "generation_size,"
-    "nb_elite,"
-    "nb_close,"
-    "lb_diversity,"
-    "ub_diversity",
+    (
+        "min_pop_size",
+        "generation_size",
+        "nb_elite",
+        "nb_close",
+        "lb_diversity",
+        "ub_diversity",
+    ),
     [
         (1, 1, 1, 1, -1, 1.0),  # -1 lb_diversity
         (1, 1, 1, 1, 2, 1.0),  # 2 lb_diversity
@@ -59,12 +61,14 @@ def test_params_constructor_throws_when_arguments_invalid(
 
 
 @mark.parametrize(
-    "min_pop_size,"
-    "generation_size,"
-    "nb_elite,"
-    "nb_close,"
-    "lb_diversity,"
-    "ub_diversity",
+    (
+        "min_pop_size",
+        "generation_size",
+        "nb_elite",
+        "nb_close",
+        "lb_diversity",
+        "ub_diversity",
+    ),
     [
         (1, 1, 1, 1, 0.0, 0.5),  # >0 min_pop_size
         (1, 0, 1, 1, 0.0, 0.5),  # 0 generation_size
@@ -256,10 +260,10 @@ def test_tournament_ranks_by_fitness(k: int):
 
     # Since this test requires the fitness values of the solutions, we have
     # to access the underlying infeasible subpopulation directly.
-    infeas_pop = pop._infeas
+    infeas_pop = pop._infeas  # noqa: SLF001
     infeas_pop.update_fitness(cost_evaluator)
 
-    items = [item for item in pop._infeas]
+    items = [item for item in infeas_pop]
     by_fitness = sorted(items, key=lambda item: item.fitness)
     sol2idx = {item.solution: idx for idx, item in enumerate(by_fitness)}
     infeas_count = np.zeros(len(infeas_pop))
