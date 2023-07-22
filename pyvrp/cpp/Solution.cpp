@@ -273,7 +273,7 @@ Load Solution::Route::demand() const { return demand_; }
 
 Load Solution::Route::excessLoad() const { return excessLoad_; }
 
-Duration Solution::Route::travelDuration() const { return travel_; }
+Duration Solution::Route::duration() const { return duration_; }
 
 Duration Solution::Route::serviceDuration() const { return service_; }
 
@@ -284,7 +284,7 @@ Duration Solution::Route::waitDuration() const
     return duration_ - travel_ - service_;
 }
 
-Duration Solution::Route::duration() const { return duration_; }
+Duration Solution::Route::travelDuration() const { return travel_; }
 
 Duration Solution::Route::startTime() const { return startTime_; }
 
@@ -319,8 +319,8 @@ bool Solution::Route::operator==(Solution::Route const &other) const
 
     // clang-format off
     return distance_ == other.distance_
-        && duration_ == other.duration_
         && demand_ == other.demand_
+        && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;
     // clang-format on
