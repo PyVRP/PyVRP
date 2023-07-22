@@ -98,9 +98,9 @@ public:
         [[nodiscard]] Load excessLoad() const;
 
         /**
-         * Total duration of travel on this route.
+         * Total route duration, including travel, service and waiting time.
          */
-        [[nodiscard]] Duration travelDuration() const;
+        [[nodiscard]] Duration duration() const;
 
         /**
          * Total duration of service on this route.
@@ -113,14 +113,14 @@ public:
         [[nodiscard]] Duration timeWarp() const;
 
         /**
+         * Total duration of travel on this route.
+         */
+        [[nodiscard]] Duration travelDuration() const;
+
+        /**
          * Total waiting duration on this route.
          */
         [[nodiscard]] Duration waitDuration() const;
-
-        /**
-         * Total route duration, including travel, service and waiting time.
-         */
-        [[nodiscard]] Duration duration() const;
 
         /**
          * Start time of this route.
