@@ -3,7 +3,6 @@
 
 #include "Measure.h"
 #include "ProblemData.h"
-#include "TimeWindowSegment.h"
 #include "XorShift128.h"
 
 #include <functional>
@@ -53,14 +52,19 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};     // Client visits on this route
-        Distance distance_ = 0;  // Total travel distance on this route
-        Load demand_ = 0;        // Total demand served on this route
-        Load excessLoad_ = 0;    // Excess demand (wrt vehicle capacity)
-        Duration travel_ = 0;    // Total travel duration on this route
-        Duration service_ = 0;   // Total service duration on this route
-        TimeWindowSegment tws_;  // Time window segment of this route
-        Cost prizes_ = 0;        // Total value of prizes on this route
+        Visits visits_ = {};      // Client visits on this route
+        Distance distance_ = 0;   // Total travel distance on this route
+        Load demand_ = 0;         // Total demand served on this route
+        Load excessLoad_ = 0;     // Excess demand (w.r.t. vehicle capacity)
+        Duration duration_ = 0;   // Total duration of this route
+        Duration timeWarp_ = 0;   // Total time warp on this route
+        Duration travel_ = 0;     // Total *travel* duration on this route
+        Duration service_ = 0;    // Total *service* duration on this route
+        Duration wait_ = 0;       // Total *waiting* duration on this route
+        Duration release_ = 0;    // Release time of this route
+        Duration startTime_ = 0;  // (earliest) start time of this route
+        Duration slack_ = 0;      // Total time slack on this route
+        Cost prizes_ = 0;         // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
         VehicleType vehicleType_ = 0;         // Type of vehicle of this route

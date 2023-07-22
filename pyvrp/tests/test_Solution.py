@@ -304,31 +304,6 @@ def test_route_time_warp_calculations():
     assert_allclose(sol.time_warp(), routes[0].time_warp())
 
 
-def test_route_start_and_end_time_calculations():
-    # TODO
-    data = read("data/OkSmall.txt")
-    sol = Solution(data, [[1, 3], [2, 4]])
-    routes = sol.get_routes()
-
-    # In both routes, there is no waiting time.
-    assert_allclose(routes[0].wait_duration(), 0)
-    assert_allclose(routes[1].wait_duration(), 0)
-
-    # Since route 0 has timewarp, there is no slack and the route should start
-    # exactly at 15'600 - 1'544 = 14'056.
-    assert_allclose(routes[0].start_time(), 14_056)
-    assert_allclose(routes[0].slack(), 0)
-
-    # Route 1 should not start before 12'000 - 1'944 = 10'056 (otherwise we
-    # will have waiting time and a longer duration) and not after 19'500
-    # - 1'090 - 360 - 1'944 = 16'106, so the slack is 16'106 - 10'056.
-    assert_allclose(routes[1].start_time(), 10_056)
-    assert_allclose(routes[1].slack(), 16_106 - 10_056)
-
-    assert_allclose(routes[1].duration(), 5_229)
-    assert_allclose(routes[1].end_time(), 10_056 + 5_229)
-
-
 def test_route_wait_time_calculations():
     # TODO
     data = read("data/OkSmallWaitTime.txt")
@@ -362,6 +337,31 @@ def test_route_wait_time_calculations():
     )
 
 
+def test_route_start_and_end_time_calculations():
+    # TODO
+    data = read("data/OkSmall.txt")
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
+
+    # In both routes, there is no waiting time.
+    assert_allclose(routes[0].wait_duration(), 0)
+    assert_allclose(routes[1].wait_duration(), 0)
+
+    # Since route 0 has timewarp, there is no slack and the route should start
+    # exactly at 15'600 - 1'544 = 14'056.
+    assert_allclose(routes[0].start_time(), 14_056)
+    assert_allclose(routes[0].slack(), 0)
+
+    # Route 1 should not start before 12'000 - 1'944 = 10'056 (otherwise we
+    # will have waiting time and a longer duration) and not after 19'500
+    # - 1'090 - 360 - 1'944 = 16'106, so the slack is 16'106 - 10'056.
+    assert_allclose(routes[1].start_time(), 10_056)
+    assert_allclose(routes[1].slack(), 16_106 - 10_056)
+
+    assert_allclose(routes[1].duration(), 5_229)
+    assert_allclose(routes[1].end_time(), 10_056 + 5_229)
+
+
 def test_route_release_time():
     data = read("data/OkSmallReleaseTimes.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
@@ -372,6 +372,11 @@ def test_route_release_time():
     # has a release time of max(5'000, 1'000) = 5'000.
     assert_allclose(routes[0].release_time(), 20_000)
     assert_allclose(routes[1].release_time(), 5_000)
+
+
+def test_route_start_time_when_there_are_also_nonzero_release_times():
+    # TODO
+    pass
 
 
 @mark.parametrize(

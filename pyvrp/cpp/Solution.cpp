@@ -213,9 +213,11 @@ Solution::Route::Route(ProblemData const &data,
     auto const &vehType = data.vehicleType(vehicleType);
     auto const &depot = data.client(vehType.depot);
     auto const &durMat = data.durationMatrix();
-    auto const depotTws = TimeWindowSegment(vehType.depot, depot);
-    tws_ = depotTws;
+
+    TimeWindowSegment depotTws(vehType.depot, depot);
+    auto tws = depotTws;
     size_t prevClient = vehType.depot;
+
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
@@ -231,7 +233,7 @@ Solution::Route::Route(ProblemData const &data,
         centroid_.second += static_cast<double>(clientData.y) / size();
 
         auto const clientTws = TimeWindowSegment(client, clientData);
-        tws_ = TimeWindowSegment::merge(durMat, tws_, clientTws);
+        tws = TimeWindowSegment::merge(durMat, tws, clientTws);
 
         prevClient = client;
     }
@@ -239,9 +241,15 @@ Solution::Route::Route(ProblemData const &data,
     Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, vehType.depot);
     travel_ += data.duration(last, vehType.depot);
-    tws_ = TimeWindowSegment::merge(durMat, tws_, depotTws);
 
     excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
+
+    tws = TimeWindowSegment::merge(durMat, tws, depotTws);
+    duration_ = tws.duration();
+    startTime_ = tws.twEarly();
+    slack_ = tws.twLate() - tws.twEarly();
+    timeWarp_ = tws.totalTimeWarp();
+    release_ = tws.releaseTime();
 }
 
 bool Solution::Route::empty() const { return visits_.empty(); }
@@ -269,25 +277,22 @@ Duration Solution::Route::travelDuration() const { return travel_; }
 
 Duration Solution::Route::serviceDuration() const { return service_; }
 
-Duration Solution::Route::timeWarp() const { return tws_.totalTimeWarp(); }
+Duration Solution::Route::timeWarp() const { return timeWarp_; }
 
 Duration Solution::Route::waitDuration() const
 {
-    return tws_.duration() - travel_ - service_;
+    return duration_ - travel_ - service_;
 }
 
-Duration Solution::Route::duration() const { return tws_.duration(); }
+Duration Solution::Route::duration() const { return duration_; }
 
-Duration Solution::Route::startTime() const { return tws_.twEarly(); }
+Duration Solution::Route::startTime() const { return startTime_; }
 
-Duration Solution::Route::endTime() const { return startTime() + duration(); }
+Duration Solution::Route::endTime() const { return startTime_ + duration_; }
 
-Duration Solution::Route::slack() const
-{
-    return tws_.twLate() - tws_.twEarly();
-}
+Duration Solution::Route::slack() const { return slack_; }
 
-Duration Solution::Route::releaseTime() const { return tws_.releaseTime(); }
+Duration Solution::Route::releaseTime() const { return release_; }
 
 Cost Solution::Route::prizes() const { return prizes_; }
 
@@ -305,7 +310,7 @@ bool Solution::Route::isFeasible() const
 
 bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
 
-bool Solution::Route::hasTimeWarp() const { return tws_.totalTimeWarp() > 0; }
+bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 
 bool Solution::Route::operator==(Solution::Route const &other) const
 {
@@ -314,8 +319,8 @@ bool Solution::Route::operator==(Solution::Route const &other) const
 
     // clang-format off
     return distance_ == other.distance_
+        && duration_ == other.duration_
         && demand_ == other.demand_
-        && tws_.totalTimeWarp() == other.tws_.totalTimeWarp() // TODO compare tws?
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;
     // clang-format on
