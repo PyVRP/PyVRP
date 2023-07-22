@@ -202,7 +202,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 }
 
 Solution::Route::Route(ProblemData const &data,
-                       Visits const visits,
+                       Visits visits,
                        size_t const vehicleType)
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
