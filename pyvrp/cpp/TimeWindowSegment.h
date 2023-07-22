@@ -63,7 +63,7 @@ public:
     /**
      * The total duration of this route segment.
      */
-    [[nodiscard]] inline Duration duration() const;
+    [[nodiscard]] Duration duration() const;
 
     /**
      * Returns the total time warp on this route segment.
@@ -79,24 +79,24 @@ public:
      * Earliest start time for this route segment that results in minimum route
      * segment duration.
      */
-    [[nodiscard]] inline Duration twEarly() const;
+    [[nodiscard]] Duration twEarly() const;
 
     /**
      * Latest start time for this route segment that results in minimum route
      * segment duration.
      */
-    [[nodiscard]] inline Duration twLate() const;
+    [[nodiscard]] Duration twLate() const;
 
     /**
      * Earliest possible release time of the clients in this route segment.
      */
-    [[nodiscard]] inline Duration releaseTime() const;
+    [[nodiscard]] Duration releaseTime() const;
 
     // TODO remove this constructor.
     TimeWindowSegment() = default;
 
     // Construct from attributes of the given client.
-    inline TimeWindowSegment(size_t idx, ProblemData::Client const &client);
+    TimeWindowSegment(size_t idx, ProblemData::Client const &client);
 
     // Construct from raw data.
     inline TimeWindowSegment(size_t idxFirst,
@@ -154,29 +154,9 @@ TimeWindowSegment TimeWindowSegment::merge(
 #endif
 }
 
-Duration TimeWindowSegment::duration() const { return duration_; }
-
 Duration TimeWindowSegment::totalTimeWarp() const
 {
     return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
-}
-
-Duration TimeWindowSegment::twEarly() const { return twEarly_; }
-
-Duration TimeWindowSegment::twLate() const { return twLate_; }
-
-Duration TimeWindowSegment::releaseTime() const { return releaseTime_; }
-
-TimeWindowSegment::TimeWindowSegment(size_t idx,
-                                     ProblemData::Client const &client)
-    : idxFirst_(idx),
-      idxLast_(idx),
-      duration_(client.serviceDuration),
-      timeWarp_(0),
-      twEarly_(client.twEarly),
-      twLate_(client.twLate),
-      releaseTime_(client.releaseTime)
-{
 }
 
 TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
