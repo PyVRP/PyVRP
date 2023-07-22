@@ -402,10 +402,10 @@ def test_route_release_time():
     assert_allclose(routes[0].release_time(), 20_000)
     assert_allclose(routes[1].release_time(), 5_000)
 
-
-def test_route_start_time_when_there_are_also_nonzero_release_times():
-    # TODO
-    pass
+    # Second route is feasible, so should have start time not smaller than
+    # release time.
+    assert_(not routes[1].has_time_warp())
+    assert_(routes[1].start_time() > routes[1].release_time())
 
 
 @mark.parametrize(
