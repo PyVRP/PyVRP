@@ -115,8 +115,8 @@ TimeWindowSegment TimeWindowSegment::merge(
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
-    // Arc travel from our last to other's first, and the time at which we
-    // arrive at the other's first client.
+    // arcDuration is the travel duration from our last to other's first client.
+    // Then, atOther is the time at which we arrive at the other's first client.
     auto const arcDuration = durationMatrix(idxLast_, other.idxFirst_);
     auto const atOther = duration_ - timeWarp_ + arcDuration;
 
