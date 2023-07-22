@@ -1,5 +1,6 @@
 import argparse
 import pathlib
+from typing import List
 
 import docblock
 
@@ -63,7 +64,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def to_cpp_string(name, docstrings):
+def to_cpp_string(name: str, docstrings: List[str]) -> str:
     # Turns the fully qualified name into something separated by underscores.
     # C++ operator overloads are mapped to their Python equivalents because
     # a C++ operator overload is not a valid variable name.
