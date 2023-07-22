@@ -268,8 +268,8 @@ public:
      */
     ProblemData(std::vector<Client> const &clients,
                 std::vector<VehicleType> const &vehicleTypes,
-                Matrix<Distance> const distMat,
-                Matrix<Duration> const durMat);
+                Matrix<Distance> distMat,
+                Matrix<Duration> durMat);
 };
 
 ProblemData::Client const &ProblemData::client(size_t client) const

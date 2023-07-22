@@ -41,7 +41,7 @@ def parse_args():
         action="store_true",
         help="""
         Whether to regenerate the MyPy type stubs as well. Default False, since
-        this can overwrite manual improvements and docstrings.
+        this can overwrite manual adjustments to the type stubs.
         """,
     )
     parser.add_argument(
