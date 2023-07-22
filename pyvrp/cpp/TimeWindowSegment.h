@@ -92,10 +92,13 @@ public:
      */
     [[nodiscard]] inline Duration releaseTime() const;
 
-    TimeWindowSegment() = default;  // TODO at least require client index
+    // TODO remove this constructor.
+    TimeWindowSegment() = default;
 
+    // Construct from attributes of the given client.
     inline TimeWindowSegment(size_t idx, ProblemData::Client const &client);
 
+    // Construct from raw data.
     inline TimeWindowSegment(size_t idxFirst,
                              size_t idxLast,
                              Duration duration,
