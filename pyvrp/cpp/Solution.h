@@ -127,11 +127,14 @@ public:
          *
          * This is the earliest possible time at which the route can leave the
          * depot and have a minimal duration. It may be possible to leave
-         * earlier, but that would incur additional waiting time. It may also
-         * be possible to leave later, without (increasing) violations of time
-         * window constraints or overall duration. In that case there is slack
-         * in the schedule: the amout of slack can be obtained through
-         * :meth:`~slack`.
+         * earlier, but that would incur additional waiting time.
+         *
+         * .. note::
+         *
+         *    It may also be possible to leave later, without (increasing)
+         *    violations of time window constraints or overall duration. In
+         *    that case there is slack in the schedule: the amout of slack can
+         *    be obtained through :meth:`~slack`.
          */
         [[nodiscard]] Duration startTime() const;
 
