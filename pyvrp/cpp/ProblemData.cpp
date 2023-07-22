@@ -56,8 +56,8 @@ size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
-                         Matrix<Distance> const distMat,
-                         Matrix<Duration> const durMat)
+                         Matrix<Distance> distMat,
+                         Matrix<Duration> durMat)
     : centroid_({0, 0}),
       dist_(std::move(distMat)),
       dur_(std::move(durMat)),

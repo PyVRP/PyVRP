@@ -71,12 +71,15 @@ def to_cpp_string(name, docstrings):
     parts[-1] = _OP2DUNDER.get(parts[-1], parts[-1])
     var_name = "__doc_" + "_".join(parts)
 
+    # Structure of the C++ statement we are going to write.
+    cpp_stmt = 'static char const *{var_name} = R"doc(\n{doc}\n)doc";'
+
     if len(docstrings) == 1:
-        doc = docstrings[0]
-        return f'char const *{var_name} = R"doc(\n{doc}\n)doc";'
+        # Without overloads we do not need to insert a counter.
+        return cpp_stmt.format(var_name=var_name, doc=docstrings[0])
 
     return "\n".join(
-        f'char const *{var_name}_{ctr} = R"doc(\n{doc}\n)doc";'
+        cpp_stmt.format(var_name=f"{var_name}_{ctr}", doc=doc)
         for ctr, doc in enumerate(docstrings, 1)
     )
 

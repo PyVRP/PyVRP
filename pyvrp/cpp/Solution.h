@@ -142,7 +142,7 @@ public:
 
         Route() = default;  // default is empty
         Route(ProblemData const &data,
-              Visits const visits,
+              Visits visits,
               VehicleType const vehicleType);
     };
 
