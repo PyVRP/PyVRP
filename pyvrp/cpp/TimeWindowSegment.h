@@ -66,7 +66,12 @@ public:
     [[nodiscard]] inline Duration duration() const;
 
     /**
-     * The total time warp on this route segment.
+     * Returns the total time warp on this route segment.
+     *
+     * Returns
+     * -------
+     * int
+     *     Total time warp on this route segment.
      */
     [[nodiscard]] inline Duration totalTimeWarp() const;
 
