@@ -278,9 +278,9 @@ Duration Solution::Route::waitDuration() const
 
 Duration Solution::Route::duration() const { return tws_.duration(); }
 
-Duration Solution::Route::earliestStart() const { return tws_.twEarly(); }
+Duration Solution::Route::startTime() const { return tws_.twEarly(); }
 
-Duration Solution::Route::latestStart() const { return tws_.twLate(); }
+Duration Solution::Route::endTime() const { return startTime() + duration(); }
 
 Duration Solution::Route::slack() const
 {

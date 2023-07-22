@@ -187,7 +187,7 @@ def test_feasibility_release_times():
     # time warp of 23'896 - 19'500 = 4'396.
     sol = Solution(data, [[1, 2], [3], [4]])
     assert_(not sol.is_feasible())
-    assert_equal(sol.time_warp(), 4396)
+    assert_allclose(sol.time_warp(), 4396)
 
     # Visiting clients 2 and 3 together is feasible: both clients are released
     # at time 5'000. We arrive at client 2 at 5'000 + 1'944 and wait till the
@@ -230,7 +230,7 @@ def test_excess_load_calculation():
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10.
-    assert_equal(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
+    assert_allclose(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
 
 
 def test_heterogeneous_capacity_excess_load_calculation():
@@ -244,12 +244,12 @@ def test_heterogeneous_capacity_excess_load_calculation():
     # excess_load is 18 - 10 = 8.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
     assert_(sol.has_excess_load())
-    assert_equal(sol.excess_load(), 8)
+    assert_allclose(sol.excess_load(), 8)
 
     # With vehicle type 1, the capacity 20 is larger than 18.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
     assert_(not sol.has_excess_load())
-    assert_equal(sol.excess_load(), 0)
+    assert_allclose(sol.excess_load(), 0)
 
 
 def test_route_access_methods():
@@ -286,7 +286,7 @@ def test_route_access_methods():
     assert_allclose(routes[1].service_duration(), services[2] + services[4])
 
 
-def test_route_time_warp_and_start_time_calculations():
+def test_route_time_warp_calculations():
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -303,22 +303,30 @@ def test_route_time_warp_and_start_time_calculations():
     assert_allclose(routes[1].time_warp(), 0)
     assert_allclose(sol.time_warp(), routes[0].time_warp())
 
+
+def test_route_start_and_end_time_calculations():
+    data = read("data/OkSmall.txt")
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
+
     # In both routes, there is no waiting time.
-    assert_equal(routes[0].wait_duration(), 0)
-    assert_equal(routes[1].wait_duration(), 0)
+    assert_allclose(routes[0].wait_duration(), 0)
+    assert_allclose(routes[1].wait_duration(), 0)
 
-    # Since route 0 has a timewarp, there is no slack and the
-    # route should start exactly at 15'600 - 1'544 = 14056
-    assert_equal(routes[0].earliest_start(), 14_056)
-    assert_equal(routes[0].latest_start(), 14_056)
-    assert_equal(routes[0].slack(), 0)
+    # Since route 0 has timewarp, there is no slack and the route should start
+    # exactly at 15'600 - 1'544 = 14'056.
+    assert_allclose(routes[0].start_time(), 14_056)
+    assert_allclose(routes[0].slack(), 0)
 
-    # Route 1 has some slack, it shouldn't start before 12'000 - 1'944 = 10'056
-    # (otherwise we will have waiting time and a longer duration) and not after
-    # 19'500 - 1'090 - 360 - 1'944 = 16'106
-    assert_equal(routes[1].earliest_start(), 10_056)
-    assert_equal(routes[1].latest_start(), 16_106)
-    assert_equal(routes[1].slack(), 16_106 - 10_056)
+    # Route 1 should not start before 12'000 - 1'944 = 10'056 (otherwise we
+    # will have waiting time and a longer duration) and not after 19'500
+    # - 1'090 - 360 - 1'944 = 16'106, so the slack is 16'106 - 10'056.
+    assert_allclose(routes[1].start_time(), 10_056)
+    assert_allclose(routes[1].slack(), 16_106 - 10_056)
+
+    # TODO
+    assert_allclose(routes[1].duration(), 5_229)
+    assert_allclose(routes[1].end_time(), 10_056 + 5_229)
 
 
 def test_route_wait_time_calculations():
@@ -328,13 +336,13 @@ def test_route_wait_time_calculations():
 
     # In route 1, the latest start of service for client 2 is 15'000, then
     # adding 360 service and 1'090 travel we arrive at client 4 at 16'450 and
-    # have to wait 18'000 - 16'450 = 1'550
-    assert_equal(routes[1].wait_duration(), 1_550)
+    # have to wait 18'000 - 16'450 = 1'550.
+    assert_allclose(routes[1].wait_duration(), 1_550)
+
     # Since there is waiting time, there is no slack and we should start
     # as late as possible, at 15'000 - 1'944 = 13'056
-    assert_equal(routes[1].earliest_start(), 13_056)
-    assert_equal(routes[1].latest_start(), 13_056)
-    assert_equal(routes[1].slack(), 0)
+    assert_allclose(routes[1].start_time(), 13_056)
+    assert_allclose(routes[1].slack(), 0)
 
     # Additionally, we will test that we can have both wait time and time warp
     # in a single route, and it holds that duration = travel + service + wait
@@ -344,15 +352,13 @@ def test_route_wait_time_calculations():
     assert_(route.has_time_warp())
     assert_(route.time_warp() > 0)
     assert_(route.wait_duration() > 0)
-    assert_equal(
+    assert_allclose(route.slack(), 0)
+    assert_allclose(
         route.duration(),
         route.travel_duration()
         + route.service_duration()
         + route.wait_duration(),
     )
-    # In this case, there is no slack either
-    assert_equal(route.earliest_start(), route.latest_start())
-    assert_equal(route.slack(), 0)
 
 
 def test_route_release_time():
@@ -411,7 +417,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
 
-    assert_equal(
+    assert_allclose(
         feasible.distance(),
         dist_mat[0, 1] + dist_mat[1, 2] + dist_mat[2, 0],
     )
@@ -432,8 +438,8 @@ def test_time_warp_return_to_depot():
     # This is 1 more than the depot time window 1, giving a time warp of 1
     sol = Solution(data, [[1]])
     routes = sol.get_routes()
-    assert_equal(routes[0].duration(), 2)
-    assert_equal(sol.time_warp(), 1)
+    assert_allclose(routes[0].duration(), 2)
+    assert_allclose(sol.time_warp(), 1)
 
 
 # TODO test all time warp cases
@@ -620,5 +626,5 @@ def test_route_centroid():
 
     for route in routes:
         x_center, y_center = route.centroid()
-        assert_equal(x_center, x[route].mean())
-        assert_equal(y_center, y[route].mean())
+        assert_allclose(x_center, x[route].mean())
+        assert_allclose(y_center, y[route].mean())

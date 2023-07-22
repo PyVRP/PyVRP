@@ -92,17 +92,19 @@ public:
          * Demand in excess of the vehicle's capacity.
          */
         [[nodiscard]] Load excessLoad() const;
+
         /**
          * Total duration of travel on this route.
          */
         [[nodiscard]] Duration travelDuration() const;
+
         /**
          * Total duration of service on this route.
          */
         [[nodiscard]] Duration serviceDuration() const;
 
         /**
-         * Amount of time warp incurred along the route.
+         * Amount of time warp incurred on this route.
          */
         [[nodiscard]] Duration timeWarp() const;
 
@@ -110,31 +112,41 @@ public:
          * Total waiting duration on this route.
          */
         [[nodiscard]] Duration waitDuration() const;
+
         /**
-         * Total duration of this route (travel + service + waiting)
+         * Total route duration, including travel, service and waiting time.
          */
         [[nodiscard]] Duration duration() const;
+
         /**
-         * Earliest possible start time of the route that results in minimum
-         * total route duration. Starting earlier than this time may be
-         * feasible but will result in additional waiting time.
+         * Start time of this route.
+         *
+         * This is the earliest possible time at which the route can leave the
+         * depot and have a minimal duration. It may be possible to leave
+         * earlier, but that would incur additional waiting time. It may also
+         * be possible to leave later, without violating time window
+         * constraints or increasing the duration. In that case there is slack
+         * in the schedule: the amout of slack can be obtained through
+         * :meth:`~slack`.
          */
-        [[nodiscard]] Duration earliestStart() const;
+        [[nodiscard]] Duration startTime() const;
+
         /**
-         * Latest possible start time of the route. Starting later than this
-         * time will be infeasible and result in a time warp.
+         * End time of the route. This is equivalent to
+         * ``start_time + duration``.
          */
-        [[nodiscard]] Duration latestStart() const;
+        [[nodiscard]] Duration endTime() const;
+
         /**
-         * Time by which (earliest) start time can be increased without
-         * resulting in a time window violation. If the route is currently
-         * infeasible due to time warp, slack will be 0.
+         * Time by which departure from the depot can be delayed without
+         * resulting in (additional) time window violations or increased route
+         * duration.
          */
         [[nodiscard]] Duration slack() const;
 
         /**
-         * Latest release time of the visits on this route, determining the
-         * earliest release time for the route.
+         * Earliest time at which this route can leave the depot. Follows from
+         * the release times of clients visited on this route.
          */
         [[nodiscard]] Duration releaseTime() const;
 

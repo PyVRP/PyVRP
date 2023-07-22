@@ -237,6 +237,28 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             DOC(pyvrp, Solution, Route, excessLoad))
         .def(
+            "duration",
+            [](Solution::Route const &route) { return route.duration().get(); },
+            DOC(pyvrp, Solution, Route, duration))
+        .def(
+            "time_warp",
+            [](Solution::Route const &route) { return route.timeWarp().get(); },
+            DOC(pyvrp, Solution, Route, timeWarp))
+        .def(
+            "start_time",
+            [](Solution::Route const &route) {
+                return route.startTime().get();
+            },
+            DOC(pyvrp, Solution, Route, startTime))
+        .def(
+            "end_time",
+            [](Solution::Route const &route) { return route.endTime().get(); },
+            DOC(pyvrp, Solution, Route, endTime))
+        .def(
+            "slack",
+            [](Solution::Route const &route) { return route.slack().get(); },
+            DOC(pyvrp, Solution, Route, slack))
+        .def(
             "travel_duration",
             [](Solution::Route const &route) {
                 return route.travelDuration().get();
@@ -249,35 +271,11 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             DOC(pyvrp, Solution, Route, serviceDuration))
         .def(
-            "time_warp",
-            [](Solution::Route const &route) { return route.timeWarp().get(); },
-            DOC(pyvrp, Solution, Route, timeWarp))
-        .def(
             "wait_duration",
             [](Solution::Route const &route) {
                 return route.waitDuration().get();
             },
             DOC(pyvrp, Solution, Route, waitDuration))
-        .def(
-            "duration",
-            [](Solution::Route const &route) { return route.duration().get(); },
-            DOC(pyvrp, Solution, Route, duration))
-        .def(
-            "earliest_start",
-            [](Solution::Route const &route) {
-                return route.earliestStart().get();
-            },
-            DOC(pyvrp, Solution, Route, earliestStart))
-        .def(
-            "latest_start",
-            [](Solution::Route const &route) {
-                return route.latestStart().get();
-            },
-            DOC(pyvrp, Solution, Route, latestStart))
-        .def(
-            "slack",
-            [](Solution::Route const &route) { return route.slack().get(); },
-            DOC(pyvrp, Solution, Route, slack))
         .def(
             "release_time",
             [](Solution::Route const &route) {
