@@ -83,10 +83,9 @@ foreach extension : extensions
 
     message('Going to build extension module ' + subdir / name + '.')
 
-    # Specify a custom target that generates the documentation header files for
-    # us. These documentation headers are of the form "<name>_docs.h". These
-    # headers are generated from headers in the relevant source directory - the
-    # glob below grabs those for us.
+    # Specify a custom target that generates the documentation header for this
+    # extension, of the form "<name>_docs.h". It is generated from headers in
+    # the relevant source directory - which the command below grabs for us.
     glob = f'import glob; print(*glob.glob("@SRC_DIR@/@subdir@/*.h"))'
     doc_cmd = run_command('poetry', 'run', 'python', '-c', glob, check: true)
     subdir_headers = doc_cmd.stdout().split()
