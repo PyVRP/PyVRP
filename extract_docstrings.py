@@ -52,9 +52,10 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="extract_docstrings")
 
     parser.add_argument(
-        "input_loc",
+        "input_locs",
+        nargs="+",
         type=pathlib.Path,
-        help="Bindings file location for which to extract docstrings.",
+        help="Files from which to extract docstrings.",
     )
     parser.add_argument(
         "output_loc",
@@ -90,7 +91,7 @@ def main():
     args = parse_args()
 
     parsed = {}
-    for header in args.input_loc.parent.glob("*.h"):
+    for header in args.input_locs:
         parsed.update(docblock.parse_file(header))
 
     docs = "\n".join(map(lambda item: to_cpp_string(*item), parsed.items()))
