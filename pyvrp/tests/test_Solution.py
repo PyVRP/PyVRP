@@ -308,30 +308,42 @@ def test_route_time_warp_calculations():
 
 
 def test_route_wait_time_calculations():
-    # TODO
     data = read("data/OkSmallWaitTime.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
 
-    # In route 1, the latest start of service for client 2 is 15'000, then
-    # adding 360 service and 1'090 travel we arrive at client 4 at 16'450 and
-    # have to wait 18'000 - 16'450 = 1'550.
+    # In the second route, the time window of client 2 closes at 15'000. After
+    # service and travel, we then arrive at client 4 before its time window is
+    # open, so we have to wait. In particular, we have to wait:
+    #   twEarly(4) - duration(2, 4) - serv(2) - twLate(2)
+    #     = 18'000 - 1'090 - 360 - 15'000
+    #     = 1'550.
     assert_allclose(routes[1].wait_duration(), 1_550)
 
-    # Since there is waiting time, there is no slack and we should start
-    # as late as possible, at 15'000 - 1'944 = 13'056
-    assert_allclose(routes[1].start_time(), 13_056)
+    # Since there is waiting time, there is no slack in the schedule. We should
+    # thus start as late as possible, at:
+    #   twLate(2) - duration(0, 2)
+    #     = 15'000 - 1'944
+    #     = 13'056.
     assert_allclose(routes[1].slack(), 0)
+    assert_allclose(routes[1].start_time(), 13_056)
 
-    # Additionally, we will test that we can have both wait time and time warp
-    # in a single route, and it holds that duration = travel + service + wait
-    sol = Solution(data, [[1, 3, 2, 4]])
-    route = sol.get_routes()[0]
+    # So far we have tested a route that had wait duration, but not time warp.
+    # We now test a solution with a route that has both.
+    sol = Solution(data, [[1, 2, 4], [3]])
+    route, *_ = sol.get_routes()
 
-    assert_(route.has_time_warp())
-    assert_(route.time_warp() > 0)
-    assert_(route.wait_duration() > 0)
+    # This route has the same wait time as explained above. The time warp is
+    # incurred earlier in the route, between 1 -> 2:
+    #   twEarly(1) + serv(1) + duration(1, 2) - twLate(2)
+    #     = 15'600 + 360 + 1'992 - 15'000
+    #     = 2'952.
+    assert_allclose(route.time_warp(), 2_952)
+    assert_allclose(route.wait_duration(), 1_550)
     assert_allclose(route.slack(), 0)
+
+    # Finally, the overall route duration should be equal to the sum of the
+    # travel, service, and waiting durations.
     assert_allclose(
         route.duration(),
         route.travel_duration()
