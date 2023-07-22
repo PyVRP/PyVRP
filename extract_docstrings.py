@@ -66,7 +66,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def to_cpp_string(name: str, docstrings: List[str]) -> str:
+def to_cpp_stmt(name: str, docstrings: List[str]) -> str:
     # Turns the fully qualified name into something separated by underscores.
     # C++ operator overloads are mapped to their Python equivalents because
     # a C++ operator overload is not a valid variable name.
@@ -94,7 +94,7 @@ def main():
     for header in args.input_locs:
         parsed.update(docblock.parse_file(header))
 
-    docs = "\n".join(map(lambda item: to_cpp_string(*item), parsed.items()))
+    docs = "\n".join(map(lambda item: to_cpp_stmt(*item), parsed.items()))
 
     with open(args.output_loc, "w") as fh:
         for section in [_PREFIX, docs, _SUFFIX]:
