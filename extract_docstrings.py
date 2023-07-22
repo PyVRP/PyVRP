@@ -52,13 +52,14 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="extract_docstrings")
 
     parser.add_argument(
-        "bindings_loc",
+        "input_loc",
         type=pathlib.Path,
-        help="Location of the bindings.cpp file to compile docstrings for.",
+        help="Bindings file location for which to extract docstrings.",
     )
     parser.add_argument(
-        "doc_header_name",
-        help="Header name to write docstrings into.",
+        "output_loc",
+        type=pathlib.Path,
+        help="Where to write the docstrings.",
     )
 
     return parser.parse_args()
@@ -87,16 +88,14 @@ def to_cpp_string(name: str, docstrings: List[str]) -> str:
 
 def main():
     args = parse_args()
-    src_dir = args.bindings_loc.parent
-    parsed = {}
 
-    for header in src_dir.glob("*.h"):
+    parsed = {}
+    for header in args.input_loc.parent.glob("*.h"):
         parsed.update(docblock.parse_file(header))
 
-    file = args.doc_header_name
     docs = "\n".join(map(lambda item: to_cpp_string(*item), parsed.items()))
 
-    with open(file, "w") as fh:
+    with open(args.output_loc, "w") as fh:
         for section in [_PREFIX, docs, _SUFFIX]:
             fh.write(section)
             fh.write("\n")

@@ -83,20 +83,22 @@ foreach extension : extensions
 
     message('Going to build extension module ' + subdir / name + '.')
 
-    # Custom target that generates the documentation header files for us. These
-    # documentation headers are of the form "<name>_docs.h".
-    docstring_h = custom_target(
+    # Specify a custom target that generates the documentation header files for
+    # us. These documentation headers are of the form "<name>_docs.h".
+    docs_h = custom_target(
         'docs for ' + name,
         output: rawname + '_docs.h',
-        # TODO inputs should reflect actual headers - not bindings.cpp
+        # TODO replace bindings.cpp with explicit headers at some point, and
+        # then remove build_always_stale flag.
         input: ['extract_docstrings.py', SRC_DIR / subdir / 'bindings.cpp'],
-        command: ['poetry', 'run', 'python', '@INPUT@', '@OUTPUT@']
+        command: ['poetry', 'run', 'python', '@INPUT@', '@OUTPUT@'],
+        build_always_stale: true,
     )
 
     # Register extension module to build.
     py.extension_module(
         name,
-        [SRC_DIR / subdir / 'bindings.cpp', docstring_h],
+        [SRC_DIR / subdir / 'bindings.cpp', docs_h],
         dependencies: dependencies,
         link_with: libcommon,
         install: true,
