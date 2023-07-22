@@ -115,15 +115,17 @@ TimeWindowSegment TimeWindowSegment::merge(
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
-    // arcDuration is the travel duration from our last to other's first client.
-    // Then, atOther is the time at which we arrive at the other's first client.
-    auto const arcDuration = durationMatrix(idxLast_, other.idxFirst_);
-    auto const atOther = duration_ - timeWarp_ + arcDuration;
+    using Dur = pyvrp::Duration;
+
+    // arcDuration is the travel duration from our last to other's first client,
+    // and atOther the time at which we arrive at the other's first client.
+    Dur const arcDuration = durationMatrix(idxLast_, other.idxFirst_);
+    Dur const atOther = duration_ - timeWarp_ + arcDuration;
 
     // Wait duration increases if we arrive at the other's first client before
     // opening, whereas time warp increases if we arrive there after closing.
-    auto diffWait = std::max<Duration>(other.twEarly_ - atOther - twLate_, 0);
-    auto diffTw = std::max<Duration>(twEarly_ + atOther - other.twLate_, 0);
+    Dur const diffWait = std::max<Dur>(other.twEarly_ - atOther - twLate_, 0);
+    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
 
     return {idxFirst_,
             other.idxLast_,
