@@ -305,6 +305,7 @@ def test_route_time_warp_calculations():
 
 
 def test_route_start_and_end_time_calculations():
+    # TODO
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -324,12 +325,12 @@ def test_route_start_and_end_time_calculations():
     assert_allclose(routes[1].start_time(), 10_056)
     assert_allclose(routes[1].slack(), 16_106 - 10_056)
 
-    # TODO
     assert_allclose(routes[1].duration(), 5_229)
     assert_allclose(routes[1].end_time(), 10_056 + 5_229)
 
 
 def test_route_wait_time_calculations():
+    # TODO
     data = read("data/OkSmallWaitTime.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -366,11 +367,11 @@ def test_route_release_time():
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
 
-    # The client release times are 20'000, 5'000, 5'000 and 1'000.
-    # So the first route has a release time of max(20'000, 5'000) = 20'000,
-    # and the second route has a release time of max(5'000, 1'000) = 5'000.
-    assert_allclose(routes[0].release_time(), 20000)
-    assert_allclose(routes[1].release_time(), 5000)
+    # The client release times are 20'000, 5'000, 5'000 and 1'000. So the first
+    # route has a release time of max(20'000, 5'000) = 20'000, and the second
+    # has a release time of max(5'000, 1'000) = 5'000.
+    assert_allclose(routes[0].release_time(), 20_000)
+    assert_allclose(routes[1].release_time(), 5_000)
 
 
 @mark.parametrize(
@@ -434,11 +435,14 @@ def test_time_warp_return_to_depot():
         distance_matrix=[[0, 0], [0, 0]],
         duration_matrix=[[0, 1], [1, 0]],
     )
-    # Travel from depot to client and back gives duration 1 + 1 = 2
-    # This is 1 more than the depot time window 1, giving a time warp of 1
+
     sol = Solution(data, [[1]])
-    routes = sol.get_routes()
-    assert_allclose(routes[0].duration(), 2)
+    route, *_ = sol.get_routes()
+
+    # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
+    # more than the depot time window 1, giving a time warp of 1.
+    assert_allclose(route.duration(), 2)
+    assert_allclose(data.client(0).tw_late, 1)
     assert_allclose(sol.time_warp(), 1)
 
 
