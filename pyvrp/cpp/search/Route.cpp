@@ -1,6 +1,5 @@
 #include "Route.h"
 
-#include <cassert>
 #include <cmath>
 #include <numbers>
 #include <ostream>
@@ -76,7 +75,6 @@ size_t Route::vehicleType() const { return vehicleType_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
-    assert(0 <= tolerance && tolerance <= 1);
     auto constexpr tau = 2 * std::numbers::pi;
 
     auto const [dataX, dataY] = data.centroid();
