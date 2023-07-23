@@ -44,8 +44,8 @@ Cost ExchangeStar<N, M>::evaluate(Route *U,
 
     for (auto *nodeU : *U)
     {
-        if constexpr (M == 0)  // test U after V's start depot when relocating
-        {
+        if constexpr (M == 0)  // Test U after V's start depot only when
+        {                      // relocating.
             deltaCost = exchange.evaluate(nodeU, &V->startDepot, costEvaluator);
 
             if (deltaCost < move.deltaCost)
@@ -54,18 +54,19 @@ Cost ExchangeStar<N, M>::evaluate(Route *U,
 
         for (auto *nodeV : *V)
         {
+            // Test (U, V).
             deltaCost = exchange.evaluate(nodeU, nodeV, costEvaluator);
 
             if (deltaCost < move.deltaCost)
                 move = {deltaCost, nodeU, nodeV};
 
-            if constexpr (N != M)  // test V after U only when the operator
-            {                      // is not a pure swap move.
-                deltaCost = exchange.evaluate(nodeV, nodeU, costEvaluator);
+            // Test (V, U). This is equivalent to (U, V) in case of pure swap
+            // - shortcutting that is already handled by the implementation of
+            // the node operator.
+            deltaCost = exchange.evaluate(nodeV, nodeU, costEvaluator);
 
-                if (deltaCost < move.deltaCost)
-                    move = {deltaCost, nodeV, nodeU};
-            }
+            if (deltaCost < move.deltaCost)
+                move = {deltaCost, nodeV, nodeU};
         }
     }
 
