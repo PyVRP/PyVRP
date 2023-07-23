@@ -120,7 +120,7 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        overlap_tolerance: float = 0.1,
+        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the intensifying route operators on this local search
