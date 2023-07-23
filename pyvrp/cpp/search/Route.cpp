@@ -77,16 +77,21 @@ size_t Route::vehicleType() const { return vehicleType_; }
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
     assert(0 <= tolerance && tolerance <= 1);
+    auto constexpr tau = 2 * std::numbers::pi;
 
     auto const [dataX, dataY] = data.centroid();
     auto const [thisX, thisY] = centroid;
     auto const [otherX, otherY] = other.centroid;
 
-    // Each angle is in [-pi, pi], so the absolute difference is in [0, 2pi].
+    // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
     // The tolerance determines when that difference is considered overlapping.
     auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
     auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
-    return std::abs(thisAngle - otherAngle) <= tolerance * 2 * M_PI;
+    auto const absDiff = std::abs(thisAngle - otherAngle);
+
+    // First case is obvious. Second case exists because tau and 0 are also
+    // close together but separated by one period.
+    return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
 }
 
 void Route::update()
