@@ -6,6 +6,8 @@
 namespace pyvrp::search
 {
 /**
+ * MoveTwoClientsReversed(data: ProblemData)
+ *
  * Inserts U -> X after V (as V -> X -> U), if that is an improving move.
  */
 class MoveTwoClientsReversed : public LocalSearchOperator<Route::Node>

@@ -6,7 +6,7 @@
 namespace pyvrp::search
 {
 /**
- * 2-OPT moves.
+ * TwoOpt(data: ProblemData)
  *
  * Between routes: replaces U -> X and V -> Y by U -> Y and V -> X, if that is
  * an improving move. Within route: replaces U -> X and V -> Y by U -> V and

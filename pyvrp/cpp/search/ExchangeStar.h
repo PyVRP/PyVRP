@@ -7,6 +7,8 @@
 namespace pyvrp::search
 {
 /**
+ * ExchangeStar(data: ProblemData)
+ *
  * Performs the best (N, M)-exchange move between routes U and V.
  */
 template <size_t N, size_t M>

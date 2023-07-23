@@ -110,13 +110,14 @@ PYBIND11_MODULE(_search, m)
              py::arg("overlap_tolerance") = 0.05)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
-    py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")
+    py::class_<MoveTwoClientsReversed, NodeOp>(
+        m, "MoveTwoClientsReversed", DOC(pyvrp, search, MoveTwoClientsReversed))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
+    py::class_<TwoOpt, NodeOp>(m, "TwoOpt", DOC(pyvrp, search, TwoOpt))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive

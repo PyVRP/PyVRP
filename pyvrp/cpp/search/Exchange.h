@@ -9,7 +9,7 @@
 namespace pyvrp::search
 {
 /**
- * Exchange()
+ * Exchange(data: ProblemData)
  *
  * The :math:`(N, M)`-exchange operators exhange :math:`N` consecutive clients
  * from :math:`U`'s route (starting at :math:`U`) with :math:`M` consecutive
