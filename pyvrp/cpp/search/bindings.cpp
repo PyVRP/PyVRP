@@ -25,6 +25,41 @@ PYBIND11_MODULE(_search, m)
     py::class_<NodeOp>(m, "NodeOperator");
     py::class_<RouteOp>(m, "RouteOperator");
 
+    py::class_<LocalSearch>(m, "LocalSearch")
+        .def(py::init<pyvrp::ProblemData const &,
+                      std::vector<std::vector<int>>>(),
+             py::arg("data"),
+             py::arg("neighbours"),
+             py::keep_alive<1, 2>())  // keep data alive until LS is freed
+        .def("add_node_operator",
+             &LocalSearch::addNodeOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
+        .def("add_route_operator",
+             &LocalSearch::addRouteOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
+        .def("set_neighbours",
+             &LocalSearch::setNeighbours,
+             py::arg("neighbours"))
+        .def("get_neighbours",
+             &LocalSearch::getNeighbours,
+             py::return_value_policy::reference_internal)
+        .def("search",
+             &LocalSearch::search,
+             py::arg("solution"),
+             py::arg("cost_evaluator"))
+        .def("intensify",
+             &LocalSearch::intensify,
+             py::arg("solution"),
+             py::arg("cost_evaluator"),
+             py::arg("overlap_tolerance") = 0.05)
+        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+
+    //
+    // Node operators
+    //
+
     py::class_<Exchange<1, 0>, NodeOp>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
@@ -79,61 +114,30 @@ PYBIND11_MODULE(_search, m)
              py::arg("data"),
              py::keep_alive<1, 2>());  // keep data alive
 
-    py::class_<LocalSearch>(m, "LocalSearch")
-        .def(py::init<pyvrp::ProblemData const &,
-                      std::vector<std::vector<int>>>(),
-             py::arg("data"),
-             py::arg("neighbours"),
-             py::keep_alive<1, 2>())  // keep data alive until LS is freed
-        .def("add_node_operator",
-             &LocalSearch::addNodeOperator,
-             py::arg("op"),
-             py::keep_alive<1, 2>())
-        .def("add_route_operator",
-             &LocalSearch::addRouteOperator,
-             py::arg("op"),
-             py::keep_alive<1, 2>())
-        .def("set_neighbours",
-             &LocalSearch::setNeighbours,
-             py::arg("neighbours"))
-        .def("get_neighbours",
-             &LocalSearch::getNeighbours,
-             py::return_value_policy::reference_internal)
-        .def("search",
-             &LocalSearch::search,
-             py::arg("solution"),
-             py::arg("cost_evaluator"))
-        .def("intensify",
-             &LocalSearch::intensify,
-             py::arg("solution"),
-             py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance") = 0.05)
-        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
-
     py::class_<MoveTwoClientsReversed, NodeOp>(
         m, "MoveTwoClientsReversed", DOC(pyvrp, search, MoveTwoClientsReversed))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<TwoOpt, NodeOp>(m, "TwoOpt", DOC(pyvrp, search, TwoOpt))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
+
+    //
+    // Route operators
+    //
 
     py::class_<ExchangeStar<1, 0>, RouteOp>(
         m, "RelocateStar", DOC(pyvrp, search, ExchangeStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<ExchangeStar<1, 1>, RouteOp>(
         m, "SwapStar", DOC(pyvrp, search, ExchangeStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 }
