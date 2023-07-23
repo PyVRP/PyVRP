@@ -9,7 +9,13 @@ namespace pyvrp::search
 /**
  * ExchangeStar(data: ProblemData)
  *
- * Performs the best (N, M)-exchange move between routes U and V.
+ * Performs the best :math:`(N, M)`-exchange move between routes :math:`U` and
+ * :math:`V`.
+ *
+ * .. note::
+ *
+ *    See the exchange node operators (:class:`Exchange10` and related) for
+ *    details.
  */
 template <size_t N, size_t M>
 class ExchangeStar : public LocalSearchOperator<Route>
