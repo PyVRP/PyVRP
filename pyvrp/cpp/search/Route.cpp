@@ -75,8 +75,6 @@ size_t Route::vehicleType() const { return vehicleType_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
-    auto constexpr tau = 2 * std::numbers::pi;
-
     auto const [dataX, dataY] = data.centroid();
     auto const [thisX, thisY] = centroid;
     auto const [otherX, otherY] = other.centroid;
@@ -88,6 +86,7 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
     // First case is obvious. Second case exists because tau and 0 are also
     // close together but separated by one period.
+    auto constexpr tau = 2 * std::numbers::pi;
     return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
 }
 
