@@ -101,7 +101,7 @@ public:
      */
     Solution intensify(Solution &solution,
                        CostEvaluator const &costEvaluator,
-                       int overlapToleranceDegrees = 0);
+                       double overlapTolerance = 0.05);
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and

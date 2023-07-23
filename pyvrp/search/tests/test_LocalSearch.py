@@ -7,6 +7,7 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    RelocateStar,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -269,3 +270,42 @@ def test_bugfix_vehicle_type_offsets():
     improved_cost = cost_evaluator.penalised_cost(improved)
 
     assert_(improved_cost <= current_cost)
+
+
+def test_intensify_overlap_tolerance():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_route_operator(RelocateStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # Overlap tolerance is zero, so no routes should have overlap and thus
+    # no intensification should take place.
+    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance=0)
+    assert_equal(unchanged, sol)
+
+    # But with full overlap tolerance, all routes should be checked. That
+    # should lead to an improvement over the random solution.
+    better = ls.intensify(sol, cost_eval, overlap_tolerance=1)
+    assert_(better != sol)
+    assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
+
+
+@mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
+def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_route_operator(RelocateStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
+        ls.intensify(sol, cost_eval, overlap_tolerance=tol)

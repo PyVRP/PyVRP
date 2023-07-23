@@ -36,7 +36,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
 
         swap_sol = ls.search(sol, cost_evaluator)
         swap_star_sol = ls.intensify(
-            swap_sol, cost_evaluator, overlap_tolerance_degrees=360
+            swap_sol, cost_evaluator, overlap_tolerance=1
         )
 
         # The regular swap operator should have been able to improve the random
@@ -63,9 +63,7 @@ def test_swap_star_on_RC208_instance(seed: int):
     route = list(range(1, data.num_clients + 1))
     split = rng.randint(data.num_clients)
     sol = Solution(data, [route[:split], route[split:]])
-    improved_sol = ls.intensify(
-        sol, cost_evaluator, overlap_tolerance_degrees=360
-    )
+    improved_sol = ls.intensify(sol, cost_evaluator, overlap_tolerance=1)
 
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
