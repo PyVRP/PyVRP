@@ -1,8 +1,7 @@
 #include "Exchange.h"
+#include "ExchangeStar.h"
 #include "LocalSearch.h"
 #include "MoveTwoClientsReversed.h"
-#include "RelocateStar.h"
-#include "SwapStar.h"
 #include "TwoOpt.h"
 #include "search_docs.h"
 
@@ -12,11 +11,10 @@
 namespace py = pybind11;
 
 using pyvrp::search::Exchange;
+using pyvrp::search::ExchangeStar;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::MoveTwoClientsReversed;
-using pyvrp::search::RelocateStar;
-using pyvrp::search::SwapStar;
 using pyvrp::search::TwoOpt;
 
 PYBIND11_MODULE(_search, m)
@@ -118,19 +116,21 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>()  // keep data alive
         );
 
-    py::class_<RelocateStar, RouteOp>(m, "RelocateStar")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
-
-    py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
-
     py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
+
+    py::class_<ExchangeStar<1, 0>, RouteOp>(
+        m, "RelocateStar", DOC(pyvrp, search, ExchangeStar))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>()  // keep data alive
+        );
+
+    py::class_<ExchangeStar<1, 1>, RouteOp>(
+        m, "SwapStar", DOC(pyvrp, search, ExchangeStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
