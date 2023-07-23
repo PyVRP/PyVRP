@@ -60,12 +60,6 @@ private:
     Load load_;          // Current route load.
     Duration timeWarp_;  // Current route time warp.
 
-    // Recomputes the route's center point.
-    void setupCentroid();
-
-    // Sets forward node time windows.
-    void setupRouteTimeWindows();
-
 public:                // TODO make fields private
     size_t const idx;  // Route index
     Node startDepot;   // Departure depot for this route

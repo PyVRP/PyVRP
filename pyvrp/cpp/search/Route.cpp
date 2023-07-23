@@ -72,32 +72,6 @@ Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     endDepot.route = this;
 }
 
-void Route::setupCentroid()
-{
-    centroid = {0, 0};
-
-    for (auto *node : *this)
-    {
-        auto const &clientData = data.client(node->client);
-
-        centroid.first += static_cast<double>(clientData.x) / size();
-        centroid.second += static_cast<double>(clientData.y) / size();
-    }
-}
-
-void Route::setupRouteTimeWindows()
-{
-    auto *node = &endDepot;
-
-    do  // forward time window segments
-    {
-        auto *prev = p(node);
-        prev->twAfter
-            = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
-        node = prev;
-    } while (!node->isDepot());
-}
-
 size_t Route::vehicleType() const { return vehicleType_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
@@ -124,12 +98,19 @@ void Route::update()
     Distance distance = 0;
     Distance deltaReversalDistance = 0;
 
+    centroid = {0, 0};
+
     while (!node->isDepot())
     {
         size_t const position = nodes.size();
         nodes.push_back(node);
 
-        load += data.client(node->client).demand;
+        auto const &clientData = data.client(node->client);
+
+        centroid.first += static_cast<double>(clientData.x);
+        centroid.second += static_cast<double>(clientData.y);
+
+        load += clientData.demand;
         distance += data.dist(p(node)->client, node->client);
 
         deltaReversalDistance += data.dist(node->client, p(node)->client);
@@ -145,6 +126,9 @@ void Route::update()
         node = n(node);
     }
 
+    centroid.first /= size();
+    centroid.second /= size();
+
     load += data.client(endDepot.client).demand;
     distance += data.dist(p(&endDepot)->client, endDepot.client);
 
@@ -158,11 +142,18 @@ void Route::update()
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
-    setupCentroid();
-    setupRouteTimeWindows();
-
     load_ = endDepot.cumulatedLoad;
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
+
+    // forward time window segments
+    node = &endDepot;
+    do
+    {
+        auto *prev = p(node);
+        prev->twAfter
+            = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
+        node = prev;
+    } while (!node->isDepot());
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
