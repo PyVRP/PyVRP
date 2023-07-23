@@ -40,29 +40,32 @@ Cost ExchangeStar<N, M>::evaluate(Route *U,
                                   CostEvaluator const &costEvaluator)
 {
     move = {};
+    Cost deltaCost = 0;
 
     for (auto *nodeU : *U)
     {
-        // Test inserting U after V's start depot
-        Cost deltaCost
-            = exchange.evaluate(nodeU, &V->startDepot, costEvaluator);
+        if constexpr (M == 0)  // test U after V's start depot when relocating
+        {
+            deltaCost = exchange.evaluate(nodeU, &V->startDepot, costEvaluator);
 
-        if (deltaCost < move.deltaCost)
-            move = {deltaCost, nodeU, &V->startDepot};
+            if (deltaCost < move.deltaCost)
+                move = {deltaCost, nodeU, &V->startDepot};
+        }
 
         for (auto *nodeV : *V)
         {
-            // Test inserting U after V
             deltaCost = exchange.evaluate(nodeU, nodeV, costEvaluator);
 
             if (deltaCost < move.deltaCost)
                 move = {deltaCost, nodeU, nodeV};
 
-            // Test inserting V after U
-            deltaCost = exchange.evaluate(nodeV, nodeU, costEvaluator);
+            if constexpr (N != M)  // test V after U only when the operator
+            {                      // is not a pure swap move.
+                deltaCost = exchange.evaluate(nodeV, nodeU, costEvaluator);
 
-            if (deltaCost < move.deltaCost)
-                move = {deltaCost, nodeV, nodeU};
+                if (deltaCost < move.deltaCost)
+                    move = {deltaCost, nodeV, nodeU};
+            }
         }
     }
 
