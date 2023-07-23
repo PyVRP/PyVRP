@@ -84,7 +84,6 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
     auto const [otherX, otherY] = other.centroid;
 
     // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
-    // The tolerance determines when that difference is considered overlapping.
     auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
     auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
     auto const absDiff = std::abs(thisAngle - otherAngle);
