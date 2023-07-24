@@ -65,6 +65,12 @@ class LocalSearch
     // Test removing U from the solution. Called when U can be removed.
     void maybeRemove(Route::Node *U, CostEvaluator const &costEvaluator);
 
+    // Performs search without load/export.
+    void search();
+
+    // Performs intensify without load/export.
+    void intensify();
+
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
@@ -88,6 +94,11 @@ public:
      * @return The neighbourhood structure currently in use.
      */
     Neighbours const &getNeighbours() const;
+
+    /**
+     * TODO
+     */
+    Solution operator()(Solution &solution, CostEvaluator const &costEvaluator);
 
     /**
      * Performs regular (node-based) local search around the given solution,
