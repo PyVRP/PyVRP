@@ -65,11 +65,12 @@ class LocalSearch
     // Test removing U from the solution. Called when U can be removed.
     void maybeRemove(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Performs search without load/export.
-    void search();
+    // Performs search on the currently loaded solution.
+    void search(CostEvaluator const &costEvaluator);
 
-    // Performs intensify without load/export.
-    void intensify();
+    // Performs intensify on the currently loaded solution.
+    void intensify(CostEvaluator const &costEvaluator,
+                   double overlapTolerance = 0.05);
 
 public:
     /**

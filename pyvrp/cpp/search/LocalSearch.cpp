@@ -12,13 +12,46 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using TWS = pyvrp::TimeWindowSegment;
 
+Solution LocalSearch::operator()(Solution &solution,
+                                 CostEvaluator const &costEvaluator)
+{
+    loadSolution(solution);
+
+    while (true)
+    {
+        search(costEvaluator);
+
+        if (numMoves == 0)  // then search() is struck - try intensifying.
+            intensify(costEvaluator);
+
+        if (numMoves == 0)  // then intensify() is also stuck. STOP.
+            break;
+    }
+
+    return exportSolution();
+}
+
 Solution LocalSearch::search(Solution &solution,
                              CostEvaluator const &costEvaluator)
 {
-    if (nodeOps.empty())
-        return solution;
-
     loadSolution(solution);
+    search(costEvaluator);
+    return exportSolution();
+}
+
+Solution LocalSearch::intensify(Solution &solution,
+                                CostEvaluator const &costEvaluator,
+                                double overlapTolerance)
+{
+    loadSolution(solution);
+    intensify(costEvaluator, overlapTolerance);
+    return exportSolution();
+}
+
+void LocalSearch::search(CostEvaluator const &costEvaluator)
+{
+    if (nodeOps.empty())
+        return;
 
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -90,21 +123,16 @@ Solution LocalSearch::search(Solution &solution,
             }
         }
     }
-
-    return exportSolution();
 }
 
-Solution LocalSearch::intensify(Solution &solution,
-                                CostEvaluator const &costEvaluator,
-                                double overlapTolerance)
+void LocalSearch::intensify(CostEvaluator const &costEvaluator,
+                            double overlapTolerance)
 {
     if (overlapTolerance < 0 || overlapTolerance > 1)
         throw std::runtime_error("overlapTolerance must be in [0, 1].");
 
     if (routeOps.empty())
-        return solution;
-
-    loadSolution(solution);
+        return;
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
@@ -144,8 +172,6 @@ Solution LocalSearch::intensify(Solution &solution,
             }
         }
     }
-
-    return exportSolution();
 }
 
 void LocalSearch::shuffle(XorShift128 &rng)
