@@ -75,7 +75,7 @@ class GeneticAlgorithm:
         Random number generator.
     population
         Population to use.
-    search
+    search_method
         Search method to use.
     crossover_op
         Crossover operator to use for generating offspring.
@@ -96,7 +96,7 @@ class GeneticAlgorithm:
         penalty_manager: PenaltyManager,
         rng: XorShift128,
         population: Population,
-        search: SearchMethod,
+        search_method: SearchMethod,
         crossover_op: CrossoverOperator,
         initial_solutions: Collection[Solution],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
@@ -108,7 +108,7 @@ class GeneticAlgorithm:
         self._pm = penalty_manager
         self._rng = rng
         self._pop = population
-        self._search = search
+        self._search = search_method
         self._crossover = crossover_op
         self._initial_solutions = initial_solutions
         self._params = params
