@@ -18,7 +18,7 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     auto const &vehicleType = data.vehicleType(route->vehicleType());
     auto const currentCost = route->penalisedCost(costEvaluator);
 
-    Distance deltaDist
+    auto const deltaDist
         = data.dist(U->client, V->client)
           + data.dist(n(U)->client, n(V)->client) + V->deltaReversalDistance
           - data.dist(U->client, n(U)->client)
