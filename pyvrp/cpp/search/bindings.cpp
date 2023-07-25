@@ -109,7 +109,7 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::intensify,
              py::arg("solution"),
              py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance_degrees") = 0)
+             py::arg("overlap_tolerance") = 0.05)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")

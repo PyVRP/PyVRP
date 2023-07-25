@@ -1,7 +1,6 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
-#include "CircleSector.h"
 #include "CostEvaluator.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
@@ -57,20 +56,11 @@ private:
     size_t const vehicleType_;
 
     std::vector<Node *> nodes;  // List of nodes in this route, excl. depot
-    CircleSector sector;        // Circle sector of the route's clients
+    std::pair<double, double> centroid;  // Center point of route's clients.
 
     Distance dist_;          // Current route dist.
     Load load_;              // Current route load.
     TimeWindowSegment tws_;  // Current route time window information.
-
-    // Populates the nodes vector.
-    void setupNodes();
-
-    // Sets the sector data.
-    void setupSector();
-
-    // Sets forward node time windows.
-    void setupRouteTimeWindows();
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -171,11 +161,10 @@ public:                // TODO make fields private
     [[nodiscard]] inline size_t vehicleType() const;
 
     /**
-     * Tests if this route overlaps with the other route, that is, whether
-     * their circle sectors overlap with a given tolerance.
+     * Tests if this route potentially overlaps with the other route, subject
+     * to a tolerance in [0, 1].
      */
-    [[nodiscard]] bool overlapsWith(Route const &other,
-                                    int const tolerance) const;
+    [[nodiscard]] bool overlapsWith(Route const &other, double tolerance) const;
 
     /**
      * Updates this route. To be called after swapping nodes/changing the

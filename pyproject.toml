@@ -81,7 +81,7 @@ codecov = "*"
 meson = "^1.0.0"
 ninja = "^1.11.1"
 mypy = "^0.991"
-docblock = "^0.0.3"
+docblock = "^0.0.5"
 
 
 [tool.poetry.scripts]

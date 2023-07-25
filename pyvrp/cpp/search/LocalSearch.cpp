@@ -96,14 +96,15 @@ Solution LocalSearch::search(Solution &solution,
 
 Solution LocalSearch::intensify(Solution &solution,
                                 CostEvaluator const &costEvaluator,
-                                int overlapToleranceDegrees)
+                                double overlapTolerance)
 {
+    if (overlapTolerance < 0 || overlapTolerance > 1)
+        throw std::runtime_error("overlapTolerance must be in [0, 1].");
+
     if (routeOps.empty())
         return solution;
 
     loadSolution(solution);
-
-    auto const overlapTolerance = overlapToleranceDegrees * 65536;
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
