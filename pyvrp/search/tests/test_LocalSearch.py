@@ -8,6 +8,7 @@ from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
     RelocateStar,
+    SwapStar,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -311,7 +312,7 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
         ls.intensify(sol, cost_eval, overlap_tolerance=tol)
 
 
-def test_no_op_same_solution():
+def test_no_op_results_in_same_solution():
     data = read("data/OkSmall.txt")
     rng = XorShift128(seed=42)
 
@@ -324,3 +325,35 @@ def test_no_op_same_solution():
     assert_equal(ls.run(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
+
+
+def test_intensify_can_improve_solution_further():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=11)
+
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange11(data))
+    ls.add_route_operator(SwapStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+
+    # The following solution is locally optimal w.r.t. the node operators. This
+    # solution cannot be improved further by repeated calls to ``search()``.
+    search_opt = ls.search(Solution.make_random(data, rng), cost_eval)
+    search_cost = cost_eval.penalised_cost(search_opt)
+
+    # But it can be improved further using the intensifying route operators,
+    # as the following solution shows.
+    intensify_opt = ls.intensify(search_opt, cost_eval)
+    intensify_cost = cost_eval.penalised_cost(intensify_opt)
+
+    print(search_cost, intensify_cost)
+    assert_(intensify_cost < search_cost)
+
+    # Both solutions are locally optimal. ``search_opt`` w.r.t. to the node
+    # operators, and ``intensify_opt`` w.r.t. to the route operators. Repeated
+    # calls to ``search()`` and ``intensify`` do not result in further
+    # improvements for such locally optimal solutions.
+    for _ in range(10):
+        assert_equal(ls.search(search_opt, cost_eval), search_opt)
+        assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
