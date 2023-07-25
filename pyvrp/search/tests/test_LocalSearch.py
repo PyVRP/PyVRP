@@ -321,5 +321,6 @@ def test_no_op_same_solution():
     # Empty local search does not actually search anything, so it should return
     # the exact same solution as what was passed in.
     ls = LocalSearch(data, rng, compute_neighbours(data))
+    assert_equal(ls.run(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
