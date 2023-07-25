@@ -20,11 +20,9 @@ Solution LocalSearch::operator()(Solution &solution,
     while (true)
     {
         search(costEvaluator);
+        intensify(costEvaluator);
 
-        if (numMoves == 0)  // then search() is struck - try intensifying.
-            intensify(costEvaluator);
-
-        if (numMoves == 0)  // then intensify() is also stuck. STOP.
+        if (numMoves == 0)  // then the current solution is locally optimal.
             break;
     }
 
