@@ -12,7 +12,7 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using TWS = pyvrp::TimeWindowSegment;
 
-Solution LocalSearch::operator()(Solution &solution,
+Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
@@ -40,7 +40,7 @@ Solution LocalSearch::operator()(Solution &solution,
     return exportSolution();
 }
 
-Solution LocalSearch::search(Solution &solution,
+Solution LocalSearch::search(Solution const &solution,
                              CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
@@ -48,7 +48,7 @@ Solution LocalSearch::search(Solution &solution,
     return exportSolution();
 }
 
-Solution LocalSearch::intensify(Solution &solution,
+Solution LocalSearch::intensify(Solution const &solution,
                                 CostEvaluator const &costEvaluator,
                                 double overlapTolerance)
 {

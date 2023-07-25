@@ -99,19 +99,21 @@ public:
     /**
      * TODO
      */
-    Solution operator()(Solution &solution, CostEvaluator const &costEvaluator);
+    Solution operator()(Solution const &solution,
+                        CostEvaluator const &costEvaluator);
 
     /**
      * Performs regular (node-based) local search around the given solution,
      * and returns a new, hopefully improved solution.
      */
-    Solution search(Solution &solution, CostEvaluator const &costEvaluator);
+    Solution search(Solution const &solution,
+                    CostEvaluator const &costEvaluator);
 
     /**
      * Performs a more intensive route-based local search around the given
      * solution, and returns a new, hopefully improved solution.
      */
-    Solution intensify(Solution &solution,
+    Solution intensify(Solution const &solution,
                        CostEvaluator const &costEvaluator,
                        double overlapTolerance = 0.05);
 

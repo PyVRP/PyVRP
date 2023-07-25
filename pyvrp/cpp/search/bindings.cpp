@@ -106,12 +106,13 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"))
         .def("search",
-             py::overload_cast<pyvrp::Solution &, pyvrp::CostEvaluator const &>(
+             py::overload_cast<pyvrp::Solution const &,
+                               pyvrp::CostEvaluator const &>(
                  &LocalSearch::search),
              py::arg("solution"),
              py::arg("cost_evaluator"))
         .def("intensify",
-             py::overload_cast<pyvrp::Solution &,
+             py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &,
                                double const>(&LocalSearch::intensify),
              py::arg("solution"),
