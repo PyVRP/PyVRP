@@ -20,6 +20,15 @@ Solution LocalSearch::operator()(Solution &solution,
     while (true)
     {
         search(costEvaluator);
+
+        if (numMoves != 0)  // then search() modified the currently loaded
+        {                   // solution.
+            Solution const newSol = exportSolution();
+
+            for (auto *routeOp : routeOps)
+                routeOp->init(newSol);
+        }
+
         intensify(costEvaluator);
 
         if (numMoves == 0)  // then the current solution is locally optimal.
