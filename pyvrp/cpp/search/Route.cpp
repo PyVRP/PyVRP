@@ -141,9 +141,6 @@ void Route::update()
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
-    load_ = endDepot.cumulatedLoad;
-    tws_ = endDepot.twBefore;
-
     // forward time window segments
     node = &endDepot;
     do

@@ -58,10 +58,6 @@ private:
     std::vector<Node *> nodes;  // List of nodes in this route, excl. depot
     std::pair<double, double> centroid;  // Center point of route's clients.
 
-    Distance dist_;          // Current route dist.
-    Load load_;              // Current route load.
-    TimeWindowSegment tws_;  // Current route time window information.
-
 public:                // TODO make fields private
     size_t const idx;  // Route index
     Node startDepot;   // Departure depot for this route
@@ -108,11 +104,6 @@ public:                // TODO make fields private
      * @return Total load on this route.
      */
     [[nodiscard]] inline Load load() const;
-
-    /**
-     * @return Total time warp on this route.
-     */
-    [[nodiscard]] inline Duration timeWarp() const;
 
     /**
      * @return Time window segment corresponding to this route.
@@ -194,14 +185,14 @@ bool Route::Node::isDepot() const
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessLoad() const { return load_ > capacity(); }
+bool Route::hasExcessLoad() const { return load() > capacity(); }
 
 bool Route::hasTimeWarp() const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
-    return tws_.totalTimeWarp() > 0;
+    return tws().totalTimeWarp() > 0;
 #endif
 }
 
@@ -223,18 +214,16 @@ std::vector<Route::Node *>::const_iterator Route::end() const
 std::vector<Route::Node *>::iterator Route::begin() { return nodes.begin(); }
 std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
 
-Distance Route::dist() const { return dist_; }
+Distance Route::dist() const { return endDepot.cumulatedDistance; }
 
-Load Route::load() const { return load_; }
+Load Route::load() const { return endDepot.cumulatedLoad; }
 
-Duration Route::timeWarp() const { return tws_.totalTimeWarp(); }
-
-TimeWindowSegment Route::tws() const { return tws_; }
+TimeWindowSegment Route::tws() const { return endDepot.twBefore; }
 
 Cost Route::penalisedCost(CostEvaluator costEvaluator) const
 {
     return costEvaluator.penalisedRouteCost(
-        dist_, load_, tws_, data.vehicleType(vehicleType_));
+        dist(), load(), tws(), data.vehicleType(vehicleType_));
 }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
