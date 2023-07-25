@@ -309,3 +309,17 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
 
     with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
         ls.intensify(sol, cost_eval, overlap_tolerance=tol)
+
+
+def test_no_op_same_solution():
+    data = read("data/OkSmall.txt")
+    rng = XorShift128(seed=42)
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # Empty local search does not actually search anything, so it should return
+    # the exact same solution as what was passed in.
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    assert_equal(ls.search(sol, cost_eval), sol)
+    assert_equal(ls.intensify(sol, cost_eval), sol)
