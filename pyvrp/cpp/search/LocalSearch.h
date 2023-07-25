@@ -97,7 +97,8 @@ public:
     Neighbours const &getNeighbours() const;
 
     /**
-     * TODO
+     * Iteratively calls ``search()`` and ``intensify()`` until no further
+     * improvements are made.
      */
     Solution operator()(Solution const &solution,
                         CostEvaluator const &costEvaluator);
