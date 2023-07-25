@@ -21,12 +21,14 @@ Solution LocalSearch::operator()(Solution &solution,
     {
         search(costEvaluator);
 
-        if (numMoves != 0)  // then search() modified the currently loaded
-        {                   // solution.
+        // When numMoves != 0, search() modified the currently loaded solution.
+        // In that case we need to reload the solution because intensify()'s
+        // route operators need to update their caches.
+        // TODO remove this.
+        if (numMoves != 0)
+        {
             Solution const newSol = exportSolution();
-
-            for (auto *routeOp : routeOps)
-                routeOp->init(newSol);
+            loadSolution(newSol);
         }
 
         intensify(costEvaluator);
