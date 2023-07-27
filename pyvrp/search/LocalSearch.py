@@ -76,7 +76,7 @@ class LocalSearch:
         """
         return self._ls.get_neighbours()
 
-    def run(
+    def __call__(
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,

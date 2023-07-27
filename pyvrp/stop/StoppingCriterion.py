@@ -21,4 +21,3 @@ class StoppingCriterion(Protocol):  # pragma: no cover
         bool
             True if the algorithm should stop, False otherwise.
         """
-        ...
