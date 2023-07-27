@@ -155,19 +155,13 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         throw std::runtime_error(msg);
     }
 
-    std::vector<size_t> visits(data.numClients() + 1, 0);
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
         if (route.empty())
-        {
-            auto const msg = "Solution should not contain empty routes.";
-            throw std::runtime_error(msg);
-        }
+            throw std::runtime_error("Solution should not have empty routes.");
 
         usedVehicles[route.vehicleType()]++;
-        for (auto const client : route)
-            visits[client]++;
     }
 
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
@@ -179,23 +173,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
                 << vehType << '.';
             throw std::runtime_error(msg.str());
         }
-
-    for (size_t client = 1; client <= data.numClients(); ++client)
-    {
-        if (data.client(client).required && visits[client] == 0)
-        {
-            std::ostringstream msg;
-            msg << "Client " << client << " is required but not present.";
-            throw std::runtime_error(msg.str());
-        }
-
-        if (visits[client] > 1)
-        {
-            std::ostringstream msg;
-            msg << "Client " << client << " is visited more than once.";
-            throw std::runtime_error(msg.str());
-        }
-    }
 
     makeNeighbours();
     evaluate(data);
