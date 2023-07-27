@@ -160,7 +160,7 @@ class GeneticAlgorithm:
             offspring = self._crossover(
                 parents, self._data, self._cost_evaluator, self._rng
             )
-            self._handle_offspring(offspring)
+            self._improve_offspring(offspring)
 
             new_best = self._cost_evaluator.cost(self._best)
 
@@ -174,7 +174,7 @@ class GeneticAlgorithm:
         end = time.perf_counter() - start
         return Result(self._best, stats, iters, end)
 
-    def _handle_offspring(self, sol: Solution):
+    def _improve_offspring(self, sol: Solution):
         def is_new_best(sol):
             cost = self._cost_evaluator.cost(sol)
             best_cost = self._cost_evaluator.cost(self._best)
