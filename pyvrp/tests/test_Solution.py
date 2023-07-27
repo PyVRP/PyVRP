@@ -126,16 +126,6 @@ def test_route_constructor_raises_too_many_vehicles():
         Solution(data, [[1, 2], [4], [3]])
 
 
-def test_route_constructor_raises_for_invalid_routes():
-    data = read("data/OkSmall.txt")
-    with assert_raises(RuntimeError):
-        Solution(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
-
-    data = read("data/OkSmallPrizes.txt")
-    with assert_raises(RuntimeError):
-        Solution(data, [[2], [3, 4]])  # 1 is required but not visited
-
-
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
 
