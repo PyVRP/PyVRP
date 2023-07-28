@@ -9,6 +9,8 @@
 
 namespace pyvrp
 {
+// The following methods must be implemented for a type to be evaluatable by
+// the CostEvaluator.
 template <typename T> concept Evaluatable = requires(T arg)
 {
     arg.distance();
