@@ -65,6 +65,32 @@ def test_raises_for_invalid_client_data(
         Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
 
 
+@mark.parametrize(
+    "x,y,demand,service,tw_early,tw_late,release_time,prize",
+    [
+        (0, 0, 1, 0, 0, 0, 0, 0),  # demand != 0
+        (0, 0, 0, 1, 0, 0, 0, 0),  # service duration != 0
+        (0, 0, 0, 0, 0, 0, 1, 0),  # release time != 0
+    ],
+)
+def test_raises_for_invalid_depot_data(
+    x: int,
+    y: int,
+    demand: int,
+    service: int,
+    tw_early: int,
+    tw_late: int,
+    release_time: int,
+    prize: int,
+):
+    depot = Client(
+        x, y, demand, service, tw_early, tw_late, release_time, prize
+    )
+
+    with assert_raises(ValueError):
+        ProblemData([depot], [VehicleType(1, 2)], [[0]], [[0]])
+
+
 def test_depot_is_first_client():
     """
     The ``depot()`` helper should return the first client, that is,
