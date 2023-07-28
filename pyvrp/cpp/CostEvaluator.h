@@ -13,11 +13,13 @@ namespace pyvrp
 // the CostEvaluator.
 template <typename T> concept Evaluatable = requires(T arg)
 {
-    arg.distance();
-    arg.excessLoad();
-    arg.timeWarp();
-    arg.uncollectedPrizes();
-    arg.isFeasible();
+    // clang-format off
+    { arg.distance() } -> std::same_as<Distance>;
+    { arg.excessLoad() } -> std::same_as<Load>;
+    { arg.timeWarp() } -> std::same_as<Duration>;
+    { arg.uncollectedPrizes() } -> std::same_as<Cost>;
+    { arg.isFeasible() } -> std::same_as<bool>;
+    // clang-format on
 };
 
 /**
