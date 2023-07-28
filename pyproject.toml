@@ -58,7 +58,7 @@ optional = true
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
-sphinx-immaterial = ">=0.11.5"
+sphinx-immaterial = ">=0.11.6"
 
 
 [tool.poetry.group.examples]
