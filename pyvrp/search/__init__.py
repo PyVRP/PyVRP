@@ -1,4 +1,5 @@
 from .LocalSearch import LocalSearch
+from .SearchMethod import SearchMethod
 from ._search import (
     Exchange10,
     Exchange11,
