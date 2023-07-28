@@ -28,10 +28,11 @@ namespace pyvrp
  * Raises
  * ------
  * RuntimeError
- *     When the number of routes in the ``routes`` argument exceeds
+ *     When the given solution is invalid in one of several ways. In
+ *     particular when the number of routes in the ``routes`` argument exceeds
  *     :py:attr:`~ProblemData.num_vehicles`, when an empty route has been
- *     passed as part of ``routes``, or when too many vehicles of a particular
- *     type have been used.
+ *     passed as part of ``routes``, when too many vehicles of a particular
+ *     type have been used, or when a client is visited more than once.
  */
 class Solution
 {
@@ -149,12 +150,13 @@ public:
 private:
     using Routes = std::vector<Route>;
 
-    size_t numClients_ = 0;       // Number of clients in the solution
-    Distance distance_ = 0;       // Total distance
-    Load excessLoad_ = 0;         // Total excess load over all routes
-    Cost prizes_ = 0;             // Total collected prize value
-    Cost uncollectedPrizes_ = 0;  // Total uncollected prize value
-    Duration timeWarp_ = 0;       // Total time warp over all routes
+    size_t numClients_ = 0;         // Number of clients in the solution
+    Distance distance_ = 0;         // Total distance
+    Load excessLoad_ = 0;           // Total excess load over all routes
+    Cost prizes_ = 0;               // Total collected prize value
+    Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
+    Duration timeWarp_ = 0;         // Total time warp over all routes
+    size_t numMissingClients_ = 0;  // Number of required but missing clients
 
     Routes routes_;
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
@@ -218,16 +220,27 @@ public:
 
     /**
      * Whether this solution is feasible. This is a shorthand for checking
-     * that :meth:`~has_excess_load` and :meth:`~has_time_warp` both return
-     * false.
+     * :meth:`~has_excess_load`, :meth:`~has_time_warp`, and
+     * :meth:`~is_complete`.
      *
      * Returns
      * -------
      * bool
      *     Whether the solution of this solution is feasible with respect to
-     *     capacity and time window constraints.
+     *     capacity and time window constraints, and has all required clients.
      */
     [[nodiscard]] bool isFeasible() const;
+
+    /**
+     * Returns whether this solution is complete, that is, has all required
+     * clients.
+     *
+     * Returns
+     * -------
+     * bool
+     *     True if the solution visits all required clients, False otherwise.
+     */
+    [[nodiscard]] bool isComplete() const;
 
     /**
      * Returns whether this solution violates capacity constraints.
