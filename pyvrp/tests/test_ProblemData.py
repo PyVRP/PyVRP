@@ -108,6 +108,28 @@ def test_depot_is_first_client():
     assert_(data.depot() is data.client(0))
 
 
+def test_problem_data_raises_when_no_clients():
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    no clients are provided.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            vehicle_types=[VehicleType(1, 2)],
+            distance_matrix=[],
+            duration_matrix=[],
+        )
+
+    # One client (the depot) should not raise.
+    ProblemData(
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=[[0]],
+        duration_matrix=[[0]],
+    )
+
+
 def test_centroid():
     data = read("data/OkSmall.txt")
 
