@@ -4,8 +4,20 @@
 #include "Measure.h"
 #include "Solution.h"
 
+#include <concepts>
+#include <limits>
+
 namespace pyvrp
 {
+template <typename T> concept Evaluatable = requires(T arg)
+{
+    arg.distance();
+    arg.excessLoad();
+    arg.timeWarp();
+    arg.uncollectedPrizes();
+    arg.isFeasible();
+};
+
 /**
  * CostEvaluator(capacity_penalty: int, tw_penalty: int)
  *
@@ -48,7 +60,10 @@ public:
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
-    [[nodiscard]] Cost penalisedCost(Solution const &solution) const;
+    // The docstring above is written for Python, where we only expose this
+    // method for Solution.
+    template <Evaluatable T>
+    [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
     /**
      * Evaluates and returns the cost/objective of the given solution.
@@ -64,7 +79,9 @@ public:
      * where the first part lists the distance costs, and the second part the
      * prizes of the unvisited clients.
      */
-    [[nodiscard]] Cost cost(Solution const &solution) const;
+    // The docstring above is written for Python, where we only expose this
+    // method for Solution.
+    template <Evaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
 
 Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
@@ -89,6 +106,22 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #else
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
+}
+
+template <Evaluatable T> Cost CostEvaluator::penalisedCost(T const &arg) const
+{
+    // Standard objective plus penalty terms for capacity- and time-related
+    // infeasibilities.
+    return static_cast<Cost>(arg.distance()) + arg.uncollectedPrizes()
+           + loadPenaltyExcess(arg.excessLoad()) + twPenalty(arg.timeWarp());
+}
+
+template <Evaluatable T> Cost CostEvaluator::cost(T const &arg) const
+{
+    // Penalties are zero when the solution is feasible, so we can fall back to
+    // penalised cost in that case.
+    return arg.isFeasible() ? penalisedCost(arg)
+                            : std::numeric_limits<Cost>::max();
 }
 }  // namespace pyvrp
 
