@@ -232,8 +232,8 @@ public:
     [[nodiscard]] bool isFeasible() const;
 
     /**
-     * Returns whether this solution is complete, that is, has all required
-     * clients.
+     * Returns whether this solution is complete, which it is when it has all
+     * required clients.
      *
      * Returns
      * -------
