@@ -113,7 +113,8 @@ public:                // TODO make fields private
     /**
      * @return Total penalised cost of this route.
      */
-    [[nodiscard]] inline Cost penalisedCost(CostEvaluator costEvaluator) const;
+    [[nodiscard]] inline Cost
+    penalisedCost(CostEvaluator const &costEvaluator) const;
 
     /**
      * @return The load capacity of this route.
@@ -220,7 +221,7 @@ Load Route::load() const { return endDepot.cumulatedLoad; }
 
 TimeWindowSegment Route::tws() const { return endDepot.twBefore; }
 
-Cost Route::penalisedCost(CostEvaluator costEvaluator) const
+Cost Route::penalisedCost(CostEvaluator const &costEvaluator) const
 {
     return costEvaluator.penalisedRouteCost(
         dist(), load(), tws(), data.vehicleType(vehicleType_));
