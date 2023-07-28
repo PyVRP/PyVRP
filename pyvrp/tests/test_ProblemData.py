@@ -130,6 +130,15 @@ def test_problem_data_raises_when_no_clients():
     )
 
 
+def test_problem_data_does_not_raise_when_no_vehicle_types():
+    ProblemData(
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[],
+        distance_matrix=[[0]],
+        duration_matrix=[[0]],
+    )
+
+
 def test_centroid():
     data = read("data/OkSmall.txt")
 
