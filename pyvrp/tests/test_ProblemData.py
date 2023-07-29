@@ -139,6 +139,46 @@ def test_problem_data_does_not_raise_when_no_vehicle_types():
     )
 
 
+def test_problem_data_raises_when_clients_do_not_match_matrix_dimensions():
+    clients = [Client(x=0, y=0), Client(x=0, y=0)]
+    vehicle_types = [VehicleType(1, 2)]
+
+    with assert_raises(ValueError):
+        # Too small
+        ProblemData(
+            clients,
+            vehicle_types,
+            distance_matrix=[[0]],
+            duration_matrix=[[0]],
+        )
+
+    with assert_raises(ValueError):
+        # Too large
+        ProblemData(
+            clients,
+            vehicle_types,
+            distance_matrix=np.zeros((3, 3), dtype=int),
+            duration_matrix=np.zeros((3, 3), dtype=int),
+        )
+
+    with assert_raises(ValueError):
+        # Not square
+        ProblemData(
+            clients,
+            vehicle_types,
+            distance_matrix=np.zeros((1, 3), dtype=int),
+            duration_matrix=np.zeros((1, 3), dtype=int),
+        )
+
+    # 2x2 square Does not raise
+    ProblemData(
+        clients,
+        vehicle_types,
+        np.zeros((2, 2), dtype=int),
+        np.zeros((2, 2), dtype=int),
+    )
+
+
 def test_centroid():
     data = read("data/OkSmall.txt")
 
