@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.search import (
     Exchange10,
     LocalSearch,
@@ -20,7 +20,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -51,7 +51,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
