@@ -158,22 +158,21 @@ PYBIND11_MODULE(_pyvrp, m)
                     std::vector<std::vector<pyvrp::Value>> const &dist,
                     std::vector<std::vector<pyvrp::Value>> const &dur) {
                      auto const numNodes = clients.size();
-                     Matrix<pyvrp::Distance> distMat(numNodes);
-                     Matrix<pyvrp::Duration> durMat(numNodes);
-
-                     if (dist.size() != numNodes)
-                         throw std::invalid_argument("");
-
-                     if (dur.size() != numNodes)
-                         throw std::invalid_argument("");
 
                      for (auto &row : dist)
-                         if (row.size() != numNodes)
-                             throw std::invalid_argument("");
+                         if (dist.size() < numNodes || row.size() < numNodes)
+                             throw std::invalid_argument(
+                                 "Distance matrix dimensions are smaller than "
+                                 "the number of clients");
 
                      for (auto &row : dur)
-                         if (row.size() != numNodes)
-                             throw std::invalid_argument("");
+                         if (dur.size() < numNodes || row.size() < numNodes)
+                             throw std::invalid_argument(
+                                 "Distance matrix dimensions are smaller than "
+                                 "the number of clients");
+
+                     Matrix<pyvrp::Distance> distMat(numNodes);
+                     Matrix<pyvrp::Duration> durMat(numNodes);
 
                      for (size_t row = 0; row != numNodes; ++row)
                          for (size_t col = 0; col != numNodes; ++col)
