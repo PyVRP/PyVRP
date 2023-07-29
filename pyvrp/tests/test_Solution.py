@@ -126,14 +126,32 @@ def test_route_constructor_raises_too_many_vehicles():
         Solution(data, [[1, 2], [4], [3]])
 
 
-def test_route_constructor_raises_for_invalid_routes():
+def test_route_constructor_raises_when_clients_are_visited_more_than_once():
     data = read("data/OkSmall.txt")
     with assert_raises(RuntimeError):
         Solution(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
 
-    data = read("data/OkSmallPrizes.txt")
     with assert_raises(RuntimeError):
-        Solution(data, [[2], [3, 4]])  # 1 is required but not visited
+        Solution(data, [[1, 2], [1, 3, 4], [1]])  # client 1 is visited thrice
+
+
+def test_route_constructor_allows_incomplete_solutions():
+    data = read("data/OkSmallPrizes.txt")
+
+    # Client 1 is required but not visited.
+    sol = Solution(data, [[2], [3, 4]])
+    assert_(not sol.is_complete())
+    assert_(not sol.is_feasible())
+
+    # All required clients are visited, but the solution is not feasible.
+    sol = Solution(data, [[1], [2, 3, 4]])
+    assert_(not sol.is_feasible())
+    assert_(sol.is_complete())
+
+    # All required clients are visited and the solution is feasible.
+    sol = Solution(data, [[1]])
+    assert_(sol.is_feasible())
+    assert_(sol.is_complete())
 
 
 def test_get_neighbours():
