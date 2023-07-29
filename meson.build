@@ -1,8 +1,8 @@
 project(
     'pyvrp',
     'cpp',
-    version: run_command('poetry', 'version', '--short', check : true).stdout(),
-    default_options : [
+    version: run_command('poetry', 'version', '--short', check: true).stdout(),
+    default_options: [
         'cpp_std=c++20',
         'b_lto=true',  # sets -flto
         'werror=true',  # sets -Werror
@@ -54,7 +54,6 @@ libcommon = static_library(
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
-        SRC_DIR / 'search' / 'Node.cpp',
         SRC_DIR / 'search' / 'MoveTwoClientsReversed.cpp',
         SRC_DIR / 'search' / 'TwoOpt.cpp',
         SRC_DIR / 'search' / 'RelocateStar.cpp',
@@ -71,20 +70,37 @@ dependencies = [py.dependency(), dependency('pybind11')]
 # eventual module name, and 'subdirectory' gives the source and installation 
 # directories (relative to SRC_DIR and INST_DIR).
 extensions = [
-    ['_pyvrp', ''],
-    ['_crossover', 'crossover'],
-    ['_diversity', 'diversity'],
-    ['_search', 'search'],
+    ['pyvrp', ''],
+    ['crossover', 'crossover'],
+    ['diversity', 'diversity'],
+    ['search', 'search'],
 ]
 
 foreach extension : extensions
-    name = extension[0]
+    rawname = extension[0]
+    name = '_' + rawname
     subdir = extension[1]
 
-    message('Going to build ' + subdir / name)
+    message('Going to build extension module ' + subdir / name + '.')
+
+    # Specify a custom target that generates the documentation header for this
+    # extension, of the form "<name>_docs.h". It is generated from headers in
+    # the relevant source directory - which the command below grabs for us.
+    doc_glob = f'import glob; print(*glob.glob("@SRC_DIR@/@subdir@/*.h"))'
+    doc_cmd = run_command('python', '-c', doc_glob, check: true)
+    doc_input_headers = doc_cmd.stdout().split()
+    doc_output_header = custom_target(
+        'docs for ' + name,
+        output: rawname + '_docs.h',
+        input: ['extract_docstrings.py'] + doc_input_headers,
+        command: ['python', '@INPUT@', '@OUTPUT@'],
+        depend_files: [SRC_DIR / subdir / 'bindings.cpp'],
+    )
+
+    # Register extension module to build.
     py.extension_module(
         name,
-        SRC_DIR / subdir / 'bindings.cpp',
+        [SRC_DIR / subdir / 'bindings.cpp', doc_output_header],
         dependencies: dependencies,
         link_with: libcommon,
         install: true,

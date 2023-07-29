@@ -51,7 +51,7 @@ def test_n_max_iterations_non_improving(n):
         assert_(stop(1))
 
 
-@mark.parametrize("n, k", [(10, 2), (100, 20), (1000, 200)])
+@mark.parametrize(("n", "k"), [(10, 2), (100, 20), (1000, 200)])
 def test_n_max_iterations_with_single_improvement(n, k):
     """
     Test if setting max_iterations to n correctly stops with a sequence of

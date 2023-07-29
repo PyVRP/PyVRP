@@ -8,46 +8,53 @@
 
 namespace pyvrp::search
 {
-using TWS = TimeWindowSegment;
-
 /**
- * Template class that exchanges N consecutive nodes from U's route (starting at
- * U) with M consecutive nodes from V's route (starting at V). As special cases,
- * (1, 0) is pure relocate, and (1, 1) pure swap.
+ * Exchange()
+ *
+ * The :math:`(N, M)`-exchange operators exhange :math:`N` consecutive clients
+ * from :math:`U`'s route (starting at :math:`U`) with :math:`M` consecutive
+ * clients from :math:`V`'s route (starting at :math:`V`). This includes
+ * the RELOCATE and SWAP operators as special cases.
+ *
+ * The :math:`(N, M)`-exchange class uses C++ templates for different :math:`N`
+ * and :math:`M` to efficiently evaluate these moves.
  */
-template <size_t N, size_t M> class Exchange : public LocalSearchOperator<Node>
+template <size_t N, size_t M>
+class Exchange : public LocalSearchOperator<Route::Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 
     // Tests if the segment starting at node of given length contains the depot
-    inline bool containsDepot(Node *node, size_t segLength) const;
+    inline bool containsDepot(Route::Node *node, size_t segLength) const;
 
     // Tests if the segments of U and V overlap in the same route
-    inline bool overlap(Node *U, Node *V) const;
+    inline bool overlap(Route::Node *U, Route::Node *V) const;
 
     // Tests if the segments of U and V are adjacent in the same route
-    inline bool adjacent(Node *U, Node *V) const;
+    inline bool adjacent(Route::Node *U, Route::Node *V) const;
 
     // Special case that's applied when M == 0
-    Cost evalRelocateMove(Node *U,
-                          Node *V,
+    Cost evalRelocateMove(Route::Node *U,
+                          Route::Node *V,
                           CostEvaluator const &costEvaluator) const;
 
     // Applied when M != 0
-    Cost
-    evalSwapMove(Node *U, Node *V, CostEvaluator const &costEvaluator) const;
+    Cost evalSwapMove(Route::Node *U,
+                      Route::Node *V,
+                      CostEvaluator const &costEvaluator) const;
 
 public:
-    Cost
-    evaluate(Node *U, Node *V, CostEvaluator const &costEvaluator) override;
+    Cost evaluate(Route::Node *U,
+                  Route::Node *V,
+                  CostEvaluator const &costEvaluator) override;
 
-    void apply(Node *U, Node *V) const override;
+    void apply(Route::Node *U, Route::Node *V) const override;
 };
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::containsDepot(Node *node, size_t segLength) const
+bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 {
     if (node->isDepot())
         return true;
@@ -59,7 +66,7 @@ bool Exchange<N, M>::containsDepot(Node *node, size_t segLength) const
 }
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::overlap(Node *U, Node *V) const
+bool Exchange<N, M>::overlap(Route::Node *U, Route::Node *V) const
 {
     return U->route == V->route
            // We need max(M, 1) here because when V is the depot and M == 0,
@@ -69,7 +76,7 @@ bool Exchange<N, M>::overlap(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::adjacent(Node *U, Node *V) const
+bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 {
     if (U->route != V->route)
         return false;
@@ -78,8 +85,8 @@ bool Exchange<N, M>::adjacent(Node *U, Node *V) const
 }
 
 template <size_t N, size_t M>
-Cost Exchange<N, M>::evalRelocateMove(Node *U,
-                                      Node *V,
+Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
+                                      Route::Node *V,
                                       CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
@@ -103,7 +110,7 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
         if (U->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(
+        auto uTWS = TimeWindowSegment::merge(
             data.durationMatrix(), p(U)->twBefore, n(endU)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
@@ -124,10 +131,11 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
         deltaCost -= costEvaluator.loadPenalty(V->route->load(),
                                                V->route->capacity());
 
-        auto vTWS = TWS::merge(data.durationMatrix(),
-                               V->twBefore,
-                               U->route->twBetween(posU, posU + N - 1),
-                               n(V)->twAfter);
+        auto vTWS
+            = TimeWindowSegment::merge(data.durationMatrix(),
+                                       V->twBefore,
+                                       U->route->twBetween(posU, posU + N - 1),
+                                       n(V)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
@@ -141,21 +149,23 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        p(U)->twBefore,
-                                        route->twBetween(posU + N, posV),
-                                        route->twBetween(posU, posU + N - 1),
-                                        n(V)->twAfter);
+            auto const tws
+                = TimeWindowSegment::merge(data.durationMatrix(),
+                                           p(U)->twBefore,
+                                           route->twBetween(posU + N, posV),
+                                           route->twBetween(posU, posU + N - 1),
+                                           n(V)->twAfter);
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
         else
         {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        V->twBefore,
-                                        route->twBetween(posU, posU + N - 1),
-                                        route->twBetween(posV + 1, posU - 1),
-                                        n(endU)->twAfter);
+            auto const tws
+                = TimeWindowSegment::merge(data.durationMatrix(),
+                                           V->twBefore,
+                                           route->twBetween(posU, posU + N - 1),
+                                           route->twBetween(posV + 1, posU - 1),
+                                           n(endU)->twAfter);
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
@@ -167,8 +177,8 @@ Cost Exchange<N, M>::evalRelocateMove(Node *U,
 }
 
 template <size_t N, size_t M>
-Cost Exchange<N, M>::evalSwapMove(Node *U,
-                                  Node *V,
+Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
+                                  Route::Node *V,
                                   CostEvaluator const &costEvaluator) const
 {
     auto const posU = U->position;
@@ -200,10 +210,11 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
         if (U->route->isFeasible() && V->route->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TWS::merge(data.durationMatrix(),
-                               p(U)->twBefore,
-                               V->route->twBetween(posV, posV + M - 1),
-                               n(endU)->twAfter);
+        auto uTWS
+            = TimeWindowSegment::merge(data.durationMatrix(),
+                                       p(U)->twBefore,
+                                       V->route->twBetween(posV, posV + M - 1),
+                                       n(endU)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(U->route->timeWarp());
@@ -217,10 +228,11 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
         deltaCost -= costEvaluator.loadPenalty(U->route->load(),
                                                U->route->capacity());
 
-        auto vTWS = TWS::merge(data.durationMatrix(),
-                               p(V)->twBefore,
-                               U->route->twBetween(posU, posU + N - 1),
-                               n(endV)->twAfter);
+        auto vTWS
+            = TimeWindowSegment::merge(data.durationMatrix(),
+                                       p(V)->twBefore,
+                                       U->route->twBetween(posU, posU + N - 1),
+                                       n(endV)->twAfter);
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
@@ -239,23 +251,25 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
 
         if (posU < posV)
         {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        p(U)->twBefore,
-                                        route->twBetween(posV, posV + M - 1),
-                                        route->twBetween(posU + N, posV - 1),
-                                        route->twBetween(posU, posU + N - 1),
-                                        n(endV)->twAfter);
+            auto const tws
+                = TimeWindowSegment::merge(data.durationMatrix(),
+                                           p(U)->twBefore,
+                                           route->twBetween(posV, posV + M - 1),
+                                           route->twBetween(posU + N, posV - 1),
+                                           route->twBetween(posU, posU + N - 1),
+                                           n(endV)->twAfter);
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
         else
         {
-            auto const tws = TWS::merge(data.durationMatrix(),
-                                        p(V)->twBefore,
-                                        route->twBetween(posU, posU + N - 1),
-                                        route->twBetween(posV + M, posU - 1),
-                                        route->twBetween(posV, posV + M - 1),
-                                        n(endU)->twAfter);
+            auto const tws
+                = TimeWindowSegment::merge(data.durationMatrix(),
+                                           p(V)->twBefore,
+                                           route->twBetween(posU, posU + N - 1),
+                                           route->twBetween(posV + M, posU - 1),
+                                           route->twBetween(posV, posV + M - 1),
+                                           n(endU)->twAfter);
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
@@ -267,8 +281,8 @@ Cost Exchange<N, M>::evalSwapMove(Node *U,
 }
 
 template <size_t N, size_t M>
-Cost Exchange<N, M>::evaluate(Node *U,
-                              Node *V,
+Cost Exchange<N, M>::evaluate(Route::Node *U,
+                              Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
     if (containsDepot(U, N) || overlap(U, V))
@@ -298,7 +312,8 @@ Cost Exchange<N, M>::evaluate(Node *U,
     }
 }
 
-template <size_t N, size_t M> void Exchange<N, M>::apply(Node *U, Node *V) const
+template <size_t N, size_t M>
+void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 {
     auto *uToInsert = N == 1 ? U : (*U->route)[U->position + N - 1];
     auto *insertUAfter = M == 0 ? V : (*V->route)[V->position + M - 1];

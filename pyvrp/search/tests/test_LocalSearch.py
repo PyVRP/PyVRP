@@ -7,13 +7,14 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    RelocateStar,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
-def test_local_search_raises_when_there_are_no_operators():
+def test_local_search_returns_same_solution_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = XorShift128(seed=42)
@@ -21,11 +22,9 @@ def test_local_search_raises_when_there_are_no_operators():
     ls = LocalSearch(data, rng, compute_neighbours(data))
     sol = Solution.make_random(data, rng)
 
-    with assert_raises(RuntimeError):
-        ls.search(sol, cost_evaluator)
-
-    with assert_raises(RuntimeError):
-        ls.intensify(sol, cost_evaluator)
+    # No operators have been added, so these calls should be no-ops.
+    assert_equal(ls.search(sol, cost_evaluator), sol)
+    assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():
@@ -73,11 +72,13 @@ def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
 
 
 @mark.parametrize(
-    "weight_wait_time,"
-    "weight_time_warp,"
-    "nb_granular,"
-    "symmetric_proximity,"
-    "symmetric_neighbours",
+    (
+        "weight_wait_time",
+        "weight_time_warp",
+        "nb_granular",
+        "symmetric_proximity",
+        "symmetric_neighbours",
+    ),
     [
         (20, 20, 10, True, False),
         (20, 20, 10, True, True),
@@ -245,3 +246,66 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     # the solution, especially not change the vehicle types
     further_improved = ls.search(improved, cost_evaluator)
     assert_equal(further_improved, improved)
+
+
+def test_bugfix_vehicle_type_offsets():
+    """
+    See https://github.com/PyVRP/PyVRP/pull/292 for details. This exercises a
+    fix to a bug that would crash local search due to an incorrect internal
+    mapping of vehicle types to route indices if the next vehicle type had
+    more vehicles than the previous.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 2)])
+
+    ls = cpp_LocalSearch(data, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    cost_evaluator = CostEvaluator(1, 1)
+
+    current = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
+    current_cost = cost_evaluator.penalised_cost(current)
+
+    improved = ls.search(current, cost_evaluator)
+    improved_cost = cost_evaluator.penalised_cost(improved)
+
+    assert_(improved_cost <= current_cost)
+
+
+def test_intensify_overlap_tolerance():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_route_operator(RelocateStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # Overlap tolerance is zero, so no routes should have overlap and thus
+    # no intensification should take place.
+    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance=0)
+    assert_equal(unchanged, sol)
+
+    # But with full overlap tolerance, all routes should be checked. That
+    # should lead to an improvement over the random solution.
+    better = ls.intensify(sol, cost_eval, overlap_tolerance=1)
+    assert_(better != sol)
+    assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
+
+
+@mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
+def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = XorShift128(seed=42)
+
+    neighbours = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_route_operator(RelocateStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
+        ls.intensify(sol, cost_eval, overlap_tolerance=tol)

@@ -47,7 +47,7 @@ public:
     result_type operator()();
 
     /**
-     * Generators one pseudo-random double uniformly in the range [0, 1].
+     * Generates one pseudo-random double uniformly in the range [0, 1].
      *
      * @return A pseudo-random number in the range [0, 1].
      */

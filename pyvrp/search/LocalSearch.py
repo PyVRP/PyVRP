@@ -76,18 +76,17 @@ class LocalSearch:
         """
         return self._ls.get_neighbours()
 
-    def run(
+    def __call__(
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        should_intensify: bool,
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
         iteratively improve the given solution. First, :meth:`~search` is
-        applied. Thereafter, if ``should_intensify`` is true,
-        :meth:`~intensify` is applied. This process repeats until no further
-        improvements are found. Finally, the improved solution is returned.
+        applied. Thereafter, :meth:`~intensify` is applied. This repeats until
+        no further improvements are found. Finally, the improved solution is
+        returned.
 
         Parameters
         ----------
@@ -95,10 +94,6 @@ class LocalSearch:
             The solution to improve through local search.
         cost_evaluator
             Cost evaluator to use.
-        should_intensify
-            Whether to apply :meth:`~intensify`. Intensification can provide
-            much better solutions, but is computationally demanding. By default
-            intensification is applied.
 
         Returns
         -------
@@ -106,22 +101,16 @@ class LocalSearch:
             The improved solution. This is not the same object as the
             solution that was passed in.
         """
-        # HACK We keep searching and intensifying to mimic the local search
-        # implementation of HGS-CVRP and HGS-VRPTW
-        # TODO separate load/export solution from c++ implementation
-        # so we only need to do it once
+        # TODO separate load/export solution from C++ implementation
+        # so we only need to do it once.
         while True:
             solution = self.search(solution, cost_evaluator)
-
-            if not should_intensify:
-                return solution
+            cost = cost_evaluator.penalised_cost(solution)
 
             new_solution = self.intensify(solution, cost_evaluator)
-
-            current_cost = cost_evaluator.penalised_cost(solution)
             new_cost = cost_evaluator.penalised_cost(new_solution)
 
-            if new_cost < current_cost:
+            if new_cost < cost:
                 solution = new_solution
                 continue
 
@@ -131,12 +120,12 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        overlap_tolerance_degrees: int = 0,
+        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the intensifying route operators on this local search
-        object to improve the given solution. To limit the computation
-        demands of intensification, the  ``overlap_tolerance_degrees`` argument
+        object to improve the given solution. To limit the computational
+        demands of intensification, the  ``overlap_tolerance`` argument
         can be used to limit the number of route pairs that are evaluated.
 
         Parameters
@@ -145,19 +134,13 @@ class LocalSearch:
             The solution to improve.
         cost_evaluator
             Cost evaluator to use.
-        overlap_tolerance_degrees
+        overlap_tolerance
             This method evaluates improving moves between route pairs. To limit
             computational efforts, by default not all route pairs are
             considered: only those route pairs that share some overlap when
-            considering their center's angle from the depot are evaluated.
+            considering their center's angle to the center of all clients.
             This parameter controls the amount of overlap needed before two
             routes are evaluated.
-
-        Raises
-        ------
-        RuntimeError
-            When this method is called before registering route operators.
-            Operators can be registered using :meth:`~add_route_operator`.
 
         Returns
         -------
@@ -166,9 +149,7 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls.intensify(
-            solution, cost_evaluator, overlap_tolerance_degrees
-        )
+        return self._ls.intensify(solution, cost_evaluator, overlap_tolerance)
 
     def search(
         self, solution: Solution, cost_evaluator: CostEvaluator
@@ -183,12 +164,6 @@ class LocalSearch:
             The solution to improve.
         cost_evaluator
             Cost evaluator to use.
-
-        Raises
-        ------
-        RuntimeError
-            When this method is called before registering node operators.
-            Operators can be registered using :meth:`~add_node_operator`.
 
         Returns
         -------

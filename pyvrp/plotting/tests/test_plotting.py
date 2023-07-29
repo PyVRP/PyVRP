@@ -1,5 +1,4 @@
 from matplotlib.testing.decorators import image_comparison as img_comp
-from numpy.testing import assert_, assert_raises
 
 from pyvrp import (
     CostEvaluator,
@@ -12,32 +11,9 @@ from pyvrp import (
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
-from pyvrp.exceptions import StatisticsNotCollectedError
 from pyvrp.tests.helpers import make_random_solutions, read, read_solution
 
 IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
-
-
-def test_plotting_methods_raise_when_no_stats_available():
-    data = read("data/OkSmall.txt")
-    sol = Solution(data, [[1, 2, 3, 4]])
-    res = Result(sol, Statistics(), 0, 0.0)
-
-    assert_(not res.has_statistics())
-
-    with assert_raises(StatisticsNotCollectedError):
-        plotting.plot_diversity(res)
-
-    with assert_raises(StatisticsNotCollectedError):
-        plotting.plot_objectives(res)
-
-    with assert_raises(StatisticsNotCollectedError):
-        plotting.plot_runtimes(res)
-
-    # These should not raise, since they do not depend on statistics
-    # (plot_solution) or optionally print statistics (plot_result).
-    plotting.plot_solution(res.best, data)
-    plotting.plot_result(res, data)
 
 
 @img_comp(["plot_solution", "plot_solution_with_customers"], **IMG_KWARGS)
@@ -48,7 +24,7 @@ def test_plot_solution():
     sol = Solution(data, bks)
 
     plotting.plot_solution(sol, data)
-    plotting.plot_solution(sol, data, plot_customers=True)
+    plotting.plot_solution(sol, data, plot_clients=True)
 
 
 @img_comp(["plot_result"], **IMG_KWARGS)

@@ -50,7 +50,7 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        overlap_tolerance_degrees: int = 0,
+        overlap_tolerance: float = 0.05,
     ) -> Solution: ...
     def search(
         self, solution: Solution, cost_evaluator: CostEvaluator

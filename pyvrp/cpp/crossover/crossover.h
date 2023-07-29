@@ -38,11 +38,8 @@ void greedyRepair(std::vector<std::vector<int>> &routes,
  * @param numMovedRoutes   Number of routes to move.
  * @return A new offspring.
  *
- * <br />
- * Yuichi Nagata and Shigenobu Kobayashi. "A memetic algorithm for
- * the pickup and delivery problem with time windows using selective route
- * exchange crossover". In: International Conference on Parallel Problem Solving
- * from Nature. Springer. 2010, pp. 536–545.
+ * Note that this is an internal docstring: the SREX operator is wrapped on
+ * the Python side.
  */
 Solution selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,

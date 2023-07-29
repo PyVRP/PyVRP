@@ -32,7 +32,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
         sol = Solution.make_random(data, rng)
         exchange_sol = ls.search(sol, cost_evaluator)
         relocate_sol = ls.intensify(
-            exchange_sol, cost_evaluator, overlap_tolerance_degrees=360
+            exchange_sol, cost_evaluator, overlap_tolerance=1
         )
 
         # RELOCATE* applies the best (1, 0)-exchange moves between routes. But
@@ -62,7 +62,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
     sol = Solution.make_random(data, rng)
     exchange_sol = ls.search(sol, cost_evaluator)
     relocate_sol = ls.intensify(
-        exchange_sol, cost_evaluator, overlap_tolerance_degrees=360
+        exchange_sol, cost_evaluator, overlap_tolerance=1
     )
 
     # The original solution was not that great, so after (1, 0)-Exchange it

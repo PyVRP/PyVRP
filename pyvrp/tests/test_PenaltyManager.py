@@ -5,13 +5,15 @@ from pyvrp import PenaltyManager, PenaltyParams
 
 
 @mark.parametrize(
-    "init_load_penalty,"
-    "init_tw_penalty,"
-    "repair_booster,"
-    "num_iters_between_penalty_updates,"
-    "penalty_increase,"
-    "penalty_decrease,"
-    "target_feasible",
+    (
+        "init_load_penalty",
+        "init_tw_penalty",
+        "repair_booster",
+        "num_iters_between_penalty_updates",
+        "penalty_increase",
+        "penalty_decrease",
+        "target_feasible",
+    ),
     [
         (1, 1, 1, 0, -1.0, 0.5, 0.5),  # -1 penalty increase
         (1, 1, 1, 0, 0.5, 0.5, 0.5),  # 0.5 penalty increase

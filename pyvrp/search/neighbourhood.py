@@ -81,6 +81,7 @@ def compute_neighbours(
     if params.symmetric_proximity:
         proximity = np.minimum(proximity, proximity.T)
 
+    # TODO generalise this when we have multiple depots
     n = len(proximity)
     k = min(params.nb_granular, n - 2)  # excl. depot and self
 

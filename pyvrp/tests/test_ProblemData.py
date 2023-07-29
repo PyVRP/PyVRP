@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_raises
+from numpy.testing import assert_allclose, assert_raises
 from pytest import mark
 
 from pyvrp import Client, ProblemData, VehicleType
@@ -8,7 +8,16 @@ from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
-    "x,y,demand,service_duration,tw_early,tw_late,release_time,prize",
+    (
+        "x",
+        "y",
+        "demand",
+        "service_duration",
+        "tw_early",
+        "tw_late",
+        "release_time",
+        "prize",
+    ),
     [
         (1, 1, 1, 1, 0, 1, 0, 0),  # normal
         (1, 1, 1, 0, 0, 1, 0, 0),  # zero duration
@@ -43,7 +52,16 @@ def test_client_constructor_initialises_data_fields_correctly(
 
 
 @mark.parametrize(
-    "x,y,demand,service,tw_early,tw_late,release_time,prize",
+    (
+        "x",
+        "y",
+        "demand",
+        "service",
+        "tw_early",
+        "tw_late",
+        "release_time",
+        "prize",
+    ),
     [
         (1, 1, 1, 1, 1, 0, 0, 0),  # late < early
         (1, 1, 1, -1, 0, 1, 0, 0),  # negative service duration

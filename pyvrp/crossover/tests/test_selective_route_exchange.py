@@ -44,7 +44,7 @@ def test_srex_empty_solution():
 
 
 @mark.parametrize(
-    "idx1, idx2, num_moved_routes",
+    ("idx1", "idx2", "num_moved_routes"),
     [
         (10, 0, 1),  # idx1 >= # routes first
         (0, 10, 1),  # idx2 >= # routes second

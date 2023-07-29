@@ -1,4 +1,5 @@
 #include "crossover.h"
+#include "crossover_docs.h"
 
 #include <pybind11/pybind11.h>
 
@@ -12,5 +13,6 @@ PYBIND11_MODULE(_crossover, m)
           py::arg("data"),
           py::arg("cost_evaluator"),
           py::arg("start_indices"),
-          py::arg("num_moved_routes"));
+          py::arg("num_moved_routes"),
+          DOC(pyvrp, crossover, selectiveRouteExchange));
 }

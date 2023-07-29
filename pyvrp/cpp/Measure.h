@@ -206,7 +206,7 @@ template <pyvrp::MeasureType Type> struct hash<pyvrp::Measure<Type>>
 
 template <pyvrp::MeasureType Type> class numeric_limits<pyvrp::Measure<Type>>
 {
-public:  // TODO should return type be Measure<Type>?
+public:
     static pyvrp::Value max()
     {
         return std::numeric_limits<pyvrp::Value>::max();

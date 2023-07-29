@@ -15,8 +15,8 @@ class RelocateStar : public LocalSearchOperator<Route>
     struct Move
     {
         Cost deltaCost = 0;
-        Node *from = nullptr;
-        Node *to = nullptr;
+        Route::Node *from = nullptr;
+        Route::Node *to = nullptr;
     };
 
     Exchange<1, 0> relocate;

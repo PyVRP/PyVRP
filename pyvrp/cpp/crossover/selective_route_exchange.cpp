@@ -14,14 +14,9 @@ namespace
 // Angle of the given route w.r.t. the centroid of all client locations.
 double routeAngle(pyvrp::ProblemData const &data, Route const &route)
 {
-    // This computes a pseudo-angle that sorts roughly equivalently to the atan2
-    // angle, but is much faster to compute. See the following post for details:
-    // https://stackoverflow.com/a/16561333/4316405.
     auto const [dataX, dataY] = data.centroid();
     auto const [routeX, routeY] = route.centroid();
-    auto const dx = routeX - dataX;
-    auto const dy = routeY - dataY;
-    return std::copysign(1. - dx / (std::fabs(dx) + std::fabs(dy)), dy);
+    return std::atan2(routeY - dataY, routeX - dataX);
 }
 
 Routes sortByAscAngle(pyvrp::ProblemData const &data, Routes routes)
@@ -231,6 +226,7 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     {
         if (!visits1[r].empty())
             routes1.emplace_back(data, visits1[r], routesA[r].vehicleType());
+
         if (!visits2[r].empty())
             routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
     }

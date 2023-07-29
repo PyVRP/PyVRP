@@ -22,17 +22,8 @@ print("Copying example notebooks into docs/source/examples/")
 shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
 
 # -- API documentation
-autoapi_type = "python"
-autoapi_dirs = ["../../pyvrp"]
-autoapi_options = ["members", "undoc-members", "special-members"]
-autoapi_ignore = ["*/tests/*.py", "*/cli.py"]
-
-autoapi_generate_api_docs = False
-autoapi_add_toctree_entry = False
-autoapi_add_objects_to_toctree = False
-
-autoapi_python_class_content = "class"
-autoapi_member_order = "bysource"
+autoclass_content = "class"
+autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 
 # -- numpydoc
@@ -48,7 +39,6 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    "autoapi.extension",
     "sphinx.ext.intersphinx",
     "sphinx_immaterial",
     "nbsphinx",
@@ -103,6 +93,34 @@ html_theme_options = {
                 "icon": "material/lightbulb",
                 "name": "Switch to light mode",
             },
+        },
+    ],
+    "version_dropdown": True,
+    "version_info": [
+        {
+            "version": "",
+            "title": "Development",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.4.4",
+            "title": "v0.4.4",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.3.0",
+            "title": "v0.3.0",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.2.1",
+            "title": "v0.2.1",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.1.0",
+            "title": "v0.1.0",
+            "aliases": [],
         },
     ],
 }
