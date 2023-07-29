@@ -5,7 +5,6 @@
 #include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
-#include "XorShift128.h"
 
 #include <functional>
 #include <vector>

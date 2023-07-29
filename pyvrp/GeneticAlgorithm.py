@@ -13,11 +13,16 @@ if TYPE_CHECKING:
 
     from .PenaltyManager import PenaltyManager
     from .Population import Population
-    from ._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
+    from ._pyvrp import (
+        CostEvaluator,
+        ProblemData,
+        RandomNumberGenerator,
+        Solution,
+    )
 
     _Parents = Tuple[Solution, Solution]
     CrossoverOperator = Callable[
-        [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
+        [_Parents, ProblemData, CostEvaluator, RandomNumberGenerator], Solution
     ]
 
 
@@ -94,7 +99,7 @@ class GeneticAlgorithm:
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
-        rng: XorShift128,
+        rng: RandomNumberGenerator,
         population: Population,
         search_method: SearchMethod,
         crossover_op: CrossoverOperator,

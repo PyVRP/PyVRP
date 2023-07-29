@@ -7,10 +7,10 @@ from pytest import mark
 from pyvrp import (
     Client,
     ProblemData,
+    RandomNumberGenerator,
     Route,
     Solution,
     VehicleType,
-    XorShift128,
 )
 from pyvrp.tests.helpers import make_heterogeneous, read
 
@@ -71,7 +71,7 @@ def test_random_constructor_cycles_over_routes():
     # vehicle would not work (insufficient vehicles), each route is given two
     # clients (and the last route should be empty).
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     sol = Solution.make_random(data, rng)
     routes = sol.get_routes()
@@ -633,7 +633,7 @@ def test_str_contains_routes(vehicle_types):
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_types)
 
-    rng = XorShift128(seed=2)
+    rng = RandomNumberGenerator(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
         sol = Solution.make_random(data, rng)
@@ -653,7 +653,7 @@ def test_str_contains_routes(vehicle_types):
 
 def test_hash():
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=2)
+    rng = RandomNumberGenerator(seed=2)
 
     sol1 = Solution.make_random(data, rng)
     sol2 = Solution.make_random(data, rng)

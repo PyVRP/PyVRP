@@ -4,9 +4,9 @@
 #include "CostEvaluator.h"
 #include "LocalSearchOperator.h"
 #include "ProblemData.h"
+#include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "Solution.h"
-#include "XorShift128.h"
 
 #include <functional>
 #include <stdexcept>
@@ -107,7 +107,7 @@ public:
      * Shuffles the order in which the node and route pairs are evaluated, and
      * the order in which node and route operators are applied.
      */
-    void shuffle(XorShift128 &rng);
+    void shuffle(RandomNumberGenerator &rng);
 
     LocalSearch(ProblemData const &data, Neighbours neighbours);
 };

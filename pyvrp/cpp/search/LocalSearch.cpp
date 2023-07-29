@@ -148,7 +148,7 @@ Solution LocalSearch::intensify(Solution &solution,
     return exportSolution();
 }
 
-void LocalSearch::shuffle(XorShift128 &rng)
+void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);

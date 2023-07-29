@@ -107,7 +107,7 @@ bool Solution::operator==(Solution const &other) const
     return true;
 }
 
-Solution::Solution(ProblemData const &data, XorShift128 &rng)
+Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)

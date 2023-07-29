@@ -46,7 +46,7 @@ libcommon = static_library(
         SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
-        SRC_DIR / 'XorShift128.cpp',
+        SRC_DIR / 'RandomNumberGenerator.cpp',
         SRC_DIR / 'Solution.cpp',
         SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'TimeWindowSegment.cpp',

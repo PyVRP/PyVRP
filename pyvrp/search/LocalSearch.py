@@ -1,6 +1,6 @@
 from typing import List
 
-from pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
+from pyvrp import CostEvaluator, ProblemData, RandomNumberGenerator, Solution
 
 from ._search import LocalSearch as _LocalSearch
 from ._search import NodeOperator, RouteOperator
@@ -23,7 +23,10 @@ class LocalSearch:
     """
 
     def __init__(
-        self, data: ProblemData, rng: XorShift128, neighbours: List[List[int]]
+        self,
+        data: ProblemData,
+        rng: RandomNumberGenerator,
+        neighbours: List[List[int]],
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng
