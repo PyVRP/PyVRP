@@ -286,7 +286,10 @@ Duration Solution::Route::travelDuration() const { return travel_; }
 
 Duration Solution::Route::startTime() const { return startTime_; }
 
-Duration Solution::Route::endTime() const { return startTime_ + duration_; }
+Duration Solution::Route::endTime() const
+{
+    return startTime_ + duration_ - timeWarp_;
+}
 
 Duration Solution::Route::slack() const { return slack_; }
 

@@ -378,10 +378,13 @@ def test_route_start_and_end_time_calculations():
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
+    start_time = data.client(1).tw_early - data.duration(0, 1)
+    end_time = start_time + routes[0].duration() - routes[0].time_warp()
+
     assert_(routes[0].has_time_warp())
     assert_allclose(routes[0].slack(), 0)
-    start_time = data.client(1).tw_early - data.duration(0, 1)
     assert_allclose(routes[0].start_time(), start_time)
+    assert_allclose(routes[0].end_time(), end_time)
 
     # The second route has no time warp. The latest it can start is calculated
     # backwards from the closing of client 4's time window:

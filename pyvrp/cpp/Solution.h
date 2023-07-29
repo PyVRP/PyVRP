@@ -125,35 +125,41 @@ public:
 
         /**
          * Start time of this route. This is the earliest possible time at which
-         * the route can leave the depot and have a minimal duration. It may be
-         * possible to leave earlier, but that would incur additional waiting
-         * time.
+         * the route can leave the depot and have a minimal duration and time
+         * warp. If there is positive :meth:`~slack`, the start time can be
+         * delayed by at most :meth:`~slack` time units without increasing the
+         * total (minimal) route duration, or time warp.
          *
          * .. note::
          *
-         *    It may also be possible to leave later, without (additional)
-         *    violations of time window constraints or increasing the route
-         *    duration. In that case there is slack in the schedule: the amount
-         *    of slack can be obtained through :meth:`~slack`.
+         *    It may be possible to leave before the start time (if the depot
+         *    time window allows for it). That will introduce additional waiting
+         *    time, such that the route duration will then no longer be minimal.
+         *    Delaying departure by more than :meth:`~slack` time units always
+         *    increases time warp, which could turn the route infeasible.
          */
         [[nodiscard]] Duration startTime() const;
 
         /**
          * End time of the route. This is equivalent to
-         * ``start_time + duration``.
+         * ``start_time + duration - time_warp``.
          */
         [[nodiscard]] Duration endTime() const;
 
         /**
          * Time by which departure from the depot can be delayed without
-         * resulting in (additional) time window violations or increased route
-         * duration.
+         * resulting in (additional) time warp or increased route duration.
          */
         [[nodiscard]] Duration slack() const;
 
         /**
          * Earliest time at which this route can leave the depot. Follows from
          * the release times of clients visited on this route.
+         *
+         * .. note::
+         *
+         *    The route's release time should not be later than its start time,
+         *    unless the route has time warp.
          */
         [[nodiscard]] Duration releaseTime() const;
 
