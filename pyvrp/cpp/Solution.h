@@ -3,7 +3,7 @@
 
 #include "Measure.h"
 #include "ProblemData.h"
-#include "XorShift128.h"
+#include "RandomNumberGenerator.h"
 
 #include <functional>
 #include <iosfwd>
@@ -324,7 +324,7 @@ public:
      * @param data Data instance describing the problem that's being solved.
      * @param rng  Random number generator.
      */
-    Solution(ProblemData const &data, XorShift128 &rng);
+    Solution(ProblemData const &data, RandomNumberGenerator &rng);
 
     /**
      * Constructs a solution using routes given as lists of client indices.

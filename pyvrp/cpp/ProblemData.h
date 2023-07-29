@@ -3,7 +3,6 @@
 
 #include "Matrix.h"
 #include "Measure.h"
-#include "XorShift128.h"
 
 #include <iosfwd>
 #include <vector>

@@ -2,7 +2,12 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, PopulationParams, Solution, XorShift128
+from pyvrp import (
+    CostEvaluator,
+    PopulationParams,
+    RandomNumberGenerator,
+    Solution,
+)
 from pyvrp._pyvrp import SubPopulation
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.tests.helpers import read
@@ -12,7 +17,7 @@ from pyvrp.tests.helpers import read
 def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=5)
+    rng = RandomNumberGenerator(seed=5)
 
     params = PopulationParams(
         min_pop_size=0, generation_size=250, nb_close=nb_close
@@ -79,7 +84,7 @@ def test_avg_distance_closest_for_single_route_solutions():
 def test_fitness_is_purely_based_on_cost_when_only_elites():
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=51)
+    rng = RandomNumberGenerator(seed=51)
     params = PopulationParams(nb_elite=25, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
 
@@ -111,7 +116,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=52)
+    rng = RandomNumberGenerator(seed=52)
     params = PopulationParams(nb_elite=0, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
 

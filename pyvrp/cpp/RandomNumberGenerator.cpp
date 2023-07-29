@@ -1,8 +1,8 @@
-#include "XorShift128.h"
+#include "RandomNumberGenerator.h"
 
-using pyvrp::XorShift128;
+using pyvrp::RandomNumberGenerator;
 
-XorShift128::XorShift128(uint32_t seed)
+RandomNumberGenerator::RandomNumberGenerator(uint32_t seed)
 {
     state_[0] = seed;
     state_[1] = 123456789;
@@ -10,7 +10,7 @@ XorShift128::XorShift128(uint32_t seed)
     state_[3] = 521288629;
 }
 
-XorShift128::result_type XorShift128::operator()()
+RandomNumberGenerator::result_type RandomNumberGenerator::operator()()
 {
     // Algorithm "xor128" from p. 5 of Marsaglia, "Xorshift RNGs"
     uint32_t t = state_[3];

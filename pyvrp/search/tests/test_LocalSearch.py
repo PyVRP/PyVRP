@@ -1,7 +1,13 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
+from pyvrp import (
+    CostEvaluator,
+    RandomNumberGenerator,
+    Route,
+    Solution,
+    VehicleType,
+)
 from pyvrp.search import (
     Exchange10,
     Exchange11,
@@ -17,7 +23,7 @@ from pyvrp.tests.helpers import make_heterogeneous, read
 def test_local_search_returns_same_solution_when_there_are_no_operators():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     sol = Solution.make_random(data, rng)
@@ -29,7 +35,7 @@ def test_local_search_returns_same_solution_when_there_are_no_operators():
 
 def test_local_search_raises_when_neighbourhood_structure_is_empty():
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     # Is completely empty neighbourhood, so there's nothing to do for the
     # local search in this case.
@@ -47,7 +53,7 @@ def test_local_search_raises_when_neighbourhood_structure_is_empty():
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     # Each of the given sizes is either smaller than or bigger than desired.
     neighbours = [[] for _ in range(size)]
@@ -63,7 +69,7 @@ def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
 
 def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     neighbours = [[client] for client in range(data.num_clients + 1)]
 
@@ -95,7 +101,7 @@ def test_local_search_set_get_neighbours(
     symmetric_neighbours: bool,
 ):
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     params = NeighbourhoodParams(nb_granular=1)
     prev_neighbours = compute_neighbours(data, params)
@@ -135,7 +141,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall():
     because the current cost doesn't count the current time warp.
     """
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     sol = Solution(data, [[1, 2, 3, 4]])
 
@@ -168,7 +174,7 @@ def test_prize_collecting():
     Tests that local search works on a small prize-collecting instance.
     """
     data = read("data/p06-2-50.vrp", round_func="dimacs")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     cost_evaluator = CostEvaluator(1, 1)
 
     sol = Solution.make_random(data, rng)
@@ -191,7 +197,7 @@ def test_prize_collecting():
 
 def test_cpp_shuffle_results_in_different_solution():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
@@ -216,7 +222,7 @@ def test_cpp_shuffle_results_in_different_solution():
 def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     # This test tests that we will preserve vehicle types
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     neighbours = compute_neighbours(data)
     ls = cpp_LocalSearch(data, neighbours)
@@ -274,7 +280,7 @@ def test_bugfix_vehicle_type_offsets():
 
 def test_intensify_overlap_tolerance():
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     neighbours = compute_neighbours(data)
     ls = LocalSearch(data, rng, neighbours)
@@ -298,7 +304,7 @@ def test_intensify_overlap_tolerance():
 @mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
 def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
     data = read("data/RC208.txt", "solomon", round_func="trunc")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     neighbours = compute_neighbours(data)
     ls = LocalSearch(data, rng, neighbours)
@@ -313,7 +319,7 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
 
 def test_local_search_raises_for_incomplete_solutions():
     data = read("data/OkSmallPrizes.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))

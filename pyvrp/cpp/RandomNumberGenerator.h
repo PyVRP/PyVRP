@@ -1,5 +1,5 @@
-#ifndef PYVRP_XORSHIFT128_H
-#define PYVRP_XORSHIFT128_H
+#ifndef PYVRP_RANDOMNUMBERGENERATOR_H
+#define PYVRP_RANDOMNUMBERGENERATOR_H
 
 #include <cstddef>
 #include <cstdint>
@@ -14,7 +14,7 @@ namespace pyvrp
  * or' (the ^ operator) of a number with a bit-shifted version of itself. See
  * also here for more details: https://en.wikipedia.org/wiki/Xorshift.
  */
-class XorShift128
+class RandomNumberGenerator
 {
     uint32_t state_[4]{};
 
@@ -26,7 +26,7 @@ public:
      *
      * @param seed Used to seed the pseudo-RNG state.
      */
-    explicit XorShift128(uint32_t seed);
+    explicit RandomNumberGenerator(uint32_t seed);
 
     /**
      * @return The minimum value this pRNG can generate.
@@ -62,27 +62,28 @@ public:
     template <typename T> result_type randint(T high);
 };
 
-constexpr size_t XorShift128::min()
+constexpr size_t RandomNumberGenerator::min()
 {
     return std::numeric_limits<result_type>::min();
 }
 
-constexpr size_t XorShift128::max()
+constexpr size_t RandomNumberGenerator::max()
 {
     return std::numeric_limits<result_type>::max();
 }
 
-template <typename T> T XorShift128::rand()
+template <typename T> T RandomNumberGenerator::rand()
 {
     static_assert(std::is_floating_point<T>::value);
     return operator()() / static_cast<T>(max());
 }
 
-template <typename T> XorShift128::result_type XorShift128::randint(T high)
+template <typename T>
+RandomNumberGenerator::result_type RandomNumberGenerator::randint(T high)
 {
     static_assert(std::is_integral<T>::value);
     return operator()() % high;
 }
 }  // namespace pyvrp
 
-#endif  // PYVRP_XORSHIFT128_H
+#endif  // PYVRP_RANDOMNUMBERGENERATOR_H
