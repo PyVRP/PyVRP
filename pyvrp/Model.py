@@ -10,9 +10,9 @@ from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
     ProblemData,
+    RandomNumberGenerator,
     Solution,
     VehicleType,
-    XorShift128,
 )
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
@@ -263,7 +263,7 @@ class Model:
         )
 
         data = self.data()
-        rng = XorShift128(seed=seed)
+        rng = RandomNumberGenerator(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))
 
         for node_op in NODE_OPERATORS:

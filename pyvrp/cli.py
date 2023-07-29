@@ -21,9 +21,9 @@ from pyvrp import (
     PenaltyParams,
     Population,
     PopulationParams,
+    RandomNumberGenerator,
     Result,
     Solution,
-    XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
@@ -121,7 +121,7 @@ def solve(
     nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
 
     data = read(data_loc, instance_format, round_func)
-    rng = XorShift128(seed=seed)
+    rng = RandomNumberGenerator(seed=seed)
     pen_manager = PenaltyManager(pen_params)
     pop = Population(bpd, params=pop_params)
 
