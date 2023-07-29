@@ -109,23 +109,6 @@ def test_raises_for_invalid_depot_data(
         ProblemData([depot], [VehicleType(1, 2)], [[0]], [[0]])
 
 
-def test_depot_is_first_client():
-    """
-    The ``depot()`` helper should return the first client, that is,
-    ``client(0)``.
-    """
-    mat = [[0, 1], [1, 0]]
-
-    data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=0, y=1)],
-        vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=mat,
-        duration_matrix=mat,
-    )
-
-    assert_(data.depot() is data.client(0))
-
-
 def test_problem_data_raises_when_no_clients():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
