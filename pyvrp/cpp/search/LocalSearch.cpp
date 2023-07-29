@@ -287,14 +287,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     for (size_t client = 0; client <= data.numClients(); client++)
     {
-        clients[client].tw = {static_cast<int>(client),  // TODO cast
-                              static_cast<int>(client),  // TODO cast
-                              data.client(client).serviceDuration,
-                              0,
-                              data.client(client).twEarly,
-                              data.client(client).twLate,
-                              data.client(client).releaseTime};
-
+        clients[client].tw = {client, data.client(client)};
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 

@@ -53,16 +53,19 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};     // Client visits on this route
-        Distance distance_ = 0;  // Total travel distance on this route
-        Load demand_ = 0;        // Total demand served on this route
-        Load excessLoad_ = 0;    // Excess demand (wrt vehicle capacity)
-        Duration duration_ = 0;  // Total travel duration on this route
-        Duration service_ = 0;   // Total service duration on this route
-        Duration timeWarp_ = 0;  // Total time warp on this route
-        Duration wait_ = 0;      // Total waiting duration on this route
-        Duration release_ = 0;   // Release time of this route
-        Cost prizes_ = 0;        // Total value of prizes on this route
+        Visits visits_ = {};      // Client visits on this route
+        Distance distance_ = 0;   // Total travel distance on this route
+        Load demand_ = 0;         // Total demand served on this route
+        Load excessLoad_ = 0;     // Excess demand (w.r.t. vehicle capacity)
+        Duration duration_ = 0;   // Total duration of this route
+        Duration timeWarp_ = 0;   // Total time warp on this route
+        Duration travel_ = 0;     // Total *travel* duration on this route
+        Duration service_ = 0;    // Total *service* duration on this route
+        Duration wait_ = 0;       // Total *waiting* duration on this route
+        Duration release_ = 0;    // Release time of this route
+        Duration startTime_ = 0;  // (earliest) start time of this route
+        Duration slack_ = 0;      // Total time slack on this route
+        Cost prizes_ = 0;         // Total value of prizes on this route
 
         std::pair<double, double> centroid_;  // center of the route
         VehicleType vehicleType_ = 0;         // Type of vehicle of this route
@@ -96,19 +99,24 @@ public:
         [[nodiscard]] Load excessLoad() const;
 
         /**
-         * Total route duration, including waiting time.
+         * Total route duration, including travel, service and waiting time.
          */
         [[nodiscard]] Duration duration() const;
 
         /**
-         * Total duration of service on the route.
+         * Total duration of service on this route.
          */
         [[nodiscard]] Duration serviceDuration() const;
 
         /**
-         * Amount of time warp incurred along the route.
+         * Amount of time warp incurred on this route.
          */
         [[nodiscard]] Duration timeWarp() const;
+
+        /**
+         * Total duration of travel on this route.
+         */
+        [[nodiscard]] Duration travelDuration() const;
 
         /**
          * Total waiting duration on this route.
@@ -116,7 +124,42 @@ public:
         [[nodiscard]] Duration waitDuration() const;
 
         /**
-         * Release time of visits on this route.
+         * Start time of this route. This is the earliest possible time at which
+         * the route can leave the depot and have a minimal duration and time
+         * warp. If there is positive :meth:`~slack`, the start time can be
+         * delayed by at most :meth:`~slack` time units without increasing the
+         * total (minimal) route duration, or time warp.
+         *
+         * .. note::
+         *
+         *    It may be possible to leave before the start time (if the depot
+         *    time window allows for it). That will introduce additional waiting
+         *    time, such that the route duration will then no longer be minimal.
+         *    Delaying departure by more than :meth:`~slack` time units always
+         *    increases time warp, which could turn the route infeasible.
+         */
+        [[nodiscard]] Duration startTime() const;
+
+        /**
+         * End time of the route. This is equivalent to
+         * ``start_time + duration - time_warp``.
+         */
+        [[nodiscard]] Duration endTime() const;
+
+        /**
+         * Time by which departure from the depot can be delayed without
+         * resulting in (additional) time warp or increased route duration.
+         */
+        [[nodiscard]] Duration slack() const;
+
+        /**
+         * Earliest time at which this route can leave the depot. Follows from
+         * the release times of clients visited on this route.
+         *
+         * .. note::
+         *
+         *    The route's release time should not be later than its start time,
+         *    unless the route has time warp.
          */
         [[nodiscard]] Duration releaseTime() const;
 
