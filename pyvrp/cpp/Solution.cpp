@@ -46,7 +46,12 @@ std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
     return neighbours;
 }
 
-bool Solution::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
+bool Solution::isFeasible() const
+{
+    return !hasExcessLoad() && !hasTimeWarp() && isComplete();
+}
+
+bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
 bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
 
@@ -161,14 +166,24 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     for (auto const &route : routes)
     {
         if (route.empty())
-        {
-            auto const msg = "Solution should not contain empty routes.";
-            throw std::runtime_error(msg);
-        }
+            throw std::runtime_error("Solution should not have empty routes.");
 
         usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
             visits[client]++;
+    }
+
+    for (size_t client = 1; client <= data.numClients(); ++client)
+    {
+        if (data.client(client).required && visits[client] == 0)
+            numMissingClients_ += 1;
+
+        if (visits[client] > 1)
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is visited more than once.";
+            throw std::runtime_error(msg.str());
+        }
     }
 
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
@@ -180,23 +195,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
                 << vehType << '.';
             throw std::runtime_error(msg.str());
         }
-
-    for (size_t client = 1; client <= data.numClients(); ++client)
-    {
-        if (data.client(client).required && visits[client] == 0)
-        {
-            std::ostringstream msg;
-            msg << "Client " << client << " is required but not present.";
-            throw std::runtime_error(msg.str());
-        }
-
-        if (visits[client] > 1)
-        {
-            std::ostringstream msg;
-            msg << "Client " << client << " is visited more than once.";
-            throw std::runtime_error(msg.str());
-        }
-    }
 
     makeNeighbours();
     evaluate(data);
