@@ -137,10 +137,21 @@ def test_route_constructor_raises_when_clients_are_visited_more_than_once():
 
 def test_route_constructor_allows_incomplete_solutions():
     data = read("data/OkSmallPrizes.txt")
-    sol = Solution(data, [[2], [3, 4]])  # 1 is required but not visited
 
+    # Client 1 is required but not visited.
+    sol = Solution(data, [[2], [3, 4]])
     assert_(not sol.is_complete())
     assert_(not sol.is_feasible())
+
+    # All required clients are visited, but the solution is not feasible.
+    sol = Solution(data, [[1], [2, 3, 4]])
+    assert_(not sol.is_feasible())
+    assert_(sol.is_complete())
+
+    # All required clients are visited and the solution is feasible.
+    sol = Solution(data, [[1]])
+    assert_(sol.is_feasible())
+    assert_(sol.is_complete())
 
 
 def test_get_neighbours():
