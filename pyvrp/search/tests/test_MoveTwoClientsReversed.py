@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.search import (
     LocalSearch,
     MoveTwoClientsReversed,
@@ -18,7 +18,7 @@ def test_single_route_OkSmall():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -52,7 +52,7 @@ def test_single_route_OkSmall():
 def test_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=seed)
+    rng = RandomNumberGenerator(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))

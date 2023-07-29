@@ -12,8 +12,8 @@ from pyvrp import (
     CostEvaluator,
     Population,
     PopulationParams,
+    RandomNumberGenerator,
     Solution,
-    XorShift128,
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import EmptySolutionWarning
@@ -110,7 +110,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 def test_add_triggers_purge():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     params = PopulationParams()
     pop = Population(bpd, params=params)
@@ -154,7 +154,7 @@ def test_add_triggers_purge():
 def test_select_returns_same_parents_if_no_other_option():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=2_147_483_647)
+    rng = RandomNumberGenerator(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
     pop = Population(bpd, params=params)
@@ -194,7 +194,7 @@ def test_select_returns_same_parents_if_no_other_option():
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=12)
+    rng = RandomNumberGenerator(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
     pop = Population(bpd, params=params)
@@ -214,7 +214,7 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(nb_elite=nb_elite)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd, params=params)
 
@@ -249,7 +249,7 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
 def test_tournament_ranks_by_fitness(k: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
     for sol in make_random_solutions(50, data, rng):
@@ -294,7 +294,7 @@ def test_tournament_ranks_by_fitness(k: int):
 def test_tournament_raises_for_invalid_k(k: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
     for sol in make_random_solutions(5, data, rng):
@@ -308,7 +308,7 @@ def test_purge_removes_duplicates():
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=20, generation_size=5)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd, params=params)
 
@@ -347,7 +347,7 @@ def test_purge_removes_duplicates():
 def test_clear():
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
     for sol in make_random_solutions(10, data, rng):

@@ -3,6 +3,7 @@
 
 #include "Matrix.h"
 #include "Measure.h"
+#include "ProblemData.h"
 
 namespace pyvrp
 {
@@ -40,13 +41,13 @@ class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    int idxFirst = 0;          // Index of the first client in the segment
-    int idxLast = 0;           // Index of the last client in the segment
-    Duration duration = 0;     // Total duration, incl. waiting and servicing
-    Duration timeWarp = 0;     // Cumulative time warp
-    Duration twEarly = 0;      // Earliest visit moment of first client
-    Duration twLate = 0;       // Latest visit moment of first client
-    Duration releaseTime = 0;  // Earliest allowed moment to leave the depot
+    size_t idxFirst_ = 0;       // Index of the first client in the segment
+    size_t idxLast_ = 0;        // Index of the last client in the segment
+    Duration duration_ = 0;     // Total duration, incl. waiting and servicing
+    Duration timeWarp_ = 0;     // Cumulative time warp
+    Duration twEarly_ = 0;      // Earliest visit moment of first client
+    Duration twLate_ = 0;       // Latest visit moment of first client
+    Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
 
     [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
                                    TWS const &other) const;
@@ -60,6 +61,11 @@ public:
           Args... args);
 
     /**
+     * The total duration of this route segment.
+     */
+    [[nodiscard]] Duration duration() const;
+
+    /**
      * Returns the total time warp on this route segment.
      *
      * Returns
@@ -69,10 +75,32 @@ public:
      */
     [[nodiscard]] inline Duration totalTimeWarp() const;
 
-    TimeWindowSegment() = default;  // TODO at least require client index
+    /**
+     * Earliest start time for this route segment that results in minimum route
+     * segment duration.
+     */
+    [[nodiscard]] Duration twEarly() const;
 
-    inline TimeWindowSegment(int idxFirst,
-                             int idxLast,
+    /**
+     * Latest start time for this route segment that results in minimum route
+     * segment duration.
+     */
+    [[nodiscard]] Duration twLate() const;
+
+    /**
+     * Earliest possible release time of the clients in this route segment.
+     */
+    [[nodiscard]] Duration releaseTime() const;
+
+    // TODO remove this constructor.
+    TimeWindowSegment() = default;
+
+    // Construct from attributes of the given client.
+    TimeWindowSegment(size_t idx, ProblemData::Client const &client);
+
+    // Construct from raw data.
+    inline TimeWindowSegment(size_t idxFirst,
+                             size_t idxLast,
                              Duration duration,
                              Duration timeWarp,
                              Duration twEarly,
@@ -87,18 +115,26 @@ TimeWindowSegment TimeWindowSegment::merge(
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
-    auto const arcDuration = durationMatrix(idxLast, other.idxFirst);
-    auto const diff = duration - timeWarp + arcDuration;
-    auto const diffWait = std::max<Duration>(other.twEarly - diff - twLate, 0);
-    auto const diffTw = std::max<Duration>(twEarly + diff - other.twLate, 0);
+    using Dur = pyvrp::Duration;
 
-    return {idxFirst,
-            other.idxLast,
-            duration + other.duration + arcDuration + diffWait,
-            timeWarp + other.timeWarp + diffTw,
-            std::max(other.twEarly - diff, twEarly) - diffWait,
-            std::min(other.twLate - diff, twLate) + diffTw,
-            std::max(releaseTime, other.releaseTime)};
+    // edgeDuration is the travel duration from our last to the other's first
+    // client, and atOther the time (after starting from our first client) at
+    // which we arrive there.
+    Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
+    Dur const atOther = duration_ - timeWarp_ + edgeDuration;
+
+    // Wait duration increases if we arrive at the other's first client before
+    // opening, whereas time warp increases if we arrive there after closing.
+    Dur const diffWait = std::max<Dur>(other.twEarly_ - atOther - twLate_, 0);
+    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
+
+    return {idxFirst_,
+            other.idxLast_,
+            duration_ + other.duration_ + edgeDuration + diffWait,
+            timeWarp_ + other.timeWarp_ + diffTw,
+            std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
+            std::min(other.twLate_ - atOther, twLate_) + diffTw,
+            std::max(releaseTime_, other.releaseTime_)};
 #endif
 }
 
@@ -123,23 +159,23 @@ TimeWindowSegment TimeWindowSegment::merge(
 
 Duration TimeWindowSegment::totalTimeWarp() const
 {
-    return timeWarp + std::max<Duration>(releaseTime - twLate, 0);
+    return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
 }
 
-TimeWindowSegment::TimeWindowSegment(int idxFirst,
-                                     int idxLast,
+TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
+                                     size_t idxLast,
                                      Duration duration,
                                      Duration timeWarp,
                                      Duration twEarly,
                                      Duration twLate,
                                      Duration releaseTime)
-    : idxFirst(idxFirst),
-      idxLast(idxLast),
-      duration(duration),
-      timeWarp(timeWarp),
-      twEarly(twEarly),
-      twLate(twLate),
-      releaseTime(releaseTime)
+    : idxFirst_(idxFirst),
+      idxLast_(idxLast),
+      duration_(duration),
+      timeWarp_(timeWarp),
+      twEarly_(twEarly),
+      twLate_(twLate),
+      releaseTime_(releaseTime)
 {
 }
 }  // namespace pyvrp
