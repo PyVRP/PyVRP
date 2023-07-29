@@ -9,10 +9,12 @@
 namespace pyvrp
 {
 /**
+ * RandomNumberGenerator(seed: int)
+ *
  * This class implements a XOR-shift pseudo-random number generator (RNG). It
  * generates the next number of a sequence by repeatedly taking the 'exclusive
- * or' (the ^ operator) of a number with a bit-shifted version of itself. See
- * `here <https://en.wikipedia.org/wiki/Xorshift>`_ for more details.
+ * or' (the ``^`` operator) of a number with a bit-shifted version of itself.
+ * See `here <https://en.wikipedia.org/wiki/Xorshift>`_ for more details.
  *
  * Parameters
  * ----------
