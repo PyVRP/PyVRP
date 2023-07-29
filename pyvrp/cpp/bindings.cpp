@@ -163,13 +163,13 @@ PYBIND11_MODULE(_pyvrp, m)
                          if (dist.size() < numNodes || row.size() < numNodes)
                              throw std::invalid_argument(
                                  "Distance matrix dimensions are smaller than "
-                                 "the number of clients");
+                                 "the number of clients.");
 
                      for (auto &row : dur)
                          if (dur.size() < numNodes || row.size() < numNodes)
                              throw std::invalid_argument(
                                  "Distance matrix dimensions are smaller than "
-                                 "the number of clients");
+                                 "the number of clients.");
 
                      Matrix<pyvrp::Distance> distMat(numNodes);
                      Matrix<pyvrp::Duration> durMat(numNodes);
