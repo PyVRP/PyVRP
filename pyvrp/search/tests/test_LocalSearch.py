@@ -309,3 +309,17 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
 
     with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
         ls.intensify(sol, cost_eval, overlap_tolerance=tol)
+
+
+def test_local_search_raises_for_incomplete_solutions():
+    data = read("data/OkSmallPrizes.txt")
+    rng = XorShift128(seed=42)
+
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution(data, [[2], [3, 4]])  # 1 is required but not visited
+
+    with assert_raises(RuntimeError):
+        ls.search(sol, cost_eval)

@@ -361,6 +361,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("is_feasible",
              &Solution::isFeasible,
              DOC(pyvrp, Solution, isFeasible))
+        .def("is_complete",
+             &Solution::isComplete,
+             DOC(pyvrp, Solution, isComplete))
         .def("has_excess_load",
              &Solution::hasExcessLoad,
              DOC(pyvrp, Solution, hasExcessLoad))
