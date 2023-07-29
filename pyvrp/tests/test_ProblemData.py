@@ -131,32 +131,46 @@ def test_problem_data_raises_when_no_clients():
     )
 
 
-@mark.parametrize(
-    "matrix",
-    [
-        ([[1, 1]]),  # num rows < 2
-        ([[], []]),  # num cols < 2
-    ],
-)
-def test_problem_data_raises_matrix_dimensions_too_small(matrix):
+def test_problem_data_matrix_dimensions():
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    the distance or duration matrix has less rows or columns than the number
+    of clients. The number of rows and columns are allowed to be larger than
+    the number of clients.
+    """
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
 
-    with assert_raises(ValueError):
-        ProblemData(
-            clients,
-            vehicle_types,
-            distance_matrix=matrix,
-            duration_matrix=[[0, 0], [0, 0]],
+    def data_dist(distance_matrix):
+        return ProblemData(
+            clients, vehicle_types, distance_matrix, [[0, 0], [0, 0]]
         )
 
-    with assert_raises(ValueError):
-        ProblemData(
-            clients,
-            vehicle_types,
-            distance_matrix=[[0, 0], [0, 0]],
-            duration_matrix=matrix,
+    def data_dur(duration_matrix):
+        return ProblemData(
+            clients, vehicle_types, [[0, 0], [0, 0]], duration_matrix
         )
+
+    # Number of rows < number of clients
+    with assert_raises(ValueError):
+        data_dist([[0, 0]])
+
+    with assert_raises(ValueError):
+        data_dur([[0, 0]])
+
+    # Number of cols < number of clients
+    with assert_raises(ValueError):
+        data_dist([[], []])
+
+    with assert_raises(ValueError):
+        data_dur([[], []])
+
+    # It's OK if the dimensions of the matrices are larger, and it's even OK
+    # when they are not even square.
+    data_dist([[0, 0], [0, 0], [0, 0]])
+    data_dur([[0, 0], [0, 0], [0, 0]])
+    data_dist([[0, 0, 0], [0, 0, 0]])
+    data_dur([[0, 0, 0], [0, 0, 0]])
 
 
 def test_centroid():
