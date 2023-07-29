@@ -109,7 +109,7 @@ def test_raises_for_invalid_depot_data(
         ProblemData([depot], [VehicleType(1, 2)], [[0]], [[0]])
 
 
-def test_problem_data_raises_when_no_clients():
+def test_problem_data_raises_when_no_clients_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
     no clients are provided.
@@ -166,7 +166,7 @@ def test_problem_data_matrix_dimensions():
         data_dur([[], []])
 
     # It's OK if the dimensions of the matrices are larger, and it's even OK
-    # when they are not even square.
+    # when they are not square.
     data_dist([[0, 0], [0, 0], [0, 0]])
     data_dur([[0, 0], [0, 0], [0, 0]])
     data_dist([[0, 0, 0], [0, 0, 0]])
