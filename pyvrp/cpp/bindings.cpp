@@ -573,7 +573,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     py::arg("second"),
                     py::arg("third"));
 
-    py::class_<RandomNumberGenerator>(m, "RandomNumberGenerator")
+    py::class_<RandomNumberGenerator>(
+        m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))
         .def(py::init<uint32_t>(), py::arg("seed"))
         .def("min", &RandomNumberGenerator::min)
         .def("max", &RandomNumberGenerator::max)
