@@ -33,6 +33,19 @@ def test_local_search_returns_same_solution_when_there_are_no_operators():
     assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
+def test_local_search_return_same_solution_when_neighbourhood_is_empty():
+    data = read("data/OkSmall.txt")
+    cost_evaluator = CostEvaluator(20, 6)
+    rng = RandomNumberGenerator(seed=42)
+
+    ls = LocalSearch(data, rng, [[] for _ in range(data.num_clients + 1)])
+    sol = Solution.make_random(data, rng)
+
+    # No operators have been added, so these calls should be no-ops.
+    assert_equal(ls.search(sol, cost_evaluator), sol)
+    assert_equal(ls.intensify(sol, cost_evaluator), sol)
+
+
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
     data = read("data/OkSmall.txt")
