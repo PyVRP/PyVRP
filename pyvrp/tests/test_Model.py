@@ -259,10 +259,10 @@ def test_data_warns_about_scaling_issues(recwarn):
         model.data()
 
 
-def test_model_solves_empty_instance():
+def test_model_solves_instance_with_zero_or_one_clients():
     """
     This test exercises the bug identified in issue #272, where the model
-    could not solve an instance with no clients or just one client.
+    could not solve an instance with zero clients or just one client.
     """
     m = Model()
     m.add_vehicle_type(capacity=15, num_available=1)
