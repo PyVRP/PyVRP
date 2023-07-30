@@ -131,7 +131,16 @@ def test_problem_data_raises_when_no_clients_provided():
     )
 
 
-def test_problem_data_raises_when_incorrect_matrix_dimensions():
+@mark.parametrize(
+    "matrix",
+    [
+        [[0, 0]],  # num rows < num clients
+        [[], []],  # num cols < num clients
+        [[0, 0], [0, 0], [0, 0]],  # num rows > num clients
+        [[0, 0, 0], [0, 0, 0]],  # num cols > num clients
+    ],
+)
+def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
     the distance or duration matrix does not match the number of clients in
@@ -140,29 +149,11 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions():
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
 
-    def data_dist(distance_matrix):
-        return ProblemData(
-            clients, vehicle_types, distance_matrix, [[0, 0], [0, 0]]
-        )
-
-    def data_dur(duration_matrix):
-        return ProblemData(
-            clients, vehicle_types, [[0, 0], [0, 0]], duration_matrix
-        )
-
-    # Number of rows < number of clients
     with assert_raises(ValueError):
-        data_dist([[0, 0]])
+        ProblemData(clients, vehicle_types, matrix, [[0, 0], [0, 0]])
 
     with assert_raises(ValueError):
-        data_dur([[0, 0]])
-
-    # Number of cols < number of clients
-    with assert_raises(ValueError):
-        data_dist([[], []])
-
-    with assert_raises(ValueError):
-        data_dur([[], []])
+        ProblemData(clients, vehicle_types, [[0, 0], [0, 0]], matrix)
 
 
 def test_centroid():
