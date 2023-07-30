@@ -217,14 +217,12 @@ class Model:
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         if self._edges:
-            max_data_value = max(
-                max(e.distance, e.duration) for e in self._edges
-            )
-            if max_data_value > MAX_USER_VALUE:
+            max_val = max(max(e.distance, e.duration) for e in self._edges)
+
+            if max_val > MAX_USER_VALUE:
                 msg = """
-                The maximum distance or duration value is very large. This
-                might impact numerical stability. Consider rescaling your input
-                data.
+                The maximum distance or duration value is very large. This may
+                impact numerical stability. Consider rescaling your input data.
                 """
                 warn(msg, ScalingWarning)
 
