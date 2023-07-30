@@ -201,10 +201,10 @@ def test_relocate_after_depot_should_work():
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    # This is a non-empty neighbourhood (so LS does not complain), but the only
-    # client moves allowed by it will not improve the initial solution created
-    # below. So the only improvements (1, 0)-exchange can make must come from
-    # moving clients behind the depot of a route.
+    # This is a non-empty neighbourhood, but the only client moves allowed by
+    # it will not improve the initial solution created below. So the only
+    # improvements (1, 0)-exchange can make must come from moving clients
+    # behind the depot of a route.
     neighbours = [[] for _ in range(data.num_clients + 1)]
     neighbours[2].append(1)
 
