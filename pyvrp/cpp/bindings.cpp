@@ -160,16 +160,16 @@ PYBIND11_MODULE(_pyvrp, m)
                      auto const numNodes = clients.size();
 
                      for (auto &row : dist)
-                         if (dist.size() < numNodes || row.size() < numNodes)
+                         if (dist.size() != numNodes || row.size() != numNodes)
                              throw std::invalid_argument(
-                                 "Distance matrix dimensions are smaller than "
-                                 "the number of clients.");
+                                 "Distance matrix shape does not match the "
+                                 "number of clients.");
 
                      for (auto &row : dur)
-                         if (dur.size() < numNodes || row.size() < numNodes)
+                         if (dur.size() != numNodes || row.size() != numNodes)
                              throw std::invalid_argument(
-                                 "Distance matrix dimensions are smaller than "
-                                 "the number of clients.");
+                                 "Duration matrix shape does not match the "
+                                 "number of clients.");
 
                      Matrix<pyvrp::Distance> distMat(numNodes);
                      Matrix<pyvrp::Duration> durMat(numNodes);

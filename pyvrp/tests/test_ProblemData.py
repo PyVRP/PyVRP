@@ -131,12 +131,11 @@ def test_problem_data_raises_when_no_clients_provided():
     )
 
 
-def test_problem_data_matrix_dimensions():
+def test_problem_data_raises_when_incorrect_matrix_dimensions():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
-    the distance or duration matrix has less rows or columns than the number
-    of clients. The number of rows and columns are allowed to be larger than
-    the number of clients.
+    the distance or duration matrix does not match the number of clients in
+    dimension size.
     """
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
@@ -164,13 +163,6 @@ def test_problem_data_matrix_dimensions():
 
     with assert_raises(ValueError):
         data_dur([[], []])
-
-    # It's OK if the dimensions of the matrices are larger, and it's even OK
-    # when they are not square.
-    data_dist([[0, 0], [0, 0], [0, 0]])
-    data_dur([[0, 0], [0, 0], [0, 0]])
-    data_dist([[0, 0, 0], [0, 0, 0]])
-    data_dur([[0, 0, 0], [0, 0, 0]])
 
 
 def test_centroid():
