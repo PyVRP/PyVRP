@@ -257,3 +257,25 @@ def test_data_warns_about_scaling_issues(recwarn):
     model.add_edge(depot, client, distance=MAX_USER_VALUE + 1)
     with assert_warns(ScalingWarning):
         model.data()
+
+
+def test_model_solves_empty_instance():
+    """
+    This test exercises the bug identified in issue #272, where the model
+    could not solve an instance with no clients or just one client.
+    """
+    m = Model()
+    m.add_vehicle_type(capacity=15, num_available=1)
+    depot = m.add_depot(x=0, y=0)
+
+    # Solve an instance with no clients.
+    res = m.solve(stop=MaxIterations(1))
+    assert_equal(res.best.get_routes(), [])
+
+    # Solve an instance with one client.
+    clients = [m.add_client(x=0, y=0, demand=0)]
+    m.add_edge(depot, clients[0], distance=0)
+    m.add_edge(clients[0], depot, distance=0)
+
+    res = m.solve(stop=MaxIterations(1))
+    assert_equal(res.best.get_routes(), [[1]])
