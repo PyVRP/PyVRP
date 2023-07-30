@@ -41,7 +41,7 @@ def test_local_search_return_same_solution_when_neighbourhood_is_empty():
     ls = LocalSearch(data, rng, [[] for _ in range(data.num_clients + 1)])
     sol = Solution.make_random(data, rng)
 
-    # No operators have been added, so these calls should be no-ops.
+    # The neighbourhood is empty, so these calls should be no-ops.
     assert_equal(ls.search(sol, cost_evaluator), sol)
     assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
