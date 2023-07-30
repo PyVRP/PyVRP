@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Solution, XorShift128
+from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.search import (
     Exchange11,
     LocalSearch,
@@ -21,7 +21,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     # For a fair comparison we should not hamper the node operator with
     # granularity restrictions.
@@ -53,7 +53,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
 def test_swap_star_on_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=seed)
+    rng = RandomNumberGenerator(seed=seed)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_route_operator(SwapStar(data))
