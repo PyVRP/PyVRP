@@ -259,6 +259,7 @@ def test_data_warns_about_scaling_issues(recwarn):
         model.data()
 
 
+@mark.filterwarnings("ignore::pyvrp.exceptions.EmptySolutionWarning")
 def test_model_solves_instance_with_zero_or_one_clients():
     """
     This test exercises the bug identified in issue #272, where the model
