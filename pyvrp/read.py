@@ -156,21 +156,6 @@ def read(
             + "(depot index should be 0 after subtracting offset 1)"
         )
 
-    if demands[0] != 0:
-        raise ValueError("Demand of depot must be 0")
-
-    if time_windows[0, 0] != 0:
-        raise ValueError("Depot start of time window must be 0")
-
-    if service_times[0] != 0:
-        raise ValueError("Depot service duration must be 0")
-
-    if release_times[0] != 0:
-        raise ValueError("Depot release time must be 0")
-
-    if (time_windows[:, 0] > time_windows[:, 1]).any():
-        raise ValueError("Time window cannot start after end")
-
     clients = [
         Client(
             coords[idx][0],  # x

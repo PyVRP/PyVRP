@@ -83,6 +83,79 @@ def test_raises_for_invalid_client_data(
         Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
 
 
+@mark.parametrize(
+    "x,y,demand,service,tw_early,tw_late,release_time,prize",
+    [
+        (0, 0, 1, 0, 0, 0, 0, 0),  # demand != 0
+        (0, 0, 0, 1, 0, 0, 0, 0),  # service duration != 0
+        (0, 0, 0, 0, 0, 0, 1, 0),  # release time != 0
+    ],
+)
+def test_raises_for_invalid_depot_data(
+    x: int,
+    y: int,
+    demand: int,
+    service: int,
+    tw_early: int,
+    tw_late: int,
+    release_time: int,
+    prize: int,
+):
+    depot = Client(
+        x, y, demand, service, tw_early, tw_late, release_time, prize
+    )
+
+    with assert_raises(ValueError):
+        ProblemData([depot], [VehicleType(1, 2)], [[0]], [[0]])
+
+
+def test_problem_data_raises_when_no_clients_provided():
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    no clients are provided.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            vehicle_types=[VehicleType(1, 2)],
+            distance_matrix=[],
+            duration_matrix=[],
+        )
+
+    # One client (the depot) should not raise.
+    ProblemData(
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=[[0]],
+        duration_matrix=[[0]],
+    )
+
+
+@mark.parametrize(
+    "matrix",
+    [
+        [[0, 0]],  # num rows < num clients
+        [[], []],  # num cols < num clients
+        [[0, 0], [0, 0], [0, 0]],  # num rows > num clients
+        [[0, 0, 0], [0, 0, 0]],  # num cols > num clients
+    ],
+)
+def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    the distance or duration matrix does not match the number of clients in
+    dimension size.
+    """
+    clients = [Client(x=0, y=0), Client(x=0, y=0)]
+    vehicle_types = [VehicleType(1, 2)]
+
+    with assert_raises(ValueError):
+        ProblemData(clients, vehicle_types, matrix, [[0, 0], [0, 0]])
+
+    with assert_raises(ValueError):
+        ProblemData(clients, vehicle_types, [[0, 0], [0, 0]], matrix)
+
+
 def test_centroid():
     data = read("data/OkSmall.txt")
 
