@@ -3,7 +3,7 @@ from pytest import mark
 
 from pyvrp import Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
-from pyvrp.exceptions import ScalingWarning
+from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
 from pyvrp.tests.helpers import read
 
@@ -259,7 +259,6 @@ def test_data_warns_about_scaling_issues(recwarn):
         model.data()
 
 
-@mark.filterwarnings("ignore::pyvrp.exceptions.EmptySolutionWarning")
 def test_model_solves_instance_with_zero_or_one_clients():
     """
     This test exercises the bug identified in issue #272, where the model
@@ -270,7 +269,9 @@ def test_model_solves_instance_with_zero_or_one_clients():
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
-    res = m.solve(stop=MaxIterations(1))
+    with assert_warns(EmptySolutionWarning):
+        res = m.solve(stop=MaxIterations(1))
+
     solution = [r.visits() for r in res.best.get_routes()]
     assert_equal(solution, [])
 
