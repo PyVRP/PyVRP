@@ -24,7 +24,7 @@ def test_single_route_OkSmall():
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
-    sol = Solution(data, [[1, 4, 2, 3]])
+    sol = Solution(data, [[1, 3], [2, 4]])
     improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
@@ -33,8 +33,7 @@ def test_single_route_OkSmall():
     improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
 
-    # (2, 3) was inserted after 1 as 1 -> 3 -> 2 -> 4. Then (1, 3) got inserted
-    # after 4 as 2 -> 4 -> 3 -> 1.
+    # (1, 3) was inserted after 4 as 2 -> 4 -> 3 -> 1.
     expected = Solution(data, [[2, 4, 3, 1]])
     assert_equal(improved_sol, expected)
 
