@@ -33,17 +33,20 @@ def test_local_search_returns_same_solution_when_there_are_no_operators():
     assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
-def test_local_search_return_same_solution_when_neighbourhood_is_empty():
+def test_local_search_returns_same_solution_with_empty_neighbourhood():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
     ls = LocalSearch(data, rng, [[] for _ in range(data.num_clients + 1)])
-    sol = Solution.make_random(data, rng)
+    ls.add_node_operator(Exchange10(data))
+    ls.add_node_operator(Exchange11(data))
 
-    # The neighbourhood is empty, so these calls should be no-ops.
+    # The search is completed after one iteration due to the empty
+    # neighbourhood. This also prevents moves involving empty routes,
+    # which are not explicitly forbidden by the empty neighbourhood.
+    sol = Solution.make_random(data, rng)
     assert_equal(ls.search(sol, cost_evaluator), sol)
-    assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
