@@ -270,7 +270,8 @@ def test_model_solves_empty_instance():
 
     # Solve an instance with no clients.
     res = m.solve(stop=MaxIterations(1))
-    assert_equal(res.best.get_routes(), [])
+    solution = [r.visits() for r in res.best.get_routes()]
+    assert_equal(solution, [])
 
     # Solve an instance with one client.
     clients = [m.add_client(x=0, y=0, demand=0)]
@@ -278,4 +279,5 @@ def test_model_solves_empty_instance():
     m.add_edge(clients[0], depot, distance=0)
 
     res = m.solve(stop=MaxIterations(1))
-    assert_equal(res.best.get_routes(), [[1]])
+    solution = [r.visits() for r in res.best.get_routes()]
+    assert_equal(solution, [[1]])

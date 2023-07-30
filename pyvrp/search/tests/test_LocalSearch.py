@@ -33,23 +33,6 @@ def test_local_search_returns_same_solution_when_there_are_no_operators():
     assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
-def test_local_search_raises_when_neighbourhood_structure_is_empty():
-    data = read("data/OkSmall.txt")
-    rng = RandomNumberGenerator(seed=42)
-
-    # Is completely empty neighbourhood, so there's nothing to do for the
-    # local search in this case.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
-
-    with assert_raises(RuntimeError):
-        LocalSearch(data, rng, neighbours)
-
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-
-    with assert_raises(RuntimeError):
-        ls.set_neighbours(neighbours)
-
-
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
     data = read("data/OkSmall.txt")
