@@ -4,8 +4,24 @@
 #include "Measure.h"
 #include "Solution.h"
 
+#include <concepts>
+#include <limits>
+
 namespace pyvrp
 {
+// The following methods must be implemented for a type to be evaluatable by
+// the CostEvaluator.
+template <typename T> concept CostEvaluatable = requires(T arg)
+{
+    // clang-format off
+    { arg.distance() } -> std::same_as<Distance>;
+    { arg.excessLoad() } -> std::same_as<Load>;
+    { arg.timeWarp() } -> std::same_as<Duration>;
+    { arg.uncollectedPrizes() } -> std::same_as<Cost>;
+    { arg.isFeasible() } -> std::same_as<bool>;
+    // clang-format on
+};
+
 /**
  * CostEvaluator(capacity_penalty: int, tw_penalty: int)
  *
@@ -48,7 +64,10 @@ public:
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
-    [[nodiscard]] Cost penalisedCost(Solution const &solution) const;
+    // The docstring above is written for Python, where we only expose this
+    // method for Solution.
+    template <CostEvaluatable T>
+    [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
     /**
      * Evaluates and returns the cost/objective of the given solution.
@@ -64,7 +83,9 @@ public:
      * where the first part lists the distance costs, and the second part the
      * prizes of the unvisited clients.
      */
-    [[nodiscard]] Cost cost(Solution const &solution) const;
+    // The docstring above is written for Python, where we only expose this
+    // method for Solution.
+    template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
 
 Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
@@ -89,6 +110,23 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #else
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
+}
+
+template <CostEvaluatable T>
+Cost CostEvaluator::penalisedCost(T const &arg) const
+{
+    // Standard objective plus penalty terms for capacity- and time-related
+    // infeasibilities.
+    return static_cast<Cost>(arg.distance()) + arg.uncollectedPrizes()
+           + loadPenaltyExcess(arg.excessLoad()) + twPenalty(arg.timeWarp());
+}
+
+template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
+{
+    // Penalties are zero when the solution is feasible, so we can fall back to
+    // penalised cost in that case.
+    return arg.isFeasible() ? penalisedCost(arg)
+                            : std::numeric_limits<Cost>::max();
 }
 }  // namespace pyvrp
 
