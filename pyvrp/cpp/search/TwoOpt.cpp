@@ -96,7 +96,7 @@ void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
     auto *insertionPoint = U;
     auto *currNext = n(U);
 
-    while (itRoute != currNext)  // No need to move X, we pivot around it
+    while (itRoute != currNext)  // No need to move n(U), we pivot around it
     {
         auto *current = itRoute;
         itRoute = p(itRoute);
