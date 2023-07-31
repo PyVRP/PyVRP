@@ -157,11 +157,25 @@ PYBIND11_MODULE(_pyvrp, m)
                     std::vector<ProblemData::VehicleType> const &vehicleTypes,
                     std::vector<std::vector<pyvrp::Value>> const &dist,
                     std::vector<std::vector<pyvrp::Value>> const &dur) {
-                     Matrix<pyvrp::Distance> distMat(clients.size());
-                     Matrix<pyvrp::Duration> durMat(clients.size());
+                     auto const numNodes = clients.size();
 
-                     for (size_t row = 0; row != clients.size(); ++row)
-                         for (size_t col = 0; col != clients.size(); ++col)
+                     for (auto &row : dist)
+                         if (dist.size() != numNodes || row.size() != numNodes)
+                             throw std::invalid_argument(
+                                 "Distance matrix shape does not match the "
+                                 "number of clients.");
+
+                     for (auto &row : dur)
+                         if (dur.size() != numNodes || row.size() != numNodes)
+                             throw std::invalid_argument(
+                                 "Duration matrix shape does not match the "
+                                 "number of clients.");
+
+                     Matrix<pyvrp::Distance> distMat(numNodes);
+                     Matrix<pyvrp::Duration> durMat(numNodes);
+
+                     for (size_t row = 0; row != numNodes; ++row)
+                         for (size_t col = 0; col != numNodes; ++col)
                          {
                              distMat(row, col) = dist[row][col];
                              durMat(row, col) = dur[row][col];
