@@ -1,1 +1,1 @@
-from ._repair import greedy_repair
+from .greedy_repair import greedy_repair
