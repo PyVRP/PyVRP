@@ -120,7 +120,7 @@ class Population:
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
         if solution.is_feasible():
-            # Note: the feasible subpopulation actually doet not depend
+            # Note: the feasible subpopulation actually does not depend
             # on the penalty values but we use the same implementation.
             self._feas.add(solution, cost_evaluator)
         else:

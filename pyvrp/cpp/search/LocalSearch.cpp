@@ -404,10 +404,6 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
         }
     }
 
-    auto isEmpty = [](auto const &neighbours) { return neighbours.empty(); };
-    if (std::all_of(neighbours.begin(), neighbours.end(), isEmpty))
-        throw std::runtime_error("Neighbourhood is empty.");
-
     this->neighbours = neighbours;
 }
 
