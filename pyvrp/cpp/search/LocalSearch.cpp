@@ -86,8 +86,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (U->route && !data.client(uClient).required)  // test removing U
                 maybeRemove(U, costEvaluator);
 
-            // Shuffling the neighbours in this loop should not matter much as
-            // we are already randomizing the nodes U.
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
@@ -163,8 +161,6 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
             auto const lastTested = lastTestedRoutes[U.idx];
             lastTestedRoutes[U.idx] = numMoves;
 
-            // Shuffling in this loop should not matter much as we are
-            // already randomizing the routes U.
             for (size_t rV = 0; rV != U.idx; ++rV)
             {
                 auto &V = routes[rV];
