@@ -97,7 +97,6 @@ void Route::update()
 
     Load load = 0;
     Distance distance = 0;
-    Distance deltaReversalDistance = 0;
 
     centroid = {0, 0};
 
@@ -114,13 +113,9 @@ void Route::update()
         load += clientData.demand;
         distance += data.dist(p(node)->client, node->client);
 
-        deltaReversalDistance += data.dist(node->client, p(node)->client);
-        deltaReversalDistance -= data.dist(p(node)->client, node->client);
-
         node->position = position + 1;
         node->cumulatedLoad = load;
         node->cumulatedDistance = distance;
-        node->deltaReversalDistance = deltaReversalDistance;
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
 
@@ -133,13 +128,9 @@ void Route::update()
     load += data.client(endDepot.client).demand;
     distance += data.dist(p(&endDepot)->client, endDepot.client);
 
-    deltaReversalDistance += data.dist(endDepot.client, p(&endDepot)->client);
-    deltaReversalDistance -= data.dist(p(&endDepot)->client, endDepot.client);
-
     endDepot.position = size() + 1;
     endDepot.cumulatedLoad = load;
     endDepot.cumulatedDistance = distance;
-    endDepot.deltaReversalDistance = deltaReversalDistance;
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
