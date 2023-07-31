@@ -11,7 +11,7 @@ namespace pyvrp
 {
 // The following methods must be implemented for a type to be evaluatable by
 // the CostEvaluator.
-template <typename T> concept Evaluatable = requires(T arg)
+template <typename T> concept CostEvaluatable = requires(T arg)
 {
     // clang-format off
     { arg.distance() } -> std::same_as<Distance>;
@@ -66,7 +66,7 @@ public:
      */
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
-    template <Evaluatable T>
+    template <CostEvaluatable T>
     [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
     /**
@@ -85,7 +85,7 @@ public:
      */
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
-    template <Evaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
+    template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
 
 Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
@@ -112,7 +112,8 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #endif
 }
 
-template <Evaluatable T> Cost CostEvaluator::penalisedCost(T const &arg) const
+template <CostEvaluatable T>
+Cost CostEvaluator::penalisedCost(T const &arg) const
 {
     // Standard objective plus penalty terms for capacity- and time-related
     // infeasibilities.
@@ -120,7 +121,7 @@ template <Evaluatable T> Cost CostEvaluator::penalisedCost(T const &arg) const
            + loadPenaltyExcess(arg.excessLoad()) + twPenalty(arg.timeWarp());
 }
 
-template <Evaluatable T> Cost CostEvaluator::cost(T const &arg) const
+template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
 {
     // Penalties are zero when the solution is feasible, so we can fall back to
     // penalised cost in that case.
