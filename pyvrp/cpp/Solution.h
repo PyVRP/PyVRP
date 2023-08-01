@@ -204,7 +204,7 @@ private:
     Routes routes_;
     std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
 
-    // Determines the [pred, succ] pairs for each client.
+    // Determines the [pred, succ] pairs for each client (-1 if unassigned).
     void makeNeighbours();
 
     // Evaluates this solution's characteristics.
