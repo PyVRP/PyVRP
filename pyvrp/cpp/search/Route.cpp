@@ -96,23 +96,21 @@ void Route::update()
     cumLoad.clear();
     cumDist.clear();
 
+    centroid = {0, 0};
     load_ = 0;
     distance_ = 0;
-    centroid = {0, 0};
+    timeWarp_ = 0;
 
     for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
     {
         size_t const position = nodes.size();
+        node->position = position + 1;
         nodes.push_back(node);
 
         auto const &clientData = data.client(node->client);
 
         centroid.first += static_cast<double>(clientData.x);
         centroid.second += static_cast<double>(clientData.y);
-
-        node->position = position + 1;
-        node->twBefore
-            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
 
         load_ += clientData.demand;
         cumLoad.push_back(load_);
@@ -121,18 +119,28 @@ void Route::update()
         cumDist.push_back(distance_);
     }
 
+    endDepot.position = size() + 1;
+
     centroid.first /= size();
     centroid.second /= size();
 
-    endDepot.position = size() + 1;
+    load_ += data.client(endDepot.client).demand;
+    distance_ += data.dist(p(&endDepot)->client, endDepot.client);
+
+#ifdef PYVRP_NO_TIME_WINDOWS
+    return;
+#else
+    // Backward time window segments
+    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
+        node->twBefore
+            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
+
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
-    load_ += data.client(endDepot.client).demand;
-    distance_ += data.dist(p(&endDepot)->client, endDepot.client);
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
-    // forward time window segments
+    // Forward time window segments
     auto *node = &endDepot;
     do
     {
@@ -141,6 +149,7 @@ void Route::update()
             = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
         node = prev;
     } while (!node->isDepot());
+#endif
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)

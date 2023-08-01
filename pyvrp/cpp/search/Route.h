@@ -50,14 +50,14 @@ private:
     ProblemData const &data;
     size_t const vehicleType_;
 
-    std::vector<Node *> nodes;           // Nodes in this route, excl. depot
-    std::vector<Load> cumLoad;           // Cumulative load along route (incl.)
-    std::vector<Distance> cumDist;       // Cumulative dist along route (incl.)
-    std::pair<double, double> centroid;  // Center point of route's clients
+    std::vector<Node *> nodes;      // Nodes in this route, excl. depot
+    std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
+    std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
 
-    Load load_;          // Current route load
-    Distance distance_;  // Current route distance
-    Duration timeWarp_;  // Current route time warp
+    std::pair<double, double> centroid;  // Center point of route's clients
+    Load load_;                          // Current route load
+    Distance distance_;                  // Current route distance
+    Duration timeWarp_;                  // Current route time warp
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
