@@ -53,6 +53,8 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator) const
 {
+    // Two routes. Current situation is U -> n(U), and V -> n(V). Proposed move
+    // is U -> n(V) and V -> n(U).
     Distance const current = data.dist(U->client, n(U)->client)
                              + data.dist(V->client, n(V)->client);
     Distance const proposed = data.dist(U->client, n(V)->client)
@@ -75,18 +77,20 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
+    // Proposed move appends the segment after V to U, and the segment after U
+    // to V.
     auto const uLoad = U->route->loadBetween(0, U->position);
+    auto const uLoadAfter = U->route->load() - uLoad;
     auto const vLoad = V->route->loadBetween(0, V->position);
+    auto const vLoadAfter = V->route->load() - vLoad;
 
-    deltaCost += costEvaluator.loadPenalty(uLoad + V->route->load() - vLoad,
-                                           U->route->capacity());
     deltaCost
-        -= costEvaluator.loadPenalty(U->route->load(), U->route->capacity());
+        += costEvaluator.loadPenalty(uLoad + vLoadAfter, U->route->capacity())
+           - costEvaluator.loadPenalty(U->route->load(), U->route->capacity());
 
-    deltaCost += costEvaluator.loadPenalty(vLoad + U->route->load() - uLoad,
-                                           V->route->capacity());
     deltaCost
-        -= costEvaluator.loadPenalty(V->route->load(), V->route->capacity());
+        += costEvaluator.loadPenalty(vLoad + uLoadAfter, V->route->capacity())
+           - costEvaluator.loadPenalty(V->route->load(), V->route->capacity());
 
     return deltaCost;
 }
