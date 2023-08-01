@@ -114,7 +114,7 @@ void Route::push_back(Node *node)
 
 void Route::update()
 {
-    clear();
+    nodes.clear();
     auto *node = n(&startDepot);
 
     Load load = 0;
