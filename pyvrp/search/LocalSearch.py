@@ -104,20 +104,8 @@ class LocalSearch:
             The improved solution. This is not the same object as the
             solution that was passed in.
         """
-        # TODO separate load/export solution from C++ implementation
-        # so we only need to do it once.
-        while True:
-            solution = self.search(solution, cost_evaluator)
-            cost = cost_evaluator.penalised_cost(solution)
-
-            new_solution = self.intensify(solution, cost_evaluator)
-            new_cost = cost_evaluator.penalised_cost(new_solution)
-
-            if new_cost < cost:
-                solution = new_solution
-                continue
-
-            return solution
+        self._ls.shuffle(self._rng)
+        return self._ls(solution, cost_evaluator)
 
     def intensify(
         self,

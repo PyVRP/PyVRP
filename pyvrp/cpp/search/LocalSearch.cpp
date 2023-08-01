@@ -12,13 +12,55 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using TWS = pyvrp::TimeWindowSegment;
 
-Solution LocalSearch::search(Solution &solution,
+Solution LocalSearch::operator()(Solution const &solution,
+                                 CostEvaluator const &costEvaluator)
+{
+    loadSolution(solution);
+
+    while (true)
+    {
+        search(costEvaluator);
+
+        // When numMoves != 0, search() modified the currently loaded solution.
+        // In that case we need to reload the solution because intensify()'s
+        // route operators need to update their caches.
+        // TODO remove this.
+        if (numMoves != 0)
+        {
+            Solution const newSol = exportSolution();
+            loadSolution(newSol);
+        }
+
+        intensify(costEvaluator);
+
+        if (numMoves == 0)  // then the current solution is locally optimal.
+            break;
+    }
+
+    return exportSolution();
+}
+
+Solution LocalSearch::search(Solution const &solution,
                              CostEvaluator const &costEvaluator)
 {
-    if (nodeOps.empty())
-        return solution;
-
     loadSolution(solution);
+    search(costEvaluator);
+    return exportSolution();
+}
+
+Solution LocalSearch::intensify(Solution const &solution,
+                                CostEvaluator const &costEvaluator,
+                                double overlapTolerance)
+{
+    loadSolution(solution);
+    intensify(costEvaluator, overlapTolerance);
+    return exportSolution();
+}
+
+void LocalSearch::search(CostEvaluator const &costEvaluator)
+{
+    if (nodeOps.empty())
+        return;
 
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
@@ -44,8 +86,6 @@ Solution LocalSearch::search(Solution &solution,
             if (U->route && !data.client(uClient).required)  // test removing U
                 maybeRemove(U, costEvaluator);
 
-            // Shuffling the neighbours in this loop should not matter much as
-            // we are already randomizing the nodes U.
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
@@ -90,21 +130,16 @@ Solution LocalSearch::search(Solution &solution,
             }
         }
     }
-
-    return exportSolution();
 }
 
-Solution LocalSearch::intensify(Solution &solution,
-                                CostEvaluator const &costEvaluator,
-                                double overlapTolerance)
+void LocalSearch::intensify(CostEvaluator const &costEvaluator,
+                            double overlapTolerance)
 {
     if (overlapTolerance < 0 || overlapTolerance > 1)
         throw std::runtime_error("overlapTolerance must be in [0, 1].");
 
     if (routeOps.empty())
-        return solution;
-
-    loadSolution(solution);
+        return;
 
     std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
@@ -126,8 +161,6 @@ Solution LocalSearch::intensify(Solution &solution,
             auto const lastTested = lastTestedRoutes[U.idx];
             lastTestedRoutes[U.idx] = numMoves;
 
-            // Shuffling in this loop should not matter much as we are
-            // already randomizing the routes U.
             for (size_t rV = 0; rV != U.idx; ++rV)
             {
                 auto &V = routes[rV];
@@ -144,8 +177,6 @@ Solution LocalSearch::intensify(Solution &solution,
             }
         }
     }
-
-    return exportSolution();
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
