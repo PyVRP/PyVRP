@@ -149,6 +149,17 @@ public:                // TODO make fields private
     [[nodiscard]] bool overlapsWith(Route const &other, double tolerance) const;
 
     /**
+     * Clears all clients on this route. After calling this method, ``empty()``
+     * returns true and ``size()`` is zero.
+     */
+    void clear();
+
+    /**
+     * TODO
+     */
+    void push_back(Node *node);
+
+    /**
      * Updates this route. To be called after swapping nodes/changing the
      * solution.
      */

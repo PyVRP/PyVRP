@@ -68,7 +68,10 @@ Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
       endDepot(data.vehicleType(vehType).depot)
 {
     startDepot.route = this;
+    startDepot.tw = TWS(startDepot.client, data.client(startDepot.client));
+
     endDepot.route = this;
+    endDepot.tw = TWS(endDepot.client, data.client(endDepot.client));
 }
 
 size_t Route::vehicleType() const { return vehicleType_; }
@@ -90,9 +93,28 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
     return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
 }
 
-void Route::update()
+void Route::clear()
 {
     nodes.clear();
+
+    startDepot.prev = &endDepot;
+    startDepot.next = &endDepot;
+    startDepot.twBefore = startDepot.tw;
+
+    endDepot.prev = &startDepot;
+    endDepot.next = &startDepot;
+    endDepot.twAfter = endDepot.tw;
+}
+
+void Route::push_back(Node *node)
+{
+    node->insertAfter(empty() ? &startDepot : nodes.back());
+    nodes.push_back(node);
+}
+
+void Route::update()
+{
+    clear();
     auto *node = n(&startDepot);
 
     Load load = 0;
