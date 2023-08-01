@@ -22,9 +22,6 @@ public:
         Node *next = nullptr;    // Successor in route
 
         // TODO can these data fields be moved to Route?
-        Load cumulatedLoad = 0;          // Load depot -> client (incl)
-        Distance cumulatedDistance = 0;  // Dist depot - client (incl)
-
         TimeWindowSegment tw;        // TWS for individual node (client)
         TimeWindowSegment twBefore;  // TWS for (0...client) including self
         TimeWindowSegment twAfter;   // TWS for (client...0) including self
@@ -53,11 +50,14 @@ private:
     ProblemData const &data;
     size_t const vehicleType_;
 
-    std::vector<Node *> nodes;  // List of nodes in this route, excl. depot
-    std::pair<double, double> centroid;  // Center point of route's clients.
+    std::vector<Node *> nodes;           // Nodes in this route, excl. depot
+    std::vector<Load> cumLoad;           // Cumulative load along route (incl.)
+    std::vector<Distance> cumDist;       // Cumulative dist along route (incl.)
+    std::pair<double, double> centroid;  // Center point of route's clients
 
-    Load load_;          // Current route load.
-    Duration timeWarp_;  // Current route time warp.
+    Load load_;          // Current route load
+    Distance distance_;  // Current route distance
+    Duration timeWarp_;  // Current route time warp
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -235,13 +235,13 @@ Distance Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size() + 1);
 
-    auto const startDist = start == 0 ? 0 : nodes[start - 1]->cumulatedDistance;
-    auto const endDist = end == nodes.size() + 1
-                             ? endDepot.cumulatedDistance
-                             : nodes[end - 1]->cumulatedDistance;
+    if (end == 0)
+        return 0;
+
+    auto const startDist = start == 0 ? 0 : cumDist[start - 1];
+    auto const endDist = end == nodes.size() + 1 ? distance_ : cumDist[end - 1];
 
     assert(startDist <= endDist);
-
     return endDist - startDist;
 }
 
@@ -249,15 +249,15 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size() + 1);
 
+    if (end == 0)
+        return 0;
+
     auto const *startNode = start == 0 ? &startDepot : nodes[start - 1];
     auto const atStart = data.client(startNode->client).demand;
-    auto const startLoad = startNode->cumulatedLoad;
-    auto const endLoad = end == nodes.size() + 1
-                             ? endDepot.cumulatedLoad
-                             : nodes[end - 1]->cumulatedLoad;
+    auto const startLoad = start == 0 ? 0 : cumLoad[start - 1];
+    auto const endLoad = end == nodes.size() + 1 ? load_ : cumLoad[end - 1];
 
     assert(startLoad <= endLoad);
-
     return endLoad - startLoad + atStart;
 }
 }  // namespace pyvrp::search

@@ -93,14 +93,14 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 void Route::update()
 {
     nodes.clear();
-    auto *node = n(&startDepot);
+    cumLoad.clear();
+    cumDist.clear();
 
-    Load load = 0;
-    Distance distance = 0;
-
+    load_ = 0;
+    distance_ = 0;
     centroid = {0, 0};
 
-    while (!node->isDepot())
+    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
     {
         size_t const position = nodes.size();
         nodes.push_back(node);
@@ -110,35 +110,30 @@ void Route::update()
         centroid.first += static_cast<double>(clientData.x);
         centroid.second += static_cast<double>(clientData.y);
 
-        load += clientData.demand;
-        distance += data.dist(p(node)->client, node->client);
-
         node->position = position + 1;
-        node->cumulatedLoad = load;
-        node->cumulatedDistance = distance;
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
 
-        node = n(node);
+        load_ += clientData.demand;
+        cumLoad.push_back(load_);
+
+        distance_ += data.dist(p(node)->client, node->client);
+        cumDist.push_back(distance_);
     }
 
     centroid.first /= size();
     centroid.second /= size();
 
-    load += data.client(endDepot.client).demand;
-    distance += data.dist(p(&endDepot)->client, endDepot.client);
-
     endDepot.position = size() + 1;
-    endDepot.cumulatedLoad = load;
-    endDepot.cumulatedDistance = distance;
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
-    load_ = endDepot.cumulatedLoad;
+    load_ += data.client(endDepot.client).demand;
+    distance_ += data.dist(p(&endDepot)->client, endDepot.client);
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
     // forward time window segments
-    node = &endDepot;
+    auto *node = &endDepot;
     do
     {
         auto *prev = p(node);
