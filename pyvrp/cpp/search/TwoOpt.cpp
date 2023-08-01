@@ -79,7 +79,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
 
     // Proposed move appends the segment after V to U, and the segment after U
     // to V. So we need to make a distinction between the loads at U and V, and
-    // the load on the segment after these nodes.
+    // the loads from clients visited after these nodes.
     auto const uLoad = U->route->loadBetween(0, U->position);
     auto const uLoadAfter = U->route->load() - uLoad;
     auto const vLoad = V->route->loadBetween(0, V->position);
