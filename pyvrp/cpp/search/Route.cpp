@@ -102,8 +102,7 @@ void Route::update()
 
     for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
     {
-        size_t const position = nodes.size();
-        node->position = position + 1;
+        node->position = size() + 1;
         nodes.push_back(node);
 
         auto const &clientData = data.client(node->client);
