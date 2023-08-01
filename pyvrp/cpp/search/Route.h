@@ -42,11 +42,6 @@ public:
          * Swaps this node with the other and updates the relevant links.
          */
         void swapWith(Node *other);
-
-        /**
-         * Removes this node and updates the relevant links.
-         */
-        void remove();
     };
 
 private:
@@ -158,6 +153,11 @@ public:                // TODO make fields private
      * TODO
      */
     void push_back(Node *node);
+
+    /**
+     * TODO
+     */
+    void remove(size_t position);
 
     /**
      * Updates this route. To be called after swapping nodes/changing the

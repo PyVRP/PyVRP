@@ -290,8 +290,8 @@ void LocalSearch::maybeRemove(Route::Node *U,
 
     if (deltaCost < 0)
     {
-        auto *route = U->route;  // after U->remove(), U->route is a nullptr
-        U->remove();
+        auto *route = U->route;  // after remove(), U->route is a nullptr
+        route->remove(U->position);
         update(route, route);
     }
 }

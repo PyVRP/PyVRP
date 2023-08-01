@@ -50,16 +50,6 @@ void Route::Node::swapWith(Route::Node *other)
     other->route = routeU;
 }
 
-void Route::Node::remove()
-{
-    prev->next = next;
-    next->prev = prev;
-
-    prev = nullptr;
-    next = nullptr;
-    route = nullptr;
-}
-
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
       vehicleType_(vehType),
@@ -110,6 +100,21 @@ void Route::push_back(Node *node)
 {
     node->insertAfter(empty() ? &startDepot : nodes.back());
     nodes.push_back(node);
+}
+
+void Route::remove(size_t position)
+{
+    assert(position > 0);
+    auto *node = nodes[position - 1];
+
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+
+    node->prev = nullptr;
+    node->next = nullptr;
+    node->route = nullptr;
+
+    nodes.erase(nodes.begin() + position - 1);
 }
 
 void Route::update()
