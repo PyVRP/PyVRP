@@ -78,19 +78,22 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     deltaCost -= costEvaluator.twPenalty(V->route->timeWarp());
 
     // Proposed move appends the segment after V to U, and the segment after U
-    // to V.
+    // to V. So we need to make a distinction between the loads at U and V, and
+    // the load on the segment after these nodes.
     auto const uLoad = U->route->loadBetween(0, U->position);
     auto const uLoadAfter = U->route->load() - uLoad;
     auto const vLoad = V->route->loadBetween(0, V->position);
     auto const vLoadAfter = V->route->load() - vLoad;
 
     deltaCost
-        += costEvaluator.loadPenalty(uLoad + vLoadAfter, U->route->capacity())
-           - costEvaluator.loadPenalty(U->route->load(), U->route->capacity());
+        += costEvaluator.loadPenalty(uLoad + vLoadAfter, U->route->capacity());
+    deltaCost
+        -= costEvaluator.loadPenalty(U->route->load(), U->route->capacity());
 
     deltaCost
-        += costEvaluator.loadPenalty(vLoad + uLoadAfter, V->route->capacity())
-           - costEvaluator.loadPenalty(V->route->load(), V->route->capacity());
+        += costEvaluator.loadPenalty(vLoad + uLoadAfter, V->route->capacity());
+    deltaCost
+        -= costEvaluator.loadPenalty(V->route->load(), V->route->capacity());
 
     return deltaCost;
 }
