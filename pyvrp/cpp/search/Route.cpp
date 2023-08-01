@@ -99,7 +99,6 @@ void Route::update()
     centroid = {0, 0};
     load_ = 0;
     distance_ = 0;
-    timeWarp_ = 0;
 
     for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
     {
@@ -128,6 +127,7 @@ void Route::update()
     distance_ += data.dist(p(&endDepot)->client, endDepot.client);
 
 #ifdef PYVRP_NO_TIME_WINDOWS
+    timeWarp_ = 0;
     return;
 #else
     // Backward time window segments
