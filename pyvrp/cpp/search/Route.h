@@ -12,14 +12,22 @@ namespace pyvrp::search
 class Route
 {
 public:
-    struct Node
+    class Node
     {
+        // TODO obsolete this
+        friend Node *p(Node *node);
+        friend Node *n(Node *node);
+        friend class Route;
+
+        // TODO remove these fields
+        Node *prev = nullptr;  // Predecessor in route
+        Node *next = nullptr;  // Successor in route
+
+    public:  // TODO make fields private
         // TODO rename client to location/loc
         size_t client;           // Location represented by this node
         size_t position = 0;     // Position in the route
         Route *route = nullptr;  // Indicates membership of a route, if any.
-        Node *prev = nullptr;    // Predecessor in route
-        Node *next = nullptr;    // Successor in route
 
         // TODO can these data fields be moved to Route?
         Load cumulatedLoad = 0;          // Load depot -> client (incl)
@@ -150,12 +158,12 @@ public:                // TODO make fields private
     void clear();
 
     /**
-     * TODO
+     * Inserts the given node at the back of the route.
      */
     void push_back(Node *node);
 
     /**
-     * TODO
+     * Removes the node at ``position`` from the route.
      */
     void remove(size_t position);
 
