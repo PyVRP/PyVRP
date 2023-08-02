@@ -290,8 +290,8 @@ void LocalSearch::maybeRemove(Route::Node *U,
 
     if (deltaCost < 0)
     {
-        auto *route = U->route;  // after U->remove(), U->route is a nullptr
-        U->remove();
+        auto *route = U->route;  // after remove(), U->route is a nullptr
+        route->remove(U->position);
         update(route, route);
     }
 }
@@ -322,26 +322,9 @@ void LocalSearch::loadSolution(Solution const &solution)
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
 
-    // First empty all routes
+    // First empty all routes.
     for (auto &route : routes)
-    {
-        auto const &vehicleType = data.vehicleType(route.vehicleType());
-
-        auto *startDepot = &route.startDepot;
-        auto *endDepot = &route.endDepot;
-
-        startDepot->prev = endDepot;
-        startDepot->next = endDepot;
-
-        endDepot->prev = startDepot;
-        endDepot->next = startDepot;
-
-        startDepot->tw = clients[vehicleType.depot].tw;
-        startDepot->twBefore = clients[vehicleType.depot].tw;
-
-        endDepot->tw = clients[vehicleType.depot].tw;
-        endDepot->twAfter = clients[vehicleType.depot].tw;
-    }
+        route.clear();
 
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
@@ -358,27 +341,12 @@ void LocalSearch::loadSolution(Solution const &solution)
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
-        Route *route = &routes[r];
+        Route &route = routes[r];
 
-        auto *client = &clients[solRoute[0]];
-        client->route = route;
+        assert(route.empty());  // should have been emptied above.
 
-        client->prev = &route->startDepot;
-        route->startDepot.next = client;
-
-        for (size_t idx = 1; idx < solRoute.size(); idx++)
-        {
-            auto *prev = client;
-
-            client = &clients[solRoute[idx]];
-            client->route = route;
-
-            client->prev = prev;
-            prev->next = client;
-        }
-
-        client->next = &route->endDepot;
-        route->endDepot.prev = client;
+        for (auto const client : solRoute)
+            route.push_back(&clients[client]);
     }
 
     for (auto &route : routes)
