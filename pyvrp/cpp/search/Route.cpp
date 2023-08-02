@@ -4,6 +4,7 @@
 #include <cmath>
 #include <numbers>
 #include <ostream>
+#include <utility>
 
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
@@ -99,26 +100,24 @@ void Route::remove(size_t position)
 void Route::swap(Node *first, Node *second)
 {
     // TODO just swap clients?
+    // TODO specialise std::swap for Node
     auto *fPred = first->prev;
     auto *fSucc = first->next;
     auto *sPred = second->prev;
     auto *sSucc = second->next;
 
-    auto *fRoute = first->route;
-    auto *sRoute = second->route;
+    std::swap(first->prev, second->prev);
+    std::swap(first->next, second->next);
+    std::swap(first->route->nodes[first->position - 1],
+              second->route->nodes[second->position - 1]);
+
+    std::swap(first->route, second->route);
+    std::swap(first->position, second->position);
 
     fPred->next = second;
     fSucc->prev = second;
     sPred->next = first;
     sSucc->prev = first;
-
-    first->prev = sPred;
-    first->next = sSucc;
-    second->prev = fPred;
-    second->next = fSucc;
-
-    first->route = sRoute;
-    second->route = fRoute;
 }
 
 void Route::update()
