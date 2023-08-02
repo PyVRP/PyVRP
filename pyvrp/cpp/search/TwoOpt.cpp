@@ -107,6 +107,7 @@ void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
     {
         auto *node = V;
         V = p(V);
+        U->route->remove(node->position);
         U->route->insert(insertPos++, node);
     }
 }
@@ -121,6 +122,7 @@ void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
     {
         auto *node = nV;
         nV = n(nV);
+        V->route->remove(node->position);
         U->route->insert(insertPos++, node);
     }
 
@@ -129,6 +131,7 @@ void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
     {
         auto *node = nU;
         nU = n(nU);
+        U->route->remove(node->position);
         V->route->insert(insertPos++, node);
     }
 }

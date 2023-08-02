@@ -60,14 +60,9 @@ void Route::clear()
 void Route::insert(size_t position, Node *node)
 {
     assert(0 < position && position <= nodes.size() + 1);
-    auto *prev = position == 1 ? &startDepot : nodes[position - 2];
+    assert(!node->route);  // must previously have been unassigned
 
-    if (node->route)
-    {
-        // TODO use Route::remove()
-        node->prev->next = node->next;
-        node->next->prev = node->prev;
-    }
+    auto *prev = position == 1 ? &startDepot : nodes[position - 2];
 
     node->prev = prev;
     node->next = prev->next;
@@ -78,6 +73,9 @@ void Route::insert(size_t position, Node *node)
 
     node->position = position;
     nodes.insert(nodes.begin() + position - 1, node);
+
+    for (auto idx = position - 1; idx != nodes.size(); ++idx)
+        nodes[idx]->position = idx + 1;
 }
 
 void Route::push_back(Node *node) { insert(size() + 1, node); }
@@ -95,6 +93,9 @@ void Route::remove(size_t position)
     node->route = nullptr;
 
     nodes.erase(nodes.begin() + position - 1);
+
+    for (auto idx = position - 1; idx != nodes.size(); ++idx)
+        nodes[idx]->position = idx + 1;
 }
 
 void Route::swap(Node *first, Node *second)

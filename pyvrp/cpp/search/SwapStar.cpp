@@ -299,6 +299,9 @@ void SwapStar::apply(Route *U, Route *V) const
 {
     if (best.U && best.UAfter && best.V && best.VAfter)
     {
+        U->remove(best.U->position);
+        V->remove(best.V->position);
+
         V->insert(best.UAfter->position + 1, best.U);
         U->insert(best.VAfter->position + 1, best.V);
     }
