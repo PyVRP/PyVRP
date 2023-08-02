@@ -42,11 +42,6 @@ public:
          * Inserts this node after the other and updates the relevant links.
          */
         void insertAfter(Node *other);
-
-        /**
-         * Swaps this node with the other and updates the relevant links.
-         */
-        void swapWith(Node *other);
     };
 
 private:
@@ -166,6 +161,11 @@ public:                // TODO make fields private
      * Removes the node at ``position`` from the route.
      */
     void remove(size_t position);
+
+    /**
+     * Swaps the given nodes.
+     */
+    static void swap(Node *first, Node *second);
 
     /**
      * Updates this route. To be called after swapping nodes/changing the

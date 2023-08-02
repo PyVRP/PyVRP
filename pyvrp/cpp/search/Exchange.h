@@ -329,7 +329,7 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     // ...and swap the overlapping nodes!
     for (size_t count = 0; count != M; ++count)
     {
-        U->swapWith(V);
+        Route::swap(U, V);
         U = n(U);
         V = n(V);
     }

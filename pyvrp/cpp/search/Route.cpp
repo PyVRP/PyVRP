@@ -26,30 +26,6 @@ void Route::Node::insertAfter(Route::Node *other)
     route = other->route;
 }
 
-void Route::Node::swapWith(Route::Node *other)
-{
-    auto *VPred = other->prev;
-    auto *VSucc = other->next;
-    auto *UPred = prev;
-    auto *USucc = next;
-
-    auto *routeU = route;
-    auto *routeV = other->route;
-
-    UPred->next = other;
-    USucc->prev = other;
-    VPred->next = this;
-    VSucc->prev = this;
-
-    prev = VPred;
-    next = VSucc;
-    other->prev = UPred;
-    other->next = USucc;
-
-    route = routeV;
-    other->route = routeU;
-}
-
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
       vehicleType_(vehType),
@@ -115,6 +91,30 @@ void Route::remove(size_t position)
     node->route = nullptr;
 
     nodes.erase(nodes.begin() + position - 1);
+}
+
+void Route::swap(Node *first, Node *second)
+{
+    auto *fPred = first->prev;
+    auto *fSucc = first->next;
+    auto *sPred = second->prev;
+    auto *sSucc = second->next;
+
+    auto *fRoute = first->route;
+    auto *sRoute = second->route;
+
+    fPred->next = second;
+    fSucc->prev = second;
+    sPred->next = first;
+    sSucc->prev = first;
+
+    first->prev = sPred;
+    first->next = sSucc;
+    second->prev = fPred;
+    second->next = fSucc;
+
+    first->route = sRoute;
+    second->route = fRoute;
 }
 
 void Route::update()
