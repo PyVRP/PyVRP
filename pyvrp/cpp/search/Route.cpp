@@ -4,7 +4,6 @@
 #include <cmath>
 #include <numbers>
 #include <ostream>
-#include <ranges>
 #include <utility>
 
 using pyvrp::search::Route;
@@ -168,9 +167,10 @@ void Route::update()
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
     // Forward time window segments (client -> depot)
-    for (auto *node : nodes | std::ranges::views::reverse)
-        node->twAfter
-            = TWS::merge(data.durationMatrix(), node->tw, n(node)->twAfter);
+    // TODO std::ranges::view::reverse once clang supports it
+    for (auto node = nodes.rbegin(); node != nodes.rend(); ++node)
+        (*node)->twAfter
+            = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
 
     startDepot.twAfter = TWS::merge(
         data.durationMatrix(), startDepot.tw, n(&startDepot)->twAfter);
