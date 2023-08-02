@@ -50,7 +50,6 @@ private:
     std::pair<double, double> centroid;  // Center point of route's clients
     Load load_;                          // Current route load
     Distance distance_;                  // Current route distance
-    Duration timeWarp_;                  // Current route time warp
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -196,14 +195,14 @@ bool Route::Node::isDepot() const
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessLoad() const { return load_ > capacity(); }
+bool Route::hasExcessLoad() const { return load() > capacity(); }
 
 bool Route::hasTimeWarp() const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
-    return timeWarp_ > 0;
+    return timeWarp() > 0;
 #endif
 }
 
@@ -227,7 +226,7 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
 
 Load Route::load() const { return load_; }
 
-Duration Route::timeWarp() const { return timeWarp_; }
+Duration Route::timeWarp() const { return endDepot.twBefore.totalTimeWarp(); }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
