@@ -123,7 +123,6 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    nodes.clear();
     cumLoad.clear();
     cumDist.clear();
 
@@ -131,11 +130,8 @@ void Route::update()
     load_ = 0;
     distance_ = 0;
 
-    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
+    for (auto *node : nodes)
     {
-        node->position = size() + 1;
-        nodes.push_back(node);
-
         auto const &clientData = data.client(node->client);
 
         centroid.first += static_cast<double>(clientData.x);
