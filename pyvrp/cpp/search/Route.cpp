@@ -156,7 +156,7 @@ void Route::update()
     timeWarp_ = 0;
     return;
 #else
-    // Backward time window segments
+    // Backward time window segments (depot -> client)
     for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
@@ -166,15 +166,13 @@ void Route::update()
 
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
-    // Forward time window segments
-    auto *node = &endDepot;
-    do
-    {
-        auto *prev = p(node);
-        prev->twAfter
-            = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
-        node = prev;
-    } while (!node->isDepot());
+    // Forward time window segments (client -> depot)
+    for (auto *node = p(&endDepot); !node->isDepot(); node = p(node))
+        node->twAfter
+            = TWS::merge(data.durationMatrix(), node->tw, n(node)->twAfter);
+
+    startDepot.twAfter = TWS::merge(
+        data.durationMatrix(), startDepot.tw, n(&startDepot)->twAfter);
 #endif
 }
 
