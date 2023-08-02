@@ -39,8 +39,6 @@ private:
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
 
     std::pair<double, double> centroid;  // Center point of route's clients
-    Load load_;                          // Current route load
-    Distance distance_;                  // Current route distance
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -173,8 +171,6 @@ public:                // TODO make fields private
 inline Route::Node *p(Route::Node *node)
 {
     auto &route = *node->route;
-
-    assert(node->position > 0);
     return route[node->position - 1];
 }
 
@@ -184,8 +180,6 @@ inline Route::Node *p(Route::Node *node)
 inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route;
-
-    assert(node->position <= route.size() + 1);
     return route[node->position + 1];
 }
 
@@ -211,30 +205,26 @@ bool Route::hasTimeWarp() const
 
 Route::Node *Route::operator[](size_t position)
 {
-    assert(position <= nodes.size() + 1);
-
-    if (position == 0)
-        return &startDepot;
-
-    if (position == nodes.size() + 1)
-        return &endDepot;
-
-    return nodes[position - 1];
+    assert(position < nodes.size());
+    return nodes[position];
 }
 
 std::vector<Route::Node *>::const_iterator Route::begin() const
 {
-    return nodes.begin();
+    return nodes.begin() + 1;
 }
 std::vector<Route::Node *>::const_iterator Route::end() const
 {
-    return nodes.end();
+    return nodes.end() - 1;
 }
 
-std::vector<Route::Node *>::iterator Route::begin() { return nodes.begin(); }
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
+std::vector<Route::Node *>::iterator Route::begin()
+{
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
-Load Route::load() const { return load_; }
+Load Route::load() const { return cumLoad.back(); }
 
 Duration Route::timeWarp() const { return endDepot.twBefore.totalTimeWarp(); }
 
@@ -242,14 +232,18 @@ Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
 bool Route::empty() const { return size() == 0; }
 
-size_t Route::size() const { return nodes.size(); }
+size_t Route::size() const
+{
+    assert(nodes.size() >= 2);
+    return nodes.size() - 2;
+}
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
-    assert(0 < start && start <= end && end <= nodes.size() + 1);
+    assert(0 < start && start <= end && end < nodes.size());
 
-    auto tws = nodes[start - 1]->tw;
-    auto *node = nodes[start - 1];
+    auto *node = nodes[start];
+    auto tws = node->tw;
 
     for (size_t step = start; step != end; ++step)
     {
@@ -262,13 +256,10 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 
 Distance Route::distBetween(size_t start, size_t end) const
 {
-    assert(start <= end && end <= nodes.size() + 1);
+    assert(start <= end && end < nodes.size());
 
-    if (end == 0)
-        return 0;
-
-    auto const startDist = start == 0 ? 0 : cumDist[start - 1];
-    auto const endDist = end == nodes.size() + 1 ? distance_ : cumDist[end - 1];
+    auto const startDist = cumDist[start];
+    auto const endDist = cumDist[end];
 
     assert(startDist <= endDist);
     return endDist - startDist;
@@ -276,15 +267,11 @@ Distance Route::distBetween(size_t start, size_t end) const
 
 Load Route::loadBetween(size_t start, size_t end) const
 {
-    assert(start <= end && end <= nodes.size() + 1);
+    assert(start <= end && end < nodes.size());
 
-    if (end == 0)
-        return 0;
-
-    auto const *startNode = start == 0 ? &startDepot : nodes[start - 1];
-    auto const atStart = data.client(startNode->client).demand;
-    auto const startLoad = start == 0 ? 0 : cumLoad[start - 1];
-    auto const endLoad = end == nodes.size() + 1 ? load_ : cumLoad[end - 1];
+    auto const atStart = data.client(nodes[start]->client).demand;
+    auto const startLoad = cumLoad[start];
+    auto const endLoad = cumLoad[end];
 
     assert(startLoad <= endLoad);
     return endLoad - startLoad + atStart;

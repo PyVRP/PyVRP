@@ -46,6 +46,8 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 void Route::clear()
 {
     nodes.clear();
+    nodes.push_back(&startDepot);
+    nodes.push_back(&endDepot);
 
     startDepot.twBefore = startDepot.tw;
     endDepot.twAfter = endDepot.tw;
@@ -53,39 +55,39 @@ void Route::clear()
 
 void Route::insert(size_t position, Node *node)
 {
-    assert(0 < position && position <= nodes.size() + 1);
+    assert(0 < position && position < nodes.size());
     assert(!node->route);  // must previously have been unassigned
 
-    auto *prev = position == 1 ? &startDepot : nodes[position - 2];
+    auto *prev = nodes[position - 1];
 
     node->position = position;
     node->route = prev->route;
-    nodes.insert(nodes.begin() + position - 1, node);
+    nodes.insert(nodes.begin() + position, node);
 
-    for (auto idx = position - 1; idx != nodes.size(); ++idx)
-        nodes[idx]->position = idx + 1;
+    for (auto idx = position; idx != nodes.size(); ++idx)
+        nodes[idx]->position = idx;
 }
 
 void Route::push_back(Node *node) { insert(size() + 1, node); }
 
 void Route::remove(size_t position)
 {
-    assert(position > 0);
-    auto *node = nodes[position - 1];
+    assert(0 < position && position < nodes.size() - 1);
+    auto *node = nodes[position];
 
     node->route = nullptr;
-    nodes.erase(nodes.begin() + position - 1);
+    nodes.erase(nodes.begin() + position);
 
-    for (auto idx = position - 1; idx != nodes.size(); ++idx)
-        nodes[idx]->position = idx + 1;
+    for (auto idx = position; idx != nodes.size(); ++idx)
+        nodes[idx]->position = idx;
 }
 
 void Route::swap(Node *first, Node *second)
 {
     // TODO just swap clients?
     // TODO specialise std::swap for Node
-    std::swap(first->route->nodes[first->position - 1],
-              second->route->nodes[second->position - 1]);
+    std::swap(first->route->nodes[first->position],
+              second->route->nodes[second->position]);
 
     std::swap(first->route, second->route);
     std::swap(first->position, second->position);
@@ -97,50 +99,43 @@ void Route::update()
     cumDist.clear();
 
     centroid = {0, 0};
-    load_ = 0;
-    distance_ = 0;
+
+    Load load = 0;
+    Distance distance = 0;
 
     for (auto *node : nodes)
     {
         auto const &clientData = data.client(node->client);
 
-        centroid.first += static_cast<double>(clientData.x);
-        centroid.second += static_cast<double>(clientData.y);
+        if (!node->isDepot())
+        {
+            centroid.first += static_cast<double>(clientData.x);
+            centroid.second += static_cast<double>(clientData.y);
+        }
 
-        load_ += clientData.demand;
-        cumLoad.push_back(load_);
+        load += clientData.demand;
+        cumLoad.push_back(load);
 
-        distance_ += data.dist(p(node)->client, node->client);
-        cumDist.push_back(distance_);
+        distance += data.dist(p(node)->client, node->client);
+        cumDist.push_back(distance);
     }
-
-    endDepot.position = size() + 1;
 
     centroid.first /= size();
     centroid.second /= size();
-
-    load_ += data.client(endDepot.client).demand;
-    distance_ += data.dist(p(&endDepot)->client, endDepot.client);
 
 #ifdef PYVRP_NO_TIME_WINDOWS
     return;
 #else
     // Backward time window segments (depot -> client)
-    for (auto *node : nodes)
-        node->twBefore
-            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
-
-    endDepot.twBefore = TWS::merge(
-        data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
+    for (auto node = nodes.begin() + 1; node != nodes.end(); ++node)
+        (*node)->twBefore = TWS::merge(
+            data.durationMatrix(), p(*node)->twBefore, (*node)->tw);
 
     // Forward time window segments (client -> depot)
     // TODO std::ranges::view::reverse once clang supports it
-    for (auto node = nodes.rbegin(); node != nodes.rend(); ++node)
+    for (auto node = nodes.rbegin() - 1; node != nodes.rend(); ++node)
         (*node)->twAfter
             = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
-
-    startDepot.twAfter = TWS::merge(
-        data.durationMatrix(), startDepot.tw, n(&startDepot)->twAfter);
 #endif
 }
 
