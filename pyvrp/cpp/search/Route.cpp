@@ -58,7 +58,7 @@ void Route::clear()
 
 void Route::insert(size_t position, Node *node)
 {
-    assert(position > 0);
+    assert(0 < position && position <= nodes.size() + 1);
     auto *prev = position == 1 ? &startDepot : nodes[position - 2];
 
     if (node->route)
