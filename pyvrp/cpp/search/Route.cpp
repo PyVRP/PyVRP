@@ -153,7 +153,6 @@ void Route::update()
     distance_ += data.dist(p(&endDepot)->client, endDepot.client);
 
 #ifdef PYVRP_NO_TIME_WINDOWS
-    timeWarp_ = 0;
     return;
 #else
     // Backward time window segments (depot -> client)
@@ -163,8 +162,6 @@ void Route::update()
 
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
-
-    timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
     // Forward time window segments (client -> depot)
     // TODO std::ranges::view::reverse once clang supports it
