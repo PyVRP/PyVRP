@@ -99,6 +99,9 @@ void MoveTwoClientsReversed::apply(Route::Node *U, Route::Node *V) const
 {
     auto *X = n(U);  // copy since the insert below changes n(U)
 
-    U->insertAfter(V);
-    X->insertAfter(V);
+    U->route->remove(X->position);
+    U->route->remove(U->position);
+
+    V->route->insert(V->position + 1, U);
+    V->route->insert(V->position + 1, X);
 }

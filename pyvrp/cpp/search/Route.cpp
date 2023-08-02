@@ -3,52 +3,12 @@
 #include <cmath>
 #include <numbers>
 #include <ostream>
+#include <utility>
 
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
 Route::Node::Node(size_t client) : client(client) {}
-
-void Route::Node::insertAfter(Route::Node *other)
-{
-    if (route)  // If we're in a route, we first stitch up the current route.
-    {           // If we're not in a route, this step should be skipped.
-        prev->next = next;
-        next->prev = prev;
-    }
-
-    prev = other;
-    next = other->next;
-
-    other->next->prev = this;
-    other->next = this;
-
-    route = other->route;
-}
-
-void Route::Node::swapWith(Route::Node *other)
-{
-    auto *VPred = other->prev;
-    auto *VSucc = other->next;
-    auto *UPred = prev;
-    auto *USucc = next;
-
-    auto *routeU = route;
-    auto *routeV = other->route;
-
-    UPred->next = other;
-    USucc->prev = other;
-    VPred->next = this;
-    VSucc->prev = this;
-
-    prev = VPred;
-    next = VSucc;
-    other->prev = UPred;
-    other->next = USucc;
-
-    route = routeV;
-    other->route = routeU;
-}
 
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
@@ -87,39 +47,52 @@ void Route::clear()
 {
     nodes.clear();
 
-    startDepot.prev = &endDepot;
-    startDepot.next = &endDepot;
     startDepot.twBefore = startDepot.tw;
-
-    endDepot.prev = &startDepot;
-    endDepot.next = &startDepot;
     endDepot.twAfter = endDepot.tw;
 }
 
-void Route::push_back(Node *node)
+void Route::insert(size_t position, Node *node)
 {
-    node->insertAfter(empty() ? &startDepot : nodes.back());
-    nodes.push_back(node);
+    assert(0 < position && position <= nodes.size() + 1);
+    assert(!node->route);  // must previously have been unassigned
+
+    auto *prev = position == 1 ? &startDepot : nodes[position - 2];
+
+    node->position = position;
+    node->route = prev->route;
+    nodes.insert(nodes.begin() + position - 1, node);
+
+    for (auto idx = position - 1; idx != nodes.size(); ++idx)
+        nodes[idx]->position = idx + 1;
 }
+
+void Route::push_back(Node *node) { insert(size() + 1, node); }
 
 void Route::remove(size_t position)
 {
     assert(position > 0);
     auto *node = nodes[position - 1];
 
-    node->prev->next = node->next;
-    node->next->prev = node->prev;
-
-    node->prev = nullptr;
-    node->next = nullptr;
     node->route = nullptr;
-
     nodes.erase(nodes.begin() + position - 1);
+
+    for (auto idx = position - 1; idx != nodes.size(); ++idx)
+        nodes[idx]->position = idx + 1;
+}
+
+void Route::swap(Node *first, Node *second)
+{
+    // TODO just swap clients?
+    // TODO specialise std::swap for Node
+    std::swap(first->route->nodes[first->position - 1],
+              second->route->nodes[second->position - 1]);
+
+    std::swap(first->route, second->route);
+    std::swap(first->position, second->position);
 }
 
 void Route::update()
 {
-    nodes.clear();
     cumLoad.clear();
     cumDist.clear();
 
@@ -127,11 +100,8 @@ void Route::update()
     load_ = 0;
     distance_ = 0;
 
-    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
+    for (auto *node : nodes)
     {
-        node->position = size() + 1;
-        nodes.push_back(node);
-
         auto const &clientData = data.client(node->client);
 
         centroid.first += static_cast<double>(clientData.x);
@@ -153,23 +123,21 @@ void Route::update()
     distance_ += data.dist(p(&endDepot)->client, endDepot.client);
 
 #ifdef PYVRP_NO_TIME_WINDOWS
-    timeWarp_ = 0;
     return;
 #else
     // Backward time window segments (depot -> client)
-    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
+    for (auto *node : nodes)
         node->twBefore
             = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
 
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
-    timeWarp_ = endDepot.twBefore.totalTimeWarp();
-
     // Forward time window segments (client -> depot)
-    for (auto *node = p(&endDepot); !node->isDepot(); node = p(node))
-        node->twAfter
-            = TWS::merge(data.durationMatrix(), node->tw, n(node)->twAfter);
+    // TODO std::ranges::view::reverse once clang supports it
+    for (auto node = nodes.rbegin(); node != nodes.rend(); ++node)
+        (*node)->twAfter
+            = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
 
     startDepot.twAfter = TWS::merge(
         data.durationMatrix(), startDepot.tw, n(&startDepot)->twAfter);

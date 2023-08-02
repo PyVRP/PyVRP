@@ -40,5 +40,9 @@ pyvrp::Cost RelocateStar::evaluate(Route *U,
 void RelocateStar::apply([[maybe_unused]] Route *U,
                          [[maybe_unused]] Route *V) const
 {
-    move.from->insertAfter(move.to);
+    auto *fromRoute = move.from->route;
+    auto *toRoute = move.to->route;
+
+    fromRoute->remove(move.from->position);
+    toRoute->insert(move.to->position + 1, move.from);
 }

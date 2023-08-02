@@ -100,40 +100,39 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
 
 void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
 {
-    auto *itRoute = V;
-    auto *insertionPoint = U;
-    auto *currNext = n(U);
+    auto *nU = n(U);
 
-    while (itRoute != currNext)  // No need to move n(U), we pivot around it
+    auto insertPos = U->position + 1;
+    while (V != nU)
     {
-        auto *current = itRoute;
-        itRoute = p(itRoute);
-        current->insertAfter(insertionPoint);
-        insertionPoint = current;
+        auto *node = V;
+        V = p(V);
+        U->route->remove(node->position);
+        U->route->insert(insertPos++, node);
     }
 }
 
 void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
 {
-    auto *itRouteU = n(U);
-    auto *itRouteV = n(V);
+    auto *nU = n(U);
+    auto *nV = n(V);
 
-    auto *insertLocation = U;
-    while (!itRouteV->isDepot())
+    auto insertPos = U->position + 1;
+    while (!nV->isDepot())
     {
-        auto *node = itRouteV;
-        itRouteV = n(itRouteV);
-        node->insertAfter(insertLocation);
-        insertLocation = node;
+        auto *node = nV;
+        nV = n(nV);
+        V->route->remove(node->position);
+        U->route->insert(insertPos++, node);
     }
 
-    insertLocation = V;
-    while (!itRouteU->isDepot())
+    insertPos = V->position + 1;
+    while (!nU->isDepot())
     {
-        auto *node = itRouteU;
-        itRouteU = n(itRouteU);
-        node->insertAfter(insertLocation);
-        insertLocation = node;
+        auto *node = nU;
+        nU = n(nU);
+        U->route->remove(node->position);
+        V->route->insert(insertPos++, node);
     }
 }
 

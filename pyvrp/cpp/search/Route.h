@@ -14,15 +14,6 @@ class Route
 public:
     class Node
     {
-        // TODO obsolete this
-        friend Node *p(Node *node);
-        friend Node *n(Node *node);
-        friend class Route;
-
-        // TODO remove these fields
-        Node *prev = nullptr;  // Predecessor in route
-        Node *next = nullptr;  // Successor in route
-
     public:  // TODO make fields private
         // TODO rename client to location/loc
         size_t client;           // Location represented by this node
@@ -37,16 +28,6 @@ public:
         Node(size_t client);
 
         [[nodiscard]] inline bool isDepot() const;
-
-        /**
-         * Inserts this node after the other and updates the relevant links.
-         */
-        void insertAfter(Node *other);
-
-        /**
-         * Swaps this node with the other and updates the relevant links.
-         */
-        void swapWith(Node *other);
     };
 
 private:
@@ -60,7 +41,6 @@ private:
     std::pair<double, double> centroid;  // Center point of route's clients
     Load load_;                          // Current route load
     Distance distance_;                  // Current route distance
-    Duration timeWarp_;                  // Current route time warp
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -70,7 +50,7 @@ public:                // TODO make fields private
     /**
      * @return The client or depot node at the given position.
      */
-    [[nodiscard]] inline Node *operator[](size_t position) const;
+    [[nodiscard]] inline Node *operator[](size_t position);
 
     [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
     [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
@@ -158,6 +138,12 @@ public:                // TODO make fields private
     void clear();
 
     /**
+     * Inserts the given node in position ``position``. Assumes the position is
+     * valid.
+     */
+    void insert(size_t position, Node *node);
+
+    /**
      * Inserts the given node at the back of the route.
      */
     void push_back(Node *node);
@@ -166,6 +152,11 @@ public:                // TODO make fields private
      * Removes the node at ``position`` from the route.
      */
     void remove(size_t position);
+
+    /**
+     * Swaps the given nodes.
+     */
+    static void swap(Node *first, Node *second);
 
     /**
      * Updates this route. To be called after swapping nodes/changing the
@@ -179,12 +170,24 @@ public:                // TODO make fields private
 /**
  * Convenience method accessing the node directly before the argument.
  */
-inline Route::Node *p(Route::Node *node) { return node->prev; }
+inline Route::Node *p(Route::Node *node)
+{
+    auto &route = *node->route;
+
+    assert(node->position > 0);
+    return route[node->position - 1];
+}
 
 /**
  * Convenience method accessing the node directly after the argument.
  */
-inline Route::Node *n(Route::Node *node) { return node->next; }
+inline Route::Node *n(Route::Node *node)
+{
+    auto &route = *node->route;
+
+    assert(node->position <= route.size() + 1);
+    return route[node->position + 1];
+}
 
 bool Route::Node::isDepot() const
 {
@@ -195,20 +198,27 @@ bool Route::Node::isDepot() const
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
 
-bool Route::hasExcessLoad() const { return load_ > capacity(); }
+bool Route::hasExcessLoad() const { return load() > capacity(); }
 
 bool Route::hasTimeWarp() const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
-    return timeWarp_ > 0;
+    return timeWarp() > 0;
 #endif
 }
 
-Route::Node *Route::operator[](size_t position) const
+Route::Node *Route::operator[](size_t position)
 {
-    assert(position > 0);
+    assert(position <= nodes.size() + 1);
+
+    if (position == 0)
+        return &startDepot;
+
+    if (position == nodes.size() + 1)
+        return &endDepot;
+
     return nodes[position - 1];
 }
 
@@ -226,7 +236,7 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
 
 Load Route::load() const { return load_; }
 
-Duration Route::timeWarp() const { return timeWarp_; }
+Duration Route::timeWarp() const { return endDepot.twBefore.totalTimeWarp(); }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 

@@ -315,21 +315,24 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 template <size_t N, size_t M>
 void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 {
-    auto *uToInsert = N == 1 ? U : (*U->route)[U->position + N - 1];
-    auto *insertUAfter = M == 0 ? V : (*V->route)[V->position + M - 1];
+    auto &uRoute = *U->route;
+    auto &vRoute = *V->route;
+    auto *uToInsert = N == 1 ? U : uRoute[U->position + N - 1];
+    auto *insertUAfter = M == 0 ? V : vRoute[V->position + M - 1];
 
     // Insert these 'extra' nodes of U after the end of V...
     for (size_t count = 0; count != N - M; ++count)
     {
         auto *prev = p(uToInsert);
-        uToInsert->insertAfter(insertUAfter);
+        uRoute.remove(uToInsert->position);
+        vRoute.insert(insertUAfter->position + 1, uToInsert);
         uToInsert = prev;
     }
 
     // ...and swap the overlapping nodes!
     for (size_t count = 0; count != M; ++count)
     {
-        U->swapWith(V);
+        Route::swap(U, V);
         U = n(U);
         V = n(V);
     }

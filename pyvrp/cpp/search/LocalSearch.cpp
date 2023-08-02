@@ -260,8 +260,8 @@ void LocalSearch::maybeInsert(Route::Node *U,
 
     if (deltaCost < 0)
     {
-        U->insertAfter(V);           // U has no route, so there's nothing to
-        update(V->route, V->route);  // update there.
+        V->route->insert(V->position + 1, U);
+        update(V->route, V->route);
     }
 }
 
@@ -318,6 +318,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     for (size_t client = 0; client <= data.numClients(); client++)
     {
+        clients[client].client = client;
         clients[client].tw = {client, data.client(client)};
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }
