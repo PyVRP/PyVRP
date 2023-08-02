@@ -9,7 +9,6 @@
 
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
-using std::ranges::views::reverse;
 
 Route::Node::Node(size_t client) : client(client) {}
 
@@ -169,7 +168,7 @@ void Route::update()
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
     // Forward time window segments (client -> depot)
-    for (auto *node : reverse(nodes))
+    for (auto *node : nodes | std::ranges::views::reverse)
         node->twAfter
             = TWS::merge(data.durationMatrix(), node->tw, n(node)->twAfter);
 
