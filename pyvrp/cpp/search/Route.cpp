@@ -50,16 +50,6 @@ void Route::Node::swapWith(Route::Node *other)
     other->route = routeU;
 }
 
-void Route::Node::remove()
-{
-    prev->next = next;
-    next->prev = prev;
-
-    prev = nullptr;
-    next = nullptr;
-    route = nullptr;
-}
-
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
       vehicleType_(vehType),
@@ -68,7 +58,10 @@ Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
       endDepot(data.vehicleType(vehType).depot)
 {
     startDepot.route = this;
+    startDepot.tw = TWS(startDepot.client, data.client(startDepot.client));
+
     endDepot.route = this;
+    endDepot.tw = TWS(endDepot.client, data.client(endDepot.client));
 }
 
 size_t Route::vehicleType() const { return vehicleType_; }
@@ -88,6 +81,40 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
     // close together but separated by one period.
     auto constexpr tau = 2 * std::numbers::pi;
     return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
+}
+
+void Route::clear()
+{
+    nodes.clear();
+
+    startDepot.prev = &endDepot;
+    startDepot.next = &endDepot;
+    startDepot.twBefore = startDepot.tw;
+
+    endDepot.prev = &startDepot;
+    endDepot.next = &startDepot;
+    endDepot.twAfter = endDepot.tw;
+}
+
+void Route::push_back(Node *node)
+{
+    node->insertAfter(empty() ? &startDepot : nodes.back());
+    nodes.push_back(node);
+}
+
+void Route::remove(size_t position)
+{
+    assert(position > 0);
+    auto *node = nodes[position - 1];
+
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+
+    node->prev = nullptr;
+    node->next = nullptr;
+    node->route = nullptr;
+
+    nodes.erase(nodes.begin() + position - 1);
 }
 
 void Route::update()
