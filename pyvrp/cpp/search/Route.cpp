@@ -48,12 +48,7 @@ void Route::clear()
 {
     nodes.clear();
 
-    startDepot.prev = &endDepot;
-    startDepot.next = &endDepot;
     startDepot.twBefore = startDepot.tw;
-
-    endDepot.prev = &startDepot;
-    endDepot.next = &startDepot;
     endDepot.twAfter = endDepot.tw;
 }
 
@@ -64,14 +59,8 @@ void Route::insert(size_t position, Node *node)
 
     auto *prev = position == 1 ? &startDepot : nodes[position - 2];
 
-    node->prev = prev;
-    node->next = prev->next;
-    node->route = prev->route;
-
-    prev->next->prev = node;
-    prev->next = node;
-
     node->position = position;
+    node->route = prev->route;
     nodes.insert(nodes.begin() + position - 1, node);
 
     for (auto idx = position - 1; idx != nodes.size(); ++idx)
@@ -85,13 +74,7 @@ void Route::remove(size_t position)
     assert(position > 0);
     auto *node = nodes[position - 1];
 
-    node->prev->next = node->next;
-    node->next->prev = node->prev;
-
-    node->prev = nullptr;
-    node->next = nullptr;
     node->route = nullptr;
-
     nodes.erase(nodes.begin() + position - 1);
 
     for (auto idx = position - 1; idx != nodes.size(); ++idx)
@@ -102,23 +85,11 @@ void Route::swap(Node *first, Node *second)
 {
     // TODO just swap clients?
     // TODO specialise std::swap for Node
-    auto *fPred = first->prev;
-    auto *fSucc = first->next;
-    auto *sPred = second->prev;
-    auto *sSucc = second->next;
-
-    std::swap(first->prev, second->prev);
-    std::swap(first->next, second->next);
     std::swap(first->route->nodes[first->position - 1],
               second->route->nodes[second->position - 1]);
 
     std::swap(first->route, second->route);
     std::swap(first->position, second->position);
-
-    fPred->next = second;
-    fSucc->prev = second;
-    sPred->next = first;
-    sSucc->prev = first;
 }
 
 void Route::update()

@@ -14,15 +14,6 @@ class Route
 public:
     class Node
     {
-        // TODO obsolete this
-        friend Node *p(Node *node);
-        friend Node *n(Node *node);
-        friend class Route;
-
-        // TODO remove these fields
-        Node *prev = nullptr;  // Predecessor in route
-        Node *next = nullptr;  // Successor in route
-
     public:  // TODO make fields private
         // TODO rename client to location/loc
         size_t client;           // Location represented by this node
@@ -179,12 +170,36 @@ public:                // TODO make fields private
 /**
  * Convenience method accessing the node directly before the argument.
  */
-inline Route::Node *p(Route::Node *node) { return node->prev; }
+inline Route::Node *p(Route::Node *node)
+{
+    // TODO streamline this
+    auto &route = *node->route;
+
+    if (node->position == 0)
+        return &route.endDepot;
+
+    if (node->position == 1)
+        return &route.startDepot;
+
+    return route[node->position - 1];
+}
 
 /**
  * Convenience method accessing the node directly after the argument.
  */
-inline Route::Node *n(Route::Node *node) { return node->next; }
+inline Route::Node *n(Route::Node *node)
+{
+    // TODO streamline this
+    auto &route = *node->route;
+
+    if (node->position == route.size() + 1)
+        return &route.startDepot;
+
+    if (node->position == route.size())
+        return &route.endDepot;
+
+    return route[node->position + 1];
+}
 
 bool Route::Node::isDepot() const
 {
