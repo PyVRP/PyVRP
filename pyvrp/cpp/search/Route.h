@@ -50,7 +50,7 @@ public:                // TODO make fields private
     /**
      * @return The client or depot node at the given position.
      */
-    [[nodiscard]] inline Node *operator[](size_t position) const;
+    [[nodiscard]] inline Node *operator[](size_t position);
 
     [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
     [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
@@ -172,15 +172,9 @@ public:                // TODO make fields private
  */
 inline Route::Node *p(Route::Node *node)
 {
-    // TODO streamline this
     auto &route = *node->route;
 
-    if (node->position == 0)
-        return &route.endDepot;
-
-    if (node->position == 1)
-        return &route.startDepot;
-
+    assert(node->position > 0);
     return route[node->position - 1];
 }
 
@@ -189,15 +183,9 @@ inline Route::Node *p(Route::Node *node)
  */
 inline Route::Node *n(Route::Node *node)
 {
-    // TODO streamline this
     auto &route = *node->route;
 
-    if (node->position == route.size() + 1)
-        return &route.startDepot;
-
-    if (node->position == route.size())
-        return &route.endDepot;
-
+    assert(node->position <= route.size() + 1);
     return route[node->position + 1];
 }
 
@@ -221,9 +209,16 @@ bool Route::hasTimeWarp() const
 #endif
 }
 
-Route::Node *Route::operator[](size_t position) const
+Route::Node *Route::operator[](size_t position)
 {
-    assert(position > 0);
+    assert(position <= nodes.size() + 1);
+
+    if (position == 0)
+        return &startDepot;
+
+    if (position == nodes.size() + 1)
+        return &endDepot;
+
     return nodes[position - 1];
 }
 

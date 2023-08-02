@@ -1,6 +1,5 @@
 #include "Route.h"
 
-#include <cassert>
 #include <cmath>
 #include <numbers>
 #include <ostream>
