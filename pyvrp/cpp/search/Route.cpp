@@ -1,5 +1,6 @@
 #include "Route.h"
 
+#include <cassert>
 #include <cmath>
 #include <numbers>
 #include <ostream>
@@ -11,19 +12,7 @@ Route::Node::Node(size_t client) : client(client) {}
 
 void Route::Node::insertAfter(Route::Node *other)
 {
-    if (route)  // If we're in a route, we first stitch up the current route.
-    {           // If we're not in a route, this step should be skipped.
-        prev->next = next;
-        next->prev = prev;
-    }
-
-    prev = other;
-    next = other->next;
-
-    other->next->prev = this;
-    other->next = this;
-
-    route = other->route;
+    other->route->insert(other->position + 1, this);
 }
 
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
@@ -70,6 +59,29 @@ void Route::clear()
     endDepot.prev = &startDepot;
     endDepot.next = &startDepot;
     endDepot.twAfter = endDepot.tw;
+}
+
+void Route::insert(size_t position, Node *node)
+{
+    assert(position > 0);
+    auto *prev = position == 1 ? &startDepot : nodes[position - 2];
+
+    if (node->route)
+    {
+        // TODO use Route::remove()
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    node->prev = prev;
+    node->next = prev->next;
+    node->route = prev->route;
+
+    prev->next->prev = node;
+    prev->next = node;
+
+    node->position = position;
+    nodes.insert(nodes.begin() + position - 1, node);
 }
 
 void Route::push_back(Node *node)

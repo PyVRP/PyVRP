@@ -153,6 +153,12 @@ public:                // TODO make fields private
     void clear();
 
     /**
+     * Inserts the given node in position ``position``. Assumes the position is
+     * valid.
+     */
+    void insert(size_t position, Node *node);
+
+    /**
      * Inserts the given node at the back of the route.
      */
     void push_back(Node *node);
