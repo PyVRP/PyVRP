@@ -37,11 +37,6 @@ public:
         Node(size_t client);
 
         [[nodiscard]] inline bool isDepot() const;
-
-        /**
-         * Inserts this node after the other and updates the relevant links.
-         */
-        void insertAfter(Node *other);
     };
 
 private:

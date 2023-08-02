@@ -10,11 +10,6 @@ using TWS = pyvrp::TimeWindowSegment;
 
 Route::Node::Node(size_t client) : client(client) {}
 
-void Route::Node::insertAfter(Route::Node *other)
-{
-    other->route->insert(other->position + 1, this);
-}
-
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
       vehicleType_(vehType),
@@ -84,11 +79,7 @@ void Route::insert(size_t position, Node *node)
     nodes.insert(nodes.begin() + position - 1, node);
 }
 
-void Route::push_back(Node *node)
-{
-    node->insertAfter(empty() ? &startDepot : nodes.back());
-    nodes.push_back(node);
-}
+void Route::push_back(Node *node) { insert(size() + 1, node); }
 
 void Route::remove(size_t position)
 {

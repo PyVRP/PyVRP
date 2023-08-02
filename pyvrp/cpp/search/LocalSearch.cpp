@@ -260,8 +260,8 @@ void LocalSearch::maybeInsert(Route::Node *U,
 
     if (deltaCost < 0)
     {
-        U->insertAfter(V);           // U has no route, so there's nothing to
-        update(V->route, V->route);  // update there.
+        V->route->insert(V->position + 1, U);
+        update(V->route, V->route);
     }
 }
 
