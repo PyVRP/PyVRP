@@ -318,6 +318,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     for (size_t client = 0; client <= data.numClients(); client++)
     {
+        clients[client].client = client;
         clients[client].tw = {client, data.client(client)};
         clients[client].route = nullptr;  // nullptr implies "not in solution"
     }

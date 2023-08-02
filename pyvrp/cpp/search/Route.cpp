@@ -98,6 +98,7 @@ void Route::remove(size_t position)
 
 void Route::swap(Node *first, Node *second)
 {
+    // TODO just swap clients?
     auto *fPred = first->prev;
     auto *fSucc = first->next;
     auto *sPred = second->prev;
