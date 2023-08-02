@@ -120,16 +120,16 @@ void Route::remove(size_t position)
 void Route::update()
 {
     nodes.clear();
-    auto *node = n(&startDepot);
-
-    Load load = 0;
-    Distance distance = 0;
+    cumLoad.clear();
+    cumDist.clear();
 
     centroid = {0, 0};
+    load_ = 0;
+    distance_ = 0;
 
-    while (!node->isDepot())
+    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
     {
-        size_t const position = nodes.size();
+        node->position = size() + 1;
         nodes.push_back(node);
 
         auto const &clientData = data.client(node->client);
@@ -137,42 +137,43 @@ void Route::update()
         centroid.first += static_cast<double>(clientData.x);
         centroid.second += static_cast<double>(clientData.y);
 
-        load += clientData.demand;
-        distance += data.dist(p(node)->client, node->client);
+        load_ += clientData.demand;
+        cumLoad.push_back(load_);
 
-        node->position = position + 1;
-        node->cumulatedLoad = load;
-        node->cumulatedDistance = distance;
-        node->twBefore
-            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
-
-        node = n(node);
+        distance_ += data.dist(p(node)->client, node->client);
+        cumDist.push_back(distance_);
     }
+
+    endDepot.position = size() + 1;
 
     centroid.first /= size();
     centroid.second /= size();
 
-    load += data.client(endDepot.client).demand;
-    distance += data.dist(p(&endDepot)->client, endDepot.client);
+    load_ += data.client(endDepot.client).demand;
+    distance_ += data.dist(p(&endDepot)->client, endDepot.client);
 
-    endDepot.position = size() + 1;
-    endDepot.cumulatedLoad = load;
-    endDepot.cumulatedDistance = distance;
+#ifdef PYVRP_NO_TIME_WINDOWS
+    timeWarp_ = 0;
+    return;
+#else
+    // Backward time window segments (depot -> client)
+    for (auto *node = n(&startDepot); !node->isDepot(); node = n(node))
+        node->twBefore
+            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
+
     endDepot.twBefore = TWS::merge(
         data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
 
-    load_ = endDepot.cumulatedLoad;
     timeWarp_ = endDepot.twBefore.totalTimeWarp();
 
-    // forward time window segments
-    node = &endDepot;
-    do
-    {
-        auto *prev = p(node);
-        prev->twAfter
-            = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
-        node = prev;
-    } while (!node->isDepot());
+    // Forward time window segments (client -> depot)
+    for (auto *node = p(&endDepot); !node->isDepot(); node = p(node))
+        node->twAfter
+            = TWS::merge(data.durationMatrix(), node->tw, n(node)->twAfter);
+
+    startDepot.twAfter = TWS::merge(
+        data.durationMatrix(), startDepot.tw, n(&startDepot)->twAfter);
+#endif
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
