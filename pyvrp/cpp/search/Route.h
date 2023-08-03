@@ -17,8 +17,14 @@ namespace pyvrp::search
  * and depots on the route can be accessed using ``Route::operator[]`` on a
  * ``route`` object: ``route[0]`` and ``route[route.size() + 1]`` are the start
  * and end depots, respectively, and any clients in between are on the indices
- * ``{1, ..., size()}`` (empty if ``size() == 0``). Note that `Route::size()``
+ * ``{1, ..., size()}`` (empty if ``size() == 0``). Note that ``Route::size()``
  * returns the number of *clients* in the route; this excludes the depots.
+ *
+ * .. note::
+ *
+ *    Modifications to the ``Route`` object do not immediately propagate to its
+ *    statitics like time window data, or load and distance attributes. To make
+ *    that happen, ``Route::update()`` must be called!
  */
 class Route
 {
@@ -45,7 +51,7 @@ private:
     ProblemData const &data;
     size_t const vehicleType_;
 
-    std::vector<Node *> nodes;      // Nodes in this route, excl. depot
+    std::vector<Node *> nodes;      // Nodes in this route, including depots
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
     std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
 

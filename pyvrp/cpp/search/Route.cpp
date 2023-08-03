@@ -113,8 +113,6 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    cumDist[0] = 0;
-    cumLoad[0] = 0;
     centroid = {0, 0};
 
     for (size_t idx = 1; idx != nodes.size(); ++idx)
