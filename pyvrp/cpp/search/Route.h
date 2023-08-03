@@ -246,7 +246,7 @@ bool Route::empty() const { return size() == 0; }
 
 size_t Route::size() const
 {
-    assert(nodes.size() >= 2);
+    assert(nodes.size() >= 2);  // excl. depots
     return nodes.size() - 2;
 }
 
