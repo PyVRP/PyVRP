@@ -206,7 +206,7 @@ private:
     // pairs of [pred, succ] per client, only if client is assigned
     std::vector<std::optional<std::pair<Client, Client>>> neighbours;
 
-    // Determines the [pred, succ] pairs for each client (-1 if unassigned).
+    // Determines the [pred, succ] pairs for assigned clients.
     void makeNeighbours();
 
     // Evaluates this solution's characteristics.
