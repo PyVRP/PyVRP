@@ -260,7 +260,7 @@ void LocalSearch::maybeInsert(Route::Node *U,
 
     if (deltaCost < 0)
     {
-        V->route->insert(V->position + 1, U);
+        V->route->insert(V->idx + 1, U);
         update(V->route, V->route);
     }
 }
@@ -291,7 +291,7 @@ void LocalSearch::maybeRemove(Route::Node *U,
     if (deltaCost < 0)
     {
         auto *route = U->route;  // after remove(), U->route is a nullptr
-        route->remove(U->position);
+        route->remove(U->idx);
         update(route, route);
     }
 }

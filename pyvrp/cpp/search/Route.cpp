@@ -57,58 +57,58 @@ void Route::clear()
     cumLoad.push_back(0);
     cumLoad.push_back(0);
 
-    startDepot.position = 0;
+    startDepot.idx = 0;
     startDepot.twBefore = startDepot.tw;
 
-    endDepot.position = 1;
+    endDepot.idx = 1;
     endDepot.twAfter = endDepot.tw;
 }
 
-void Route::insert(size_t position, Node *node)
+void Route::insert(size_t idx, Node *node)
 {
-    assert(0 < position && position < nodes.size());
+    assert(0 < idx && idx < nodes.size());
     assert(!node->route);  // must previously have been unassigned
 
-    node->position = position;
+    node->idx = idx;
     node->route = this;
 
     cumDist.emplace_back();  // does not matter where we place these, as they
     cumLoad.emplace_back();  // will be updated by Route::update().
 
-    nodes.insert(nodes.begin() + position, node);
-    for (auto idx = position; idx != nodes.size(); ++idx)
-        nodes[idx]->position = idx;
+    nodes.insert(nodes.begin() + idx, node);
+    for (size_t after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx = after;
 }
 
 void Route::push_back(Node *node) { insert(size() + 1, node); }
 
-void Route::remove(size_t position)
+void Route::remove(size_t idx)
 {
-    assert(0 < position && position < nodes.size() - 1);
-    assert(nodes[position]->route == this);  // must currently be in this route
+    assert(0 < idx && idx < nodes.size() - 1);
+    assert(nodes[idx]->route == this);  // must currently be in this route
 
-    auto *node = nodes[position];
+    auto *node = nodes[idx];
 
-    node->position = 0;
+    node->idx = 0;
     node->route = nullptr;
 
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
 
-    nodes.erase(nodes.begin() + position);
-    for (auto idx = position; idx != nodes.size(); ++idx)
-        nodes[idx]->position = idx;
+    nodes.erase(nodes.begin() + idx);
+    for (auto after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx = after;
 }
 
 void Route::swap(Node *first, Node *second)
 {
     // TODO just swap clients?
     // TODO specialise std::swap for Node
-    std::swap(first->route->nodes[first->position],
-              second->route->nodes[second->position]);
+    std::swap(first->route->nodes[first->idx],
+              second->route->nodes[second->idx]);
 
     std::swap(first->route, second->route);
-    std::swap(first->position, second->position);
+    std::swap(first->idx, second->idx);
 }
 
 void Route::update()
@@ -117,9 +117,9 @@ void Route::update()
     cumLoad[0] = 0;
     centroid = {0, 0};
 
-    for (size_t pos = 1; pos != nodes.size(); ++pos)
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
-        auto *node = nodes[pos];
+        auto *node = nodes[idx];
         auto const &clientData = data.client(node->client);
 
         if (!node->isDepot())
@@ -129,8 +129,8 @@ void Route::update()
         }
 
         auto const dist = data.dist(p(node)->client, node->client);
-        cumDist[pos] = cumDist[pos - 1] + dist;
-        cumLoad[pos] = cumLoad[pos - 1] + clientData.demand;
+        cumDist[idx] = cumDist[idx - 1] + dist;
+        cumLoad[idx] = cumLoad[idx - 1] + clientData.demand;
     }
 
 #ifdef PYVRP_NO_TIME_WINDOWS

@@ -17,7 +17,7 @@ public:
     public:  // TODO make fields private
         // TODO rename client to location/loc
         size_t client;           // Location represented by this node
-        size_t position = 0;     // Position in the route
+        size_t idx = 0;          // Position in the route
         Route *route = nullptr;  // Indicates membership of a route, if any.
 
         // TODO can these data fields be moved to Route?
@@ -46,9 +46,9 @@ public:                // TODO make fields private
     Node endDepot;     // Return depot for this route
 
     /**
-     * @return The client or depot node at the given position.
+     * @return The client or depot node at the given ``idx``.
      */
-    [[nodiscard]] inline Node *operator[](size_t position);
+    [[nodiscard]] inline Node *operator[](size_t idx);
 
     [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
     [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
@@ -136,10 +136,10 @@ public:                // TODO make fields private
     void clear();
 
     /**
-     * Inserts the given node in position ``position``. Assumes the position is
+     * Inserts the given node at index ``idx``. Assumes the given index is
      * valid.
      */
-    void insert(size_t position, Node *node);
+    void insert(size_t idx, Node *node);
 
     /**
      * Inserts the given node at the back of the route.
@@ -147,9 +147,9 @@ public:                // TODO make fields private
     void push_back(Node *node);
 
     /**
-     * Removes the node at ``position`` from the route.
+     * Removes the node at ``idx`` from the route.
      */
-    void remove(size_t position);
+    void remove(size_t idx);
 
     /**
      * Swaps the given nodes.
@@ -171,7 +171,7 @@ public:                // TODO make fields private
 inline Route::Node *p(Route::Node *node)
 {
     auto &route = *node->route;
-    return route[node->position - 1];
+    return route[node->idx - 1];
 }
 
 /**
@@ -180,7 +180,7 @@ inline Route::Node *p(Route::Node *node)
 inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route;
-    return route[node->position + 1];
+    return route[node->idx + 1];
 }
 
 bool Route::Node::isDepot() const
@@ -203,10 +203,10 @@ bool Route::hasTimeWarp() const
 #endif
 }
 
-Route::Node *Route::operator[](size_t position)
+Route::Node *Route::operator[](size_t idx)
 {
-    assert(position < nodes.size());
-    return nodes[position];
+    assert(idx < nodes.size());
+    return nodes[idx];
 }
 
 std::vector<Route::Node *>::const_iterator Route::begin() const
