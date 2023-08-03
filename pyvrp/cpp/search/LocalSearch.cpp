@@ -367,7 +367,7 @@ Solution LocalSearch::exportSolution() const
         if (route.empty())
             continue;
 
-        std::vector<int> visits;
+        std::vector<size_t> visits;
         visits.reserve(route.size());
 
         for (auto *node : route)

@@ -12,7 +12,7 @@ using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Solution;
 
-using Client = int;
+using Client = size_t;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
 
@@ -111,7 +111,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
-    auto clients = std::vector<int>(data.numClients());
+    auto clients = std::vector<size_t>(data.numClients());
     std::iota(clients.begin(), clients.end(), 1);
     std::shuffle(clients.begin(), clients.end(), rng);
 
