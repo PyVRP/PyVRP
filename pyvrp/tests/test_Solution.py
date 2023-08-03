@@ -161,11 +161,11 @@ def test_get_neighbours():
     neighbours = sol.get_neighbours()
 
     expected = [
-        (-1, -1),  # 0: is depot
+        None,  # 0: is depot
         (0, 2),  # 1: between depot (0) to 2
         (1, 0),  # 2: between 1 and depot (0)
         (0, 0),  # 3: between depot (0) and depot (0)
-        (-1, -1),  # 4: unassigned
+        None,  # 4: unassigned
     ]
 
     assert_equal(data.num_clients, 4)

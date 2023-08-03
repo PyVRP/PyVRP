@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <iosfwd>
+#include <optional>
 #include <vector>
 
 namespace pyvrp
@@ -202,7 +203,8 @@ private:
     size_t numMissingClients_ = 0;  // Number of required but missing clients
 
     Routes routes_;
-    std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
+    // pairs of [pred, succ] per client, only if client is assigned
+    std::vector<std::optional<std::pair<Client, Client>>> neighbours;
 
     // Determines the [pred, succ] pairs for each client (-1 if unassigned).
     void makeNeighbours();
@@ -258,7 +260,7 @@ public:
      *     A list of ``(pred, succ)`` tuples that encode for each client their
      *     predecessor and successors in this solutions's routes.
      */
-    [[nodiscard]] std::vector<std::pair<Client, Client>> const &
+    [[nodiscard]] std::vector<std::optional<std::pair<Client, Client>>> const &
     getNeighbours() const;
 
     /**
