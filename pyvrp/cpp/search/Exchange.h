@@ -75,7 +75,7 @@ bool Exchange<N, M>::overlap(Route::Node *U, Route::Node *V) const
 template <size_t N, size_t M>
 bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 {
-    return (U->route == V->route)
+    return U->route == V->route
            && (U->idx + N == V->idx || V->idx + M == U->idx);
 }
 
