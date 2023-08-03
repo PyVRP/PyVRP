@@ -4,7 +4,13 @@ import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
+from pyvrp import (
+    CostEvaluator,
+    RandomNumberGenerator,
+    Route,
+    Solution,
+    VehicleType,
+)
 from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
@@ -17,7 +23,7 @@ from pyvrp.tests.helpers import make_heterogeneous, read
 def test_OkSmall_instance():
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -58,7 +64,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
 
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(10000, 6)  # Large capacity penalty
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     # Now making it heterogenous, the same move should result in capacity
     # penalties and thus not be applied
@@ -88,7 +94,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
 def test_RC208_instance(seed: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=seed)
+    rng = RandomNumberGenerator(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))

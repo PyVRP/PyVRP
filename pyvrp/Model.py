@@ -10,9 +10,9 @@ from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
     ProblemData,
+    RandomNumberGenerator,
     Solution,
     VehicleType,
-    XorShift128,
 )
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
@@ -216,13 +216,15 @@ class Model:
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
-        max_data_value = max(max(e.distance, e.duration) for e in self._edges)
-        if max_data_value > MAX_USER_VALUE:
-            msg = """
-            The maximum distance or duration value is very large. This might
-            impact numerical stability. Consider rescaling your input data.
-            """
-            warn(msg, ScalingWarning)
+        if self._edges:
+            max_value = max(max(e.distance, e.duration) for e in self._edges)
+
+            if max_value > MAX_USER_VALUE:
+                msg = """
+                The maximum distance or duration value is very large. This may
+                impact numerical stability. Consider rescaling your input data.
+                """
+                warn(msg, ScalingWarning)
 
         # Default value is a sufficiently large value to make sure any edges
         # not set below are never traversed.
@@ -263,7 +265,7 @@ class Model:
         )
 
         data = self.data()
-        rng = XorShift128(seed=seed)
+        rng = RandomNumberGenerator(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))
 
         for node_op in NODE_OPERATORS:

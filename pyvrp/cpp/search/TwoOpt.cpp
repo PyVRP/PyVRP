@@ -18,11 +18,19 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     auto const &vehicleType = data.vehicleType(route->vehicleType());
     auto const currentCost = route->penalisedCost(costEvaluator);
 
-    auto const deltaDist
-        = data.dist(U->client, V->client)
-          + data.dist(n(U)->client, n(V)->client) + V->deltaReversalDistance
-          - data.dist(U->client, n(U)->client)
-          - data.dist(V->client, n(V)->client) - n(U)->deltaReversalDistance;
+    // Current situation is U -> n(U) -> ... -> V -> n(V). Proposed move is
+    // U -> V -> p(V) -> ... -> n(U) -> n(V). This reverses the segment from
+    // n(U) to V.
+    Distance segmentReversalDistance = 0;  // reversal dist of n(U) -> ... -> V
+    for (auto *node = V; node != n(U); node = p(node))
+        segmentReversalDistance += data.dist(node->client, p(node)->client);
+
+    auto const deltaDist = data.dist(U->client, V->client)
+                           + data.dist(n(U)->client, n(V)->client)
+                           + segmentReversalDistance
+                           - data.dist(U->client, n(U)->client)
+                           - data.dist(V->client, n(V)->client)
+                           - U->route->distBetween(n(U)->position, V->position);
 
     // First compute bound based on dist and load
     auto const dist = route->dist() + deltaDist;
@@ -51,6 +59,8 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator) const
 {
+    // Two routes. Current situation is U -> n(U), and V -> n(V). Proposed move
+    // is U -> n(V) and V -> n(U).
     auto const currentCost = U->route->penalisedCost(costEvaluator)
                              + V->route->penalisedCost(costEvaluator);
 
@@ -63,8 +73,17 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     auto const distV = V->cumulatedDistance + data.dist(V->client, n(U)->client)
                        + U->route->dist() - n(U)->cumulatedDistance;
 
-    auto const loadU = U->cumulatedLoad + V->route->load() - V->cumulatedLoad;
-    auto const loadV = V->cumulatedLoad + U->route->load() - U->cumulatedLoad;
+    // Proposed move appends the segment after V to U, and the segment after U
+    // to V. So we need to make a distinction between the loads at U and V, and
+    // the loads from clients visited after these nodes.
+    auto const curLoadUntilU = U->route->loadBetween(0, U->position);
+    auto const curLoadAfterU = U->route->load() - curLoadUntilU;
+    auto const curLoadUntilV = V->route->loadBetween(0, V->position);
+    auto const curLoadAfterV = V->route->load() - curLoadUntilV;
+
+    // Load for new routes
+    auto const loadU = curLoadUntilU + curLoadAfterV;
+    auto const loadV = curLoadUntilV + curLoadAfterU;
 
     auto const lbCostU
         = costEvaluator.penalisedRouteCost(distU, loadU, 0, 0, vehicleTypeU);
@@ -94,40 +113,39 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
 
 void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
 {
-    auto *itRoute = V;
-    auto *insertionPoint = U;
-    auto *currNext = n(U);
+    auto *nU = n(U);
 
-    while (itRoute != currNext)  // No need to move x, we pivot around it
+    auto insertPos = U->position + 1;
+    while (V != nU)
     {
-        auto *current = itRoute;
-        itRoute = p(itRoute);
-        current->insertAfter(insertionPoint);
-        insertionPoint = current;
+        auto *node = V;
+        V = p(V);
+        U->route->remove(node->position);
+        U->route->insert(insertPos++, node);
     }
 }
 
 void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
 {
-    auto *itRouteU = n(U);
-    auto *itRouteV = n(V);
+    auto *nU = n(U);
+    auto *nV = n(V);
 
-    auto *insertLocation = U;
-    while (!itRouteV->isDepot())
+    auto insertPos = U->position + 1;
+    while (!nV->isDepot())
     {
-        auto *node = itRouteV;
-        itRouteV = n(itRouteV);
-        node->insertAfter(insertLocation);
-        insertLocation = node;
+        auto *node = nV;
+        nV = n(nV);
+        V->route->remove(node->position);
+        U->route->insert(insertPos++, node);
     }
 
-    insertLocation = V;
-    while (!itRouteU->isDepot())
+    insertPos = V->position + 1;
+    while (!nU->isDepot())
     {
-        auto *node = itRouteU;
-        itRouteU = n(itRouteU);
-        node->insertAfter(insertLocation);
-        insertLocation = node;
+        auto *node = nU;
+        nU = n(nU);
+        U->route->remove(node->position);
+        V->route->insert(insertPos++, node);
     }
 }
 

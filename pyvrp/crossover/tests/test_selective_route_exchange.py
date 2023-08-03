@@ -3,7 +3,13 @@ import itertools
 from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Route, Solution, VehicleType, XorShift128
+from pyvrp import (
+    CostEvaluator,
+    RandomNumberGenerator,
+    Route,
+    Solution,
+    VehicleType,
+)
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._crossover import selective_route_exchange as cpp_srex
 from pyvrp.tests.helpers import make_heterogeneous, read
@@ -16,7 +22,7 @@ def test_same_parents_same_offspring():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     solution = Solution(data, [[1, 2], [3, 4]])
     offspring = srex((solution, solution), data, cost_evaluator, rng)
@@ -27,7 +33,7 @@ def test_same_parents_same_offspring():
 def test_srex_empty_solution():
     data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     empty = Solution(data, [])
     nonempty = Solution(data, [[1, 2, 3, 4]])

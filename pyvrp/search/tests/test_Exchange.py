@@ -5,10 +5,10 @@ from pyvrp import (
     Client,
     CostEvaluator,
     ProblemData,
+    RandomNumberGenerator,
     Route,
     Solution,
     VehicleType,
-    XorShift128,
 )
 from pyvrp.search import (
     Exchange10,
@@ -46,7 +46,7 @@ def test_swap_single_route_stays_single_route(operator):
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -78,7 +78,7 @@ def test_relocate_uses_empty_routes(operator):
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -115,7 +115,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(operator):
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -135,7 +135,7 @@ def test_cannot_exchange_when_segments_overlap(operator):
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -154,7 +154,7 @@ def test_cannot_swap_adjacent_segments():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -176,7 +176,7 @@ def test_swap_between_routes_OkSmall():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
@@ -199,7 +199,7 @@ def test_relocate_after_depot_should_work():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     # This is a non-empty neighbourhood (so LS does not complain), but the only
     # client moves allowed by it will not improve the initial solution created
@@ -257,7 +257,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     assert_(duration_optimal.time_warp() < distance_optimal.time_warp())
 
     cost_evaluator = CostEvaluator(1, 1)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
@@ -274,7 +274,7 @@ def test_relocate_to_heterogeneous_empty_route():
     data = make_heterogeneous(read("data/OkSmall.txt"), vehicle_types)
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator(100_000, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     # This is a non-empty neighbourhood (so LS does not complain), but the only
     # client moves allowed by it will not improve the initial solution created

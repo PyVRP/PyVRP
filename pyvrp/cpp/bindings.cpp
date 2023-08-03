@@ -2,10 +2,10 @@
 #include "DynamicBitset.h"
 #include "Matrix.h"
 #include "ProblemData.h"
+#include "RandomNumberGenerator.h"
 #include "Solution.h"
 #include "SubPopulation.h"
 #include "TimeWindowSegment.h"
-#include "XorShift128.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -22,9 +22,9 @@ using pyvrp::DynamicBitset;
 using pyvrp::Matrix;
 using pyvrp::PopulationParams;
 using pyvrp::ProblemData;
+using pyvrp::RandomNumberGenerator;
 using pyvrp::Solution;
 using pyvrp::SubPopulation;
-using pyvrp::XorShift128;
 using TWS = pyvrp::TimeWindowSegment;
 
 template <typename... Args>
@@ -157,11 +157,25 @@ PYBIND11_MODULE(_pyvrp, m)
                     std::vector<ProblemData::VehicleType> const &vehicleTypes,
                     std::vector<std::vector<pyvrp::Value>> const &dist,
                     std::vector<std::vector<pyvrp::Value>> const &dur) {
-                     Matrix<pyvrp::Distance> distMat(clients.size());
-                     Matrix<pyvrp::Duration> durMat(clients.size());
+                     auto const numNodes = clients.size();
 
-                     for (size_t row = 0; row != clients.size(); ++row)
-                         for (size_t col = 0; col != clients.size(); ++col)
+                     for (auto &row : dist)
+                         if (dist.size() != numNodes || row.size() != numNodes)
+                             throw std::invalid_argument(
+                                 "Distance matrix shape does not match the "
+                                 "number of clients.");
+
+                     for (auto &row : dur)
+                         if (dur.size() != numNodes || row.size() != numNodes)
+                             throw std::invalid_argument(
+                                 "Duration matrix shape does not match the "
+                                 "number of clients.");
+
+                     Matrix<pyvrp::Distance> distMat(numNodes);
+                     Matrix<pyvrp::Duration> durMat(numNodes);
+
+                     for (size_t row = 0; row != numNodes; ++row)
+                         for (size_t col = 0; col != numNodes; ++col)
                          {
                              distMat(row, col) = dist[row][col];
                              durMat(row, col) = dur[row][col];
@@ -241,15 +255,35 @@ PYBIND11_MODULE(_pyvrp, m)
             [](Solution::Route const &route) { return route.duration().get(); },
             DOC(pyvrp, Solution, Route, duration))
         .def(
+            "time_warp",
+            [](Solution::Route const &route) { return route.timeWarp().get(); },
+            DOC(pyvrp, Solution, Route, timeWarp))
+        .def(
+            "start_time",
+            [](Solution::Route const &route) {
+                return route.startTime().get();
+            },
+            DOC(pyvrp, Solution, Route, startTime))
+        .def(
+            "end_time",
+            [](Solution::Route const &route) { return route.endTime().get(); },
+            DOC(pyvrp, Solution, Route, endTime))
+        .def(
+            "slack",
+            [](Solution::Route const &route) { return route.slack().get(); },
+            DOC(pyvrp, Solution, Route, slack))
+        .def(
+            "travel_duration",
+            [](Solution::Route const &route) {
+                return route.travelDuration().get();
+            },
+            DOC(pyvrp, Solution, Route, travelDuration))
+        .def(
             "service_duration",
             [](Solution::Route const &route) {
                 return route.serviceDuration().get();
             },
             DOC(pyvrp, Solution, Route, serviceDuration))
-        .def(
-            "time_warp",
-            [](Solution::Route const &route) { return route.timeWarp().get(); },
-            DOC(pyvrp, Solution, Route, timeWarp))
         .def(
             "wait_duration",
             [](Solution::Route const &route) {
@@ -322,13 +356,16 @@ PYBIND11_MODULE(_pyvrp, m)
                 options.disable_function_signatures();
 
                 return py::cpp_function(
-                    [](ProblemData const &data, XorShift128 &rng) {
+                    [](ProblemData const &data, RandomNumberGenerator &rng) {
                         return Solution(data, rng);
                     },
                     py::arg("data"),
                     py::arg("rng"),
                     R"doc(
-                        make_random(data: ProblemData, rng: XorShift128) -> Solution
+                        make_random(
+                            data: ProblemData,
+                            rng: RandomNumberGenerator,
+                        ) -> Solution
 
                         Creates a randomly generated solution.
 
@@ -361,6 +398,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("is_feasible",
              &Solution::isFeasible,
              DOC(pyvrp, Solution, isFeasible))
+        .def("is_complete",
+             &Solution::isComplete,
+             DOC(pyvrp, Solution, isComplete))
         .def("has_excess_load",
              &Solution::hasExcessLoad,
              DOC(pyvrp, Solution, hasExcessLoad))
@@ -567,11 +607,12 @@ PYBIND11_MODULE(_pyvrp, m)
                     py::arg("second"),
                     py::arg("third"));
 
-    py::class_<XorShift128>(m, "XorShift128")
+    py::class_<RandomNumberGenerator>(
+        m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))
         .def(py::init<uint32_t>(), py::arg("seed"))
-        .def("min", &XorShift128::min)
-        .def("max", &XorShift128::max)
-        .def("__call__", &XorShift128::operator())
-        .def("rand", &XorShift128::rand<double>)
-        .def("randint", &XorShift128::randint<int>, py::arg("high"));
+        .def("min", &RandomNumberGenerator::min)
+        .def("max", &RandomNumberGenerator::max)
+        .def("__call__", &RandomNumberGenerator::operator())
+        .def("rand", &RandomNumberGenerator::rand<double>)
+        .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"));
 }

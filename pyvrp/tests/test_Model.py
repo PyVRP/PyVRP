@@ -3,7 +3,7 @@ from pytest import mark
 
 from pyvrp import Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
-from pyvrp.exceptions import ScalingWarning
+from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
 from pyvrp.tests.helpers import read
 
@@ -257,3 +257,29 @@ def test_data_warns_about_scaling_issues(recwarn):
     model.add_edge(depot, client, distance=MAX_USER_VALUE + 1)
     with assert_warns(ScalingWarning):
         model.data()
+
+
+def test_model_solves_instance_with_zero_or_one_clients():
+    """
+    This test exercises the bug identified in issue #272, where the model
+    could not solve an instance with zero clients or just one client.
+    """
+    m = Model()
+    m.add_vehicle_type(capacity=15, num_available=1)
+    depot = m.add_depot(x=0, y=0)
+
+    # Solve an instance with no clients.
+    with assert_warns(EmptySolutionWarning):
+        res = m.solve(stop=MaxIterations(1))
+
+    solution = [r.visits() for r in res.best.get_routes()]
+    assert_equal(solution, [])
+
+    # Solve an instance with one client.
+    clients = [m.add_client(x=0, y=0, demand=0)]
+    m.add_edge(depot, clients[0], distance=0)
+    m.add_edge(clients[0], depot, distance=0)
+
+    res = m.solve(stop=MaxIterations(1))
+    solution = [r.visits() for r in res.best.get_routes()]
+    assert_equal(solution, [[1]])

@@ -1,5 +1,7 @@
 #include "SwapStar.h"
 
+#include <cassert>
+
 using pyvrp::Cost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
@@ -100,6 +102,10 @@ Cost SwapStar::evaluateRouteCost(Route::Node *V,
     auto const uDemand = data.client(U->client).demand;
     auto const vDemand = data.client(V->client).demand;
     auto const load = route->load() + uDemand - vDemand;
+
+    // We cannot have that UAfter == V, as the positions must always be
+    // strictly different.
+    assert(UAfter->position != V->position);
 
     if (UAfter == p(V))
     {
@@ -246,12 +252,15 @@ Cost SwapStar::evaluate(Route *routeU,
     return costU + costV - currentCost;
 }
 
-void SwapStar::apply([[maybe_unused]] Route *U, [[maybe_unused]] Route *V) const
+void SwapStar::apply(Route *U, Route *V) const
 {
     if (best.U && best.UAfter && best.V && best.VAfter)
     {
-        best.U->insertAfter(best.UAfter);
-        best.V->insertAfter(best.VAfter);
+        U->remove(best.U->position);
+        V->remove(best.V->position);
+
+        V->insert(best.UAfter->position + 1, best.U);
+        U->insert(best.VAfter->position + 1, best.V);
     }
 }
 

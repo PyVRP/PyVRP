@@ -7,7 +7,7 @@ from ._pyvrp import PopulationParams, SubPopulation
 from .exceptions import EmptySolutionWarning
 
 if TYPE_CHECKING:
-    from ._pyvrp import CostEvaluator, Solution, XorShift128
+    from ._pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 
 
 class Population:
@@ -120,7 +120,7 @@ class Population:
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
         if solution.is_feasible():
-            # Note: the feasible subpopulation actually doet not depend
+            # Note: the feasible subpopulation actually does not depend
             # on the penalty values but we use the same implementation.
             self._feas.add(solution, cost_evaluator)
         else:
@@ -136,7 +136,7 @@ class Population:
 
     def select(
         self,
-        rng: XorShift128,
+        rng: RandomNumberGenerator,
         cost_evaluator: CostEvaluator,
         k: int = 2,
     ) -> Tuple[Solution, Solution]:
@@ -177,7 +177,10 @@ class Population:
         return first, second
 
     def get_tournament(
-        self, rng: XorShift128, cost_evaluator: CostEvaluator, k: int = 2
+        self,
+        rng: RandomNumberGenerator,
+        cost_evaluator: CostEvaluator,
+        k: int = 2,
     ) -> Solution:
         """
         Selects a solution from this population by k-ary tournament, based
@@ -201,7 +204,7 @@ class Population:
         self._update_fitness(cost_evaluator)
         return self._get_tournament(rng, k)
 
-    def _get_tournament(self, rng: XorShift128, k: int) -> Solution:
+    def _get_tournament(self, rng: RandomNumberGenerator, k: int) -> Solution:
         if k <= 0:
             raise ValueError(f"Expected k > 0; got k = {k}.")
 

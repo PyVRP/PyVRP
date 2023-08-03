@@ -101,12 +101,20 @@ PYBIND11_MODULE(_search, m)
         .def("get_neighbours",
              &LocalSearch::getNeighbours,
              py::return_value_policy::reference_internal)
+        .def("__call__",
+             &LocalSearch::operator(),
+             py::arg("solution"),
+             py::arg("cost_evaluator"))
         .def("search",
-             &LocalSearch::search,
+             py::overload_cast<pyvrp::Solution const &,
+                               pyvrp::CostEvaluator const &>(
+                 &LocalSearch::search),
              py::arg("solution"),
              py::arg("cost_evaluator"))
         .def("intensify",
-             &LocalSearch::intensify,
+             py::overload_cast<pyvrp::Solution const &,
+                               pyvrp::CostEvaluator const &,
+                               double const>(&LocalSearch::intensify),
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::arg("overlap_tolerance") = 0.05)

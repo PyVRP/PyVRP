@@ -1,6 +1,11 @@
 from typing import Tuple
 
-from pyvrp._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
+from pyvrp._pyvrp import (
+    CostEvaluator,
+    ProblemData,
+    RandomNumberGenerator,
+    Solution,
+)
 
 from ._crossover import selective_route_exchange as _srex
 
@@ -9,7 +14,7 @@ def selective_route_exchange(
     parents: Tuple[Solution, Solution],
     data: ProblemData,
     cost_evaluator: CostEvaluator,
-    rng: XorShift128,
+    rng: RandomNumberGenerator,
 ) -> Solution:
     """
     This crossover operator due to Nagata and Kobayashi (2010) combines routes

@@ -13,20 +13,15 @@ namespace pyvrp::search
 class Route
 {
 public:
-    struct Node
+    class Node
     {
+    public:  // TODO make fields private
         // TODO rename client to location/loc
         size_t client;           // Location represented by this node
         size_t position = 0;     // Position in the route
         Route *route = nullptr;  // Indicates membership of a route, if any.
-        Node *prev = nullptr;    // Predecessor in route
-        Node *next = nullptr;    // Successor in route
 
         // TODO can these data fields be moved to Route?
-        Load cumulatedLoad = 0;              // Load depot -> client (incl)
-        Distance cumulatedDistance = 0;      // Dist depot - client (incl)
-        Distance deltaReversalDistance = 0;  // Delta of depot - client reversed
-
         TimeWindowSegment tw;        // TWS for individual node (client)
         TimeWindowSegment twBefore;  // TWS for (0...client) including self
         TimeWindowSegment twAfter;   // TWS for (client...0) including self
@@ -34,29 +29,17 @@ public:
         Node(size_t client);
 
         [[nodiscard]] inline bool isDepot() const;
-
-        /**
-         * Inserts this node after the other and updates the relevant links.
-         */
-        void insertAfter(Node *other);
-
-        /**
-         * Swaps this node with the other and updates the relevant links.
-         */
-        void swapWith(Node *other);
-
-        /**
-         * Removes this node and updates the relevant links.
-         */
-        void remove();
     };
 
 private:
     ProblemData const &data;
     size_t const vehicleType_;
 
-    std::vector<Node *> nodes;  // List of nodes in this route, excl. depot
-    std::pair<double, double> centroid;  // Center point of route's clients.
+    std::vector<Node *> nodes;      // Nodes in this route, excl. depot
+    std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
+    std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
+
+    std::pair<double, double> centroid;  // Center point of route's clients
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -66,7 +49,7 @@ public:                // TODO make fields private
     /**
      * @return The client or depot node at the given position.
      */
-    [[nodiscard]] inline Node *operator[](size_t position) const;
+    [[nodiscard]] inline Node *operator[](size_t position);
 
     [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
     [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
@@ -159,6 +142,33 @@ public:                // TODO make fields private
     [[nodiscard]] bool overlapsWith(Route const &other, double tolerance) const;
 
     /**
+     * Clears all clients on this route. After calling this method, ``empty()``
+     * returns true and ``size()`` is zero.
+     */
+    void clear();
+
+    /**
+     * Inserts the given node in position ``position``. Assumes the position is
+     * valid.
+     */
+    void insert(size_t position, Node *node);
+
+    /**
+     * Inserts the given node at the back of the route.
+     */
+    void push_back(Node *node);
+
+    /**
+     * Removes the node at ``position`` from the route.
+     */
+    void remove(size_t position);
+
+    /**
+     * Swaps the given nodes.
+     */
+    static void swap(Node *first, Node *second);
+
+    /**
      * Updates this route. To be called after swapping nodes/changing the
      * solution.
      */
@@ -170,12 +180,24 @@ public:                // TODO make fields private
 /**
  * Convenience method accessing the node directly before the argument.
  */
-inline Route::Node *p(Route::Node *node) { return node->prev; }
+inline Route::Node *p(Route::Node *node)
+{
+    auto &route = *node->route;
+
+    assert(node->position > 0);
+    return route[node->position - 1];
+}
 
 /**
  * Convenience method accessing the node directly after the argument.
  */
-inline Route::Node *n(Route::Node *node) { return node->next; }
+inline Route::Node *n(Route::Node *node)
+{
+    auto &route = *node->route;
+
+    assert(node->position <= route.size() + 1);
+    return route[node->position + 1];
+}
 
 bool Route::Node::isDepot() const
 {
@@ -197,9 +219,16 @@ bool Route::hasTimeWarp() const
 #endif
 }
 
-Route::Node *Route::operator[](size_t position) const
+Route::Node *Route::operator[](size_t position)
 {
-    assert(position > 0);
+    assert(position <= nodes.size() + 1);
+
+    if (position == 0)
+        return &startDepot;
+
+    if (position == nodes.size() + 1)
+        return &endDepot;
+
     return nodes[position - 1];
 }
 
@@ -253,13 +282,13 @@ Distance Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size() + 1);
 
-    auto const startDist = start == 0 ? 0 : nodes[start - 1]->cumulatedDistance;
-    auto const endDist = end == nodes.size() + 1
-                             ? endDepot.cumulatedDistance
-                             : nodes[end - 1]->cumulatedDistance;
+    if (end == 0)
+        return 0;
+
+    auto const startDist = start == 0 ? 0 : cumDist[start - 1];
+    auto const endDist = end == nodes.size() + 1 ? distance_ : cumDist[end - 1];
 
     assert(startDist <= endDist);
-
     return endDist - startDist;
 }
 
@@ -267,15 +296,15 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end <= nodes.size() + 1);
 
+    if (end == 0)
+        return 0;
+
     auto const *startNode = start == 0 ? &startDepot : nodes[start - 1];
     auto const atStart = data.client(startNode->client).demand;
-    auto const startLoad = startNode->cumulatedLoad;
-    auto const endLoad = end == nodes.size() + 1
-                             ? endDepot.cumulatedLoad
-                             : nodes[end - 1]->cumulatedLoad;
+    auto const startLoad = start == 0 ? 0 : cumLoad[start - 1];
+    auto const endLoad = end == nodes.size() + 1 ? load_ : cumLoad[end - 1];
 
     assert(startLoad <= endLoad);
-
     return endLoad - startLoad + atStart;
 }
 

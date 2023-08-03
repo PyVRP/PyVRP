@@ -3,7 +3,7 @@ import math
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import CostEvaluator, Population, Solution, XorShift128
+from pyvrp import CostEvaluator, Population, RandomNumberGenerator, Solution
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
@@ -49,7 +49,7 @@ def test_init_raises_invalid_arguments(num_iterations, runtime):
 def test_num_iterations(num_iterations: int):
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
 
