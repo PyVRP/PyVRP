@@ -40,6 +40,8 @@ private:
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
 
     std::pair<double, double> centroid;  // Center point of route's clients
+    Load load_;                          // Current route load
+    Distance distance_;                  // Current route distance
 
 public:                // TODO make fields private
     size_t const idx;  // Route index
@@ -244,9 +246,9 @@ std::vector<Route::Node *>::const_iterator Route::end() const
 std::vector<Route::Node *>::iterator Route::begin() { return nodes.begin(); }
 std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
 
-Distance Route::dist() const { return endDepot.cumulatedDistance; }
+Distance Route::dist() const { return distance_; }
 
-Load Route::load() const { return endDepot.cumulatedLoad; }
+Load Route::load() const { return load_; }
 
 TimeWindowSegment Route::tws() const { return endDepot.twBefore; }
 

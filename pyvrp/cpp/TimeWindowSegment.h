@@ -168,7 +168,7 @@ Duration TimeWindowSegment::totalTimeWarp() const
     return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
 }
 
-Duration TimeWindowSegment::totalDuration() const { return duration; }
+Duration TimeWindowSegment::totalDuration() const { return duration_; }
 
 TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
                                      size_t idxLast,

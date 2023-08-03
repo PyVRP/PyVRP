@@ -301,7 +301,7 @@ void LocalSearch::maybeRemove(Route::Node *U,
     if (cost + uClient.prize < currentCost)
     {
         auto *routePtr = U->route;  // after remove(), U->route is a nullptr
-        route->remove(U->position);
+        routePtr->remove(U->position);
         update(routePtr, routePtr);
     }
 }

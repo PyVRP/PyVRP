@@ -68,10 +68,12 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     auto const &vehicleTypeV = data.vehicleType(V->route->vehicleType());
 
     // Compute lower bound for new cost based on distance and load
-    auto const distU = U->cumulatedDistance + data.dist(U->client, n(V)->client)
-                       + V->route->dist() - n(V)->cumulatedDistance;
-    auto const distV = V->cumulatedDistance + data.dist(V->client, n(U)->client)
-                       + U->route->dist() - n(U)->cumulatedDistance;
+    auto const distU = U->route->distBetween(0, U->position)
+                       + data.dist(U->client, n(V)->client) + V->route->dist()
+                       - V->route->distBetween(0, V->position + 1);
+    auto const distV = V->route->distBetween(0, V->position)
+                       + data.dist(V->client, n(U)->client) + U->route->dist()
+                       - U->route->distBetween(0, U->position + 1);
 
     // Proposed move appends the segment after V to U, and the segment after U
     // to V. So we need to make a distinction between the loads at U and V, and
