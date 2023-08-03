@@ -49,7 +49,10 @@ void Route::clear()
     nodes.push_back(&startDepot);
     nodes.push_back(&endDepot);
 
+    startDepot.position = 0;
     startDepot.twBefore = startDepot.tw;
+
+    endDepot.position = 1;
     endDepot.twAfter = endDepot.tw;
 }
 
@@ -58,12 +61,10 @@ void Route::insert(size_t position, Node *node)
     assert(0 < position && position < nodes.size());
     assert(!node->route);  // must previously have been unassigned
 
-    auto *prev = nodes[position - 1];
-
     node->position = position;
-    node->route = prev->route;
-    nodes.insert(nodes.begin() + position, node);
+    node->route = this;
 
+    nodes.insert(nodes.begin() + position, node);
     for (auto idx = position; idx != nodes.size(); ++idx)
         nodes[idx]->position = idx;
 }
@@ -73,11 +74,14 @@ void Route::push_back(Node *node) { insert(size() + 1, node); }
 void Route::remove(size_t position)
 {
     assert(0 < position && position < nodes.size() - 1);
+    assert(nodes[position]->route == this);  // must currently be in this route
+
     auto *node = nodes[position];
 
+    node->position = 0;
     node->route = nullptr;
-    nodes.erase(nodes.begin() + position);
 
+    nodes.erase(nodes.begin() + position);
     for (auto idx = position; idx != nodes.size(); ++idx)
         nodes[idx]->position = idx;
 }
@@ -95,16 +99,17 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
+    centroid = {0, 0};
+
     cumLoad.clear();
     cumDist.clear();
 
-    centroid = {0, 0};
+    cumLoad.push_back(0);
+    cumDist.push_back(0);
 
-    Load load = 0;
-    Distance distance = 0;
-
-    for (auto *node : nodes)
+    for (auto it = nodes.begin() + 1; it != nodes.end(); ++it)
     {
+        auto *node = *it;
         auto const &clientData = data.client(node->client);
 
         if (!node->isDepot())
@@ -113,11 +118,9 @@ void Route::update()
             centroid.second += static_cast<double>(clientData.y);
         }
 
-        load += clientData.demand;
-        cumLoad.push_back(load);
-
-        distance += data.dist(p(node)->client, node->client);
-        cumDist.push_back(distance);
+        cumLoad.push_back(cumLoad.back() + clientData.demand);
+        cumDist.push_back(cumDist.back()
+                          + data.dist(p(node)->client, node->client));
     }
 
     centroid.first /= size();
@@ -133,7 +136,7 @@ void Route::update()
 
     // Forward time window segments (client -> depot)
     // TODO std::ranges::view::reverse once clang supports it
-    for (auto node = nodes.rbegin() - 1; node != nodes.rend(); ++node)
+    for (auto node = nodes.rbegin() + 1; node != nodes.rend(); ++node)
         (*node)->twAfter
             = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
 #endif
