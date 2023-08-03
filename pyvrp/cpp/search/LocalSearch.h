@@ -47,16 +47,15 @@ class LocalSearch
     Solution exportSolution() const;
 
     // Tests the node pair (U, V).
-    inline bool applyNodeOps(Route::Node *U,
-                             Route::Node *V,
-                             CostEvaluator const &costEvaluator);
+    bool applyNodeOps(Route::Node *U,
+                      Route::Node *V,
+                      CostEvaluator const &costEvaluator);
 
     // Tests the route pair (U, V).
-    inline bool
-    applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
+    bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.
-    inline void update(Route *U, Route *V);
+    void update(Route *U, Route *V);
 
     // Test inserting U after V. Called if U is not currently in the solution.
     void maybeInsert(Route::Node *U,
