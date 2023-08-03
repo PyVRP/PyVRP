@@ -124,17 +124,14 @@ void Route::update()
 
         if (!node->isDepot())
         {
-            centroid.first += static_cast<double>(clientData.x);
-            centroid.second += static_cast<double>(clientData.y);
+            centroid.first += static_cast<double>(clientData.x) / size();
+            centroid.second += static_cast<double>(clientData.y) / size();
         }
 
         auto const dist = data.dist(p(node)->client, node->client);
         cumDist[pos] = cumDist[pos - 1] + dist;
         cumLoad[pos] = cumLoad[pos - 1] + clientData.demand;
     }
-
-    centroid.first /= size();
-    centroid.second /= size();
 
 #ifdef PYVRP_NO_TIME_WINDOWS
     return;
