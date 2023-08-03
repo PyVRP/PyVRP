@@ -123,9 +123,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                         continue;
 
                     if (U->route)  // try inserting U into the empty route.
-                        applyNodeOps(U, &empty->startDepot, costEvaluator);
+                        applyNodeOps(U, (*empty)[0], costEvaluator);
                     else  // U is not in the solution, so again try inserting.
-                        maybeInsert(U, &empty->startDepot, costEvaluator);
+                        maybeInsert(U, (*empty)[0], costEvaluator);
                 }
             }
         }

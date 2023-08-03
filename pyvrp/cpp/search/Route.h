@@ -40,10 +40,11 @@ private:
 
     std::pair<double, double> centroid;  // Center point of route's clients
 
+    Node startDepot;  // Departure depot for this route
+    Node endDepot;    // Return depot for this route
+
 public:                // TODO make fields private
     size_t const idx;  // Route index
-    Node startDepot;   // Departure depot for this route
-    Node endDepot;     // Return depot for this route
 
     /**
      * @return The client or depot node at the given ``idx``.

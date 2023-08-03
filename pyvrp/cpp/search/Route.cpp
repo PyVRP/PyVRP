@@ -13,9 +13,9 @@ Route::Node::Node(size_t client) : client(client) {}
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
       vehicleType_(vehType),
-      idx(idx),
       startDepot(data.vehicleType(vehType).depot),
-      endDepot(data.vehicleType(vehType).depot)
+      endDepot(data.vehicleType(vehType).depot),
+      idx(idx)
 {
     startDepot.route = this;
     startDepot.tw = TWS(startDepot.client, data.client(startDepot.client));
