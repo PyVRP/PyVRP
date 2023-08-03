@@ -15,10 +15,10 @@ namespace pyvrp::search
  *
  * A ``Route`` object tracks a full route, including the depots. The clients
  * and depots on the route can be accessed using ``Route::operator[]`` on a
- * ``route`` object: ``route[0]`` is the starting depot, ``route[route.size()]``
- * is the last client, and ``route[route.size() + 1]`` is the ending depot.
- * Note that `Route::size()`` returns the number of *clients* in the route; this
- * does *not* include the depots.
+ * ``route`` object: ``route[0]`` and ``route[route.size() + 1]`` are the start
+ * and end depots, respectively, and any clients in between are on the indices
+ * ``{1, ..., size()}`` (empty if ``size() == 0``). Note that `Route::size()``
+ * returns the number of *clients* in the route; this excludes the depots.
  */
 class Route
 {
