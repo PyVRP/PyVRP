@@ -123,9 +123,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                         continue;
 
                     if (U->route)  // try inserting U into the empty route.
-                        applyNodeOps(U, &empty->startDepot, costEvaluator);
+                        applyNodeOps(U, (*empty)[0], costEvaluator);
                     else  // U is not in the solution, so again try inserting.
-                        maybeInsert(U, &empty->startDepot, costEvaluator);
+                        maybeInsert(U, (*empty)[0], costEvaluator);
                 }
             }
         }
@@ -260,7 +260,7 @@ void LocalSearch::maybeInsert(Route::Node *U,
 
     if (deltaCost < 0)
     {
-        V->route->insert(V->position + 1, U);
+        V->route->insert(V->idx + 1, U);
         update(V->route, V->route);
     }
 }
@@ -291,7 +291,7 @@ void LocalSearch::maybeRemove(Route::Node *U,
     if (deltaCost < 0)
     {
         auto *route = U->route;  // after remove(), U->route is a nullptr
-        route->remove(U->position);
+        route->remove(U->idx);
         update(route, route);
     }
 }

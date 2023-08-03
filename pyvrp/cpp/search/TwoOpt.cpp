@@ -11,7 +11,7 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
                              Route::Node *V,
                              CostEvaluator const &costEvaluator) const
 {
-    if (U->position + 1 >= V->position)
+    if (U->idx + 1 >= V->idx)
         return 0;
 
     // Current situation is U -> n(U) -> ... -> V -> n(V). Proposed move is
@@ -21,12 +21,12 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     for (auto *node = V; node != n(U); node = p(node))
         segmentReversalDistance += data.dist(node->client, p(node)->client);
 
-    Distance const deltaDist
-        = data.dist(U->client, V->client)
-          + data.dist(n(U)->client, n(V)->client) + segmentReversalDistance
-          - data.dist(U->client, n(U)->client)
-          - data.dist(V->client, n(V)->client)
-          - U->route->distBetween(n(U)->position, V->position);
+    Distance const deltaDist = data.dist(U->client, V->client)
+                               + data.dist(n(U)->client, n(V)->client)
+                               + segmentReversalDistance
+                               - data.dist(U->client, n(U)->client)
+                               - data.dist(V->client, n(V)->client)
+                               - U->route->distBetween(n(U)->idx, V->idx);
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 
@@ -80,9 +80,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     // Proposed move appends the segment after V to U, and the segment after U
     // to V. So we need to make a distinction between the loads at U and V, and
     // the loads from clients visited after these nodes.
-    auto const uLoad = U->route->loadBetween(0, U->position);
+    auto const uLoad = U->route->loadBetween(0, U->idx);
     auto const uLoadAfter = U->route->load() - uLoad;
-    auto const vLoad = V->route->loadBetween(0, V->position);
+    auto const vLoad = V->route->loadBetween(0, V->idx);
     auto const vLoadAfter = V->route->load() - vLoad;
 
     deltaCost
@@ -102,13 +102,13 @@ void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
 {
     auto *nU = n(U);
 
-    auto insertPos = U->position + 1;
+    auto insertIdx = U->idx + 1;
     while (V != nU)
     {
         auto *node = V;
         V = p(V);
-        U->route->remove(node->position);
-        U->route->insert(insertPos++, node);
+        U->route->remove(node->idx);
+        U->route->insert(insertIdx++, node);
     }
 }
 
@@ -117,22 +117,22 @@ void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
     auto *nU = n(U);
     auto *nV = n(V);
 
-    auto insertPos = U->position + 1;
+    auto insertIdx = U->idx + 1;
     while (!nV->isDepot())
     {
         auto *node = nV;
         nV = n(nV);
-        V->route->remove(node->position);
-        U->route->insert(insertPos++, node);
+        V->route->remove(node->idx);
+        U->route->insert(insertIdx++, node);
     }
 
-    insertPos = V->position + 1;
+    insertIdx = V->idx + 1;
     while (!nU->isDepot())
     {
         auto *node = nU;
         nU = n(nU);
-        U->route->remove(node->position);
-        V->route->insert(insertPos++, node);
+        U->route->remove(node->idx);
+        V->route->insert(insertIdx++, node);
     }
 }
 

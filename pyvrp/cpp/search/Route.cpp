@@ -13,9 +13,9 @@ Route::Node::Node(size_t client) : client(client) {}
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
       vehicleType_(vehType),
-      idx(idx),
       startDepot(data.vehicleType(vehType).depot),
-      endDepot(data.vehicleType(vehType).depot)
+      endDepot(data.vehicleType(vehType).depot),
+      idx(idx)
 {
     startDepot.route = this;
     startDepot.tw = TWS(startDepot.client, data.client(startDepot.client));
@@ -46,101 +46,104 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 void Route::clear()
 {
     nodes.clear();
+    nodes.push_back(&startDepot);
+    nodes.push_back(&endDepot);
 
+    cumDist.clear();
+    cumDist.push_back(0);
+    cumDist.push_back(0);
+
+    cumLoad.clear();
+    cumLoad.push_back(0);
+    cumLoad.push_back(0);
+
+    startDepot.idx = 0;
     startDepot.twBefore = startDepot.tw;
+
+    endDepot.idx = 1;
     endDepot.twAfter = endDepot.tw;
 }
 
-void Route::insert(size_t position, Node *node)
+void Route::insert(size_t idx, Node *node)
 {
-    assert(0 < position && position <= nodes.size() + 1);
+    assert(0 < idx && idx < nodes.size());
     assert(!node->route);  // must previously have been unassigned
 
-    auto *prev = position == 1 ? &startDepot : nodes[position - 2];
+    node->idx = idx;
+    node->route = this;
 
-    node->position = position;
-    node->route = prev->route;
-    nodes.insert(nodes.begin() + position - 1, node);
+    cumDist.emplace_back();  // does not matter where we place these, as they
+    cumLoad.emplace_back();  // will be updated by Route::update().
 
-    for (auto idx = position - 1; idx != nodes.size(); ++idx)
-        nodes[idx]->position = idx + 1;
+    nodes.insert(nodes.begin() + idx, node);
+    for (size_t after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx = after;
 }
 
 void Route::push_back(Node *node) { insert(size() + 1, node); }
 
-void Route::remove(size_t position)
+void Route::remove(size_t idx)
 {
-    assert(position > 0);
-    auto *node = nodes[position - 1];
+    assert(0 < idx && idx < nodes.size() - 1);
+    assert(nodes[idx]->route == this);  // must currently be in this route
 
+    auto *node = nodes[idx];
+
+    node->idx = 0;
     node->route = nullptr;
-    nodes.erase(nodes.begin() + position - 1);
 
-    for (auto idx = position - 1; idx != nodes.size(); ++idx)
-        nodes[idx]->position = idx + 1;
+    cumDist.pop_back();  // does not matter where we remove these, as they will
+    cumLoad.pop_back();  // will be updated by Route::update().
+
+    nodes.erase(nodes.begin() + idx);
+    for (auto after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx = after;
 }
 
 void Route::swap(Node *first, Node *second)
 {
     // TODO just swap clients?
     // TODO specialise std::swap for Node
-    std::swap(first->route->nodes[first->position - 1],
-              second->route->nodes[second->position - 1]);
+    std::swap(first->route->nodes[first->idx],
+              second->route->nodes[second->idx]);
 
     std::swap(first->route, second->route);
-    std::swap(first->position, second->position);
+    std::swap(first->idx, second->idx);
 }
 
 void Route::update()
 {
-    cumLoad.clear();
-    cumDist.clear();
-
     centroid = {0, 0};
-    load_ = 0;
-    distance_ = 0;
 
-    for (auto *node : nodes)
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
+        auto *node = nodes[idx];
         auto const &clientData = data.client(node->client);
 
-        centroid.first += static_cast<double>(clientData.x);
-        centroid.second += static_cast<double>(clientData.y);
+        if (!node->isDepot())
+        {
+            centroid.first += static_cast<double>(clientData.x) / size();
+            centroid.second += static_cast<double>(clientData.y) / size();
+        }
 
-        load_ += clientData.demand;
-        cumLoad.push_back(load_);
-
-        distance_ += data.dist(p(node)->client, node->client);
-        cumDist.push_back(distance_);
+        auto const dist = data.dist(p(node)->client, node->client);
+        cumDist[idx] = cumDist[idx - 1] + dist;
+        cumLoad[idx] = cumLoad[idx - 1] + clientData.demand;
     }
-
-    endDepot.position = size() + 1;
-
-    centroid.first /= size();
-    centroid.second /= size();
-
-    load_ += data.client(endDepot.client).demand;
-    distance_ += data.dist(p(&endDepot)->client, endDepot.client);
 
 #ifdef PYVRP_NO_TIME_WINDOWS
     return;
 #else
     // Backward time window segments (depot -> client)
-    for (auto *node : nodes)
-        node->twBefore
-            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
-
-    endDepot.twBefore = TWS::merge(
-        data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
+    for (auto node = nodes.begin() + 1; node != nodes.end(); ++node)
+        (*node)->twBefore = TWS::merge(
+            data.durationMatrix(), p(*node)->twBefore, (*node)->tw);
 
     // Forward time window segments (client -> depot)
     // TODO std::ranges::view::reverse once clang supports it
-    for (auto node = nodes.rbegin(); node != nodes.rend(); ++node)
+    for (auto node = nodes.rbegin() + 1; node != nodes.rend(); ++node)
         (*node)->twAfter
             = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
-
-    startDepot.twAfter = TWS::merge(
-        data.durationMatrix(), startDepot.tw, n(&startDepot)->twAfter);
 #endif
 }
 
