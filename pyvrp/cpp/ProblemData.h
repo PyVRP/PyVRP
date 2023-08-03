@@ -295,7 +295,6 @@ Duration ProblemData::duration(size_t first, size_t second) const
 Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
 Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
-
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H
