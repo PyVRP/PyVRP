@@ -49,6 +49,14 @@ void Route::clear()
     nodes.push_back(&startDepot);
     nodes.push_back(&endDepot);
 
+    cumDist.clear();
+    cumDist.push_back(0);
+    cumDist.push_back(0);
+
+    cumLoad.clear();
+    cumLoad.push_back(0);
+    cumLoad.push_back(0);
+
     startDepot.position = 0;
     startDepot.twBefore = startDepot.tw;
 
@@ -63,6 +71,9 @@ void Route::insert(size_t position, Node *node)
 
     node->position = position;
     node->route = this;
+
+    cumDist.emplace_back();  // does not matter where we place these, as they
+    cumLoad.emplace_back();  // will be updated by Route::update().
 
     nodes.insert(nodes.begin() + position, node);
     for (auto idx = position; idx != nodes.size(); ++idx)
@@ -80,6 +91,9 @@ void Route::remove(size_t position)
 
     node->position = 0;
     node->route = nullptr;
+
+    cumDist.pop_back();  // does not matter where we remove these, as they will
+    cumLoad.pop_back();  // will be updated by Route::update().
 
     nodes.erase(nodes.begin() + position);
     for (auto idx = position; idx != nodes.size(); ++idx)
@@ -99,17 +113,13 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
+    cumDist[0] = 0;
+    cumLoad[0] = 0;
     centroid = {0, 0};
 
-    cumLoad.clear();
-    cumDist.clear();
-
-    cumLoad.push_back(0);
-    cumDist.push_back(0);
-
-    for (auto it = nodes.begin() + 1; it != nodes.end(); ++it)
+    for (size_t pos = 1; pos != nodes.size(); ++pos)
     {
-        auto *node = *it;
+        auto *node = nodes[pos];
         auto const &clientData = data.client(node->client);
 
         if (!node->isDepot())
@@ -118,9 +128,9 @@ void Route::update()
             centroid.second += static_cast<double>(clientData.y);
         }
 
-        cumLoad.push_back(cumLoad.back() + clientData.demand);
-        cumDist.push_back(cumDist.back()
-                          + data.dist(p(node)->client, node->client));
+        auto const dist = data.dist(p(node)->client, node->client);
+        cumDist[pos] = cumDist[pos - 1] + dist;
+        cumLoad[pos] = cumLoad[pos - 1] + clientData.demand;
     }
 
     centroid.first /= size();

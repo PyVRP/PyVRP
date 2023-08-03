@@ -35,8 +35,8 @@ private:
     size_t const vehicleType_;
 
     std::vector<Node *> nodes;      // Nodes in this route, excl. depot
-    std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
+    std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
 
     std::pair<double, double> centroid;  // Center point of route's clients
 
