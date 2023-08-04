@@ -16,7 +16,6 @@ using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::MoveTwoClientsReversed;
 using pyvrp::search::RelocateStar;
-using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 using pyvrp::search::TwoOpt;
 
@@ -144,8 +143,4 @@ PYBIND11_MODULE(_search, m)
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
-
-    py::class_<Route>(m, "Route");
-
-    py::class_<Route::Node>(m, "Node");
 }
