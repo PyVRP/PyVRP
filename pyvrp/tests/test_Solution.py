@@ -12,7 +12,7 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import read
 
 
 def test_route_constructor_raises_for_empty_routes():
@@ -572,43 +572,41 @@ def test_eq_heterogeneous_vehicle():
     Tests that two solutions are not considered equal if they have the same
     routes (orders of clients) but served by different vehicle types.
     """
-    data = read("data/OkSmall.txt")
+    clients = [Client(x=0, y=0) for _ in range(5)]
+    vehicle_types = [VehicleType(20, 2), VehicleType(30, 1)]
+    matrix = np.zeros((len(clients), len(clients)), dtype=int)
+    data = ProblemData(clients, vehicle_types, matrix, matrix)
 
-    # Make sure capacities are different but large enough (>18) to have no
-    # violations so have the same attributes, such that we actually test if the
-    # assignments are used for the equality comparison.
-    data = make_heterogeneous(
-        data, vehicle_types=[VehicleType(20, 2), VehicleType(30, 1)]
-    )
-
-    # These two should be the same
+    # Vehicle type 0 is used by default, so these two solutions are the same.
     sol1 = Solution(data, [[1, 2, 3, 4]])
-    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
-    # Create solution with different vehicle type
+    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], vehicle_type=0)])
+    assert_equal(sol1, sol2)
+
+    # Solution 3 has the same route but uses a different vehicle type (1),
+    # so this should not be equal to the first two solutions.
     sol3 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+    assert_(sol3 != sol1)
+    assert_(sol3 != sol2)
 
-    # First two solution have one route with the same vehicle type
-    assert_(sol1 == sol2)
-    # Solution 3 is different since the route has a different vehicle type
-    assert_(sol1 != sol3)
-
-    # Order should not matter so these should be the same
+    # Order of routes in the solution should not matter for equality.
     sol1 = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
     sol2 = Solution(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
-    assert_(sol1 == sol2)
+    assert_equal(sol1, sol2)
 
-    # But changing the vehicle types should be different
+    # But changing the vehicle types should be different.
     sol3 = Solution(data, [Route(data, [1, 2], 1), Route(data, [3, 4], 0)])
     assert_(sol1 != sol3)
 
 
 def test_duplicate_vehicle_types():
     """
-    Tests that even though it is not useful it is allowed to have duplicate
-    vehicle types which will be considered different.
+    Tests that it is allowed to have duplicate vehicle types, but those will
+    be considered different from each other.
     """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 1)])
+    clients = [Client(x=0, y=0) for _ in range(5)]
+    vehicle_types = [VehicleType(10, 2), VehicleType(10, 1)]
+    matrix = np.zeros((len(clients), len(clients)), dtype=int)
+    data = ProblemData(clients, vehicle_types, matrix, matrix)
 
     sol1 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
     sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
@@ -621,8 +619,9 @@ def test_duplicate_vehicle_types():
     [[VehicleType(10, 3)], [VehicleType(10, 2), VehicleType(20, 1)]],
 )
 def test_str_contains_routes(vehicle_types):
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_types)
+    clients = [Client(x=0, y=0) for _ in range(5)]
+    matrix = np.zeros((len(clients), len(clients)), dtype=int)
+    data = ProblemData(clients, vehicle_types, matrix, matrix)
 
     rng = RandomNumberGenerator(seed=2)
 
