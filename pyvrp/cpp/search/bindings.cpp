@@ -170,7 +170,8 @@ PYBIND11_MODULE(_search, m)
              &Route::insert,
              py::arg("idx"),
              py::arg("node"),
-             py::keep_alive<1, 3>());  // keep node alive
+             py::keep_alive<1, 3>())  // keep node alive
+        .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
         .def(py::init<size_t>(), py::arg("loc"))

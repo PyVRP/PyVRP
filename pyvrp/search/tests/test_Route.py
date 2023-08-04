@@ -77,7 +77,7 @@ def test_route_iter():
     assert_equal(len(nodes), len(route))
 
     # Iterating the Route object returns all clients, not the depots at index
-    # ``0`` and index ``len(route) + 1```.`
+    # ``0`` and index ``len(route) + 1`` in the Route object.
     assert_equal(nodes[0], route[1])
     assert_equal(nodes[1], route[2])
     assert_equal(nodes[2], route[3])
