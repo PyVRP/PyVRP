@@ -109,6 +109,9 @@ def test_route_add_and_remove_client_leaves_route_empty():
 
 
 def test_route_remove_reduces_size_by_one():
+    """
+    The remove() method removes only the indicated index, not more.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -118,10 +121,15 @@ def test_route_remove_reduces_size_by_one():
 
     route.remove(1)
     assert_equal(len(route), 1)
+    assert_equal(route[1].client, 2)
 
 
 @pytest.mark.parametrize("num_nodes", range(4))
 def test_route_clear_empties_entire_route(num_nodes: int):
+    """
+    The clear() method should clear the entire route, not just remove part of
+    it.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -214,8 +222,38 @@ def test_all_routes_overlap_with_maximum_tolerance_value():
 # TODO test overlap with less extreme cases, including wrap around etc.
 
 
+def test_data_is_not_updated_until_update_call():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    # Add a new client to the route. update() has not been called, so the route
+    # statistics are not correct.
+    route.append(Node(loc=1))
+    assert_(route.load() != data.client(1).demand)
+    assert_(route.dist_between(0, 2) != data.dist(0, 1) + data.dist(1, 0))
+
+    # Update. This recalculates the statistics, which should now be correct.
+    route.update()
+    assert_equal(route.load(), data.client(1).demand)
+    assert_equal(route.dist_between(0, 2), data.dist(0, 1) + data.dist(1, 0))
+
+    # Same story with another client: incorrect before update, correct after.
+    route.append(Node(loc=2))
+    assert_(route.load() != data.client(1).demand + data.client(2).demand)
+
+    route.update()
+    assert_equal(route.load(), data.client(1).demand + data.client(2).demand)
+    assert_equal(
+        route.dist_between(0, 3),
+        data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0),
+    )
+
+
 @pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
 def test_str_contains_route(locs: List[int]):
+    """
+    Test that each client in the route is also printed in the route's __str__.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
