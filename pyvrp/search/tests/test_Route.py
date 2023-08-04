@@ -64,3 +64,20 @@ def test_route_insert():
     assert_equal(route[1].client, 3)
     assert_equal(route[2].client, 1)
     assert_equal(route[3].client, 2)
+
+
+def test_route_iter():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for loc in [1, 2, 3]:
+        route.append(Node(loc=loc))
+
+    nodes = [node for node in route]
+    assert_equal(len(nodes), len(route))
+
+    # Iterating the Route object returns all clients, not the depots at index
+    # ``0`` and index ``len(route) + 1```.`
+    assert_equal(nodes[0], route[1])
+    assert_equal(nodes[1], route[2])
+    assert_equal(nodes[2], route[3])

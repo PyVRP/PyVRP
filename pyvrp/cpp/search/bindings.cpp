@@ -155,6 +155,12 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
         .def("__getitem__", &Route::operator[], py::arg("idx"))
+        .def(
+            "__iter__",
+            [](Route const &route) {
+                return py::make_iterator(route.begin(), route.end());
+            },
+            py::return_value_policy::reference_internal)
         .def("__len__", &Route::size)
         .def("append",
              &Route::push_back,
