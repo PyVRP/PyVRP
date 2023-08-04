@@ -7,7 +7,7 @@
 using pyvrp::Cost;
 using pyvrp::Duration;
 
-using Client = int;
+using Client = size_t;
 using Route = std::vector<Client>;
 using Routes = std::vector<Route>;
 

@@ -87,7 +87,7 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
-                      std::vector<std::vector<int>>>(),
+                      std::vector<std::vector<size_t>>>(),
              py::arg("data"),
              py::arg("neighbours"),
              py::keep_alive<1, 2>())  // keep data alive until LS is freed
