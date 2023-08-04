@@ -167,3 +167,8 @@ def test_dist_and_load_for_single_client_routes(client: int):
     assert_equal(
         route.dist_between(0, 2), data.dist(0, client) + data.dist(client, 0)
     )
+
+
+# TODO test overlap
+
+# TODO test time windows
