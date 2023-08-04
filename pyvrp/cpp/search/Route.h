@@ -33,20 +33,19 @@ public:
     {
         friend class Route;
 
-        // TODO rename client to location/loc
-        size_t client_;           // Location represented by this node
-        size_t idx_;              // Position in the route
-        Route *route_ = nullptr;  // Indicates membership of a route, if any.
+        size_t loc_;    // Location represented by this node
+        size_t idx_;    // Position in the route
+        Route *route_;  // Indicates membership of a route, if any
 
     public:
-        // TODO can these data fields be moved to Route?
-        TimeWindowSegment tw;        // TWS for individual node (client)
-        TimeWindowSegment twBefore;  // TWS for (0...client) including self
-        TimeWindowSegment twAfter;   // TWS for (client...0) including self
+        // TODO move these data fields to Route
+        TimeWindowSegment tw;        // TWS of this node (loc)
+        TimeWindowSegment twBefore;  // TWS for depot -> loc, including self
+        TimeWindowSegment twAfter;   // TWS for loc -> depot, including self
 
-        Node(size_t client);
+        Node(size_t loc);
 
-        [[nodiscard]] inline size_t client() const;
+        [[nodiscard]] inline size_t client() const;  // TODO rename to loc
         [[nodiscard]] inline size_t idx() const;
         [[nodiscard]] inline Route *route() const;
         [[nodiscard]] inline bool isDepot() const;
@@ -206,7 +205,7 @@ inline Route::Node *n(Route::Node *node)
     return route[node->idx() + 1];
 }
 
-size_t Route::Node::client() const { return client_; }
+size_t Route::Node::client() const { return loc_; }
 
 size_t Route::Node::idx() const { return idx_; }
 

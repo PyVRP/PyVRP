@@ -8,7 +8,7 @@
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Node::Node(size_t client) : client_(client), idx_(0), route_(nullptr) {}
+Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
