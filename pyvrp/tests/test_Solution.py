@@ -25,29 +25,24 @@ def test_route_constructor_raises_for_empty_routes():
 
 
 def test_route_constructor_heterogeneous():
-    data = read("data/OkSmall.txt")
-    # Test heterogeneous case
-    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
-    sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
 
-    # num_routes() should show two non-empty routes.
+    sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+    routes = sol.get_routes()
+
     assert_equal(sol.num_routes(), 2)
 
-    # We expect Solution to remove empty routes and return routes with the
-    # correct vehicle types.
-    routes = sol.get_routes()
-    assert_equal(len(routes), 2)
     assert_equal(routes[0].visits(), [3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[0], Route(data, [3, 4], 0))
+
     assert_equal(routes[1].visits(), [1, 2])
     assert_equal(routes[1].vehicle_type(), 1)
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
 
 def test_route_eq():
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
 
     route1 = Route(data, [1, 2], 0)
     assert_(route1 == route1)  # should equal self
@@ -100,7 +95,7 @@ def test_route_constructor_raises_too_many_vehicles():
         Solution(data, [[1], [2], [3], [4]])
 
     # Now test heterogeneous case
-    data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
 
     # Only two routes (of type 0) should not raise.
     sol = Solution(data, [[1, 2], [4, 3]])
@@ -252,10 +247,7 @@ def test_excess_load_calculation():
 
 
 def test_heterogeneous_capacity_excess_load_calculation():
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(
-        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
-    )
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
 
     # This instance has capacities 10 and 20 for vehicle type 0 and 1. The
     # total demand is 18 so if all demand is put in vehicle type 0 the
@@ -505,10 +497,7 @@ def test_time_warp_return_to_depot():
 
 
 def test_num_routes_calculation():
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(
-        data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
-    )
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
 
     sol = Solution(data, [[1, 2, 3, 4]])
     assert_equal(sol.num_routes(), 1)
@@ -525,18 +514,16 @@ def test_num_routes_calculation():
         sol = Solution(data, [[1], [2], [3, 4]])
 
     # It works if we specify the correct vehicle types
-    sol = Solution(
-        data,
-        [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)],
-    )
+    routes = [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)]
+    sol = Solution(data, routes)
+
     assert_equal(sol.num_routes(), 3)
 
     # But not if we violate the qty available per vehicle type
+    routes = [Route(data, [1], 0), Route(data, [2], 1), Route(data, [3, 4], 1)]
+
     with assert_raises(RuntimeError):
-        sol = Solution(
-            data,
-            [Route(data, [1], 0), Route(data, [2], 1), Route(data, [3, 4], 1)],
-        )
+        Solution(data, routes)
 
 
 def test_copy():
@@ -586,6 +573,7 @@ def test_eq_heterogeneous_vehicle():
     routes (orders of clients) but served by different vehicle types.
     """
     data = read("data/OkSmall.txt")
+
     # Make sure capacities are different but large enough (>18) to have no
     # violations so have the same attributes, such that we actually test if the
     # assignments are used for the equality comparison.

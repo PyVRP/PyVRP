@@ -34,11 +34,11 @@ SERVICE_TIME_SECTION
 3    360
 4    420
 5    360
-// Vehicle capacities are given for each unique vehicle. PyVRP groups vehicles
-// with identical capacities together in a VehicleType class.
+# Vehicle capacities are given for each unique vehicle. PyVRP groups vehicles
+# with identical capacities together in a VehicleType class.
 VEHICLE_CAPACITY_SECTION
 1    10
-2    20
+2    10
 3    20
 DEPOT_SECTION
 1

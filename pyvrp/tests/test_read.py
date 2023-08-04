@@ -104,10 +104,10 @@ def test_reading_OkSmallHeterogeneousCapacities_instance():
     assert_equal(data.num_vehicle_types, 2)
 
     assert_equal(data.vehicle_type(0).capacity, 10)
-    assert_equal(data.vehicle_type(0).num_available, 1)
+    assert_equal(data.vehicle_type(0).num_available, 2)
 
     assert_equal(data.vehicle_type(1).capacity, 20)
-    assert_equal(data.vehicle_type(1).num_available, 2)
+    assert_equal(data.vehicle_type(1).num_available, 1)
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB

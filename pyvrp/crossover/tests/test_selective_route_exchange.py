@@ -218,9 +218,7 @@ def test_srex_heterogeneous_changed_start_indices():
     Tests the case where the initial start indices are changed in SREX for
     heterogeneous routes.
     """
-    data = make_heterogeneous(
-        read("data/OkSmall.txt"), [VehicleType(10, 2), VehicleType(20, 1)]
-    )
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't
