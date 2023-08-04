@@ -31,12 +31,14 @@ class Route
 public:
     class Node
     {
-    public:  // TODO make fields private
-        // TODO rename client to location/loc
-        size_t client;           // Location represented by this node
-        size_t idx = 0;          // Position in the route
-        Route *route = nullptr;  // Indicates membership of a route, if any.
+        friend class Route;
 
+        // TODO rename client to location/loc
+        size_t client_;           // Location represented by this node
+        size_t idx_;              // Position in the route
+        Route *route_ = nullptr;  // Indicates membership of a route, if any.
+
+    public:
         // TODO can these data fields be moved to Route?
         TimeWindowSegment tw;        // TWS for individual node (client)
         TimeWindowSegment twBefore;  // TWS for (0...client) including self
@@ -44,6 +46,9 @@ public:
 
         Node(size_t client);
 
+        [[nodiscard]] inline size_t client() const;
+        [[nodiscard]] inline size_t idx() const;
+        [[nodiscard]] inline Route *route() const;
         [[nodiscard]] inline bool isDepot() const;
     };
 
@@ -188,8 +193,8 @@ public:                // TODO make fields private
  */
 inline Route::Node *p(Route::Node *node)
 {
-    auto &route = *node->route;
-    return route[node->idx - 1];
+    auto &route = *node->route();
+    return route[node->idx() - 1];
 }
 
 /**
@@ -197,15 +202,21 @@ inline Route::Node *p(Route::Node *node)
  */
 inline Route::Node *n(Route::Node *node)
 {
-    auto &route = *node->route;
-    return route[node->idx + 1];
+    auto &route = *node->route();
+    return route[node->idx() + 1];
 }
+
+size_t Route::Node::client() const { return client_; }
+
+size_t Route::Node::idx() const { return idx_; }
+
+Route *Route::Node::route() const { return route_; }
 
 bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
     // be either the route's start or end depot.
-    return route && (this == &route->startDepot || this == &route->endDepot);
+    return idx_ == 0 || (route_ && idx_ == route_->size() + 1);
 }
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
@@ -287,7 +298,7 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end < nodes.size());
 
-    auto const atStart = data.client(nodes[start]->client).demand;
+    auto const atStart = data.client(nodes[start]->client()).demand;
     auto const startLoad = cumLoad[start];
     auto const endLoad = cumLoad[end];
 
