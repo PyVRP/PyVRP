@@ -106,7 +106,7 @@ def test_route_remove_reduces_size_by_one():
     assert_equal(len(route), 1)
 
 
-@pytest.mark.parametrize("num_nodes", [0, 1, 2, 3])
+@pytest.mark.parametrize("num_nodes", range(4))
 def test_route_clear(num_nodes: int):
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
