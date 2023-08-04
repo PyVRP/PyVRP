@@ -125,26 +125,22 @@ PYBIND11_MODULE(_search, m)
     py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<RelocateStar, RouteOp>(m, "RelocateStar")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>()  // keep data alive
-        );
+             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),
@@ -165,6 +161,25 @@ PYBIND11_MODULE(_search, m)
             },
             py::return_value_policy::reference_internal)
         .def("__len__", &Route::size)
+        .def("is_feasible", &Route::isFeasible)
+        .def("has_excess_load", &Route::hasExcessLoad)
+        .def("has_time_warp", &Route::hasTimeWarp)
+        .def("capacity", &Route::capacity)
+        .def("load", &Route::load)
+        .def("time_warp", &Route::timeWarp)
+        .def("dist_between",
+             &Route::distBetween,
+             py::arg("start"),
+             py::arg("end"))
+        .def("load_between",
+             &Route::loadBetween,
+             py::arg("start"),
+             py::arg("end"))
+        .def("tw_between", &Route::twBetween, py::arg("start"), py::arg("end"))
+        .def("overlaps_with",
+             &Route::overlapsWith,
+             py::arg("other"),
+             py::arg("tolerance"))
         .def("append",
              &Route::push_back,
              py::arg("node"),
