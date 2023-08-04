@@ -28,3 +28,15 @@ def test_route_init(idx: int, vehicle_type: int):
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
     assert_equal(route.idx, idx)
     assert_equal(route.vehicle_type, vehicle_type)
+
+
+def test_route_append_increases_route_len():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+    assert_equal(len(route), 0)
+
+    route.append(Node(loc=1))
+    assert_equal(len(route), 1)
+
+    route.append(Node(loc=2))
+    assert_equal(len(route), 2)

@@ -22,6 +22,8 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
     endDepot.route_ = this;
     endDepot.tw = TWS(endDepot.client(), data.client(endDepot.client()));
+
+    clear();
 }
 
 size_t Route::vehicleType() const { return vehicleType_; }
