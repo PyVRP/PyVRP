@@ -317,10 +317,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         throw std::runtime_error("LocalSearch requires complete solutions.");
 
     for (size_t client = 0; client <= data.numClients(); client++)
-    {
         clients[client] = {client};
-        clients[client].tw = {client, data.client(client)};
-    }
 
     // First empty all routes.
     for (auto &route : routes)

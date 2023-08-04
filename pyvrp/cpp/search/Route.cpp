@@ -18,11 +18,7 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       endDepot(data.vehicleType(vehicleType).depot)
 {
     startDepot.route_ = this;
-    startDepot.tw = TWS(startDepot.client(), data.client(startDepot.client()));
-
     endDepot.route_ = this;
-    endDepot.tw = TWS(endDepot.client(), data.client(endDepot.client()));
-
     clear();
 }
 
@@ -51,6 +47,9 @@ void Route::clear()
     nodes.push_back(&startDepot);
     nodes.push_back(&endDepot);
 
+    startDepot.idx_ = 0;
+    endDepot.idx_ = 1;
+
     cumDist.clear();
     cumDist.push_back(0);
     cumDist.push_back(0);
@@ -59,11 +58,24 @@ void Route::clear()
     cumLoad.push_back(0);
     cumLoad.push_back(0);
 
-    startDepot.idx_ = 0;
-    startDepot.twBefore = startDepot.tw;
+    tws.clear();
+    twsBefore.clear();
+    twsAfter.clear();
 
-    endDepot.idx_ = 1;
-    endDepot.twAfter = endDepot.tw;
+    auto const startClient = startDepot.client();
+    TWS const startTWS = TWS(startClient, data.client(startClient));
+
+    auto const endClient = endDepot.client();
+    TWS const endTWS = TWS(endClient, data.client(endClient));
+
+    tws.push_back(startTWS);
+    tws.push_back(endTWS);
+
+    twsBefore.push_back(startTWS);
+    twsBefore.push_back(TWS::merge(data.durationMatrix(), startTWS, endTWS));
+
+    twsAfter.push_back(TWS::merge(data.durationMatrix(), startTWS, endTWS));
+    twsAfter.push_back(endTWS);
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -76,6 +88,9 @@ void Route::insert(size_t idx, Node *node)
 
     cumDist.emplace_back();  // does not matter where we place these, as they
     cumLoad.emplace_back();  // will be updated by Route::update().
+    tws.emplace_back();
+    twsBefore.emplace_back();
+    twsAfter.emplace_back();
 
     nodes.insert(nodes.begin() + idx, node);
     for (size_t after = idx; after != nodes.size(); ++after)
@@ -96,6 +111,9 @@ void Route::remove(size_t idx)
 
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
+    tws.pop_back();
+    twsBefore.pop_back();
+    twsAfter.pop_back();
 
     nodes.erase(nodes.begin() + idx);
     for (auto after = idx; after != nodes.size(); ++after)
@@ -137,15 +155,14 @@ void Route::update()
     return;
 #else
     // Backward time window segments (depot -> client)
-    for (auto node = nodes.begin() + 1; node != nodes.end(); ++node)
-        (*node)->twBefore = TWS::merge(
-            data.durationMatrix(), p(*node)->twBefore, (*node)->tw);
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        twsBefore[idx]
+            = TWS::merge(data.durationMatrix(), twsBefore[idx - 1], tws[idx]);
 
     // Forward time window segments (client -> depot)
-    // TODO std::ranges::view::reverse once clang supports it
-    for (auto node = nodes.rbegin() + 1; node != nodes.rend(); ++node)
-        (*node)->twAfter
-            = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
+    for (size_t idx = nodes.size() - 2; idx != 0; --idx)
+        twsAfter[idx]
+            = TWS::merge(data.durationMatrix(), tws[idx], twsAfter[idx + 1]);
 #endif
 }
 

@@ -43,11 +43,6 @@ public:
         Route *route_;  // Indicates membership of a route, if any
 
     public:
-        // TODO move these data fields to Route
-        TimeWindowSegment tw;        // TWS of this node (loc)
-        TimeWindowSegment twBefore;  // TWS for depot -> loc, including self
-        TimeWindowSegment twAfter;   // TWS for loc -> depot, including self
-
         Node(size_t loc);
 
         [[nodiscard]] inline size_t client() const;  // TODO rename to loc
@@ -64,6 +59,10 @@ private:
     std::vector<Node *> nodes;      // Nodes in this route, including depots
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
     std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
+
+    std::vector<TimeWindowSegment> tws;        // TWS of client
+    std::vector<TimeWindowSegment> twsBefore;  // TWS of depot -> client
+    std::vector<TimeWindowSegment> twsAfter;   // TWS of client -> depot
 
     std::pair<double, double> centroid;  // Center point of route's clients
 
@@ -265,7 +264,7 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
 Load Route::load() const { return cumLoad.back(); }
 
-Duration Route::timeWarp() const { return endDepot.twBefore.totalTimeWarp(); }
+Duration Route::timeWarp() const { return twsBefore.back().totalTimeWarp(); }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
@@ -279,18 +278,15 @@ size_t Route::size() const
 
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
+    using TWS = TimeWindowSegment;
     assert(0 < start && start <= end && end < nodes.size());
 
-    auto *node = nodes[start];
-    auto tws = node->tw;
+    auto segment = tws[start];
 
-    for (size_t step = start; step != end; ++step)
-    {
-        node = n(node);
-        tws = TimeWindowSegment::merge(data.durationMatrix(), tws, node->tw);
-    }
+    for (size_t step = start + 1; step <= end; ++step)
+        segment = TWS::merge(data.durationMatrix(), segment, tws[step]);
 
-    return tws;
+    return segment;
 }
 
 Distance Route::distBetween(size_t start, size_t end) const
