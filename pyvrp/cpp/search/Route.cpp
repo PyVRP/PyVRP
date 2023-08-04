@@ -8,7 +8,7 @@
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Node::Node(size_t client) : client(client) {}
+Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
 Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
     : data(data),
@@ -17,11 +17,11 @@ Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
       endDepot(data.vehicleType(vehType).depot),
       idx(idx)
 {
-    startDepot.route = this;
-    startDepot.tw = TWS(startDepot.client, data.client(startDepot.client));
+    startDepot.route_ = this;
+    startDepot.tw = TWS(startDepot.client(), data.client(startDepot.client()));
 
-    endDepot.route = this;
-    endDepot.tw = TWS(endDepot.client, data.client(endDepot.client));
+    endDepot.route_ = this;
+    endDepot.tw = TWS(endDepot.client(), data.client(endDepot.client()));
 }
 
 size_t Route::vehicleType() const { return vehicleType_; }
@@ -57,27 +57,27 @@ void Route::clear()
     cumLoad.push_back(0);
     cumLoad.push_back(0);
 
-    startDepot.idx = 0;
+    startDepot.idx_ = 0;
     startDepot.twBefore = startDepot.tw;
 
-    endDepot.idx = 1;
+    endDepot.idx_ = 1;
     endDepot.twAfter = endDepot.tw;
 }
 
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
-    assert(!node->route);  // must previously have been unassigned
+    assert(!node->route());  // must previously have been unassigned
 
-    node->idx = idx;
-    node->route = this;
+    node->idx_ = idx;
+    node->route_ = this;
 
     cumDist.emplace_back();  // does not matter where we place these, as they
     cumLoad.emplace_back();  // will be updated by Route::update().
 
     nodes.insert(nodes.begin() + idx, node);
     for (size_t after = idx; after != nodes.size(); ++after)
-        nodes[after]->idx = after;
+        nodes[after]->idx_ = after;
 }
 
 void Route::push_back(Node *node) { insert(size() + 1, node); }
@@ -85,30 +85,30 @@ void Route::push_back(Node *node) { insert(size() + 1, node); }
 void Route::remove(size_t idx)
 {
     assert(0 < idx && idx < nodes.size() - 1);
-    assert(nodes[idx]->route == this);  // must currently be in this route
+    assert(nodes[idx]->route() == this);  // must currently be in this route
 
     auto *node = nodes[idx];
 
-    node->idx = 0;
-    node->route = nullptr;
+    node->idx_ = 0;
+    node->route_ = nullptr;
 
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
 
     nodes.erase(nodes.begin() + idx);
     for (auto after = idx; after != nodes.size(); ++after)
-        nodes[after]->idx = after;
+        nodes[after]->idx_ = after;
 }
 
 void Route::swap(Node *first, Node *second)
 {
     // TODO just swap clients?
     // TODO specialise std::swap for Node
-    std::swap(first->route->nodes[first->idx],
-              second->route->nodes[second->idx]);
+    std::swap(first->route_->nodes[first->idx_],
+              second->route_->nodes[second->idx_]);
 
-    std::swap(first->route, second->route);
-    std::swap(first->idx, second->idx);
+    std::swap(first->route_, second->route_);
+    std::swap(first->idx_, second->idx_);
 }
 
 void Route::update()
@@ -118,7 +118,7 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto *node = nodes[idx];
-        auto const &clientData = data.client(node->client);
+        auto const &clientData = data.client(node->client());
 
         if (!node->isDepot())
         {
@@ -126,7 +126,7 @@ void Route::update()
             centroid.second += static_cast<double>(clientData.y) / size();
         }
 
-        auto const dist = data.dist(p(node)->client, node->client);
+        auto const dist = data.dist(p(node)->client(), node->client());
         cumDist[idx] = cumDist[idx - 1] + dist;
         cumLoad[idx] = cumLoad[idx - 1] + clientData.demand;
     }
@@ -151,7 +151,7 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx + 1 << ":";  // route number
     for (auto *node : route)
-        out << ' ' << node->client;  // client index
+        out << ' ' << node->client();  // client index
     out << '\n';
 
     return out;
