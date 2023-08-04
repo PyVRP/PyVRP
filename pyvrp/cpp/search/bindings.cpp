@@ -152,5 +152,6 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<size_t>(), py::arg("loc"))
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
-        .def_property_readonly("route", &Route::Node::route);
+        .def_property_readonly("route", &Route::Node::route)
+        .def("is_depot", &Route::Node::isDepot);
 }

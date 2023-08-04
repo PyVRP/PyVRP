@@ -215,7 +215,7 @@ bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
     // be either the route's start or end depot.
-    return idx_ == 0 || (route_ && idx_ == route_->size() + 1);
+    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
