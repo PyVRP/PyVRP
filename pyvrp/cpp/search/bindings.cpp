@@ -10,6 +10,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <sstream>
+
 namespace py = pybind11;
 
 using pyvrp::search::Exchange;
@@ -161,6 +163,12 @@ PYBIND11_MODULE(_search, m)
             },
             py::return_value_policy::reference_internal)
         .def("__len__", &Route::size)
+        .def("__str__",
+             [](Route const &route) {
+                 std::stringstream stream;
+                 stream << route;
+                 return stream.str();
+             })
         .def("is_feasible", &Route::isFeasible)
         .def("has_excess_load", &Route::hasExcessLoad)
         .def("has_time_warp", &Route::hasTimeWarp)

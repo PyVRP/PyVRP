@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 from numpy.testing import assert_, assert_equal
 
@@ -210,5 +212,18 @@ def test_all_routes_overlap_with_maximum_tolerance_value():
 
 
 # TODO test overlap with less extreme cases, including wrap around etc.
+
+
+@pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
+def test_str_contains_route(locs: List[int]):
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for loc in locs:
+        route.append(Node(loc=loc))
+
+    for loc in locs:
+        assert_(str(loc) in str(route))
+
 
 # TODO test time windows
