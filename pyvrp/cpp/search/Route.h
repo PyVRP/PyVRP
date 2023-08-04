@@ -54,6 +54,7 @@ public:
 private:
     ProblemData const &data;
     size_t const vehicleType_;
+    size_t const idx_;
 
     std::vector<Node *> nodes;      // Nodes in this route, including depots
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
@@ -64,8 +65,11 @@ private:
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
 
-public:                // TODO make fields private
-    size_t const idx;  // Route index
+public:
+    /**
+     * Route index.
+     */
+    [[nodiscard]] inline size_t idx() const;
 
     /**
      * @return The client or depot node at the given ``idx``.
@@ -184,7 +188,7 @@ public:                // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data, size_t const idx, size_t const vehType);
+    Route(ProblemData const &data, size_t idx, size_t vehType);
 };
 
 /**
@@ -230,6 +234,8 @@ bool Route::hasTimeWarp() const
     return timeWarp() > 0;
 #endif
 }
+
+size_t Route::idx() const { return idx_; }
 
 Route::Node *Route::operator[](size_t idx)
 {
