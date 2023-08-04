@@ -154,7 +154,10 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
-        .def("__getitem__", &Route::operator[], py::arg("idx"))
+        .def("__getitem__",
+             &Route::operator[],
+             py::arg("idx"),
+             py::return_value_policy::reference_internal)
         .def(
             "__iter__",
             [](Route const &route) {

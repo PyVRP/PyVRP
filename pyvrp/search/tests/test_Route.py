@@ -14,12 +14,6 @@ def test_node_init(loc: int):
     assert_(node.route is None)
 
 
-@pytest.mark.parametrize("loc", [0, 1, 10])
-def test_new_nodes_are_not_depots(loc: int):
-    node = Node(loc=loc)
-    assert_(not node.is_depot())
-
-
 @pytest.mark.parametrize(("idx", "vehicle_type"), [(0, 0), (1, 0), (1, 1)])
 def test_route_init(idx: int, vehicle_type: int):
     data = read("data/OkSmall.txt")
@@ -28,6 +22,24 @@ def test_route_init(idx: int, vehicle_type: int):
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
     assert_equal(route.idx, idx)
     assert_equal(route.vehicle_type, vehicle_type)
+
+
+@pytest.mark.parametrize("loc", [0, 1, 10])
+def test_new_nodes_are_not_depots(loc: int):
+    node = Node(loc=loc)
+    assert_(not node.is_depot())
+
+
+def test_route_depots_are_depots():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for loc in range(2):
+        # The depots flank the clients at indices {1, ..., len(route)}. Thus,
+        # depots are at indices 0 and len(route) + 1.
+        route.append(Node(loc=loc))
+        assert_(route[0].is_depot())
+        assert_(route[len(route) + 1].is_depot())
 
 
 def test_route_append_increases_route_len():
@@ -117,3 +129,31 @@ def test_route_clear(num_nodes: int):
 
     route.clear()
     assert_equal(len(route), 0)
+
+
+def test_load_feasibility():
+    pass
+
+
+def test_time_warp_feasibility():
+    pass
+
+
+def test_feasible_flags():
+    pass
+
+
+def test_route_overlap():
+    pass
+
+
+def test_tw_between():
+    pass
+
+
+def test_load_between():
+    pass
+
+
+def test_dist_between():
+    pass
