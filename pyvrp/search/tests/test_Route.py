@@ -161,6 +161,10 @@ def test_dist_and_load_for_single_client_routes(client: int):
     assert_equal(route.load(), data.client(client).demand)
     assert_equal(route.load_between(0, 2), data.client(client).demand)
 
+    # The load_between() function is inclusive.
+    assert_equal(route.load_between(0, 0), 0)
+    assert_equal(route.load_between(1, 1), data.client(client).demand)
+
     # Distances on various segments of the route.
     assert_equal(route.dist_between(0, 1), data.dist(0, client))
     assert_equal(route.dist_between(1, 2), data.dist(client, 0))
