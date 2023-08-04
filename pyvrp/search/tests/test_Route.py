@@ -173,6 +173,42 @@ def test_dist_and_load_for_single_client_routes(client: int):
     )
 
 
-# TODO test overlap
+def test_route_overlaps_with_self_no_matter_the_tolerance_value():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(Node(loc=1))
+    route.append(Node(loc=2))
+
+    route.update()
+
+    assert_(route.overlaps_with(route, 0))
+    assert_(route.overlaps_with(route, 0.5))
+    assert_(route.overlaps_with(route, 1))
+
+
+def test_all_routes_overlap_with_maximum_tolerance_value():
+    data = read("data/OkSmall.txt")
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=0, vehicle_type=0)
+    for loc in [3, 4]:
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    # The routes are clearly not the same, and don't overlap with zero
+    # tolerance.
+    assert_(not route1.overlaps_with(route2, 0))
+    assert_(not route2.overlaps_with(route1, 0))
+
+    # But with maximum tolerance, they do.
+    assert_(route1.overlaps_with(route2, 1))
+    assert_(route2.overlaps_with(route1, 1))
+
+
+# TODO test overlap with less extreme cases, including wrap around etc.
 
 # TODO test time windows
