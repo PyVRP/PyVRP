@@ -24,7 +24,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.tests.helpers import customize, read
+from pyvrp.tests.helpers import customise, read
 
 
 @mark.parametrize(
@@ -271,7 +271,7 @@ def test_relocate_to_heterogeneous_empty_route():
     with a different capacity even if there is another empty route in between.
     """
     vehicle_types = [VehicleType(capacity, 1) for capacity in [12, 5, 1, 3]]
-    data = customize(read("data/OkSmall.txt"), vehicle_types=vehicle_types)
+    data = customise(read("data/OkSmall.txt"), vehicle_types=vehicle_types)
 
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator(100_000, 6)

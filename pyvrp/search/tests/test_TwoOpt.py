@@ -17,7 +17,7 @@ from pyvrp.search import (
     TwoOpt,
     compute_neighbours,
 )
-from pyvrp.tests.helpers import customize, read
+from pyvrp.tests.helpers import customise, read
 
 
 def test_OkSmall_instance():
@@ -69,7 +69,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
 
     # Now making it heterogenous, the same move should result in capacity
     # penalties and thus not be applied
-    data = customize(data, vehicle_types=vehicle_types)
+    data = customise(data, vehicle_types=vehicle_types)
 
     neighbours: List[List[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)

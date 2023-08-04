@@ -8,7 +8,7 @@ from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
 
-def customize(
+def customise(
     data: ProblemData,
     clients: Optional[List[Client]] = None,
     vehicle_types: Optional[List[VehicleType]] = None,
@@ -16,7 +16,7 @@ def customize(
     distance_matrix: Optional[List[List[int]]] = None,
 ) -> ProblemData:
     """
-    Returns a customized version of the given ``ProblemData`` object.
+    Returns a customised version of the given ``ProblemData`` object.
     """
     if clients is None:
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]
