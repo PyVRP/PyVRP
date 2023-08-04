@@ -92,3 +92,28 @@ def test_route_add_and_remove_client_leaves_route_empty():
 
     route.remove(1)
     assert_equal(len(route), 0)
+
+
+def test_route_remove_reduces_size_by_one():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    route.append(Node(loc=1))
+    route.append(Node(loc=2))
+    assert_equal(len(route), 2)
+
+    route.remove(1)
+    assert_equal(len(route), 1)
+
+
+@pytest.mark.parametrize("num_nodes", [0, 1, 2, 3])
+def test_route_clear(num_nodes: int):
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for loc in range(num_nodes):
+        route.append(Node(loc=loc))
+        assert_equal(len(route), loc + 1)
+
+    route.clear()
+    assert_equal(len(route), 0)

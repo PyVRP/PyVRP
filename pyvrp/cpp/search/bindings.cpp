@@ -166,6 +166,7 @@ PYBIND11_MODULE(_search, m)
              &Route::push_back,
              py::arg("node"),
              py::keep_alive<1, 2>())  // keep node alive
+        .def("clear", &Route::clear)
         .def("insert",
              &Route::insert,
              py::arg("idx"),
