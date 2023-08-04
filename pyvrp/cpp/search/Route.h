@@ -29,6 +29,11 @@ namespace pyvrp::search
 class Route
 {
 public:
+    /**
+     * Light wrapper class around a client or depot location. This class tracks
+     * the route it is in, and the position and role it currently has in that
+     * route.
+     */
     class Node
     {
         friend class Route;
