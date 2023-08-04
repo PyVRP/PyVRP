@@ -18,7 +18,7 @@ class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Route::Node>;
     using RouteOp = LocalSearchOperator<Route>;
-    using Neighbours = std::vector<std::vector<int>>;
+    using Neighbours = std::vector<std::vector<size_t>>;
 
     ProblemData const &data;
 
@@ -26,8 +26,8 @@ class LocalSearch
     // numClients + 1, but nothing stored for the depot!)
     Neighbours neighbours;
 
-    std::vector<int> orderNodes;   // node order used by LocalSearch::search
-    std::vector<int> orderRoutes;  // route order used by LocalSearch::intensify
+    std::vector<size_t> orderNodes;   // node order used by LS::search
+    std::vector<size_t> orderRoutes;  // route order used by LS::intensify
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
