@@ -129,3 +129,41 @@ def test_route_clear_empties_entire_route(num_nodes: int):
 
     route.clear()
     assert_equal(len(route), 0)
+
+
+def test_excess_load():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for loc in [1, 2, 3, 4]:
+        route.append(Node(loc=loc))
+
+    route.update()
+
+    # The instance has four clients, which have a total demand of 18. The only
+    # vehicle type in the instance has a capacity of 10, so this route has
+    # excess load.
+    assert_equal(route.load(), 18)
+    assert_equal(route.capacity(), 10)
+    assert_(route.has_excess_load())
+
+
+@pytest.mark.parametrize("client", [1, 2, 3, 4])
+def test_dist_and_load_for_single_client_routes(client: int):
+    data = read("data/OkSmall.txt")
+
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(Node(loc=client))
+    route.update()
+
+    # Only the client has any demand, so the total route load should be equal
+    # to it.
+    assert_equal(route.load(), data.client(client).demand)
+    assert_equal(route.load_between(0, 2), data.client(client).demand)
+
+    # Distances on various segments of the route.
+    assert_equal(route.dist_between(0, 1), data.dist(0, client))
+    assert_equal(route.dist_between(1, 2), data.dist(client, 0))
+    assert_equal(
+        route.dist_between(0, 2), data.dist(0, client) + data.dist(client, 0)
+    )

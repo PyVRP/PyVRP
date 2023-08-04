@@ -164,17 +164,24 @@ PYBIND11_MODULE(_search, m)
         .def("is_feasible", &Route::isFeasible)
         .def("has_excess_load", &Route::hasExcessLoad)
         .def("has_time_warp", &Route::hasTimeWarp)
-        .def("capacity", &Route::capacity)
-        .def("load", &Route::load)
+        .def("capacity",
+             [](Route const &route) { return route.capacity().get(); })
+        .def("load", [](Route const &route) { return route.load().get(); })
         .def("time_warp", &Route::timeWarp)
-        .def("dist_between",
-             &Route::distBetween,
-             py::arg("start"),
-             py::arg("end"))
-        .def("load_between",
-             &Route::loadBetween,
-             py::arg("start"),
-             py::arg("end"))
+        .def(
+            "dist_between",
+            [](Route const &route, size_t start, size_t end) {
+                return route.distBetween(start, end).get();
+            },
+            py::arg("start"),
+            py::arg("end"))
+        .def(
+            "load_between",
+            [](Route const &route, size_t start, size_t end) {
+                return route.loadBetween(start, end).get();
+            },
+            py::arg("start"),
+            py::arg("end"))
         .def("tw_between", &Route::twBetween, py::arg("start"), py::arg("end"))
         .def("overlaps_with",
              &Route::overlapsWith,
