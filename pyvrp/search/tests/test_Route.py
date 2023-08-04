@@ -81,3 +81,14 @@ def test_route_iter():
     assert_equal(nodes[0], route[1])
     assert_equal(nodes[1], route[2])
     assert_equal(nodes[2], route[3])
+
+
+def test_route_add_and_remove_client_leaves_route_empty():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    route.append(Node(loc=1))
+    assert_equal(len(route), 1)
+
+    route.remove(1)
+    assert_equal(len(route), 0)

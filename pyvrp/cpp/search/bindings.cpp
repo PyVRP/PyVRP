@@ -171,6 +171,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("idx"),
              py::arg("node"),
              py::keep_alive<1, 3>())  // keep node alive
+        .def("remove", &Route::remove, py::arg("idx"))
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
