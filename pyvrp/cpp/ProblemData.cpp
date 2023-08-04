@@ -44,10 +44,6 @@ std::pair<double, double> const &ProblemData::centroid() const
     return centroid_;
 }
 
-Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
-
-Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
-
 size_t ProblemData::numClients() const { return numClients_; }
 
 size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }

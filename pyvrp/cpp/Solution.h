@@ -37,7 +37,7 @@ namespace pyvrp
  */
 class Solution
 {
-    using Client = int;
+    using Client = size_t;
     using VehicleType = size_t;
 
 public:
