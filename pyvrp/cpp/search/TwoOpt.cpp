@@ -102,13 +102,12 @@ void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
 {
     auto *nU = n(U);
 
-    auto insertIdx = U->idx + 1;
-    while (V != nU)
+    while (V->idx > nU->idx)
     {
-        auto *node = V;
-        V = p(V);
-        U->route->remove(node->idx);
-        U->route->insert(insertIdx++, node);
+        auto *pV = p(V);
+        Route::swap(nU, V);
+        nU = n(V);  // after swap, V is now nU
+        V = pV;
     }
 }
 
