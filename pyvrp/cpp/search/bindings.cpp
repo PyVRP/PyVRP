@@ -2,6 +2,7 @@
 #include "LocalSearch.h"
 #include "MoveTwoClientsReversed.h"
 #include "RelocateStar.h"
+#include "Route.h"
 #include "SwapStar.h"
 #include "TwoOpt.h"
 #include "search_docs.h"
@@ -16,6 +17,7 @@ using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::MoveTwoClientsReversed;
 using pyvrp::search::RelocateStar;
+using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 using pyvrp::search::TwoOpt;
 
@@ -143,4 +145,12 @@ PYBIND11_MODULE(_search, m)
              py::arg("data"),
              py::keep_alive<1, 2>()  // keep data alive
         );
+
+    py::class_<Route>(m, "Route");
+
+    py::class_<Route::Node>(m, "Node")
+        .def(py::init<size_t>(), py::arg("loc"))
+        .def_property_readonly("client", &Route::Node::client)
+        .def_property_readonly("idx", &Route::Node::idx)
+        .def_property_readonly("route", &Route::Node::route);
 }

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pyvrp._pyvrp import (
     CostEvaluator,
@@ -77,3 +77,14 @@ class SwapStar(RouteOperator):
 
 class TwoOpt(NodeOperator):
     def __init__(self, data: ProblemData) -> None: ...
+
+class Route: ...
+
+class Node:
+    def __init__(self, loc: int) -> None: ...
+    @property
+    def client(self) -> int: ...
+    @property
+    def idx(self) -> int: ...
+    @property
+    def route(self) -> Optional[Route]: ...
