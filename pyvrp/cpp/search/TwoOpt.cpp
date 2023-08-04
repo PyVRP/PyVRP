@@ -139,8 +139,8 @@ Cost TwoOpt::evaluate(Route::Node *U,
                       Route::Node *V,
                       CostEvaluator const &costEvaluator)
 {
-    if (U->route()->idx > V->route()->idx)  // tackled in a later iteration - no
-        return 0;                           // need to process here already
+    if (U->route()->idx() > V->route()->idx())  // tackled in a later iteration
+        return 0;
 
     if (U->route() == V->route())
         return evalWithinRoute(U, V, costEvaluator);

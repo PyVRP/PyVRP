@@ -96,8 +96,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!U->route() || !V->route())  // we already tested inserting
                     continue;                    // U, so we can skip this move
 
-                if (lastModified[U->route()->idx] > lastTestedNode
-                    || lastModified[V->route()->idx] > lastTestedNode)
+                if (lastModified[U->route()->idx()] > lastTestedNode
+                    || lastModified[V->route()->idx()] > lastTestedNode)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
@@ -158,10 +158,10 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
             if (U.empty())
                 continue;
 
-            auto const lastTested = lastTestedRoutes[U.idx];
-            lastTestedRoutes[U.idx] = numMoves;
+            auto const lastTested = lastTestedRoutes[U.idx()];
+            lastTestedRoutes[U.idx()] = numMoves;
 
-            for (size_t rV = 0; rV != U.idx; ++rV)
+            for (size_t rV = 0; rV != U.idx(); ++rV)
             {
                 auto &V = routes[rV];
 
@@ -169,7 +169,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
                     continue;
 
                 auto const lastModifiedRoute
-                    = std::max(lastModified[U.idx], lastModified[V.idx]);
+                    = std::max(lastModified[U.idx()], lastModified[V.idx()]);
 
                 if (lastModifiedRoute > lastTested
                     && applyRouteOps(&U, &V, costEvaluator))
@@ -302,12 +302,12 @@ void LocalSearch::update(Route *U, Route *V)
     searchCompleted = false;
 
     U->update();
-    lastModified[U->idx] = numMoves;
+    lastModified[U->idx()] = numMoves;
 
     if (U != V)
     {
         V->update();
-        lastModified[V->idx] = numMoves;
+        lastModified[V->idx()] = numMoves;
     }
 }
 

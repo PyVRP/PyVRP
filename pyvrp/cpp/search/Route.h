@@ -29,6 +29,11 @@ namespace pyvrp::search
 class Route
 {
 public:
+    /**
+     * Light wrapper class around a client or depot location. This class tracks
+     * the route it is in, and the position and role it currently has in that
+     * route.
+     */
     class Node
     {
         friend class Route;
@@ -54,6 +59,7 @@ public:
 private:
     ProblemData const &data;
     size_t const vehicleType_;
+    size_t const idx_;
 
     std::vector<Node *> nodes;      // Nodes in this route, including depots
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
@@ -64,8 +70,11 @@ private:
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
 
-public:                // TODO make fields private
-    size_t const idx;  // Route index
+public:
+    /**
+     * Route index.
+     */
+    [[nodiscard]] inline size_t idx() const;
 
     /**
      * @return The client or depot node at the given ``idx``.
@@ -184,7 +193,7 @@ public:                // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data, size_t const idx, size_t const vehType);
+    Route(ProblemData const &data, size_t idx, size_t vehicleType);
 };
 
 /**
@@ -215,7 +224,7 @@ bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
     // be either the route's start or end depot.
-    return idx_ == 0 || (route_ && idx_ == route_->size() + 1);
+    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
@@ -230,6 +239,8 @@ bool Route::hasTimeWarp() const
     return timeWarp() > 0;
 #endif
 }
+
+size_t Route::idx() const { return idx_; }
 
 Route::Node *Route::operator[](size_t idx)
 {
