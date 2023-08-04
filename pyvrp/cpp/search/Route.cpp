@@ -10,12 +10,12 @@ using TWS = pyvrp::TimeWindowSegment;
 
 Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
-Route::Route(ProblemData const &data, size_t idx, size_t vehType)
+Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
-      vehicleType_(vehType),
+      vehicleType_(vehicleType),
       idx_(idx),
-      startDepot(data.vehicleType(vehType).depot),
-      endDepot(data.vehicleType(vehType).depot)
+      startDepot(data.vehicleType(vehicleType).depot),
+      endDepot(data.vehicleType(vehicleType).depot)
 {
     startDepot.route_ = this;
     startDepot.tw = TWS(startDepot.client(), data.client(startDepot.client()));
