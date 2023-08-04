@@ -78,7 +78,7 @@ def test_route_insert():
     assert_equal(route[3].client, 2)
 
 
-def test_route_iter():
+def test_route_iter_returns_all_clients():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -119,7 +119,7 @@ def test_route_remove_reduces_size_by_one():
 
 
 @pytest.mark.parametrize("num_nodes", range(4))
-def test_route_clear(num_nodes: int):
+def test_route_clear_empties_entire_route(num_nodes: int):
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
