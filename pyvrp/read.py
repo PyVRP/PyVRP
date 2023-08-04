@@ -1,5 +1,6 @@
 import functools
 import pathlib
+from collections import Counter
 from numbers import Number
 from typing import Callable, Dict, List, Union
 from warnings import warn
@@ -105,7 +106,16 @@ def read(
 
     depots: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
-    capacity: int = instance.get("capacity", _INT_MAX)
+
+    if "vehicle_capacity" in instance:
+        vehicle_capacities: np.ndarray = instance["vehicle_capacity"]
+        vehicle_types = [
+            VehicleType(capacity, count)
+            for capacity, count in Counter(vehicle_capacities).items()
+        ]
+    else:
+        capacity: int = instance.get("capacity", _INT_MAX)
+        vehicle_types = [VehicleType(capacity, num_vehicles)]
 
     distances: np.ndarray = round_func(instance["edge_weight"])
 
@@ -170,7 +180,6 @@ def read(
         )
         for idx in range(dimension)
     ]
-    vehicle_types = [VehicleType(capacity, num_vehicles)]
 
     if max(distances.max(), durations.max()) > MAX_USER_VALUE:
         msg = """

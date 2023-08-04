@@ -97,6 +97,19 @@ def test_reading_OkSmall_instance():
         assert_equal(data.client(client).service_duration, expected[client])
 
 
+def test_reading_OkSmallHeterogeneousCapacities_instance():
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
+
+    assert_equal(data.num_vehicles, 3)
+    assert_equal(data.num_vehicle_types, 2)
+
+    assert_equal(data.vehicle_type(0).capacity, 10)
+    assert_equal(data.vehicle_type(0).num_available, 1)
+
+    assert_equal(data.vehicle_type(1).capacity, 20)
+    assert_equal(data.vehicle_type(1).num_available, 2)
+
+
 def test_reading_En22k4_instance():  # instance from CVRPLIB
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
