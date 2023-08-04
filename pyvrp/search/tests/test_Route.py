@@ -35,8 +35,32 @@ def test_route_append_increases_route_len():
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(len(route), 0)
 
-    route.append(Node(loc=1))
+    node = Node(loc=1)
+    route.append(node)
     assert_equal(len(route), 1)
+    assert_(route[1] is node)  # pointers, so must be same object
 
+    node = Node(loc=2)
+    route.append(node)
+    assert_equal(len(route), 2)
+    assert_(route[2] is node)  # pointers, so must be same object
+
+
+def test_route_insert():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+    assert_equal(len(route), 0)
+
+    # Insert a few customers so we have an actual route.
+    route.append(Node(loc=1))
     route.append(Node(loc=2))
     assert_equal(len(route), 2)
+    assert_equal(route[1].client, 1)
+    assert_equal(route[2].client, 2)
+
+    # # Now insert a new customer at index 1.
+    route.insert(1, Node(loc=3))
+    assert_equal(len(route), 3)
+    assert_equal(route[1].client, 3)
+    assert_equal(route[2].client, 1)
+    assert_equal(route[3].client, 2)

@@ -150,12 +150,21 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),
              py::arg("data"),
              py::arg("idx"),
-             py::arg("vehicle_type"))
+             py::arg("vehicle_type"),
+             py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
+        .def("__getitem__", &Route::operator[], py::arg("idx"))
         .def("__len__", &Route::size)
-        .def("append", &Route::push_back, py::arg("node"))
-        .def("insert", &Route::insert, py::arg("idx"), py::arg("node"));
+        .def("append",
+             &Route::push_back,
+             py::arg("node"),
+             py::keep_alive<1, 2>())  // keep node alive
+        .def("insert",
+             &Route::insert,
+             py::arg("idx"),
+             py::arg("node"),
+             py::keep_alive<1, 3>());  // keep node alive
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
         .def(py::init<size_t>(), py::arg("loc"))
