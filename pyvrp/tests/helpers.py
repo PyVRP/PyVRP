@@ -1,30 +1,48 @@
 import pathlib
 import time
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
-from pyvrp import ProblemData, Solution, VehicleType
+from pyvrp import Client, ProblemData, Solution, VehicleType
 from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
 
-def make_heterogeneous(data: ProblemData, vehicle_types: List[VehicleType]):
+def customize(
+    data: ProblemData,
+    clients: Optional[List[Client]] = None,
+    vehicle_types: Optional[List[VehicleType]] = None,
+    duration_matrix: Optional[List[List[int]]] = None,
+    distance_matrix: Optional[List[List[int]]] = None,
+) -> ProblemData:
     """
-    Creates a new ProblemData instance by replacing the capacities for routes.
-    All other data are kept identical.
+    Returns a customized version of the given ``ProblemData`` object.
     """
-    clients = [data.client(i) for i in range(data.num_clients + 1)]
+    if clients is None:
+        clients = [data.client(idx) for idx in range(data.num_clients + 1)]
+
+    if vehicle_types is None:
+        vehicle_types = [
+            data.vehicle_type(idx) for idx in range(data.num_vehicle_types)
+        ]
+
+    if duration_matrix is None:
+        duration_matrix = [
+            [data.duration(i, j) for j in range(data.num_clients + 1)]
+            for i in range(data.num_clients + 1)
+        ]
+
+    if distance_matrix is None:
+        distance_matrix = [
+            [data.dist(i, j) for j in range(data.num_clients + 1)]
+            for i in range(data.num_clients + 1)
+        ]
+
     return ProblemData(
         clients=clients,
         vehicle_types=vehicle_types,
-        distance_matrix=[
-            [data.dist(i, j) for j in range(data.num_clients + 1)]
-            for i in range(data.num_clients + 1)
-        ],
-        duration_matrix=[
-            [data.duration(i, j) for j in range(data.num_clients + 1)]
-            for i in range(data.num_clients + 1)
-        ],
+        duration_matrix=duration_matrix,
+        distance_matrix=distance_matrix,
     )
 
 

@@ -24,7 +24,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import customize, read
 
 
 @mark.parametrize(
@@ -270,8 +270,9 @@ def test_relocate_to_heterogeneous_empty_route():
     This test asserts that a customer will be relocated to a non-empty route
     with a different capacity even if there is another empty route in between.
     """
-    vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
-    data = make_heterogeneous(read("data/OkSmall.txt"), vehicle_types)
+    vehicle_types = [VehicleType(capacity, 1) for capacity in [12, 5, 1, 3]]
+    data = customize(read("data/OkSmall.txt"), vehicle_types=vehicle_types)
+
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator(100_000, 6)
     rng = RandomNumberGenerator(seed=42)

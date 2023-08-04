@@ -17,7 +17,7 @@ from pyvrp.search import (
     TwoOpt,
     compute_neighbours,
 )
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import customize, read
 
 
 def test_OkSmall_instance():
@@ -61,6 +61,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
     # the move may or may not be improving and should be applied or not
     # The starting solution has routes [1, 3] and [2, 4] with demands 8, 10
     # the 2-opt solution has routes [1, 4] and [2, 3] with demands 10, 8
+    # TODO rewrite this
 
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(10000, 6)  # Large capacity penalty
@@ -68,7 +69,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
 
     # Now making it heterogenous, the same move should result in capacity
     # penalties and thus not be applied
-    data = make_heterogeneous(data, vehicle_types)
+    data = customize(data, vehicle_types=vehicle_types)
 
     neighbours: List[List[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)

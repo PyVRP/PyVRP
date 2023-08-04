@@ -12,7 +12,7 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._crossover import selective_route_exchange as cpp_srex
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import customize, read
 
 
 def test_same_parents_same_offspring():
@@ -145,8 +145,9 @@ def test_srex_heterogeneous_greedy_repair():
     Tests the case where greedy repair is used during SREX crossover for
     heterogeneous routes.
     """
-    data = read("data/OkSmallGreedyRepair.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
+    ok_small = read("data/OkSmallGreedyRepair.txt")
+    vehicle_types = [VehicleType(10, 2), VehicleType(20, 1)]
+    data = customize(ok_small, vehicle_types=vehicle_types)
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't

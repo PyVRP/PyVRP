@@ -18,7 +18,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import customize, read
 
 
 def test_local_search_returns_same_solution_when_there_are_no_operators():
@@ -237,9 +237,9 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     improved = ls.search(sol, cost_evaluator)
 
     # Now make the instance heterogeneous and update the local search
-    data = make_heterogeneous(
-        data, [VehicleType(1000, 25), VehicleType(1000, 25)]
-    )
+    vehicle_types = [VehicleType(1000, 25), VehicleType(1000, 25)]
+    data = customize(data, vehicle_types=vehicle_types)
+
     ls = cpp_LocalSearch(data, neighbours)
     ls.add_node_operator(Exchange10(data))
     ls.add_node_operator(Exchange11(data))
@@ -261,8 +261,8 @@ def test_bugfix_vehicle_type_offsets():
     mapping of vehicle types to route indices if the next vehicle type had
     more vehicles than the previous.
     """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 2)])
+    vehicle_types = [VehicleType(10, 1), VehicleType(20, 2)]
+    data = customize(read("data/OkSmall.txt"), vehicle_types=vehicle_types)
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
