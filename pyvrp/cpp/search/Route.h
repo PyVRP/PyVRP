@@ -310,14 +310,14 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     using TWS = TimeWindowSegment;
     assert(start <= end && end < nodes.size());
 
-    if (start == 0)  // shortcut in case we want start of route -> end
-        return twsBefore[end];
-
-    if (end == size() + 1)  // shortcut in case we want start -> end of route
-        return twsAfter[start];
-
     if (start == end)  // shortcut in case we want the node time window data
         return nodes[start]->tws();
+
+    if (start == 0)  // shortcut in case we want start depot -> end
+        return twsBefore[end];
+
+    if (end == size() - 1)  // shortcut in case we want start -> end depot
+        return twsAfter[start];
 
     auto tws = nodes[start]->tws();
     for (size_t step = start + 1; step != end; ++step)
