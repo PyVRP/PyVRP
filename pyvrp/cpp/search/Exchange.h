@@ -86,6 +86,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                                       CostEvaluator const &costEvaluator) const
 {
     assert(U->idx() > 0);
+
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 

@@ -28,7 +28,7 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
                                + segmentReversalDistance
                                - data.dist(U->client(), n(U)->client())
                                - data.dist(V->client(), n(V)->client())
-                               - route->distBetween(n(U)->idx(), V->idx());
+                               - route->distBetween(U->idx() + 1, V->idx());
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 
@@ -84,7 +84,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     auto const vTWS
         = TWS::merge(data.durationMatrix(),
                      vRoute->twBetween(0, V->idx()),
-                     uRoute->twBetween(n(U)->idx(), uRoute->size() + 1));
+                     uRoute->twBetween(U->idx() + 1, uRoute->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());

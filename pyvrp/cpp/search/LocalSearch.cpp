@@ -286,8 +286,8 @@ void LocalSearch::maybeRemove(Route::Node *U,
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     auto uTWS = TWS::merge(data.durationMatrix(),
-                           route->twBetween(0, p(U)->idx()),
-                           route->twBetween(n(U)->idx(), route->size() + 1));
+                           route->twBetween(0, U->idx() - 1),
+                           route->twBetween(U->idx() + 1, route->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
