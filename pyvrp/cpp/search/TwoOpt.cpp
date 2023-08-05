@@ -36,8 +36,8 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
         return deltaCost;
 
     auto tws = route->twsBefore(U->idx());
-    for (auto *node = V; node != U; node = p(node))
-        tws = TWS::merge(data.durationMatrix(), tws, route->tws(node->idx()));
+    for (size_t idx = V->idx(); idx != U->idx(); --idx)
+        tws = TWS::merge(data.durationMatrix(), tws, route->tws(idx));
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
