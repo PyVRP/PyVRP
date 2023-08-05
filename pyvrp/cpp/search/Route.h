@@ -38,16 +38,41 @@ public:
     {
         friend class Route;
 
-        size_t loc_;    // Location represented by this node
-        size_t idx_;    // Position in the route
-        Route *route_;  // Indicates membership of a route, if any
+        size_t loc_;             // Location represented by this node
+        size_t idx_;             // Position in the route
+        Route *route_;           // Indicates membership of a route, if any
+        TimeWindowSegment tws_;  // This location's time window data
 
     public:
-        Node(size_t loc);
+        Node(size_t loc, ProblemData::Client const &client);
 
+        /**
+         * Returns the location represented by this node.
+         */
         [[nodiscard]] inline size_t client() const;  // TODO rename to loc
+
+        /**
+         * Returns this node's position in a route. This value is ``0`` when
+         * the node is *not* in a route.
+         */
         [[nodiscard]] inline size_t idx() const;
+
+        /**
+         * Returns the route this node is currently in. If the node is not in
+         * a route, this returns ``None`` (C++: ``nullptr``).
+         */
         [[nodiscard]] inline Route *route() const;
+
+        /**
+         * Returns this location's time window segment data. This is the time
+         * window data of just this location.
+         */
+        [[nodiscard]] inline TimeWindowSegment const &tws() const;
+
+        /**
+         * Returns whether this node is a depot. A node can only be a depot if
+         * it is in a route.
+         */
         [[nodiscard]] inline bool isDepot() const;
     };
 
