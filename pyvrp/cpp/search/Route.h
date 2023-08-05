@@ -316,11 +316,12 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     if (end == size() + 1)  // shortcut in case we want start -> end of route
         return twsAfter[start];
 
+    if (start == end)  // shortcut in case we want the node time window data
+        return nodes[start]->tws();
+
     auto tws = nodes[start]->tws();
-
-    for (size_t step = start + 1; step <= end; ++step)
+    for (size_t step = start + 1; step != end; ++step)
         tws = TWS::merge(data.durationMatrix(), tws, nodes[step]->tws());
-
     return tws;
 }
 

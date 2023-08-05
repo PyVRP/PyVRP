@@ -592,6 +592,18 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_late"),
              py::arg("release_time"))
         .def(
+            "duration",
+            [](TWS const &tws) { return tws.duration().get(); },
+            DOC(pyvrp, TimeWindowSegment, duration))
+        .def(
+            "tw_early",
+            [](TWS const &tws) { return tws.twEarly().get(); },
+            DOC(pyvrp, TimeWindowSegment, twEarly))
+        .def(
+            "tw_late",
+            [](TWS const &tws) { return tws.twLate().get(); },
+            DOC(pyvrp, TimeWindowSegment, twLate))
+        .def(
             "total_time_warp",
             [](TWS const &tws) { return tws.totalTimeWarp().get(); },
             DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
