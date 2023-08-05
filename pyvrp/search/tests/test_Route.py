@@ -3,14 +3,14 @@ from typing import List
 import pytest
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import VehicleType
+from pyvrp import Client, VehicleType
 from pyvrp.search._search import Node, Route
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
 def test_node_init(loc: int):
-    node = Node(loc=loc)
+    node = Node(loc=loc, client=Client(x=0, y=0))
     assert_equal(node.client, loc)
     assert_equal(node.idx, 0)
     assert_(node.route is None)
@@ -28,7 +28,7 @@ def test_route_init(idx: int, vehicle_type: int):
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
 def test_new_nodes_are_not_depots(loc: int):
-    node = Node(loc=loc)
+    node = Node(loc=loc, client=Client(x=0, y=0))
     assert_(not node.is_depot())
 
 
@@ -37,7 +37,7 @@ def test_route_insert_and_remove_updates_node_idx_and_route_properties():
     route = Route(data, idx=0, vehicle_type=0)
 
     # After construction, the node is not in a route yet.
-    node = Node(loc=1)
+    node = Node(loc=1, client=Client(x=0, y=0))
     assert_equal(node.idx, 0)
     assert_(node.route is None)
 
@@ -59,7 +59,7 @@ def test_route_depots_are_depots():
     for loc in range(2):
         # The depots flank the clients at indices {1, ..., len(route)}. Thus,
         # depots are at indices 0 and len(route) + 1.
-        route.append(Node(loc=loc))
+        route.append(Node(loc=loc, client=Client(x=0, y=0)))
         assert_(route[0].is_depot())
         assert_(route[len(route) + 1].is_depot())
 
@@ -69,12 +69,12 @@ def test_route_append_increases_route_len():
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(len(route), 0)
 
-    node = Node(loc=1)
+    node = Node(loc=1, client=Client(x=0, y=0))
     route.append(node)
     assert_equal(len(route), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
-    node = Node(loc=2)
+    node = Node(loc=2, client=Client(x=0, y=0))
     route.append(node)
     assert_equal(len(route), 2)
     assert_(route[2] is node)  # pointers, so must be same object
@@ -86,14 +86,14 @@ def test_route_insert():
     assert_equal(len(route), 0)
 
     # Insert a few customers so we have an actual route.
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
+    route.append(Node(loc=1, client=Client(x=0, y=0)))
+    route.append(Node(loc=2, client=Client(x=0, y=0)))
     assert_equal(len(route), 2)
     assert_equal(route[1].client, 1)
     assert_equal(route[2].client, 2)
 
     # # Now insert a new customer at index 1.
-    route.insert(1, Node(loc=3))
+    route.insert(1, Node(loc=3, client=Client(x=0, y=0)))
     assert_equal(len(route), 3)
     assert_equal(route[1].client, 3)
     assert_equal(route[2].client, 1)
@@ -105,7 +105,7 @@ def test_route_iter_returns_all_clients():
     route = Route(data, idx=0, vehicle_type=0)
 
     for loc in [1, 2, 3]:
-        route.append(Node(loc=loc))
+        route.append(Node(loc=loc, client=Client(x=0, y=0)))
 
     nodes = [node for node in route]
     assert_equal(len(nodes), len(route))
@@ -121,7 +121,7 @@ def test_route_add_and_delete_client_leaves_route_empty():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
-    route.append(Node(loc=1))
+    route.append(Node(loc=1, client=Client(x=0, y=0)))
     assert_equal(len(route), 1)
 
     del route[1]
@@ -135,8 +135,8 @@ def test_route_delete_reduces_size_by_one():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
+    route.append(Node(loc=1, client=Client(x=0, y=0)))
+    route.append(Node(loc=2, client=Client(x=0, y=0)))
     assert_equal(len(route), 2)
 
     del route[1]
@@ -154,7 +154,7 @@ def test_route_clear_empties_entire_route(num_nodes: int):
     route = Route(data, idx=0, vehicle_type=0)
 
     for loc in range(num_nodes):
-        route.append(Node(loc=loc))
+        route.append(Node(loc=loc, client=Client(x=0, y=0)))
         assert_equal(len(route), loc + 1)
 
     route.clear()
@@ -166,7 +166,7 @@ def test_excess_load():
     route = Route(data, idx=0, vehicle_type=0)
 
     for loc in [1, 2, 3, 4]:
-        route.append(Node(loc=loc))
+        route.append(Node(loc=loc, client=Client(x=0, y=0)))
 
     route.update()
 
@@ -183,7 +183,7 @@ def test_dist_and_load_for_single_client_routes(client: int):
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
-    route.append(Node(loc=client))
+    route.append(Node(loc=client, client=Client(x=0, y=0)))
     route.update()
 
     # Only the client has any demand, so the total route load should be equal
@@ -206,8 +206,8 @@ def test_dist_and_load_for_single_client_routes(client: int):
 def test_route_overlaps_with_self_no_matter_the_tolerance_value():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
+    route.append(Node(loc=1, client=Client(x=0, y=0)))
+    route.append(Node(loc=2, client=Client(x=0, y=0)))
 
     route.update()
 
@@ -221,12 +221,12 @@ def test_all_routes_overlap_with_maximum_tolerance_value():
 
     route1 = Route(data, idx=0, vehicle_type=0)
     for loc in [1, 2]:
-        route1.append(Node(loc=loc))
+        route1.append(Node(loc=loc, client=Client(x=0, y=0)))
     route1.update()
 
     route2 = Route(data, idx=0, vehicle_type=0)
     for loc in [3, 4]:
-        route2.append(Node(loc=loc))
+        route2.append(Node(loc=loc, client=Client(x=0, y=0)))
     route2.update()
 
     # The routes are clearly not the same, and don't overlap with zero
@@ -248,7 +248,7 @@ def test_data_is_not_updated_until_update_call():
 
     # Add a new client to the route. update() has not been called, so the route
     # statistics are not correct.
-    route.append(Node(loc=1))
+    route.append(Node(loc=1, client=Client(x=0, y=0)))
     assert_(route.load() != data.client(1).demand)
     assert_(route.dist_between(0, 2) != data.dist(0, 1) + data.dist(1, 0))
 
@@ -258,7 +258,7 @@ def test_data_is_not_updated_until_update_call():
     assert_equal(route.dist_between(0, 2), data.dist(0, 1) + data.dist(1, 0))
 
     # Same story with another client: incorrect before update, correct after.
-    route.append(Node(loc=2))
+    route.append(Node(loc=2, client=Client(x=0, y=0)))
     assert_(route.load() != data.client(1).demand + data.client(2).demand)
 
     route.update()
@@ -278,7 +278,7 @@ def test_str_contains_route(locs: List[int]):
     route = Route(data, idx=0, vehicle_type=0)
 
     for loc in locs:
-        route.append(Node(loc=loc))
+        route.append(Node(loc=loc, client=Client(x=0, y=0)))
 
     for loc in locs:
         assert_(str(loc) in str(route))
