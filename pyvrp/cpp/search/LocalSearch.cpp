@@ -20,17 +20,6 @@ Solution LocalSearch::operator()(Solution const &solution,
     while (true)
     {
         search(costEvaluator);
-
-        // When numMoves != 0, search() modified the currently loaded solution.
-        // In that case we need to reload the solution because intensify()'s
-        // route operators need to update their caches.
-        // TODO remove this.
-        if (numMoves != 0)
-        {
-            Solution const newSol = exportSolution();
-            loadSolution(newSol);
-        }
-
         intensify(costEvaluator);
 
         if (numMoves == 0)  // then the current solution is locally optimal.
@@ -217,12 +206,6 @@ bool LocalSearch::applyRouteOps(Route *U,
             routeOp->apply(U, V);
             update(U, V);
 
-            for (auto *op : routeOps)  // this is used by some route operators
-            {                          // (particularly SWAP*) to keep caches
-                op->update(U);         // in sync.
-                op->update(V);
-            }
-
             return true;
         }
 
@@ -306,10 +289,16 @@ void LocalSearch::update(Route *U, Route *V)
     U->update();
     lastModified[U->idx()] = numMoves;
 
+    for (auto *op : routeOps)  // this is used by some route operators
+        op->update(U);         // to keep caches in sync.
+
     if (U != V)
     {
         V->update();
         lastModified[V->idx()] = numMoves;
+
+        for (auto *op : routeOps)  // this is used by some route operators
+            op->update(V);         // to keep caches in sync.
     }
 }
 
