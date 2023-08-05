@@ -256,7 +256,7 @@ void LocalSearch::maybeInsert(Route::Node *U,
         = TWS::merge(data.durationMatrix(),
                      route->twBetween(0, V->idx()),
                      U->tws(),
-                     route->twBetween(n(V)->idx(), route->size() + 1));
+                     route->twBetween(V->idx() + 1, route->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
