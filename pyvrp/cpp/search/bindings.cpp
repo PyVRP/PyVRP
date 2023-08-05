@@ -192,7 +192,10 @@ PYBIND11_MODULE(_search, m)
             },
             py::arg("start"),
             py::arg("end"))
-        .def("tw_between", &Route::twBetween, py::arg("start"), py::arg("end"))
+        .def(
+            "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))
+        .def("tws_after", &Route::twsAfter, py::arg("start"))
+        .def("tws_before", &Route::twsBefore, py::arg("end"))
         .def("overlaps_with",
              &Route::overlapsWith,
              py::arg("other"),

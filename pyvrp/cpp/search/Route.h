@@ -85,8 +85,8 @@ private:
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
     std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
 
-    std::vector<TimeWindowSegment> twsBefore;  // TWS of depot -> client
-    std::vector<TimeWindowSegment> twsAfter;   // TWS of client -> depot
+    std::vector<TimeWindowSegment> twsBefore_;  // TWS of depot -> client
+    std::vector<TimeWindowSegment> twsAfter_;   // TWS of client -> depot
 
     std::pair<double, double> centroid;  // Center point of route's clients
 
@@ -159,8 +159,18 @@ public:
     /**
      * Calculates time window data for segment [start, end].
      */
-    [[nodiscard]] inline TimeWindowSegment twBetween(size_t start,
-                                                     size_t end) const;
+    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
+                                                      size_t end) const;
+
+    /**
+     * Returns time window data for segment [start, 0].
+     */
+    [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
+
+    /**
+     * Returns time window data for segment [0, end].
+     */
+    [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
 
     /**
      * Calculates the distance for segment [start, end].
@@ -293,7 +303,7 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
 Load Route::load() const { return cumLoad.back(); }
 
-Duration Route::timeWarp() const { return twsBefore.back().totalTimeWarp(); }
+Duration Route::timeWarp() const { return twsBefore_.back().totalTimeWarp(); }
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
@@ -305,7 +315,7 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-TimeWindowSegment Route::twBetween(size_t start, size_t end) const
+TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
 {
     using TWS = TimeWindowSegment;
     assert(start <= end && end < nodes.size());
@@ -313,16 +323,24 @@ TimeWindowSegment Route::twBetween(size_t start, size_t end) const
     if (start == end)  // shortcut in case we want the node time window data
         return nodes[start]->tws();
 
-    if (start == 0)  // shortcut in case we want start depot -> end
-        return twsBefore[end];
-
-    if (end == size() - 1)  // shortcut in case we want start -> end depot
-        return twsAfter[start];
-
     auto tws = nodes[start]->tws();
+
     for (size_t step = start + 1; step != end; ++step)
         tws = TWS::merge(data.durationMatrix(), tws, nodes[step]->tws());
+
     return tws;
+}
+
+TimeWindowSegment Route::twsAfter(size_t start) const
+{
+    assert(start < nodes.size());
+    return twsAfter_[start];
+}
+
+TimeWindowSegment Route::twsBefore(size_t end) const
+{
+    assert(end < nodes.size());
+    return twsBefore_[end];
 }
 
 Distance Route::distBetween(size_t start, size_t end) const

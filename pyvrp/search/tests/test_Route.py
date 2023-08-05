@@ -296,7 +296,7 @@ def test_str_contains_route(locs: List[int]):
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
-def test_tw_between_same_client_returns_node_tws(loc: int):
+def test_tws_between_same_client_returns_node_tws(loc: int):
     data = read("data/OkSmall.txt")
     client = data.client(loc)
 
@@ -306,15 +306,23 @@ def test_tw_between_same_client_returns_node_tws(loc: int):
 
     # Duration of the depot node TWS's is zero, and for the client it is equal
     # to the service duration.
-    assert_equal(route.tw_between(0, 0).duration(), 0)
-    assert_equal(route.tw_between(1, 1).duration(), client.service_duration)
-    assert_equal(route.tw_between(2, 2).duration(), 0)
+    assert_equal(route.tws_between(0, 0).duration(), 0)
+    assert_equal(route.tws_between(1, 1).duration(), client.service_duration)
+    assert_equal(route.tws_between(2, 2).duration(), 0)
 
     # Single route solutions are all feasible for this instance.
     assert_equal(route.time_warp(), 0)
 
 
-def test_tw_between_single_route_solution_has_time_warp_in_the_right_places():
+def test_tws_between_same_as_tws_before_when_start_is_depot():
+    pass
+
+
+def test_tws_between_same_as_tws_after_when_end_is_depot():
+    pass
+
+
+def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -325,18 +333,18 @@ def test_tw_between_single_route_solution_has_time_warp_in_the_right_places():
 
     route.update()
     assert_(route.has_time_warp())
-    assert_equal(route.tw_between(0, 5).total_time_warp(), route.time_warp())
+    assert_equal(route.tws_between(0, 5).total_time_warp(), route.time_warp())
 
     # Client #1 (at idx 1) causes the time warp, because its time windows is
     # really tight.
     assert_equal(route.time_warp(), 3_633)
-    assert_equal(route.tw_between(1, 4).total_time_warp(), 3_633)
-    assert_equal(route.tw_between(0, 4).total_time_warp(), 3_633)
-    assert_equal(route.tw_between(1, 5).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 4).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(0, 4).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 5).total_time_warp(), 3_633)
 
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
-        assert_equal(route.tw_between(start, end).total_time_warp(), 0)
+        assert_equal(route.tws_between(start, end).total_time_warp(), 0)
 
 
 # TODO test time windows

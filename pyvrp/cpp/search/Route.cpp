@@ -63,17 +63,17 @@ void Route::clear()
     cumLoad.push_back(0);
     cumLoad.push_back(0);
 
-    twsBefore.clear();
-    twsAfter.clear();
+    twsBefore_.clear();
+    twsAfter_.clear();
 
     auto const depot = startDepot.client();
     TWS const depotTWS = TWS(depot, data.client(depot));
 
-    twsBefore.push_back(depotTWS);
-    twsBefore.push_back(depotTWS);
+    twsBefore_.push_back(depotTWS);
+    twsBefore_.push_back(depotTWS);
 
-    twsAfter.push_back(depotTWS);
-    twsAfter.push_back(depotTWS);
+    twsAfter_.push_back(depotTWS);
+    twsAfter_.push_back(depotTWS);
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -88,8 +88,8 @@ void Route::insert(size_t idx, Node *node)
     cumLoad.emplace_back();  // will be updated by Route::update().
 
     TWS const tws = {node->client(), data.client(node->client())};
-    twsBefore.insert(twsBefore.begin() + idx, tws);
-    twsAfter.insert(twsAfter.begin() + idx, tws);
+    twsBefore_.insert(twsBefore_.begin() + idx, tws);
+    twsAfter_.insert(twsAfter_.begin() + idx, tws);
 
     nodes.insert(nodes.begin() + idx, node);
     for (size_t after = idx; after != nodes.size(); ++after)
@@ -111,8 +111,8 @@ void Route::remove(size_t idx)
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
 
-    twsBefore.erase(twsBefore.begin() + idx);
-    twsAfter.erase(twsAfter.begin() + idx);
+    twsBefore_.erase(twsBefore_.begin() + idx);
+    twsAfter_.erase(twsAfter_.begin() + idx);
 
     nodes.erase(nodes.begin() + idx);
     for (auto after = idx; after != nodes.size(); ++after)
@@ -153,13 +153,13 @@ void Route::update()
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Backward time window segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        twsBefore[idx] = TWS::merge(
-            data.durationMatrix(), twsBefore[idx - 1], nodes[idx]->tws());
+        twsBefore_[idx] = TWS::merge(
+            data.durationMatrix(), twsBefore_[idx - 1], nodes[idx]->tws());
 
     // Forward time window segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
-        twsAfter[idx - 1] = TWS::merge(
-            data.durationMatrix(), nodes[idx - 1]->tws(), twsAfter[idx]);
+        twsAfter_[idx - 1] = TWS::merge(
+            data.durationMatrix(), nodes[idx - 1]->tws(), twsAfter_[idx]);
 #endif
 }
 

@@ -35,7 +35,7 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     if (!route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;
 
-    auto tws = route->twBetween(0, U->idx());
+    auto tws = route->twsBefore(U->idx());
     auto *itRoute = V;
     while (itRoute != U)
     {
@@ -43,9 +43,7 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
         itRoute = p(itRoute);
     }
 
-    tws = TWS::merge(data.durationMatrix(),
-                     tws,
-                     route->twBetween(V->idx() + 1, route->size() + 1));
+    tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
@@ -73,18 +71,16 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
-    auto const uTWS
-        = TWS::merge(data.durationMatrix(),
-                     uRoute->twBetween(0, U->idx()),
-                     vRoute->twBetween(V->idx() + 1, vRoute->size() + 1));
+    auto const uTWS = TWS::merge(data.durationMatrix(),
+                                 uRoute->twsBefore(U->idx()),
+                                 vRoute->twsAfter(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-    auto const vTWS
-        = TWS::merge(data.durationMatrix(),
-                     vRoute->twBetween(0, V->idx()),
-                     uRoute->twBetween(U->idx() + 1, uRoute->size() + 1));
+    auto const vTWS = TWS::merge(data.durationMatrix(),
+                                 vRoute->twsBefore(V->idx()),
+                                 uRoute->twsAfter(U->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
