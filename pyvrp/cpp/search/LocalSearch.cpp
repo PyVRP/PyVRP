@@ -318,9 +318,6 @@ void LocalSearch::loadSolution(Solution const &solution)
     if (!solution.isComplete())  // TODO allow incomplete at some point
         throw std::runtime_error("LocalSearch requires complete solutions.");
 
-    for (size_t client = 0; client <= data.numClients(); client++)
-        clients[client] = {client};
-
     // First empty all routes.
     for (auto &route : routes)
         route.clear();

@@ -17,8 +17,6 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       startDepot(data.vehicleType(vehicleType).depot),
       endDepot(data.vehicleType(vehicleType).depot)
 {
-    startDepot.route_ = this;
-    endDepot.route_ = this;
     clear();
 }
 
@@ -43,12 +41,22 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
+    for (auto *node : nodes)  // unassign all nodes from route
+    {
+        node->idx_ = 0;
+        node->route_ = nullptr;
+    }
+
+    // Reinsert depots.
     nodes.clear();
     nodes.push_back(&startDepot);
     nodes.push_back(&endDepot);
 
     startDepot.idx_ = 0;
     endDepot.idx_ = 1;
+
+    startDepot.route_ = this;
+    endDepot.route_ = this;
 
     cumDist.clear();
     cumDist.push_back(0);
@@ -58,6 +66,7 @@ void Route::clear()
     cumLoad.push_back(0);
     cumLoad.push_back(0);
 
+    tws_.clear();
     twsBefore_.clear();
     twsAfter_.clear();
 
