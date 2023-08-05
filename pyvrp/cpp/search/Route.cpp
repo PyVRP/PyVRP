@@ -63,7 +63,6 @@ void Route::clear()
     cumLoad.push_back(0);
     cumLoad.push_back(0);
 
-    tws.clear();
     twsBefore.clear();
     twsAfter.clear();
 
@@ -72,9 +71,6 @@ void Route::clear()
 
     auto const endClient = endDepot.client();
     TWS const endTWS = TWS(endClient, data.client(endClient));
-
-    tws.push_back(startTWS);
-    tws.push_back(endTWS);
 
     twsBefore.push_back(startTWS);
     twsBefore.push_back(TWS::merge(data.durationMatrix(), startTWS, endTWS));
@@ -93,7 +89,6 @@ void Route::insert(size_t idx, Node *node)
 
     cumDist.emplace_back();  // does not matter where we place these, as they
     cumLoad.emplace_back();  // will be updated by Route::update().
-    tws.emplace_back();
     twsBefore.emplace_back();
     twsAfter.emplace_back();
 
@@ -116,7 +111,6 @@ void Route::remove(size_t idx)
 
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
-    tws.pop_back();
     twsBefore.pop_back();
     twsAfter.pop_back();
 
@@ -156,18 +150,16 @@ void Route::update()
         cumLoad[idx] = cumLoad[idx - 1] + clientData.demand;
     }
 
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return;
-#else
-    // Backward time window segments (depot -> client)
+#ifndef PYVRP_NO_TIME_WINDOWS
+    // Backward time window segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        twsBefore[idx]
-            = TWS::merge(data.durationMatrix(), twsBefore[idx - 1], tws[idx]);
+        twsBefore[idx] = TWS::merge(
+            data.durationMatrix(), twsBefore[idx - 1], nodes[idx]->tws());
 
-    // Forward time window segments (client -> depot)
-    for (size_t idx = nodes.size() - 2; idx != 0; --idx)
-        twsAfter[idx]
-            = TWS::merge(data.durationMatrix(), tws[idx], twsAfter[idx + 1]);
+    // Forward time window segments (client -> depot).
+    for (auto idx = static_cast<int>(nodes.size() - 2); idx >= 0; --idx)
+        twsAfter[idx] = TWS::merge(
+            data.durationMatrix(), nodes[idx]->tws(), twsAfter[idx + 1]);
 #endif
 }
 

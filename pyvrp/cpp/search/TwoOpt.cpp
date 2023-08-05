@@ -3,6 +3,8 @@
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
+#include <cassert>
+
 using pyvrp::Cost;
 using pyvrp::search::TwoOpt;
 using TWS = pyvrp::TimeWindowSegment;
@@ -11,8 +13,8 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
                              Route::Node *V,
                              CostEvaluator const &costEvaluator) const
 {
-    if (U->idx() + 1 >= V->idx())
-        return 0;
+    assert(U->route() == V->route());
+    auto *route = U->route();
 
     // Current situation is U -> n(U) -> ... -> V -> n(V). Proposed move is
     // U -> V -> p(V) -> ... -> n(U) -> n(V). This reverses the segment from
@@ -26,25 +28,27 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
                                + segmentReversalDistance
                                - data.dist(U->client(), n(U)->client())
                                - data.dist(V->client(), n(V)->client())
-                               - U->route()->distBetween(n(U)->idx(), V->idx());
+                               - route->distBetween(n(U)->idx(), V->idx());
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 
-    if (!U->route()->hasTimeWarp() && deltaCost >= 0)
+    if (!route->hasTimeWarp() && deltaCost >= 0)
         return deltaCost;
 
-    auto tws = U->twBefore;
+    auto tws = route->twBetween(0, U->idx());
     auto *itRoute = V;
     while (itRoute != U)
     {
-        tws = TWS::merge(data.durationMatrix(), tws, itRoute->tw);
+        tws = TWS::merge(data.durationMatrix(), tws, itRoute->tws());
         itRoute = p(itRoute);
     }
 
-    tws = TWS::merge(data.durationMatrix(), tws, n(V)->twAfter);
+    tws = TWS::merge(data.durationMatrix(),
+                     tws,
+                     route->twBetween(n(V)->idx(), route->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(U->route()->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;
 }
@@ -53,6 +57,10 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator) const
 {
+    assert(U->route() && V->route());
+    auto *uRoute = U->route();
+    auto *vRoute = V->route();
+
     // Two routes. Current situation is U -> n(U), and V -> n(V). Proposed move
     // is U -> n(V) and V -> n(U).
     Distance const current = data.dist(U->client(), n(U)->client())
@@ -62,38 +70,40 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
-    if (U->route()->isFeasible() && V->route()->isFeasible() && deltaCost >= 0)
+    if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
     auto const uTWS
-        = TWS::merge(data.durationMatrix(), U->twBefore, n(V)->twAfter);
+        = TWS::merge(data.durationMatrix(),
+                     uRoute->twBetween(0, U->idx()),
+                     vRoute->twBetween(n(V)->idx(), vRoute->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(U->route()->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
     auto const vTWS
-        = TWS::merge(data.durationMatrix(), V->twBefore, n(U)->twAfter);
+        = TWS::merge(data.durationMatrix(),
+                     vRoute->twBetween(0, V->idx()),
+                     uRoute->twBetween(n(U)->idx(), uRoute->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(V->route()->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
     // Proposed move appends the segment after V to U, and the segment after U
     // to V. So we need to make a distinction between the loads at U and V, and
     // the loads from clients visited after these nodes.
-    auto const uLoad = U->route()->loadBetween(0, U->idx());
-    auto const uLoadAfter = U->route()->load() - uLoad;
-    auto const vLoad = V->route()->loadBetween(0, V->idx());
-    auto const vLoadAfter = V->route()->load() - vLoad;
+    auto const uLoad = uRoute->loadBetween(0, U->idx());
+    auto const uLoadAfter = uRoute->load() - uLoad;
+    auto const vLoad = vRoute->loadBetween(0, V->idx());
+    auto const vLoadAfter = vRoute->load() - vLoad;
 
-    deltaCost += costEvaluator.loadPenalty(uLoad + vLoadAfter,
-                                           U->route()->capacity());
-    deltaCost -= costEvaluator.loadPenalty(U->route()->load(),
-                                           U->route()->capacity());
+    deltaCost
+        += costEvaluator.loadPenalty(uLoad + vLoadAfter, uRoute->capacity());
+    deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
 
-    deltaCost += costEvaluator.loadPenalty(vLoad + uLoadAfter,
-                                           V->route()->capacity());
-    deltaCost -= costEvaluator.loadPenalty(V->route()->load(),
-                                           V->route()->capacity());
+    deltaCost
+        += costEvaluator.loadPenalty(vLoad + uLoadAfter, vRoute->capacity());
+    deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
     return deltaCost;
 }
@@ -142,10 +152,13 @@ Cost TwoOpt::evaluate(Route::Node *U,
     if (U->route()->idx() > V->route()->idx())  // tackled in a later iteration
         return 0;
 
-    if (U->route() == V->route())
-        return evalWithinRoute(U, V, costEvaluator);
-    else
+    if (U->route() != V->route())
         return evalBetweenRoutes(U, V, costEvaluator);
+
+    if (U->idx() + 1 >= V->idx())  // tackled in a later iteration
+        return 0;
+
+    return evalWithinRoute(U, V, costEvaluator);
 }
 
 void TwoOpt::apply(Route::Node *U, Route::Node *V) const

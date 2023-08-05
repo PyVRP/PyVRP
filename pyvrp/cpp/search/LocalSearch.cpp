@@ -234,6 +234,7 @@ void LocalSearch::maybeInsert(Route::Node *U,
                               CostEvaluator const &costEvaluator)
 {
     assert(!U->route() && V->route());
+    auto *route = V->route();
 
     Distance const deltaDist = data.dist(V->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
@@ -242,26 +243,28 @@ void LocalSearch::maybeInsert(Route::Node *U,
     auto const &uClient = data.client(U->client());
     Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
 
-    deltaCost += costEvaluator.loadPenalty(V->route()->load() + uClient.demand,
-                                           V->route()->capacity());
-    deltaCost -= costEvaluator.loadPenalty(V->route()->load(),
-                                           V->route()->capacity());
+    deltaCost += costEvaluator.loadPenalty(route->load() + uClient.demand,
+                                           route->capacity());
+    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     // If this is true, adding U cannot decrease time warp in V's route enough
     // to offset the deltaCost.
-    if (deltaCost >= costEvaluator.twPenalty(V->route()->timeWarp()))
+    if (deltaCost >= costEvaluator.twPenalty(route->timeWarp()))
         return;
 
     auto const vTWS
-        = TWS::merge(data.durationMatrix(), V->twBefore, U->tw, n(V)->twAfter);
+        = TWS::merge(data.durationMatrix(),
+                     route->twBetween(0, V->idx()),
+                     U->tws(),
+                     route->twBetween(n(V)->idx(), route->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(V->route()->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     if (deltaCost < 0)
     {
-        V->route()->insert(V->idx() + 1, U);
-        update(V->route(), V->route());
+        route->insert(V->idx() + 1, U);
+        update(route, route);
     }
 }
 
@@ -269,6 +272,7 @@ void LocalSearch::maybeRemove(Route::Node *U,
                               CostEvaluator const &costEvaluator)
 {
     assert(U->route());
+    auto *route = U->route();
 
     Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                - data.dist(p(U)->client(), U->client())
@@ -277,20 +281,19 @@ void LocalSearch::maybeRemove(Route::Node *U,
     auto const &uClient = data.client(U->client());
     Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
 
-    deltaCost += costEvaluator.loadPenalty(U->route()->load() - uClient.demand,
-                                           U->route()->capacity());
-    deltaCost -= costEvaluator.loadPenalty(U->route()->load(),
-                                           U->route()->capacity());
+    deltaCost += costEvaluator.loadPenalty(route->load() - uClient.demand,
+                                           route->capacity());
+    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
-    auto uTWS
-        = TWS::merge(data.durationMatrix(), p(U)->twBefore, n(U)->twAfter);
+    auto uTWS = TWS::merge(data.durationMatrix(),
+                           route->twBetween(0, p(U)->idx()),
+                           route->twBetween(n(U)->idx(), route->size() + 1));
 
     deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(U->route()->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     if (deltaCost < 0)
     {
-        auto *route = U->route();  // after remove(), U->route is a nullptr
         route->remove(U->idx());
         update(route, route);
     }

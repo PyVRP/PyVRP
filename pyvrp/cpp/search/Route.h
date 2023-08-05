@@ -85,7 +85,6 @@ private:
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
     std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
 
-    std::vector<TimeWindowSegment> tws;        // TWS of client
     std::vector<TimeWindowSegment> twsBefore;  // TWS of depot -> client
     std::vector<TimeWindowSegment> twsAfter;   // TWS of client -> depot
 
@@ -244,6 +243,11 @@ size_t Route::Node::idx() const { return idx_; }
 
 Route *Route::Node::route() const { return route_; }
 
+[[nodiscard]] inline TimeWindowSegment const &Route::Node::tws() const
+{
+    return tws_;
+}
+
 bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
@@ -304,14 +308,20 @@ size_t Route::size() const
 TimeWindowSegment Route::twBetween(size_t start, size_t end) const
 {
     using TWS = TimeWindowSegment;
-    assert(0 < start && start <= end && end < nodes.size());
+    assert(start <= end && end < nodes.size());
 
-    auto segment = tws[start];
+    if (start == 0)  // shortcut in case we want start of route -> end
+        return twsBefore[end];
+
+    if (end == size() + 1)  // shortcut in case we want start -> end of route
+        return twsAfter[start];
+
+    auto tws = nodes[start]->tws();
 
     for (size_t step = start + 1; step <= end; ++step)
-        segment = TWS::merge(data.durationMatrix(), segment, tws[step]);
+        tws = TWS::merge(data.durationMatrix(), tws, nodes[step]->tws());
 
-    return segment;
+    return tws;
 }
 
 Distance Route::distBetween(size_t start, size_t end) const
