@@ -295,4 +295,23 @@ def test_str_contains_route(locs: List[int]):
         assert_(str(loc) in str(route))
 
 
+@pytest.mark.parametrize("loc", [1, 2, 3, 4])
+def test_tw_between_same_client_returns_node_tws(loc: int):
+    data = read("data/OkSmall.txt")
+    client = data.client(loc)
+
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(Node(loc=loc, client=client))
+    route.update()
+
+    # Duration of the depot node TWS's is zero, and for the client it is equal
+    # to the service duration.
+    assert_equal(route.tw_between(0, 0).duration(), 0)
+    assert_equal(route.tw_between(1, 1).duration(), client.service_duration)
+    assert_equal(route.tw_between(2, 2).duration(), 0)
+
+    # Single route solutions are all feasible for this instance.
+    assert_equal(route.time_warp(), 0)
+
+
 # TODO test time windows
