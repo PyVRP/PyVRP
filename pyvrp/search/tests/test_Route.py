@@ -335,12 +335,13 @@ def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     assert_(route.has_time_warp())
     assert_equal(route.tws_between(0, 5).total_time_warp(), route.time_warp())
 
-    # Client #1 (at idx 1) causes the time warp, because its time windows is
-    # really tight.
+    # Client #1 (at idx 1) causes the time warp in combination with client #3:
+    # #1 can only be visited after #3's window has already closed.
     assert_equal(route.time_warp(), 3_633)
     assert_equal(route.tws_between(1, 4).total_time_warp(), 3_633)
     assert_equal(route.tws_between(0, 4).total_time_warp(), 3_633)
     assert_equal(route.tws_between(1, 5).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 3).total_time_warp(), 3_633)
 
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:

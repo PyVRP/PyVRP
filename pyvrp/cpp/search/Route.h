@@ -320,13 +320,10 @@ TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
     using TWS = TimeWindowSegment;
     assert(start <= end && end < nodes.size());
 
-    if (start == end)  // shortcut in case we want the node time window data
-        return nodes[start]->tws();
-
     auto tws = nodes[start]->tws();
 
-    for (size_t step = start + 1; step != end; ++step)
-        tws = TWS::merge(data.durationMatrix(), tws, nodes[step]->tws());
+    for (size_t step = start; step != end; ++step)
+        tws = TWS::merge(data.durationMatrix(), tws, nodes[step + 1]->tws());
 
     return tws;
 }
