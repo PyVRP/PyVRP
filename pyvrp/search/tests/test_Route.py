@@ -32,6 +32,26 @@ def test_new_nodes_are_not_depots(loc: int):
     assert_(not node.is_depot())
 
 
+def test_route_insert_and_remove_updates_node_idx_and_route_properties():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    # After construction, the node is not in a route yet.
+    node = Node(loc=1)
+    assert_equal(node.idx, 0)
+    assert_(node.route is None)
+
+    # Add to the route, test the route and idx properties are updated.
+    route.append(node)
+    assert_equal(node.idx, 1)
+    assert_(node.route is route)
+
+    # Remove and test the node reverts to its initial state.
+    del route[1]
+    assert_equal(node.idx, 0)
+    assert_(node.route is None)
+
+
 def test_route_depots_are_depots():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
@@ -97,20 +117,20 @@ def test_route_iter_returns_all_clients():
     assert_equal(nodes[2], route[3])
 
 
-def test_route_add_and_remove_client_leaves_route_empty():
+def test_route_add_and_delete_client_leaves_route_empty():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
     route.append(Node(loc=1))
     assert_equal(len(route), 1)
 
-    route.remove(1)
+    del route[1]
     assert_equal(len(route), 0)
 
 
-def test_route_remove_reduces_size_by_one():
+def test_route_delete_reduces_size_by_one():
     """
-    The remove() method removes only the indicated index, not more.
+    Deleting an item at an index removes only the indicated index, not more.
     """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
@@ -119,7 +139,7 @@ def test_route_remove_reduces_size_by_one():
     route.append(Node(loc=2))
     assert_equal(len(route), 2)
 
-    route.remove(1)
+    del route[1]
     assert_equal(len(route), 1)
     assert_equal(route[1].client, 2)
 
