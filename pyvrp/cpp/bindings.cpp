@@ -228,7 +228,7 @@ PYBIND11_MODULE(_pyvrp, m)
             DOC(pyvrp, ProblemData, duration));
 
     py::class_<Solution::Route>(m, "Route", DOC(pyvrp, Solution, Route))
-        .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
+        .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
@@ -336,8 +336,8 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
         // Note, the order of constructors is important! Since Solution::Route
         // implements __len__ and __getitem__, it can also be converted to
-        // std::vector<int> and thus a list of Routes is a valid argument for
-        // both constructors. We want to avoid using the second constructor
+        // std::vector<size_t> and thus a list of Routes is a valid argument
+        // for both constructors. We want to avoid using the second constructor
         // since that would lose the vehicle types associations. As pybind11
         // will use the first matching constructor we put this one first.
         .def(py::init<ProblemData const &,
@@ -345,7 +345,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("routes"))
         .def(py::init<ProblemData const &,
-                      std::vector<std::vector<int>> const &>(),
+                      std::vector<std::vector<size_t>> const &>(),
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(

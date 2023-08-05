@@ -18,7 +18,7 @@ class LocalSearch
 {
     using NodeOp = LocalSearchOperator<Route::Node>;
     using RouteOp = LocalSearchOperator<Route>;
-    using Neighbours = std::vector<std::vector<int>>;
+    using Neighbours = std::vector<std::vector<size_t>>;
 
     ProblemData const &data;
 
@@ -26,8 +26,8 @@ class LocalSearch
     // numClients + 1, but nothing stored for the depot!)
     Neighbours neighbours;
 
-    std::vector<int> orderNodes;   // node order used by LocalSearch::search
-    std::vector<int> orderRoutes;  // route order used by LocalSearch::intensify
+    std::vector<size_t> orderNodes;   // node order used by LS::search
+    std::vector<size_t> orderRoutes;  // route order used by LS::intensify
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
@@ -65,6 +65,13 @@ class LocalSearch
     // Test removing U from the solution. Called when U can be removed.
     void maybeRemove(Route::Node *U, CostEvaluator const &costEvaluator);
 
+    // Performs search on the currently loaded solution.
+    void search(CostEvaluator const &costEvaluator);
+
+    // Performs intensify on the currently loaded solution.
+    void intensify(CostEvaluator const &costEvaluator,
+                   double overlapTolerance = 0.05);
+
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
@@ -90,16 +97,24 @@ public:
     Neighbours const &getNeighbours() const;
 
     /**
+     * Iteratively calls ``search()`` and ``intensify()`` until no further
+     * improvements are made.
+     */
+    Solution operator()(Solution const &solution,
+                        CostEvaluator const &costEvaluator);
+
+    /**
      * Performs regular (node-based) local search around the given solution,
      * and returns a new, hopefully improved solution.
      */
-    Solution search(Solution &solution, CostEvaluator const &costEvaluator);
+    Solution search(Solution const &solution,
+                    CostEvaluator const &costEvaluator);
 
     /**
      * Performs a more intensive route-based local search around the given
      * solution, and returns a new, hopefully improved solution.
      */
-    Solution intensify(Solution &solution,
+    Solution intensify(Solution const &solution,
                        CostEvaluator const &costEvaluator,
                        double overlapTolerance = 0.05);
 

@@ -14,6 +14,7 @@ from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
     RelocateStar,
+    SwapStar,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -33,21 +34,20 @@ def test_local_search_returns_same_solution_when_there_are_no_operators():
     assert_equal(ls.intensify(sol, cost_evaluator), sol)
 
 
-def test_local_search_raises_when_neighbourhood_structure_is_empty():
+def test_local_search_returns_same_solution_with_empty_neighbourhood():
     data = read("data/OkSmall.txt")
+    cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    # Is completely empty neighbourhood, so there's nothing to do for the
-    # local search in this case.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
+    ls = LocalSearch(data, rng, [[] for _ in range(data.num_clients + 1)])
+    ls.add_node_operator(Exchange10(data))
+    ls.add_node_operator(Exchange11(data))
 
-    with assert_raises(RuntimeError):
-        LocalSearch(data, rng, neighbours)
-
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-
-    with assert_raises(RuntimeError):
-        ls.set_neighbours(neighbours)
+    # The search is completed after one iteration due to the empty
+    # neighbourhood. This also prevents moves involving empty routes,
+    # which are not explicitly forbidden by the empty neighbourhood.
+    sol = Solution.make_random(data, rng)
+    assert_equal(ls.search(sol, cost_evaluator), sol)
 
 
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
@@ -315,6 +315,53 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
 
     with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
         ls.intensify(sol, cost_eval, overlap_tolerance=tol)
+
+
+def test_no_op_results_in_same_solution():
+    data = read("data/OkSmall.txt")
+    rng = RandomNumberGenerator(seed=42)
+
+    cost_eval = CostEvaluator(1, 1)
+    sol = Solution.make_random(data, rng)
+
+    # Empty local search does not actually search anything, so it should return
+    # the exact same solution as what was passed in.
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    assert_equal(ls(sol, cost_eval), sol)
+    assert_equal(ls.search(sol, cost_eval), sol)
+    assert_equal(ls.intensify(sol, cost_eval), sol)
+
+
+def test_intensify_can_improve_solution_further():
+    data = read("data/RC208.txt", "solomon", round_func="trunc")
+    rng = RandomNumberGenerator(seed=11)
+
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange11(data))
+    ls.add_route_operator(SwapStar(data))
+
+    cost_eval = CostEvaluator(1, 1)
+
+    # The following solution is locally optimal w.r.t. the node operators. This
+    # solution cannot be improved further by repeated calls to ``search()``.
+    search_opt = ls.search(Solution.make_random(data, rng), cost_eval)
+    search_cost = cost_eval.penalised_cost(search_opt)
+
+    # But it can be improved further using the intensifying route operators,
+    # as the following solution shows.
+    intensify_opt = ls.intensify(search_opt, cost_eval)
+    intensify_cost = cost_eval.penalised_cost(intensify_opt)
+
+    print(search_cost, intensify_cost)
+    assert_(intensify_cost < search_cost)
+
+    # Both solutions are locally optimal. ``search_opt`` w.r.t. to the node
+    # operators, and ``intensify_opt`` w.r.t. to the route operators. Repeated
+    # calls to ``search()`` and ``intensify`` do not result in further
+    # improvements for such locally optimal solutions.
+    for _ in range(10):
+        assert_equal(ls.search(search_opt, cost_eval), search_opt)
+        assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
 
 
 def test_local_search_raises_for_incomplete_solutions():
