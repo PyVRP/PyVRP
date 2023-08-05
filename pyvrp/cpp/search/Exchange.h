@@ -108,7 +108,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto uTWS = TimeWindowSegment::merge(
             data.durationMatrix(),
             uRoute->twBetween(0, U->idx() - 1),
-            uRoute->twBetween(U->idx() + 1, uRoute->size() + 1));
+            uRoute->twBetween(U->idx() + N, uRoute->size() + 1));
 
         deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
