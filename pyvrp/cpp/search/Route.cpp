@@ -66,17 +66,14 @@ void Route::clear()
     twsBefore.clear();
     twsAfter.clear();
 
-    auto const startClient = startDepot.client();
-    TWS const startTWS = TWS(startClient, data.client(startClient));
+    auto const depot = startDepot.client();
+    TWS const depotTWS = TWS(depot, data.client(depot));
 
-    auto const endClient = endDepot.client();
-    TWS const endTWS = TWS(endClient, data.client(endClient));
+    twsBefore.push_back(depotTWS);
+    twsBefore.push_back(depotTWS);
 
-    twsBefore.push_back(startTWS);
-    twsBefore.push_back(TWS::merge(data.durationMatrix(), startTWS, endTWS));
-
-    twsAfter.push_back(TWS::merge(data.durationMatrix(), startTWS, endTWS));
-    twsAfter.push_back(endTWS);
+    twsAfter.push_back(depotTWS);
+    twsAfter.push_back(depotTWS);
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -89,8 +86,10 @@ void Route::insert(size_t idx, Node *node)
 
     cumDist.emplace_back();  // does not matter where we place these, as they
     cumLoad.emplace_back();  // will be updated by Route::update().
-    twsBefore.emplace_back();
-    twsAfter.emplace_back();
+
+    TWS const tws = {node->client(), data.client(node->client())};
+    twsBefore.insert(twsBefore.begin() + idx, tws);
+    twsAfter.insert(twsAfter.begin() + idx, tws);
 
     nodes.insert(nodes.begin() + idx, node);
     for (size_t after = idx; after != nodes.size(); ++after)
@@ -111,8 +110,9 @@ void Route::remove(size_t idx)
 
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
-    twsBefore.pop_back();
-    twsAfter.pop_back();
+
+    twsBefore.erase(twsBefore.begin() + idx);
+    twsAfter.erase(twsAfter.begin() + idx);
 
     nodes.erase(nodes.begin() + idx);
     for (auto after = idx; after != nodes.size(); ++after)
@@ -157,9 +157,9 @@ void Route::update()
             data.durationMatrix(), twsBefore[idx - 1], nodes[idx]->tws());
 
     // Forward time window segments (client -> depot).
-    for (auto idx = static_cast<int>(nodes.size() - 2); idx >= 0; --idx)
-        twsAfter[idx] = TWS::merge(
-            data.durationMatrix(), nodes[idx]->tws(), twsAfter[idx + 1]);
+    for (auto idx = nodes.size() - 1; idx != 0; --idx)
+        twsAfter[idx - 1] = TWS::merge(
+            data.durationMatrix(), nodes[idx - 1]->tws(), twsAfter[idx]);
 #endif
 }
 

@@ -314,4 +314,29 @@ def test_tw_between_same_client_returns_node_tws(loc: int):
     assert_equal(route.time_warp(), 0)
 
 
+def test_tw_between_single_route_solution_has_time_warp_in_the_right_places():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client, client=data.client(client)))
+
+    assert_equal(len(route), data.num_clients)
+
+    route.update()
+    assert_(route.has_time_warp())
+    assert_equal(route.tw_between(0, 5).total_time_warp(), route.time_warp())
+
+    # Client #1 (at idx 1) causes the time warp, because its time windows is
+    # really tight.
+    assert_equal(route.time_warp(), 3_633)
+    assert_equal(route.tw_between(1, 4).total_time_warp(), 3_633)
+    assert_equal(route.tw_between(0, 4).total_time_warp(), 3_633)
+    assert_equal(route.tw_between(1, 5).total_time_warp(), 3_633)
+
+    # But excluding client #1, other subtours are (time-)feasible:
+    for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
+        assert_equal(route.tw_between(start, end).total_time_warp(), 0)
+
+
 # TODO test time windows
