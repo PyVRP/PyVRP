@@ -164,12 +164,12 @@ void Route::update()
     // Backward time window segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
         twsBefore_[idx]
-            = TWS::merge(data.durationMatrix(), twsBefore_[idx - 1], tws(idx));
+            = TWS::merge(data.durationMatrix(), twsBefore_[idx - 1], tws_[idx]);
 
     // Forward time window segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
         twsAfter_[idx - 1]
-            = TWS::merge(data.durationMatrix(), tws(idx - 1), twsAfter_[idx]);
+            = TWS::merge(data.durationMatrix(), tws_[idx - 1], twsAfter_[idx]);
 #endif
 }
 
