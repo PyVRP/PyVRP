@@ -176,7 +176,8 @@ PYBIND11_MODULE(_search, m)
         .def("capacity",
              [](Route const &route) { return route.capacity().get(); })
         .def("load", [](Route const &route) { return route.load().get(); })
-        .def("time_warp", &Route::timeWarp)
+        .def("time_warp",
+             [](Route const &route) { return route.timeWarp().get(); })
         .def(
             "dist_between",
             [](Route const &route, size_t start, size_t end) {
