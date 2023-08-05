@@ -50,26 +50,25 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
-    for (auto *node : nodes)  // unassign all nodes from route
+    for (auto *node : nodes)  // unassign all nodes from route.
     {
         node->idx_ = 0;
         node->route_ = nullptr;
     }
 
-    // Reinsert depots.
-    nodes.clear();
+    nodes.clear();  // clear nodes and reinsert the depots.
     nodes.push_back(&startDepot);
     nodes.push_back(&endDepot);
 
     startDepot.idx_ = 0;
-    endDepot.idx_ = 1;
-
     startDepot.route_ = this;
+
+    endDepot.idx_ = 1;
     endDepot.route_ = this;
 
     auto const depot = startDepot.client();
 
-    stats.clear();
+    stats.clear();  // clear stats and reinsert depot statistics.
     stats.emplace_back(depot, data.client(depot));
     stats.emplace_back(depot, data.client(depot));
 }

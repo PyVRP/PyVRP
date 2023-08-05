@@ -286,8 +286,8 @@ def test_str_contains_route(locs: List[int]):
 
 def test_route_tws_access():
     data = read("data/OkSmall.txt")
-    route = Route(data, idx=0, vehicle_type=0)
 
+    route = Route(data, idx=0, vehicle_type=0)
     for client in range(1, data.num_clients + 1):
         route.append(Node(loc=client))
 
@@ -325,18 +325,33 @@ def test_tws_between_same_client_returns_node_tws(loc: int):
     assert_equal(route.time_warp(), 0)
 
 
-def test_tws_between_same_as_tws_before_when_start_is_depot():
-    pass
+def test_tws_between_same_as_tws_before_after_when_one_side_is_depot():
+    data = read("data/OkSmall.txt")
 
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client))
 
-def test_tws_between_same_as_tws_after_when_end_is_depot():
-    pass
+    route.update()
+
+    for idx in [1, 2, 3, 4]:
+        before = route.tws_before(idx)
+        between_before = route.tws_between(0, idx)
+        assert_equal(before.duration(), between_before.duration())
+        assert_equal(
+            before.total_time_warp(), between_before.total_time_warp()
+        )
+
+        after = route.tws_after(idx)
+        between_after = route.tws_between(idx, len(route) + 1)
+        assert_equal(after.duration(), between_after.duration())
+        assert_equal(after.total_time_warp(), between_after.total_time_warp())
 
 
 def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     data = read("data/OkSmall.txt")
-    route = Route(data, idx=0, vehicle_type=0)
 
+    route = Route(data, idx=0, vehicle_type=0)
     for client in range(1, data.num_clients + 1):
         route.append(Node(loc=client))
 
@@ -357,6 +372,3 @@ def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
         assert_equal(route.tws_between(start, end).total_time_warp(), 0)
-
-
-# TODO test time windows
