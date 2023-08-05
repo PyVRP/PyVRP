@@ -64,12 +64,6 @@ public:
         [[nodiscard]] inline Route *route() const;
 
         /**
-         * Returns this location's time window segment data. This is the time
-         * window data of just this location.
-         */
-        [[nodiscard]] inline TimeWindowSegment const &tws() const;
-
-        /**
          * Returns whether this node is a depot. A node can only be a depot if
          * it is in a route.
          */
@@ -155,6 +149,11 @@ public:
      * @return Number of clients in this route.
      */
     [[nodiscard]] inline size_t size() const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
 
     /**
      * Calculates time window data for segment [start, end].
@@ -253,11 +252,6 @@ size_t Route::Node::idx() const { return idx_; }
 
 Route *Route::Node::route() const { return route_; }
 
-[[nodiscard]] inline TimeWindowSegment const &Route::Node::tws() const
-{
-    return tws_;
-}
-
 bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
@@ -315,15 +309,21 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
+TimeWindowSegment Route::tws(size_t idx) const
+{
+    assert(idx < nodes.size());
+    return nodes[idx]->tws_;
+}
+
 TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
 {
     using TWS = TimeWindowSegment;
     assert(start <= end && end < nodes.size());
 
-    auto tws = nodes[start]->tws();
+    auto tws = this->tws(start);
 
     for (size_t step = start; step != end; ++step)
-        tws = TWS::merge(data.durationMatrix(), tws, nodes[step + 1]->tws());
+        tws = TWS::merge(data.durationMatrix(), tws, this->tws(step + 1));
 
     return tws;
 }

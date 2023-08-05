@@ -32,17 +32,6 @@ def test_new_nodes_are_not_depots(loc: int):
     assert_(not node.is_depot())
 
 
-@pytest.mark.parametrize("loc", range(5))
-def test_node_tws(loc: int):
-    data = read("data/OkSmall.txt")
-    client = data.client(loc)
-
-    node = Node(loc=loc, client=client)
-    assert_equal(node.tws.tw_early(), client.tw_early)
-    assert_equal(node.tws.tw_late(), client.tw_late)
-    assert_equal(node.tws.duration(), client.service_duration)
-
-
 def test_route_insert_and_remove_updates_node_idx_and_route_properties():
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
@@ -293,6 +282,28 @@ def test_str_contains_route(locs: List[int]):
 
     for loc in locs:
         assert_(str(loc) in str(route))
+
+
+def test_route_tws_access():
+    data = read("data/OkSmall.txt")
+    route = Route(data, idx=0, vehicle_type=0)
+
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client, client=data.client(client)))
+
+    route.update()
+
+    for loc in [0, 1, 2, 3, 4, 5]:  # = [depot, *clients, depot]
+        if 0 < loc < len(route) + 1:
+            client = data.client(loc)  # if actual client
+        else:
+            client = data.client(0)  # else depot
+
+        tws = route.tws(loc)
+        assert_equal(tws.tw_early(), client.tw_early)
+        assert_equal(tws.tw_late(), client.tw_late)
+        assert_equal(tws.duration(), client.service_duration)
+        assert_equal(tws.total_time_warp(), 0)
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])

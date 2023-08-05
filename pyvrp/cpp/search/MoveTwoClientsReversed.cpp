@@ -55,8 +55,8 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
 
         auto vTWS = TWS::merge(data.durationMatrix(),
                                vRoute->twsBefore(V->idx()),
-                               n(U)->tws(),
-                               U->tws(),
+                               uRoute->tws(U->idx() + 1),
+                               uRoute->tws(U->idx()),
                                vRoute->twsAfter(V->idx() + 1));
 
         deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
@@ -75,8 +75,8 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                 = TWS::merge(data.durationMatrix(),
                              route->twsBefore(U->idx() - 1),
                              route->twsBetween(U->idx() + 2, V->idx()),
-                             n(U)->tws(),
-                             U->tws(),
+                             route->tws(U->idx() + 1),
+                             route->tws(U->idx()),
                              route->twsAfter(V->idx() + 1));
 
             deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
@@ -86,8 +86,8 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
             auto const uTWS
                 = TWS::merge(data.durationMatrix(),
                              route->twsBefore(V->idx()),
-                             n(U)->tws(),
-                             U->tws(),
+                             route->tws(U->idx() + 1),
+                             route->tws(U->idx()),
                              route->twsBetween(V->idx() + 1, U->idx() - 1),
                              route->twsAfter(U->idx() + 2));
 

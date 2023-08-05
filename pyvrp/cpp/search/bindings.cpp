@@ -192,6 +192,7 @@ PYBIND11_MODULE(_search, m)
             },
             py::arg("start"),
             py::arg("end"))
+        .def("tws", &Route::tws, py::arg("idx"))
         .def(
             "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))
         .def("tws_after", &Route::twsAfter, py::arg("start"))
@@ -219,6 +220,5 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("route", &Route::Node::route)
-        .def_property_readonly("tws", &Route::Node::tws)
         .def("is_depot", &Route::Node::isDepot);
 }
