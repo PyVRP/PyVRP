@@ -1,7 +1,6 @@
 from typing import Iterator, List, Optional
 
 from pyvrp._pyvrp import (
-    Client,
     CostEvaluator,
     ProblemData,
     RandomNumberGenerator,
@@ -111,7 +110,7 @@ class Route:
     def update(self) -> None: ...
 
 class Node:
-    def __init__(self, loc: int, client: Client) -> None: ...
+    def __init__(self, loc: int) -> None: ...
     @property
     def client(self) -> int: ...
     @property

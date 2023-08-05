@@ -38,13 +38,12 @@ public:
     {
         friend class Route;
 
-        size_t loc_;             // Location represented by this node
-        size_t idx_;             // Position in the route
-        Route *route_;           // Indicates membership of a route, if any
-        TimeWindowSegment tws_;  // This location's time window data
+        size_t loc_;    // Location represented by this node
+        size_t idx_;    // Position in the route
+        Route *route_;  // Indicates membership of a route, if any
 
     public:
-        Node(size_t loc, ProblemData::Client const &client);
+        Node(size_t loc);
 
         /**
          * Returns the location represented by this node.
@@ -79,6 +78,7 @@ private:
     std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
     std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
 
+    std::vector<TimeWindowSegment> tws_;        // Location's time window data
     std::vector<TimeWindowSegment> twsBefore_;  // TWS of depot -> client
     std::vector<TimeWindowSegment> twsAfter_;   // TWS of client -> depot
 
@@ -151,7 +151,7 @@ public:
     [[nodiscard]] inline size_t size() const;
 
     /**
-     * TODO
+     * Returns the time window data of the node at ``idx``.
      */
     [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
 
@@ -312,7 +312,7 @@ size_t Route::size() const
 TimeWindowSegment Route::tws(size_t idx) const
 {
     assert(idx < nodes.size());
-    return nodes[idx]->tws_;
+    return tws_[idx];
 }
 
 TimeWindowSegment Route::twsBetween(size_t start, size_t end) const

@@ -214,9 +214,7 @@ PYBIND11_MODULE(_search, m)
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
-        .def(py::init<size_t, pyvrp::ProblemData::Client const &>(),
-             py::arg("loc"),
-             py::arg("client"))
+        .def(py::init<size_t>(), py::arg("loc"))
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("route", &Route::Node::route)

@@ -8,19 +8,14 @@
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Node::Node(size_t loc, ProblemData::Client const &client)
-    : loc_(loc), idx_(0), route_(nullptr), tws_(loc, client)
-{
-}
+Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(vehicleType),
       idx_(idx),
-      startDepot(data.vehicleType(vehicleType).depot,
-                 data.client(data.vehicleType(vehicleType).depot)),
-      endDepot(data.vehicleType(vehicleType).depot,
-               data.client(data.vehicleType(vehicleType).depot))
+      startDepot(data.vehicleType(vehicleType).depot),
+      endDepot(data.vehicleType(vehicleType).depot)
 {
     startDepot.route_ = this;
     endDepot.route_ = this;
@@ -69,6 +64,9 @@ void Route::clear()
     auto const depot = startDepot.client();
     TWS const depotTWS = TWS(depot, data.client(depot));
 
+    tws_.push_back(depotTWS);
+    tws_.push_back(depotTWS);
+
     twsBefore_.push_back(depotTWS);
     twsBefore_.push_back(depotTWS);
 
@@ -88,6 +86,7 @@ void Route::insert(size_t idx, Node *node)
     cumLoad.emplace_back();  // will be updated by Route::update().
 
     TWS const tws = {node->client(), data.client(node->client())};
+    tws_.insert(tws_.begin() + idx, tws);
     twsBefore_.insert(twsBefore_.begin() + idx, tws);
     twsAfter_.insert(twsAfter_.begin() + idx, tws);
 
@@ -111,6 +110,7 @@ void Route::remove(size_t idx)
     cumDist.pop_back();  // does not matter where we remove these, as they will
     cumLoad.pop_back();  // will be updated by Route::update().
 
+    tws_.erase(tws_.begin() + idx);
     twsBefore_.erase(twsBefore_.begin() + idx);
     twsAfter_.erase(twsAfter_.begin() + idx);
 
@@ -121,10 +121,11 @@ void Route::remove(size_t idx)
 
 void Route::swap(Node *first, Node *second)
 {
-    // TODO just swap clients?
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
+    std::swap(first->route_->tws_[first->idx_],
+              second->route_->tws_[second->idx_]);
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
