@@ -20,6 +20,15 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     clear();
 }
 
+Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
+    : cumDist(0),
+      cumLoad(0),
+      tws(loc, client),
+      twsAfter(loc, client),
+      twsBefore(loc, client)
+{
+}
+
 size_t Route::vehicleType() const { return vehicleType_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
@@ -58,29 +67,11 @@ void Route::clear()
     startDepot.route_ = this;
     endDepot.route_ = this;
 
-    cumDist.clear();
-    cumDist.push_back(0);
-    cumDist.push_back(0);
-
-    cumLoad.clear();
-    cumLoad.push_back(0);
-    cumLoad.push_back(0);
-
-    tws_.clear();
-    twsBefore_.clear();
-    twsAfter_.clear();
-
     auto const depot = startDepot.client();
-    TWS const depotTWS = TWS(depot, data.client(depot));
 
-    tws_.push_back(depotTWS);
-    tws_.push_back(depotTWS);
-
-    twsBefore_.push_back(depotTWS);
-    twsBefore_.push_back(depotTWS);
-
-    twsAfter_.push_back(depotTWS);
-    twsAfter_.push_back(depotTWS);
+    stats.clear();
+    stats.emplace_back(depot, data.client(depot));
+    stats.emplace_back(depot, data.client(depot));
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -90,16 +81,13 @@ void Route::insert(size_t idx, Node *node)
 
     node->idx_ = idx;
     node->route_ = this;
-
-    cumDist.emplace_back();  // does not matter where we place these, as they
-    cumLoad.emplace_back();  // will be updated by Route::update().
-
-    TWS const tws = {node->client(), data.client(node->client())};
-    tws_.insert(tws_.begin() + idx, tws);
-    twsBefore_.insert(twsBefore_.begin() + idx, tws);
-    twsAfter_.insert(twsAfter_.begin() + idx, tws);
-
     nodes.insert(nodes.begin() + idx, node);
+
+    // We do not need to update the statistics; Route::update() will handle
+    // that later.
+    stats.insert(stats.begin() + idx,
+                 {node->client(), data.client(node->client())});
+
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 }
@@ -116,14 +104,9 @@ void Route::remove(size_t idx)
     node->idx_ = 0;
     node->route_ = nullptr;
 
-    cumDist.pop_back();  // does not matter where we remove these, as they will
-    cumLoad.pop_back();  // will be updated by Route::update().
-
-    tws_.erase(tws_.begin() + idx);
-    twsBefore_.erase(twsBefore_.begin() + idx);
-    twsAfter_.erase(twsAfter_.begin() + idx);
-
     nodes.erase(nodes.begin() + idx);
+    stats.erase(stats.begin() + idx);
+
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 }
@@ -133,8 +116,8 @@ void Route::swap(Node *first, Node *second)
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
-    std::swap(first->route_->tws_[first->idx_],
-              second->route_->tws_[second->idx_]);
+    std::swap(first->route_->stats[first->idx_],
+              second->route_->stats[second->idx_]);
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
@@ -156,20 +139,20 @@ void Route::update()
         }
 
         auto const dist = data.dist(p(node)->client(), node->client());
-        cumDist[idx] = cumDist[idx - 1] + dist;
-        cumLoad[idx] = cumLoad[idx - 1] + clientData.demand;
+        stats[idx].cumDist = stats[idx - 1].cumDist + dist;
+        stats[idx].cumLoad = stats[idx - 1].cumLoad + clientData.demand;
     }
 
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Backward time window segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        twsBefore_[idx]
-            = TWS::merge(data.durationMatrix(), twsBefore_[idx - 1], tws_[idx]);
+        stats[idx].twsBefore = TWS::merge(
+            data.durationMatrix(), stats[idx - 1].twsBefore, stats[idx].tws);
 
     // Forward time window segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
-        twsAfter_[idx - 1]
-            = TWS::merge(data.durationMatrix(), tws_[idx - 1], twsAfter_[idx]);
+        stats[idx - 1].twsAfter = TWS::merge(
+            data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
 #endif
 }
 
