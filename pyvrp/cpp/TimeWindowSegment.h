@@ -92,9 +92,6 @@ public:
      */
     [[nodiscard]] Duration releaseTime() const;
 
-    // TODO remove this constructor.
-    TimeWindowSegment() = default;
-
     // Construct from attributes of the given client.
     TimeWindowSegment(size_t idx, ProblemData::Client const &client);
 
@@ -113,7 +110,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] TimeWindowSegment const &other) const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
+    return {0, 0, 0, 0, 0, 0, 0};
 #else
     using Dur = pyvrp::Duration;
 
@@ -146,7 +143,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] Args... args)
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
+    return {0, 0, 0, 0, 0, 0, 0};
 #else
     auto const res = first.merge(durationMatrix, second);
 
