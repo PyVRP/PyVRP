@@ -6,7 +6,11 @@
 namespace pyvrp::search
 {
 /**
- * Inserts U -> X after V (as V -> X -> U), if that is an improving move.
+ * MoveTwoClientsReversed(data: ProblemData)
+ *
+ * Given two clients :math:`U` and :math:`V`, tests if inserting :math:`U` and
+ * its successor :math:`n(U)` after :math:`V` as
+ * :math:`V \rightarrow n(U) \rightarrow U` is an improving move.
  */
 class MoveTwoClientsReversed : public LocalSearchOperator<Route::Node>
 {

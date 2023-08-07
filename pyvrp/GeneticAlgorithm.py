@@ -20,11 +20,6 @@ if TYPE_CHECKING:
         Solution,
     )
 
-    _Parents = Tuple[Solution, Solution]
-    CrossoverOperator = Callable[
-        [_Parents, ProblemData, CostEvaluator, RandomNumberGenerator], Solution
-    ]
-
 
 @dataclass
 class GeneticAlgorithmParams:
@@ -102,7 +97,15 @@ class GeneticAlgorithm:
         rng: RandomNumberGenerator,
         population: Population,
         search_method: SearchMethod,
-        crossover_op: CrossoverOperator,
+        crossover_op: Callable[
+            [
+                Tuple[Solution, Solution],
+                ProblemData,
+                CostEvaluator,
+                RandomNumberGenerator,
+            ],
+            Solution,
+        ],
         initial_solutions: Collection[Solution],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):
