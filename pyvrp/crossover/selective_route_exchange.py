@@ -17,7 +17,7 @@ def selective_route_exchange(
     rng: RandomNumberGenerator,
 ) -> Solution:
     """
-    This crossover operator due to Nagata and Kobayashi (2010) combines routes
+    This crossover operator due to Nagata and Kobayashi [1]_ combines routes
     from both parents to generate a new offspring solution. It does this by
     carefully selecting routes from the second parent that could be exchanged
     with routes from the first parent. After exchanging these routes, the

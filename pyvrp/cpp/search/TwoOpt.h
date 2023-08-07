@@ -6,11 +6,17 @@
 namespace pyvrp::search
 {
 /**
- * 2-OPT moves.
+ * TwoOpt(data: ProblemData)
  *
- * Between routes: replaces U -> X and V -> Y by U -> Y and V -> X, if that is
- * an improving move. Within route: replaces U -> X and V -> Y by U -> V and
- * X -> Y, if that is an improving move.
+ * Given two clients :math:`U` and :math:`V`, tests:
+ *
+ * * If :math:`U` and :math:`V` are not in the same route, tests replacing the
+ *   arc of :math:`U` to its successor :math:`n(U)` and :math:`V` to
+ *   :math:`n(V)` by :math:`U \rightarrow n(V)` and :math:`V \rightarrow n(U)`.
+ * * If :math:`U` and :math:`V` are in the same route, tests replacing
+ *   :math:`U \rightarrow n(U)` and :math:`V \rightarrow n(V)` by
+ *   :math:`U \rightarrow V` and :math:`n(U) \rightarrow n(V)`. This reverses
+ *   the route segment from :math:`n(U)` to :math:`V`.
  */
 class TwoOpt : public LocalSearchOperator<Route::Node>
 {

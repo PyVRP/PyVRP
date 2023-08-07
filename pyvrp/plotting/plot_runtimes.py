@@ -14,7 +14,7 @@ def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
     ----------
     result
         Result for which to plot runtimes.
-    ax, optional
+    ax
         Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:

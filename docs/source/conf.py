@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx_immaterial",
     "nbsphinx",
@@ -124,6 +125,13 @@ html_theme_options = {
         },
     ],
 }
+
+python_resolve_unqualified_typing = True
+python_transform_type_annotations_pep585 = True
+python_transform_type_annotations_pep604 = True
+object_description_options = [
+    ("py:.*", dict(include_fields_in_toc=False, include_rubrics_in_toc=False)),
+]
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
