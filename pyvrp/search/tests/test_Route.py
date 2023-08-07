@@ -284,4 +284,91 @@ def test_str_contains_route(locs: List[int]):
         assert_(str(loc) in str(route))
 
 
-# TODO test time windows
+def test_route_tws_access():
+    data = read("data/OkSmall.txt")
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client))
+
+    route.update()
+
+    for loc in [0, 1, 2, 3, 4, 5]:  # = [depot, *clients, depot]
+        if 0 < loc < len(route) + 1:
+            client = data.client(loc)  # if actual client
+        else:
+            client = data.client(0)  # else depot
+
+        tws = route.tws(loc)
+        assert_equal(tws.tw_early(), client.tw_early)
+        assert_equal(tws.tw_late(), client.tw_late)
+        assert_equal(tws.duration(), client.service_duration)
+        assert_equal(tws.total_time_warp(), 0)
+
+
+@pytest.mark.parametrize("loc", [1, 2, 3, 4])
+def test_tws_between_same_client_returns_node_tws(loc: int):
+    data = read("data/OkSmall.txt")
+    client = data.client(loc)
+
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(Node(loc=loc))
+    route.update()
+
+    # Duration of the depot node TWS's is zero, and for the client it is equal
+    # to the service duration.
+    assert_equal(route.tws_between(0, 0).duration(), 0)
+    assert_equal(route.tws_between(1, 1).duration(), client.service_duration)
+    assert_equal(route.tws_between(2, 2).duration(), 0)
+
+    # Single route solutions are all feasible for this instance.
+    assert_equal(route.time_warp(), 0)
+
+
+def test_tws_between_same_as_tws_before_after_when_one_side_is_depot():
+    data = read("data/OkSmall.txt")
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client))
+
+    route.update()
+
+    for idx in [1, 2, 3, 4]:
+        before = route.tws_before(idx)
+        between_before = route.tws_between(0, idx)
+        assert_equal(before.duration(), between_before.duration())
+        assert_equal(
+            before.total_time_warp(), between_before.total_time_warp()
+        )
+
+        after = route.tws_after(idx)
+        between_after = route.tws_between(idx, len(route) + 1)
+        assert_equal(after.duration(), between_after.duration())
+        assert_equal(after.total_time_warp(), between_after.total_time_warp())
+
+
+def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
+    data = read("data/OkSmall.txt")
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client))
+
+    assert_equal(len(route), data.num_clients)
+
+    route.update()
+    assert_(route.has_time_warp())
+    assert_equal(route.tws_between(0, 5).total_time_warp(), route.time_warp())
+
+    # Client #1 (at idx 1) causes the time warp in combination with client #3:
+    # #1 can only be visited after #3's window has already closed.
+    assert_equal(route.time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 4).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(0, 4).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 5).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 3).total_time_warp(), 3_633)
+
+    # But excluding client #1, other subtours are (time-)feasible:
+    for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
+        assert_equal(route.tws_between(start, end).total_time_warp(), 0)
