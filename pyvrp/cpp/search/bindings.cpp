@@ -35,55 +35,156 @@ PYBIND11_MODULE(_search, m)
         m, "Exchange10", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<1, 0>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<2, 0>, NodeOp>(
         m, "Exchange20", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<2, 0>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<3, 0>, NodeOp>(
         m, "Exchange30", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<3, 0>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<1, 1>, NodeOp>(
         m, "Exchange11", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<1, 1>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<2, 1>, NodeOp>(
         m, "Exchange21", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<2, 1>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<3, 1>, NodeOp>(
         m, "Exchange31", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<3, 1>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<2, 2>, NodeOp>(
         m, "Exchange22", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<2, 2>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<3, 2>, NodeOp>(
         m, "Exchange32", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<3, 2>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"));
 
     py::class_<Exchange<3, 3>, NodeOp>(
         m, "Exchange33", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &Exchange<3, 3>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"));
+
+    py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &MoveTwoClientsReversed::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply",
+             &MoveTwoClientsReversed::apply,
+             py::arg("U"),
+             py::arg("V"));
+
+    py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &TwoOpt::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &TwoOpt::apply, py::arg("U"), py::arg("V"));
+
+    py::class_<RelocateStar, RouteOp>(m, "RelocateStar")
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &RelocateStar::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RelocateStar::apply, py::arg("U"), py::arg("V"));
+
+    py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &SwapStar::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"));
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
@@ -123,26 +224,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"),
              py::arg("overlap_tolerance") = 0.05)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
-
-    py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
-
-    py::class_<RelocateStar, RouteOp>(m, "RelocateStar")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
-
-    py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
-
-    py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>());  // keep data alive
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),

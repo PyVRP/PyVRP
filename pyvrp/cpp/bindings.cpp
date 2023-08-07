@@ -361,26 +361,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     },
                     py::arg("data"),
                     py::arg("rng"),
-                    R"doc(
-                        make_random(
-                            data: ProblemData,
-                            rng: RandomNumberGenerator,
-                        ) -> Solution
-
-                        Creates a randomly generated solution.
-
-                        Parameters
-                        ----------
-                        data
-                            Data instance.
-                        rng
-                            Random number generator to use.
-
-                        Returns
-                        -------
-                        Solution
-                            The randomly generated solution.
-                    )doc");
+                    DOC(pyvrp, Solution, Solution, 1));
             })
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
@@ -479,7 +460,8 @@ PYBIND11_MODULE(_pyvrp, m)
             py::arg("solution"),
             DOC(pyvrp, CostEvaluator, cost));
 
-    py::class_<PopulationParams>(m, "PopulationParams")
+    py::class_<PopulationParams>(
+        m, "PopulationParams", DOC(pyvrp, PopulationParams))
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
              py::arg("min_pop_size") = 25,
              py::arg("generation_size") = 40,
