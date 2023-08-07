@@ -203,7 +203,7 @@ private:
     size_t numMissingClients_ = 0;  // Number of required but missing clients
 
     Routes routes_;
-    // pairs of [pred, succ] per client, only if client is assigned
+    // Pairs of [pred, succ] per client, null if not assigned.
     std::vector<std::optional<std::pair<Client, Client>>> neighbours;
 
     // Determines the [pred, succ] pairs for assigned clients.

@@ -13,19 +13,16 @@ double pyvrp::diversity::brokenPairsDistance(pyvrp::Solution const &first,
 
     for (size_t j = 1; j <= numClients; j++)
     {
-        if (fNeighbours[j].has_value() && sNeighbours[j].has_value())
-        {
-            // Both clients are assigned, compare neighbours
-            auto const [fPred, fSucc] = fNeighbours[j].value();
-            auto const [sPred, sSucc] = sNeighbours[j].value();
+        std::pair<size_t, size_t> const unassigned
+            = {numClients + 1, numClients + 1};
 
-            // An edge pair (fPred, j) or (j, fSucc) from the first solution is
-            // broken if it is not in the second solution.
-            numBrokenPairs += fSucc != sSucc;
-            numBrokenPairs += fPred != sPred;
-        }
-        else if (fNeighbours[j].has_value() || sNeighbours[j].has_value())
-            numBrokenPairs += 2;  // One assigned, other not so 2 broken edges
+        auto const [fPred, fSucc] = fNeighbours[j].value_or(unassigned);
+        auto const [sPred, sSucc] = sNeighbours[j].value_or(unassigned);
+
+        // An edge pair (fPred, j) or (j, fSucc) from the first solution is
+        // broken if it is not in the second solution.
+        numBrokenPairs += fSucc != sSucc;
+        numBrokenPairs += fPred != sPred;
     }
 
     // numBrokenPairs is at most 2n since we can count at most two broken edges
