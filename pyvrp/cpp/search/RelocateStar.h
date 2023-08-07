@@ -7,8 +7,14 @@
 namespace pyvrp::search
 {
 /**
- * Performs the best (1, 0)-exchange move between routes U and V. Tests both
- * ways: from U to V, and from V to U.
+ * RelocateStar(data: ProblemData)
+ *
+ * Performs the best :math:`(1, 0)`-exchange move between routes :math:`U` and
+ * :math:`V`.
+ *
+ * .. note::
+ *
+ *    See the :class:`Exchange10` node operator for details.
  */
 class RelocateStar : public LocalSearchOperator<Route>
 {

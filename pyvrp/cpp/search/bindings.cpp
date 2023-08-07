@@ -193,7 +193,8 @@ PYBIND11_MODULE(_search, m)
             py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<MoveTwoClientsReversed, NodeOp>(m, "MoveTwoClientsReversed")
+    py::class_<MoveTwoClientsReversed, NodeOp>(
+        m, "MoveTwoClientsReversed", DOC(pyvrp, search, MoveTwoClientsReversed))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -213,7 +214,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"));
 
-    py::class_<TwoOpt, NodeOp>(m, "TwoOpt")
+    py::class_<TwoOpt, NodeOp>(m, "TwoOpt", DOC(pyvrp, search, TwoOpt))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -230,7 +231,8 @@ PYBIND11_MODULE(_search, m)
             py::arg("cost_evaluator"))
         .def("apply", &TwoOpt::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<RelocateStar, RouteOp>(m, "RelocateStar")
+    py::class_<RelocateStar, RouteOp>(
+        m, "RelocateStar", DOC(pyvrp, search, RelocateStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
