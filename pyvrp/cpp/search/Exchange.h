@@ -11,7 +11,7 @@ namespace pyvrp::search
 /**
  * Exchange()
  *
- * The :math:`(N, M)`-exchange operators exhange :math:`N` consecutive clients
+ * The :math:`(N, M)`-exchange operators exchange :math:`N` consecutive clients
  * from :math:`U`'s route (starting at :math:`U`) with :math:`M` consecutive
  * clients from :math:`V`'s route (starting at :math:`V`). This includes
  * the RELOCATE and SWAP operators as special cases.
