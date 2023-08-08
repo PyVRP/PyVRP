@@ -24,7 +24,6 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.search._search import Node, Route
 from pyvrp.tests.helpers import make_heterogeneous, read
 
