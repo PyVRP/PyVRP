@@ -12,15 +12,15 @@ from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import read
 
 
-def test_relocate_after_depot_should_work():
+def test_single_route_OkSmall():
     """
-    This test exercises the bug identified in issue #142, involving a relocate
-    action that should insert directly after the depot.
+    This test checks that MoveTwoClientsReversed properly solves the small
+    instance where we know what is going on.
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
-    # Only neighbours are 2 -> 1 and 1 -> 4.
+    # Only neighbours are 1 -> 4 and 2 -> 1.
     ls = cpp_LocalSearch(data, [[], [4], [1], [], []])
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
