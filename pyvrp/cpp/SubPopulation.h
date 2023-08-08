@@ -12,6 +12,19 @@
 
 namespace pyvrp
 {
+/**
+ * PopulationParams(
+ *     min_pop_size: int = 25,
+ *     generation_size: int = 40,
+ *     nb_elite: int = 4,
+ *     nb_close: int = 5,
+ *     lb_diversity: float = 0.1,
+ *     ub_diversity: float = 0.5,
+ * )
+ *
+ * Creates a parameters object to be used with
+ * :class:`~pyvrp.Population.Population`.
+ */
 struct PopulationParams
 {
     size_t minPopSize;

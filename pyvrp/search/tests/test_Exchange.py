@@ -6,10 +6,10 @@ from pyvrp import (
     CostEvaluator,
     ProblemData,
     RandomNumberGenerator,
-    Route,
     Solution,
     VehicleType,
 )
+from pyvrp import Route as SolRoute
 from pyvrp.search import (
     Exchange10,
     Exchange11,
@@ -24,6 +24,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
+from pyvrp.search._search import Node, Route
 from pyvrp.tests.helpers import customise, read
 
 
@@ -198,25 +199,35 @@ def test_relocate_after_depot_should_work():
     action that should insert directly after the depot.
     """
     data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(20, 6)
-    rng = RandomNumberGenerator(seed=42)
+    op = Exchange10(data)
 
-    # This is a non-empty neighbourhood (so LS does not complain), but the only
-    # client moves allowed by it will not improve the initial solution created
-    # below. So the only improvements (1, 0)-exchange can make must come from
-    # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
-    neighbours[2].append(1)
+    # We create two routes: one with clients [1, 2, 3], and the other empty.
+    # It is an improving move to insert client 3 into the empty route.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route2 = Route(data, idx=1, vehicle_type=0)
 
-    ls = LocalSearch(data, rng, neighbours)
-    ls.add_node_operator(Exchange10(data))
+    nodes = [Node(loc=client) for client in [1, 2, 3]]
+    for node in nodes:
+        route1.append(node)
+    route1.update()
 
     # This solution can be improved by moving 3 into its own route, that is,
     # inserting it after the depot of an empty route. Before the bug was fixed,
     # (1, 0)-exchange never performed this move.
-    sol = Solution(data, [[1, 2, 3], [4]])
-    expected = Solution(data, [[1, 2], [3], [4]])
-    assert_equal(ls.search(sol, cost_evaluator), expected)
+    cost_evaluator = CostEvaluator(20, 6)
+    assert_(route1[3] is nodes[-1])
+    assert_(op.evaluate(nodes[-1], route2[0], cost_evaluator) < 0)
+
+    assert_(nodes[-1].route is route1)
+    assert_equal(len(route1), 3)
+    assert_equal(len(route2), 0)
+
+    # Apply the move and check that the routes and nodes are appropriately
+    # updated.
+    op.apply(nodes[-1], route2[0])
+    assert_(nodes[-1].route is route2)
+    assert_equal(len(route1), 2)
+    assert_equal(len(route2), 1)
 
 
 def test_relocate_only_happens_when_distance_and_duration_allow_it():
@@ -291,9 +302,15 @@ def test_relocate_to_heterogeneous_empty_route():
     # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all
     # load penalties, but other moves would increase load penalties.
     # Therefore, this requires moving to an empty route which is not the first.
-    sol = Solution(data, [Route(data, [1, 2, 3], 0), Route(data, [4], 1)])
+    sol = Solution(
+        data, [SolRoute(data, [1, 2, 3], 0), SolRoute(data, [4], 1)]
+    )
     expected = Solution(
         data,
-        [Route(data, [1, 2], 0), Route(data, [4], 1), Route(data, [3], 3)],
+        [
+            SolRoute(data, [1, 2], 0),
+            SolRoute(data, [4], 1),
+            SolRoute(data, [3], 3),
+        ],
     )
     assert_equal(ls.search(sol, cost_evaluator), expected)

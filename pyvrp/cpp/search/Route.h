@@ -29,6 +29,11 @@ namespace pyvrp::search
 class Route
 {
 public:
+    /**
+     * Light wrapper class around a client or depot location. This class tracks
+     * the route it is in, and the position and role it currently has in that
+     * route.
+     */
     class Node
     {
         friend class Route;
@@ -38,34 +43,60 @@ public:
         Route *route_;  // Indicates membership of a route, if any
 
     public:
-        // TODO move these data fields to Route
-        TimeWindowSegment tw;        // TWS of this node (loc)
-        TimeWindowSegment twBefore;  // TWS for depot -> loc, including self
-        TimeWindowSegment twAfter;   // TWS for loc -> depot, including self
-
         Node(size_t loc);
 
+        /**
+         * Returns the location represented by this node.
+         */
         [[nodiscard]] inline size_t client() const;  // TODO rename to loc
+
+        /**
+         * Returns this node's position in a route. This value is ``0`` when
+         * the node is *not* in a route.
+         */
         [[nodiscard]] inline size_t idx() const;
+
+        /**
+         * Returns the route this node is currently in. If the node is not in
+         * a route, this returns ``None`` (C++: ``nullptr``).
+         */
         [[nodiscard]] inline Route *route() const;
+
+        /**
+         * Returns whether this node is a depot. A node can only be a depot if
+         * it is in a route.
+         */
         [[nodiscard]] inline bool isDepot() const;
     };
 
 private:
+    struct NodeStats
+    {
+        Distance cumDist;             // Cumulative dist to this node (incl.)
+        Load cumLoad;                 // Cumulative load to this node (incl.)
+        TimeWindowSegment tws;        // Node's time window data
+        TimeWindowSegment twsAfter;   // TWS of client -> depot (incl.)
+        TimeWindowSegment twsBefore;  // TWS of depot -> client (incl.)
+
+        NodeStats(size_t loc, ProblemData::Client const &client);
+    };
+
     ProblemData const &data;
     size_t const vehicleType_;
+    size_t const idx_;
 
-    std::vector<Node *> nodes;      // Nodes in this route, including depots
-    std::vector<Distance> cumDist;  // Cumulative dist along route (incl.)
-    std::vector<Load> cumLoad;      // Cumulative load along route (incl.)
-
+    std::vector<Node *> nodes;     // Nodes in this route, including depots
+    std::vector<NodeStats> stats;  // (Cumulative) statistics along the route
     std::pair<double, double> centroid;  // Center point of route's clients
 
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
 
-public:                // TODO make fields private
-    size_t const idx;  // Route index
+public:
+    /**
+     * Route index.
+     */
+    [[nodiscard]] inline size_t idx() const;
 
     /**
      * @return The client or depot node at the given ``idx``.
@@ -125,10 +156,25 @@ public:                // TODO make fields private
     [[nodiscard]] inline size_t size() const;
 
     /**
+     * Returns the time window data of the node at ``idx``.
+     */
+    [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
+
+    /**
      * Calculates time window data for segment [start, end].
      */
-    [[nodiscard]] inline TimeWindowSegment twBetween(size_t start,
-                                                     size_t end) const;
+    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
+                                                      size_t end) const;
+
+    /**
+     * Returns time window data for segment [start, 0].
+     */
+    [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
+
+    /**
+     * Returns time window data for segment [0, end].
+     */
+    [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
 
     /**
      * Calculates the distance for segment [start, end].
@@ -184,7 +230,7 @@ public:                // TODO make fields private
      */
     void update();
 
-    Route(ProblemData const &data, size_t const idx, size_t const vehType);
+    Route(ProblemData const &data, size_t idx, size_t vehicleType);
 };
 
 /**
@@ -215,7 +261,7 @@ bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
     // be either the route's start or end depot.
-    return idx_ == 0 || (route_ && idx_ == route_->size() + 1);
+    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
 bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
@@ -230,6 +276,8 @@ bool Route::hasTimeWarp() const
     return timeWarp() > 0;
 #endif
 }
+
+size_t Route::idx() const { return idx_; }
 
 Route::Node *Route::operator[](size_t idx)
 {
@@ -252,9 +300,12 @@ std::vector<Route::Node *>::iterator Route::begin()
 }
 std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
-Load Route::load() const { return cumLoad.back(); }
+Load Route::load() const { return stats.back().cumLoad; }
 
-Duration Route::timeWarp() const { return endDepot.twBefore.totalTimeWarp(); }
+Duration Route::timeWarp() const
+{
+    return stats.back().twsBefore.totalTimeWarp();
+}
 
 Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
@@ -266,28 +317,43 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-TimeWindowSegment Route::twBetween(size_t start, size_t end) const
+TimeWindowSegment Route::tws(size_t idx) const
 {
-    assert(0 < start && start <= end && end < nodes.size());
+    assert(idx < nodes.size());
+    return stats[idx].tws;
+}
 
-    auto *node = nodes[start];
-    auto tws = node->tw;
+TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
+{
+    using TWS = TimeWindowSegment;
+    assert(start <= end && end < nodes.size());
+
+    auto tws = stats[start].tws;
 
     for (size_t step = start; step != end; ++step)
-    {
-        node = n(node);
-        tws = TimeWindowSegment::merge(data.durationMatrix(), tws, node->tw);
-    }
+        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
 
     return tws;
+}
+
+TimeWindowSegment Route::twsAfter(size_t start) const
+{
+    assert(start < nodes.size());
+    return stats[start].twsAfter;
+}
+
+TimeWindowSegment Route::twsBefore(size_t end) const
+{
+    assert(end < nodes.size());
+    return stats[end].twsBefore;
 }
 
 Distance Route::distBetween(size_t start, size_t end) const
 {
     assert(start <= end && end < nodes.size());
 
-    auto const startDist = cumDist[start];
-    auto const endDist = cumDist[end];
+    auto const startDist = stats[start].cumDist;
+    auto const endDist = stats[end].cumDist;
 
     assert(startDist <= endDist);
     return endDist - startDist;
@@ -298,8 +364,8 @@ Load Route::loadBetween(size_t start, size_t end) const
     assert(start <= end && end < nodes.size());
 
     auto const atStart = data.client(nodes[start]->client()).demand;
-    auto const startLoad = cumLoad[start];
-    auto const endLoad = cumLoad[end];
+    auto const startLoad = stats[start].cumLoad;
+    auto const endLoad = stats[end].cumLoad;
 
     assert(startLoad <= endLoad);
     return endLoad - startLoad + atStart;
