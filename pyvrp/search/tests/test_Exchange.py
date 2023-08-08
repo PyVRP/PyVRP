@@ -24,6 +24,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
+from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
@@ -199,23 +200,21 @@ def test_relocate_after_depot_should_work():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = RandomNumberGenerator(seed=42)
 
-    # This is a non-empty neighbourhood, but the only client moves allowed by
-    # it will not improve the initial solution created below. So the only
-    # improvements (1, 0)-exchange can make must come from moving clients
-    # behind the depot of a route.
     neighbours = [[] for _ in range(data.num_clients + 1)]
-    neighbours[2].append(1)
+    neighbours[2].append(3)
 
-    ls = LocalSearch(data, rng, neighbours)
+    ls = cpp_LocalSearch(data, neighbours)
     ls.add_node_operator(Exchange10(data))
 
-    # This solution can be improved by moving 3 into its own route, that is,
-    # inserting it after the depot of an empty route. Before the bug was fixed,
-    # (1, 0)-exchange never performed this move.
+    # The first move involves inserting client 2 after 3. Since there was an
+    # improving move (and there are no other improving moves), empty routes
+    # are now evaluated as well. The solution can be improved by moving 1 into
+    # its own route, that is, inserting it after the depot of an empty route.
+    # Before the bug was fixed, (1, 0)-exchange never performed this move.
     sol = Solution(data, [[1, 2, 3], [4]])
-    expected = Solution(data, [[1, 2], [3], [4]])
+    expected = Solution(data, [[3, 2], [4], [1]])
+
     assert_equal(ls.search(sol, cost_evaluator), expected)
 
 
