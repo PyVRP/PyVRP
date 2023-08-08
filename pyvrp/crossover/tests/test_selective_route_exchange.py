@@ -145,9 +145,10 @@ def test_srex_heterogeneous_greedy_repair():
     Tests the case where greedy repair is used during SREX crossover for
     heterogeneous routes.
     """
-    ok_small = read("data/OkSmallGreedyRepair.txt")
-    vehicle_types = [VehicleType(10, 2), VehicleType(20, 1)]
-    data = customise(ok_small, vehicle_types=vehicle_types)
+    data = customise(
+        read("data/OkSmallGreedyRepair.txt"),
+        vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)],
+    )
     cost_evaluator = CostEvaluator(20, 6)
 
     # We create the routes sorted by angle such that SREX sorting doesn't
