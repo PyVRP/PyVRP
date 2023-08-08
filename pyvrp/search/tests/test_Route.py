@@ -3,9 +3,8 @@ from typing import List
 import pytest
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import VehicleType
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import read
 
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
@@ -18,8 +17,7 @@ def test_node_init(loc: int):
 
 @pytest.mark.parametrize(("idx", "vehicle_type"), [(0, 0), (1, 0), (1, 1)])
 def test_route_init(idx: int, vehicle_type: int):
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(1, 1), VehicleType(2, 2)])
+    data = read("data/OkSmallHeterogeneousCapacities.txt")
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
     assert_equal(route.idx, idx)
