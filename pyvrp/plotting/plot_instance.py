@@ -17,7 +17,7 @@ def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
     ----------
     data
         Data instance.
-    fig, optional
+    fig
         Optional Figure to draw on. One will be created if not provided.
     """
     if not fig:

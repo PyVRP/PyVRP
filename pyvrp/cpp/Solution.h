@@ -36,7 +36,7 @@ namespace pyvrp
  */
 class Solution
 {
-    using Client = int;
+    using Client = size_t;
     using VehicleType = size_t;
 
 public:
@@ -362,10 +362,21 @@ public:
     Solution(Solution &&other) = default;
 
     /**
-     * Constructs a random solution using the given random number generator.
+     * make_random(data: ProblemData, rng: RandomNumberGenerator) -> Solution
      *
-     * @param data Data instance describing the problem that's being solved.
-     * @param rng  Random number generator.
+     * Creates a randomly generated solution.
+     *
+     * Parameters
+     * ----------
+     * data
+     *     Data instance.
+     * rng
+     *     Random number generator to use.
+     *
+     * Returns
+     * -------
+     * Solution
+     *     The randomly generated solution.
      */
     Solution(ProblemData const &data, RandomNumberGenerator &rng);
 

@@ -24,7 +24,7 @@ def plot_result(
         Result to be plotted.
     data
         Data instance underlying the result's solution.
-    fig, optional
+    fig
         Optional Figure to draw on. One will be created if not provided.
     """
     if not fig:

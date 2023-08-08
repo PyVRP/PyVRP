@@ -32,11 +32,11 @@ def plot_route_schedule(
         Data instance for which to plot the route schedule.
     route
         Route (list of clients) whose schedule to plot.
-    legend, optional
+    legend
         Whether or not to show the legends. Default True.
-    title, optional
+    title
         Title to add to the plot.
-    ax, optional
+    ax
         Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:

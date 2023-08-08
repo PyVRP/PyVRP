@@ -228,7 +228,7 @@ PYBIND11_MODULE(_pyvrp, m)
             DOC(pyvrp, ProblemData, duration));
 
     py::class_<Solution::Route>(m, "Route", DOC(pyvrp, Solution, Route))
-        .def(py::init<ProblemData const &, std::vector<int>, size_t>(),
+        .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
@@ -336,8 +336,8 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
         // Note, the order of constructors is important! Since Solution::Route
         // implements __len__ and __getitem__, it can also be converted to
-        // std::vector<int> and thus a list of Routes is a valid argument for
-        // both constructors. We want to avoid using the second constructor
+        // std::vector<size_t> and thus a list of Routes is a valid argument
+        // for both constructors. We want to avoid using the second constructor
         // since that would lose the vehicle types associations. As pybind11
         // will use the first matching constructor we put this one first.
         .def(py::init<ProblemData const &,
@@ -345,7 +345,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("routes"))
         .def(py::init<ProblemData const &,
-                      std::vector<std::vector<int>> const &>(),
+                      std::vector<std::vector<size_t>> const &>(),
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(
@@ -361,26 +361,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     },
                     py::arg("data"),
                     py::arg("rng"),
-                    R"doc(
-                        make_random(
-                            data: ProblemData,
-                            rng: RandomNumberGenerator,
-                        ) -> Solution
-
-                        Creates a randomly generated solution.
-
-                        Parameters
-                        ----------
-                        data
-                            Data instance.
-                        rng
-                            Random number generator to use.
-
-                        Returns
-                        -------
-                        Solution
-                            The randomly generated solution.
-                    )doc");
+                    DOC(pyvrp, Solution, Solution, 1));
             })
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
@@ -479,7 +460,8 @@ PYBIND11_MODULE(_pyvrp, m)
             py::arg("solution"),
             DOC(pyvrp, CostEvaluator, cost));
 
-    py::class_<PopulationParams>(m, "PopulationParams")
+    py::class_<PopulationParams>(
+        m, "PopulationParams", DOC(pyvrp, PopulationParams))
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
              py::arg("min_pop_size") = 25,
              py::arg("generation_size") = 40,
@@ -591,6 +573,18 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_early"),
              py::arg("tw_late"),
              py::arg("release_time"))
+        .def(
+            "duration",
+            [](TWS const &tws) { return tws.duration().get(); },
+            DOC(pyvrp, TimeWindowSegment, duration))
+        .def(
+            "tw_early",
+            [](TWS const &tws) { return tws.twEarly().get(); },
+            DOC(pyvrp, TimeWindowSegment, twEarly))
+        .def(
+            "tw_late",
+            [](TWS const &tws) { return tws.twLate().get(); },
+            DOC(pyvrp, TimeWindowSegment, twLate))
         .def(
             "total_time_warp",
             [](TWS const &tws) { return tws.totalTimeWarp().get(); },

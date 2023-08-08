@@ -218,12 +218,12 @@ public:
     /**
      * @return The full travel distance matrix.
      */
-    [[nodiscard]] Matrix<Distance> const &distanceMatrix() const;
+    [[nodiscard]] inline Matrix<Distance> const &distanceMatrix() const;
 
     /**
      * @return The full travel duration matrix.
      */
-    [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
+    [[nodiscard]] inline Matrix<Duration> const &durationMatrix() const;
 
     /**
      * Number of clients in this problem instance.
@@ -291,6 +291,10 @@ Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }
+
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

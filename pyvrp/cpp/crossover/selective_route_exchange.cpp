@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-using Client = int;
+using Client = size_t;
 using Clients = std::vector<Client>;
 using Route = pyvrp::Solution::Route;
 using Routes = std::vector<Route>;

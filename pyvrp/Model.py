@@ -247,7 +247,7 @@ class Model:
         ----------
         stop
             Stopping criterion to use.
-        seed, optional
+        seed
             Seed value to use for the PRNG, by default 0.
 
         Returns
