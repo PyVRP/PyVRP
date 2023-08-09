@@ -16,7 +16,9 @@ def customise(
     distance_matrix: Optional[List[List[int]]] = None,
 ) -> ProblemData:
     """
-    Returns a customised version of the given ``ProblemData`` object.
+    Returns a customised ``ProblemData`` instance with the given arguments.
+    If an argument is ``None``, the corresponding attribute of the passed
+    data instance is used.
     """
     if clients is None:
         clients = [data.client(idx) for idx in range(data.num_clients + 1)]

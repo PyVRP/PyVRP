@@ -46,7 +46,7 @@ def test_OkSmall_instance():
 
 def test_two_opt_heterogeneous_capacity():
     """
-    Tests whether a two-opt move that is improving when considering homogeneous
+    Tests a two-opt move that is improving when considering homogeneous
     capacities, but is not improving when using heterogeneous capacities.
     """
     data = read("data/OkSmall.txt")
@@ -57,10 +57,10 @@ def test_two_opt_heterogeneous_capacity():
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(TwoOpt(data))
 
-    # Solution 1 is not locally optimal w.r.t. two-opt, but solution 2 is.
     sol1 = Solution(data, [Route(data, [1, 3], 0), Route(data, [2, 4], 0)])
     sol2 = Solution(data, [Route(data, [1, 4], 0), Route(data, [2, 3], 0)])
 
+    # Solution 1 is not locally optimal w.r.t. two-opt, but solution 2 is.
     assert_equal(ls.search(sol1, cost_evaluator), sol2)
     assert_equal(ls.search(sol2, cost_evaluator), sol2)
 
