@@ -4,11 +4,10 @@ import matplotlib.pyplot as plt
 
 from pyvrp import ProblemData
 from pyvrp.Result import Result
-
-from .plot_diversity import plot_diversity
-from .plot_objectives import plot_objectives
-from .plot_runtimes import plot_runtimes
-from .plot_solution import plot_solution
+from pyvrp.plotting.plot_diversity import plot_diversity
+from pyvrp.plotting.plot_objectives import plot_objectives
+from pyvrp.plotting.plot_runtimes import plot_runtimes
+from pyvrp.plotting.plot_solution import plot_solution
 
 
 def plot_result(
