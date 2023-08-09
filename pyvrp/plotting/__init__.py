@@ -1,10 +1,10 @@
-from .plot_coordinates import plot_coordinates
-from .plot_demands import plot_demands
-from .plot_diversity import plot_diversity
-from .plot_instance import plot_instance
-from .plot_objectives import plot_objectives
-from .plot_result import plot_result
-from .plot_route_schedule import plot_route_schedule
-from .plot_runtimes import plot_runtimes
-from .plot_solution import plot_solution
-from .plot_time_windows import plot_time_windows
+from .plot_coordinates import plot_coordinates as plot_coordinates
+from .plot_demands import plot_demands as plot_demands
+from .plot_diversity import plot_diversity as plot_diversity
+from .plot_instance import plot_instance as plot_instance
+from .plot_objectives import plot_objectives as plot_objectives
+from .plot_result import plot_result as plot_result
+from .plot_route_schedule import plot_route_schedule as plot_route_schedule
+from .plot_runtimes import plot_runtimes as plot_runtimes
+from .plot_solution import plot_solution as plot_solution
+from .plot_time_windows import plot_time_windows as plot_time_windows
