@@ -6,8 +6,7 @@ from pyvrp._pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-
-from ._crossover import selective_route_exchange as _srex
+from pyvrp.crossover._crossover import selective_route_exchange as _srex
 
 
 def selective_route_exchange(

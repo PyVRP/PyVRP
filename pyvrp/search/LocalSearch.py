@@ -1,9 +1,8 @@
 from typing import List
 
 from pyvrp import CostEvaluator, ProblemData, RandomNumberGenerator, Solution
-
-from ._search import LocalSearch as _LocalSearch
-from ._search import NodeOperator, RouteOperator
+from pyvrp.search._search import LocalSearch as _LocalSearch
+from pyvrp.search._search import NodeOperator, RouteOperator
 
 
 class LocalSearch:
