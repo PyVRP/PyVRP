@@ -513,13 +513,13 @@ def test_num_routes_calculation():
         # 3 routes of type 0 whereas we only have 2 available.
         sol = Solution(data, [[1], [2], [3, 4]])
 
-    # It works if we specify the correct vehicle types
+    # It works if we specify the correct vehicle types.
     routes = [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)]
     sol = Solution(data, routes)
 
     assert_equal(sol.num_routes(), 3)
 
-    # But not if we violate the qty available per vehicle type
+    # But not if we violate the available number per vehicle type.
     routes = [Route(data, [1], 0), Route(data, [2], 1), Route(data, [3, 4], 1)]
 
     with assert_raises(RuntimeError):
