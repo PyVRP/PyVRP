@@ -15,6 +15,7 @@ using pyvrp::Solution;
 using Client = size_t;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
+using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -43,10 +44,7 @@ size_t Solution::numMissingClients() const { return numMissingClients_; }
 
 Routes const &Solution::getRoutes() const { return routes_; }
 
-std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
-{
-    return neighbours_;
-}
+Neighbours const &Solution::getNeighbours() const { return neighbours_; }
 
 bool Solution::isFeasible() const
 {
@@ -110,7 +108,7 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.numClients() + 1, {0, 0})
+    : neighbours_(data.numClients() + 1, std::nullopt)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<size_t>(data.numClients());
@@ -155,7 +153,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours_(data.numClients() + 1, {0, 0})
+    : routes_(routes), neighbours_(data.numClients() + 1, std::nullopt)
 {
     if (routes.size() > data.numVehicles())
     {
