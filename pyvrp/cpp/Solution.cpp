@@ -288,7 +288,7 @@ Solution::Route::Route(Visits visits,
                        Cost prizes,
                        std::pair<double, double> centroid,
                        size_t vehicleType)
-    : visits_(visits),
+    : visits_(std::move(visits)),
       distance_(distance),
       demand_(demand),
       excessLoad_(excessLoad),
