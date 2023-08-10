@@ -39,11 +39,13 @@ size_t Solution::numRoutes() const { return routes_.size(); }
 
 size_t Solution::numClients() const { return numClients_; }
 
+size_t Solution::numMissingClients() const { return numMissingClients_; }
+
 Routes const &Solution::getRoutes() const { return routes_; }
 
 std::vector<std::pair<Client, Client>> const &Solution::getNeighbours() const
 {
-    return neighbours;
+    return neighbours_;
 }
 
 bool Solution::isFeasible() const
@@ -71,7 +73,7 @@ void Solution::makeNeighbours()
 {
     for (auto const &route : routes_)
         for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours[route[idx]]
+            neighbours_[route[idx]]
                 = {idx == 0 ? 0 : route[idx - 1],                  // pred
                    idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
 }
@@ -89,7 +91,7 @@ bool Solution::operator==(Solution const &other) const
 
     // Now test if the neighbours are all equal. If that's the case we have
     // the same visit structure across routes.
-    if (neighbours != other.neighbours)
+    if (neighbours_ != other.neighbours_)
         return false;
 
     // The visits are the same for both solutions, but the vehicle assignments
@@ -108,7 +110,7 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours(data.numClients() + 1, {0, 0})
+    : neighbours_(data.numClients() + 1, {0, 0})
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<size_t>(data.numClients());
@@ -153,7 +155,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours(data.numClients() + 1, {0, 0})
+    : routes_(routes), neighbours_(data.numClients() + 1, {0, 0})
 {
     if (routes.size() > data.numVehicles())
     {
@@ -198,6 +200,27 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
     makeNeighbours();
     evaluate(data);
+}
+
+Solution::Solution(size_t numClients,
+                   size_t numMissingClients,
+                   Distance distance,
+                   Load excessLoad,
+                   Cost prizes,
+                   Cost uncollectedPrizes,
+                   Duration timeWarp,
+                   std::vector<Route> const &routes,
+                   std::vector<std::pair<Client, Client>> neighbours)
+    : numClients_(numClients),
+      numMissingClients_(numMissingClients),
+      distance_(distance),
+      excessLoad_(excessLoad),
+      prizes_(prizes),
+      uncollectedPrizes_(uncollectedPrizes),
+      timeWarp_(timeWarp),
+      routes_(routes),
+      neighbours_(neighbours)
+{
 }
 
 Solution::Route::Route(ProblemData const &data,
@@ -248,6 +271,39 @@ Solution::Route::Route(ProblemData const &data,
     slack_ = tws.twLate() - tws.twEarly();
     timeWarp_ = tws.totalTimeWarp();
     release_ = tws.releaseTime();
+}
+
+Solution::Route::Route(Visits visits,
+                       Distance distance,
+                       Load demand,
+                       Load excessLoad,
+                       Duration duration,
+                       Duration timeWarp,
+                       Duration travel,
+                       Duration service,
+                       Duration wait,
+                       Duration release,
+                       Duration startTime,
+                       Duration slack,
+                       Cost prizes,
+                       std::pair<double, double> centroid,
+                       size_t vehicleType)
+    : visits_(visits),
+      distance_(distance),
+      demand_(demand),
+      excessLoad_(excessLoad),
+      duration_(duration),
+      timeWarp_(timeWarp),
+      travel_(travel),
+      service_(service),
+      wait_(wait),
+      release_(release),
+      startTime_(startTime),
+      slack_(slack),
+      prizes_(prizes),
+      centroid_(centroid),
+      vehicleType_(vehicleType)
+{
 }
 
 bool Solution::Route::empty() const { return visits_.empty(); }
