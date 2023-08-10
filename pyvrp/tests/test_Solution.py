@@ -699,3 +699,15 @@ def test_solution_can_be_pickled():
     after_pickle = pickle.loads(bytes)
 
     assert_equal(after_pickle, before_pickle)
+
+
+def test_route_can_be_pickled():
+    data = read("data/OkSmall.txt")
+    rng = RandomNumberGenerator(seed=2)
+    sol = Solution.make_random(data, rng)
+
+    for before_pickle in sol.get_routes():
+        bytes = pickle.dumps(before_pickle)
+        after_pickle = pickle.loads(bytes)
+
+        assert_equal(after_pickle, before_pickle)
