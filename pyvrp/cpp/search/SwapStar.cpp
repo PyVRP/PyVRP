@@ -109,10 +109,10 @@ Cost SwapStar::evaluateMove(Route::Node *U,
     auto const *route = V->route();
     Cost deltaCost = 0;
 
-    auto const uDemand = data.client(best.U->client()).demand;
-    auto const rDemand = data.client(remove->client()).demand;
+    auto const loadDiff = data.client(best.U->client()).demand
+                          - data.client(remove->client()).demand;
 
-    deltaCost += costEvaluator.loadPenalty(route->load() + uDemand - rDemand,
+    deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
                                            route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
