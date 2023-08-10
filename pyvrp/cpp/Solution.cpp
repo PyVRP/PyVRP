@@ -15,6 +15,7 @@ using pyvrp::Solution;
 using Client = size_t;
 using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
+using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -41,11 +42,7 @@ size_t Solution::numClients() const { return numClients_; }
 
 Routes const &Solution::getRoutes() const { return routes_; }
 
-std::vector<std::optional<std::pair<Client, Client>>> const &
-Solution::getNeighbours() const
-{
-    return neighbours;
-}
+Neighbours const &Solution::getNeighbours() const { return neighbours; }
 
 bool Solution::isFeasible() const
 {

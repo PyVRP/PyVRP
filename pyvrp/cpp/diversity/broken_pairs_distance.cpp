@@ -1,5 +1,7 @@
 #include "diversity.h"
 
+#include <limits>
+
 double pyvrp::diversity::brokenPairsDistance(pyvrp::Solution const &first,
                                              pyvrp::Solution const &second)
 {
@@ -13,8 +15,9 @@ double pyvrp::diversity::brokenPairsDistance(pyvrp::Solution const &first,
 
     for (size_t j = 1; j <= numClients; j++)
     {
-        std::pair<size_t, size_t> const unassigned
-            = {numClients + 1, numClients + 1};
+        // Large default value in case a client is not in one of the solutions.
+        size_t constexpr max = std::numeric_limits<size_t>::max();
+        std::pair<size_t, size_t> constexpr unassigned = {max, max};
 
         auto const [fPred, fSucc] = fNeighbours[j].value_or(unassigned);
         auto const [sPred, sSucc] = sNeighbours[j].value_or(unassigned);
