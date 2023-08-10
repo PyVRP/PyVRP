@@ -65,7 +65,33 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__xor__", &DynamicBitset::operator^, py::arg("other"))
         .def("__invert__", &DynamicBitset::operator~);
 
-    py::class_<Matrix<pyvrp::Value>>(m, "Matrix")
+    // See https://pybind11.readthedocs.io/en/stable/advanced/pycpp/numpy.html
+    // for details on the buffer protocol that Matrix implements.
+    py::class_<Matrix<pyvrp::Value>>(m, "Matrix", py::buffer_protocol())
+        .def_buffer([](Matrix<pyvrp::Value> &matrix) {
+            auto const size = sizeof(pyvrp::Value);
+            return py::buffer_info(
+                matrix.data(),
+                size,
+                py::format_descriptor<pyvrp::Value>::format(),
+                2,
+                {matrix.numRows(), matrix.numCols()},
+                {size * matrix.numCols(), size});  // stride size; row major
+        })
+        .def(py::init([](py::buffer b) {
+            py::buffer_info info = b.request();
+
+            if (info.format != py::format_descriptor<pyvrp::Value>::format())
+                throw std::runtime_error("Incompatible format!");
+
+            if (info.ndim != 2)
+                throw std::runtime_error("Incompatible dimension!");
+
+            auto *raw = static_cast<pyvrp::Value *>(info.ptr);
+            std::vector<pyvrp::Value> data = {raw, raw + info.size};
+
+            return Matrix<pyvrp::Value>(data, info.shape[0], info.shape[1]);
+        }))
         .def(py::init<size_t>(), py::arg("dimension"))
         .def(py::init<size_t, size_t>(), py::arg("n_rows"), py::arg("n_cols"))
         .def(py::init<std::vector<std::vector<pyvrp::Value>>>(),

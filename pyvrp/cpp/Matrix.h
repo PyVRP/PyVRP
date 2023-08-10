@@ -2,6 +2,7 @@
 #define PYVRP_MATRIX_H
 
 #include <algorithm>
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -38,9 +39,13 @@ public:
      */
     explicit Matrix(std::vector<std::vector<T>> const &data);
 
+    explicit Matrix(std::vector<T> data, size_t nRows, size_t nCols);
+
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col);
 
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
+
+    [[nodiscard]] T *data();
 
     [[nodiscard]] size_t numCols() const;
 
@@ -90,6 +95,13 @@ Matrix<T>::Matrix(std::vector<std::vector<T>> const &data)
 }
 
 template <typename T>
+Matrix<T>::Matrix(std::vector<T> data, size_t nRows, size_t nCols)
+    : cols_(nCols), rows_(nRows), data_(std::move(data))
+{
+    assert(cols_ * rows_ == data_.size());
+}
+
+template <typename T>
 decltype(auto) Matrix<T>::operator()(size_t row, size_t col)
 {
     return data_[cols_ * row + col];
@@ -100,6 +112,8 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
 {
     return data_[cols_ * row + col];
 }
+
+template <typename T> T *Matrix<T>::data() { return data_.data(); }
 
 template <typename T> size_t Matrix<T>::numCols() const { return cols_; }
 
