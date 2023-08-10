@@ -702,7 +702,7 @@ def test_solution_can_be_pickled():
 
 
 def test_route_can_be_pickled():
-    data = read("data/OkSmall.txt")
+    data = read("data/RC208.txt", "solomon", "dimacs")
     rng = RandomNumberGenerator(seed=2)
     sol = Solution.make_random(data, rng)
 
