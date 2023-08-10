@@ -327,6 +327,45 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             py::arg("idx"))
         .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](Solution::Route const &route) {  // __getstate__
+                // Returns a tuple that completely encodes the route's state.
+                return py::make_tuple(route.visits(),
+                                      route.distance().get(),
+                                      route.demand().get(),
+                                      route.excessLoad().get(),
+                                      route.duration().get(),
+                                      route.timeWarp().get(),
+                                      route.travelDuration().get(),
+                                      route.serviceDuration().get(),
+                                      route.waitDuration().get(),
+                                      route.releaseTime().get(),
+                                      route.startTime().get(),
+                                      route.slack().get(),
+                                      route.prizes().get(),
+                                      route.centroid(),
+                                      route.vehicleType());
+            },
+            [](py::tuple t) {  // __setstate__
+                Solution::Route route = Solution::Route(
+                    t[0].cast<std::vector<size_t>>(),         // visits
+                    t[1].cast<pyvrp::Value>(),                // distance
+                    t[2].cast<pyvrp::Value>(),                // demand
+                    t[3].cast<pyvrp::Value>(),                // excess load
+                    t[4].cast<pyvrp::Value>(),                // duration
+                    t[5].cast<pyvrp::Value>(),                // time warp
+                    t[6].cast<pyvrp::Value>(),                // travel
+                    t[7].cast<pyvrp::Value>(),                // service
+                    t[8].cast<pyvrp::Value>(),                // wait
+                    t[9].cast<pyvrp::Value>(),                // release
+                    t[10].cast<pyvrp::Value>(),               // start time
+                    t[11].cast<pyvrp::Value>(),               // slack
+                    t[12].cast<pyvrp::Value>(),               // prizes
+                    t[13].cast<std::pair<double, double>>(),  // centroid
+                    t[14].cast<size_t>());                    // vehicle type
+
+                return route;
+            }))
         .def("__str__", [](Solution::Route const &route) {
             std::stringstream stream;
             stream << route;
@@ -368,6 +407,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("num_clients",
              &Solution::numClients,
              DOC(pyvrp, Solution, numClients))
+        .def("num_missing_clients",
+             &Solution::numMissingClients,
+             DOC(pyvrp, Solution, numMissingClients))
         .def("get_routes",
              &Solution::getRoutes,
              py::return_value_policy::reference_internal,
@@ -416,6 +458,37 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__hash__",
              [](Solution const &sol) { return std::hash<Solution>()(sol); })
         .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](Solution const &sol) {  // __getstate__
+                // Returns a tuple that completely encodes the solution's state.
+                return py::make_tuple(sol.numClients(),
+                                      sol.numMissingClients(),
+                                      sol.distance().get(),
+                                      sol.excessLoad().get(),
+                                      sol.prizes().get(),
+                                      sol.uncollectedPrizes().get(),
+                                      sol.timeWarp().get(),
+                                      sol.getRoutes(),
+                                      sol.getNeighbours());
+            },
+            [](py::tuple t) {  // __setstate__
+                using Routes = std::vector<Solution::Route>;
+                using Neighbours
+                    = std::vector<std::optional<std::pair<size_t, size_t>>>;
+
+                Solution sol
+                    = Solution(t[0].cast<size_t>(),        // num clients
+                               t[1].cast<size_t>(),        // num missing
+                               t[2].cast<pyvrp::Value>(),  // distance
+                               t[3].cast<pyvrp::Value>(),  // excess load
+                               t[4].cast<pyvrp::Value>(),  // prizes
+                               t[5].cast<pyvrp::Value>(),  // uncollected
+                               t[6].cast<pyvrp::Value>(),  // time warp
+                               t[7].cast<Routes>(),        // routes
+                               t[8].cast<Neighbours>());   // neighbours
+
+                return sol;
+            }))
         .def("__str__", [](Solution const &sol) {
             std::stringstream stream;
             stream << sol;
