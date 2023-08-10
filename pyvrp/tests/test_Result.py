@@ -1,4 +1,5 @@
 import math
+import pickle
 
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
@@ -82,3 +83,23 @@ def test_str_contains_essential_information(routes):
     # And make sure that all routes are printed as well.
     for route in sol.get_routes():
         assert_(str(route) in str_representation)
+
+
+def test_result_can_be_pickled():
+    data = read("data/OkSmall.txt")
+    cost_evaluator = CostEvaluator(20, 6)
+    rng = RandomNumberGenerator(seed=42)
+    pop = Population(broken_pairs_distance)
+    stats = Statistics()
+
+    for _ in range(10):
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        stats.collect_from(pop, cost_evaluator)
+
+    best = Solution.make_random(data, rng)
+
+    before_pickle = Result(best, stats, 10, 1.2)
+    bytes = pickle.dumps(before_pickle)
+    after_pickle = pickle.loads(bytes)
+
+    assert_equal(after_pickle, before_pickle)
