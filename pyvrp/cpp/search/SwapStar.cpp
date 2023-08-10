@@ -125,7 +125,7 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         auto const tws = TWS::merge(data.durationMatrix(),
                                     route->twsBefore(V->idx()),
                                     U->route()->tws(U->idx()),
-                                    route->twsAfter(V->idx() + 1));
+                                    route->twsAfter(V->idx() + 2));
 
         deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
     }
