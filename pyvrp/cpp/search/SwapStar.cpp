@@ -260,6 +260,11 @@ Cost SwapStar::evaluate(Route *routeU,
     if (best.cost >= 0)
         return best.cost;
 
+    // We cannot have that UAfter == V or VAfter == U, as the positions must
+    // always be strictly different.
+    assert(best.VAfter->idx() != best.U->idx());
+    assert(best.UAfter->idx() != best.V->idx());
+
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
     return evaluateMove(best.V, best.VAfter, best.U, costEvaluator)
