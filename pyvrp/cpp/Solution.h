@@ -189,6 +189,24 @@ public:
         Route(ProblemData const &data,
               Visits visits,
               VehicleType const vehicleType);
+
+        // This constructor does *no* validation. Useful when unserialising
+        // objects.
+        Route(Visits visits,
+              Distance distance,
+              Load demand,
+              Load excessLoad,
+              Duration duration,
+              Duration timeWarp,
+              Duration travel,
+              Duration service,
+              Duration wait,
+              Duration release,
+              Duration startTime,
+              Duration slack,
+              Cost prizes,
+              std::pair<double, double> centroid,
+              VehicleType vehicleType);
     };
 
 private:
@@ -196,15 +214,15 @@ private:
     using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
     size_t numClients_ = 0;         // Number of clients in the solution
+    size_t numMissingClients_ = 0;  // Number of required but missing clients
     Distance distance_ = 0;         // Total distance
     Load excessLoad_ = 0;           // Total excess load over all routes
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
     Duration timeWarp_ = 0;         // Total time warp over all routes
-    size_t numMissingClients_ = 0;  // Number of required but missing clients
 
     Routes routes_;
-    Neighbours neighbours;  // [pred, succ] pairs per client, null if unassigned
+    Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
 
     // Determines the [pred, succ] pairs for assigned clients.
     void makeNeighbours();
@@ -237,6 +255,16 @@ public:
      *     Number of clients in this solution.
      */
     [[nodiscard]] size_t numClients() const;
+
+    /**
+     * Number of required clients that are not in this solution.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of required but missing clients.
+     */
+    [[nodiscard]] size_t numMissingClients() const;
 
     /**
      * The solution's routing decisions.
@@ -397,7 +425,18 @@ public:
      * @param data   Data instance describing the problem that's being solved.
      * @param routes Solution's route list.
      */
-    Solution(ProblemData const &data, std::vector<Route> const &routes);
+    Solution(ProblemData const &data, Routes const &routes);
+
+    // This constructor does *no* validation. Useful when unserialising objects.
+    Solution(size_t numClients,
+             size_t numMissingClients,
+             Distance distance,
+             Load excessLoad,
+             Cost prizes,
+             Cost uncollectedPrizes,
+             Duration timeWarp,
+             Routes const &routes,
+             Neighbours neighbours);
 };
 }  // namespace pyvrp
 

@@ -25,6 +25,21 @@ class _Datum:
     avg_cost: float
     avg_num_routes: float
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _Datum):
+            return False
+
+        if self.size == other.size == 0:  # shortcut to avoid comparing NaN
+            return True
+
+        return (
+            self.size == other.size
+            and self.avg_diversity == other.avg_diversity
+            and self.best_cost == other.best_cost
+            and self.avg_cost == other.avg_cost
+            and self.avg_num_routes == other.avg_num_routes
+        )
+
 
 @dataclass
 class Statistics:
