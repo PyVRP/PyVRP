@@ -62,7 +62,7 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
 
 
 def solve(
-    data_loc: str,
+    data_loc: Path,
     instance_format: str,
     round_func: str,
     seed: int,
@@ -153,25 +153,18 @@ def solve(
 
     if stats_dir:
         stats_dir.mkdir(parents=True, exist_ok=True)  # just in case
-
-        instance_name = Path(data_loc).stem
-        where = stats_dir / (instance_name + ".csv")
-        result.stats.to_csv(where)
+        result.stats.to_csv(stats_dir / (data_loc.stem + ".csv"))
 
     if sol_dir:
         sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
-
-        instance_name = Path(data_loc).stem
-        where = sol_dir / (instance_name + ".sol")
-
-        with open(where, "w") as fh:
+        with open(sol_dir / (data_loc.stem + ".sol"), "w") as fh:
             fh.write(str(result.best))
             fh.write(f"Cost: {result.cost()}\n")
 
     return result
 
 
-def benchmark_solve(instance: str, **kwargs):
+def benchmark_solve(instance: Path, **kwargs):
     """
     Small wrapper script around ``solve()`` that translates result objects into
     a few key statistics, and returns those. This is needed because the result
@@ -189,7 +182,7 @@ def benchmark_solve(instance: str, **kwargs):
     )
 
 
-def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
+def benchmark(instances: List[Path], num_procs: int = 1, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.
@@ -237,7 +230,8 @@ def main():
     """
     parser = argparse.ArgumentParser(prog="pyvrp", description=description)
 
-    parser.add_argument("instances", nargs="+", help="Instance paths.")
+    msg = "One or more paths to the VRPLIB instance(s) to solve."
+    parser.add_argument("instances", nargs="+", type=Path, help=msg)
 
     msg = """
     Directory to store runtime statistics in, as CSV files (one per instance).
