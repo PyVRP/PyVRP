@@ -3,72 +3,30 @@
 #include <cmath>
 #include <numbers>
 #include <ostream>
+#include <utility>
 
 using pyvrp::search::Route;
 using TWS = pyvrp::TimeWindowSegment;
 
-Route::Node::Node(size_t client) : client(client) {}
+Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
-void Route::Node::insertAfter(Route::Node *other)
-{
-    if (route)  // If we're in a route, we first stitch up the current route.
-    {           // If we're not in a route, this step should be skipped.
-        prev->next = next;
-        next->prev = prev;
-    }
-
-    prev = other;
-    next = other->next;
-
-    other->next->prev = this;
-    other->next = this;
-
-    route = other->route;
-}
-
-void Route::Node::swapWith(Route::Node *other)
-{
-    auto *VPred = other->prev;
-    auto *VSucc = other->next;
-    auto *UPred = prev;
-    auto *USucc = next;
-
-    auto *routeU = route;
-    auto *routeV = other->route;
-
-    UPred->next = other;
-    USucc->prev = other;
-    VPred->next = this;
-    VSucc->prev = this;
-
-    prev = VPred;
-    next = VSucc;
-    other->prev = UPred;
-    other->next = USucc;
-
-    route = routeV;
-    other->route = routeU;
-}
-
-void Route::Node::remove()
-{
-    prev->next = next;
-    next->prev = prev;
-
-    prev = nullptr;
-    next = nullptr;
-    route = nullptr;
-}
-
-Route::Route(ProblemData const &data, size_t const idx, size_t const vehType)
+Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
-      vehicleType_(vehType),
-      idx(idx),
-      startDepot(data.vehicleType(vehType).depot),
-      endDepot(data.vehicleType(vehType).depot)
+      vehicleType_(vehicleType),
+      idx_(idx),
+      startDepot(data.vehicleType(vehicleType).depot),
+      endDepot(data.vehicleType(vehicleType).depot)
 {
-    startDepot.route = this;
-    endDepot.route = this;
+    clear();
+}
+
+Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
+    : cumDist(0),
+      cumLoad(0),
+      tws(loc, client),
+      twsAfter(loc, client),
+      twsBefore(loc, client)
+{
 }
 
 size_t Route::vehicleType() const { return vehicleType_; }
@@ -90,78 +48,118 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
     return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
 }
 
-void Route::update()
+void Route::clear()
 {
-    nodes.clear();
-    auto *node = n(&startDepot);
-
-    Load load = 0;
-    Distance distance = 0;
-    Distance deltaReversalDistance = 0;
-
-    centroid = {0, 0};
-
-    while (!node->isDepot())
+    for (auto *node : nodes)  // unassign all nodes from route.
     {
-        size_t const position = nodes.size();
-        nodes.push_back(node);
-
-        auto const &clientData = data.client(node->client);
-
-        centroid.first += static_cast<double>(clientData.x);
-        centroid.second += static_cast<double>(clientData.y);
-
-        load += clientData.demand;
-        distance += data.dist(p(node)->client, node->client);
-
-        deltaReversalDistance += data.dist(node->client, p(node)->client);
-        deltaReversalDistance -= data.dist(p(node)->client, node->client);
-
-        node->position = position + 1;
-        node->cumulatedLoad = load;
-        node->cumulatedDistance = distance;
-        node->deltaReversalDistance = deltaReversalDistance;
-        node->twBefore
-            = TWS::merge(data.durationMatrix(), p(node)->twBefore, node->tw);
-
-        node = n(node);
+        node->idx_ = 0;
+        node->route_ = nullptr;
     }
 
-    centroid.first /= size();
-    centroid.second /= size();
+    nodes.clear();  // clear nodes and reinsert the depots.
+    nodes.push_back(&startDepot);
+    nodes.push_back(&endDepot);
 
-    load += data.client(endDepot.client).demand;
-    distance += data.dist(p(&endDepot)->client, endDepot.client);
+    startDepot.idx_ = 0;
+    startDepot.route_ = this;
 
-    deltaReversalDistance += data.dist(endDepot.client, p(&endDepot)->client);
-    deltaReversalDistance -= data.dist(p(&endDepot)->client, endDepot.client);
+    endDepot.idx_ = 1;
+    endDepot.route_ = this;
 
-    endDepot.position = size() + 1;
-    endDepot.cumulatedLoad = load;
-    endDepot.cumulatedDistance = distance;
-    endDepot.deltaReversalDistance = deltaReversalDistance;
-    endDepot.twBefore = TWS::merge(
-        data.durationMatrix(), p(&endDepot)->twBefore, endDepot.tw);
+    auto const depot = startDepot.client();
 
-    load_ = endDepot.cumulatedLoad;
-    timeWarp_ = endDepot.twBefore.totalTimeWarp();
+    stats.clear();  // clear stats and reinsert depot statistics.
+    stats.emplace_back(depot, data.client(depot));
+    stats.emplace_back(depot, data.client(depot));
+}
 
-    // forward time window segments
-    node = &endDepot;
-    do
+void Route::insert(size_t idx, Node *node)
+{
+    assert(0 < idx && idx < nodes.size());
+    assert(!node->route());  // must previously have been unassigned
+
+    node->idx_ = idx;
+    node->route_ = this;
+    nodes.insert(nodes.begin() + idx, node);
+
+    // We do not need to update the statistics; Route::update() will handle
+    // that later.
+    stats.insert(stats.begin() + idx,
+                 {node->client(), data.client(node->client())});
+
+    for (size_t after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx_ = after;
+}
+
+void Route::push_back(Node *node) { insert(size() + 1, node); }
+
+void Route::remove(size_t idx)
+{
+    assert(0 < idx && idx < nodes.size() - 1);
+    assert(nodes[idx]->route() == this);  // must currently be in this route
+
+    auto *node = nodes[idx];
+
+    node->idx_ = 0;
+    node->route_ = nullptr;
+
+    nodes.erase(nodes.begin() + idx);
+    stats.erase(stats.begin() + idx);
+
+    for (auto after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx_ = after;
+}
+
+void Route::swap(Node *first, Node *second)
+{
+    // TODO specialise std::swap for Node
+    std::swap(first->route_->nodes[first->idx_],
+              second->route_->nodes[second->idx_]);
+    std::swap(first->route_->stats[first->idx_],
+              second->route_->stats[second->idx_]);
+
+    std::swap(first->route_, second->route_);
+    std::swap(first->idx_, second->idx_);
+}
+
+void Route::update()
+{
+    centroid = {0, 0};
+
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
-        auto *prev = p(node);
-        prev->twAfter
-            = TWS::merge(data.durationMatrix(), prev->tw, node->twAfter);
-        node = prev;
-    } while (!node->isDepot());
+        auto *node = nodes[idx];
+        auto const &clientData = data.client(node->client());
+
+        if (!node->isDepot())
+        {
+            centroid.first += static_cast<double>(clientData.x) / size();
+            centroid.second += static_cast<double>(clientData.y) / size();
+        }
+
+        auto const dist = data.dist(p(node)->client(), node->client());
+        stats[idx].cumDist = stats[idx - 1].cumDist + dist;
+        stats[idx].cumLoad = stats[idx - 1].cumLoad + clientData.demand;
+    }
+
+#ifndef PYVRP_NO_TIME_WINDOWS
+    // Backward time window segments (depot -> client).
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        stats[idx].twsBefore = TWS::merge(
+            data.durationMatrix(), stats[idx - 1].twsBefore, stats[idx].tws);
+
+    // Forward time window segments (client -> depot).
+    for (auto idx = nodes.size() - 1; idx != 0; --idx)
+        stats[idx - 1].twsAfter = TWS::merge(
+            data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
+#endif
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
-    out << "Route #" << route.idx + 1 << ":";  // route number
+    out << "Route #" << route.idx() + 1 << ":";  // route number
     for (auto *node : route)
-        out << ' ' << node->client;  // client index
+        out << ' ' << node->client();  // client index
     out << '\n';
 
     return out;

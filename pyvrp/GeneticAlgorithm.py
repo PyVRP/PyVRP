@@ -4,21 +4,20 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Collection, Tuple
 
-from .Result import Result
-from .Statistics import Statistics
+from pyvrp.Result import Result
+from pyvrp.Statistics import Statistics
 
 if TYPE_CHECKING:
+    from pyvrp.PenaltyManager import PenaltyManager
+    from pyvrp.Population import Population
+    from pyvrp._pyvrp import (
+        CostEvaluator,
+        ProblemData,
+        RandomNumberGenerator,
+        Solution,
+    )
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
-
-    from .PenaltyManager import PenaltyManager
-    from .Population import Population
-    from ._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
-
-    _Parents = Tuple[Solution, Solution]
-    CrossoverOperator = Callable[
-        [_Parents, ProblemData, CostEvaluator, XorShift128], Solution
-    ]
 
 
 @dataclass
@@ -94,10 +93,18 @@ class GeneticAlgorithm:
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
-        rng: XorShift128,
+        rng: RandomNumberGenerator,
         population: Population,
         search_method: SearchMethod,
-        crossover_op: CrossoverOperator,
+        crossover_op: Callable[
+            [
+                Tuple[Solution, Solution],
+                ProblemData,
+                CostEvaluator,
+                RandomNumberGenerator,
+            ],
+            Solution,
+        ],
         initial_solutions: Collection[Solution],
         params: GeneticAlgorithmParams = GeneticAlgorithmParams(),
     ):

@@ -1,18 +1,22 @@
 from typing import Tuple
 
-from pyvrp._pyvrp import CostEvaluator, ProblemData, Solution, XorShift128
-
-from ._crossover import selective_route_exchange as _srex
+from pyvrp._pyvrp import (
+    CostEvaluator,
+    ProblemData,
+    RandomNumberGenerator,
+    Solution,
+)
+from pyvrp.crossover._crossover import selective_route_exchange as _srex
 
 
 def selective_route_exchange(
     parents: Tuple[Solution, Solution],
     data: ProblemData,
     cost_evaluator: CostEvaluator,
-    rng: XorShift128,
+    rng: RandomNumberGenerator,
 ) -> Solution:
     """
-    This crossover operator due to Nagata and Kobayashi (2010) combines routes
+    This crossover operator due to Nagata and Kobayashi [1]_ combines routes
     from both parents to generate a new offspring solution. It does this by
     carefully selecting routes from the second parent that could be exchanged
     with routes from the first parent. After exchanging these routes, the

@@ -7,10 +7,10 @@ from pytest import mark
 from pyvrp import (
     Client,
     ProblemData,
+    RandomNumberGenerator,
     Route,
     Solution,
     VehicleType,
-    XorShift128,
 )
 from pyvrp.tests.helpers import make_heterogeneous, read
 
@@ -71,7 +71,7 @@ def test_random_constructor_cycles_over_routes():
     # vehicle would not work (insufficient vehicles), each route is given two
     # clients (and the last route should be empty).
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     sol = Solution.make_random(data, rng)
     routes = sol.get_routes()
@@ -126,14 +126,32 @@ def test_route_constructor_raises_too_many_vehicles():
         Solution(data, [[1, 2], [4], [3]])
 
 
-def test_route_constructor_raises_for_invalid_routes():
+def test_route_constructor_raises_when_clients_are_visited_more_than_once():
     data = read("data/OkSmall.txt")
     with assert_raises(RuntimeError):
         Solution(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
 
-    data = read("data/OkSmallPrizes.txt")
     with assert_raises(RuntimeError):
-        Solution(data, [[2], [3, 4]])  # 1 is required but not visited
+        Solution(data, [[1, 2], [1, 3, 4], [1]])  # client 1 is visited thrice
+
+
+def test_route_constructor_allows_incomplete_solutions():
+    data = read("data/OkSmallPrizes.txt")
+
+    # Client 1 is required but not visited.
+    sol = Solution(data, [[2], [3, 4]])
+    assert_(not sol.is_complete())
+    assert_(not sol.is_feasible())
+
+    # All required clients are visited, but the solution is not feasible.
+    sol = Solution(data, [[1], [2, 3, 4]])
+    assert_(not sol.is_feasible())
+    assert_(sol.is_complete())
+
+    # All required clients are visited and the solution is feasible.
+    sol = Solution(data, [[1]])
+    assert_(sol.is_feasible())
+    assert_(sol.is_complete())
 
 
 def test_get_neighbours():
@@ -187,7 +205,7 @@ def test_feasibility_release_times():
     # time warp of 23'896 - 19'500 = 4'396.
     sol = Solution(data, [[1, 2], [3], [4]])
     assert_(not sol.is_feasible())
-    assert_equal(sol.time_warp(), 4396)
+    assert_allclose(sol.time_warp(), 4396)
 
     # Visiting clients 2 and 3 together is feasible: both clients are released
     # at time 5'000. We arrive at client 2 at 5'000 + 1'944 and wait till the
@@ -230,7 +248,7 @@ def test_excess_load_calculation():
 
     # All clients are visited on the same route/by the same vehicle. The total
     # demand is 18, but the vehicle capacity is only 10.
-    assert_equal(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
+    assert_allclose(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
 
 
 def test_heterogeneous_capacity_excess_load_calculation():
@@ -244,12 +262,12 @@ def test_heterogeneous_capacity_excess_load_calculation():
     # excess_load is 18 - 10 = 8.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
     assert_(sol.has_excess_load())
-    assert_equal(sol.excess_load(), 8)
+    assert_allclose(sol.excess_load(), 8)
 
     # With vehicle type 1, the capacity 20 is larger than 18.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
     assert_(not sol.has_excess_load())
-    assert_equal(sol.excess_load(), 0)
+    assert_allclose(sol.excess_load(), 0)
 
 
 def test_route_access_methods():
@@ -286,29 +304,112 @@ def test_route_access_methods():
     assert_allclose(routes[1].service_duration(), services[2] + services[4])
 
 
-def test_route_time_warp_and_wait_duration():
+def test_route_time_warp_calculations():
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
 
-    # There's only time warp on the first route: duration(0, 1) = 1'544, so we
+    # There is time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
     # starts at 15'600, and completes at 15'600 + 360. Then we drive for
     # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
     # window). This is where we incur time warp: we need to 'warp' to 15'300.
     assert_(sol.has_time_warp())
     assert_(routes[0].has_time_warp())
-    assert_(not routes[1].has_time_warp())
     assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
+
+    # The second route has no time warp, so the overall solution time warp is
+    # all incurred on the first route.
+    assert_(not routes[1].has_time_warp())
     assert_allclose(routes[1].time_warp(), 0)
     assert_allclose(sol.time_warp(), routes[0].time_warp())
 
-    # On the first route, we have to wait at the first client, where we arrive
-    # at 1'544, but cannot start service until 15'600. On the second route, we
-    # also have to wait at the first client, where we arrive at 1'944, but
-    # cannot start service until 12'000.
-    assert_equal(routes[0].wait_duration(), 15_600 - 1_544)
-    assert_equal(routes[1].wait_duration(), 12_000 - 1_944)
+
+def test_route_wait_time_calculations():
+    data = read("data/OkSmallWaitTime.txt")
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
+
+    # In the second route, the time window of client 2 closes at 15'000. After
+    # service and travel, we then arrive at client 4 before its time window is
+    # open, so we have to wait. In particular, we have to wait:
+    #   twEarly(4) - duration(2, 4) - serv(2) - twLate(2)
+    #     = 18'000 - 1'090 - 360 - 15'000
+    #     = 1'550.
+    assert_allclose(routes[1].wait_duration(), 1_550)
+
+    # Since there is waiting time, there is no slack in the schedule. We should
+    # thus start as late as possible, at:
+    #   twLate(2) - duration(0, 2)
+    #     = 15'000 - 1'944
+    #     = 13'056.
+    assert_allclose(routes[1].slack(), 0)
+    assert_allclose(routes[1].start_time(), 13_056)
+
+    # So far we have tested a route that had wait duration, but not time warp.
+    # We now test a solution with a route that has both.
+    sol = Solution(data, [[1, 2, 4], [3]])
+    route, *_ = sol.get_routes()
+
+    # This route has the same wait time as explained above. The time warp is
+    # incurred earlier in the route, between 1 -> 2:
+    #   twEarly(1) + serv(1) + duration(1, 2) - twLate(2)
+    #     = 15'600 + 360 + 1'992 - 15'000
+    #     = 2'952.
+    assert_allclose(route.time_warp(), 2_952)
+    assert_allclose(route.wait_duration(), 1_550)
+    assert_allclose(route.slack(), 0)
+
+    # Finally, the overall route duration should be equal to the sum of the
+    # travel, service, and waiting durations.
+    assert_allclose(
+        route.duration(),
+        route.travel_duration()
+        + route.service_duration()
+        + route.wait_duration(),
+    )
+
+
+def test_route_start_and_end_time_calculations():
+    data = read("data/OkSmall.txt")
+    sol = Solution(data, [[1, 3], [2, 4]])
+    routes = sol.get_routes()
+
+    # The first route has timewarp, so there is no slack in the schedule. We
+    # should thus depart as soon as possible to arrive at the first client the
+    # moment its time window opens.
+    start_time = data.client(1).tw_early - data.duration(0, 1)
+    end_time = start_time + routes[0].duration() - routes[0].time_warp()
+
+    assert_(routes[0].has_time_warp())
+    assert_allclose(routes[0].slack(), 0)
+    assert_allclose(routes[0].start_time(), start_time)
+    assert_allclose(routes[0].end_time(), end_time)
+
+    # The second route has no time warp. The latest it can start is calculated
+    # backwards from the closing of client 4's time window:
+    #   twLate(4) - duration(2, 4) - serv(2) - duration(0, 2)
+    #     = 19'500 - 1'090 - 360 - 1'944
+    #     = 16'106.
+    #
+    # Because client 4 has a large time window, the earliest this route can
+    # start is determined completely by client 2: we should not arrive before
+    # its time window, because that would incur needless waiting. We should
+    # thus not depart before:
+    #   twEarly(2) - duration(0, 2)
+    #     = 12'000 - 1'944
+    #     = 10'056.
+    assert_(not routes[1].has_time_warp())
+    assert_allclose(routes[1].wait_duration(), 0)
+    assert_allclose(routes[1].start_time(), 10_056)
+    assert_allclose(routes[1].slack(), 16_106 - 10_056)
+
+    # The overall route duration is given by:
+    #   duration(0, 2) + serv(2) + duration(2, 4) + serv(4) + duration(4, 0)
+    #     = 1'944 + 360 + 1'090 + 360 + 1'475
+    #     = 5'229.
+    assert_allclose(routes[1].duration(), 1_944 + 360 + 1_090 + 360 + 1_475)
+    assert_allclose(routes[1].end_time(), 10_056 + 5_229)
 
 
 def test_route_release_time():
@@ -316,11 +417,16 @@ def test_route_release_time():
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
 
-    # The client release times are 20'000, 5'000, 5'000 and 1'000.
-    # So the first route has a release time of max(20'000, 5'000) = 20'000,
-    # and the second route has a release time of max(5'000, 1'000) = 5'000.
-    assert_allclose(routes[0].release_time(), 20000)
-    assert_allclose(routes[1].release_time(), 5000)
+    # The client release times are 20'000, 5'000, 5'000 and 1'000. So the first
+    # route has a release time of max(20'000, 5'000) = 20'000, and the second
+    # has a release time of max(5'000, 1'000) = 5'000.
+    assert_allclose(routes[0].release_time(), 20_000)
+    assert_allclose(routes[1].release_time(), 5_000)
+
+    # Second route is feasible, so should have start time not smaller than
+    # release time.
+    assert_(not routes[1].has_time_warp())
+    assert_(routes[1].start_time() > routes[1].release_time())
 
 
 @mark.parametrize(
@@ -367,10 +473,32 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
 
-    assert_equal(
+    assert_allclose(
         feasible.distance(),
         dist_mat[0, 1] + dist_mat[1, 2] + dist_mat[2, 0],
     )
+
+
+def test_time_warp_return_to_depot():
+    """
+    This tests wether the calculated total duration and time warp includes the
+    travel back to the depot.
+    """
+    data = ProblemData(
+        clients=[Client(x=0, y=0, tw_late=1), Client(x=1, y=0)],
+        vehicle_types=[VehicleType(0, 1)],
+        distance_matrix=[[0, 0], [0, 0]],
+        duration_matrix=[[0, 1], [1, 0]],
+    )
+
+    sol = Solution(data, [[1]])
+    route, *_ = sol.get_routes()
+
+    # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
+    # more than the depot time window 1, giving a time warp of 1.
+    assert_allclose(route.duration(), 2)
+    assert_allclose(data.client(0).tw_late, 1)
+    assert_allclose(sol.time_warp(), 1)
 
 
 # TODO test all time warp cases
@@ -508,7 +636,7 @@ def test_str_contains_routes(vehicle_types):
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_types)
 
-    rng = XorShift128(seed=2)
+    rng = RandomNumberGenerator(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
         sol = Solution.make_random(data, rng)
@@ -528,7 +656,7 @@ def test_str_contains_routes(vehicle_types):
 
 def test_hash():
     data = read("data/OkSmall.txt")
-    rng = XorShift128(seed=2)
+    rng = RandomNumberGenerator(seed=2)
 
     sol1 = Solution.make_random(data, rng)
     sol2 = Solution.make_random(data, rng)
@@ -557,5 +685,5 @@ def test_route_centroid():
 
     for route in routes:
         x_center, y_center = route.centroid()
-        assert_equal(x_center, x[route].mean())
-        assert_equal(y_center, y[route].mean())
+        assert_allclose(x_center, x[route].mean())
+        assert_allclose(y_center, y[route].mean())

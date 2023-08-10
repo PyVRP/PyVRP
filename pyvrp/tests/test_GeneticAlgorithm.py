@@ -7,8 +7,8 @@ from pyvrp import (
     PenaltyManager,
     Population,
     PopulationParams,
+    RandomNumberGenerator,
     Solution,
-    XorShift128,
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
@@ -63,7 +63,7 @@ def test_raises_when_no_initial_solutions():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pen_manager = PenaltyManager()
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
 
     pop = Population(bpd)
@@ -85,7 +85,7 @@ def test_initial_solutions_added_when_running():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager()
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
     ls = LocalSearch(data, rng, compute_neighbours(data))
     init = set(make_random_solutions(25, data, rng))
@@ -107,7 +107,7 @@ def test_initial_solutions_added_when_restarting():
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
     pm = PenaltyManager()
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
@@ -138,7 +138,7 @@ def test_initial_solutions_added_when_restarting():
 
 def test_best_solution_improves_with_more_iterations():
     data = read("data/RC208.txt", "solomon", "dimacs")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager()
     pop_params = PopulationParams()
     pop = Population(bpd, params=pop_params)
@@ -165,7 +165,7 @@ def test_best_initial_solution():
     the best found solution.
     """
     data = read("data/RC208.txt", "solomon", "dimacs")
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager()
     pop = Population(bpd)
 

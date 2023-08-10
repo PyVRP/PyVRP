@@ -4,6 +4,7 @@ project(
     version: run_command('poetry', 'version', '--short', check: true).stdout(),
     default_options: [
         'cpp_std=c++20',
+        'b_ndebug=if-release',  # disables asserts in release builds
         'b_lto=true',  # sets -flto
         'werror=true',  # sets -Werror
         'warning_level=3',  # level 3 sets -Wextra and -Wpedantic
@@ -46,9 +47,10 @@ libcommon = static_library(
         SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
-        SRC_DIR / 'XorShift128.cpp',
+        SRC_DIR / 'RandomNumberGenerator.cpp',
         SRC_DIR / 'Solution.cpp',
         SRC_DIR / 'SubPopulation.cpp',
+        SRC_DIR / 'TimeWindowSegment.cpp',
         SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
         SRC_DIR / 'crossover' / 'crossover.cpp',
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',

@@ -5,7 +5,6 @@
 #include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
-#include "XorShift128.h"
 
 #include <functional>
 #include <vector>
@@ -16,7 +15,7 @@ namespace pyvrp::crossover
  * Greedily inserts each unplanned client into the route that's nearest to the
  * client.
  */
-void greedyRepair(std::vector<std::vector<int>> &routes,
+void greedyRepair(std::vector<std::vector<size_t>> &routes,
                   DynamicBitset const &unplanned,
                   ProblemData const &data,
                   CostEvaluator const &costEvaluator);

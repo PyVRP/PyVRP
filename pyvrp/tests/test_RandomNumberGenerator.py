@@ -2,28 +2,28 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
-from pyvrp import XorShift128
+from pyvrp import RandomNumberGenerator
 
 
 def test_bounds():
-    assert_equal(XorShift128.min(), 0)
-    assert_equal(XorShift128.max(), np.iinfo(np.uint32).max)
+    assert_equal(RandomNumberGenerator.min(), 0)
+    assert_equal(RandomNumberGenerator.max(), np.iinfo(np.uint32).max)
 
 
 def test_call():
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     assert_equal(rng(), 2386648076)
     assert_equal(rng(), 1236469084)
 
-    rng = XorShift128(seed=43)
+    rng = RandomNumberGenerator(seed=43)
 
     assert_equal(rng(), 2386648077)
     assert_equal(rng(), 1236469085)
 
 
 def test_randint():
-    rng = XorShift128(seed=42)
+    rng = RandomNumberGenerator(seed=42)
 
     assert_equal(rng.randint(100), 2386648076 % 100)
     assert_equal(rng.randint(100), 1236469084 % 100)
@@ -31,7 +31,7 @@ def test_randint():
 
 @mark.parametrize("seed", [2, 10, 42])
 def test_rand(seed: int):
-    rng = XorShift128(seed)
+    rng = RandomNumberGenerator(seed)
     sample = np.array([rng.rand() for _ in range(10_000)])
 
     # The sample should be almost uniform, so mean 1/ 2 and variance 1 / 12,

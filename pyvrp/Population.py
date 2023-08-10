@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generator, Tuple
+from typing import TYPE_CHECKING, Callable, Generator, Optional, Tuple
 from warnings import warn
 
-from ._pyvrp import PopulationParams, SubPopulation
-from .exceptions import EmptySolutionWarning
+from pyvrp._pyvrp import PopulationParams, SubPopulation
+from pyvrp.exceptions import EmptySolutionWarning
 
 if TYPE_CHECKING:
-    from ._pyvrp import CostEvaluator, Solution, XorShift128
+    from pyvrp._pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 
 
 class Population:
@@ -19,20 +19,20 @@ class Population:
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
-    params, optional
+    params
         Population parameters. If not provided, a default will be used.
     """
 
     def __init__(
         self,
         diversity_op: Callable[[Solution, Solution], float],
-        params: PopulationParams = PopulationParams(),
+        params: Optional[PopulationParams] = None,
     ):
         self._op = diversity_op
-        self._params = params
+        self._params = params if params is not None else PopulationParams()
 
-        self._feas = SubPopulation(diversity_op, params)
-        self._infeas = SubPopulation(diversity_op, params)
+        self._feas = SubPopulation(diversity_op, self._params)
+        self._infeas = SubPopulation(diversity_op, self._params)
 
     def __iter__(self) -> Generator[Solution, None, None]:
         """
@@ -40,8 +40,8 @@ class Population:
 
         Yields
         ------
-        iterable
-            An iterable object of solutions.
+        Solution
+            Solutions currently in this population.
         """
         for item in self._feas:
             yield item.solution
@@ -120,7 +120,7 @@ class Population:
         # may trigger a purge which needs to compute the biased fitness which
         # requires computing the cost.
         if solution.is_feasible():
-            # Note: the feasible subpopulation actually doet not depend
+            # Note: the feasible subpopulation actually does not depend
             # on the penalty values but we use the same implementation.
             self._feas.add(solution, cost_evaluator)
         else:
@@ -136,7 +136,7 @@ class Population:
 
     def select(
         self,
-        rng: XorShift128,
+        rng: RandomNumberGenerator,
         cost_evaluator: CostEvaluator,
         k: int = 2,
     ) -> Tuple[Solution, Solution]:
@@ -177,7 +177,10 @@ class Population:
         return first, second
 
     def get_tournament(
-        self, rng: XorShift128, cost_evaluator: CostEvaluator, k: int = 2
+        self,
+        rng: RandomNumberGenerator,
+        cost_evaluator: CostEvaluator,
+        k: int = 2,
     ) -> Solution:
         """
         Selects a solution from this population by k-ary tournament, based
@@ -201,7 +204,7 @@ class Population:
         self._update_fitness(cost_evaluator)
         return self._get_tournament(rng, k)
 
-    def _get_tournament(self, rng: XorShift128, k: int) -> Solution:
+    def _get_tournament(self, rng: RandomNumberGenerator, k: int) -> Solution:
         if k <= 0:
             raise ValueError(f"Expected k > 0; got k = {k}.")
 
