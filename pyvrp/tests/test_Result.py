@@ -85,21 +85,24 @@ def test_str_contains_essential_information(routes):
         assert_(str(route) in str_representation)
 
 
-def test_result_can_be_pickled():
+@mark.parametrize("num_iterations", [0, 1, 10])
+def test_result_can_be_pickled(num_iterations: int):
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
 
-    for _ in range(10):
+    for _ in range(num_iterations):
         pop.add(Solution.make_random(data, rng), cost_evaluator)
         stats.collect_from(pop, cost_evaluator)
 
-    best = Solution.make_random(data, rng)
+    best = Solution(data, [[1, 2], [3], [4]])
 
-    before_pickle = Result(best, stats, 10, 1.2)
+    before_pickle = Result(best, stats, num_iterations, 1.2)
     bytes = pickle.dumps(before_pickle)
     after_pickle = pickle.loads(bytes)
 
+    assert_equal(after_pickle.best, before_pickle.best)
+    assert_equal(after_pickle.stats, before_pickle.stats)
     assert_equal(after_pickle, before_pickle)
