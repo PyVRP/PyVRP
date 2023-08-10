@@ -61,21 +61,15 @@ def tabulate(headers: List[str], rows: np.ndarray) -> str:
     return "\n".join(header + content)
 
 
-def maybe_mkdir(where: str):
-    if where:
-        path = Path(where)
-        path.mkdir(parents=True, exist_ok=True)
-
-
 def solve(
-    data_loc: str,
+    data_loc: Path,
     instance_format: str,
     round_func: str,
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
-    stats_dir: Optional[str],
-    sol_dir: Optional[str],
+    stats_dir: Optional[Path],
+    sol_dir: Optional[Path],
     **kwargs,
 ) -> Result:
     """
@@ -158,22 +152,19 @@ def solve(
     result = algo.run(stop)
 
     if stats_dir:
-        instance_name = Path(data_loc).stem
-        where = Path(stats_dir) / (instance_name + ".csv")
-        result.stats.to_csv(where)
+        stats_dir.mkdir(parents=True, exist_ok=True)  # just in case
+        result.stats.to_csv(stats_dir / (data_loc.stem + ".csv"))
 
     if sol_dir:
-        instance_name = Path(data_loc).stem
-        where = Path(sol_dir) / (instance_name + ".sol")
-
-        with open(where, "w") as fh:
+        sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
+        with open(sol_dir / (data_loc.stem + ".sol"), "w") as fh:
             fh.write(str(result.best))
             fh.write(f"Cost: {result.cost()}\n")
 
     return result
 
 
-def benchmark_solve(instance: str, **kwargs):
+def benchmark_solve(instance: Path, **kwargs):
     """
     Small wrapper script around ``solve()`` that translates result objects into
     a few key statistics, and returns those. This is needed because the result
@@ -191,7 +182,7 @@ def benchmark_solve(instance: str, **kwargs):
     )
 
 
-def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
+def benchmark(instances: List[Path], num_procs: int = 1, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.
@@ -205,9 +196,6 @@ def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
     kwargs
         Any additional keyword arguments to pass to the solving function.
     """
-    maybe_mkdir(kwargs.get("stats_dir", ""))
-    maybe_mkdir(kwargs.get("sol_dir", ""))
-
     func = partial(benchmark_solve, **kwargs)
     args = sorted(instances)
 
@@ -236,25 +224,25 @@ def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
 
 def main():
     description = """
-    This program is a command line interface for solving CVRP and VRPTW
-    instances, specified in VRPLIB format. The program can solve one or
-    multiple such instances, and outputs useful information in either
-    case.
+    This program is a command line interface for solving VRPs, specified in
+    VRPLIB format. The program can solve one or multiple such VRP instances,
+    and outputs useful information in either case.
     """
     parser = argparse.ArgumentParser(prog="pyvrp", description=description)
 
-    parser.add_argument("instances", nargs="+", help="Instance paths.")
+    msg = "One or more paths to the VRPLIB instance(s) to solve."
+    parser.add_argument("instances", nargs="+", type=Path, help=msg)
 
     msg = """
     Directory to store runtime statistics in, as CSV files (one per instance).
     """
-    parser.add_argument("--stats_dir", help=msg)
+    parser.add_argument("--stats_dir", type=Path, help=msg)
 
     msg = """
     Directory to store best observed solutions in, in VRPLIB format (one file
     per instance).
     """
-    parser.add_argument("--sol_dir", help=msg)
+    parser.add_argument("--sol_dir", type=Path, help=msg)
 
     parser.add_argument(
         "--instance_format",
@@ -275,7 +263,7 @@ def main():
     replace the defaults if a file is passed; default parameters are used when
     this argument is not given.
     """
-    parser.add_argument("--config_loc", help=msg)
+    parser.add_argument("--config_loc", type=Path, help=msg)
 
     msg = "Seed to use for reproducible results."
     parser.add_argument("--seed", required=True, type=int, help=msg)
