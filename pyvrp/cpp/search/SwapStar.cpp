@@ -107,25 +107,18 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 {
     assert(V->route() == remove->route());
     auto const *route = V->route();
+
     Cost deltaCost = 0;
-
-    auto const loadDiff = data.client(best.U->client()).demand
-                          - data.client(remove->client()).demand;
-
-    deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
-                                           route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     if (V == p(remove))
     {
         // Special case: insert U in place of remove. Doing so removes edges
         // V -> remove -> n(remove), and adds V -> U -> n(remove).
-        auto const deltaDist = data.dist(V->client(), U->client())
-                               + data.dist(U->client(), n(remove)->client())
-                               - data.dist(V->client(), U->client())
-                               - data.dist(U->client(), n(remove)->client());
+        auto const deltaDist
+            = data.dist(V->client(), U->client())
+              + data.dist(U->client(), n(remove)->client())
+              - data.dist(V->client(), remove->client())
+              - data.dist(remove->client(), n(remove)->client());
 
         deltaCost += static_cast<Cost>(deltaDist);
 
@@ -138,18 +131,16 @@ Cost SwapStar::evaluateMove(Route::Node *U,
     }
     else  // in non-adjacent parts of the route.
     {
-        // Remove V -> n(V) and add V -> U -> n(V).
-        auto const uDeltaDist = data.dist(V->client(), U->client())
-                                + data.dist(U->client(), n(V)->client())
-                                - data.dist(V->client(), n(V)->client());
+        auto const current = data.dist(V->client(), n(V)->client())
+                             + data.dist(p(remove)->client(), remove->client())
+                             + data.dist(remove->client(), n(remove)->client());
 
-        // Remove p(remove) -> remove -> n(remove), add p(remove) -> n(remove).
-        auto const vDeltaDist
-            = data.dist(p(remove)->client(), n(remove)->client())
-              - data.dist(p(remove)->client(), remove->client())
-              - data.dist(remove->client(), n(remove)->client());
+        auto const proposed
+            = data.dist(V->client(), U->client())
+              + data.dist(U->client(), n(V)->client())
+              + data.dist(p(remove)->client(), n(remove)->client());
 
-        deltaCost += static_cast<Cost>(vDeltaDist + uDeltaDist);
+        deltaCost += static_cast<Cost>(proposed - current);
 
         if (V->idx() < remove->idx())
         {
@@ -174,6 +165,15 @@ Cost SwapStar::evaluateMove(Route::Node *U,
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
     }
+
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+
+    auto const loadDiff = data.client(best.U->client()).demand
+                          - data.client(remove->client()).demand;
+
+    deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
+                                           route->capacity());
+    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     return deltaCost;
 }
