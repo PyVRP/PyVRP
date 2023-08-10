@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generator, Tuple
+from typing import TYPE_CHECKING, Callable, Generator, Optional, Tuple
 from warnings import warn
 
-from ._pyvrp import PopulationParams, SubPopulation
-from .exceptions import EmptySolutionWarning
+from pyvrp._pyvrp import PopulationParams, SubPopulation
+from pyvrp.exceptions import EmptySolutionWarning
 
 if TYPE_CHECKING:
-    from ._pyvrp import CostEvaluator, RandomNumberGenerator, Solution
+    from pyvrp._pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 
 
 class Population:
@@ -19,20 +19,20 @@ class Population:
     diversity_op
         Operator to use to determine pairwise diversity between solutions. Have
         a look at :mod:`pyvrp.diversity` for available operators.
-    params, optional
+    params
         Population parameters. If not provided, a default will be used.
     """
 
     def __init__(
         self,
         diversity_op: Callable[[Solution, Solution], float],
-        params: PopulationParams = PopulationParams(),
+        params: Optional[PopulationParams] = None,
     ):
         self._op = diversity_op
-        self._params = params
+        self._params = params if params is not None else PopulationParams()
 
-        self._feas = SubPopulation(diversity_op, params)
-        self._infeas = SubPopulation(diversity_op, params)
+        self._feas = SubPopulation(diversity_op, self._params)
+        self._infeas = SubPopulation(diversity_op, self._params)
 
     def __iter__(self) -> Generator[Solution, None, None]:
         """
@@ -40,8 +40,8 @@ class Population:
 
         Yields
         ------
-        iterable
-            An iterable object of solutions.
+        Solution
+            Solutions currently in this population.
         """
         for item in self._feas:
             yield item.solution

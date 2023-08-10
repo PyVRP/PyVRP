@@ -18,9 +18,9 @@ def plot_demands(
     ----------
     data
         Data instance.
-    title, optional
+    title
         Title to add to the plot.
-    ax, optional
+    ax
         Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:

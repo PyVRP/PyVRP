@@ -21,10 +21,10 @@ def plot_solution(
         Solution to plot.
     data
         Data instance underlying the solution.
-    plot_clients, optional
+    plot_clients
         Whether to plot clients as dots. Default False, which plots only the
         solution's routes.
-    ax, optional
+    ax
         Axes object to draw the plot on. One will be created if not provided.
     """
     if not ax:

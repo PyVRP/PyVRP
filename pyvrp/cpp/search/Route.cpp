@@ -17,13 +17,16 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       startDepot(data.vehicleType(vehicleType).depot),
       endDepot(data.vehicleType(vehicleType).depot)
 {
-    startDepot.route_ = this;
-    startDepot.tw = TWS(startDepot.client(), data.client(startDepot.client()));
-
-    endDepot.route_ = this;
-    endDepot.tw = TWS(endDepot.client(), data.client(endDepot.client()));
-
     clear();
+}
+
+Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
+    : cumDist(0),
+      cumLoad(0),
+      tws(loc, client),
+      twsAfter(loc, client),
+      twsBefore(loc, client)
+{
 }
 
 size_t Route::vehicleType() const { return vehicleType_; }
@@ -47,23 +50,27 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
-    nodes.clear();
+    for (auto *node : nodes)  // unassign all nodes from route.
+    {
+        node->idx_ = 0;
+        node->route_ = nullptr;
+    }
+
+    nodes.clear();  // clear nodes and reinsert the depots.
     nodes.push_back(&startDepot);
     nodes.push_back(&endDepot);
 
-    cumDist.clear();
-    cumDist.push_back(0);
-    cumDist.push_back(0);
-
-    cumLoad.clear();
-    cumLoad.push_back(0);
-    cumLoad.push_back(0);
-
     startDepot.idx_ = 0;
-    startDepot.twBefore = startDepot.tw;
+    startDepot.route_ = this;
 
     endDepot.idx_ = 1;
-    endDepot.twAfter = endDepot.tw;
+    endDepot.route_ = this;
+
+    auto const depot = startDepot.client();
+
+    stats.clear();  // clear stats and reinsert depot statistics.
+    stats.emplace_back(depot, data.client(depot));
+    stats.emplace_back(depot, data.client(depot));
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -73,11 +80,13 @@ void Route::insert(size_t idx, Node *node)
 
     node->idx_ = idx;
     node->route_ = this;
-
-    cumDist.emplace_back();  // does not matter where we place these, as they
-    cumLoad.emplace_back();  // will be updated by Route::update().
-
     nodes.insert(nodes.begin() + idx, node);
+
+    // We do not need to update the statistics; Route::update() will handle
+    // that later.
+    stats.insert(stats.begin() + idx,
+                 {node->client(), data.client(node->client())});
+
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 }
@@ -94,20 +103,20 @@ void Route::remove(size_t idx)
     node->idx_ = 0;
     node->route_ = nullptr;
 
-    cumDist.pop_back();  // does not matter where we remove these, as they will
-    cumLoad.pop_back();  // will be updated by Route::update().
-
     nodes.erase(nodes.begin() + idx);
+    stats.erase(stats.begin() + idx);
+
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 }
 
 void Route::swap(Node *first, Node *second)
 {
-    // TODO just swap clients?
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
+    std::swap(first->route_->stats[first->idx_],
+              second->route_->stats[second->idx_]);
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
@@ -129,23 +138,20 @@ void Route::update()
         }
 
         auto const dist = data.dist(p(node)->client(), node->client());
-        cumDist[idx] = cumDist[idx - 1] + dist;
-        cumLoad[idx] = cumLoad[idx - 1] + clientData.demand;
+        stats[idx].cumDist = stats[idx - 1].cumDist + dist;
+        stats[idx].cumLoad = stats[idx - 1].cumLoad + clientData.demand;
     }
 
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return;
-#else
-    // Backward time window segments (depot -> client)
-    for (auto node = nodes.begin() + 1; node != nodes.end(); ++node)
-        (*node)->twBefore = TWS::merge(
-            data.durationMatrix(), p(*node)->twBefore, (*node)->tw);
+#ifndef PYVRP_NO_TIME_WINDOWS
+    // Backward time window segments (depot -> client).
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        stats[idx].twsBefore = TWS::merge(
+            data.durationMatrix(), stats[idx - 1].twsBefore, stats[idx].tws);
 
-    // Forward time window segments (client -> depot)
-    // TODO std::ranges::view::reverse once clang supports it
-    for (auto node = nodes.rbegin() + 1; node != nodes.rend(); ++node)
-        (*node)->twAfter
-            = TWS::merge(data.durationMatrix(), (*node)->tw, n(*node)->twAfter);
+    // Forward time window segments (client -> depot).
+    for (auto idx = nodes.size() - 1; idx != 0; --idx)
+        stats[idx - 1].twsAfter = TWS::merge(
+            data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
 #endif
 }
 

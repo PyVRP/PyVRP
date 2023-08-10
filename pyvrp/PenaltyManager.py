@@ -109,7 +109,7 @@ class PenaltyManager:
 
     Parameters
     ----------
-    params, optional
+    params
         PenaltyManager parameters. If not provided, a default will be used.
     """
 

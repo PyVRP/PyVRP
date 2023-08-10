@@ -7,10 +7,9 @@ from warnings import warn
 import numpy as np
 import vrplib
 
+from pyvrp._pyvrp import Client, ProblemData, VehicleType
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
-
-from ._pyvrp import Client, ProblemData, VehicleType
 
 _Routes = List[List[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -47,7 +46,7 @@ ROUND_FUNCS: Dict[str, _RoundingFunc] = {
 def read(
     where: Union[str, pathlib.Path],
     instance_format: str = "vrplib",
-    round_func: Union[str, _RoundingFunc] = no_rounding,
+    round_func: Union[str, _RoundingFunc] = "none",
 ) -> ProblemData:
     """
     Reads the VRPLIB file at the given location, and returns a ProblemData
@@ -58,10 +57,10 @@ def read(
     where
         File location to read. Assumes the data on the given location is in
         VRPLIB format.
-    instance_format, optional
+    instance_format
         File format of the instance to read, one of ``'vrplib'`` (default) or
         ``'solomon'``.
-    round_func, optional
+    round_func
         Optional rounding function. Will be applied to round data if the data
         is not already integer. This can either be a function or a string:
 

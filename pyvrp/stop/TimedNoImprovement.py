@@ -1,5 +1,5 @@
-from .MaxRuntime import MaxRuntime
-from .NoImprovement import NoImprovement
+from pyvrp.stop.MaxRuntime import MaxRuntime
+from pyvrp.stop.NoImprovement import NoImprovement
 
 
 class TimedNoImprovement:

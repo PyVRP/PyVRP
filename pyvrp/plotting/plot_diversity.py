@@ -14,7 +14,7 @@ def plot_diversity(result: Result, ax: Optional[plt.Axes] = None):
     ----------
     result
         Result for which to plot diversity.
-    ax, optional
+    ax
         Axes object to draw the plot on. One will be created if not
         provided.
     """
