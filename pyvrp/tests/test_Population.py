@@ -17,7 +17,7 @@ from pyvrp import (
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import EmptySolutionWarning
-from pyvrp.tests.helpers import make_random_solutions, read
+from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
@@ -114,9 +114,8 @@ def test_add_triggers_purge():
 
     params = PopulationParams()
     pop = Population(bpd, params=params)
-
-    for sol in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(sol, cost_evaluator)
+    for _ in range(params.min_pop_size):
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
 
     # Population should initialise at least min_pop_size solutions
     assert_(len(pop) >= params.min_pop_size)
@@ -252,7 +251,8 @@ def test_tournament_ranks_by_fitness(k: int):
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
-    for sol in make_random_solutions(50, data, rng):
+    for _ in range(50):
+        sol = Solution.make_random(data, rng)
         if not sol.is_feasible():
             pop.add(sol, cost_evaluator)
 
@@ -295,10 +295,10 @@ def test_tournament_raises_for_invalid_k(k: int):
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
-    pop = Population(bpd)
 
-    for sol in make_random_solutions(5, data, rng):
-        pop.add(sol, cost_evaluator)
+    pop = Population(bpd)
+    for _ in range(5):
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
 
     with assert_raises(ValueError):
         pop.get_tournament(rng, cost_evaluator, k=k)
@@ -311,9 +311,8 @@ def test_purge_removes_duplicates():
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd, params=params)
-
-    for sol in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(sol, cost_evaluator)
+    for _ in range(params.min_pop_size):
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
 
     assert_equal(len(pop), params.min_pop_size)
 
@@ -348,10 +347,10 @@ def test_clear():
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
-    pop = Population(bpd)
 
-    for sol in make_random_solutions(10, data, rng):
-        pop.add(sol, cost_evaluator)
+    pop = Population(bpd)
+    for _ in range(10):
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
 
     assert_equal(len(pop), 10)
 
