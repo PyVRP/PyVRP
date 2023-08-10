@@ -207,8 +207,8 @@ Solution::Solution(size_t numClients,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
-                   std::vector<Route> const &routes,
-                   std::vector<std::pair<Client, Client>> neighbours)
+                   Routes const &routes,
+                   Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
       distance_(distance),

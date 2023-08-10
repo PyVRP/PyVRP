@@ -425,7 +425,7 @@ public:
      * @param data   Data instance describing the problem that's being solved.
      * @param routes Solution's route list.
      */
-    Solution(ProblemData const &data, std::vector<Route> const &routes);
+    Solution(ProblemData const &data, Routes const &routes);
 
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,
@@ -435,8 +435,8 @@ public:
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
-             std::vector<Route> const &routes,
-             std::vector<std::pair<Client, Client>> neighbours);
+             Routes const &routes,
+             Neighbours neighbours);
 };
 }  // namespace pyvrp
 
