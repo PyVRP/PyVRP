@@ -152,15 +152,17 @@ def solve(
     result = algo.run(stop)
 
     if stats_dir:
+        stats_dir.mkdir(parents=True, exist_ok=True)  # just in case
+
         instance_name = Path(data_loc).stem
         where = stats_dir / (instance_name + ".csv")
-        stats_dir.mkdir(parents=True, exist_ok=True)  # just in case
         result.stats.to_csv(where)
 
     if sol_dir:
+        sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
+
         instance_name = Path(data_loc).stem
         where = sol_dir / (instance_name + ".sol")
-        sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
 
         with open(where, "w") as fh:
             fh.write(str(result.best))
@@ -229,10 +231,9 @@ def benchmark(instances: List[str], num_procs: int = 1, **kwargs):
 
 def main():
     description = """
-    This program is a command line interface for solving CVRP and VRPTW
-    instances, specified in VRPLIB format. The program can solve one or
-    multiple such instances, and outputs useful information in either
-    case.
+    This program is a command line interface for solving VRPs, specified in
+    VRPLIB format. The program can solve one or multiple such VRP instances,
+    and outputs useful information in either case.
     """
     parser = argparse.ArgumentParser(prog="pyvrp", description=description)
 
