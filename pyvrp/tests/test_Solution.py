@@ -1,3 +1,4 @@
+import pickle
 from copy import copy, deepcopy
 
 import numpy as np
@@ -709,3 +710,26 @@ def test_route_centroid():
         x_center, y_center = route.centroid()
         assert_allclose(x_center, x[route].mean())
         assert_allclose(y_center, y[route].mean())
+
+
+def test_solution_can_be_pickled():
+    data = read("data/OkSmall.txt")
+    rng = RandomNumberGenerator(seed=2)
+
+    before_pickle = Solution.make_random(data, rng)
+    bytes = pickle.dumps(before_pickle)
+    after_pickle = pickle.loads(bytes)
+
+    assert_equal(after_pickle, before_pickle)
+
+
+def test_route_can_be_pickled():
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    rng = RandomNumberGenerator(seed=2)
+    sol = Solution.make_random(data, rng)
+
+    for before_pickle in sol.get_routes():
+        bytes = pickle.dumps(before_pickle)
+        after_pickle = pickle.loads(bytes)
+
+        assert_equal(after_pickle, before_pickle)

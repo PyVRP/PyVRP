@@ -3,7 +3,7 @@ import time
 from functools import lru_cache
 from typing import List
 
-from pyvrp import ProblemData, Solution, VehicleType
+from pyvrp import ProblemData, VehicleType
 from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
@@ -57,10 +57,3 @@ def sleep(duration, get_now=time.perf_counter):
     end = now + duration
     while now < end:
         now = get_now()
-
-
-def make_random_solutions(num_sols, data, rng):
-    """
-    Returns a list of ``num_sols`` random solutions.
-    """
-    return [Solution.make_random(data, rng) for _ in range(num_sols)]

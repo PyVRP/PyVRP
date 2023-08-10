@@ -14,7 +14,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.search import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import make_random_solutions, read, read_solution
+from pyvrp.tests.helpers import read, read_solution
 
 
 @mark.parametrize(
@@ -88,7 +88,7 @@ def test_initial_solutions_added_when_running():
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    init = set(make_random_solutions(25, data, rng))
+    init = {Solution.make_random(data, rng) for _ in range(25)}
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
 
     algo.run(MaxIterations(0))
@@ -116,7 +116,7 @@ def test_initial_solutions_added_when_restarting():
     # We use the best known solution as one of the initial solutions so that
     # there are no improving iterations.
     init = {Solution(data, read_solution("data/RC208.sol"))}
-    init.update(make_random_solutions(24, data, rng))
+    init.update(Solution.make_random(data, rng) for _ in range(24))
 
     params = GeneticAlgorithmParams(
         repair_probability=0,
@@ -142,7 +142,9 @@ def test_best_solution_improves_with_more_iterations():
     pm = PenaltyManager()
     pop_params = PopulationParams()
     pop = Population(bpd, params=pop_params)
-    init = make_random_solutions(pop_params.min_pop_size, data, rng)
+    init = [
+        Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
+    ]
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
@@ -169,8 +171,9 @@ def test_best_initial_solution():
     pm = PenaltyManager()
     pop = Population(bpd)
 
+    init = [Solution.make_random(data, rng) for _ in range(24)]
     bks = Solution(data, read_solution("data/RC208.sol"))
-    init = [bks, *make_random_solutions(24, data, rng)]
+    init.append(bks)
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init)
