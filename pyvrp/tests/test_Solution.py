@@ -157,15 +157,15 @@ def test_route_constructor_allows_incomplete_solutions():
 def test_get_neighbours():
     data = read("data/OkSmall.txt")
 
-    sol = Solution(data, [[3, 4], [1, 2]])
+    sol = Solution(data, [[3], [1, 2]])
     neighbours = sol.get_neighbours()
 
     expected = [
-        (0, 0),  # 0: is depot
+        None,  # 0: is depot
         (0, 2),  # 1: between depot (0) to 2
         (1, 0),  # 2: between 1 and depot (0)
-        (0, 4),  # 3: between depot (0) and 4
-        (3, 0),  # 4: between 3 and depot (0)
+        (0, 0),  # 3: between depot (0) and depot (0)
+        None,  # 4: unassigned
     ]
 
     assert_equal(data.num_clients, 4)
@@ -611,6 +611,28 @@ def test_eq_heterogeneous_vehicle():
 
     # But changing the vehicle types should be different
     sol3 = Solution(data, [Route(data, [1, 2], 1), Route(data, [3, 4], 0)])
+    assert_(sol1 != sol3)
+
+
+def test_eq_unassigned():
+    """
+    Tests the equality operator for solutions with unassigned clients.
+    """
+    clients = [
+        Client(x=0, y=0),
+        Client(x=0, y=1, required=False),
+        Client(x=1, y=0, required=False),
+    ]
+    vehicle_types = [VehicleType(1, 2)]
+    dist = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
+
+    data = ProblemData(clients, vehicle_types, dist, dist)
+
+    sol1 = Solution(data, [[1]])
+    sol2 = Solution(data, [[1]])
+    sol3 = Solution(data, [[2]])
+
+    assert_(sol1 == sol2)
     assert_(sol1 != sol3)
 
 
