@@ -38,7 +38,7 @@ template <typename T> struct type_caster<Matrix<T>>
 
 public:
 #ifdef PYVRP_DOUBLE_PRECISION
-    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<double>"));
+    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<float>"));
 #else
     PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<int>"));
 #endif
