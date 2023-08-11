@@ -51,6 +51,9 @@ public:
         if (!buf || buf.ndim() != 2)
             throw py::value_error("Expected 2D np.ndarray argument!");
 
+        if (buf.size() == 0)  // then the default constructed object is already
+            return true;      // OK, and we have nothing to do.
+
         std::vector<T> data = {buf.data(), buf.data() + buf.size()};
         value = Matrix<T>(data, buf.shape(0), buf.shape(1));
 

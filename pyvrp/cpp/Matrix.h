@@ -11,9 +11,9 @@ namespace pyvrp
 {
 template <typename T> class Matrix
 {
-    size_t cols_;          // The number of columns of the matrix
-    size_t rows_;          // The number of rows of the matrix
-    std::vector<T> data_;  // Data vector
+    size_t cols_ = 0;           // The number of columns of the matrix
+    size_t rows_ = 0;           // The number of rows of the matrix
+    std::vector<T> data_ = {};  // Data vector
 
 public:
     Matrix() = default;  // default is an empty matrix
