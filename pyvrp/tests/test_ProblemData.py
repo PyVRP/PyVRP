@@ -106,7 +106,12 @@ def test_raises_for_invalid_depot_data(
     )
 
     with assert_raises(ValueError):
-        ProblemData([depot], [VehicleType(1, 2)], [[0]], [[0]])
+        ProblemData(
+            clients=[depot],
+            vehicle_types=[VehicleType(1, 2)],
+            distance_matrix=np.asarray([[0]], dtype=int),
+            duration_matrix=np.asarray([[0]], dtype=int),
+        )
 
 
 def test_problem_data_raises_when_no_clients_provided():
@@ -134,10 +139,10 @@ def test_problem_data_raises_when_no_clients_provided():
 @mark.parametrize(
     "matrix",
     [
-        [[0, 0]],  # num rows < num clients
-        [[], []],  # num cols < num clients
-        [[0, 0], [0, 0], [0, 0]],  # num rows > num clients
-        [[0, 0, 0], [0, 0, 0]],  # num cols > num clients
+        np.asarray([[0, 0]]),  # num rows < num clients
+        np.asarray([[], []]),  # num cols < num clients
+        np.asarray([[0, 0], [0, 0], [0, 0]]),  # num rows > num clients
+        np.asarray([[0, 0, 0], [0, 0, 0]]),  # num cols > num clients
     ],
 )
 def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
@@ -150,10 +155,10 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     vehicle_types = [VehicleType(1, 2)]
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, matrix, [[0, 0], [0, 0]])
+        ProblemData(clients, vehicle_types, matrix, np.zeros_like(matrix))
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, [[0, 0], [0, 0]], matrix)
+        ProblemData(clients, vehicle_types, np.zeros_like(matrix), matrix)
 
 
 def test_centroid():
