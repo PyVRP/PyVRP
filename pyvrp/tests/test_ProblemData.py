@@ -153,13 +153,12 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     """
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
-    other_matrix = np.asarray([[0, 0], [0, 0]])
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, matrix, other_matrix)
+        ProblemData(clients, vehicle_types, matrix, np.zeros(2, 2))
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, other_matrix, matrix)
+        ProblemData(clients, vehicle_types, np.zeros(2, 2), matrix)
 
 
 def test_centroid():
