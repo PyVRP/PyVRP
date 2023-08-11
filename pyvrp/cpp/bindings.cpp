@@ -34,6 +34,8 @@ namespace detail
 {
 template <typename T> struct type_caster<Matrix<T>>
 {
+    static_assert(sizeof(T) == sizeof(pyvrp::Value));
+
 public:
 #ifdef PYVRP_DOUBLE_PRECISION
     PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<double>"));
@@ -41,11 +43,8 @@ public:
     PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<int>"));
 #endif
 
-    // Python -> C++
-    bool load(py::handle src, bool)
+    bool load(py::handle src, bool)  // Python -> C++
     {
-        static_assert(sizeof(T) == sizeof(pyvrp::Value));
-
         auto const style = py::array::c_style | py::array::forcecast;
         auto const buf = py::array_t<pyvrp::Value, style>::ensure(src);
 
@@ -58,21 +57,19 @@ public:
         return true;
     }
 
-    // C++ -> Python
-    static py::handle cast(Matrix<T> const &src,
+    static py::handle cast(Matrix<T> const &src,  // C++ -> Python
                            [[maybe_unused]] py::return_value_policy policy,
                            [[maybe_unused]] py::handle parent)
     {
-        static_assert(sizeof(T) == sizeof(pyvrp::Value));
         auto constexpr elemSize = sizeof(pyvrp::Value);
 
-        py::array a(
-            py::dtype::of<pyvrp::Value>(),                        // dtype
-            {src.numRows(), src.numCols()},                       // shape
-            {elemSize * src.numCols(), elemSize},                 // strides
-            reinterpret_cast<pyvrp::Value const *>(src.data()));  // data
+        py::array array
+            = {py::dtype::of<pyvrp::Value>(),                        // dtype
+               {src.numRows(), src.numCols()},                       // shape
+               {elemSize * src.numCols(), elemSize},                 // strides
+               reinterpret_cast<pyvrp::Value const *>(src.data())};  // data
 
-        return a.release();
+        return array.release();
     }
 };
 }  // namespace detail
