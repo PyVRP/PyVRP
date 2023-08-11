@@ -146,5 +146,5 @@ def _compute_proximity(
         data.distance_matrix()
         + weight_wait_time * np.maximum(min_wait_time, 0)
         + weight_time_warp * np.maximum(min_time_warp, 0)
-        - prize[None, :]
+        - prize[..., :]
     )
