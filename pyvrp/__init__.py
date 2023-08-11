@@ -29,9 +29,6 @@ from ._pyvrp import (
     DynamicBitset as DynamicBitset,
 )
 from ._pyvrp import (
-    Matrix as Matrix,
-)
-from ._pyvrp import (
     ProblemData as ProblemData,
 )
 from ._pyvrp import (

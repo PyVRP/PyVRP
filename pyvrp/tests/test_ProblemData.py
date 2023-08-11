@@ -169,8 +169,8 @@ def test_centroid():
 
 def test_matrix_access():
     """
-    Tests that the ``duration()`` and ``dist()`` methods correctly index the
-    underlying duration and distance matrices.
+    Tests that the ``duration()`` and ``dist()`` methods (and their matrix
+    access equivalents) correctly index the underlying data matrices.
     """
     gen = default_rng(seed=42)
     size = 6
@@ -185,11 +185,14 @@ def test_matrix_access():
     data = ProblemData(
         clients=clients,
         vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=dist_mat,  # type: ignore
-        duration_matrix=dur_mat,  # type: ignore
+        distance_matrix=dist_mat,
+        duration_matrix=dur_mat,
     )
+
+    assert_allclose(data.distance_matrix(), dist_mat)
+    assert_allclose(data.duration_matrix(), dur_mat)
 
     for frm in range(size):
         for to in range(size):
-            assert_allclose(dur_mat[frm, to], data.duration(frm, to))
-            assert_allclose(dist_mat[frm, to], data.dist(frm, to))
+            assert_allclose(data.dist(frm, to), dist_mat[frm, to])
+            assert_allclose(data.duration(frm, to), dur_mat[frm, to])

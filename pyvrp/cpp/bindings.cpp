@@ -9,6 +9,7 @@
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
+#include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -27,20 +28,54 @@ using pyvrp::Solution;
 using pyvrp::SubPopulation;
 using TWS = pyvrp::TimeWindowSegment;
 
-template <typename... Args>
-TWS merge(Matrix<pyvrp::Value> const &mat, Args... args)
+// type caster: Matrix <-> NumPy-array
+namespace pybind11
 {
-    Matrix<pyvrp::Duration> durMat(mat.numRows(), mat.numCols());
+namespace detail
+{
+template <typename T> struct type_caster<Matrix<T>>
+{
+public:
+    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<T>"));
 
-    // Copy the Matrix<pyvrp::Value> over to Matrix<Duration>. That's not
-    // efficient, but since this class is internal to PyVRP that does not matter
-    // much. We only expose it to Python for testing.
-    for (size_t row = 0; row != durMat.numRows(); ++row)
-        for (size_t col = 0; col != durMat.numCols(); ++col)
-            durMat(row, col) = mat(row, col);
+    // Python -> C++
+    bool load(py::handle src, bool convert)
+    {
+        static_assert(sizeof(T) == sizeof(pyvrp::Value));
 
-    return TWS::merge(durMat, args...);
-}
+        if (!convert && !py::array_t<T>::check_(src))
+            return false;
+
+        auto buf = py::array_t<T, py::array::c_style>::ensure(src);
+
+        if (!buf || buf.ndim() != 2)
+            return false;
+
+        std::vector<T> data = {buf.data(), buf.data() + buf.size()};
+        value = Matrix<T>(data, buf.shape(0), buf.shape(1));
+
+        return true;
+    }
+
+    // C++ -> Python
+    static py::handle cast(Matrix<T> const &src,
+                           [[maybe_unused]] py::return_value_policy policy,
+                           [[maybe_unused]] py::handle parent)
+    {
+        static_assert(sizeof(T) == sizeof(pyvrp::Value));
+        auto constexpr elemSize = sizeof(pyvrp::Value);
+
+        py::array a(
+            py::dtype::of<pyvrp::Value>(),                        // dtype
+            {src.numRows(), src.numCols()},                       // shape
+            {elemSize * src.numCols(), elemSize},                 // strides
+            reinterpret_cast<pyvrp::Value const *>(src.data()));  // data
+
+        return a.release();
+    }
+};
+}  // namespace detail
+}  // namespace pybind11
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -64,54 +99,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__and__", &DynamicBitset::operator&, py::arg("other"))
         .def("__xor__", &DynamicBitset::operator^, py::arg("other"))
         .def("__invert__", &DynamicBitset::operator~);
-
-    // See https://pybind11.readthedocs.io/en/stable/advanced/pycpp/numpy.html
-    // for details on the buffer protocol that Matrix implements.
-    py::class_<Matrix<pyvrp::Value>>(m, "Matrix", py::buffer_protocol())
-        .def_buffer([](Matrix<pyvrp::Value> &matrix) {
-            auto const size = sizeof(pyvrp::Value);
-            return py::buffer_info(
-                matrix.data(),
-                size,
-                py::format_descriptor<pyvrp::Value>::format(),
-                2,
-                {matrix.numRows(), matrix.numCols()},
-                {size * matrix.numCols(), size});  // stride size; row major
-        })
-        .def(py::init([](py::buffer b) {
-            py::buffer_info info = b.request();
-
-            if (info.format != py::format_descriptor<pyvrp::Value>::format())
-                throw std::runtime_error("Incompatible format!");
-
-            if (info.ndim != 2)
-                throw std::runtime_error("Incompatible dimension!");
-
-            auto *raw = static_cast<pyvrp::Value *>(info.ptr);
-            std::vector<pyvrp::Value> data = {raw, raw + info.size};
-
-            return Matrix<pyvrp::Value>(data, info.shape[0], info.shape[1]);
-        }))
-        .def(py::init<size_t>(), py::arg("dimension"))
-        .def(py::init<size_t, size_t>(), py::arg("n_rows"), py::arg("n_cols"))
-        .def(py::init<std::vector<std::vector<pyvrp::Value>>>(),
-             py::arg("data"))
-        .def_property_readonly("num_cols", &Matrix<pyvrp::Value>::numCols)
-        .def_property_readonly("num_rows", &Matrix<pyvrp::Value>::numRows)
-        .def(
-            "__getitem__",
-            [](Matrix<pyvrp::Value> &m, std::pair<size_t, size_t> idx)
-                -> pyvrp::Value { return m(idx.first, idx.second); },
-            py::arg("idx"))
-        .def(
-            "__setitem__",
-            [](Matrix<pyvrp::Value> &m,
-               std::pair<size_t, size_t> idx,
-               pyvrp::Value value) { m(idx.first, idx.second) = value; },
-            py::arg("idx"),
-            py::arg("value"))
-        .def("max", &Matrix<pyvrp::Value>::max)
-        .def("size", &Matrix<pyvrp::Value>::size);
 
     py::class_<ProblemData::Client>(
         m, "Client", DOC(pyvrp, ProblemData, Client))
@@ -236,6 +223,12 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, vehicleType))
+        .def("distance_matrix",
+             &ProblemData::distanceMatrix,
+             DOC(pyvrp, ProblemData, distanceMatrix))
+        .def("duration_matrix",
+             &ProblemData::durationMatrix,
+             DOC(pyvrp, ProblemData, durationMatrix))
         .def(
             "dist",
             [](ProblemData const &data, size_t first, size_t second) {

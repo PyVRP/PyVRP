@@ -46,6 +46,7 @@ public:
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
 
     [[nodiscard]] T *data();
+    [[nodiscard]] T const *data() const;
 
     [[nodiscard]] size_t numCols() const;
 
@@ -114,6 +115,7 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
 }
 
 template <typename T> T *Matrix<T>::data() { return data_.data(); }
+template <typename T> T const *Matrix<T>::data() const { return data_.data(); }
 
 template <typename T> size_t Matrix<T>::numCols() const { return cols_; }
 

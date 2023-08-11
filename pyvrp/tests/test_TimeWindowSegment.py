@@ -1,7 +1,8 @@
+import numpy as np
 from numpy.testing import assert_equal
 from pytest import mark
 
-from pyvrp._pyvrp import Matrix, TimeWindowSegment
+from pyvrp._pyvrp import TimeWindowSegment
 
 
 @mark.parametrize("existing_time_warp", [2, 5, 10])
@@ -14,7 +15,7 @@ def test_merge_two():
     tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0)
     tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6, 0)
 
-    mat = Matrix([[1, 4], [1, 2]])
+    mat = np.asarray([[1, 4], [1, 2]])
     merged = TimeWindowSegment.merge(mat, tws1, tws2)
 
     # There is no release time, so segment time warp and total time warp should
@@ -37,7 +38,7 @@ def test_merge_multiple():
     tws2 = TimeWindowSegment(1, 1, 0, 0, 3, 6, 0)
     tws3 = TimeWindowSegment(2, 2, 0, 0, 2, 3, 2)
 
-    mat = Matrix([[1, 4, 1], [1, 2, 4], [1, 1, 1]])
+    mat = np.asarray([[1, 4, 1], [1, 2, 4], [1, 1, 1]])
     merged1 = TimeWindowSegment.merge(mat, tws1, tws2)
     merged2 = TimeWindowSegment.merge(mat, merged1, tws3)
     merged3 = TimeWindowSegment.merge(mat, tws1, tws2, tws3)
