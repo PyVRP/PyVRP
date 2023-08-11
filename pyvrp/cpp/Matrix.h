@@ -16,6 +16,8 @@ template <typename T> class Matrix
     std::vector<T> data_;  // Data vector
 
 public:
+    Matrix() = default;  // default is an empty matrix
+
     /**
      * Creates a square matrix of size dimension * dimension.
      *
@@ -29,7 +31,7 @@ public:
      * @param nRows Number of rows.
      * @param nCols Number of columns.
      */
-    Matrix(size_t nRows, size_t nCols);
+    explicit Matrix(size_t nRows, size_t nCols);
 
     /**
      * Creates a matrix from the given data. The data is copied into the

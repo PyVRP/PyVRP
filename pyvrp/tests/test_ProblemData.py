@@ -118,16 +118,16 @@ def test_problem_data_raises_when_no_clients_provided():
         ProblemData(
             clients=[],
             vehicle_types=[VehicleType(1, 2)],
-            distance_matrix=[],
-            duration_matrix=[],
+            distance_matrix=np.asarray([[]], dtype=int),
+            duration_matrix=np.asarray([[]], dtype=int),
         )
 
     # One client (the depot) should not raise.
     ProblemData(
         clients=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=[[0]],
-        duration_matrix=[[0]],
+        distance_matrix=np.asarray([[0]]),
+        duration_matrix=np.asarray([[0]]),
     )
 
 

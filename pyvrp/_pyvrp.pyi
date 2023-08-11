@@ -57,8 +57,8 @@ class ProblemData:
         self,
         clients: List[Client],
         vehicle_types: List[VehicleType],
-        distance_matrix: Union[List[List[int]], np.ndarray],
-        duration_matrix: Union[List[List[int]], np.ndarray],
+        distance_matrix: np.ndarray,
+        duration_matrix: np.ndarray,
     ) -> None: ...
     def client(self, client: int) -> Client: ...
     def centroid(self) -> Tuple[float, float]: ...

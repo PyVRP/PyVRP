@@ -28,7 +28,6 @@ using pyvrp::Solution;
 using pyvrp::SubPopulation;
 using TWS = pyvrp::TimeWindowSegment;
 
-// type caster: Matrix <-> NumPy-array
 namespace pybind11
 {
 namespace detail
@@ -36,20 +35,22 @@ namespace detail
 template <typename T> struct type_caster<Matrix<T>>
 {
 public:
-    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<T>"));
+#ifdef PYVRP_DOUBLE_PRECISION
+    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<double>"));
+#else
+    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<int>"));
+#endif
 
     // Python -> C++
-    bool load(py::handle src, bool convert)
+    bool load(py::handle src, bool)
     {
         static_assert(sizeof(T) == sizeof(pyvrp::Value));
 
-        if (!convert && !py::array_t<T>::check_(src))
-            return false;
-
-        auto buf = py::array_t<T, py::array::c_style>::ensure(src);
+        auto const style = py::array::c_style | py::array::forcecast;
+        auto const buf = py::array_t<pyvrp::Value, style>::ensure(src);
 
         if (!buf || buf.ndim() != 2)
-            return false;
+            throw py::value_error("Expected 2D np.ndarray argument!");
 
         std::vector<T> data = {buf.data(), buf.data() + buf.size()};
         value = Matrix<T>(data, buf.shape(0), buf.shape(1));
@@ -165,37 +166,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("depot", &ProblemData::VehicleType::depot);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
-        .def(py::init(
-                 [](std::vector<ProblemData::Client> const &clients,
-                    std::vector<ProblemData::VehicleType> const &vehicleTypes,
-                    std::vector<std::vector<pyvrp::Value>> const &dist,
-                    std::vector<std::vector<pyvrp::Value>> const &dur) {
-                     auto const numNodes = clients.size();
-
-                     for (auto &row : dist)
-                         if (dist.size() != numNodes || row.size() != numNodes)
-                             throw std::invalid_argument(
-                                 "Distance matrix shape does not match the "
-                                 "number of clients.");
-
-                     for (auto &row : dur)
-                         if (dur.size() != numNodes || row.size() != numNodes)
-                             throw std::invalid_argument(
-                                 "Duration matrix shape does not match the "
-                                 "number of clients.");
-
-                     Matrix<pyvrp::Distance> distMat(numNodes);
-                     Matrix<pyvrp::Duration> durMat(numNodes);
-
-                     for (size_t row = 0; row != numNodes; ++row)
-                         for (size_t col = 0; col != numNodes; ++col)
-                         {
-                             distMat(row, col) = dist[row][col];
-                             durMat(row, col) = dur[row][col];
-                         }
-
-                     return ProblemData(clients, vehicleTypes, distMat, durMat);
-                 }),
+        .def(py::init<std::vector<ProblemData::Client> const &,
+                      std::vector<ProblemData::VehicleType> const &,
+                      Matrix<pyvrp::Distance>,
+                      Matrix<pyvrp::Duration>>(),
              py::arg("clients"),
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
@@ -682,12 +656,12 @@ PYBIND11_MODULE(_pyvrp, m)
             [](TWS const &tws) { return tws.totalTimeWarp().get(); },
             DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
         .def_static("merge",
-                    &merge<TWS, TWS>,
+                    &TWS::merge<>,
                     py::arg("duration_matrix"),
                     py::arg("first"),
                     py::arg("second"))
         .def_static("merge",
-                    &merge<TWS, TWS, TWS>,
+                    &TWS::merge<TWS>,
                     py::arg("duration_matrix"),
                     py::arg("first"),
                     py::arg("second"),
