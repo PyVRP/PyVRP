@@ -131,17 +131,13 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    dim = data.num_clients + 1
-    clients = [data.client(idx) for idx in range(dim)]
+    clients = [data.client(idx) for idx in range(data.num_clients + 1)]
 
     earliest = np.array([client.tw_early for client in clients])
     latest = np.array([client.tw_late for client in clients])
     service = np.array([client.service_duration for client in clients])
     prizes = np.array([client.prize for client in clients])
-    durations = np.array(
-        [[data.duration(i, j) for j in range(dim)] for i in range(dim)],
-        dtype=float,
-    )
+    durations = np.asarray(data.duration_matrix(), dtype=float)
 
     min_wait_time = np.maximum(
         earliest[None, :] - durations - service[:, None] - latest[:, None], 0
@@ -152,13 +148,8 @@ def _compute_proximity(
         0,
     )
 
-    distances = np.array(
-        [[data.dist(i, j) for j in range(dim)] for i in range(dim)],
-        dtype=float,
-    )
-
     return (
-        distances
+        data.duration_matrix()
         + weight_wait_time * min_wait_time
         + weight_time_warp * min_time_warp
         - prizes[None, :]
