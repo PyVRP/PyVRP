@@ -38,9 +38,9 @@ template <typename T> struct type_caster<Matrix<T>>
 
 public:
 #ifdef PYVRP_DOUBLE_PRECISION
-    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<float>"));
+    PYBIND11_TYPE_CASTER(Matrix<T>, _("numpy.ndarray[float]"));
 #else
-    PYBIND11_TYPE_CASTER(Matrix<T>, _("Matrix<int>"));
+    PYBIND11_TYPE_CASTER(Matrix<T>, _("numpy.ndarray[int]"));
 #endif
 
     bool load(py::handle src, bool)  // Python -> C++
