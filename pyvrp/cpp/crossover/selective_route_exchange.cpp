@@ -213,7 +213,7 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
         }
     }
 
-    // Turn visits back into solutions.
+    // Turn visits back into routes.
     std::vector<Solution::Route> routes1;
     std::vector<Solution::Route> routes2;
     for (size_t r = 0; r < nRoutesA; r++)
@@ -224,17 +224,15 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
         if (!visits2[r].empty())
             routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
     }
-    Solution sol1{data, routes1};
-    Solution sol2{data, routes2};
 
     // We have not yet inserted unplanned clients (those that were in the
     // removed routes of A, but not the inserted routes of B). Let's insert
     // those now.
     auto const unplanned = selectedA & ~selectedB;
-    auto newsol1 = greedyRepair(sol1, unplanned, data, costEvaluator);
-    auto newsol2 = greedyRepair(sol1, unplanned, data, costEvaluator);
+    auto const sol1 = greedyRepair(routes1, unplanned, data, costEvaluator);
+    auto const sol2 = greedyRepair(routes2, unplanned, data, costEvaluator);
 
-    auto const cost1 = costEvaluator.penalisedCost(newsol1);
-    auto const cost2 = costEvaluator.penalisedCost(newsol2);
-    return cost1 < cost2 ? newsol1 : newsol2;
+    auto const cost1 = costEvaluator.penalisedCost(sol1);
+    auto const cost2 = costEvaluator.penalisedCost(sol2);
+    return cost1 < cost2 ? sol1 : sol2;
 }

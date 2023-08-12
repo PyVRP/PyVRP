@@ -1,5 +1,5 @@
-#ifndef PYVRP_CROSSOVER_H
-#define PYVRP_CROSSOVER_H
+#ifndef PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
+#define PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
 
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
@@ -39,4 +39,4 @@ Solution selectiveRouteExchange(
     size_t const numMovedRoutes);
 }  // namespace pyvrp::crossover
 
-#endif  // PYVRP_CROSSOVER_H
+#endif  // PYVRP_SELECTIVE_ROUTE_EXCHANGE_H

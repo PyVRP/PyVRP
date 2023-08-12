@@ -1,5 +1,5 @@
-#ifndef PYVRP_REPAIR_H
-#define PYVRP_REPAIR_H
+#ifndef PYVRP_GREEDY_REPAIR_H
+#define PYVRP_GREEDY_REPAIR_H
 
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
@@ -36,6 +36,12 @@ Solution greedyRepair(Solution const &solution,
                       DynamicBitset const &unplanned,
                       ProblemData const &data,
                       CostEvaluator const &costEvaluator);
+
+// Convenient for use on the C++ side.
+Solution greedyRepair(std::vector<Solution::Route> const &routes,
+                      DynamicBitset const &unplanned,
+                      ProblemData const &data,
+                      CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::repair
 
-#endif  // PYVRP_REPAIR_H
+#endif  // PYVRP_GREEDY_REPAIR_H

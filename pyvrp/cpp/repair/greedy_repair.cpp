@@ -15,6 +15,7 @@ using pyvrp::search::Route;
 
 using Clients = std::vector<Route::Node>;
 using Routes = std::vector<Route>;
+using SolRoutes = std::vector<Solution::Route>;
 using TWS = pyvrp::TimeWindowSegment;
 
 namespace
@@ -22,7 +23,7 @@ namespace
 // Populate the given clients and routes vectors with routes from the solution.
 void setupRoutes(Clients &clients,
                  Routes &routes,
-                 Solution const &sol,
+                 SolRoutes const &solRoutes,
                  ProblemData const &data)
 {
     assert(clients.empty() && routes.empty());
@@ -30,13 +31,13 @@ void setupRoutes(Clients &clients,
     // Doing this avoids re-allocations, which would break the pointer structure
     // that Route and Route::Node use.
     clients.reserve(data.numClients() + 1);
-    routes.reserve(sol.numRoutes());
+    routes.reserve(solRoutes.size());
 
     for (size_t client = 0; client <= data.numClients(); ++client)
         clients.emplace_back(client);
 
     size_t idx = 0;
-    for (auto const &solRoute : sol.getRoutes())
+    for (auto const &solRoute : solRoutes)
     {
         auto &route = routes.emplace_back(data, idx++, solRoute.vehicleType());
         for (auto const client : solRoute)
@@ -108,9 +109,17 @@ Solution pyvrp::repair::greedyRepair(Solution const &solution,
                                      ProblemData const &data,
                                      CostEvaluator const &costEvaluator)
 {
+    return greedyRepair(solution.getRoutes(), unplanned, data, costEvaluator);
+}
+
+Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
+                                     DynamicBitset const &unplanned,
+                                     ProblemData const &data,
+                                     CostEvaluator const &costEvaluator)
+{
     Clients clients;
     Routes routes;
-    setupRoutes(clients, routes, solution, data);
+    setupRoutes(clients, routes, solRoutes, data);
 
     for (size_t client = 1; client <= data.numClients(); ++client)
     {

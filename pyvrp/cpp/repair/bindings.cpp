@@ -8,7 +8,11 @@ namespace py = pybind11;
 PYBIND11_MODULE(_repair, m)
 {
     m.def("greedy_repair",
-          &pyvrp::repair::greedyRepair,
+          py::overload_cast<pyvrp::Solution const &,
+                            pyvrp::DynamicBitset const &,
+                            pyvrp::ProblemData const &,
+                            pyvrp::CostEvaluator const &>(
+              &pyvrp::repair::greedyRepair),
           py::arg("solution"),
           py::arg("unplanned"),
           py::arg("data"),
