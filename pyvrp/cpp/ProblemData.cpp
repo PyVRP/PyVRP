@@ -68,6 +68,13 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                                        return sum + type.numAvailable;
                                    }))
 {
+    if (dist_.numRows() != clients.size() || dist_.numCols() != clients.size())
+        throw std::invalid_argument("Distance matrix shape does not match the "
+                                    "number of clients.");
+
+    if (dur_.numRows() != clients.size() || dur_.numCols() != clients.size())
+        throw std::invalid_argument("Duration matrix shape does not match the "
+                                    "number of clients.");
 
     if (clients.size() == 0)  // at least one client (the depot) is required
         throw std::invalid_argument("Clients must not be empty.");

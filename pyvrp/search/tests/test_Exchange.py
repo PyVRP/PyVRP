@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
@@ -236,24 +237,30 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     feasibility before applying a move that improves the travelled distance.
     """
     clients = [
-        Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10),
-        Client(x=1, y=0, demand=0, service_duration=0, tw_early=0, tw_late=5),
-        Client(x=2, y=0, demand=0, service_duration=0, tw_early=0, tw_late=5),
+        Client(x=0, y=0, tw_early=0, tw_late=10),
+        Client(x=1, y=0, tw_early=0, tw_late=5),
+        Client(x=2, y=0, tw_early=0, tw_late=5),
     ]
 
+    # Distance-wise, the best route is 0 -> 1 -> 2 -> 0. Duration-wise,
+    # however, the best route is 0 -> 2 -> 1 -> 0.
     data = ProblemData(
         clients=clients,
         vehicle_types=[VehicleType(0, 1)],
-        distance_matrix=[  # distance-wise, the best route is 0 -> 1 -> 2 -> 0.
-            [0, 1, 5],
-            [5, 0, 1],
-            [1, 5, 0],
-        ],
-        duration_matrix=[  # duration-wise, the best route is 0 -> 2 -> 1 -> 0.
-            [0, 100, 2],
-            [1, 0, 100],
-            [100, 2, 0],
-        ],
+        distance_matrix=np.asarray(
+            [
+                [0, 1, 5],
+                [5, 0, 1],
+                [1, 5, 0],
+            ]
+        ),
+        duration_matrix=np.asarray(
+            [
+                [0, 100, 2],
+                [1, 0, 100],
+                [100, 2, 0],
+            ]
+        ),
     )
 
     # We consider two solutions. The first is duration optimal, and overall the

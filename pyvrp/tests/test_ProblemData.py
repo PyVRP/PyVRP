@@ -106,7 +106,12 @@ def test_raises_for_invalid_depot_data(
     )
 
     with assert_raises(ValueError):
-        ProblemData([depot], [VehicleType(1, 2)], [[0]], [[0]])
+        ProblemData(
+            clients=[depot],
+            vehicle_types=[VehicleType(1, 2)],
+            distance_matrix=np.asarray([[0]], dtype=int),
+            duration_matrix=np.asarray([[0]], dtype=int),
+        )
 
 
 def test_problem_data_raises_when_no_clients_provided():
@@ -118,26 +123,26 @@ def test_problem_data_raises_when_no_clients_provided():
         ProblemData(
             clients=[],
             vehicle_types=[VehicleType(1, 2)],
-            distance_matrix=[],
-            duration_matrix=[],
+            distance_matrix=np.asarray([[]], dtype=int),
+            duration_matrix=np.asarray([[]], dtype=int),
         )
 
     # One client (the depot) should not raise.
     ProblemData(
         clients=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=[[0]],
-        duration_matrix=[[0]],
+        distance_matrix=np.asarray([[0]]),
+        duration_matrix=np.asarray([[0]]),
     )
 
 
 @mark.parametrize(
     "matrix",
     [
-        [[0, 0]],  # num rows < num clients
-        [[], []],  # num cols < num clients
-        [[0, 0], [0, 0], [0, 0]],  # num rows > num clients
-        [[0, 0, 0], [0, 0, 0]],  # num cols > num clients
+        np.asarray([[0, 0]]),  # num rows < num clients
+        np.asarray([[], []]),  # num cols < num clients
+        np.asarray([[0, 0], [0, 0], [0, 0]]),  # num rows > num clients
+        np.asarray([[0, 0, 0], [0, 0, 0]]),  # num cols > num clients
     ],
 )
 def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
@@ -148,12 +153,13 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     """
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
+    other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, matrix, [[0, 0], [0, 0]])
+        ProblemData(clients, vehicle_types, matrix, other_matrix)
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, [[0, 0], [0, 0]], matrix)
+        ProblemData(clients, vehicle_types, other_matrix, matrix)
 
 
 def test_centroid():
@@ -169,8 +175,8 @@ def test_centroid():
 
 def test_matrix_access():
     """
-    Tests that the ``duration()`` and ``dist()`` methods correctly index the
-    underlying duration and distance matrices.
+    Tests that the ``duration()`` and ``dist()`` methods (and their matrix
+    access equivalents) correctly index the underlying data matrices.
     """
     gen = default_rng(seed=42)
     size = 6
@@ -185,11 +191,14 @@ def test_matrix_access():
     data = ProblemData(
         clients=clients,
         vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=dist_mat,  # type: ignore
-        duration_matrix=dur_mat,  # type: ignore
+        distance_matrix=dist_mat,
+        duration_matrix=dur_mat,
     )
+
+    assert_allclose(data.distance_matrix(), dist_mat)
+    assert_allclose(data.duration_matrix(), dur_mat)
 
     for frm in range(size):
         for to in range(size):
-            assert_allclose(dur_mat[frm, to], data.duration(frm, to))
-            assert_allclose(dist_mat[frm, to], data.dist(frm, to))
+            assert_allclose(data.dist(frm, to), dist_mat[frm, to])
+            assert_allclose(data.duration(frm, to), dur_mat[frm, to])
