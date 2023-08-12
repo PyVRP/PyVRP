@@ -11,7 +11,26 @@
 namespace pyvrp::repair
 {
 /**
- * TODO
+ * Greedy repair operator. This operator inserts each client in the set of
+ * unplanned clients into the solution. It does so by evaluating all possible
+ * moves and applying the best one for each client, resulting in a quadratic
+ * runtime.
+ *
+ * Parameters
+ * ----------
+ * solution
+ *     Solution to repair.
+ * unplanned
+ *     Set of unplanned clients to insert into the solution.
+ * data
+ *     Problem data instance.
+ * cost_evaluator
+ *     Cost evaluator to use when evaluating insertion moves.
+ *
+ * Returns
+ * -------
+ * Solution
+ *     The repaired solution.
  */
 Solution greedyRepair(Solution const &solution,
                       DynamicBitset const &unplanned,
