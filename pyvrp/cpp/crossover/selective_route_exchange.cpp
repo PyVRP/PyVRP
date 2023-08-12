@@ -1,8 +1,11 @@
-#include "crossover.h"
+#include "selective_route_exchange.h"
 
 #include "DynamicBitset.h"
+#include "greedy_repair.h"
 
 #include <cmath>
+
+using pyvrp::repair::greedyRepair;
 
 using Client = size_t;
 using Clients = std::vector<Client>;
@@ -210,18 +213,9 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
         }
     }
 
-    // Insert unplanned clients (those that were in the removed routes of A, but
-    // not the inserted routes of B).
-    auto const unplanned = selectedA & ~selectedB;
-    crossover::greedyRepair(visits1, unplanned, data, costEvaluator);
-    crossover::greedyRepair(visits2, unplanned, data, costEvaluator);
-
-    // Assign correct types to routes (from parents) and filter empty
+    // Turn visits back into solutions.
     std::vector<Solution::Route> routes1;
-    routes1.reserve(nRoutesA);
     std::vector<Solution::Route> routes2;
-    routes2.reserve(nRoutesA);
-
     for (size_t r = 0; r < nRoutesA; r++)
     {
         if (!visits1[r].empty())
@@ -230,11 +224,17 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
         if (!visits2[r].empty())
             routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
     }
-
     Solution sol1{data, routes1};
     Solution sol2{data, routes2};
 
-    auto const cost1 = costEvaluator.penalisedCost(sol1);
-    auto const cost2 = costEvaluator.penalisedCost(sol2);
-    return cost1 < cost2 ? sol1 : sol2;
+    // We have not yet inserted unplanned clients (those that were in the
+    // removed routes of A, but not the inserted routes of B). Let's insert
+    // those now.
+    auto const unplanned = selectedA & ~selectedB;
+    auto newsol1 = greedyRepair(sol1, unplanned, data, costEvaluator);
+    auto newsol2 = greedyRepair(sol1, unplanned, data, costEvaluator);
+
+    auto const cost1 = costEvaluator.penalisedCost(newsol1);
+    auto const cost2 = costEvaluator.penalisedCost(newsol2);
+    return cost1 < cost2 ? newsol1 : newsol2;
 }

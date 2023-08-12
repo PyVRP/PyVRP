@@ -12,15 +12,6 @@
 namespace pyvrp::crossover
 {
 /**
- * Greedily inserts each unplanned client into the route that's nearest to the
- * client.
- */
-void greedyRepair(std::vector<std::vector<size_t>> &routes,
-                  DynamicBitset const &unplanned,
-                  ProblemData const &data,
-                  CostEvaluator const &costEvaluator);
-
-/**
  * Performs two SREX crossovers of the given parents. SREX is a method that
  * selects a set of routes for each parent and replaces the selected routes of
  * the first parent with those of the second parent. The routes are selected by
