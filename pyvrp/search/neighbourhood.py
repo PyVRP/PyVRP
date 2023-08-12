@@ -131,35 +131,20 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    dim = data.num_clients + 1
-    clients = [data.client(idx) for idx in range(dim)]
+    clients = [data.client(idx) for idx in range(data.num_clients + 1)]
 
-    earliest = np.array([client.tw_early for client in clients])
-    latest = np.array([client.tw_late for client in clients])
+    early = np.array([client.tw_early for client in clients])
+    late = np.array([client.tw_late for client in clients])
     service = np.array([client.service_duration for client in clients])
-    prizes = np.array([client.prize for client in clients])
-    durations = np.array(
-        [[data.duration(i, j) for j in range(dim)] for i in range(dim)],
-        dtype=float,
-    )
+    prize = np.array([client.prize for client in clients])
+    duration = np.asarray(data.duration_matrix(), dtype=float)
 
-    min_wait_time = np.maximum(
-        earliest[None, :] - durations - service[:, None] - latest[:, None], 0
-    )
-
-    min_time_warp = np.maximum(
-        earliest[:, None] + service[:, None] + durations - latest[None, :],
-        0,
-    )
-
-    distances = np.array(
-        [[data.dist(i, j) for j in range(dim)] for i in range(dim)],
-        dtype=float,
-    )
+    min_wait_time = early[..., :] - duration - service[:, ...] - late[:, ...]
+    min_time_warp = early[:, ...] + service[:, ...] + duration - late[..., :]
 
     return (
-        distances
-        + weight_wait_time * min_wait_time
-        + weight_time_warp * min_time_warp
-        - prizes[None, :]
+        data.distance_matrix()
+        + weight_wait_time * np.maximum(min_wait_time, 0)
+        + weight_time_warp * np.maximum(min_time_warp, 0)
+        - prize[..., :]
     )

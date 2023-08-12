@@ -488,8 +488,8 @@ def test_time_warp_return_to_depot():
     data = ProblemData(
         clients=[Client(x=0, y=0, tw_late=1), Client(x=1, y=0)],
         vehicle_types=[VehicleType(0, 1)],
-        distance_matrix=[[0, 0], [0, 0]],
-        duration_matrix=[[0, 1], [1, 0]],
+        distance_matrix=np.asarray([[0, 0], [0, 0]]),
+        duration_matrix=np.asarray([[0, 1], [1, 0]]),
     )
 
     sol = Solution(data, [[1]])

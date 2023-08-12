@@ -2,6 +2,7 @@
 #define PYVRP_MATRIX_H
 
 #include <algorithm>
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -10,17 +11,12 @@ namespace pyvrp
 {
 template <typename T> class Matrix
 {
-    size_t cols_;          // The number of columns of the matrix
-    size_t rows_;          // The number of rows of the matrix
-    std::vector<T> data_;  // Data vector
+    size_t cols_ = 0;           // The number of columns of the matrix
+    size_t rows_ = 0;           // The number of rows of the matrix
+    std::vector<T> data_ = {};  // Data vector
 
 public:
-    /**
-     * Creates a square matrix of size dimension * dimension.
-     *
-     * @param dimension Size of one side.
-     */
-    explicit Matrix(size_t dimension);
+    Matrix() = default;  // default is an empty matrix
 
     /**
      * Creates a matrix of size nRows * nCols.
@@ -28,19 +24,15 @@ public:
      * @param nRows Number of rows.
      * @param nCols Number of columns.
      */
-    Matrix(size_t nRows, size_t nCols);
+    explicit Matrix(size_t nRows, size_t nCols);
 
-    /**
-     * Creates a matrix from the given data. The data is copied into the
-     * created matrix.
-     *
-     * @param Data elements.
-     */
-    explicit Matrix(std::vector<std::vector<T>> const &data);
+    explicit Matrix(std::vector<T> data, size_t nRows, size_t nCols);
 
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col);
-
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
+
+    [[nodiscard]] T *data();
+    [[nodiscard]] T const *data() const;
 
     [[nodiscard]] size_t numCols() const;
 
@@ -58,35 +50,16 @@ public:
 };
 
 template <typename T>
-Matrix<T>::Matrix(size_t dimension)
-    : cols_(dimension), rows_(dimension), data_(dimension * dimension)
-{
-}
-
-template <typename T>
 Matrix<T>::Matrix(size_t nRows, size_t nCols)
     : cols_(nCols), rows_(nRows), data_(nRows * nCols)
 {
 }
 
 template <typename T>
-Matrix<T>::Matrix(std::vector<std::vector<T>> const &data)
-    : Matrix(data.size(), data.empty() ? 0 : data[0].size())
+Matrix<T>::Matrix(std::vector<T> data, size_t nRows, size_t nCols)
+    : cols_(nCols), rows_(nRows), data_(std::move(data))
 {
-    for (size_t i = 0; i != rows_; ++i)
-    {
-        auto const size = data[i].size();
-
-        if (size != cols_)
-        {
-            std::ostringstream msg;
-            msg << "Expected " << cols_ << "elements, got " << size << ".";
-            throw std::invalid_argument(msg.str());
-        }
-
-        for (size_t j = 0; j != cols_; ++j)
-            data_[cols_ * i + j] = data[i][j];
-    }
+    assert(cols_ * rows_ == data_.size());
 }
 
 template <typename T>
@@ -100,6 +73,9 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
 {
     return data_[cols_ * row + col];
 }
+
+template <typename T> T *Matrix<T>::data() { return data_.data(); }
+template <typename T> T const *Matrix<T>::data() const { return data_.data(); }
 
 template <typename T> size_t Matrix<T>::numCols() const { return cols_; }
 

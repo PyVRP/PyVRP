@@ -17,14 +17,8 @@ def make_heterogeneous(data: ProblemData, vehicle_types: List[VehicleType]):
     return ProblemData(
         clients=clients,
         vehicle_types=vehicle_types,
-        distance_matrix=[
-            [data.dist(i, j) for j in range(data.num_clients + 1)]
-            for i in range(data.num_clients + 1)
-        ],
-        duration_matrix=[
-            [data.duration(i, j) for j in range(data.num_clients + 1)]
-            for i in range(data.num_clients + 1)
-        ],
+        distance_matrix=data.distance_matrix(),
+        duration_matrix=data.duration_matrix(),
     )
 
 
