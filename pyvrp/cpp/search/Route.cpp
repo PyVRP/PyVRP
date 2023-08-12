@@ -137,7 +137,7 @@ void Route::update()
             centroid.second += static_cast<double>(clientData.y) / size();
         }
 
-        auto const dist = data.dist(p(node)->client(), node->client());
+        auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
         stats[idx].cumDist = stats[idx - 1].cumDist + dist;
         stats[idx].cumLoad = stats[idx - 1].cumLoad + clientData.demand;
     }

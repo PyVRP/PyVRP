@@ -329,13 +329,11 @@ void LocalSearch::loadSolution(Solution const &solution)
         Route &route = routes[r];
 
         assert(route.empty());  // should have been emptied above.
-
         for (auto const client : solRoute)
             route.push_back(&clients[client]);
-    }
 
-    for (auto &route : routes)
         route.update();
+    }
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
@@ -414,16 +412,10 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
-    for (size_t vehTypeIdx = 0; vehTypeIdx != data.numVehicleTypes();
-         ++vehTypeIdx)
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
-        auto const &vehType = data.vehicleType(vehTypeIdx);
-        auto const numAvailable = vehType.numAvailable;
-
-        for (size_t i = 0; i != numAvailable; ++i)
-        {
-            routes.emplace_back(data, rIdx, vehTypeIdx);
-            rIdx++;
-        }
+        auto const numAvailable = data.vehicleType(vehType).numAvailable;
+        for (size_t vehicle = 0; vehicle != numAvailable; ++vehicle)
+            routes.emplace_back(data, rIdx++, vehType);
     }
 }
