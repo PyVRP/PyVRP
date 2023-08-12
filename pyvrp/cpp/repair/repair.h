@@ -13,8 +13,8 @@ namespace pyvrp::repair
 /**
  * TODO
  */
-Solution greedyRepair(std::vector<Solution::Route> routes,
-                      DynamicBitset const &toInsert,
+Solution greedyRepair(Solution const &solution,
+                      DynamicBitset const &unplanned,
                       ProblemData const &data,
                       CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::repair
