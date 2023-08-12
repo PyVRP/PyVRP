@@ -8,6 +8,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
+from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import read
 
 
@@ -18,10 +19,9 @@ def test_single_route_OkSmall():
     """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
-    rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
+    # Only neighbours are 1 -> 4 and 2 -> 1.
+    ls = cpp_LocalSearch(data, [[], [4], [1], [], []])
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
     sol = Solution(data, [[1, 4, 2, 3]])

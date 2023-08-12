@@ -3,10 +3,9 @@ from typing import Optional
 import matplotlib.pyplot as plt
 
 from pyvrp import ProblemData
-
-from .plot_coordinates import plot_coordinates
-from .plot_demands import plot_demands
-from .plot_time_windows import plot_time_windows
+from pyvrp.plotting.plot_coordinates import plot_coordinates
+from pyvrp.plotting.plot_demands import plot_demands
+from pyvrp.plotting.plot_time_windows import plot_time_windows
 
 
 def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):

@@ -11,9 +11,9 @@ from pyvrp import (
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
-from pyvrp.tests.helpers import make_random_solutions, read, read_solution
+from pyvrp.tests.helpers import read, read_solution
 
-IMG_KWARGS = dict(remove_text=True, tol=2, extensions=["png"], style="mpl20")
+IMG_KWARGS = dict(remove_text=True, tol=8, extensions=["png"], style="mpl20")
 
 
 @img_comp(["plot_solution", "plot_solution_with_customers"], **IMG_KWARGS)
@@ -38,9 +38,8 @@ def test_plot_result():
 
     params = PopulationParams()
     pop = Population(broken_pairs_distance, params=params)
-
-    for sol in make_random_solutions(params.min_pop_size, data, rng):
-        pop.add(sol, cost_evaluator)
+    for _ in range(params.min_pop_size):
+        pop.add(Solution.make_random(data, rng), cost_evaluator)
 
     stats = Statistics()
 

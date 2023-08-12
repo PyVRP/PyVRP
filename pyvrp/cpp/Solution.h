@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <iosfwd>
+#include <optional>
 #include <vector>
 
 namespace pyvrp
@@ -188,23 +189,42 @@ public:
         Route(ProblemData const &data,
               Visits visits,
               VehicleType const vehicleType);
+
+        // This constructor does *no* validation. Useful when unserialising
+        // objects.
+        Route(Visits visits,
+              Distance distance,
+              Load demand,
+              Load excessLoad,
+              Duration duration,
+              Duration timeWarp,
+              Duration travel,
+              Duration service,
+              Duration wait,
+              Duration release,
+              Duration startTime,
+              Duration slack,
+              Cost prizes,
+              std::pair<double, double> centroid,
+              VehicleType vehicleType);
     };
 
 private:
     using Routes = std::vector<Route>;
+    using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
     size_t numClients_ = 0;         // Number of clients in the solution
+    size_t numMissingClients_ = 0;  // Number of required but missing clients
     Distance distance_ = 0;         // Total distance
     Load excessLoad_ = 0;           // Total excess load over all routes
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
     Duration timeWarp_ = 0;         // Total time warp over all routes
-    size_t numMissingClients_ = 0;  // Number of required but missing clients
 
     Routes routes_;
-    std::vector<std::pair<Client, Client>> neighbours;  // pairs of [pred, succ]
+    Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
 
-    // Determines the [pred, succ] pairs for each client.
+    // Determines the [pred, succ] pairs for assigned clients.
     void makeNeighbours();
 
     // Evaluates this solution's characteristics.
@@ -237,6 +257,16 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
+     * Number of required clients that are not in this solution.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of required but missing clients.
+     */
+    [[nodiscard]] size_t numMissingClients() const;
+
+    /**
      * The solution's routing decisions.
      *
      * Returns
@@ -258,8 +288,7 @@ public:
      *     A list of ``(pred, succ)`` tuples that encode for each client their
      *     predecessor and successors in this solutions's routes.
      */
-    [[nodiscard]] std::vector<std::pair<Client, Client>> const &
-    getNeighbours() const;
+    [[nodiscard]] Neighbours const &getNeighbours() const;
 
     /**
      * Whether this solution is feasible. This is a shorthand for checking
@@ -396,7 +425,18 @@ public:
      * @param data   Data instance describing the problem that's being solved.
      * @param routes Solution's route list.
      */
-    Solution(ProblemData const &data, std::vector<Route> const &routes);
+    Solution(ProblemData const &data, Routes const &routes);
+
+    // This constructor does *no* validation. Useful when unserialising objects.
+    Solution(size_t numClients,
+             size_t numMissingClients,
+             Distance distance,
+             Load excessLoad,
+             Cost prizes,
+             Cost uncollectedPrizes,
+             Duration timeWarp,
+             Routes const &routes,
+             Neighbours neighbours);
 };
 }  // namespace pyvrp
 

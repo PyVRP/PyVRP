@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, Generator, Optional, Tuple
 from warnings import warn
 
-from ._pyvrp import PopulationParams, SubPopulation
-from .exceptions import EmptySolutionWarning
+from pyvrp._pyvrp import PopulationParams, SubPopulation
+from pyvrp.exceptions import EmptySolutionWarning
 
 if TYPE_CHECKING:
-    from ._pyvrp import CostEvaluator, RandomNumberGenerator, Solution
+    from pyvrp._pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 
 
 class Population:
