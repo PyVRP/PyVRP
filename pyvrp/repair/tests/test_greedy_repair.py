@@ -42,3 +42,19 @@ def test_after_depot():
     # Let's check if the repaired solution indeed visits client 4 first.
     route = repaired.get_routes()[0]
     assert_equal(route.visits(), [4, 3, 2, 1])
+
+
+def test_OkSmall():
+    data = read("data/OkSmall.txt")
+    cost_eval = CostEvaluator(1, 1)
+
+    # We want to insert 1 and 4 into this solution. Both 1 and 4 are close to
+    # 3, so it would be cheapest to insert these into the second route, as
+    # 1 -> 3 -> 4.
+    sol = Solution(data, [[2], [3]])
+    unplanned = DynamicBitset(data.num_clients + 1)
+    unplanned[1] = True
+    unplanned[4] = True
+
+    repaired = greedy_repair(sol, unplanned, data, cost_eval)
+    assert_equal(repaired, Solution(data, [[2], [1, 3, 4]]))
