@@ -117,6 +117,9 @@ Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
                                      ProblemData const &data,
                                      CostEvaluator const &costEvaluator)
 {
+    if (solRoutes.empty() && unplanned.count())
+        throw std::invalid_argument("Need routes to repair!");
+
     Clients clients;
     Routes routes;
     setupRoutes(clients, routes, solRoutes, data);

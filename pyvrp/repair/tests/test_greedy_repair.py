@@ -1,9 +1,28 @@
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import CostEvaluator, DynamicBitset, RandomNumberGenerator, Solution
 from pyvrp.repair import greedy_repair
 from pyvrp.tests.helpers import read
+
+
+def test_raises_given_no_routes_and_unplanned_clients():
+    data = read("data/OkSmall.txt")
+    cost_eval = CostEvaluator(1, 1)
+
+    empty = Solution(data, [])
+    unplanned = DynamicBitset(data.num_clients + 1)
+
+    # This call should not raise since unplanned is empty: there are no routes
+    # to insert into, which is OK since have nothing to insert.
+    assert_equal(unplanned.count(), 0)
+    greedy_repair(empty, unplanned, data, cost_eval)
+
+    # But now we do need to insert a client, and that should raise.
+    unplanned[1] = True
+    assert_equal(unplanned.count(), 1)
+    with assert_raises(ValueError):
+        greedy_repair(empty, unplanned, data, cost_eval)
 
 
 def test_empty_unplanned_is_a_no_op():
