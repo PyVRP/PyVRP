@@ -31,7 +31,7 @@ def test_insert_into_empty_route():
     assert_equal(greedy, Solution(data, [[1]]))
 
 
-def test_empty_unplanned_is_a_no_op():
+def test_empty_routes_or_unplanned_is_a_no_op():
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
 
@@ -45,6 +45,10 @@ def test_empty_unplanned_is_a_no_op():
     sol = Solution(data, [[2, 3, 4]])
     assert_(not sol.is_complete())
     assert_equal(greedy_repair(sol, [], data, cost_eval), sol)
+
+    # Finally, when both the set of routes and the list of unplanned clients
+    # is empty, we get an empty solution.
+    assert_equal(greedy_repair([], [], data, cost_eval), Solution(data, []))
 
 
 def test_after_depot():
