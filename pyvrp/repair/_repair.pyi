@@ -1,4 +1,4 @@
-from pyvrp._pyvrp import CostEvaluator, DynamicBitset, ProblemData, Solution
+from pyvrp import CostEvaluator, DynamicBitset, ProblemData, Solution
 
 def greedy_repair(
     solution: Solution,
