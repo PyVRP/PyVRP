@@ -2,7 +2,6 @@
 #define PYVRP_GREEDY_REPAIR_H
 
 #include "CostEvaluator.h"
-#include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
 
@@ -11,7 +10,7 @@
 namespace pyvrp::repair
 {
 /**
- * Greedy repair operator. This operator inserts each client in the set of
+ * Greedy repair operator. This operator inserts each client in the list of
  * unplanned clients into the solution. It does so by evaluating all possible
  * moves and applying the best one for each client, resulting in a quadratic
  * runtime.
@@ -21,7 +20,7 @@ namespace pyvrp::repair
  * solution
  *     Solution to repair.
  * unplanned
- *     Set of unplanned clients to insert into the solution.
+ *     Unplanned clients to insert into the solution.
  * data
  *     Problem data instance.
  * cost_evaluator
@@ -31,15 +30,20 @@ namespace pyvrp::repair
  * -------
  * Solution
  *     The repaired solution.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When the solution is empty but the list of unplanned clients is not.
  */
 Solution greedyRepair(Solution const &solution,
-                      DynamicBitset const &unplanned,
+                      std::vector<size_t> const &unplanned,
                       ProblemData const &data,
                       CostEvaluator const &costEvaluator);
 
 // Convenient overload
 Solution greedyRepair(std::vector<Solution::Route> const &routes,
-                      DynamicBitset const &unplanned,
+                      std::vector<size_t> const &unplanned,
                       ProblemData const &data,
                       CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::repair

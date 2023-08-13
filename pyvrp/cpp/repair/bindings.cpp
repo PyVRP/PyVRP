@@ -10,7 +10,7 @@ PYBIND11_MODULE(_repair, m)
 {
     m.def("greedy_repair",
           py::overload_cast<pyvrp::Solution const &,
-                            pyvrp::DynamicBitset const &,
+                            std::vector<size_t> const &,
                             pyvrp::ProblemData const &,
                             pyvrp::CostEvaluator const &>(
               &pyvrp::repair::greedyRepair),
@@ -22,7 +22,7 @@ PYBIND11_MODULE(_repair, m)
 
     m.def("greedy_repair",
           py::overload_cast<std::vector<pyvrp::Solution::Route> const &,
-                            pyvrp::DynamicBitset const &,
+                            std::vector<size_t> const &,
                             pyvrp::ProblemData const &,
                             pyvrp::CostEvaluator const &>(
               &pyvrp::repair::greedyRepair),

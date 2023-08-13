@@ -228,7 +228,11 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     // We have not yet inserted unplanned clients (those that were in the
     // removed routes of A, but not the inserted routes of B). Let's insert
     // those now.
-    auto const unplanned = selectedA & ~selectedB;
+    std::vector<size_t> unplanned;
+    for (size_t client = 1; client <= data.numClients(); ++client)
+        if (selectedA[client] && !selectedB[client])
+            unplanned.push_back(client);
+
     auto const sol1 = greedyRepair(routes1, unplanned, data, costEvaluator);
     auto const sol2 = greedyRepair(routes2, unplanned, data, costEvaluator);
 

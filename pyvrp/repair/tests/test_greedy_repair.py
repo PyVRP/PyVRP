@@ -1,13 +1,7 @@
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import (
-    CostEvaluator,
-    DynamicBitset,
-    RandomNumberGenerator,
-    Route,
-    Solution,
-)
+from pyvrp import CostEvaluator, RandomNumberGenerator, Route, Solution
 from pyvrp.repair import greedy_repair
 from pyvrp.tests.helpers import read
 
@@ -15,20 +9,15 @@ from pyvrp.tests.helpers import read
 def test_raises_given_no_routes_and_unplanned_clients():
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
-
     empty = Solution(data, [])
-    unplanned = DynamicBitset(data.num_clients + 1)
 
     # This call should not raise since unplanned is empty: there are no routes
     # to insert into, which is OK since we have nothing to insert.
-    assert_equal(unplanned.count(), 0)
-    greedy_repair(empty, unplanned, data, cost_eval)
+    greedy_repair(empty, [], data, cost_eval)
 
-    # But now we do need to insert a client, and that should raise.
-    unplanned[1] = True
-    assert_equal(unplanned.count(), 1)
     with assert_raises(ValueError):
-        greedy_repair(empty, unplanned, data, cost_eval)
+        # But now we do need to insert a client, and that should raise.
+        greedy_repair(empty, [1], data, cost_eval)
 
 
 def test_insert_into_empty_route():
@@ -38,10 +27,7 @@ def test_insert_into_empty_route():
     # We want to insert client one into an empty route. That should result in
     # a solution that has a single route with just client 1.
     routes = [Route(data, [], 0)]
-    unplanned = DynamicBitset(data.num_clients + 1)
-    unplanned[1] = True
-
-    greedy = greedy_repair(routes, unplanned, data, cost_eval)
+    greedy = greedy_repair(routes, [1], data, cost_eval)
     assert_equal(greedy, Solution(data, [[1]]))
 
 
@@ -49,19 +35,16 @@ def test_empty_unplanned_is_a_no_op():
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
 
-    unplanned = DynamicBitset(data.num_clients + 1)
-    assert_equal(unplanned.count(), 0)
-
     # When unplanned is empty, there is nothing for greedy repair to do, so it
     # should return the exact same solution it received.
     sol = Solution(data, [[3, 2], [1, 4]])
-    assert_equal(greedy_repair(sol, unplanned, data, cost_eval), sol)
+    assert_equal(greedy_repair(sol, [], data, cost_eval), sol)
 
     # This is also true when the solution is not complete: greedy repair only
     # reinserts what's in unplanned.
     sol = Solution(data, [[2, 3, 4]])
     assert_(not sol.is_complete())
-    assert_equal(greedy_repair(sol, unplanned, data, cost_eval), sol)
+    assert_equal(greedy_repair(sol, [], data, cost_eval), sol)
 
 
 def test_after_depot():
@@ -71,8 +54,7 @@ def test_after_depot():
     # We want to insert client 4 into the following single-route solution. It
     # is optimal to do so directly after the depot, just before client 3.
     sol = Solution(data, [[3, 2, 1]])
-    unplanned = DynamicBitset(data.num_clients + 1)
-    unplanned[4] = True
+    unplanned = [4]
 
     # The greedy repair operator inserts into *existing* routes; it does not
     # create new ones.
@@ -92,9 +74,7 @@ def test_OkSmall():
     # 3, so it would be cheapest to insert these into the second route, as
     # 1 -> 3 -> 4.
     sol = Solution(data, [[2], [3]])
-    unplanned = DynamicBitset(data.num_clients + 1)
-    unplanned[1] = True
-    unplanned[4] = True
+    unplanned = [1, 4]
 
     repaired = greedy_repair(sol, unplanned, data, cost_eval)
     assert_equal(repaired, Solution(data, [[2], [1, 3, 4]]))
@@ -119,9 +99,7 @@ def test_RC208(seed: int):
     to_repair = Solution(data, [[idx + 1] for idx in range(data.num_vehicles)])
 
     cost_eval = CostEvaluator(1, 1)
-    unplanned = DynamicBitset(data.num_clients + 1)
-    for client in range(data.num_vehicles + 1, data.num_clients + 1):
-        unplanned[client] = True
+    unplanned = list(range(data.num_vehicles + 1, data.num_clients + 1))
 
     # Greedily repair the solution by inserting all clients that are not
     # already in the dummy routes.

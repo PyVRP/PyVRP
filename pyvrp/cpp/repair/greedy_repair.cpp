@@ -6,7 +6,6 @@
 #include <cassert>
 
 using pyvrp::CostEvaluator;
-using pyvrp::DynamicBitset;
 using pyvrp::ProblemData;
 using pyvrp::Solution;
 using pyvrp::search::n;
@@ -105,7 +104,7 @@ pyvrp::Cost evaluate(Route::Node *U,
 }  // namespace
 
 Solution pyvrp::repair::greedyRepair(Solution const &solution,
-                                     DynamicBitset const &unplanned,
+                                     std::vector<size_t> const &unplanned,
                                      ProblemData const &data,
                                      CostEvaluator const &costEvaluator)
 {
@@ -113,22 +112,19 @@ Solution pyvrp::repair::greedyRepair(Solution const &solution,
 }
 
 Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
-                                     DynamicBitset const &unplanned,
+                                     std::vector<size_t> const &unplanned,
                                      ProblemData const &data,
                                      CostEvaluator const &costEvaluator)
 {
-    if (solRoutes.empty() && unplanned.count())
+    if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
 
     Clients clients;
     Routes routes;
     setupRoutes(clients, routes, solRoutes, data);
 
-    for (size_t client = 1; client <= data.numClients(); ++client)
+    for (auto const client : unplanned)
     {
-        if (!unplanned[client])
-            continue;
-
         Route::Node *U = &clients[client];
         assert(!U->route());
 
