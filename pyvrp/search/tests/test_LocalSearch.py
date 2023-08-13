@@ -71,8 +71,11 @@ def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
     data = read("data/OkSmall.txt")
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours = [[client] for client in range(data.num_clients + 1)]
+    neighbours = [[], [2], [3], [4], [0]]  # 4 has depot as neighbour
+    with assert_raises(RuntimeError):
+        LocalSearch(data, rng, neighbours)
 
+    neighbours = [[], [1], [3], [4], [1]]  # 1 has itself as neighbour
     with assert_raises(RuntimeError):
         LocalSearch(data, rng, neighbours)
 
