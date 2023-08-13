@@ -185,4 +185,33 @@ def test_best_initial_solution():
     assert_equal(result.best, bks)
 
 
+def test_infeasible_offspring_is_repaired():
+    """
+    Tests that infeasible offspring will be repaired if the repair probability
+    is 1.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    bks = Solution(data, read_solution("data/RC208.sol"))
+
+    pm = PenaltyManager()
+    rng = RandomNumberGenerator(seed=42)
+    pop = Population(bpd)
+
+    init = [Solution.make_random(data, rng) for _ in range(25)]
+    params = GeneticAlgorithmParams(repair_probability=1.0)
+
+    def search(sol, cost_eval):
+        # When a solution is being repaired, a special booster evaluator is
+        # used. In that case we return the BKS, which should become the new
+        # best solution. Else we return the given solution.
+        return bks if cost_eval == pm.get_booster_cost_evaluator() else sol
+
+    # We should have repaired at least once, since we start with a large
+    # solution of random (mostly infeasible) solutions. Since we return the
+    # BKS in that case, the resulting best solution should be the BKS as well.
+    algo = GeneticAlgorithm(data, pm, rng, pop, search, srex, init, params)
+    res = algo.run(stop=MaxIterations(25))
+    assert_equal(res.best, bks)
+
+
 # TODO more functional tests
