@@ -15,6 +15,8 @@ from pyvrp._pyvrp import (
     VehicleType,
 )
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
+from pyvrp.crossover import selective_route_exchange as srex
+from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import StoppingCriterion
 
@@ -253,10 +255,8 @@ class Model:
         Result
             The solution result object, containing the best found solution.
         """
-        # These cause import issues (circular, double naming), so the imports
-        # need to be postponed to here (where they are actually used).
-        from pyvrp.crossover import selective_route_exchange as srex
-        from pyvrp.diversity import broken_pairs_distance as bpd
+        # These cause a circular import, so the imports needed to be postponed
+        # to here (where they are actually used).
         from pyvrp.search import (
             NODE_OPERATORS,
             ROUTE_OPERATORS,
