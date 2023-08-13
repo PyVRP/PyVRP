@@ -78,3 +78,29 @@ def test_eq(num_iterations: int):
 
         assert_(stats.feas_stats[0] != "test")
         assert_(stats.infeas_stats[0] != "test")
+
+
+def test_more_eq():
+    cost_evaluator = CostEvaluator(20, 6)
+    pop = Population(broken_pairs_distance)
+    assert_equal(len(pop), 0)
+
+    stats1 = Statistics()
+    stats2 = Statistics()
+
+    assert_equal(stats1, stats2)
+    assert_(stats1, stats1)
+    assert_(stats1 != "str")
+
+    stats1.collect_from(pop, cost_evaluator)
+    assert_(stats1 != stats2)
+
+    # Now do the same thing for stats2, so they have the seen the exact same
+    # population trajectory. That, however, is not enough: the runtimes are
+    # still slightly different.
+    stats2.collect_from(pop, cost_evaluator)
+    assert_(stats1 != stats2)
+
+    # But once we fix that the two should be the exact same again.
+    stats2.runtimes = stats1.runtimes
+    assert_equal(stats1, stats2)
