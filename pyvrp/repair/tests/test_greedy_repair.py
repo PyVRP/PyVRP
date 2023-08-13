@@ -1,6 +1,7 @@
+import pytest
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import CostEvaluator, DynamicBitset, Solution
+from pyvrp import CostEvaluator, DynamicBitset, RandomNumberGenerator, Solution
 from pyvrp.repair import greedy_repair
 from pyvrp.tests.helpers import read
 
@@ -58,3 +59,36 @@ def test_OkSmall():
 
     repaired = greedy_repair(sol, unplanned, data, cost_eval)
     assert_equal(repaired, Solution(data, [[2], [1, 3, 4]]))
+
+
+@pytest.mark.parametrize("seed", [0, 13, 42])
+def test_RC208(seed: int):
+    """
+    This smoke test checks that greedy repair is better than random on a larger
+    instance, for several seeds.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    assert_(data.num_vehicles < data.num_clients)
+
+    # Let's first create a random solution that uses all vehicles.
+    rng = RandomNumberGenerator(seed=seed)
+    random = Solution.make_random(data, rng)
+    assert_equal(random.num_routes(), data.num_vehicles)
+
+    # Let's next create the solution we want to repair. To ensure we use the
+    # same number of vehicles, we initialise this solution with dummy routes.
+    to_repair = Solution(data, [[idx + 1] for idx in range(data.num_vehicles)])
+
+    cost_eval = CostEvaluator(1, 1)
+    unplanned = DynamicBitset(data.num_clients + 1)
+    for client in range(data.num_vehicles + 1, data.num_clients + 1):
+        unplanned[client] = True
+
+    # Greedily repair the solution by inserting all clients that are not
+    # already in the dummy routes.
+    greedy = greedy_repair(to_repair, unplanned, data, cost_eval)
+
+    # The greedy solution should be (quite a bit) better than random.
+    random_cost = cost_eval.penalised_cost(random)
+    greedy_cost = cost_eval.penalised_cost(greedy)
+    assert_(greedy_cost < random_cost)
