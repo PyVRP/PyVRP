@@ -37,7 +37,7 @@ Solution greedyRepair(Solution const &solution,
                       ProblemData const &data,
                       CostEvaluator const &costEvaluator);
 
-// Convenient for use on the C++ side.
+// Convenient overload
 Solution greedyRepair(std::vector<Solution::Route> const &routes,
                       DynamicBitset const &unplanned,
                       ProblemData const &data,

@@ -1,7 +1,13 @@
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import CostEvaluator, DynamicBitset, RandomNumberGenerator, Solution
+from pyvrp import (
+    CostEvaluator,
+    DynamicBitset,
+    RandomNumberGenerator,
+    Route,
+    Solution,
+)
 from pyvrp.repair import greedy_repair
 from pyvrp.tests.helpers import read
 
@@ -14,7 +20,7 @@ def test_raises_given_no_routes_and_unplanned_clients():
     unplanned = DynamicBitset(data.num_clients + 1)
 
     # This call should not raise since unplanned is empty: there are no routes
-    # to insert into, which is OK since have nothing to insert.
+    # to insert into, which is OK since we have nothing to insert.
     assert_equal(unplanned.count(), 0)
     greedy_repair(empty, unplanned, data, cost_eval)
 
@@ -23,6 +29,20 @@ def test_raises_given_no_routes_and_unplanned_clients():
     assert_equal(unplanned.count(), 1)
     with assert_raises(ValueError):
         greedy_repair(empty, unplanned, data, cost_eval)
+
+
+def test_insert_into_empty_route():
+    data = read("data/OkSmall.txt")
+    cost_eval = CostEvaluator(1, 1)
+
+    # We want to insert client one into an empty route. That should result in
+    # a solution that has a single route with just client 1.
+    routes = [Route(data, [], 0)]
+    unplanned = DynamicBitset(data.num_clients + 1)
+    unplanned[1] = True
+
+    greedy = greedy_repair(routes, unplanned, data, cost_eval)
+    assert_equal(greedy, Solution(data, [[1]]))
 
 
 def test_empty_unplanned_is_a_no_op():
