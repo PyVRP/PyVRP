@@ -171,10 +171,9 @@ def benchmark_solve(instance: Path, **kwargs):
     solution (of type ``Solution``) cannot be pickled.
     """
     res = solve(instance, **kwargs)
-    instance_name = Path(instance).stem
 
     return (
-        instance_name,
+        instance.stem,
         "Y" if res.is_feasible() else "N",
         round(res.cost(), 2),
         res.num_iterations,
