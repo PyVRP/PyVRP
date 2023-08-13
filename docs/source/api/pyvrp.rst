@@ -83,6 +83,11 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: ProblemData
       :members:
 
+   .. autoclass:: DynamicBitset
+      :members:
+      :special-members: __and__, __or__, __xor__, __getitem__, __setitem__,
+                        __invert__, __len__, __eq__
+
    .. autoclass:: RandomNumberGenerator
       :members:
       :special-members: __call__
