@@ -59,6 +59,7 @@ intersphinx_disabled_domains = ["std"]
 templates_path = ["_templates"]
 
 add_module_names = False
+python_use_unqualified_type_names = True
 
 # -- Options for HTML output
 html_theme = "sphinx_immaterial"

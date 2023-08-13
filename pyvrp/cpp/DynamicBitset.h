@@ -7,9 +7,20 @@
 namespace pyvrp
 {
 /**
- * A simple dynamic bitset implementation, on top of a vector of bitsets. See
- * https://en.cppreference.com/w/cpp/utility/bitset for details.
+ * DynamicBitset(num_bits: int)
+ *
+ * A simple dynamic bitset implementation. This class functions as a fast set
+ * for membership checks on the integers. That is particularly useful for
+ * testing if e.g. clients are in a solution or not.
+ *
+ * Parameters
+ * ----------
+ * num_bits
+ *     Number of integers in ``[0, num_bits)`` this bitset must be able to
+ *     store. If ``num_bits`` is not a multiple of ``BLOCK_SIZE``, the actual
+ *     size is rounded up towards the next multiple.
  */
+// See https://en.cppreference.com/w/cpp/utility/bitset for further information.
 class DynamicBitset
 {
     static constexpr size_t BLOCK_SIZE = 64;

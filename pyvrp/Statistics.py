@@ -1,5 +1,5 @@
 import csv
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, fields
 from math import nan
 from pathlib import Path
 from statistics import fmean
@@ -41,7 +41,6 @@ class _Datum:
         )
 
 
-@dataclass
 class Statistics:
     """
     The Statistics object tracks various (population-level) statistics of
@@ -49,13 +48,27 @@ class Statistics:
     performance.
     """
 
-    runtimes: List[float] = field(default_factory=list)
-    num_iterations: int = 0
-    feas_stats: List[_Datum] = field(default_factory=list)
-    infeas_stats: List[_Datum] = field(default_factory=list)
+    runtimes: List[float]
+    num_iterations: int
+    feas_stats: List[_Datum]
+    infeas_stats: List[_Datum]
 
-    def __post_init__(self):
+    def __init__(self):
+        self.runtimes = []
+        self.num_iterations = 0
+        self.feas_stats = []
+        self.infeas_stats = []
+
         self._clock = perf_counter()
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, Statistics)
+            and self.runtimes == other.runtimes
+            and self.num_iterations == other.num_iterations
+            and self.feas_stats == other.feas_stats
+            and self.infeas_stats == other.infeas_stats
+        )
 
     def collect_from(
         self, population: Population, cost_evaluator: CostEvaluator
