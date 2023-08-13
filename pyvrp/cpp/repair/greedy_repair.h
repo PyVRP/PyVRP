@@ -41,7 +41,33 @@ Solution greedyRepair(Solution const &solution,
                       ProblemData const &data,
                       CostEvaluator const &costEvaluator);
 
-// Convenient overload
+/**
+ * Greedy repair operator. This operator inserts each client in the list of
+ * unplanned clients into the given routes. It does so by evaluating all
+ * possible moves and applying the best one for each client, resulting in a
+ * quadratic runtime.
+ *
+ * Parameters
+ * ----------
+ * routes
+ *     List of routes to insert the unplanned clients into.
+ * unplanned
+ *     Unplanned clients to insert into the solution.
+ * data
+ *     Problem data instance.
+ * cost_evaluator
+ *     Cost evaluator to use when evaluating insertion moves.
+ *
+ * Returns
+ * -------
+ * Solution
+ *     The repaired solution.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When the solution is empty but the list of unplanned clients is not.
+ */
 Solution greedyRepair(std::vector<Solution::Route> const &routes,
                       std::vector<size_t> const &unplanned,
                       ProblemData const &data,

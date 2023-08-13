@@ -18,7 +18,7 @@ PYBIND11_MODULE(_repair, m)
           py::arg("unplanned"),
           py::arg("data"),
           py::arg("cost_evaluator"),
-          DOC(pyvrp, repair, greedyRepair));
+          DOC(pyvrp, repair, greedyRepair, 1));
 
     m.def("greedy_repair",
           py::overload_cast<std::vector<pyvrp::Solution::Route> const &,
@@ -30,5 +30,5 @@ PYBIND11_MODULE(_repair, m)
           py::arg("unplanned"),
           py::arg("data"),
           py::arg("cost_evaluator"),
-          DOC(pyvrp, repair, greedyRepair));
+          DOC(pyvrp, repair, greedyRepair, 2));
 }
