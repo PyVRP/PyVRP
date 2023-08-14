@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_allclose, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_raises
 from pytest import mark
 
 from pyvrp import Client, ProblemData, VehicleType
@@ -202,3 +202,53 @@ def test_matrix_access():
         for to in range(size):
             assert_allclose(data.dist(frm, to), dist_mat[frm, to])
             assert_allclose(data.duration(frm, to), dur_mat[frm, to])
+
+
+def test_matrices_are_not_writeable():
+    data = ProblemData(
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=np.array([[0]]),
+        duration_matrix=np.array([[0]]),
+    )
+
+    dist_mat = data.distance_matrix()
+    dur_mat = data.duration_matrix()
+
+    with assert_raises(ValueError):
+        dist_mat[0, 0] = 1_000
+
+    with assert_raises(ValueError):
+        dur_mat[0, 0] = 1_000
+
+
+def test_matrices_are_not_copies():
+    """
+    The matrices returned by ``distance_matrix()`` and ``duration_matrix()``
+    offer views into data owned by the underlying ``ProblemData`` instance.
+    There is no copying going on when accessing this data.
+    """
+    mat = np.array([[0, 0], [0, 0]])
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=0, y=1)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=mat,
+        duration_matrix=mat,
+    )
+
+    # Ownership is taken, so the memory that's referenced is not that of the
+    # matrices that are passed into ProblemData's constructor.
+    assert_(data.distance_matrix().base is not mat)
+    assert_(data.duration_matrix().base is not mat)
+
+    # Repeated calls should return matrices that reference the same base data,
+    # implying nothing is copied: the memory is not owned by the matrix.
+    dist1 = data.distance_matrix()
+    dist2 = data.distance_matrix()
+    assert_(not dist1.flags["OWNDATA"])
+    assert_(dist1.base is dist2.base)
+
+    dur1 = data.duration_matrix()
+    dur2 = data.duration_matrix()
+    assert_(not dur1.flags["OWNDATA"])
+    assert_(dur1.base is dur2.base)
