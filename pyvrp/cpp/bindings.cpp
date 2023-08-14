@@ -62,15 +62,21 @@ public:
 
     static py::handle cast(Matrix<T> const &src,  // C++ -> Python
                            [[maybe_unused]] py::return_value_policy policy,
-                           [[maybe_unused]] py::handle parent)
+                           py::handle parent)
     {
         auto constexpr elemSize = sizeof(pyvrp::Value);
 
-        py::array array
-            = {py::dtype::of<pyvrp::Value>(),                        // dtype
-               {src.numRows(), src.numCols()},                       // shape
-               {elemSize * src.numCols(), elemSize},                 // strides
-               reinterpret_cast<pyvrp::Value const *>(src.data())};  // data
+        py::array_t<pyvrp::Value> array
+            = {{src.numRows(), src.numCols()},                      // shape
+               {elemSize * src.numCols(), elemSize},                // strides
+               reinterpret_cast<pyvrp::Value const *>(src.data()),  // data
+               parent};                                             // base
+
+        // This is not pretty, but it makes the matrix non-writeable on the
+        // Python side. That's needed because src is const, and we should
+        // preserve that to avoid issues.
+        py::detail::array_proxy(array.ptr())->flags
+            &= ~py::detail::npy_api::NPY_ARRAY_WRITEABLE_;
 
         return array.release();
     }
@@ -199,9 +205,11 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, ProblemData, vehicleType))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
+             py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, distanceMatrix))
         .def("duration_matrix",
              &ProblemData::durationMatrix,
+             py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrix))
         .def(
             "dist",

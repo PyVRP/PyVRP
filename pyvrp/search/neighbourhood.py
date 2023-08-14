@@ -108,8 +108,8 @@ def _compute_proximity(
     data: ProblemData, weight_wait_time: float, weight_time_warp: float
 ) -> np.ndarray[float]:
     """
-    Computes proximity for neighborhood. Proximity is based on Vidal et al.
-    (2013).
+    Computes proximity for neighborhood. Proximity is based on [1]_, with
+    modification for additional VRP variants.
 
     Parameters
     ----------
@@ -133,17 +133,17 @@ def _compute_proximity(
     """
     clients = [data.client(idx) for idx in range(data.num_clients + 1)]
 
-    early = np.array([client.tw_early for client in clients])
-    late = np.array([client.tw_late for client in clients])
-    service = np.array([client.service_duration for client in clients])
-    prize = np.array([client.prize for client in clients])
+    early = np.asarray([client.tw_early for client in clients])
+    late = np.asarray([client.tw_late for client in clients])
+    service = np.asarray([client.service_duration for client in clients])
+    prize = np.asarray([client.prize for client in clients])
     duration = np.asarray(data.duration_matrix(), dtype=float)
 
     min_wait_time = early[..., :] - duration - service[:, ...] - late[:, ...]
     min_time_warp = early[:, ...] + service[:, ...] + duration - late[..., :]
 
     return (
-        data.distance_matrix()
+        np.asarray(data.distance_matrix(), dtype=float)
         + weight_wait_time * np.maximum(min_wait_time, 0)
         + weight_time_warp * np.maximum(min_time_warp, 0)
         - prize[..., :]
