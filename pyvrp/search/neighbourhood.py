@@ -108,8 +108,7 @@ def _compute_proximity(
     data: ProblemData, weight_wait_time: float, weight_time_warp: float
 ) -> np.ndarray[float]:
     """
-    Computes proximity for neighborhood. Proximity is based on Vidal et al.
-    (2013).
+    Computes proximity for neighborhood. Proximity is based on [1]_.
 
     Parameters
     ----------
