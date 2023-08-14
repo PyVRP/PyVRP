@@ -202,3 +202,21 @@ def test_matrix_access():
         for to in range(size):
             assert_allclose(data.dist(frm, to), dist_mat[frm, to])
             assert_allclose(data.duration(frm, to), dur_mat[frm, to])
+
+
+def test_matrices_are_not_writeable():
+    data = ProblemData(
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=np.array([[0]]),
+        duration_matrix=np.array([[0]]),
+    )
+
+    dist_mat = data.distance_matrix()
+    dur_mat = data.duration_matrix()
+
+    with assert_raises(ValueError):
+        dist_mat[0, 0] = 1_000
+
+    with assert_raises(ValueError):
+        dur_mat[0, 0] = 1_000
