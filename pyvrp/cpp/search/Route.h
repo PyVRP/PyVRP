@@ -231,6 +231,7 @@ public:
     void update();
 
     Route(ProblemData const &data, size_t idx, size_t vehicleType);
+    ~Route();
 };
 
 /**

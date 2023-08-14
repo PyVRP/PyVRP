@@ -20,6 +20,8 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     clear();
 }
 
+Route::~Route() { clear(); }
+
 Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
     : cumDist(0),
       cumLoad(0),
