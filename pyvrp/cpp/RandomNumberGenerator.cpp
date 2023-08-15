@@ -3,11 +3,13 @@
 using pyvrp::RandomNumberGenerator;
 
 RandomNumberGenerator::RandomNumberGenerator(uint32_t seed)
+    : state_{seed, 123456789, 362436069, 521288629}
 {
-    state_[0] = seed;
-    state_[1] = 123456789;
-    state_[2] = 362436069;
-    state_[3] = 521288629;
+}
+
+RandomNumberGenerator::RandomNumberGenerator(std::array<uint32_t, 4> state)
+    : state_(std::move(state))
+{
 }
 
 RandomNumberGenerator::result_type RandomNumberGenerator::operator()()
@@ -26,4 +28,9 @@ RandomNumberGenerator::result_type RandomNumberGenerator::operator()()
 
     // Return the new random number
     return state_[0] = t ^ s ^ (s >> 19);
+}
+
+std::array<uint32_t, 4> const &RandomNumberGenerator::state() const
+{
+    return state_;
 }

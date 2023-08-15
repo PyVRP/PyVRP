@@ -678,9 +678,11 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<RandomNumberGenerator>(
         m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))
         .def(py::init<uint32_t>(), py::arg("seed"))
+        .def(py::init<std::array<uint32_t, 4>>(), py::arg("state"))
         .def("min", &RandomNumberGenerator::min)
         .def("max", &RandomNumberGenerator::max)
         .def("__call__", &RandomNumberGenerator::operator())
         .def("rand", &RandomNumberGenerator::rand<double>)
-        .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"));
+        .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"))
+        .def("state", &RandomNumberGenerator::state);
 }

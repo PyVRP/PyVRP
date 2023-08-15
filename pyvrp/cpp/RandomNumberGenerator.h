@@ -1,6 +1,7 @@
 #ifndef PYVRP_RANDOMNUMBERGENERATOR_H
 #define PYVRP_RANDOMNUMBERGENERATOR_H
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -23,12 +24,13 @@ namespace pyvrp
  */
 class RandomNumberGenerator
 {
-    uint32_t state_[4]{};
+    std::array<uint32_t, 4> state_;
 
 public:
     typedef uint32_t result_type;
 
     explicit RandomNumberGenerator(uint32_t seed);
+    explicit RandomNumberGenerator(std::array<uint32_t, 4> state);
 
     /**
      * @return The minimum value this pRNG can generate.
@@ -62,6 +64,12 @@ public:
      * @return A pseudo-random integer.
      */
     template <typename T> result_type randint(T high);
+
+    /**
+     * Returns the internal RNG state.
+     */
+    // Could be useful for debugging.
+    std::array<uint32_t, 4> const &state() const;
 };
 
 constexpr size_t RandomNumberGenerator::min()

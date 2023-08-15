@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
@@ -39,3 +41,9 @@ def test_rand(seed: int):
     assert_allclose(sample.mean(), 1 / 2, atol=1e-3)
     assert_allclose(sample.var(), 1 / 12, atol=1e-3)
     assert_(0 <= sample.min() < sample.max() <= 1)
+
+
+@mark.parametrize("state", [[1, 2, 3, 4], [10, 14, 274, 83]])
+def test_rng_has_given_state(state: List[int]):
+    rng = RandomNumberGenerator(state=state)
+    assert_equal(rng.state(), state)
