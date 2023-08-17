@@ -212,7 +212,7 @@ def test_never_repairs_when_zero_repair_probability():
     # manager. This should be OK.
     ga_params = GeneticAlgorithmParams(repair_probability=1.0)
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, ga_params)
-    algo.run(MaxIterations(5))
+    algo.run(MaxIterations(50))
 
     # Now we patch the penalty manager: when asked for a booster cost evaluator
     # (as used during repair), this will now raise a runtime error. Since the
@@ -222,10 +222,10 @@ def test_never_repairs_when_zero_repair_probability():
 
     pm.get_booster_cost_evaluator = MethodType(raise_when_called, pm)
     with assert_raises(RuntimeError):
-        algo.run(MaxIterations(5))
+        algo.run(MaxIterations(50))
 
     # But when we set the repair probability to 0%, the booster is no longer
     # needed, and nothing should raise.
     ga_params = GeneticAlgorithmParams(repair_probability=0.0)
     algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, ga_params)
-    algo.run(MaxIterations(5))
+    algo.run(MaxIterations(50))
