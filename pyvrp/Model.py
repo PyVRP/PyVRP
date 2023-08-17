@@ -181,6 +181,13 @@ class Model:
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
 
+        if max(distance, duration) > MAX_USER_VALUE:
+            msg = """
+            The given distance or duration value is very large. This may impact
+            numerical stability. Consider rescaling your input data.
+            """
+            warn(msg, ScalingWarning)
+
         edge = Edge(frm, to, distance, duration)
         self._edges.append(edge)
         return edge
@@ -215,16 +222,6 @@ class Model:
         """
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
-
-        if self._edges:
-            max_value = max(max(e.distance, e.duration) for e in self._edges)
-
-            if max_value > MAX_USER_VALUE:
-                msg = """
-                The maximum distance or duration value is very large. This may
-                impact numerical stability. Consider rescaling your input data.
-                """
-                warn(msg, ScalingWarning)
 
         # Default value is a sufficiently large value to make sure any edges
         # not set below are never traversed.

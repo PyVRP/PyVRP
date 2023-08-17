@@ -137,6 +137,11 @@ def test_initial_solutions_added_when_restarting():
 
 
 def test_best_solution_improves_with_more_iterations():
+    """
+    Tests that additional iterations result in better solutions. This is a
+    smoke test that checks at least something's improving during the GA's
+    execution.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager()
