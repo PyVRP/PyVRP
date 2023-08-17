@@ -412,8 +412,8 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot():
 
 def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     """
-    Tests the time window segment acess on a single-route solution where we
-    know exactly where the time warp is.
+    Tests time window segment access on a single-route solution where we know
+    exactly where in the route time warp occurs.
     """
     data = read("data/OkSmall.txt")
 

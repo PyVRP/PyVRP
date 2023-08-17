@@ -65,7 +65,7 @@ def test_merge_three():
 def test_merging_two_previously_merged_tws():
     """
     This test evaluates what happens when we merge two previously merged
-    segments, where both have time warp.
+    segments, when both have time warp.
     """
     time_warp = 1
     tws1 = TimeWindowSegment(0, 0, 5, time_warp, 0, 5, 0)  # depot
@@ -91,7 +91,7 @@ def test_merging_two_previously_merged_tws():
     # makes for 2 + 1 + 1 = 4 total time warp.
     assert_equal(merged12.total_time_warp(), 4)
 
-    # We can leave at the earliest as t = 3, the start of the client's time
+    # We can leave at the earliest at t = 3, the start of the client's time
     # window. We then arrive at t = 6, which adds one unit of time warp.
     # Combined with the initial time warp, this results in 1 + 1 + 1 = 3 units
     # of total time warp.

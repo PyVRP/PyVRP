@@ -18,7 +18,7 @@ from pyvrp.tests.helpers import make_heterogeneous, read
 
 def test_route_constructor_raises_for_empty_routes():
     """
-    Tests that construction a ``Solution`` with empty routes fails.
+    Tests that constructing a ``Solution`` with empty routes fails.
     """
     data = read("data/OkSmall.txt")
 
