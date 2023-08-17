@@ -1,3 +1,5 @@
+from math import sqrt
+
 from numpy.testing import assert_equal, assert_raises, assert_warns
 from pytest import mark
 
@@ -200,4 +202,40 @@ def test_warns_about_scaling_issues():
         read("data/ReallyLargeDistance.txt")
 
 
-# TODO test round funcs
+def test_round_func_trunc1_and_dimacs_are_same():
+    """
+    Tests that the DIMACS convention is equivalent to truncating to the first
+    decimal.
+    """
+    trunc1 = read("data/RC208.txt", "solomon", "trunc1")
+    dimacs = read("data/RC208.txt", "solomon", "dimacs")
+
+    trunc1_dist = trunc1.distance_matrix()
+    dimacs_dist = dimacs.distance_matrix()
+    assert_equal(trunc1_dist, dimacs_dist)
+
+    trunc1_dur = trunc1.duration_matrix()
+    dimacs_dur = trunc1.duration_matrix()
+    assert_equal(trunc1_dur, dimacs_dur)
+
+
+def test_round_func_round_nearest():
+    """
+    Tests rounding to the nearest integer works well for the RC208 instance,
+    which has Euclidean distances computed from integer coordinates. Since the
+    instance is large, we'll test one particular distance.
+    """
+    data = read("data/RC208.txt", "solomon", "round")
+
+    # We're going to test dist(0, 1) and dist(1, 0), which should be the same
+    # since the distances are symmetric/Euclidean.
+    assert_equal(data.client(0).x, 40)
+    assert_equal(data.client(0).y, 50)
+
+    assert_equal(data.client(1).x, 25)
+    assert_equal(data.client(1).y, 85)
+
+    # Compute the distance, and assert that it is indeed correctly rounded.
+    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
+    assert_equal(data.dist(0, 1), round(dist))
+    assert_equal(data.dist(1, 0), round(dist))
