@@ -20,11 +20,17 @@ from pyvrp.tests.helpers import read
     ],
 )
 def test_raises_invalid_file(where: str, exception: Exception):
+    """
+    Tests that ``read()`` raises when there are issues with the given file.
+    """
     with assert_raises(exception):
         read(where)
 
 
 def test_raises_unknown_round_func():
+    """
+    Tests that ``read()`` raises when the rounding function is not known.
+    """
     with assert_raises(TypeError):
         # Unknown round_func, so should raise.
         read("data/OkSmall.txt", round_func="asdbsadfas")
@@ -34,6 +40,9 @@ def test_raises_unknown_round_func():
 
 
 def test_reading_OkSmall_instance():
+    """
+    Tests that the parsed data from the "OkSmall" instance is correct.
+    """
     data = read("data/OkSmall.txt")
 
     # From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
@@ -98,6 +107,9 @@ def test_reading_OkSmall_instance():
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB
+    """
+    Tests that the small E-n22-k4 instance from CVRPLIB is correctly parsed.
+    """
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
     assert_equal(data.num_clients, 21)
@@ -132,6 +144,9 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
 
 
 def test_reading_RC208_instance():  # Solomon style instance
+    """
+    Tests that a Solomon-style VRPTW instance is correctly parsed.
+    """
     data = read(
         "data/RC208.txt", instance_format="solomon", round_func="trunc1"
     )
@@ -174,9 +189,11 @@ def test_reading_RC208_instance():  # Solomon style instance
         assert_equal(data.client(client).required, True)
 
 
-def test_warns_about_scaling_issues(recwarn):
-    # But 100 million is too large. That's really close to INT_MAX, and might
-    # result in issues. So now a warning should be issued.
+def test_warns_about_scaling_issues():
+    """
+    Tests that ``read()`` warns about scaling issues when a distance value is
+    very large.
+    """
     with assert_warns(ScalingWarning):
         # The arc from the depot to client 4 is really large (one billion), so
         # that should trigger a warning.
