@@ -6,12 +6,19 @@ from pyvrp._pyvrp import TimeWindowSegment
 
 
 @mark.parametrize("existing_time_warp", [2, 5, 10])
-def test_total_time_warp(existing_time_warp):
+def test_total_time_warp_when_there_is_existing_time_warp(existing_time_warp):
+    """
+    Tests that the ``total_time_warp()`` returns existing time warp when no
+    segments have been merged yet.
+    """
     tws1 = TimeWindowSegment(0, 0, 0, existing_time_warp, 0, 0, 0)
     assert_equal(tws1.total_time_warp(), existing_time_warp)
 
 
 def test_merge_two():
+    """
+    Tests merging two time window segments.
+    """
     tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0)
     tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6, 0)
 
@@ -33,7 +40,10 @@ def test_merge_two():
     assert_equal(merged.total_time_warp(), 11)
 
 
-def test_merge_multiple():
+def test_merge_three():
+    """
+    Tests merging three time window segments.
+    """
     tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0)
     tws2 = TimeWindowSegment(1, 1, 0, 0, 3, 6, 0)
     tws3 = TimeWindowSegment(2, 2, 0, 0, 2, 3, 2)
