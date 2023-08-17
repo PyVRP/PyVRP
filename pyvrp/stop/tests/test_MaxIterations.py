@@ -22,13 +22,21 @@ def test_does_not_raise(max_iterations: int):
 
 
 def test_before_max_iterations():
+    """
+    Tests that ``MaxIterations`` does not stop *before* the number of
+    iterations have passed.
+    """
     stop = MaxIterations(100)
 
-    for _ in range(100):
+    for _ in range(100):  # stop *after* 100 iterations, not before
         assert_(not stop(1))
 
 
 def test_after_max_iterations():
+    """
+    Tests that after the number of iterations have passed, ``MaxIterations``
+    stops.
+    """
     stop = MaxIterations(100)
 
     for _ in range(100):
