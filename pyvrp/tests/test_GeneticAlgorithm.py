@@ -1,3 +1,5 @@
+from types import MethodType
+
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
@@ -5,6 +7,7 @@ from pyvrp import (
     GeneticAlgorithm,
     GeneticAlgorithmParams,
     PenaltyManager,
+    PenaltyParams,
     Population,
     PopulationParams,
     RandomNumberGenerator,
@@ -190,4 +193,39 @@ def test_best_initial_solution():
     assert_equal(result.best, bks)
 
 
-# TODO more functional tests
+def test_never_repairs_when_zero_repair_probability():
+    """
+    Tests that the genetic algorithm does not repair when the repair
+    probability parameter is set to zero.
+    """
+    data = read("data/RC208.txt", "solomon", "dimacs")
+    rng = RandomNumberGenerator(seed=42)
+    pm = PenaltyManager(PenaltyParams(repair_booster=10))
+    pop = Population(bpd)
+
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    init = [Solution.make_random(data, rng) for _ in range(25)]
+
+    # Repair probability 100%, but we're still using the unpatched penalty
+    # manager. This should be OK.
+    ga_params = GeneticAlgorithmParams(repair_probability=1.0)
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, ga_params)
+    algo.run(MaxIterations(5))
+
+    # Now we patch the penalty manager: when asked for a booster cost evaluator
+    # (as used during repair), this will now raise a runtime error. Since the
+    # repair probability is still 100%, this should certainly raise.
+    def raise_when_called(self):
+        raise RuntimeError
+
+    pm.get_booster_cost_evaluator = MethodType(raise_when_called, pm)
+    with assert_raises(RuntimeError):
+        algo.run(MaxIterations(5))
+
+    # But when we set the repair probability to 0%, the booster is no longer
+    # needed, and nothing should raise.
+    ga_params = GeneticAlgorithmParams(repair_probability=0.0)
+    algo = GeneticAlgorithm(data, pm, rng, pop, ls, srex, init, ga_params)
+    algo.run(MaxIterations(5))

@@ -196,9 +196,6 @@ def test_select_returns_same_parents_if_no_other_option():
     assert_(900 < different_parents < 1_000)
 
 
-# TODO test more select() - diversity, feas/infeas pairs
-
-
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
     """
     Tests that the population can never grow when it starts empty and the
