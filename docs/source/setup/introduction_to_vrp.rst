@@ -6,6 +6,7 @@ The overarching goal of the VRP is to determine a set of vehicle routes to fulfi
 
 .. figure:: ../assets/images/introduction-to-vrp.svg
    :alt: A vehicle routing problem
+   :figwidth: 100%
 
 Motivated by the enormous potential for cost savings, creating algorithms to compute cost-efficient solutions has been a primary focus for VRP researchers.
 While finding a feasible solution for a given VRP is often relatively simple, obtaining the optimal solution can be considerably more complex as most VRP variants are classified as `NP-hard <https://en.wikipedia.org/wiki/NP-hardness>`_.
@@ -29,6 +30,11 @@ The vertex set :math:`V` is partitioned into :math:`V=\{0\} \cup V_c`, where :ma
 Each arc :math:`(i, j) \in A` has a weight :math:`d_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
 A fleet of vehicles :math:`K = \{1, 2, \dots, |K| \}` is assumed to be available at the depot.
 
+.. note::
+
+   If the VRP variant you are interested in is not listed here, it might still be possible to add support for it to PyVRP.
+   If you're interested in working on that, head over to the :doc:`contributing <../dev/contributing>` and :doc:`supporting new VRP variants <../dev/new_vrp_variants>` pages to get started!
+
 Capacitated vehicle routing problem
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -42,7 +48,7 @@ The objective is to find a feasible solution that minimises the total travelling
 Vehicle routing problem with time windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The vehicle routing problem with time windows (VRPTW) is a variant of the VRP that introduces timing constraints.
+The *vehicle routing problem with time windows* (VRPTW) is a variant of the VRP that introduces timing constraints.
 Each arc :math:`(i, j) \in A` has an additional parameter :math:`t_{ij}`, denoting the travel time from location :math:`i` to :math:`j`.
 Each client :math:`i \in V_c` has a demand :math:`q_{i} \ge 0`, a service time :math:`s_{i} \ge 0` and a time window :math:`\left[e_i, l_i\right]` that denotes the earliest and latest time that service can start at the client.
 A vehicle is allowed to arrive at a location before the beginning of the time window, but it must wait for the window to open to start the service.
