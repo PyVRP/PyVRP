@@ -31,6 +31,11 @@ def test_same_parents_same_offspring():
 
 
 def test_srex_empty_solution():
+    """
+    Tests that SREX returns the other parent when one of the solutions is
+    empty. This can occur during prize collecting, and in that case there are
+    no routes to exchange.
+    """
     data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -59,6 +64,9 @@ def test_srex_empty_solution():
     ],
 )
 def test_raise_invalid_arguments(idx1, idx2, num_moved_routes):
+    """
+    Tests that SREX raises when some of the arguments are invalid.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
