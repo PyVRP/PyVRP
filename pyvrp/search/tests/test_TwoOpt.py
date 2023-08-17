@@ -21,6 +21,9 @@ from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 def test_OkSmall_instance():
+    """
+    Test 2-OPT on the OkSmall instance where we know exactly what's going on.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -55,20 +58,18 @@ def test_OkSmall_instance():
         [VehicleType(8, 1), VehicleType(8, 1)],
     ],
 )
-def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
-    # This instance tests a two-opt move that is improving when disregarding
-    # the vehicle capacities. Depending on the (heterogeneous) capacities,
-    # the move may or may not be improving and should be applied or not
-    # The starting solution has routes [1, 3] and [2, 4] with demands 8, 10
-    # the 2-opt solution has routes [1, 4] and [2, 3] with demands 10, 8
-
+def test_OkSmall_multiple_vehicle_types(vehicle_types: List[VehicleType]):
+    """
+    This test evaluates a 2-OPT move that is improving for some of the vehicle
+    types, and not for others. Because the granular neighbourhood is very
+    constrained, only a single 2-OPT can be applied. When it's better to do so,
+    it should have been applied, and when it's not better, it should not.
+    """
     data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(10000, 6)  # Large capacity penalty
-    rng = RandomNumberGenerator(seed=42)
-
-    # Now making it heterogenous, the same move should result in capacity
-    # penalties and thus not be applied
     data = make_heterogeneous(data, vehicle_types)
+
+    cost_evaluator = CostEvaluator(10_000, 6)  # large capacity penalty
+    rng = RandomNumberGenerator(seed=42)
 
     neighbours: List[List[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)
@@ -81,7 +82,7 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
 
     assert_(not np.allclose(cost1, cost2))
 
-    # Using the local search, the result should not get worse
+    # Using the local search, the result should not get worse.
     improved_sol1 = ls.search(sol1, cost_evaluator)
     improved_sol2 = ls.search(sol2, cost_evaluator)
 
@@ -92,6 +93,9 @@ def test_OkSmall_heterogeneous_capacity(vehicle_types: List[VehicleType]):
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
 def test_RC208_instance(seed: int):
+    """
+    Test a larger instance over several seeds.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=seed)
