@@ -3,7 +3,7 @@
 This directory hosts the documentation. 
 We use Sphinx for this.
 The documentation has a few unique dependencies that are listed in the optional `docs` group in the top-level `pyproject.toml`.
-If you want to build the documentation, make sure to install that group (using `poetry install --with docs` or `--only docs`).
+If you want to build the documentation, make sure to install that group (using `poetry install --with docs,examples` or `--only docs`).
 
 The Makefile in this directory can be used to build the documentation.
 Running the command `poetry run make help` from this directory provides an overview of the available options.
