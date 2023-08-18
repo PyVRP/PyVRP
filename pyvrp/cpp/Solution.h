@@ -279,14 +279,14 @@ public:
     [[nodiscard]] Routes const &getRoutes() const;
 
     /**
-     * Returns a list of neighbours for each client, by index. Also includes
-     * the depot at index 0, which only neighbours itself.
+     * Returns a list of neighbours for each client, by index.
      *
      * Returns
      * -------
      * list
      *     A list of ``(pred, succ)`` tuples that encode for each client their
-     *     predecessor and successors in this solutions's routes.
+     *     predecessor and successors in this solutions's routes. ``None`` in
+     *     case the client is not in the solution (or is a depot).
      */
     [[nodiscard]] Neighbours const &getNeighbours() const;
 
