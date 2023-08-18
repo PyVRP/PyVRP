@@ -13,6 +13,10 @@ from pyvrp.tests.helpers import read
 
 
 def test_csv_serialises_correctly(tmp_path):
+    """
+    Tests that writing a CSV of a ``Statistics`` object and then reading that
+    CSV again returns the same object.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -39,6 +43,10 @@ def test_csv_serialises_correctly(tmp_path):
 
 @pytest.mark.parametrize("num_iterations", [0, 5])
 def test_stats_collects_a_data_point_per_iteration(num_iterations: int):
+    """
+    Tests that the statistics object collects on feasible and infeasible data
+    point every time ``collect_from`` is called.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -55,6 +63,9 @@ def test_stats_collects_a_data_point_per_iteration(num_iterations: int):
 
 @pytest.mark.parametrize("num_iterations", [0, 1, 10])
 def test_eq(num_iterations: int):
+    """
+    Tests the equality operator.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -81,6 +92,9 @@ def test_eq(num_iterations: int):
 
 
 def test_more_eq():
+    """
+    Tests the equality operator for the same population trajectory.
+    """
     cost_evaluator = CostEvaluator(20, 6)
     pop = Population(broken_pairs_distance)
     assert_equal(len(pop), 0)

@@ -24,6 +24,10 @@ def test_valid_parameters(max_runtime: float):
 
 @mark.parametrize("max_runtime", [0.01, 0.05, 0.10])
 def test_before_max_runtime(max_runtime):
+    """
+    Tests that ``MaxRuntime`` does not stop *before* the given runtime has
+    passed.
+    """
     stop = MaxRuntime(max_runtime)
 
     for _ in range(100):
@@ -32,6 +36,9 @@ def test_before_max_runtime(max_runtime):
 
 @mark.parametrize("max_runtime", [0.01, 0.05, 0.10])
 def test_after_max_runtime(max_runtime):
+    """
+    Tests that after the max runtime has passed, ``MaxRuntime`` stops.
+    """
     stop = MaxRuntime(max_runtime)
     assert_(not stop(1))  # trigger the first time measurement
 

@@ -15,6 +15,10 @@ from pyvrp.tests.helpers import read
 
 @mark.parametrize("nb_close", [5, 10, 25])
 def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
+    """
+    Tests that the average distance of a solution to other solutions only looks
+    at the nearest ``nb_close`` solutions.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=5)
@@ -49,6 +53,10 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
 
 
 def test_avg_distance_closest_for_single_route_solutions():
+    """
+    Tests that the closest computations are exactly right for a simple, single
+    route solution where it's easy to reason about what's going on.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=0, nb_close=10)
@@ -82,6 +90,10 @@ def test_avg_distance_closest_for_single_route_solutions():
 
 
 def test_fitness_is_purely_based_on_cost_when_only_elites():
+    """
+    Tests than when all solutions are considered elite, the fitness values
+    are completely determines by the solutions' cost.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=51)
@@ -114,6 +126,10 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
 
 
 def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
+    """
+    When there are no elite solutions, the fitness ranking averages the cost
+    and diversity rank.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=52)

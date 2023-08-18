@@ -38,6 +38,10 @@ def test_client_constructor_initialises_data_fields_correctly(
     release_time: int,
     prize: int,
 ):
+    """
+    Tests that the access properties return the data that was given to the
+    Client's constructor.
+    """
     client = Client(
         x, y, demand, service_duration, tw_early, tw_late, release_time, prize
     )
@@ -79,6 +83,9 @@ def test_raises_for_invalid_client_data(
     release_time: int,
     prize: int,
 ):
+    """
+    Tests that invalid configurations are not accepted.
+    """
     with assert_raises(ValueError):
         Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
 
@@ -101,6 +108,9 @@ def test_raises_for_invalid_depot_data(
     release_time: int,
     prize: int,
 ):
+    """
+    Tests that an invalid depot configuration is not accepted.
+    """
     depot = Client(
         x, y, demand, service, tw_early, tw_late, release_time, prize
     )
@@ -163,6 +173,9 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
 
 
 def test_centroid():
+    """
+    Tests the computation of the centroid of all clients in the data instance.
+    """
     data = read("data/OkSmall.txt")
 
     centroid = data.centroid()
@@ -205,6 +218,14 @@ def test_matrix_access():
 
 
 def test_matrices_are_not_writeable():
+    """
+    Tests that the data matrices provided by ``distance_matrix()`` and
+    ``duration_matrix()`` are not writeable. They can be read from, but
+    assigning new values should raise an error.
+
+    We require this because they're constant on the C++ side, and allowing
+    changes from Python causes undefined behaviour on the C++ side.
+    """
     data = ProblemData(
         clients=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, 2)],

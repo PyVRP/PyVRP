@@ -10,6 +10,9 @@ from pyvrp.tests.helpers import make_heterogeneous, read
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
 def test_node_init(loc: int):
+    """
+    Tests that after initialisation, a Node has index 0 and is not in a route.
+    """
     node = Node(loc=loc)
     assert_equal(node.client, loc)
     assert_equal(node.idx, 0)
@@ -18,6 +21,10 @@ def test_node_init(loc: int):
 
 @pytest.mark.parametrize(("idx", "vehicle_type"), [(0, 0), (1, 0), (1, 1)])
 def test_route_init(idx: int, vehicle_type: int):
+    """
+    Tests that after initialisation, a Route has the given index and vehicle
+    type.
+    """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, [VehicleType(1, 1), VehicleType(2, 2)])
 
@@ -28,11 +35,21 @@ def test_route_init(idx: int, vehicle_type: int):
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
 def test_new_nodes_are_not_depots(loc: int):
+    """
+    Tests that new nodes cannot be depots: to be a depot in this context
+    requires route membership, and new nodes are not in routes yet.
+    """
     node = Node(loc=loc)
     assert_(not node.is_depot())
 
 
 def test_route_insert_and_remove_updates_node_idx_and_route_properties():
+    """
+    Tests that after a node is inserted into a route, its index and route
+    properties are updated to reflect its new position in the route. After
+    the node is removed from the route, these properties revert to their
+    defaults.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -53,6 +70,10 @@ def test_route_insert_and_remove_updates_node_idx_and_route_properties():
 
 
 def test_route_depots_are_depots():
+    """
+    Tests that the start and end depot nodes in a route known they are, in
+    fact, depots.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -65,6 +86,9 @@ def test_route_depots_are_depots():
 
 
 def test_route_append_increases_route_len():
+    """
+    Tests that appending nodes to a route increases the route's length.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(len(route), 0)
@@ -81,18 +105,22 @@ def test_route_append_increases_route_len():
 
 
 def test_route_insert():
+    """
+    Tests that inserting and appending nodes works as expected: appending adds
+    to the end, inserting places at the given index.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(len(route), 0)
 
-    # Insert a few customers so we have an actual route.
+    # Insert a few nodes so we have an actual route.
     route.append(Node(loc=1))
     route.append(Node(loc=2))
     assert_equal(len(route), 2)
     assert_equal(route[1].client, 1)
     assert_equal(route[2].client, 2)
 
-    # # Now insert a new customer at index 1.
+    # # Now insert a new nodes at index 1.
     route.insert(1, Node(loc=3))
     assert_equal(len(route), 3)
     assert_equal(route[1].client, 3)
@@ -101,6 +129,10 @@ def test_route_insert():
 
 
 def test_route_iter_returns_all_clients():
+    """
+    Tests that iterating over a route returns all clients in the route, but
+    not the depots.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -118,6 +150,9 @@ def test_route_iter_returns_all_clients():
 
 
 def test_route_add_and_delete_client_leaves_route_empty():
+    """
+    Tests that adding and removing a client leaves a route empty.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -162,6 +197,9 @@ def test_route_clear_empties_entire_route(num_nodes: int):
 
 
 def test_excess_load():
+    """
+    Tests that the route calculations excess load correctly.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -180,6 +218,10 @@ def test_excess_load():
 
 @pytest.mark.parametrize("client", [1, 2, 3, 4])
 def test_dist_and_load_for_single_client_routes(client: int):
+    """
+    Tests that the route calculates distance and load correctly for a
+    single-client route.
+    """
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
@@ -204,6 +246,9 @@ def test_dist_and_load_for_single_client_routes(client: int):
 
 
 def test_route_overlaps_with_self_no_matter_the_tolerance_value():
+    """
+    Tests that a route always overlaps with itself.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
     route.append(Node(loc=1))
@@ -217,6 +262,10 @@ def test_route_overlaps_with_self_no_matter_the_tolerance_value():
 
 
 def test_all_routes_overlap_with_maximum_tolerance_value():
+    """
+    Tests that any route overlaps with any other route with the maximum
+    tolerance value.
+    """
     data = read("data/OkSmall.txt")
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -239,10 +288,11 @@ def test_all_routes_overlap_with_maximum_tolerance_value():
     assert_(route2.overlaps_with(route1, 1))
 
 
-# TODO test overlap with less extreme cases, including wrap around etc.
-
-
 def test_data_is_not_updated_until_update_call():
+    """
+    Tests that route statistics like distance, time window segments, and load
+    are not updated until ``update()`` has been called.
+    """
     data = read("data/OkSmall.txt")
     route = Route(data, idx=0, vehicle_type=0)
 
@@ -285,6 +335,10 @@ def test_str_contains_route(locs: List[int]):
 
 
 def test_route_tws_access():
+    """
+    Tests access to a client's or depot's time window segment, as tracked by
+    the route.
+    """
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
@@ -308,6 +362,10 @@ def test_route_tws_access():
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
 def test_tws_between_same_client_returns_node_tws(loc: int):
+    """
+    Tests that calling the ``tws_between()`` with the same start and end
+    arguments returns a node's time window segment data.
+    """
     data = read("data/OkSmall.txt")
     client = data.client(loc)
 
@@ -326,6 +384,10 @@ def test_tws_between_same_client_returns_node_tws(loc: int):
 
 
 def test_tws_between_same_as_tws_before_after_when_one_side_is_depot():
+    """
+    Tests that ``tws_between()`` returns the same value as ``tws_before()`` or
+    ``tws_after()`` when one side is the depot.
+    """
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
@@ -349,6 +411,10 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot():
 
 
 def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
+    """
+    Tests time window segment access on a single-route solution where we know
+    exactly where in the route time warp occurs.
+    """
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)

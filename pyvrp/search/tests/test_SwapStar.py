@@ -60,6 +60,9 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
 def test_swap_star_on_RC208_instance(seed: int):
+    """
+    Evaluate SWAP* on the RC208 instance, over a few seeds.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=seed)

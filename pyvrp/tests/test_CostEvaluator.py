@@ -7,6 +7,9 @@ from pyvrp.tests.helpers import read
 
 
 def test_load_penalty():
+    """
+    This test asserts that load penalty computations are correct.
+    """
     cost_evaluator = CostEvaluator(2, 1)
 
     assert_allclose(cost_evaluator.load_penalty(0, 1), 0)  # below capacity
@@ -29,6 +32,10 @@ def test_load_penalty():
 
 @mark.parametrize("capacity", [5, 15, 29, 51, 103])
 def test_load_penalty_always_zero_when_below_capacity(capacity: int):
+    """
+    This test asserts that load penalties are only applied to excess load, that
+    is, load in excess of the vehicle's capacity.
+    """
     load_penalty = 2
     cost_evaluator = CostEvaluator(load_penalty, 1)
 
@@ -47,6 +54,9 @@ def test_load_penalty_always_zero_when_below_capacity(capacity: int):
 
 
 def test_tw_penalty():
+    """
+    This test asserts that time window penalty computations are correct.
+    """
     cost_evaluator = CostEvaluator(1, 2)
 
     # Penalty per unit time warp is 2
@@ -63,6 +73,11 @@ def test_tw_penalty():
 
 
 def test_cost():
+    """
+    This test asserts that the cost is computed correctly for feasible
+    individuals, and is a large value (representing infinity) for infeasible
+    individuals.
+    """
     data = read("data/OkSmall.txt")
     default_cost_evaluator = CostEvaluator()
     cost_evaluator = CostEvaluator(20, 6)
@@ -88,6 +103,10 @@ def test_cost():
 
 
 def test_cost_with_prizes():
+    """
+    When solving a prize-collecting instance, the cost is equal to the distance
+    plus a prize term.
+    """
     data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(1, 1)
 
@@ -106,6 +125,12 @@ def test_cost_with_prizes():
 
 
 def test_penalised_cost():
+    """
+    The penalised cost represents the smoothed objective, where constraint
+    violations are priced in using penalty terms. It can be computed for both
+    feasible and infeasible individuals. In case of the former, it is equal
+    to the actual cost: the penalty terms are all zero.
+    """
     data = read("data/OkSmall.txt")
     penalty_capacity = 20
     penalty_tw = 6

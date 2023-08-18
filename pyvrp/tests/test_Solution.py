@@ -17,6 +17,9 @@ from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 def test_route_constructor_raises_for_empty_routes():
+    """
+    Tests that constructing a ``Solution`` with empty routes fails.
+    """
     data = read("data/OkSmall.txt")
 
     with assert_raises(RuntimeError):
@@ -25,28 +28,32 @@ def test_route_constructor_raises_for_empty_routes():
         Solution(data, [[3, 4], [], [1, 2]])
 
 
-def test_route_constructor_heterogeneous():
+def test_route_constructor_with_different_vehicle_types():
+    """
+    Tests that Solution's route constructor respects vehicle types.
+    """
     data = read("data/OkSmall.txt")
-    # Test heterogeneous case
     data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
+
     sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
 
-    # num_routes() should show two non-empty routes.
-    assert_equal(sol.num_routes(), 2)
-
-    # We expect Solution to remove empty routes and return routes with the
-    # correct vehicle types.
+    # We expect Solution to return routes with the correct vehicle types.
     routes = sol.get_routes()
     assert_equal(len(routes), 2)
+
     assert_equal(routes[0].visits(), [3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[0], Route(data, [3, 4], 0))
+
     assert_equal(routes[1].visits(), [1, 2])
     assert_equal(routes[1].vehicle_type(), 1)
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
 
 def test_route_eq():
+    """
+    Tests ``Route``'s equality operator.
+    """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 2)])
 
@@ -68,6 +75,10 @@ def test_route_eq():
 
 
 def test_random_constructor_cycles_over_routes():
+    """
+    Tests that a randomly constructed solution fills all available vehicles
+    in turn.
+    """
     # This instance has four clients and three vehicles. Since 1 client per
     # vehicle would not work (insufficient vehicles), each route is given two
     # clients (and the last route should be empty).
@@ -85,6 +96,10 @@ def test_random_constructor_cycles_over_routes():
 
 
 def test_route_constructor_raises_too_many_vehicles():
+    """
+    Tests that constructing a solution with more routes than available in the
+    data instance raises.
+    """
     data = read("data/OkSmall.txt")
 
     assert_equal(data.num_vehicles, 3)
@@ -100,7 +115,7 @@ def test_route_constructor_raises_too_many_vehicles():
     with assert_raises(RuntimeError):
         Solution(data, [[1], [2], [3], [4]])
 
-    # Now test heterogeneous case
+    # Now test the case with multiple vehicle types.
     data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
 
     # Only two routes (of type 0) should not raise.
@@ -128,6 +143,9 @@ def test_route_constructor_raises_too_many_vehicles():
 
 
 def test_route_constructor_raises_when_clients_are_visited_more_than_once():
+    """
+    Tests that visiting the same client more than once raises.
+    """
     data = read("data/OkSmall.txt")
     with assert_raises(RuntimeError):
         Solution(data, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
@@ -137,6 +155,12 @@ def test_route_constructor_raises_when_clients_are_visited_more_than_once():
 
 
 def test_route_constructor_allows_incomplete_solutions():
+    """
+    Tests that not visiting a client at all is allowed, but turns the solution
+    infeasible (unless the client is not required). Allowing this is useful
+    for both prize collecting, and in LNS settings where an incomplete solution
+    is subsequently repaired.
+    """
     data = read("data/OkSmallPrizes.txt")
 
     # Client 1 is required but not visited.
@@ -156,11 +180,17 @@ def test_route_constructor_allows_incomplete_solutions():
 
 
 def test_get_neighbours():
+    """
+    Tests that accessing the neighbour structur of (pred, succ) pairs for each
+    client in the solution works correctly.
+    """
     data = read("data/OkSmall.txt")
+    assert_equal(data.num_clients, 4)
 
-    sol = Solution(data, [[3], [1, 2]])
+    sol = Solution(data, [[3], [1, 2]])  # client 4 is not in the solution
+    assert_(not sol.is_complete())
+
     neighbours = sol.get_neighbours()
-
     expected = [
         None,  # 0: is depot
         (0, 2),  # 1: between depot (0) to 2
@@ -169,13 +199,15 @@ def test_get_neighbours():
         None,  # 4: unassigned
     ]
 
-    assert_equal(data.num_clients, 4)
-
     for client in range(data.num_clients + 1):  # incl. depot
         assert_equal(neighbours[client], expected[client])
 
 
 def test_feasibility():
+    """
+    Tests that solutions are infeasible when they have load or time window
+    violations.
+    """
     data = read("data/OkSmall.txt")
 
     # This solution is infeasible due to both load and time window violations.
@@ -197,6 +229,10 @@ def test_feasibility():
 
 
 def test_feasibility_release_times():
+    """
+    Tests solutions can be infeasible due to release time violations, which
+    adds time warp.
+    """
     data = read("data/OkSmallReleaseTimes.txt")
 
     # Client 1 is released at 20'000, but client 2 time window ends at 19'500,
@@ -217,6 +253,10 @@ def test_feasibility_release_times():
 
 
 def test_distance_calculation():
+    """
+    Tests that route distance calculations are correct, and that the overall
+    Solution's distance is the sum of the route distances.
+    """
     data = read("data/OkSmall.txt")
 
     sol = Solution(data, [[1, 2], [3], [4]])
@@ -241,6 +281,9 @@ def test_distance_calculation():
 
 
 def test_excess_load_calculation():
+    """
+    Tests the Solution's excess load calculation on a single-route case.
+    """
     data = read("data/OkSmall.txt")
 
     sol = Solution(data, [[4, 3, 1, 2]])
@@ -252,7 +295,11 @@ def test_excess_load_calculation():
     assert_allclose(sol.excess_load(), 18 - data.vehicle_type(0).capacity)
 
 
-def test_heterogeneous_capacity_excess_load_calculation():
+def test_excess_load_calculation_with_multiple_vehicle_capacities():
+    """
+    Tests that vehicles of different capacities result in different (excess)
+    load calaculations.
+    """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(
         data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
@@ -272,6 +319,9 @@ def test_heterogeneous_capacity_excess_load_calculation():
 
 
 def test_route_access_methods():
+    """
+    Tests that accessing route statistics returns the correct numbers.
+    """
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -306,6 +356,9 @@ def test_route_access_methods():
 
 
 def test_route_time_warp_calculations():
+    """
+    Tests route time warp calculations.
+    """
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -327,6 +380,9 @@ def test_route_time_warp_calculations():
 
 
 def test_route_wait_time_calculations():
+    """
+    Tests route wait time and slack calculations.
+    """
     data = read("data/OkSmallWaitTime.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -372,6 +428,10 @@ def test_route_wait_time_calculations():
 
 
 def test_route_start_and_end_time_calculations():
+    """
+    Tests route start time, slack, and end time calculations for cases with
+    and without time warp or wait duration.
+    """
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -414,6 +474,10 @@ def test_route_start_and_end_time_calculations():
 
 
 def test_route_release_time():
+    """
+    Tests that routes return the correct release times, and, when feasible,
+    start after the release time.
+    """
     data = read("data/OkSmallReleaseTimes.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
     routes = sol.get_routes()
@@ -502,10 +566,12 @@ def test_time_warp_return_to_depot():
     assert_allclose(sol.time_warp(), 1)
 
 
-# TODO test all time warp cases
-
-
-def test_num_routes_calculation():
+def tests_that_not_specifying_the_vehicle_type_assumes_a_default():
+    """
+    Not specifying the vehicle type when providing a list of visits uses the
+    first vehicle type to complete the routes. That could result in a solution
+    using too many vehicles of the first type.
+    """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(
         data, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
@@ -525,14 +591,14 @@ def test_num_routes_calculation():
         # 3 routes of type 0 whereas we only have 2 available.
         sol = Solution(data, [[1], [2], [3, 4]])
 
-    # It works if we specify the correct vehicle types
+    # It works if we specify the correct vehicle types.
     sol = Solution(
         data,
         [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)],
     )
     assert_equal(sol.num_routes(), 3)
 
-    # But not if we violate the qty available per vehicle type
+    # But not if we violate the number of available vehicles of that type.
     with assert_raises(RuntimeError):
         sol = Solution(
             data,
@@ -541,22 +607,29 @@ def test_num_routes_calculation():
 
 
 def test_copy():
+    """
+    Tests that copied solutions are equal to the original solution, but not
+    the exact same object.
+    """
     data = read("data/OkSmall.txt")
 
     sol = Solution(data, [[1, 2, 3, 4]])
     copy_sol = copy(sol)
     deepcopy_sol = deepcopy(sol)
 
-    # Copied solutions are equal to the original solution
+    # Copied solutions are equal to the original solution.
     assert_(sol == copy_sol)
     assert_(sol == deepcopy_sol)
 
-    # But they are not the same object
+    # But they are not the same object.
     assert_(sol is not copy_sol)
     assert_(sol is not deepcopy_sol)
 
 
 def test_eq():
+    """
+    Tests the solution's equality operator.
+    """
     data = read("data/OkSmall.txt")
 
     sol1 = Solution(data, [[1, 2, 3, 4]])
@@ -581,7 +654,7 @@ def test_eq():
     assert_(sol5 != "cd")
 
 
-def test_eq_heterogeneous_vehicle():
+def test_eq_with_multiple_vehicle_types():
     """
     Tests that two solutions are not considered equal if they have the same
     routes (orders of clients) but served by different vehicle types.
@@ -639,8 +712,8 @@ def test_eq_unassigned():
 
 def test_duplicate_vehicle_types():
     """
-    Tests that even though it is not useful it is allowed to have duplicate
-    vehicle types which will be considered different.
+    Tests that it is allowed to have duplicate vehicle types. These will be
+    considered completely different during optimisation.
     """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(10, 1)])
@@ -656,6 +729,9 @@ def test_duplicate_vehicle_types():
     [[VehicleType(10, 3)], [VehicleType(10, 2), VehicleType(20, 1)]],
 )
 def test_str_contains_routes(vehicle_types):
+    """
+    Tests that the Solution's string representation contains each route.
+    """
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(data, vehicle_types)
 
@@ -678,19 +754,19 @@ def test_str_contains_routes(vehicle_types):
 
 
 def test_hash():
+    """
+    Tests that solutions that compare the same have the same hash.
+    """
     data = read("data/OkSmall.txt")
     rng = RandomNumberGenerator(seed=2)
 
     sol1 = Solution.make_random(data, rng)
     sol2 = Solution.make_random(data, rng)
 
-    hash1 = hash(sol1)
-    hash2 = hash(sol2)
-
     # Two random solutions. They're not the same, so the hashes should not be
-    # the same either.
+    # the same either (unless there's a collision, which is not the case here).
     assert_(sol1 != sol2)
-    assert_(hash1 != hash2)
+    assert_(hash(sol1) != hash(sol2))
 
     sol3 = deepcopy(sol2)  # is a direct copy
 
@@ -700,6 +776,10 @@ def test_hash():
 
 
 def test_route_centroid():
+    """
+    Tests that each route's center point is the center point of all clients
+    visited by that route.
+    """
     data = read("data/OkSmall.txt")
     x = np.array([data.client(client).x for client in range(5)])
     y = np.array([data.client(client).y for client in range(5)])
@@ -713,6 +793,9 @@ def test_route_centroid():
 
 
 def test_solution_can_be_pickled():
+    """
+    Tests that a solution can be serialised and unserialised.
+    """
     data = read("data/OkSmall.txt")
     rng = RandomNumberGenerator(seed=2)
 
@@ -724,6 +807,9 @@ def test_solution_can_be_pickled():
 
 
 def test_route_can_be_pickled():
+    """
+    Tests that individual routes can be serialised and unserialised.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     rng = RandomNumberGenerator(seed=2)
     sol = Solution.make_random(data, rng)

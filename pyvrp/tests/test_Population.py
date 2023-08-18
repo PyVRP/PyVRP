@@ -108,6 +108,11 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
 
 
 def test_add_triggers_purge():
+    """
+    Tests that adding another solution to a population of maximum size triggers
+    survivor selection, that is, a purge that reduces the relevant population
+    back to minimum size.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -151,6 +156,10 @@ def test_add_triggers_purge():
 
 
 def test_select_returns_same_parents_if_no_other_option():
+    """
+    Tests that the ``select()`` method tries to return two different parents,
+    but will return the same solution twice if there is no other option.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=2_147_483_647)
@@ -187,10 +196,12 @@ def test_select_returns_same_parents_if_no_other_option():
     assert_(900 < different_parents < 1_000)
 
 
-# // TODO test more select() - diversity, feas/infeas pairs
-
-
 def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
+    """
+    Tests that the population can never grow when it starts empty and the
+    generation size is set to 0: adding a new solution then immediately
+    triggers survivor selection.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=12)
@@ -210,6 +221,11 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
 
 @mark.parametrize("nb_elite", [5, 25])
 def test_elite_solutions_are_not_purged(nb_elite: int):
+    """
+    Tests that elite solutions - those considered of such high quality that
+    they should be given special treatment - are not purged during survivor
+    selection.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(nb_elite=nb_elite)
@@ -246,6 +262,10 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
 
 @mark.parametrize("k", [2, 3])
 def test_tournament_ranks_by_fitness(k: int):
+    """
+    Tests that the tournament-based parent selection on average returns
+    solutions about as often as their relative fitness value would suggest.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -292,6 +312,9 @@ def test_tournament_ranks_by_fitness(k: int):
 
 @mark.parametrize("k", [-100, -1, 0])  # k must be strictly positive
 def test_tournament_raises_for_invalid_k(k: int):
+    """
+    Tests that k >= 0 is required for tournament-based selection.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -305,6 +328,10 @@ def test_tournament_raises_for_invalid_k(k: int):
 
 
 def test_purge_removes_duplicates():
+    """
+    Tests that purging/survivor selection first removes duplicate solutions,
+    before purging by (biased) fitness.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=20, generation_size=5)
@@ -344,6 +371,9 @@ def test_purge_removes_duplicates():
 
 
 def test_clear():
+    """
+    Tests that clearing the population reduces its size to zero.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -359,6 +389,11 @@ def test_clear():
 
 
 def test_add_emits_warning_when_solution_is_empty():
+    """
+    Tests that adding an empty solution to the population emits a warning. Such
+    solutions could be generated when solving a prize-collecting instance, and
+    typically indicate a scaling issue in the data.
+    """
     data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     pop = Population(bpd)

@@ -28,6 +28,9 @@ def test_neighbourhood_params_raises_for_invalid_arguments(
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
 ):
+    """
+    Test that ``NeighbourhoodParams`` raises for invalid configurations.
+    """
     with assert_raises(ValueError):
         NeighbourhoodParams(
             weight_wait_time,
@@ -60,6 +63,9 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
 ):
+    """
+    Tests that ``NeighbourhoodParams`` allows valid arguments and edge cases.
+    """
     NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,
@@ -85,7 +91,7 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
         (20, 20, 10, True, True, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 60, 70, 79, 100}),
-        # From original c++ implementation
+        # From original C++ implementation
         (18, 20, 34, True, False, 1,
          {2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 53,
           54, 55, 60, 61, 68, 69, 70, 73, 78, 79, 81, 88, 90, 98, 100}),
@@ -104,6 +110,9 @@ def test_compute_neighbours(
     idx_check: int,
     expected_neighbours_check: Set[int],
 ):
+    """
+    Tests ``compute_neighbours`` on several well-understood cases.
+    """
     data = read("data/RC208.txt", "solomon", "trunc1")
     params = NeighbourhoodParams(
         weight_wait_time,
@@ -129,6 +138,9 @@ def test_compute_neighbours(
 
 
 def test_neighbours_are_sorted_by_proximity():
+    """
+    Tests that the neighbourhood lists sort by their proximity: closest first.
+    """
     # E-n22-k4 is a CVRP instance, so the time component is irrelevant.
     data = read("data/E-n22-k4.txt", round_func="trunc1")
     params = NeighbourhoodParams(0, 0, data.num_clients)
@@ -146,6 +158,10 @@ def test_neighbours_are_sorted_by_proximity():
 
 
 def test_symmetric_neighbours():
+    """
+    Tests that when ``symmetric_neighbours`` is true, if an edge (i, j) is
+    in the granular neighbourhood, then so is (j, i).
+    """
     data = read("data/RC208.txt", "solomon", "trunc1")
 
     # Symmetric neighbourhood structure: if (i, j) is in, then so is (j, i).
@@ -163,6 +179,10 @@ def test_symmetric_neighbours():
 
 
 def test_more_neighbours_than_instance_size():
+    """
+    Tests that a value for ``nb_granular`` larger than the problem instance's
+    number of clients results in neighbourhoods of maximum size.
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     params = NeighbourhoodParams(nb_granular=data.num_clients)
     neighbours = compute_neighbours(data, params)
@@ -172,6 +192,10 @@ def test_more_neighbours_than_instance_size():
 
 
 def test_proximity_with_prizes():
+    """
+    Tests that prizes factor into the neighbourhood structure, and offset
+    travel costs somewhat.
+    """
     data = read("data/p06-2-50.vrp", round_func="dimacs")
     params = NeighbourhoodParams(0, 0, nb_granular=10)
     neighbours = compute_neighbours(data, params)

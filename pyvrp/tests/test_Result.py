@@ -16,6 +16,10 @@ from pyvrp.tests.helpers import read
     [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4]], 100, 54.2)],
 )
 def test_fields_are_correctly_set(routes, num_iterations, runtime):
+    """
+    Tests that ``Result``'s data properties are correctly set after
+    initialisation completes.
+    """
     data = read("data/OkSmall.txt")
     sol = Solution(data, routes)
 
@@ -39,6 +43,9 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
     ],
 )
 def test_init_raises_invalid_arguments(num_iterations, runtime):
+    """
+    Tests that invalid arguments are rejected.
+    """
     data = read("data/OkSmall.txt")
     sol = Solution(data, [[1, 2, 3, 4]])
 
@@ -48,6 +55,9 @@ def test_init_raises_invalid_arguments(num_iterations, runtime):
 
 @mark.parametrize("num_iterations", [0, 1, 10])
 def test_num_iterations(num_iterations: int):
+    """
+    Tests access to the ``num_iterations`` property.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -67,6 +77,10 @@ def test_num_iterations(num_iterations: int):
     [[[1, 2], [3], [4]], [[1, 2, 3, 4]]],
 )
 def test_str_contains_essential_information(routes):
+    """
+    Tests that printing (or, in general, calling ```str(result)``) returns a
+    bunch of useful information about the underlying solution.
+    """
     data = read("data/OkSmall.txt")
 
     sol = Solution(data, routes)
@@ -87,6 +101,10 @@ def test_str_contains_essential_information(routes):
 
 @mark.parametrize("num_iterations", [0, 1, 10])
 def test_result_can_be_pickled(num_iterations: int):
+    """
+    Tests that a ``Result`` object can be pickled: it can be serialised and
+    unserialised. This is useful for e.g. storing results to disk.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)

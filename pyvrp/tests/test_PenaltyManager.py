@@ -33,6 +33,9 @@ def test_constructor_throws_when_arguments_invalid(
     penalty_decrease: float,
     target_feasible: float,
 ):
+    """
+    Tests that invalid arguments are not accepted.
+    """
     with assert_raises(ValueError):
         PenaltyParams(
             init_load_penalty,
@@ -46,6 +49,10 @@ def test_constructor_throws_when_arguments_invalid(
 
 
 def test_repair_booster():
+    """
+    Tests that the booster evaluator returns a cost evaluator object that
+    penalises constraint violations much more severely.
+    """
     params = PenaltyParams(1, 1, 5, 1, 1, 1, 1)
     pm = PenaltyManager(params)
 
@@ -69,6 +76,10 @@ def test_repair_booster():
 
 
 def test_capacity_penalty_update_increase():
+    """
+    Tests that the load violation penalty is increased when too many load
+    infeasible solutions have been generated since the last update.
+    """
     num_registerations = 4
     params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(params)
@@ -108,6 +119,10 @@ def test_capacity_penalty_update_increase():
 
 
 def test_capacity_penalty_update_decrease():
+    """
+    Tests that the load violation penalty is decreased when sufficiently many
+    load feasible solutions have been generated since the last update.
+    """
     num_registerations = 4
     params = PenaltyParams(4, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(params)
@@ -146,6 +161,10 @@ def test_capacity_penalty_update_decrease():
 
 
 def test_time_warp_penalty_update_increase():
+    """
+    Tests that the time warp violation penalty is increased when too many time
+    window infeasible solutions have been generated since the last update.
+    """
     num_registerations = 4
     params = PenaltyParams(1, 1, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(params)
@@ -185,6 +204,11 @@ def test_time_warp_penalty_update_increase():
 
 
 def test_time_warp_penalty_update_decrease():
+    """
+    Tests that the time warp violation penalty is decreased when sufficently
+    many time window feasible solutions have been generated since the last
+    update.
+    """
     num_registerations = 4
     params = PenaltyParams(1, 4, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(params)
@@ -223,6 +247,10 @@ def test_time_warp_penalty_update_decrease():
 
 
 def test_does_not_update_penalties_before_sufficient_registrations():
+    """
+    Tests that updates only happen every ``num_registrations`` times, not every
+    time a new value is registered.
+    """
     num_registerations = 4
     params = PenaltyParams(4, 4, 1, num_registerations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(params)
