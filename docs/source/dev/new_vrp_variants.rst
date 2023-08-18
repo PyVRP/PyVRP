@@ -12,7 +12,7 @@ For reference, the pull request implementing prize-collecting is available `here
    It is also recommended to open an early draft pull request.
    How to set everything up for development is documented on the :doc:`contributing <contributing>` page.
 
-Adding support for a new VRP variants starts with thinking about where to add the new problem data needed to solve it.
+Adding support for new VRP variants starts with thinking about where to add the new problem data needed to solve it.
 In the case of prize-collecting, this meant adding the ``prize: int`` and ``required: bool`` fields to the :class:`~pyvrp._pyvrp.Client` object:
 
 * The ``prize`` field indicates the prize obtained for visiting the client;
@@ -59,7 +59,7 @@ Depending on the VRP variant in question, this might be simple, or it could be a
    Open an issue if you are unsure about how to proceed implementing your VRP variant.
 
 In the :mod:`pyvrp.search` module, either changes need to be made to the operators, or the :class:`~pyvrp.search.LocalSearch` object.
-In the case of prize-collecting, it was the latter: we added support for evaluating (and applying) moves that inserted a client into the solution, or removed a (not required!) client from it.
+In the case of prize-collecting, it was the latter: we added support for evaluating (and applying) moves that inserted a client into the solution, or removed a client from it.
 The required evaluation logic was easy to write by looking at the implementation of :class:`~pyvrp.search._search.Exchange10`.
 
 With those changes in place, an basic implementation supporting the new VRP variant is typically already functional.
@@ -93,3 +93,7 @@ Such changes may come about later, as we further improve support for a new VRP v
    It is always possible to further improve support for a VRP variant in later pull requests.
 
 We hope that the guidelines on this page will prove helpful when adding support for a new VRP variant.
+
+.. note::
+
+   For further inspiration, you may want to look at the pull requests that added `release time support <https://github.com/PyVRP/PyVRP/pull/254>`_ and support for `multiple vehicle types <https://github.com/PyVRP/PyVRP/pull/245>`_.
