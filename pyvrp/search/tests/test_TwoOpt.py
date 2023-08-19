@@ -10,9 +10,7 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp import (
-    Route as SolRoute,
-)
+from pyvrp import Route as SolRoute
 from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
