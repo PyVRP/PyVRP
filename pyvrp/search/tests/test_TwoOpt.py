@@ -7,9 +7,11 @@ from pytest import mark
 from pyvrp import (
     CostEvaluator,
     RandomNumberGenerator,
-    Route,
     Solution,
     VehicleType,
+)
+from pyvrp import (
+    Route as SolRoute,
 )
 from pyvrp.search import (
     LocalSearch,
@@ -17,6 +19,7 @@ from pyvrp.search import (
     TwoOpt,
     compute_neighbours,
 )
+from pyvrp.search._search import Node, Route
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
@@ -75,11 +78,14 @@ def test_OkSmall_multiple_vehicle_types(vehicle_types: List[VehicleType]):
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(TwoOpt(data))
 
-    sol1 = Solution(data, [Route(data, [1, 3], 0), Route(data, [2, 4], 1)])
-    sol2 = Solution(data, [Route(data, [1, 4], 0), Route(data, [2, 3], 1)])
+    routes1 = [SolRoute(data, [1, 3], 0), SolRoute(data, [2, 4], 1)]
+    sol1 = Solution(data, routes1)
+
+    routes2 = [SolRoute(data, [1, 4], 0), SolRoute(data, [2, 3], 1)]
+    sol2 = Solution(data, routes2)
+
     cost1 = cost_evaluator.penalised_cost(sol1)
     cost2 = cost_evaluator.penalised_cost(sol2)
-
     assert_(not np.allclose(cost1, cost2))
 
     # Using the local search, the result should not get worse.
@@ -112,3 +118,46 @@ def test_RC208_instance(seed: int):
     current_cost = cost_evaluator.penalised_cost(sol)
     improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
+
+
+def test_within_route_move():
+    """
+    Within-route 2-OPT reverses the segment between U and V. This test checks
+    that such a move is correctly evaluated and applied on a single-route
+    solution to the OkSmall instance.
+    """
+    data = read("data/OkSmall.txt")
+    nodes = [Node(loc=loc) for loc in range(data.num_clients + 1)]
+
+    # Current route is 4 -> 1 -> 2 -> 3.
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(nodes[4])
+    route.append(nodes[1])
+    route.append(nodes[2])
+    route.append(nodes[3])
+    route.update()
+
+    cost_eval = CostEvaluator(1, 1)
+    two_opt = TwoOpt(data)
+
+    # Current (relevant) part of the route has distance:
+    #   dist(4, 1) + dist(1, 2) + dist(2, 3) + dist(3, 0)
+    #     = 1594 + 1992 + 621 + 2063
+    #     = 6270.
+    #
+    # Proposed distance is:
+    #   dist(4, 3) + dist(3, 2) + dist(2, 1) + dist(1, 0)
+    #     = 828 + 647 + 1975 + 1726
+    #     = 5176.
+    #
+    # Load remains the same, but the time warp decreases substantially as well:
+    # from 3633 (due to visiting client 3 far too late) to 0. This results in
+    # a total delta cost of -3633 + 5176 - 6270 = -4727.
+    assert_equal(two_opt.evaluate(nodes[4], nodes[3], cost_eval), -4_727)
+
+    # Check that applying the proposed move indeed creates the correct route.
+    two_opt.apply(nodes[4], nodes[3])
+    assert_equal(route[1].client, 4)
+    assert_equal(route[2].client, 3)
+    assert_equal(route[3].client, 2)
+    assert_equal(route[4].client, 1)
