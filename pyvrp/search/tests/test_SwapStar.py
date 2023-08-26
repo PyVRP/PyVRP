@@ -134,3 +134,61 @@ def test_swap_star_can_swap_in_place():
     swap_star.apply(route1, route2)
     assert_(nodes[1].route is route2)
     assert_(nodes[3].route is route1)
+
+
+def test_wrong_load_calculation_bug():
+    """
+    This test exercises the bug identified in issue #344 (here:
+    https://github.com/PyVRP/PyVRP/issues/344). There, the load calculations
+    were incorrect because they used "best.U" instead of "U" when determining
+    the load diff on a route. This test exercises the fix for that issue.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, demand=0),
+            Client(x=1, y=1, demand=0),
+            Client(x=2, y=2, demand=0),
+            Client(x=3, y=3, demand=15),
+            Client(x=4, y=4, demand=0),
+        ],
+        vehicle_types=[VehicleType(capacity=12, num_available=2)],
+        distance_matrix=np.asarray(
+            [
+                [0, 10, 10, 10, 1],
+                [1, 0, 10, 10, 10],
+                [10, 10, 0, 10, 10],
+                [10, 1, 10, 0, 10],
+                [10, 10, 1, 10, 0],
+            ]
+        ),
+        duration_matrix=np.zeros((5, 5), dtype=int),
+    )
+
+    nodes = [Node(loc=loc) for loc in range(data.num_clients + 1)]
+
+    # First route is 0 -> 1 -> 2 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(nodes[1])
+    route1.append(nodes[2])
+    route1.update()
+
+    # Second route is 0 -> 3 -> 4 -> 0.
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.append(nodes[3])
+    route2.append(nodes[4])
+    route2.update()
+
+    cost_eval = CostEvaluator(1_000, 1)
+    swap_star = SwapStar(data)
+
+    # Optimal is 0 -> 3 -> 1 -> 0 and 0 -> 4 -> 2 -> 0. This exchanges four
+    # costly arcs of distance 10 for four arcs of distance 1, so the diff is
+    # 4 - 40 = -36. We shift the positive demand client, but that does not add
+    # to the cost. Before the bug was fixed, that (excess) demand was removed,
+    # but not added to the other route, which would have resulted in a large
+    # (wrong!) negative delta cost.
+    assert_equal(swap_star.evaluate(route1, route2, cost_eval), -36)
+    swap_star.apply(route1, route2)
+
+    assert_equal([node.client for node in route1], [3, 1])
+    assert_equal([node.client for node in route2], [4, 2])
