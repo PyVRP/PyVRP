@@ -106,6 +106,8 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                             CostEvaluator const &costEvaluator)
 {
     assert(V->route() == remove->route());
+    assert(V != remove);
+
     auto const *route = V->route();
 
     Cost deltaCost = 0;
@@ -168,7 +170,7 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
-    auto const loadDiff = data.client(best.U->client()).demand
+    auto const loadDiff = data.client(U->client()).demand
                           - data.client(remove->client()).demand;
 
     deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
@@ -259,11 +261,6 @@ Cost SwapStar::evaluate(Route *routeU,
     // not worth spending time on.
     if (best.cost >= 0)
         return best.cost;
-
-    // We cannot have that UAfter == V or VAfter == U, as the positions must
-    // always be strictly different.
-    assert(best.VAfter->idx() != best.U->idx());
-    assert(best.UAfter->idx() != best.V->idx());
 
     // Now do a full evaluation of the proposed swap move. This includes
     // possible time warp penalties.
