@@ -136,14 +136,19 @@ public:
     [[nodiscard]] inline Load load() const;
 
     /**
-     * @return Total time warp on this route.
-     */
-    [[nodiscard]] inline Duration timeWarp() const;
-
-    /**
      * @return The load capacity of this route.
      */
     [[nodiscard]] inline Load capacity() const;
+
+    /**
+     * @return Total distance travelled on this route.
+     */
+    [[nodiscard]] inline Distance distance() const;
+
+    /**
+     * @return Total time warp on this route.
+     */
+    [[nodiscard]] inline Duration timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -303,12 +308,14 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
 Load Route::load() const { return stats.back().cumLoad; }
 
+Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
+
+Distance Route::distance() const { return stats.back().cumDist; }
+
 Duration Route::timeWarp() const
 {
     return stats.back().twsBefore.totalTimeWarp();
 }
-
-Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
 
 bool Route::empty() const { return size() == 0; }
 
