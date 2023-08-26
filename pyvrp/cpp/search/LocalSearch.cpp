@@ -236,22 +236,8 @@ void LocalSearch::emptyRouteMoves(Route::Node *U,
         if (empty == end)
             continue;
 
-        auto *depot = (*empty)[0];
-
-        // Try inserting U into the empty route using regular node operators.
-        if (U->route())
-        {
-            applyNodeOps(U, depot, costEvaluator);
-            continue;
-        }
-
-        // U is not in the solution. We should insert it into the empty route
-        // if that's improving (typically when U has a high prize).
-        if (insertCost(U, depot, data, costEvaluator) < 0)
-        {
-            depot->route()->insert(1, U);
-            update(depot->route(), depot->route());
-        }
+        if (U->route())  // try inserting U into the empty route.
+            applyNodeOps(U, (*empty)[0], costEvaluator);
     }
 }
 
