@@ -57,13 +57,12 @@ class LocalSearch
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
-    // Test inserting U after V. Called if U is not currently in the solution.
-    void maybeInsert(Route::Node *U,
-                     Route::Node *V,
-                     CostEvaluator const &costEvaluator);
+    // TODO
+    void emptyRouteMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Test removing U from the solution. Called when U can be removed.
-    void maybeRemove(Route::Node *U, CostEvaluator const &costEvaluator);
+    // TODO
+    void optionalClientMoves(Route::Node *U,
+                             CostEvaluator const &costEvaluator);
 
     // Performs search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);
