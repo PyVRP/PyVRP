@@ -183,10 +183,10 @@ def test_wrong_load_calculation_bug():
 
     # Optimal is 0 -> 3 -> 1 -> 0 and 0 -> 4 -> 2 -> 0. This exchanges four
     # costly arcs of distance 10 for four arcs of distance 1, so the diff is
-    # 4 - 40 = -36. We shift the positive demand client, but that does not add
-    # to the cost. Before the bug was fixed, that (excess) demand was removed,
-    # but not added to the other route, which would have resulted in a large
-    # (wrong!) negative delta cost.
+    # 4 - 40 = -36. We shift the positive demand client, but that does not
+    # change the solution's cost. Before the bug was fixed, it did: the demand
+    # was removed from one route but not added to the other, which resulted in
+    # a large (wrong!) negative delta cost.
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -36)
     swap_star.apply(route1, route2)
 
