@@ -25,12 +25,20 @@ def test_valid_parameters(max_iterations, max_runtime):
 
 
 def test_stops_if_zero_max_iterations():
+    """
+    Tests that ``TimedNoImprovement`` stops immediately if zero maximum
+    iterations are allowed.
+    """
     stop = TimedNoImprovement(0, 0.100)
     assert_(stop(1))
 
 
 @mark.parametrize("max_runtime", [0.01, 0.05, 0.10])
 def test_before_max_runtime(max_runtime):
+    """
+    Tests that ``TimedNoImprovement`` allows iterations if the maximum runtime
+    has not yet been violated.
+    """
     stop = TimedNoImprovement(101, max_runtime)
 
     for _ in range(100):
@@ -39,6 +47,10 @@ def test_before_max_runtime(max_runtime):
 
 @mark.parametrize("max_runtime", [0.01, 0.05, 0.10])
 def test_after_max_runtime(max_runtime):
+    """
+    Tests that ``TimedNoImprovement`` stops after maximum runtime, regardless
+    of maximum number of iterations.
+    """
     stop = TimedNoImprovement(101, max_runtime)
     assert_(not stop(1))  # trigger the first time measurement
 

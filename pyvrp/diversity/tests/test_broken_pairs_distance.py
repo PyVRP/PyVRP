@@ -6,6 +6,10 @@ from pyvrp.tests.helpers import read
 
 
 def test_broken_pairs_distance():
+    """
+    Test broken pairs distance (BPD) calculations on a number of solutions to
+    a small instance.
+    """
     data = read("data/OkSmall.txt")
 
     sol1 = Solution(data, [[1, 2, 3, 4]])

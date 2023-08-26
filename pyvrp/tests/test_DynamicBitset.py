@@ -17,12 +17,18 @@ def test_size(num_bits, expected_size):
 
 
 def test_init_all_zero():
+    """
+    The bitset starts out empty, that is, is initialised to all zeros.
+    """
     bitset = DynamicBitset(64)
     assert_(all(not bitset[idx] for idx in range(len(bitset))))
     assert_equal(bitset.count(), 0)
 
 
 def test_eq():
+    """
+    Tests the equality operator.
+    """
     bitset1 = DynamicBitset(64)
     bitset2 = DynamicBitset(64)
     assert_(bitset1 == bitset2)  # both empty, equal size - should be the same
@@ -37,8 +43,11 @@ def test_eq():
 
 
 def test_get_set_item():
+    """
+    Tests that setting and retrieving an item from the bitset works correctly.
+    """
     bitset = DynamicBitset(128)
-    indices = [0, 1, 63, 64, 126, 127]
+    indices = [0, 1, 63, 64, 126, 127]  # at the bitset boundaries
 
     assert_equal(bitset.count(), 0)  # Bitset starts empty - no bits are set
 
@@ -58,6 +67,9 @@ def test_get_set_item():
 
 
 def test_bit_or():
+    """
+    Tests the union operator.
+    """
     bitset1 = DynamicBitset(128)
     bitset1[0] = True
     bitset1[64] = True
@@ -74,6 +86,9 @@ def test_bit_or():
 
 
 def test_bit_and():
+    """
+    Tests the intersection operator.
+    """
     bitset1 = DynamicBitset(128)
     bitset1[0] = True
     bitset1[64] = True
@@ -90,6 +105,9 @@ def test_bit_and():
 
 
 def test_bit_xor():
+    """
+    Tests the symmetric difference operator.
+    """
     bitset1 = DynamicBitset(128)
     bitset1[0] = True
     bitset1[64] = True
@@ -106,6 +124,9 @@ def test_bit_xor():
 
 
 def test_bit_not():
+    """
+    Tests the complement operator.
+    """
     bitset = DynamicBitset(128)
     assert_equal(bitset.count(), 0)
 

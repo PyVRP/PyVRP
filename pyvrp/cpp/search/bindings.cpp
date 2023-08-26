@@ -337,6 +337,8 @@ PYBIND11_MODULE(_search, m)
         .def("capacity",
              [](Route const &route) { return route.capacity().get(); })
         .def("load", [](Route const &route) { return route.load().get(); })
+        .def("distance",
+             [](Route const &route) { return route.distance().get(); })
         .def("time_warp",
              [](Route const &route) { return route.timeWarp().get(); })
         .def(

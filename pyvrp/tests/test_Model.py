@@ -9,6 +9,10 @@ from pyvrp.tests.helpers import read
 
 
 def test_model_data():
+    """
+    Tests that calling the ``data()`` member on the model returns a data
+    instance representing the added data.
+    """
     model = Model()
 
     # Let's add some data: a single client, and edges from/to the depot.
@@ -18,12 +22,17 @@ def test_model_data():
     model.add_edge(client, depot, 1, 1)
     model.add_vehicle_type(capacity=1, num_available=1)
 
-    # The model should now have one client.
     data = model.data()
     assert_equal(data.num_clients, 1)
+    assert_equal(data.num_vehicle_types, 1)
+    assert_equal(data.num_vehicles, 1)
 
 
 def test_add_depot_raises_more_than_one_depot():
+    """
+    PyVRP does not currently support VRPs with multiple depots. Adding more
+    than one depot should raise.
+    """
     model = Model()
     model.add_depot(0, 0)  # first depot should be OK
 
@@ -32,6 +41,10 @@ def test_add_depot_raises_more_than_one_depot():
 
 
 def test_add_edge_raises_negative_distance_or_duration():
+    """
+    Negative distances or durations are not understood. Attempting to add
+    such edges should raise an error.
+    """
     model = Model()
     depot = model.add_depot(0, 0)
     client = model.add_client(0, 1)
@@ -54,12 +67,21 @@ def test_add_edge_raises_negative_distance_or_duration():
     ],
 )
 def test_add_vehicle_type_raises_negative_number_or_capacity(number, capacity):
+    """
+    A negative number of vehicles of a given type, or a negative capacity, is
+    not understood. Attempting to add such a vehicle type should raise an
+    error.
+    """
     model = Model()
     with assert_raises(ValueError):
         model.add_vehicle_type(capacity=capacity, num_available=number)
 
 
 def test_add_client_attributes():
+    """
+    Smoke test that checks, for a single client, that the model adds a client
+    whose attributes are the same as what was passed in.
+    """
     model = Model()
     client = model.add_client(
         x=1,
@@ -85,6 +107,10 @@ def test_add_client_attributes():
 
 
 def test_add_depot_attributes():
+    """
+    Smoke test that checks the depot attributes are the same as what was passed
+    in.
+    """
     model = Model()
     depot = model.add_depot(x=1, y=0, tw_early=3, tw_late=5)
 
@@ -95,6 +121,9 @@ def test_add_depot_attributes():
 
 
 def test_add_edge():
+    """
+    Smoke test that checks edge attributes are the same as what was passed in.
+    """
     model = Model()
     depot = model.add_depot(0, 0)
     client = model.add_client(0, 1)
@@ -107,6 +136,10 @@ def test_add_edge():
 
 
 def test_add_vehicle_type():
+    """
+    Smoke test that checks vehicle type attributes are the same as what was
+    passed in.
+    """
     model = Model()
     vehicle_type = model.add_vehicle_type(num_available=10, capacity=998)
 
@@ -115,6 +148,9 @@ def test_add_vehicle_type():
 
 
 def test_get_locations():
+    """
+    Checks that the ``locations`` property returns the depot and all clients.
+    """
     model = Model()
     client1 = model.add_client(0, 1)
     depot = model.add_depot(0, 0)
@@ -127,6 +163,9 @@ def test_get_locations():
 
 
 def test_get_vehicle_types():
+    """
+    Tests the ``vehicle_types`` property.
+    """
     model = Model()
     vehicle_type1 = model.add_vehicle_type(1, 2)
     vehicle_type2 = model.add_vehicle_type(1, 3)
@@ -137,6 +176,10 @@ def test_get_vehicle_types():
 
 
 def test_from_data():
+    """
+    Tests that initialising the model from a data instance results in a valid
+    model representation of that data instance.
+    """
     read_data = read("data/E-n22-k4.txt", round_func="dimacs")
     model = Model.from_data(read_data)
     model_data = model.data()
@@ -155,6 +198,10 @@ def test_from_data():
 
 
 def test_from_data_and_solve():
+    """
+    Tests that solving a model initialised from a data instance finds the
+    correct (known) solutions.
+    """
     # Solve the small E-n22-k4 instance using the from_data constructor.
     data = read("data/E-n22-k4.txt", round_func="dimacs")
     model = Model.from_data(data)
@@ -170,6 +217,10 @@ def test_from_data_and_solve():
 
 
 def test_model_and_solve():
+    """
+    Tests that solving a model initialised using the modelling interface
+    finds the correct (known) solutions.
+    """
     # Solve the small OkSmall instance using the from_data constructor.
     data = read("data/OkSmall.txt")
     model = Model.from_data(data)
@@ -217,6 +268,11 @@ def test_model_and_solve():
 
 
 def test_partial_distance_duration_matrix():
+    """
+    Tests that adding a full distance or duration matrix is not required. Any
+    "missing" arcs are given large default values, ensuring they are never
+    used.
+    """
     model = Model()
     depot = model.add_depot(0, 0)
     clients = [model.add_client(0, 1), model.add_client(1, 0)]
@@ -242,6 +298,12 @@ def test_partial_distance_duration_matrix():
 
 
 def test_data_warns_about_scaling_issues(recwarn):
+    """
+    Tests that the modelling interface warns when an edge is added whose
+    distance or duration values are too large: in that case, PyVRP might not be
+    able to detect missing edges. This situation is likely caused by scaling
+    issues, so a warning is appropriate.
+    """
     model = Model()
     model.add_vehicle_type(capacity=0, num_available=1)
     depot = model.add_depot(0, 0)
@@ -250,13 +312,15 @@ def test_data_warns_about_scaling_issues(recwarn):
     # Normal distance sizes; should all be OK.
     for distance in [1, 10, 100, 1_000, 10_000, 100_000, MAX_USER_VALUE]:
         model.add_edge(client, depot, distance=distance)
-        model.data()
         assert_equal(len(recwarn), 0)
 
-    # But a value exceeding the maximum user value is not OK. This should warn.
-    model.add_edge(depot, client, distance=MAX_USER_VALUE + 1)
+    # But a value exceeding the maximum user value is not OK. This should warn
+    # (both for distance and/or duration).
     with assert_warns(ScalingWarning):
-        model.data()
+        model.add_edge(depot, client, distance=MAX_USER_VALUE + 1)
+
+    with assert_warns(ScalingWarning):
+        model.add_edge(depot, client, distance=0, duration=MAX_USER_VALUE + 1)
 
 
 def test_model_solves_instance_with_zero_or_one_clients():

@@ -1,3 +1,5 @@
+from math import sqrt
+
 from numpy.testing import assert_equal, assert_raises, assert_warns
 from pytest import mark
 
@@ -20,11 +22,17 @@ from pyvrp.tests.helpers import read
     ],
 )
 def test_raises_invalid_file(where: str, exception: Exception):
+    """
+    Tests that ``read()`` raises when there are issues with the given file.
+    """
     with assert_raises(exception):
         read(where)
 
 
 def test_raises_unknown_round_func():
+    """
+    Tests that ``read()`` raises when the rounding function is not known.
+    """
     with assert_raises(TypeError):
         # Unknown round_func, so should raise.
         read("data/OkSmall.txt", round_func="asdbsadfas")
@@ -34,6 +42,9 @@ def test_raises_unknown_round_func():
 
 
 def test_reading_OkSmall_instance():
+    """
+    Tests that the parsed data from the "OkSmall" instance is correct.
+    """
     data = read("data/OkSmall.txt")
 
     # From the DIMENSION, VEHICLES, and CAPACITY fields in the file.
@@ -98,6 +109,9 @@ def test_reading_OkSmall_instance():
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB
+    """
+    Tests that the small E-n22-k4 instance from CVRPLIB is correctly parsed.
+    """
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
     assert_equal(data.num_clients, 21)
@@ -132,6 +146,9 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
 
 
 def test_reading_RC208_instance():  # Solomon style instance
+    """
+    Tests that a Solomon-style VRPTW instance is correctly parsed.
+    """
     data = read(
         "data/RC208.txt", instance_format="solomon", round_func="trunc1"
     )
@@ -174,13 +191,51 @@ def test_reading_RC208_instance():  # Solomon style instance
         assert_equal(data.client(client).required, True)
 
 
-def test_warns_about_scaling_issues(recwarn):
-    # But 100 million is too large. That's really close to INT_MAX, and might
-    # result in issues. So now a warning should be issued.
+def test_warns_about_scaling_issues():
+    """
+    Tests that ``read()`` warns about scaling issues when a distance value is
+    very large.
+    """
     with assert_warns(ScalingWarning):
         # The arc from the depot to client 4 is really large (one billion), so
         # that should trigger a warning.
         read("data/ReallyLargeDistance.txt")
 
 
-# TODO test round funcs
+def test_round_func_trunc1_and_dimacs_are_same():
+    """
+    Tests that the DIMACS convention is equivalent to truncating to the first
+    decimal.
+    """
+    trunc1 = read("data/RC208.txt", "solomon", "trunc1")
+    dimacs = read("data/RC208.txt", "solomon", "dimacs")
+
+    trunc1_dist = trunc1.distance_matrix()
+    dimacs_dist = dimacs.distance_matrix()
+    assert_equal(trunc1_dist, dimacs_dist)
+
+    trunc1_dur = trunc1.duration_matrix()
+    dimacs_dur = trunc1.duration_matrix()
+    assert_equal(trunc1_dur, dimacs_dur)
+
+
+def test_round_func_round_nearest():
+    """
+    Tests rounding to the nearest integer works well for the RC208 instance,
+    which has Euclidean distances computed from integer coordinates. Since the
+    instance is large, we'll test one particular distance.
+    """
+    data = read("data/RC208.txt", "solomon", "round")
+
+    # We're going to test dist(0, 1) and dist(1, 0), which should be the same
+    # since the distances are symmetric/Euclidean.
+    assert_equal(data.client(0).x, 40)
+    assert_equal(data.client(0).y, 50)
+
+    assert_equal(data.client(1).x, 25)
+    assert_equal(data.client(1).y, 85)
+
+    # Compute the distance, and assert that it is indeed correctly rounded.
+    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
+    assert_equal(data.dist(0, 1), round(dist))
+    assert_equal(data.dist(1, 0), round(dist))

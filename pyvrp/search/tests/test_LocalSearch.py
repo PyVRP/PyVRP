@@ -21,20 +21,13 @@ from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 from pyvrp.tests.helpers import make_heterogeneous, read
 
 
-def test_local_search_returns_same_solution_when_there_are_no_operators():
-    data = read("data/OkSmall.txt")
-    cost_evaluator = CostEvaluator(20, 6)
-    rng = RandomNumberGenerator(seed=42)
-
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    sol = Solution.make_random(data, rng)
-
-    # No operators have been added, so these calls should be no-ops.
-    assert_equal(ls.search(sol, cost_evaluator), sol)
-    assert_equal(ls.intensify(sol, cost_evaluator), sol)
-
-
 def test_local_search_returns_same_solution_with_empty_neighbourhood():
+    """
+    Tests that calling the local search when it only has node operators and
+    an empty neighbourhood is a no-op: since the node operators respect the
+    neighbourhood definition, they cannot do anything with an empty
+    neighbourhood.
+    """
     data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -52,6 +45,10 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood():
 
 @mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
+    """
+    Tests that the local search raises when the neighbourhood size does not
+    correspond to the problem dimensions.
+    """
     data = read("data/OkSmall.txt")
     rng = RandomNumberGenerator(seed=42)
 
@@ -68,6 +65,10 @@ def test_local_search_raises_when_neighbourhood_dimensions_do_not_match(size):
 
 
 def test_local_search_raises_when_neighbourhood_contains_self_or_depot():
+    """
+    Tests that the local search raises when the granular neighbourhood contains
+    the depot (for any client) or the client is in its own neighbourhood.
+    """
     data = read("data/OkSmall.txt")
     rng = RandomNumberGenerator(seed=42)
 
@@ -103,6 +104,9 @@ def test_local_search_set_get_neighbours(
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
 ):
+    """
+    Tests setting and getting neighbours on the local search instance.
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = RandomNumberGenerator(seed=42)
 
@@ -199,6 +203,10 @@ def test_prize_collecting():
 
 
 def test_cpp_shuffle_results_in_different_solution():
+    """
+    Tests that calling shuffle changes the evaluation order, which can well
+    result in different solutions generated from the same initial solution.
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = RandomNumberGenerator(seed=42)
 
@@ -223,11 +231,16 @@ def test_cpp_shuffle_results_in_different_solution():
 
 
 def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
-    # This test tests that we will preserve vehicle types
+    """
+    Tests that a solution that is already locally optimal returns the same
+    solution, particularly w.r.t. the underlying vehicles. This exercises an
+    issue where loading the solution in the local search did not preserve the
+    vehicle types.
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = RandomNumberGenerator(seed=42)
-
     neighbours = compute_neighbours(data)
+
     ls = cpp_LocalSearch(data, neighbours)
     ls.add_node_operator(Exchange10(data))
     ls.add_node_operator(Exchange11(data))
@@ -235,8 +248,6 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     cost_evaluator = CostEvaluator(1, 1)
     sol = Solution.make_random(data, rng)
 
-    # LocalSearch::search is deterministic, so two calls with the same base
-    # solution should result in the same improved solution.
     improved = ls.search(sol, cost_evaluator)
 
     # Now make the instance heterogeneous and update the local search
@@ -252,7 +263,7 @@ def test_route_vehicle_types_are_preserved_for_locally_optimal_solutions():
     improved = Solution(data, routes)
 
     # Doing the search should not find any further improvements thus not change
-    # the solution, especially not change the vehicle types
+    # the solution.
     further_improved = ls.search(improved, cost_evaluator)
     assert_equal(further_improved, improved)
 
@@ -282,6 +293,10 @@ def test_bugfix_vehicle_type_offsets():
 
 
 def test_intensify_overlap_tolerance():
+    """
+    Tests that the local search's intensifying route operators respect the
+    route overlap tolerance argument.
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = RandomNumberGenerator(seed=42)
 
@@ -306,6 +321,10 @@ def test_intensify_overlap_tolerance():
 
 @mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
 def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
+    """
+    Tests that calling ``intensify()`` raises when the overlap tolerance
+    argument is not in [0, 1].
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = RandomNumberGenerator(seed=42)
 
@@ -321,6 +340,11 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(tol):
 
 
 def test_no_op_results_in_same_solution():
+    """
+    Tests that calling local search without first adding node or route
+    operators is a no-op, and returns the same solution as the one that was
+    given to it.
+    """
     data = read("data/OkSmall.txt")
     rng = RandomNumberGenerator(seed=42)
 
@@ -336,6 +360,10 @@ def test_no_op_results_in_same_solution():
 
 
 def test_intensify_can_improve_solution_further():
+    """
+    Tests that ``intensify()`` improves a solution further once ``search()`` is
+    stuck.
+    """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     rng = RandomNumberGenerator(seed=11)
 
@@ -368,6 +396,10 @@ def test_intensify_can_improve_solution_further():
 
 
 def test_local_search_raises_for_incomplete_solutions():
+    """
+    Tests that the local search object cannot (yet) improve solutions that are
+    incomplete. Passing an incomplete solution should raise.
+    """
     data = read("data/OkSmallPrizes.txt")
     rng = RandomNumberGenerator(seed=42)
 

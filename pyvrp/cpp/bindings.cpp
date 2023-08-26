@@ -15,6 +15,7 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
+#include <type_traits>
 
 namespace py = pybind11;
 
@@ -32,9 +33,13 @@ namespace pybind11
 {
 namespace detail
 {
+// This is not a fully general type caster for Matrix. Instead, it assumes
+// we're casting elements that are, or have the same size as, pyvrp::Value,
+// which is the case for e.g. the Measure types.
 template <typename T> struct type_caster<Matrix<T>>
 {
-    static_assert(sizeof(T) == sizeof(pyvrp::Value));
+    static_assert(sizeof(T) == sizeof(pyvrp::Value)
+                  && std::is_constructible_v<T, pyvrp::Value>);
 
 public:
 #ifdef PYVRP_DOUBLE_PRECISION
@@ -43,8 +48,11 @@ public:
     PYBIND11_TYPE_CASTER(Matrix<T>, _("numpy.ndarray[int]"));
 #endif
 
-    bool load(py::handle src, bool)  // Python -> C++
+    bool load(py::handle src, bool convert)  // Python -> C++
     {
+        if (!convert && !py::array_t<pyvrp::Value>::check_(src))
+            return false;
+
         auto const style = py::array::c_style | py::array::forcecast;
         auto const buf = py::array_t<pyvrp::Value, style>::ensure(src);
 
@@ -678,9 +686,11 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<RandomNumberGenerator>(
         m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))
         .def(py::init<uint32_t>(), py::arg("seed"))
+        .def(py::init<std::array<uint32_t, 4>>(), py::arg("state"))
         .def("min", &RandomNumberGenerator::min)
         .def("max", &RandomNumberGenerator::max)
         .def("__call__", &RandomNumberGenerator::operator())
         .def("rand", &RandomNumberGenerator::rand<double>)
-        .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"));
+        .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"))
+        .def("state", &RandomNumberGenerator::state);
 }

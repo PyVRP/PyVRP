@@ -35,7 +35,6 @@ Contents
 
    setup/introduction_to_vrp
    setup/introduction_to_hgs
-   examples/quick_tutorial
    setup/installation
    setup/getting_help
    setup/benchmarks
@@ -44,6 +43,7 @@ Contents
    :maxdepth: 1
    :caption: Examples
 
+   examples/quick_tutorial
    examples/basic_vrps
    examples/using_pyvrp_components
 
@@ -63,5 +63,6 @@ Contents
    :maxdepth: 1
    :caption: Developing PyVRP
 
-   dev/contributing
    dev/benchmarking
+   dev/contributing
+   dev/new_vrp_variants

@@ -71,10 +71,10 @@ class SwapStar : public LocalSearchOperator<Route>
         Cost cost = 0;
 
         Route::Node *U = nullptr;
-        Route::Node *UAfter = nullptr;  // Insert U after this node in V's route
+        Route::Node *UAfter = nullptr;  // insert U after this node in V's route
 
         Route::Node *V = nullptr;
-        Route::Node *VAfter = nullptr;  // Insert V after this node in U's route
+        Route::Node *VAfter = nullptr;  // insert V after this node in U's route
     };
 
     Matrix<ThreeBest> cache;

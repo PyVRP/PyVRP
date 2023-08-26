@@ -50,6 +50,9 @@ def test_single_route_OkSmall():
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
 def test_RC208_instance(seed: int):
+    """
+    Test a larger instance over several seeds.
+    """
     data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=seed)
