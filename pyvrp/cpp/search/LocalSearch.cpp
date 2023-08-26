@@ -65,7 +65,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     {
         searchCompleted = true;
 
-        // Node operators are evaluated at neighbouring (U, V) pairs.
+        // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
             auto *U = &clients[uClient];
@@ -77,13 +77,16 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // all clients are required (e.g., when prize collecting).
             optionalClientMoves(U, costEvaluator);
 
+            if (!U->route())  // we already evaluated inserting U, so there is
+                continue;     // nothing left to be done for this client.
+
             // We next apply the regular node operators. These work on pairs
             // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
 
-                if (!U->route() || !V->route())
+                if (!V->route())
                     continue;
 
                 if (lastModified[U->route()->idx()] > lastTestedNode

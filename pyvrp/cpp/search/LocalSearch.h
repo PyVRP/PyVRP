@@ -57,10 +57,10 @@ class LocalSearch
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
-    // TODO
+    // Evaluates moves involving empty routes.
     void emptyRouteMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // TODO
+    // Evaluates moves involving missing or optional clients.
     void optionalClientMoves(Route::Node *U,
                              CostEvaluator const &costEvaluator);
 
