@@ -438,3 +438,18 @@ def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
         assert_equal(route.tws_between(start, end).total_time_warp(), 0)
+
+
+def test_distance_is_equal_to_dist_between_over_whole_route():
+    """
+    Tests that calling distance() on the route object is the same as calling
+    dist_between() with the start and end depot indices as arguments.
+    """
+    data = read("data/OkSmall.txt")
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(1, data.num_clients + 1):
+        route.append(Node(loc=client))
+    route.update()
+
+    assert_equal(route.distance(), route.dist_between(0, len(route) + 1))
