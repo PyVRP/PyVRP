@@ -28,11 +28,6 @@ Cost pyvrp::search::insertCost(Route::Node *U,
                                            route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
-    // If this is true, adding U cannot decrease time warp in V's route enough
-    // to offset the deltaCost.
-    if (deltaCost >= costEvaluator.twPenalty(route->timeWarp()))
-        return deltaCost;
-
     auto const vTWS = TWS::merge(data.durationMatrix(),
                                  route->twsBefore(V->idx()),
                                  TWS(U->client(), uClient),
