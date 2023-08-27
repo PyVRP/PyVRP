@@ -54,15 +54,16 @@ class LocalSearch
     // Tests the route pair (U, V).
     bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
+    // Tests moves involving empty routes.
+    void applyEmptyRouteMoves(Route::Node *U,
+                              CostEvaluator const &costEvaluator);
+
+    // Tests moves involving missing or optional clients.
+    void applyOptionalClientMoves(Route::Node *U,
+                                  CostEvaluator const &costEvaluator);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
-
-    // Evaluates moves involving empty routes.
-    void emptyRouteMoves(Route::Node *U, CostEvaluator const &costEvaluator);
-
-    // Evaluates moves involving missing or optional clients.
-    void optionalClientMoves(Route::Node *U,
-                             CostEvaluator const &costEvaluator);
 
     // Performs search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);

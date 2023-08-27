@@ -75,7 +75,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
-            optionalClientMoves(U, costEvaluator);
+            applyOptionalClientMoves(U, costEvaluator);
 
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
@@ -103,7 +103,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // Moves involving empty routes are not tested in the first
             // iteration to avoid using too many routes.
             if (step > 0)
-                emptyRouteMoves(U, costEvaluator);
+                applyEmptyRouteMoves(U, costEvaluator);
         }
     }
 }
@@ -199,29 +199,8 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-void LocalSearch::update(Route *U, Route *V)
-{
-    numMoves++;
-    searchCompleted = false;
-
-    U->update();
-    lastModified[U->idx()] = numMoves;
-
-    for (auto *op : routeOps)  // this is used by some route operators
-        op->update(U);         // to keep caches in sync.
-
-    if (U != V)
-    {
-        V->update();
-        lastModified[V->idx()] = numMoves;
-
-        for (auto *op : routeOps)  // this is used by some route operators
-            op->update(V);         // to keep caches in sync.
-    }
-}
-
-void LocalSearch::emptyRouteMoves(Route::Node *U,
-                                  CostEvaluator const &costEvaluator)
+void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
+                                       CostEvaluator const &costEvaluator)
 {
     auto begin = routes.begin();
     for (size_t t = 0; t != data.numVehicleTypes(); t++)
@@ -241,8 +220,8 @@ void LocalSearch::emptyRouteMoves(Route::Node *U,
     }
 }
 
-void LocalSearch::optionalClientMoves(Route::Node *U,
-                                      CostEvaluator const &costEvaluator)
+void LocalSearch::applyOptionalClientMoves(Route::Node *U,
+                                           CostEvaluator const &costEvaluator)
 {
     auto const uClient = U->client();
     auto const &uData = data.client(uClient);
@@ -282,6 +261,27 @@ void LocalSearch::optionalClientMoves(Route::Node *U,
             UAfter->route()->insert(UAfter->idx() + 1, U);
             update(UAfter->route(), UAfter->route());
         }
+    }
+}
+
+void LocalSearch::update(Route *U, Route *V)
+{
+    numMoves++;
+    searchCompleted = false;
+
+    U->update();
+    lastModified[U->idx()] = numMoves;
+
+    for (auto *op : routeOps)  // this is used by some route operators
+        op->update(U);         // to keep caches in sync.
+
+    if (U != V)
+    {
+        V->update();
+        lastModified[V->idx()] = numMoves;
+
+        for (auto *op : routeOps)  // this is used by some route operators
+            op->update(V);         // to keep caches in sync.
     }
 }
 
