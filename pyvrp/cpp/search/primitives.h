@@ -5,6 +5,9 @@
 #include "Measure.h"
 #include "Route.h"
 
+// This file stores a few basic functions for (precisely) evaluating really
+// common moves. Those primitives may be useful implementing higher order
+// operators.
 namespace pyvrp::search
 {
 // Evaluates inserting U after V.
