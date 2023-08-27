@@ -12,13 +12,13 @@ namespace pyvrp::search
 {
 // Evaluates inserting U after V.
 /**
- * Evaluates the delta cost of inserting U after V in V's route.The evaluation
+ * Evaluates the delta cost of inserting U after V in V's route. The evaluation
  * is exact.
  *
  * Parameters
  * ----------
  * U
- *     Node to insert. Must not currently be in a route.
+ *     Node to insert.
  * V
  *     Node to insert U after. Must be in a route.
  * data

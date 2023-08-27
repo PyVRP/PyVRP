@@ -11,7 +11,7 @@ Cost pyvrp::search::insertCost(Route::Node *U,
                                ProblemData const &data,
                                CostEvaluator const &costEvaluator)
 {
-    if (!V->route() || U->route() || U->isDepot())
+    if (!V->route() || U->isDepot())
         return 0;
 
     auto *route = V->route();
