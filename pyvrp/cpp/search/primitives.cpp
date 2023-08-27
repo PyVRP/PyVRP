@@ -11,10 +11,9 @@ Cost pyvrp::search::insertCost(Route::Node *U,
                                ProblemData const &data,
                                CostEvaluator const &costEvaluator)
 {
-    if (!V->route())
+    if (!V->route() || U->route() || U->isDepot())
         return 0;
 
-    assert(!U->route());
     auto *route = V->route();
 
     Distance const deltaDist = data.dist(V->client(), U->client())
@@ -43,7 +42,7 @@ Cost pyvrp::search::removeCost(Route::Node *U,
                                ProblemData const &data,
                                CostEvaluator const &costEvaluator)
 {
-    if (!U->route())
+    if (!U->route() || U->isDepot())
         return 0;
 
     auto *route = U->route();
