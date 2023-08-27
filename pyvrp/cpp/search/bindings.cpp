@@ -386,18 +386,29 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("route", &Route::Node::route)
         .def("is_depot", &Route::Node::isDepot);
 
-    m.def("insert_cost",
-          &insertCost,
-          py::arg("U"),
-          py::arg("V"),
-          py::arg("data"),
-          py::arg("cost_evaluator"),
-          DOC(pyvrp, search, insertCost));
+    m.def(
+        "insert_cost",
+        [](Route::Node *U,
+           Route::Node *V,
+           pyvrp::ProblemData const &data,
+           pyvrp::CostEvaluator const &costEvaluator) {
+            return insertCost(U, V, data, costEvaluator).get();
+        },
+        py::arg("U"),
+        py::arg("V"),
+        py::arg("data"),
+        py::arg("cost_evaluator"),
+        DOC(pyvrp, search, insertCost));
 
-    m.def("remove_cost",
-          &removeCost,
-          py::arg("U"),
-          py::arg("data"),
-          py::arg("cost_evaluator"),
-          DOC(pyvrp, search, removeCost));
+    m.def(
+        "remove_cost",
+        [](Route::Node *U,
+           pyvrp::ProblemData const &data,
+           pyvrp::CostEvaluator const &costEvaluator) {
+            return removeCost(U, data, costEvaluator).get();
+        },
+        py::arg("U"),
+        py::arg("data"),
+        py::arg("cost_evaluator"),
+        DOC(pyvrp, search, removeCost));
 }
