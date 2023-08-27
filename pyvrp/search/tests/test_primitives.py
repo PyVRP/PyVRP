@@ -24,6 +24,7 @@ def test_insert_cost_zero_when_not_allowed():
 
     # Inserting after a node that's not in a route is not possible.
     assert_equal(insert_cost(route[1], Node(loc=3), data, cost_eval), 0)
+    assert_equal(insert_cost(route[3], Node(loc=3), data, cost_eval), 0)
 
 
 def test_insert_cost():
