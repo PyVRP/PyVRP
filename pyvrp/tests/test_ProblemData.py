@@ -67,8 +67,8 @@ def test_client_constructor_initialises_data_fields_correctly(
         "prize",
     ),
     [
-        (1, 1, 1, 1, 1, 0, 0, 0),  # late < early
-        (1, 1, 1, -1, 0, 1, 0, 0),  # negative service duration
+        (1, 1, 1, 0, 1, 0, 0, 0),  # late < early
+        (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
         (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
         (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
     ],
