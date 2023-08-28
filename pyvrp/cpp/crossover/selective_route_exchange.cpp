@@ -1,11 +1,8 @@
 #include "selective_route_exchange.h"
 
 #include "DynamicBitset.h"
-#include "repair/greedy_repair.h"
 
 #include <cmath>
-
-using pyvrp::repair::greedyRepair;
 
 using Client = size_t;
 using Clients = std::vector<Client>;
@@ -181,8 +178,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     // Identify differences between route sets
     auto const selectedBNotA = selectedB & ~selectedA;
 
-    std::vector<std::vector<Client>> visits1(nRoutesA);
-    std::vector<std::vector<Client>> visits2(nRoutesA);
+    std::vector<Clients> visits1(nRoutesA);
+    std::vector<Clients> visits2(nRoutesA);
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)
@@ -214,8 +211,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     }
 
     // Turn visits back into routes.
-    std::vector<Solution::Route> routes1;
-    std::vector<Solution::Route> routes2;
+    Routes routes1;
+    Routes routes2;
     for (size_t r = 0; r < nRoutesA; r++)
     {
         if (!visits1[r].empty())
@@ -225,16 +222,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
             routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
     }
 
-    // We have not yet inserted unplanned clients (those that were in the
-    // removed routes of A, but not the inserted routes of B). Let's insert
-    // those now.
-    std::vector<size_t> unplanned;
-    for (size_t client = 1; client <= data.numClients(); ++client)
-        if (selectedA[client] && !selectedB[client])
-            unplanned.push_back(client);
-
-    auto const sol1 = greedyRepair(routes1, unplanned, data, costEvaluator);
-    auto const sol2 = greedyRepair(routes2, unplanned, data, costEvaluator);
+    auto const sol1 = Solution(data, routes1);
+    auto const sol2 = Solution(data, routes2);
 
     auto const cost1 = costEvaluator.penalisedCost(sol1);
     auto const cost2 = costEvaluator.penalisedCost(sol2);
