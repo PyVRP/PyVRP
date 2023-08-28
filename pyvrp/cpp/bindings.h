@@ -67,15 +67,15 @@ public:
     }
 };
 
+// On the C++ side we have strong types for different measure values (for
+// example distance, duration, etc.), but on the Python side those things
+// are just ints or doubles. This type caster converts between the two.
 template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
     PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("pyvrp.MeasureType"));
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
-        if (!convert)
-            return false;
-
 #ifdef PYVRP_DOUBLE_PRECISION
         auto const raw = PyFloat_AsDouble(src.ptr());
 #else
