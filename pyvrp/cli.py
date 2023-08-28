@@ -1,7 +1,7 @@
 import argparse
 from functools import partial
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -22,7 +22,6 @@ from pyvrp import (
     Population,
     PopulationParams,
     RandomNumberGenerator,
-    Result,
     Solution,
 )
 from pyvrp.crossover import selective_route_exchange as srex
@@ -71,7 +70,7 @@ def solve(
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     **kwargs,
-) -> Result:
+) -> Tuple[str, str, float, int, float]:
     """
     Solves a single VRPLIB instance.
 
@@ -100,8 +99,9 @@ def solve(
 
     Returns
     -------
-    Result
-        Object storing the solver outcome.
+    Tuple[str, str, float, int, float]
+        A tuple containing the instance name, whether the solution is feasible,
+        the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
         with open(kwargs["config_loc"], "rb") as fh:
@@ -150,35 +150,24 @@ def solve(
         stop = MaxIterations(max_iterations)  # type: ignore
 
     result = algo.run(stop)
+    instance_name = data_loc.stem
 
     if stats_dir:
         stats_dir.mkdir(parents=True, exist_ok=True)  # just in case
-        result.stats.to_csv(stats_dir / (data_loc.stem + ".csv"))
+        result.stats.to_csv(stats_dir / (instance_name + ".csv"))
 
     if sol_dir:
         sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
-        with open(sol_dir / (data_loc.stem + ".sol"), "w") as fh:
+        with open(sol_dir / (instance_name + ".sol"), "w") as fh:
             fh.write(str(result.best))
             fh.write(f"Cost: {result.cost()}\n")
 
-    return result
-
-
-def benchmark_solve(instance: Path, **kwargs):
-    """
-    Small wrapper script around ``solve()`` that translates result objects into
-    a few key statistics, and returns those. This is needed because the result
-    solution (of type ``Solution``) cannot be pickled.
-    """
-    res = solve(instance, **kwargs)
-    instance_name = Path(instance).stem
-
     return (
         instance_name,
-        "Y" if res.is_feasible() else "N",
-        round(res.cost(), 2),
-        res.num_iterations,
-        round(res.runtime, 3),
+        "Y" if result.is_feasible() else "N",
+        round(result.cost(), 2),
+        result.num_iterations,
+        round(result.runtime, 3),
     )
 
 
@@ -196,7 +185,7 @@ def benchmark(instances: List[Path], num_procs: int = 1, **kwargs):
     kwargs
         Any additional keyword arguments to pass to the solving function.
     """
-    func = partial(benchmark_solve, **kwargs)
+    func = partial(solve, **kwargs)
     args = sorted(instances)
 
     if len(instances) == 1 or num_procs == 1:
