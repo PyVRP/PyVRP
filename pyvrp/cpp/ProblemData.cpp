@@ -27,16 +27,26 @@ ProblemData::Client::Client(Coordinate x,
       required(required)
 {
     if (demand < 0)
-        throw std::invalid_argument("demand must be >= 0");
+        throw std::invalid_argument("demand must be >= 0.");
 
     if (serviceDuration < 0)
-        throw std::invalid_argument("service_duration must be >= 0");
+        throw std::invalid_argument("service_duration must be >= 0.");
 
     if (twEarly > twLate)
-        throw std::invalid_argument("tw_early must be <= tw_late");
+        throw std::invalid_argument("tw_early must be <= tw_late.");
 
     if (prize < 0)
-        throw std::invalid_argument("prize must be >= 0");
+        throw std::invalid_argument("prize must be >= 0.");
+}
+
+ProblemData::VehicleType::VehicleType(Load capacity, size_t numAvailable)
+    : capacity(capacity), numAvailable(numAvailable)
+{
+    if (capacity < 0)
+        throw std::invalid_argument("capacity must be >= 0.");
+
+    if (numAvailable == 0)
+        throw std::invalid_argument("num_available must be > 0.");
 }
 
 std::pair<double, double> const &ProblemData::centroid() const

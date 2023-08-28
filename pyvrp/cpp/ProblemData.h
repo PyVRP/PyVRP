@@ -124,6 +124,8 @@ public:
         Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
+
+        VehicleType(Load capacity, size_t numAvailable);
     };
 
 private:
