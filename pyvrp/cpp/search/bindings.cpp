@@ -6,6 +6,7 @@
 #include "Route.h"
 #include "SwapStar.h"
 #include "TwoOpt.h"
+#include "primitives.h"
 #include "search_docs.h"
 
 #include <pybind11/pybind11.h>
@@ -16,10 +17,12 @@
 namespace py = pybind11;
 
 using pyvrp::search::Exchange;
+using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::MoveTwoClientsReversed;
 using pyvrp::search::RelocateStar;
+using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 using pyvrp::search::TwoOpt;
@@ -296,4 +299,19 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("route", &Route::Node::route)
         .def("is_depot", &Route::Node::isDepot);
+
+    m.def("insert_cost",
+          &insertCost,
+          py::arg("U"),
+          py::arg("V"),
+          py::arg("data"),
+          py::arg("cost_evaluator"),
+          DOC(pyvrp, search, insertCost));
+
+    m.def("remove_cost",
+          &removeCost,
+          py::arg("U"),
+          py::arg("data"),
+          py::arg("cost_evaluator"),
+          DOC(pyvrp, search, removeCost));
 }
