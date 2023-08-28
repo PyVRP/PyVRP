@@ -9,14 +9,11 @@
 using pyvrp::CostEvaluator;
 using pyvrp::ProblemData;
 using pyvrp::Solution;
-using pyvrp::search::n;
-using pyvrp::search::p;
 using pyvrp::search::Route;
 
 using Clients = std::vector<Route::Node>;
 using Routes = std::vector<Route>;
 using SolRoutes = std::vector<Solution::Route>;
-using TWS = pyvrp::TimeWindowSegment;
 
 namespace
 {
