@@ -833,6 +833,8 @@ def test_fixed_vehicle_cost(assignment: Tuple[int, int], expected: int):
     data = read("data/OkSmall.txt")
     data = make_heterogeneous(
         data,
+        # First vehicle type is free, second costs 10 per vehicle. The solution
+        # should be able to track this.
         [VehicleType(10, 2, fixed_cost=0), VehicleType(10, 2, fixed_cost=10)],
     )
 

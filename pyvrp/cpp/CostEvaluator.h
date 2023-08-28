@@ -16,6 +16,7 @@ template <typename T> concept CostEvaluatable = requires(T arg)
     // clang-format off
     { arg.distance() } -> std::same_as<Distance>;
     { arg.excessLoad() } -> std::same_as<Load>;
+    { arg.fixedVehicleCost() }  -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
     { arg.isFeasible() } -> std::same_as<bool>;
@@ -117,8 +118,13 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
 {
     // Standard objective plus penalty terms for capacity- and time-related
     // infeasibilities.
-    return static_cast<Cost>(arg.distance()) + arg.uncollectedPrizes()
-           + loadPenaltyExcess(arg.excessLoad()) + twPenalty(arg.timeWarp());
+    // clang-format off
+    return static_cast<Cost>(arg.distance())
+           + arg.fixedVehicleCost()
+           + arg.uncollectedPrizes()
+           + loadPenaltyExcess(arg.excessLoad())
+           + twPenalty(arg.timeWarp());
+    // clang-format on
 }
 
 template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
