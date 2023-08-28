@@ -9,7 +9,8 @@ namespace pyvrp::search
 /**
  * SwapRoutes(data: ProblemData)
  *
- * TODO
+ * This operator evaluates exchanging the visits of two routes :math:`U` and
+ * :math:`V`.
  */
 class SwapRoutes : public LocalSearchOperator<Route>
 {
