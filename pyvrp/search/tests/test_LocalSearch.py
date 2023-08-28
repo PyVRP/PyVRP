@@ -395,10 +395,11 @@ def test_intensify_can_improve_solution_further():
         assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
 
 
-def test_local_search_raises_for_incomplete_solutions():
+def test_local_search_completes_incomplete_solutions():
     """
-    Tests that the local search object cannot (yet) improve solutions that are
-    incomplete. Passing an incomplete solution should raise.
+    Tests that the local search object improve solutions that are incomplete,
+    and returns a completed solution. Passing an incomplete solution should
+    return a completed solution after search.
     """
     data = read("data/OkSmallPrizes.txt")
     rng = RandomNumberGenerator(seed=42)
@@ -408,6 +409,7 @@ def test_local_search_raises_for_incomplete_solutions():
 
     cost_eval = CostEvaluator(1, 1)
     sol = Solution(data, [[2], [3, 4]])  # 1 is required but not visited
+    assert_(not sol.is_complete())
 
-    with assert_raises(RuntimeError):
-        ls.search(sol, cost_eval)
+    new_sol = ls.search(sol, cost_eval)
+    assert_(new_sol.is_complete())

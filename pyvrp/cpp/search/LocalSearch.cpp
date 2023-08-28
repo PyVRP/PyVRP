@@ -1,6 +1,7 @@
 #include "LocalSearch.h"
 #include "Measure.h"
 #include "TimeWindowSegment.h"
+#include "primitives.h"
 
 #include <algorithm>
 #include <cassert>
@@ -64,7 +65,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     {
         searchCompleted = true;
 
-        // Node operators are evaluated at neighbouring (U, V) pairs.
+        // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
             auto *U = &clients[uClient];
@@ -72,18 +73,21 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
 
-            if (U->route() && !data.client(uClient).required)  // test removing
-                maybeRemove(U, costEvaluator);                 // U
+            // First test removing or inserting U. Particularly relevant if not
+            // all clients are required (e.g., when prize collecting).
+            applyOptionalClientMoves(U, costEvaluator);
 
+            if (!U->route())  // we already evaluated inserting U, so there is
+                continue;     // nothing left to be done for this client.
+
+            // We next apply the regular node operators. These work on pairs
+            // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours[uClient])
             {
                 auto *V = &clients[vClient];
 
-                if (!U->route() && V->route())         // U might be inserted
-                    maybeInsert(U, V, costEvaluator);  // into V's route
-
-                if (!U->route() || !V->route())  // we already tested inserting
-                    continue;                    // U, so we can skip this move
+                if (!V->route())
+                    continue;
 
                 if (lastModified[U->route()->idx()] > lastTestedNode
                     || lastModified[V->route()->idx()] > lastTestedNode)
@@ -96,27 +100,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 }
             }
 
-            if (step > 0)  // empty moves are not tested initially to avoid
-            {              // using too many routes.
-                auto begin = routes.begin();
-                for (size_t t = 0; t != data.numVehicleTypes(); t++)
-                {
-                    // Check move involving empty route of each vehicle type
-                    // (if such a route exists).
-                    auto const end = begin + data.vehicleType(t).numAvailable;
-                    auto pred = [](auto const &route) { return route.empty(); };
-                    auto empty = std::find_if(begin, end, pred);
-                    begin = end;
-
-                    if (empty == end)
-                        continue;
-
-                    if (U->route())  // try inserting U into the empty route.
-                        applyNodeOps(U, (*empty)[0], costEvaluator);
-                    else  // U is not in the solution, so again try inserting.
-                        maybeInsert(U, (*empty)[0], costEvaluator);
-                }
-            }
+            // Moves involving empty routes are not tested in the first
+            // iteration to avoid using too many routes.
+            if (step > 0)
+                applyEmptyRouteMoves(U, costEvaluator);
         }
     }
 }
@@ -212,72 +199,68 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
-void LocalSearch::maybeInsert(Route::Node *U,
-                              Route::Node *V,
-                              CostEvaluator const &costEvaluator)
+void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
+                                       CostEvaluator const &costEvaluator)
 {
-    assert(!U->route() && V->route());
-    auto *route = V->route();
-
-    Distance const deltaDist = data.dist(V->client(), U->client())
-                               + data.dist(U->client(), n(V)->client())
-                               - data.dist(V->client(), n(V)->client());
-
-    auto const &uClient = data.client(U->client());
-    Cost deltaCost = static_cast<Cost>(deltaDist) - uClient.prize;
-
-    deltaCost += costEvaluator.loadPenalty(route->load() + uClient.demand,
-                                           route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    // If this is true, adding U cannot decrease time warp in V's route enough
-    // to offset the deltaCost.
-    if (deltaCost >= costEvaluator.twPenalty(route->timeWarp()))
-        return;
-
-    auto const vTWS = TWS::merge(data.durationMatrix(),
-                                 route->twsBefore(V->idx()),
-                                 TWS(U->client(), uClient),
-                                 route->twsAfter(V->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
-
-    if (deltaCost < 0)
+    auto begin = routes.begin();
+    for (size_t t = 0; t != data.numVehicleTypes(); t++)
     {
-        route->insert(V->idx() + 1, U);
-        update(route, route);
+        // Check move involving empty route of each vehicle type
+        // (if such a route exists).
+        auto const end = begin + data.vehicleType(t).numAvailable;
+        auto pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+        begin = end;
+
+        if (empty == end)
+            continue;
+
+        if (U->route())  // try inserting U into the empty route.
+            applyNodeOps(U, (*empty)[0], costEvaluator);
     }
 }
 
-void LocalSearch::maybeRemove(Route::Node *U,
-                              CostEvaluator const &costEvaluator)
+void LocalSearch::applyOptionalClientMoves(Route::Node *U,
+                                           CostEvaluator const &costEvaluator)
 {
-    assert(U->route());
-    auto *route = U->route();
+    auto const uClient = U->client();
+    auto const &uData = data.client(uClient);
 
-    Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
-                               - data.dist(p(U)->client(), U->client())
-                               - data.dist(U->client(), n(U)->client());
-
-    auto const &uClient = data.client(U->client());
-    Cost deltaCost = static_cast<Cost>(deltaDist) + uClient.prize;
-
-    deltaCost += costEvaluator.loadPenalty(route->load() - uClient.demand,
-                                           route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    auto uTWS = TWS::merge(data.durationMatrix(),
-                           route->twsBefore(U->idx() - 1),
-                           route->twsAfter(U->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
-
-    if (deltaCost < 0)
+    // First test removing U. This is allowed when U is not required.
+    if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
+        auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
+    }
+
+    // If U is not currently in the solution, we test if inserting it is an
+    // improving move. Note that we always insert required clients.
+    if (!U->route())
+    {
+        Route::Node *UAfter = routes[0][0];
+        Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+
+        for (auto const vClient : neighbours[uClient])
+        {
+            auto *V = &clients[vClient];
+
+            if (!V->route())
+                continue;
+
+            auto cost = insertCost(U, V, data, costEvaluator);
+            if (cost < bestCost)
+            {
+                bestCost = cost;
+                UAfter = V;
+            }
+        }
+
+        if (uData.required || bestCost < 0)
+        {
+            UAfter->route()->insert(UAfter->idx() + 1, U);
+            update(UAfter->route(), UAfter->route());
+        }
     }
 }
 
@@ -304,9 +287,6 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
-    if (!solution.isComplete())  // TODO allow incomplete at some point
-        throw std::runtime_error("LocalSearch requires complete solutions.");
-
     // First empty all routes.
     for (auto &route : routes)
         route.clear();
