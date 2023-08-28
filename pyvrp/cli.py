@@ -1,7 +1,7 @@
 import argparse
 from functools import partial
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -70,7 +70,7 @@ def solve(
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     **kwargs,
-) -> tuple[str, str, float, int, float]:
+) -> Tuple[str, str, float, int, float]:
     """
     Solves a single VRPLIB instance.
 
