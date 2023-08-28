@@ -57,6 +57,7 @@ libcommon = static_library(
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'MoveTwoClientsReversed.cpp',
+        SRC_DIR / 'search' / 'primitives.cpp',
         SRC_DIR / 'search' / 'TwoOpt.cpp',
         SRC_DIR / 'search' / 'RelocateStar.cpp',
         SRC_DIR / 'search' / 'SwapStar.cpp',
