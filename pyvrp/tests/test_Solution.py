@@ -842,4 +842,4 @@ def test_fixed_vehicle_cost(assignment: Tuple[int, int], expected: int):
     ]
 
     sol = Solution(data, routes)
-    assert_equal(sol.fixed_vehicle_cost(), expected)
+    assert_allclose(sol.fixed_vehicle_cost(), expected)
