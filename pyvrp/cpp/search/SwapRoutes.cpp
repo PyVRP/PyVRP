@@ -14,14 +14,18 @@ Cost SwapRoutes::evaluate(Route *U,
 
     Cost deltaCost = 0;
 
-    // Load changes
+    // Changes in load capacity violations.
     deltaCost += costEvaluator.loadPenalty(U->load(), V->capacity());
     deltaCost -= costEvaluator.loadPenalty(U->load(), U->capacity());
 
     deltaCost += costEvaluator.loadPenalty(V->load(), U->capacity());
     deltaCost -= costEvaluator.loadPenalty(V->load(), V->capacity());
 
-    // TODO depot distance, time windows
+    // Changes in distance from and to the depot.
+    // TODO
+
+    // Changes in time warp.
+    // TODO
 
     return deltaCost;
 }
