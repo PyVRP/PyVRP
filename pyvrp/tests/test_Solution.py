@@ -1,5 +1,6 @@
 import pickle
 from copy import copy, deepcopy
+from typing import Tuple
 
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
@@ -819,3 +820,26 @@ def test_route_can_be_pickled():
         after_pickle = pickle.loads(bytes)
 
         assert_equal(after_pickle, before_pickle)
+
+
+@mark.parametrize(
+    ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
+)
+def test_fixed_vehicle_cost(assignment: Tuple[int, int], expected: int):
+    """
+    Tests that the solution tracks the total fixed vehicle costs of the
+    vehicles used for its routes.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(
+        data,
+        [VehicleType(10, 2, fixed_cost=0), VehicleType(10, 2, fixed_cost=10)],
+    )
+
+    routes = [
+        Route(data, [1, 2], assignment[0]),
+        Route(data, [3, 4], assignment[1]),
+    ]
+
+    sol = Solution(data, routes)
+    assert_equal(sol.fixed_vehicle_cost(), expected)
