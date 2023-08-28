@@ -54,14 +54,14 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::Client>(
         m, "Client", DOC(pyvrp, ProblemData, Client))
-        .def(py::init<pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
+        .def(py::init<pyvrp::Coordinate,
+                      pyvrp::Coordinate,
+                      pyvrp::Load,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Cost,
                       bool>(),
              py::arg("x"),
              py::arg("y"),
@@ -84,7 +84,7 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
-        .def(py::init<pyvrp::Value, size_t>(),
+        .def(py::init<pyvrp::Load, size_t>(),
              py::arg("capacity"),
              py::arg("num_available"))
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
@@ -221,36 +221,36 @@ PYBIND11_MODULE(_pyvrp, m)
             [](Solution::Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
                 return py::make_tuple(route.visits(),
-                                      route.distance().get(),
-                                      route.demand().get(),
-                                      route.excessLoad().get(),
-                                      route.duration().get(),
-                                      route.timeWarp().get(),
-                                      route.travelDuration().get(),
-                                      route.serviceDuration().get(),
-                                      route.waitDuration().get(),
-                                      route.releaseTime().get(),
-                                      route.startTime().get(),
-                                      route.slack().get(),
-                                      route.prizes().get(),
+                                      route.distance(),
+                                      route.demand(),
+                                      route.excessLoad(),
+                                      route.duration(),
+                                      route.timeWarp(),
+                                      route.travelDuration(),
+                                      route.serviceDuration(),
+                                      route.waitDuration(),
+                                      route.releaseTime(),
+                                      route.startTime(),
+                                      route.slack(),
+                                      route.prizes(),
                                       route.centroid(),
                                       route.vehicleType());
             },
             [](py::tuple t) {  // __setstate__
                 Solution::Route route = Solution::Route(
                     t[0].cast<std::vector<size_t>>(),         // visits
-                    t[1].cast<pyvrp::Value>(),                // distance
-                    t[2].cast<pyvrp::Value>(),                // demand
-                    t[3].cast<pyvrp::Value>(),                // excess load
-                    t[4].cast<pyvrp::Value>(),                // duration
-                    t[5].cast<pyvrp::Value>(),                // time warp
-                    t[6].cast<pyvrp::Value>(),                // travel
-                    t[7].cast<pyvrp::Value>(),                // service
-                    t[8].cast<pyvrp::Value>(),                // wait
-                    t[9].cast<pyvrp::Value>(),                // release
-                    t[10].cast<pyvrp::Value>(),               // start time
-                    t[11].cast<pyvrp::Value>(),               // slack
-                    t[12].cast<pyvrp::Value>(),               // prizes
+                    t[1].cast<pyvrp::Distance>(),             // distance
+                    t[2].cast<pyvrp::Load>(),                 // demand
+                    t[3].cast<pyvrp::Load>(),                 // excess load
+                    t[4].cast<pyvrp::Duration>(),             // duration
+                    t[5].cast<pyvrp::Duration>(),             // time warp
+                    t[6].cast<pyvrp::Duration>(),             // travel
+                    t[7].cast<pyvrp::Duration>(),             // service
+                    t[8].cast<pyvrp::Duration>(),             // wait
+                    t[9].cast<pyvrp::Duration>(),             // release
+                    t[10].cast<pyvrp::Duration>(),            // start time
+                    t[11].cast<pyvrp::Duration>(),            // slack
+                    t[12].cast<pyvrp::Cost>(),                // prizes
                     t[13].cast<std::pair<double, double>>(),  // centroid
                     t[14].cast<size_t>());                    // vehicle type
 
@@ -342,11 +342,11 @@ PYBIND11_MODULE(_pyvrp, m)
                 // Returns a tuple that completely encodes the solution's state.
                 return py::make_tuple(sol.numClients(),
                                       sol.numMissingClients(),
-                                      sol.distance().get(),
-                                      sol.excessLoad().get(),
-                                      sol.prizes().get(),
-                                      sol.uncollectedPrizes().get(),
-                                      sol.timeWarp().get(),
+                                      sol.distance(),
+                                      sol.excessLoad(),
+                                      sol.prizes(),
+                                      sol.uncollectedPrizes(),
+                                      sol.timeWarp(),
                                       sol.getRoutes(),
                                       sol.getNeighbours());
             },
@@ -356,15 +356,15 @@ PYBIND11_MODULE(_pyvrp, m)
                     = std::vector<std::optional<std::pair<size_t, size_t>>>;
 
                 Solution sol
-                    = Solution(t[0].cast<size_t>(),        // num clients
-                               t[1].cast<size_t>(),        // num missing
-                               t[2].cast<pyvrp::Value>(),  // distance
-                               t[3].cast<pyvrp::Value>(),  // excess load
-                               t[4].cast<pyvrp::Value>(),  // prizes
-                               t[5].cast<pyvrp::Value>(),  // uncollected
-                               t[6].cast<pyvrp::Value>(),  // time warp
-                               t[7].cast<Routes>(),        // routes
-                               t[8].cast<Neighbours>());   // neighbours
+                    = Solution(t[0].cast<size_t>(),           // num clients
+                               t[1].cast<size_t>(),           // num missing
+                               t[2].cast<pyvrp::Distance>(),  // distance
+                               t[3].cast<pyvrp::Load>(),      // excess load
+                               t[4].cast<pyvrp::Cost>(),      // prizes
+                               t[5].cast<pyvrp::Cost>(),      // uncollected
+                               t[6].cast<pyvrp::Duration>(),  // time warp
+                               t[7].cast<Routes>(),           // routes
+                               t[8].cast<Neighbours>());      // neighbours
 
                 return sol;
             }))
@@ -497,13 +497,13 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, SubPopulation, updateFitness));
 
     py::class_<TWS>(m, "TimeWindowSegment", DOC(pyvrp, TimeWindowSegment))
-        .def(py::init<int,
-                      int,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value,
-                      pyvrp::Value>(),
+        .def(py::init<size_t,
+                      size_t,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration>(),
              py::arg("idx_first"),
              py::arg("idx_last"),
              py::arg("duration"),
