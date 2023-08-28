@@ -1,5 +1,7 @@
 #include "SwapRoutes.h"
 
+#include <vector>
+
 using pyvrp::Cost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
@@ -33,7 +35,20 @@ Cost SwapRoutes::evaluate(Route *U,
 void SwapRoutes::apply([[maybe_unused]] Route *U,
                        [[maybe_unused]] Route *V) const
 {
-    // TODO
+    std::vector<Route::Node *> uNodes = {U->begin(), U->end()};
+    std::vector<Route::Node *> vNodes = {V->begin(), V->end()};
+
+    // We are swapping the routes completely, so we can just clear both.
+    U->clear();
+    V->clear();
+
+    // Reinsert the nodes from route U in route V.
+    for (auto *node : uNodes)
+        V->push_back(node);
+
+    // Reinsert the nodes from route V in route U.
+    for (auto *node : vNodes)
+        U->push_back(node);
 }
 
 SwapRoutes::SwapRoutes(ProblemData const &data)
