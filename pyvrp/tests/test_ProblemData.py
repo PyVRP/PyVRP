@@ -300,3 +300,14 @@ def test_vehicle_type_does_not_raise_for_edge_cases():
     vehicle_type = VehicleType(capacity=0, num_available=1)
     assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
+
+
+def test_vehicle_type_attribute_access():
+    """
+    Smoke test that checks all attributes are equal to the values they were
+    given in the constructor's arguments.
+    """
+    vehicle_type = VehicleType(capacity=13, num_available=7, fixed_cost=3)
+    assert_allclose(vehicle_type.capacity, 13)
+    assert_equal(vehicle_type.num_available, 7)
+    assert_allclose(vehicle_type.fixed_cost, 3)

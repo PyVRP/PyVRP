@@ -118,14 +118,17 @@ public:
      *     Number of vehicles of this type that are available.
      * depot
      *     Depot associated with these vehicles.
+     * fixed_cost
+     *     Fixed cost of using a vehicle of this type.
      */
     struct VehicleType
     {
         Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
+        Cost fixedCost;             // Fixed cost of using this vehicle
 
-        VehicleType(Load capacity, size_t numAvailable);
+        VehicleType(Load capacity, size_t numAvailable, Cost fixedCost = 0);
     };
 
 private:

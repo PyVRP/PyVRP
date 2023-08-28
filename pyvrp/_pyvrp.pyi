@@ -50,7 +50,10 @@ class VehicleType:
     capacity: int
     num_available: int
     depot: int
-    def __init__(self, capacity: int, num_available: int) -> None: ...
+    fixed_cost: int
+    def __init__(
+        self, capacity: int, num_available: int, fixed_cost: int = 0
+    ) -> None: ...
 
 class ProblemData:
     def __init__(

@@ -39,8 +39,10 @@ ProblemData::Client::Client(Coordinate x,
         throw std::invalid_argument("prize must be >= 0.");
 }
 
-ProblemData::VehicleType::VehicleType(Load capacity, size_t numAvailable)
-    : capacity(capacity), numAvailable(numAvailable)
+ProblemData::VehicleType::VehicleType(Load capacity,
+                                      size_t numAvailable,
+                                      Cost fixedCost)
+    : capacity(capacity), numAvailable(numAvailable), fixedCost(fixedCost)
 {
     if (capacity < 0)
         throw std::invalid_argument("capacity must be >= 0.");
