@@ -105,6 +105,11 @@ html_theme_options = {
             "aliases": [],
         },
         {
+            "version": "https://pyvrp.github.io/v0.5.0",
+            "title": "v0.5.0",
+            "aliases": [],
+        },
+        {
             "version": "https://pyvrp.github.io/v0.4.4",
             "title": "v0.4.4",
             "aliases": [],
