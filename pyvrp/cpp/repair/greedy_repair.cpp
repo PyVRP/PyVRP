@@ -2,6 +2,7 @@
 
 #include "TimeWindowSegment.h"
 #include "search/Route.h"
+#include "search/primitives.h"
 
 #include <cassert>
 
@@ -65,42 +66,6 @@ Solution exportRoutes(ProblemData const &data, Routes const &routes)
 
     return {data, solRoutes};
 }
-
-// Evaluates the move of inserting U after V.
-pyvrp::Cost evaluate(Route::Node *U,
-                     Route::Node *V,
-                     ProblemData const &data,
-                     CostEvaluator const &costEvaluator)
-{
-    assert(!U->route() && V->route());
-    auto *route = V->route();
-
-    auto const deltaDist = data.dist(V->client(), U->client())
-                           + data.dist(U->client(), n(V)->client())
-                           - data.dist(V->client(), n(V)->client());
-
-    auto const &uClient = data.client(U->client());
-    auto deltaCost = static_cast<pyvrp::Cost>(deltaDist) - uClient.prize;
-
-    deltaCost += costEvaluator.loadPenalty(route->load() + uClient.demand,
-                                           route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    // If this is true, adding U cannot decrease time warp in V's route enough
-    // to offset the deltaCost.
-    if (deltaCost >= costEvaluator.twPenalty(route->timeWarp()))
-        return deltaCost;
-
-    auto const vTWS = TWS::merge(data.durationMatrix(),
-                                 route->twsBefore(V->idx()),
-                                 TWS(U->client(), uClient),
-                                 route->twsAfter(V->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
-
-    return deltaCost;
-}
 }  // namespace
 
 Solution pyvrp::repair::greedyRepair(Solution const &solution,
@@ -133,7 +98,7 @@ Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
 
         for (auto &route : routes)
         {
-            auto const cost = evaluate(U, route[0], data, costEvaluator);
+            auto const cost = insertCost(U, route[0], data, costEvaluator);
             if (cost < deltaCost)  // evaluate after depot
             {
                 deltaCost = cost;
@@ -142,7 +107,7 @@ Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
 
             for (auto *V : route)  // evaluate after V
             {
-                auto const cost = evaluate(U, V, data, costEvaluator);
+                auto const cost = insertCost(U, V, data, costEvaluator);
                 if (cost < deltaCost)
                 {
                     deltaCost = cost;
