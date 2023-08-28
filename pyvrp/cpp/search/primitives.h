@@ -10,7 +10,6 @@
 // operators.
 namespace pyvrp::search
 {
-// Evaluates inserting U after V.
 /**
  * Evaluates the delta cost of inserting U after V in V's route. The evaluation
  * is exact.
