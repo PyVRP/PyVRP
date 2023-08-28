@@ -4,6 +4,7 @@
 #include "MoveTwoClientsReversed.h"
 #include "RelocateStar.h"
 #include "Route.h"
+#include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "TwoOpt.h"
 #include "primitives.h"
@@ -24,6 +25,7 @@ using pyvrp::search::MoveTwoClientsReversed;
 using pyvrp::search::RelocateStar;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
+using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::TwoOpt;
 
@@ -180,6 +182,18 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &RelocateStar::apply, py::arg("U"), py::arg("V"));
+
+    py::class_<SwapRoutes, RouteOp>(
+        m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &SwapRoutes::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"));
 
     py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
         .def(py::init<pyvrp::ProblemData const &>(),

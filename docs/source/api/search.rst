@@ -95,5 +95,8 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: RelocateStar
       :exclude-members: evaluate, apply
 
+   .. autoclass:: SwapRoutes
+      :exclude-members: evaluate, apply
+
    .. autoclass:: SwapStar
       :exclude-members: evaluate, apply
