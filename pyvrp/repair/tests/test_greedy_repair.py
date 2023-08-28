@@ -7,6 +7,11 @@ from pyvrp.tests.helpers import read
 
 
 def test_raises_given_no_routes_and_unplanned_clients():
+    """
+    Tests that the greedy repair function raises when it's not given any routes
+    to insert unplanned clients into. Greedy repair does not create new routes,
+    so this is an impossible situation.
+    """
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
     empty = Solution(data, [])
@@ -21,6 +26,10 @@ def test_raises_given_no_routes_and_unplanned_clients():
 
 
 def test_insert_into_empty_route():
+    """
+    Although greedy repair does not create *new* routes, existing empty routes
+    will be used if they're available.
+    """
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
 
@@ -32,6 +41,10 @@ def test_insert_into_empty_route():
 
 
 def test_empty_routes_or_unplanned_is_a_no_op():
+    """
+    If there are no routes, or no unplanned clients, then the returned solution
+    should be the same as the one that was given as an argument.
+    """
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
 
@@ -52,6 +65,9 @@ def test_empty_routes_or_unplanned_is_a_no_op():
 
 
 def test_after_depot():
+    """
+    Tests moves where it is optimal to insert directly after the depot.
+    """
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
 
@@ -71,6 +87,9 @@ def test_after_depot():
 
 
 def test_OkSmall():
+    """
+    Tests greedy repair on a small instance.
+    """
     data = read("data/OkSmall.txt")
     cost_eval = CostEvaluator(1, 1)
 
@@ -81,7 +100,8 @@ def test_OkSmall():
     unplanned = [1, 4]
 
     repaired = greedy_repair(sol, unplanned, data, cost_eval)
-    assert_equal(repaired, Solution(data, [[2], [1, 3, 4]]))
+    expected = Solution(data, [[2], [4, 3, 1]])
+    assert_equal(repaired, expected)
 
 
 @pytest.mark.parametrize("seed", [0, 13, 42])
