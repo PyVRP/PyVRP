@@ -326,6 +326,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("excess_load",
              &Solution::excessLoad,
              DOC(pyvrp, Solution, excessLoad))
+        .def("fixed_vehicle_cost",
+             &Solution::fixedVehicleCost,
+             DOC(pyvrp, Solution, fixedVehicleCost))
         .def("time_warp", &Solution::timeWarp, DOC(pyvrp, Solution, timeWarp))
         .def("prizes", &Solution::prizes, DOC(pyvrp, Solution, prizes))
         .def("uncollected_prizes",
@@ -346,6 +349,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.numMissingClients(),
                                       sol.distance(),
                                       sol.excessLoad(),
+                                      sol.fixedVehicleCost(),
                                       sol.prizes(),
                                       sol.uncollectedPrizes(),
                                       sol.timeWarp(),
@@ -362,11 +366,12 @@ PYBIND11_MODULE(_pyvrp, m)
                                t[1].cast<size_t>(),           // num missing
                                t[2].cast<pyvrp::Distance>(),  // distance
                                t[3].cast<pyvrp::Load>(),      // excess load
-                               t[4].cast<pyvrp::Cost>(),      // prizes
-                               t[5].cast<pyvrp::Cost>(),      // uncollected
-                               t[6].cast<pyvrp::Duration>(),  // time warp
-                               t[7].cast<Routes>(),           // routes
-                               t[8].cast<Neighbours>());      // neighbours
+                               t[4].cast<pyvrp::Cost>(),      // fixed veh cost
+                               t[5].cast<pyvrp::Cost>(),      // prizes
+                               t[6].cast<pyvrp::Cost>(),      // uncollected
+                               t[7].cast<pyvrp::Duration>(),  // time warp
+                               t[8].cast<Routes>(),           // routes
+                               t[9].cast<Neighbours>());      // neighbours
 
                 return sol;
             }))
