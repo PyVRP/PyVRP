@@ -99,7 +99,7 @@ def solve(
 
     Returns
     -------
-    tuple[str, str, float, int, float]
+    Tuple[str, str, float, int, float]
         A tuple containing the instance name, whether the solution is feasible,
         the solution cost, the number of iterations, and the runtime.
     """
