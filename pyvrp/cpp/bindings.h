@@ -6,9 +6,7 @@
 
 #include <type_traits>
 
-namespace pybind11
-{
-namespace detail
+namespace pybind11::detail
 {
 // This is not a fully general type caster for Matrix. Instead, it assumes
 // we're casting elements that are, or have the same size as, pyvrp::Value,
@@ -99,6 +97,4 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 #endif
     }
 };
-
-}  // namespace detail
-}  // namespace pybind11
+}  // namespace pybind11::detail
