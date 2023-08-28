@@ -1,2 +1,3 @@
 ignore:
   - "**/bindings.cpp"  # ignore pybind11 bindings
+  - "**/bindings.h"
