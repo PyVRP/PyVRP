@@ -9,6 +9,7 @@
 using pyvrp::CostEvaluator;
 using pyvrp::ProblemData;
 using pyvrp::Solution;
+using pyvrp::search::insertCost;
 using pyvrp::search::Route;
 
 using Clients = std::vector<Route::Node>;
