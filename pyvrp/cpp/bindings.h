@@ -74,7 +74,8 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
     PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("pyvrp.MeasureType"));
 
-    bool load(pybind11::handle src, bool convert)  // Python -> C++
+    bool load(pybind11::handle src,
+              [[maybe_unused]] bool convert)  // Python -> C++
     {
 #ifdef PYVRP_DOUBLE_PRECISION
         auto const raw = PyFloat_AsDouble(src.ptr());
