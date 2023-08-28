@@ -78,7 +78,7 @@ public:
      * :math:`i` is visited. The objective is then given by
      *
      * .. math::
-
+     *
      *    \sum_{(i, j)} d_{ij} x_{ij} + \sum_{i} p_i (1 - y_i),
      *
      * where the first part lists the distance costs, and the second part the
