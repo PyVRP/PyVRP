@@ -39,6 +39,7 @@ from ._search import (
 from ._search import (
     RouteOperator as RouteOperator,
 )
+from ._search import SwapRoutes as SwapRoutes
 from ._search import (
     SwapStar as SwapStar,
 )
@@ -68,5 +69,6 @@ NODE_OPERATORS = [
 
 ROUTE_OPERATORS = [
     RelocateStar,
+    SwapRoutes,
     SwapStar,
 ]
