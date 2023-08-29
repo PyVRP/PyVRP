@@ -139,6 +139,3 @@ def test_evaluate_capacity_differences():
     # so evaluate(route1, route2) and evaluate(route2, route1) are the same.
     assert_allclose(op.evaluate(route1, route2, cost_eval), -200)
     assert_allclose(op.evaluate(route2, route1, cost_eval), -200)
-
-
-# TODO once we support multiple depots, test depot evaluation logic

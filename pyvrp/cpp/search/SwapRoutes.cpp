@@ -23,17 +23,6 @@ Cost SwapRoutes::evaluate(Route *U,
     deltaCost += costEvaluator.loadPenalty(V->load(), U->capacity());
     deltaCost -= costEvaluator.loadPenalty(V->load(), V->capacity());
 
-    auto const &uVehicleType = data.vehicleType(U->vehicleType());
-    auto const &vVehicleType = data.vehicleType(V->vehicleType());
-
-    auto const uDepot = uVehicleType.depot;
-    auto const vDepot = vVehicleType.depot;
-
-    if (uDepot == vDepot)
-        // Then the start and end depots are the same, so there are no changes
-        // in distance or time warp, and we do not have to evaluate those.
-        return deltaCost;
-
     // TODO handle the case of depot differences (multiple depots). There is
     // some evaluation code for this in issue #188.
     return deltaCost;
