@@ -54,7 +54,7 @@ def test_swap_single_route_stays_single_route(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    single_route = list(range(1, data.num_clients + 1))
+    single_route = list(range(1, data.dimension))
     sol = Solution(data, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -86,7 +86,7 @@ def test_relocate_uses_empty_routes(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    single_route = list(range(1, data.num_clients + 1))
+    single_route = list(range(1, data.dimension))
     sol = Solution(data, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -298,7 +298,7 @@ def test_relocate_to_heterogeneous_empty_route():
     # client moves allowed by it will not improve the initial solution created
     # below. So the only improvements (1, 0)-exchange can make must come from
     # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours = [[] for _ in range(data.dimension)]
     neighbours[2].append(1)
 
     ls = LocalSearch(data, rng, neighbours)

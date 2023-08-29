@@ -5,7 +5,7 @@
 #include <cmath>
 
 using Client = size_t;
-using Clients = std::vector<Client>;
+using Locations = std::vector<Client>;
 using Route = pyvrp::Solution::Route;
 using Routes = std::vector<Route>;
 
@@ -75,8 +75,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
     auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
-    DynamicBitset selectedA(data.numClients() + 1);
-    DynamicBitset selectedB(data.numClients() + 1);
+    DynamicBitset selectedA(data.dimension());
+    DynamicBitset selectedB(data.dimension());
 
     // Routes are sorted on polar angle, so selecting adjacent routes in both
     // parents should result in a large overlap when the start indices are
@@ -178,8 +178,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     // Identify differences between route sets
     auto const selectedBNotA = selectedB & ~selectedA;
 
-    std::vector<Clients> visits1(nRoutesA);
-    std::vector<Clients> visits2(nRoutesA);
+    std::vector<Locations> visits1(nRoutesA);
+    std::vector<Locations> visits2(nRoutesA);
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)

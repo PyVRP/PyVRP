@@ -108,7 +108,7 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.numClients() + 1, std::nullopt)
+    : neighbours_(data.dimension(), std::nullopt)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<size_t>(data.numClients());
@@ -153,7 +153,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours_(data.numClients() + 1, std::nullopt)
+    : routes_(routes), neighbours_(data.dimension(), std::nullopt)
 {
     if (routes.size() > data.numVehicles())
     {

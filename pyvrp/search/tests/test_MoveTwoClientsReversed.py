@@ -61,7 +61,7 @@ def test_RC208_instance(seed: int):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(MoveTwoClientsReversed(data))
 
-    single_route = list(range(1, data.num_clients + 1))
+    single_route = list(range(1, data.dimension))
     sol = Solution(data, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 

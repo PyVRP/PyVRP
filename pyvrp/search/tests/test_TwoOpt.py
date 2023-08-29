@@ -108,7 +108,7 @@ def test_RC208_instance(seed: int):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(TwoOpt(data))
 
-    single_route = list(range(1, data.num_clients + 1))
+    single_route = list(range(1, data.dimension))
     sol = Solution(data, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -125,7 +125,7 @@ def test_within_route_move():
     solution to the OkSmall instance.
     """
     data = read("data/OkSmall.txt")
-    nodes = [Node(loc=loc) for loc in range(data.num_clients + 1)]
+    nodes = [Node(loc=loc) for loc in range(data.dimension)]
 
     # Current route is 4 -> 1 -> 2 -> 3.
     route = Route(data, idx=0, vehicle_type=0)

@@ -95,8 +95,8 @@ class Model:
         ]
 
         self = Model()
-        self._clients = data.clients()
-        self._depots = data.depots()
+        self._clients = locs[data.num_depots :]
+        self._depots = locs[: data.num_depots]
         self._edges = edges
         vehicle_types = [
             data.vehicle_type(i) for i in range(data.num_vehicle_types)

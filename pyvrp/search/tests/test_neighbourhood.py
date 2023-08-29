@@ -123,7 +123,7 @@ def test_compute_neighbours(
     )
     neighbours = compute_neighbours(data, params)
 
-    assert_equal(len(neighbours), data.num_clients + 1)
+    assert_equal(len(neighbours), data.dimension)
     assert_equal(len(neighbours[0]), 0)
 
     # We compare sets because the expected data (from the old C++
@@ -145,7 +145,7 @@ def test_neighbours_are_sorted_by_proximity():
     data = read("data/E-n22-k4.txt", round_func="trunc1")
     params = NeighbourhoodParams(0, 0, data.num_clients)
     neighbours = compute_neighbours(data, params)
-    clients = list(range(1, data.num_clients + 1))
+    clients = list(range(1, data.dimension))
 
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
@@ -168,7 +168,7 @@ def test_symmetric_neighbours():
     params = NeighbourhoodParams(symmetric_neighbours=True)
     sym_neighbours = [set(n) for n in compute_neighbours(data, params)]
 
-    for client in range(data.num_clients + 1):
+    for client in range(data.dimension):
         for neighbour in sym_neighbours[client]:
             assert_(client in sym_neighbours[neighbour])
 

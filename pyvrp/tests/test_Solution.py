@@ -199,8 +199,8 @@ def test_get_neighbours():
         None,  # 4: unassigned
     ]
 
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(neighbours[client], expected[client])
+    for loc in range(data.dimension):
+        assert_equal(neighbours[loc], expected[loc])
 
 
 def test_feasibility():

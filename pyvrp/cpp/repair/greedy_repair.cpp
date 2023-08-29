@@ -12,34 +12,34 @@ using pyvrp::Solution;
 using pyvrp::search::insertCost;
 using pyvrp::search::Route;
 
-using Clients = std::vector<Route::Node>;
+using Locations = std::vector<Route::Node>;
 using Routes = std::vector<Route>;
 using SolRoutes = std::vector<Solution::Route>;
 
 namespace
 {
 // Populate the given clients and routes vectors with routes from the solution.
-void setupRoutes(Clients &clients,
+void setupRoutes(Locations &locs,
                  Routes &routes,
                  SolRoutes const &solRoutes,
                  ProblemData const &data)
 {
-    assert(clients.empty() && routes.empty());
+    assert(locs.empty() && routes.empty());
 
     // Doing this avoids re-allocations, which would break the pointer structure
     // that Route and Route::Node use.
-    clients.reserve(data.numClients() + 1);
+    locs.reserve(data.dimension());
     routes.reserve(solRoutes.size());
 
-    for (size_t client = 0; client <= data.numClients(); ++client)
-        clients.emplace_back(client);
+    for (size_t loc = 0; loc != data.dimension(); ++loc)
+        locs.emplace_back(loc);
 
     size_t idx = 0;
     for (auto const &solRoute : solRoutes)
     {
         auto &route = routes.emplace_back(data, idx++, solRoute.vehicleType());
         for (auto const client : solRoute)
-            route.push_back(&clients[client]);
+            route.push_back(&locs[client]);
 
         route.update();
     }
@@ -82,13 +82,13 @@ Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
 
-    Clients clients;
+    Locations locs;
     Routes routes;
-    setupRoutes(clients, routes, solRoutes, data);
+    setupRoutes(locs, routes, solRoutes, data);
 
     for (auto const client : unplanned)
     {
-        Route::Node *U = &clients[client];
+        Route::Node *U = &locs[client];
         assert(!U->route());
 
         Route::Node *UAfter = nullptr;

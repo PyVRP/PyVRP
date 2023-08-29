@@ -197,7 +197,7 @@ Cost SwapStar::evaluate(Route *routeU,
         updateRemovalCosts(routeV, costEvaluator);
         updated[routeV->idx()] = false;
 
-        for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
+        for (size_t idx = 1; idx != data.dimension(); ++idx)
             cache(routeV->idx(), idx).shouldUpdate = true;
     }
 
@@ -206,7 +206,7 @@ Cost SwapStar::evaluate(Route *routeU,
         updateRemovalCosts(routeU, costEvaluator);
         updated[routeV->idx()] = false;
 
-        for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
+        for (size_t idx = 1; idx != data.dimension(); ++idx)
             cache(routeU->idx(), idx).shouldUpdate = true;
     }
 

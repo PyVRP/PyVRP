@@ -55,7 +55,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
-    std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
+    std::vector<int> lastTestedNodes(data.dimension(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
@@ -68,7 +68,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
-            auto *U = &clients[uClient];
+            auto *U = &nodes[uClient];
 
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
@@ -84,7 +84,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours[uClient])
             {
-                auto *V = &clients[vClient];
+                auto *V = &nodes[vClient];
 
                 if (!V->route())
                     continue;
@@ -243,7 +243,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
         for (auto const vClient : neighbours[uClient])
         {
-            auto *V = &clients[vClient];
+            auto *V = &nodes[vClient];
 
             if (!V->route())
                 continue;
@@ -310,7 +310,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
         assert(route.empty());  // should have been emptied above.
         for (auto const client : solRoute)
-            route.push_back(&clients[client]);
+            route.push_back(&nodes[client]);
 
         route.update();
     }
@@ -347,22 +347,23 @@ void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
-    if (neighbours.size() != data.numClients() + 1)
+    if (neighbours.size() != data.dimension())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
-    for (size_t client = 0; client <= data.numClients(); ++client)
+    for (size_t client = data.numDepots(); client != data.dimension(); ++client)
     {
         auto const beginPos = neighbours[client].begin();
         auto const endPos = neighbours[client].end();
 
         auto const clientPos = std::find(beginPos, endPos, client);
-        auto const depotPos = std::find(beginPos, endPos, 0);
+        auto pred = [&](auto item) { return item < data.numDepots(); };
+        auto const hasDepot = std::any_of(beginPos, endPos, pred);
 
-        if (clientPos != endPos || depotPos != endPos)
+        if (clientPos != endPos || hasDepot)
         {
             throw std::runtime_error("Neighbourhood of client "
                                      + std::to_string(client)
-                                     + " contains itself or the depot.");
+                                     + " contains itself or a depot.");
         }
     }
 
@@ -376,7 +377,7 @@ LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      neighbours(data.numClients() + 1),
+      neighbours(data.dimension()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
@@ -386,9 +387,9 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    clients.reserve(data.numClients() + 1);
-    for (size_t client = 0; client <= data.numClients(); ++client)
-        clients.emplace_back(client);
+    nodes.reserve(data.dimension());
+    for (size_t loc = 0; loc != data.dimension(); ++loc)
+        nodes.emplace_back(loc);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;
