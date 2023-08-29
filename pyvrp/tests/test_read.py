@@ -153,7 +153,8 @@ def test_reading_RC208_instance():  # Solomon style instance
         "data/RC208.txt", instance_format="solomon", round_func="trunc1"
     )
 
-    assert_equal(data.num_clients, 100)  # Excl. depot
+    assert_equal(data.num_clients, 100)
+    assert_equal(data.dimension, 101)
     assert_equal(data.vehicle_type(0).capacity, 1_000)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision

@@ -143,7 +143,7 @@ public:
     /**
      * Returns location data for the location at the given index. This can
      * be a depot or a client: a depot if the ``idx`` argument is smaller than
-     * :py:attr:`num_depots`, and a client if the ``idx`` is bigger than that.
+     * :py:attr:`~num_depots`, and a client if the ``idx`` is bigger than that.
      *
      * Parameters
      * ----------
@@ -159,27 +159,57 @@ public:
     [[nodiscard]] inline Client const &location(size_t idx) const;
 
     /**
-     * TODO
+     * Returns client data for the given client.
+     *
+     * Parameters
+     * ----------
+     * idx
+     *     Client index whose information to retrieve.
+     *
+     * Returns
+     * -------
+     * Client
+     *     A simple data object containing the requested client's information.
      */
     [[nodiscard]] inline Client const &client(size_t idx) const;
 
     /**
-     * TODO
+     * Returns depot data for the given depot.
+     *
+     * Parameters
+     * ----------
+     * idx
+     *     Depot index whose information to retrieve.
+     *
+     * Returns
+     * -------
+     * Client
+     *     A simple data object containing the requested depot's information.
      */
     [[nodiscard]] inline Client const &depot(size_t idx) const;
 
     /**
-     * TODO
+     * Returns a list of all clients in the problem instance.
+     *
+     * Returns
+     * -------
+     * List[Client]
+     *     List of all clients in the problem instance.
      */
     [[nodiscard]] std::vector<Client> const &clients() const;
 
     /**
-     * TODO
+     * Returns a list of all depots in the problem instance.
+     *
+     * Returns
+     * -------
+     * List[Client]
+     *     List of all depots in the problem instance.
      */
     [[nodiscard]] std::vector<Client> const &depots() const;
 
     /**
-     * Center point of all client locations (excluding the depot).
+     * Center point of all client locations (excluding depots).
      *
      * Returns
      * -------
