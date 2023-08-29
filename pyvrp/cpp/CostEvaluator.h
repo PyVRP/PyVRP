@@ -71,18 +71,22 @@ public:
     [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
     /**
-     * Evaluates and returns the cost/objective of the given solution.
-     * Hand-waving some details, let :math:`x_{ij} \in \{ 0, 1 \}` indicate
-     * if edge :math:`(i, j)` is used in the solution encoded by the given
-     * solution, and :math:`y_i \in \{ 0, 1 \}` indicate if client
-     * :math:`i` is visited. The objective is then given by
+     * Hand-waving some details, each solution consists of a set of routes
+     * :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a sequence
+     * of edges, starting and ending at the depot. A route :math:`R` has an
+     * assigned vehicle type :math:`t_R`, which has a fixed vehicle cost
+     * :math:`f_{t_R}`. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
+     * locations visited by route :math:`R`. The objective value is then given
+     * by
      *
      * .. math::
      *
-     *    \sum_{(i, j)} d_{ij} x_{ij} + \sum_{i} p_i (1 - y_i),
+     *    \sum_{R \in \mathcal{R}} \left[ f_{t_R}
+     *          + \sum_{(i, j) \in R} d_{ij} \right]
+     *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
-     * where the first part lists the distance costs, and the second part the
-     * prizes of the unvisited clients.
+     * where the first part lists the vehicle and distance costs, and the
+     * second part the prize penalty of not visiting all clients.
      */
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
