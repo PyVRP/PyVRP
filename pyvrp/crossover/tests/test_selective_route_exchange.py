@@ -133,12 +133,12 @@ def test_srex_does_not_reinsert_unplanned_clients():
     case, some clients will no longer in the solution after crossover: SREX
     does not reinsert those, but instead leaves that to the search method.
     """
-    data = read("data/OkSmallGreedyRepair.txt")
+    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
     # Note that when routes are exchanged, some customers will necessarily be
     # removed from the solution because the routes are overlapping. The
-    # offspring are thus incomplete.y
+    # offspring are thus incomplete.
     sol1 = Solution(data, [[3, 4], [1, 2]])
     sol2 = Solution(data, [[2, 3], [4, 1]])
 
