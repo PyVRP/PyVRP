@@ -347,7 +347,7 @@ def test_relocate_fixed_vehicle_cost(operator, base_cost, fixed_cost):
     op = operator(data)
 
     route1 = Route(data, idx=0, vehicle_type=0)
-    for loc in [2, 4, 1]:
+    for loc in [2, 4, 1, 3]:
         route1.append(Node(loc=loc))
     route1.update()
 
