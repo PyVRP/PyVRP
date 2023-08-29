@@ -12,6 +12,7 @@ namespace pyvrp
 /**
  * ProblemData(
  *     clients: List[Client],
+ *     depots: List[Client],
  *     vehicle_types: List[VehicleType],
  *     distance_matrix: List[List[int]],
  *     duration_matrix: List[List[int]],
@@ -23,9 +24,9 @@ namespace pyvrp
  * Parameters
  * ----------
  * clients
- *     List of clients. The first client (at index 0) is assumed to be the
- *     depot. The time window for the depot is assumed to describe the overall
- *     time horizon. The depot should have 0 demand and 0 service duration.
+ *     List of clients to visit.
+ * depots
+ *     List of depots. Depots should have no demand or service duration.
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrix
