@@ -152,7 +152,7 @@ def test_remove_fixed_vehicle_cost():
 
     # All distances, durations, and loads are equal. So the only cost change
     # can happen due to vehicle changes. In this, case we evaluate removing the
-    # only client on a route. That makes the route empty, and removesthe fixed
+    # only client on a route. That makes the route empty, and removes the fixed
     # vehicle cost of 7 for this vehicle type.
     route = Route(data, idx=0, vehicle_type=0)
     route.append(Node(loc=1))

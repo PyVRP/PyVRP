@@ -86,7 +86,14 @@ public:
      *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
      * where the first part lists the vehicle and distance costs, and the
-     * second part the prize penalty of not visiting all clients.
+     * second part the uncollected prizes of unvisited clients.
+     *
+     * .. note::
+     *
+     *    The above cost computation only holds for feasible solutions. If the
+     *    solution argument is *infeasible*, we return a very large number.
+     *    If that is not what you want, consider calling :meth:`penalised_cost`
+     *    instead.
      */
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
