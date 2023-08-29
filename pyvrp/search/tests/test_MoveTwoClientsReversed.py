@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
 from pyvrp import (
@@ -108,4 +108,4 @@ def test_relocate_fixed_vehicle_cost():
     # and has a fixed vehicle cost change of 13 - 7 = 6.
     op = MoveTwoClientsReversed(data)
     cost_eval = CostEvaluator(0, 0)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 6)
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), 6)
