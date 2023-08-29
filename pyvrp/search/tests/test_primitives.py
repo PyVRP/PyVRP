@@ -1,6 +1,7 @@
+import numpy as np
 from numpy.testing import assert_allclose
 
-from pyvrp import CostEvaluator
+from pyvrp import Client, CostEvaluator, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route, insert_cost, remove_cost
 from pyvrp.tests.helpers import read
 
@@ -109,3 +110,28 @@ def test_remove():
     # Purely distance. Removes arcs 1 -> 2 -> 0, adds arcs 1 -> 0. This change
     # has delta distance of 1726 - 1992 - 1965 = -2231.
     assert_allclose(remove_cost(route[2], data, cost_eval), -2231)
+
+
+def test_insert_fixed_vehicle_cost():
+    """
+    Tests that insert_cost adds the fixed vehicle cost if the route is empty.
+    """
+    cost_eval = CostEvaluator(0, 0)
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
+        vehicle_types=[VehicleType(0, 1, 7), VehicleType(0, 1, 13)],
+        distance_matrix=np.zeros((3, 3), dtype=int),
+        duration_matrix=np.zeros((3, 3), dtype=int),
+    )
+
+    # All distances, durations, and loads are equal. So the only cost change
+    # can happen due to vehicle changes. In this, case we evaluate inserting a
+    # client into an empty route. That adds the fixed vehicle cost of 7 for
+    # this vehicle type.
+    route = Route(data, idx=0, vehicle_type=0)
+    assert_allclose(insert_cost(Node(loc=1), route[0], data, cost_eval), 7)
+
+    # Same story for this route, but now we have a different vehicle type with
+    # fixed cost 13.
+    route = Route(data, idx=0, vehicle_type=1)
+    assert_allclose(insert_cost(Node(loc=1), route[0], data, cost_eval), 13)
