@@ -125,10 +125,10 @@ def test_raises_for_invalid_depot_data(
         )
 
 
-def test_problem_data_raises_when_no_depots_provided():
+def test_problem_data_raises_when_not_exactly_one_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
-    no depots are provided.
+    not exactly one depot is provided.
     """
     with assert_raises(ValueError):
         ProblemData(
@@ -147,6 +147,16 @@ def test_problem_data_raises_when_no_depots_provided():
         distance_matrix=np.asarray([[0]]),
         duration_matrix=np.asarray([[0]]),
     )
+
+    # But multiple (for now) do: PyVRP does not yet support multi-depot VRPs.
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            depots=[Client(x=0, y=0), Client(x=0, y=0)],
+            vehicle_types=[VehicleType(1, 2)],
+            distance_matrix=np.zeros((2, 2), dtype=int),
+            duration_matrix=np.zeros((2, 2), dtype=int),
+        )
 
 
 @mark.parametrize(
