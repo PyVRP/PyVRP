@@ -1,6 +1,6 @@
 import itertools
 
-from numpy.testing import assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
@@ -127,74 +127,30 @@ def test_srex_sorts_routes():
             assert_equal(permuted_offspring, offspring)
 
 
-def test_srex_greedy_repair():
+def test_srex_does_not_reinsert_unplanned_clients():
     """
-    Tests the case where greedy repair is used during SREX crossover.
+    Tests the case where the routes are not perfectly complementary. In that
+    case, some clients will no longer in the solution after crossover: SREX
+    does not reinsert those, but instead leaves that to the search method.
     """
-    data = read("data/OkSmallGreedyRepair.txt")
+    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
 
+    # Note that when routes are exchanged, some customers will necessarily be
+    # removed from the solution because the routes are overlapping. The
+    # offspring are thus incomplete.
     sol1 = Solution(data, [[3, 4], [1, 2]])
     sol2 = Solution(data, [[2, 3], [4, 1]])
 
     # The start indices do not change because there are no improving moves.
     # So, sol1's route [3, 4] will be replaced by sol2's route [2, 3].
     # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
-    # which are both repaired using greedy repair. After repair, we obtain the
-    # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
-    # cost 9725. The first one is returned since it has the lowest cost.
+    # the first with penalised cost 7898, the second with cost 9495. Thus, the
+    # first one is returned.
     offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 1)
-    expected = Solution(data, [[2, 3, 4], [1]])
+    expected = Solution(data, [[2, 3], [1]])
     assert_equal(offspring, expected)
-
-
-def test_srex_heterogeneous_greedy_repair():
-    """
-    Tests the case where greedy repair is used during SREX crossover for
-    heterogeneous routes.
-    """
-    data = read("data/OkSmallGreedyRepair.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 2), VehicleType(20, 1)])
-    cost_evaluator = CostEvaluator(20, 6)
-
-    # We create the routes sorted by angle such that SREX sorting doesn't
-    # affect them, and create a heterogeneous version for each
-    sol1 = Solution(data, [[3, 4], [1, 2]])
-    sol1h = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
-    sol2 = Solution(data, [[2, 3], [4, 1]])
-    sol2h = Solution(data, [Route(data, [2, 3], 0), Route(data, [4, 1], 1)])
-
-    # The start indices do not change because there are no improving moves.
-    # So, sol1's route [3, 4] will be replaced by sol2's route [2, 3].
-    # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
-    # which are both repaired using greedy repair. After repair, we obtain the
-    # offspring [[2, 3, 4], [1]] with cost 8188, and [[3, 4], [1, 2]] with
-    # cost 9725. The first one is returned since it has the lowest cost.
-
-    # The offspring solution should have the routes according to sol1
-    offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (0, 0), 1)
-    routes = offspring.get_routes()
-    assert_equal(len(routes), 2)
-    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
-    assert_equal(routes[1], Route(data, [1], 0))
-
-    # Even if sol2 is heterogeneous
-    offspring = cpp_srex((sol1, sol2h), data, cost_evaluator, (0, 0), 1)
-    routes = offspring.get_routes()
-    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
-    assert_equal(routes[1], Route(data, [1], 0))
-
-    # If sol1 is heterogeneous, the result should be so too
-    offspring = cpp_srex((sol1h, sol2), data, cost_evaluator, (0, 0), 1)
-    routes = offspring.get_routes()
-    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
-    assert_equal(routes[1], Route(data, [1], 1))
-
-    # Same if sol2 is also heterogeneous
-    offspring = cpp_srex((sol1h, sol2h), data, cost_evaluator, (0, 0), 1)
-    routes = offspring.get_routes()
-    assert_equal(routes[0], Route(data, [2, 3, 4], 0))
-    assert_equal(routes[1], Route(data, [1], 1))
+    assert_(not expected.is_complete())
 
 
 def test_srex_changed_start_indices():
