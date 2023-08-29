@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import Client, ProblemData, VehicleType
@@ -280,3 +280,36 @@ def test_matrices_are_not_copies():
     dur2 = data.duration_matrix()
     assert_(not dur1.flags["OWNDATA"])
     assert_(dur1.base is dur2.base)
+
+
+def test_depot_client_location_access():
+    """
+    Tests that obtaining the depots and clients in a toy ProblemData instance
+    indeed return the correct data. Depots and clients are both locations, so
+    they may be accessed either through the locations() member, all at once
+    via depots() and clients(), or by index from depot() or client().
+    """
+    mat = np.array([[0, 0], [0, 0]])
+    data = ProblemData(
+        clients=[Client(x=0, y=1)],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=mat,
+        duration_matrix=mat,
+    )
+
+    depot = data.depot(0)
+    assert_allclose(depot.x, 0)
+    assert_allclose(depot.y, 0)
+
+    assert_equal(data.location(0), depot)
+    assert_equal(data.depot(0), depot)
+    assert_equal(data.depots(), [depot])
+
+    client = data.client(0)
+    assert_allclose(client.x, 0)
+    assert_allclose(client.y, 1)
+
+    assert_equal(data.location(1), client)
+    assert_equal(data.client(0), client)
+    assert_equal(data.clients(), [client])

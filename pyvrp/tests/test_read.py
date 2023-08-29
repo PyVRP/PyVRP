@@ -115,6 +115,8 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
     assert_equal(data.num_clients, 21)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.dimension, 22)
     assert_equal(data.vehicle_type(0).capacity, 6_000)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
@@ -154,6 +156,7 @@ def test_reading_RC208_instance():  # Solomon style instance
     )
 
     assert_equal(data.num_clients, 100)
+    assert_equal(data.num_depots, 1)
     assert_equal(data.dimension, 101)
     assert_equal(data.vehicle_type(0).capacity, 1_000)
 
