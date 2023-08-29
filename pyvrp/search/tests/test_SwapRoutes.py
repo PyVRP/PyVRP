@@ -77,11 +77,8 @@ def test_evaluate_empty_routes():
     """
     Tests that evaluate() returns 0 when one or both of the routes are empty.
     """
-    # First vehicle type is the same as default OkSmall. The second one has
-    # 10 fixed cost, instead of 0.
-    vehicle_types = [VehicleType(10, 3, 0), VehicleType(10, 3, 10)]
     data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_types)
+    data = make_heterogeneous(data, [VehicleType(10, 3), VehicleType(10, 3)])
 
     route1 = Route(data, idx=0, vehicle_type=0)
     route2 = Route(data, idx=1, vehicle_type=1)
@@ -104,3 +101,44 @@ def test_evaluate_empty_routes():
     # Both routes are empty, but of different vehicle type as well.
     assert_equal(len(route2), len(route3))
     assert_allclose(op.evaluate(route3, route2, cost_eval), 0)
+
+
+def test_evaluate_capacity_differences():
+    """
+    Tests that changes in vehicle capacity violations are evaluated correctly.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 1)])
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2, 4]:
+        route1.append(Node(loc=loc))
+
+    route2 = Route(data, idx=0, vehicle_type=1)
+    route2.append(Node(loc=3))
+
+    route1.update()
+    route2.update()
+
+    # route1 has vehicle type 0, which has capacity 10. So there is excess load
+    # since its client demand sums to 15.
+    assert_(route1.has_excess_load())
+    assert_allclose(route1.load(), 15)
+
+    # route2, on the other hand, has capacity 20 and a load of only 3.
+    assert_(not route2.has_excess_load())
+    assert_allclose(route2.load(), 3)
+
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(40, 1)
+
+    # Swapping the route plans should alleviate the excess load, since the load
+    # of 15 on route1 is below route2's capacity, and similarly for route2's
+    # load and route1's capacity. Since we price unit load violations at 40,
+    # this should result in a delta cost of -200. The operator is symmetric,
+    # so evaluate(route1, route2) and evaluate(route2, route1) are the same.
+    assert_allclose(op.evaluate(route1, route2, cost_eval), -200)
+    assert_allclose(op.evaluate(route2, route1, cost_eval), -200)
+
+
+# TODO once we support multiple depots, test depot evaluation logic
