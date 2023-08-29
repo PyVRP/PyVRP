@@ -93,27 +93,53 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
+                      std::vector<ProblemData::Client> const &,
                       std::vector<ProblemData::VehicleType> const &,
                       Matrix<pyvrp::Distance>,
                       Matrix<pyvrp::Duration>>(),
              py::arg("clients"),
+             py::arg("depots"),
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
                                DOC(pyvrp, ProblemData, numClients))
+        .def_property_readonly("num_depots",
+                               &ProblemData::numDepots,
+                               DOC(pyvrp, ProblemData, numDepots))
+        .def_property_readonly("dimension",
+                               &ProblemData::dimension,
+                               DOC(pyvrp, ProblemData, dimension))
         .def_property_readonly("num_vehicle_types",
                                &ProblemData::numVehicleTypes,
                                DOC(pyvrp, ProblemData, numVehicleTypes))
         .def_property_readonly("num_vehicles",
                                &ProblemData::numVehicles,
                                DOC(pyvrp, ProblemData, numVehicles))
+        .def("location",
+             &ProblemData::location,
+             py::arg("idx"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, location))
         .def("client",
              &ProblemData::client,
-             py::arg("client"),
+             py::arg("idx"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, client))
+        .def("depot",
+             &ProblemData::depot,
+             py::arg("idx"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, depot))
+        .def("clients",
+             &ProblemData::clients,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, clients))
+        .def("depots",
+             &ProblemData::depots,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, depots))
         .def("centroid",
              &ProblemData::centroid,
              py::return_value_policy::reference_internal,

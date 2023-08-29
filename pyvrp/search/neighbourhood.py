@@ -131,7 +131,7 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    clients = [data.client(idx) for idx in range(data.num_clients + 1)]
+    clients = [data.location(loc) for loc in range(data.dimension)]
 
     early = np.asarray([client.tw_early for client in clients])
     late = np.asarray([client.tw_late for client in clients])

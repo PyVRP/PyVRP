@@ -117,29 +117,32 @@ def test_raises_for_invalid_depot_data(
 
     with assert_raises(ValueError):
         ProblemData(
-            clients=[depot],
+            clients=[],
+            depots=[depot],
             vehicle_types=[VehicleType(1, 2)],
             distance_matrix=np.asarray([[0]], dtype=int),
             duration_matrix=np.asarray([[0]], dtype=int),
         )
 
 
-def test_problem_data_raises_when_no_clients_provided():
+def test_problem_data_raises_when_no_depots_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
-    no clients are provided.
+    no depots are provided.
     """
     with assert_raises(ValueError):
         ProblemData(
             clients=[],
+            depots=[],
             vehicle_types=[VehicleType(1, 2)],
             distance_matrix=np.asarray([[]], dtype=int),
             duration_matrix=np.asarray([[]], dtype=int),
         )
 
-    # One client (the depot) should not raise.
+    # One depot should not raise.
     ProblemData(
-        clients=[Client(x=0, y=0)],
+        clients=[],
+        depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, 2)],
         distance_matrix=np.asarray([[0]]),
         duration_matrix=np.asarray([[0]]),
@@ -161,15 +164,16 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     the distance or duration matrix does not match the number of clients in
     dimension size.
     """
-    clients = [Client(x=0, y=0), Client(x=0, y=0)]
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, matrix, other_matrix)
+        ProblemData(clients, depots, vehicle_types, matrix, other_matrix)
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, other_matrix, matrix)
+        ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
 
 
 def test_centroid():
@@ -179,8 +183,8 @@ def test_centroid():
     data = read("data/OkSmall.txt")
 
     centroid = data.centroid()
-    x = [data.client(idx).x for idx in range(1, data.num_clients + 1)]
-    y = [data.client(idx).y for idx in range(1, data.num_clients + 1)]
+    x = [client.x for client in data.clients()]
+    y = [client.y for client in data.clients()]
 
     assert_allclose(centroid[0], np.mean(x))
     assert_allclose(centroid[1], np.mean(y))
@@ -202,7 +206,8 @@ def test_matrix_access():
     ]
 
     data = ProblemData(
-        clients=clients,
+        clients=clients[1:],
+        depots=clients[:1],
         vehicle_types=[VehicleType(1, 2)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
@@ -227,7 +232,8 @@ def test_matrices_are_not_writeable():
     changes from Python causes undefined behaviour on the C++ side.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0)],
+        clients=[],
+        depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, 2)],
         distance_matrix=np.array([[0]]),
         duration_matrix=np.array([[0]]),
@@ -251,7 +257,8 @@ def test_matrices_are_not_copies():
     """
     mat = np.array([[0, 0], [0, 0]])
     data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=0, y=1)],
+        clients=[Client(x=0, y=1)],
+        depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, 2)],
         distance_matrix=mat,
         duration_matrix=mat,

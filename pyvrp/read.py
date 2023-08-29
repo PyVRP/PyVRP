@@ -179,7 +179,8 @@ def read(
         warn(msg, ScalingWarning)
 
     return ProblemData(
-        clients,
+        clients[1:],
+        clients[:1],
         vehicle_types,
         distances,
         durations,

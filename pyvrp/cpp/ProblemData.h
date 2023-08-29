@@ -130,28 +130,53 @@ private:
     std::pair<double, double> centroid_;           // Center of client locations
     Matrix<Distance> const dist_;                  // Distance matrix
     Matrix<Duration> const dur_;                   // Duration matrix
-    std::vector<Client> const clients_;            // Client/depot information
+    std::vector<Client> const clients_;            // Client information
+    std::vector<Client> const depots_;             // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
 
     size_t const numClients_;
+    size_t const numDepots_;
     size_t const numVehicleTypes_;
     size_t const numVehicles_;
 
 public:
     /**
-     * Returns client data for the given client.
+     * Returns location data for the location at the given index. This can
+     * be a depot or a client: a depot if the ``idx`` argument is smaller than
+     * :py:attr:`num_depots`, and a client if the ``idx`` is bigger than that.
      *
      * Parameters
      * ----------
-     * client
-     *     Client number whose information to retrieve.
+     * idx
+     *     Location index whose information to retrieve.
      *
      * Returns
      * -------
      * Client
-     *     A simple data object containing the requested client's information.
+     *     A simple data object containing the requested location's
+     *     information.
      */
-    [[nodiscard]] inline Client const &client(size_t client) const;
+    [[nodiscard]] inline Client const &location(size_t idx) const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] inline Client const &client(size_t idx) const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] inline Client const &depot(size_t idx) const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] std::vector<Client> const &clients() const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] std::vector<Client> const &depots() const;
 
     /**
      * Center point of all client locations (excluding the depot).
@@ -236,6 +261,27 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
+     * Number of depots in this problem instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of depots in the instance.
+     */
+    [[nodiscard]] size_t numDepots() const;
+
+    /**
+     * Dimension of this problem instance, that is, the number of depots plus
+     * the number of clients in the instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of depots in the instance.
+     */
+    [[nodiscard]] size_t dimension() const;
+
+    /**
      * Number of vehicles in this problem instance.
      *
      * Returns
@@ -256,24 +302,36 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
-     * Constructs a ProblemData object with the given data. Assumes the list of
-     * clients contains the depot, such that each vector is one longer than the
-     * number of clients.
+     * Constructs a ProblemData object with the given data. The given distance
+     * and duration matrices should have the depots on the lower indices (in
+     * order of the depots argument), followed by the clients (again in order).
      *
-     * @param clients      List of clients (including depot at index 0).
+     * @param clients      List of clients.
+     * @param depots       List of depots.
      * @param vehicleTypes List of vehicle types.
      * @param distMat      Distance matrix.
      * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
+                std::vector<Client> const &depots,
                 std::vector<VehicleType> const &vehicleTypes,
                 Matrix<Distance> distMat,
                 Matrix<Duration> durMat);
 };
 
-ProblemData::Client const &ProblemData::client(size_t client) const
+ProblemData::Client const &ProblemData::location(size_t idx) const
 {
-    return clients_[client];
+    return idx < numDepots_ ? depots_[idx] : clients_[idx - numDepots_];
+}
+
+ProblemData::Client const &ProblemData::client(size_t idx) const
+{
+    return clients_[idx];
+}
+
+ProblemData::Client const &ProblemData::depot(size_t idx) const
+{
+    return depots_[idx];
 }
 
 ProblemData::VehicleType const &

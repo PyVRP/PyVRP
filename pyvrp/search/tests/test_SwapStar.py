@@ -93,11 +93,11 @@ def test_swap_star_can_swap_in_place():
     """
     data = ProblemData(
         clients=[
-            Client(x=0, y=0),
             Client(x=1, y=1),
             Client(x=2, y=2),
             Client(x=3, y=3),
         ],
+        depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(capacity=0, num_available=2)],
         distance_matrix=np.asarray(
             [
@@ -145,12 +145,12 @@ def test_wrong_load_calculation_bug():
     """
     data = ProblemData(
         clients=[
-            Client(x=0, y=0, demand=0),
             Client(x=1, y=1, demand=0),
             Client(x=2, y=2, demand=0),
             Client(x=3, y=3, demand=15),
             Client(x=4, y=4, demand=0),
         ],
+        depots=[Client(x=0, y=0, demand=0)],
         vehicle_types=[VehicleType(capacity=12, num_available=2)],
         distance_matrix=np.asarray(
             [

@@ -114,11 +114,10 @@ def test_cost_with_prizes():
     cost = cost_evaluator.cost(sol)
     assert_(sol.is_feasible())
 
-    prizes = [data.client(idx).prize for idx in range(data.num_clients + 1)]
-    collected = sum(prizes[:6])
+    prizes = [client.prize for client in data.clients()]
+    collected = sum(prizes[:5])
     uncollected = sum(prizes) - collected
 
-    assert_allclose(prizes[0], 0)
     assert_allclose(sol.prizes(), collected)
     assert_allclose(sol.uncollected_prizes(), uncollected)
     assert_allclose(sol.distance() + sol.uncollected_prizes(), cost)

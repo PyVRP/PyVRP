@@ -230,12 +230,12 @@ def test_dist_and_load_for_single_client_routes(client: int):
 
     # Only the client has any demand, so the total route load should be equal
     # to it.
-    assert_equal(route.load(), data.client(client).demand)
-    assert_equal(route.load_between(0, 2), data.client(client).demand)
+    assert_equal(route.load(), data.location(client).demand)
+    assert_equal(route.load_between(0, 2), data.location(client).demand)
 
     # The load_between() function is inclusive.
     assert_equal(route.load_between(0, 0), 0)
-    assert_equal(route.load_between(1, 1), data.client(client).demand)
+    assert_equal(route.load_between(1, 1), data.location(client).demand)
 
     # Distances on various segments of the route.
     assert_equal(route.dist_between(0, 1), data.dist(0, client))
@@ -299,20 +299,22 @@ def test_data_is_not_updated_until_update_call():
     # Add a new client to the route. update() has not been called, so the route
     # statistics are not correct.
     route.append(Node(loc=1))
-    assert_(route.load() != data.client(1).demand)
+    assert_(route.load() != data.location(1).demand)
     assert_(route.dist_between(0, 2) != data.dist(0, 1) + data.dist(1, 0))
 
     # Update. This recalculates the statistics, which should now be correct.
     route.update()
-    assert_equal(route.load(), data.client(1).demand)
+    assert_equal(route.load(), data.location(1).demand)
     assert_equal(route.dist_between(0, 2), data.dist(0, 1) + data.dist(1, 0))
 
     # Same story with another client: incorrect before update, correct after.
     route.append(Node(loc=2))
-    assert_(route.load() != data.client(1).demand + data.client(2).demand)
+    assert_(route.load() != data.location(1).demand + data.location(2).demand)
 
     route.update()
-    assert_equal(route.load(), data.client(1).demand + data.client(2).demand)
+    assert_equal(
+        route.load(), data.location(1).demand + data.location(2).demand
+    )
     assert_equal(
         route.dist_between(0, 3),
         data.dist(0, 1) + data.dist(1, 2) + data.dist(2, 0),
@@ -348,12 +350,9 @@ def test_route_tws_access():
     route.update()
 
     for loc in [0, 1, 2, 3, 4, 5]:  # = [depot, *clients, depot]
-        if 0 < loc < len(route) + 1:
-            client = data.client(loc)  # if actual client
-        else:
-            client = data.client(0)  # else depot
-
+        client = data.location(loc % (len(route) + 1))
         tws = route.tws(loc)
+
         assert_equal(tws.tw_early(), client.tw_early)
         assert_equal(tws.tw_late(), client.tw_late)
         assert_equal(tws.duration(), client.service_duration)
@@ -367,7 +366,7 @@ def test_tws_between_same_client_returns_node_tws(loc: int):
     arguments returns a node's time window segment data.
     """
     data = read("data/OkSmall.txt")
-    client = data.client(loc)
+    client = data.location(loc)
 
     route = Route(data, idx=0, vehicle_type=0)
     route.append(Node(loc=loc))

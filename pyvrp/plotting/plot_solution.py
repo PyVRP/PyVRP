@@ -30,13 +30,18 @@ def plot_solution(
     if not ax:
         _, ax = plt.subplots()
 
-    dim = data.num_clients + 1
-    x_coords = np.array([data.client(client).x for client in range(dim)])
-    y_coords = np.array([data.client(client).y for client in range(dim)])
+    dim = data.dimension
+    x_coords = np.array([data.location(loc).x for loc in range(dim)])
+    y_coords = np.array([data.location(loc).y for loc in range(dim)])
 
-    # This is the depot
+    # These are the depots
     kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
-    ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
+    ax.scatter(
+        x_coords[: data.num_depots],
+        y_coords[: data.num_depots],
+        label="Depot",
+        **kwargs,
+    )
 
     for idx, route in enumerate(solution.get_routes(), 1):
         x = x_coords[route]

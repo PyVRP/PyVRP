@@ -13,9 +13,9 @@ def make_heterogeneous(data: ProblemData, vehicle_types: List[VehicleType]):
     Creates a new ProblemData instance by replacing the capacities for routes.
     All other data are kept identical.
     """
-    clients = [data.client(i) for i in range(data.num_clients + 1)]
     return ProblemData(
-        clients=clients,
+        clients=data.clients(),
+        depots=data.depots(),
         vehicle_types=vehicle_types,
         distance_matrix=data.distance_matrix(),
         duration_matrix=data.duration_matrix(),

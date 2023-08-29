@@ -237,7 +237,6 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     feasibility before applying a move that improves the travelled distance.
     """
     clients = [
-        Client(x=0, y=0, tw_early=0, tw_late=10),
         Client(x=1, y=0, tw_early=0, tw_late=5),
         Client(x=2, y=0, tw_early=0, tw_late=5),
     ]
@@ -246,6 +245,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     # however, the best route is 0 -> 2 -> 1 -> 0.
     data = ProblemData(
         clients=clients,
+        depots=[Client(x=0, y=0, tw_early=0, tw_late=10)],
         vehicle_types=[VehicleType(0, 1)],
         distance_matrix=np.asarray(
             [

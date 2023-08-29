@@ -26,9 +26,9 @@ def plot_coordinates(
     if not ax:
         _, ax = plt.subplots()
 
-    dim = data.num_clients + 1
-    x_coords = np.array([data.client(client).x for client in range(dim)])
-    y_coords = np.array([data.client(client).y for client in range(dim)])
+    dim = data.dimension
+    x_coords = np.array([data.location(client).x for client in range(dim)])
+    y_coords = np.array([data.location(client).y for client in range(dim)])
 
     # This is the depot
     kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)

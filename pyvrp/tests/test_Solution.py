@@ -337,7 +337,7 @@ def test_route_access_methods():
     assert_allclose(routes[1].excess_load(), 0)
 
     # Total route demand.
-    demands = [data.client(idx).demand for idx in range(data.num_clients + 1)]
+    demands = [data.location(idx).demand for idx in range(data.dimension)]
     assert_allclose(routes[0].demand(), demands[1] + demands[3])
     assert_allclose(routes[1].demand(), demands[2] + demands[4])
 
@@ -348,8 +348,7 @@ def test_route_access_methods():
 
     # Total service duration.
     services = [
-        data.client(idx).service_duration
-        for idx in range(data.num_clients + 1)
+        data.location(idx).service_duration for idx in range(data.dimension)
     ]
     assert_allclose(routes[0].service_duration(), services[1] + services[3])
     assert_allclose(routes[1].service_duration(), services[2] + services[4])
@@ -439,7 +438,7 @@ def test_route_start_and_end_time_calculations():
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
-    start_time = data.client(1).tw_early - data.duration(0, 1)
+    start_time = data.location(1).tw_early - data.duration(0, 1)
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())
@@ -516,10 +515,10 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
     data = ProblemData(
         clients=[
-            Client(x=0, y=0, tw_late=10),
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
+        depots=[Client(x=0, y=0, tw_late=10)],
         vehicle_types=[VehicleType(0, 2)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
@@ -550,7 +549,8 @@ def test_time_warp_return_to_depot():
     travel back to the depot.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0, tw_late=1), Client(x=1, y=0)],
+        clients=[Client(x=1, y=0)],
+        depots=[Client(x=0, y=0, tw_late=1)],
         vehicle_types=[VehicleType(0, 1)],
         distance_matrix=np.asarray([[0, 0], [0, 0]]),
         duration_matrix=np.asarray([[0, 1], [1, 0]]),
@@ -562,7 +562,7 @@ def test_time_warp_return_to_depot():
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
     # more than the depot time window 1, giving a time warp of 1.
     assert_allclose(route.duration(), 2)
-    assert_allclose(data.client(0).tw_late, 1)
+    assert_allclose(data.location(0).tw_late, 1)
     assert_allclose(sol.time_warp(), 1)
 
 
@@ -692,15 +692,17 @@ def test_eq_unassigned():
     """
     Tests the equality operator for solutions with unassigned clients.
     """
-    clients = [
-        Client(x=0, y=0),
-        Client(x=0, y=1, required=False),
-        Client(x=1, y=0, required=False),
-    ]
-    vehicle_types = [VehicleType(1, 2)]
     dist = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
-
-    data = ProblemData(clients, vehicle_types, dist, dist)
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=1, required=False),
+            Client(x=1, y=0, required=False),
+        ],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=dist,
+        duration_matrix=dist,
+    )
 
     sol1 = Solution(data, [[1]])
     sol2 = Solution(data, [[1]])
@@ -781,8 +783,8 @@ def test_route_centroid():
     visited by that route.
     """
     data = read("data/OkSmall.txt")
-    x = np.array([data.client(client).x for client in range(5)])
-    y = np.array([data.client(client).y for client in range(5)])
+    x = np.array([data.location(client).x for client in range(5)])
+    y = np.array([data.location(client).y for client in range(5)])
 
     routes = [Route(data, [1, 2], 0), Route(data, [3], 0), Route(data, [4], 0)]
 
