@@ -54,7 +54,7 @@ def test_swap_single_route_stays_single_route(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    single_route = list(range(1, data.dimension))
+    single_route = list(range(data.num_depots, data.dimension))
     sol = Solution(data, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -86,7 +86,7 @@ def test_relocate_uses_empty_routes(operator):
     ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
     ls.add_node_operator(operator(data))
 
-    single_route = list(range(1, data.dimension))
+    single_route = list(range(data.num_depots, data.dimension))
     sol = Solution(data, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 

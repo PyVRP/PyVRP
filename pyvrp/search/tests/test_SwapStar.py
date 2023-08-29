@@ -72,7 +72,7 @@ def test_swap_star_on_RC208_instance(seed: int):
 
     # Make an initial solution that consists of two routes, by randomly
     # splitting the single-route solution.
-    route = list(range(1, data.dimension))
+    route = list(range(data.num_depots, data.dimension))
     split = rng.randint(data.num_clients)
     sol = Solution(data, [route[:split], route[split:]])
     improved_sol = ls.intensify(sol, cost_evaluator, overlap_tolerance=1)

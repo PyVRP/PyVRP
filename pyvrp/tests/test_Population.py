@@ -247,7 +247,7 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
     elite_sols = best_sols[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
-    single_route = [client for client in range(1, data.dimension)]
+    single_route = list(range(data.num_depots, data.dimension))
     pop.add(Solution(data, [single_route]), cost_evaluator)
 
     # After the purge, there should remain min_pop_size infeasible solutions.

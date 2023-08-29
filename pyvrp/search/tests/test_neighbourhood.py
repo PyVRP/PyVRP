@@ -145,7 +145,7 @@ def test_neighbours_are_sorted_by_proximity():
     data = read("data/E-n22-k4.txt", round_func="trunc1")
     params = NeighbourhoodParams(0, 0, data.num_clients)
     neighbours = compute_neighbours(data, params)
-    clients = list(range(1, data.dimension))
+    clients = list(range(data.num_depots, data.dimension))
 
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
@@ -168,9 +168,9 @@ def test_symmetric_neighbours():
     params = NeighbourhoodParams(symmetric_neighbours=True)
     sym_neighbours = [set(n) for n in compute_neighbours(data, params)]
 
-    for client in range(data.dimension):
-        for neighbour in sym_neighbours[client]:
-            assert_(client in sym_neighbours[neighbour])
+    for loc in range(data.dimension):
+        for neighbour in sym_neighbours[loc]:
+            assert_(loc in sym_neighbours[neighbour])
 
     # But when neighbours are not symmetrised, this is typically not the case.
     params = NeighbourhoodParams(symmetric_neighbours=False)

@@ -344,7 +344,7 @@ def test_route_tws_access():
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
-    for client in range(1, data.dimension):
+    for client in range(data.num_depots, data.dimension):
         route.append(Node(loc=client))
 
     route.update()
@@ -390,7 +390,7 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot():
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
-    for client in range(1, data.dimension):
+    for client in range(data.num_depots, data.dimension):
         route.append(Node(loc=client))
 
     route.update()
@@ -417,7 +417,7 @@ def test_tws_between_single_route_solution_has_time_warp_in_the_right_places():
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
-    for client in range(1, data.dimension):
+    for client in range(data.num_depots, data.dimension):
         route.append(Node(loc=client))
 
     assert_equal(len(route), data.num_clients)
@@ -447,7 +447,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route():
     data = read("data/OkSmall.txt")
 
     route = Route(data, idx=0, vehicle_type=0)
-    for client in range(1, data.dimension):
+    for client in range(data.num_depots, data.dimension):
         route.append(Node(loc=client))
     route.update()
 
