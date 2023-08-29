@@ -73,6 +73,36 @@ def test_evaluate_same_vehicle_type():
     assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
 
 
+def test_evaluate_empty_routes():
+    """
+    Tests that evaluate() returns 0 when one or both of the routes are empty.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 3), VehicleType(10, 3)])
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route3 = Route(data, idx=2, vehicle_type=0)
+
+    route1.append(Node(loc=1))
+
+    route1.update()
+    route2.update()
+
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(1, 1)
+
+    # Vehicle types are no longer the same, but one of the routes is empty.
+    # That situation is not currently handled.
+    assert_(route1.vehicle_type != route2.vehicle_type)
+    assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
+    assert_allclose(op.evaluate(route2, route1, cost_eval), 0)
+
+    # Both routes are empty, but of different vehicle type as well.
+    assert_equal(len(route2), len(route3))
+    assert_allclose(op.evaluate(route3, route2, cost_eval), 0)
+
+
 def test_evaluate_capacity_differences():
     """
     Tests that changes in vehicle capacity violations are evaluated correctly.
