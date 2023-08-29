@@ -114,7 +114,7 @@ def test_remove():
 
 def test_insert_fixed_vehicle_cost():
     """
-    Tests that insert_cost adds the fixed vehicle cost if the route is empty.
+    Tests that insert_cost() adds the fixed vehicle cost if the route is empty.
     """
     cost_eval = CostEvaluator(0, 0)
     data = ProblemData(
@@ -135,3 +135,33 @@ def test_insert_fixed_vehicle_cost():
     # fixed cost 13.
     route = Route(data, idx=0, vehicle_type=1)
     assert_allclose(insert_cost(Node(loc=1), route[0], data, cost_eval), 13)
+
+
+def test_remove_fixed_vehicle_cost():
+    """
+    Tests that remove_cost() subtracts the fixed vehicle cost if the route will
+    be left empty.
+    """
+    cost_eval = CostEvaluator(0, 0)
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
+        vehicle_types=[VehicleType(0, 1, 7), VehicleType(0, 1, 13)],
+        distance_matrix=np.zeros((3, 3), dtype=int),
+        duration_matrix=np.zeros((3, 3), dtype=int),
+    )
+
+    # All distances, durations, and loads are equal. So the only cost change
+    # can happen due to vehicle changes. In this, case we evaluate removing the
+    # only client on a route. That makes the route empty, and removesthe fixed
+    # vehicle cost of 7 for this vehicle type.
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(Node(loc=1))
+    route.update()
+    assert_allclose(remove_cost(route[1], data, cost_eval), -7)
+
+    # Same story for this route, but now we have a different vehicle type with
+    # fixed cost 13.
+    route = Route(data, idx=0, vehicle_type=1)
+    route.append(Node(loc=1))
+    route.update()
+    assert_allclose(remove_cost(route[1], data, cost_eval), -13)
