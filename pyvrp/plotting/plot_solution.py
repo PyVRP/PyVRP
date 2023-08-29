@@ -46,6 +46,7 @@ def plot_solution(
     for idx, route in enumerate(solution.get_routes(), 1):
         x = x_coords[route]
         y = y_coords[route]
+        depot = data.vehicle_type(route.vehicle_type()).depot
 
         # Coordinates of clients served by this route.
         if len(route) == 1 or plot_clients:
@@ -54,8 +55,8 @@ def plot_solution(
 
         # Edges from and to the depot, very thinly dashed.
         kwargs = dict(ls=(0, (5, 15)), linewidth=0.25, color="grey")
-        ax.plot([x_coords[0], x[0]], [y_coords[0], y[0]], **kwargs)
-        ax.plot([x[-1], x_coords[0]], [y[-1], y_coords[0]], **kwargs)
+        ax.plot([x_coords[depot], x[0]], [y_coords[depot], y[0]], **kwargs)
+        ax.plot([x[-1], x_coords[depot]], [y[-1], y_coords[depot]], **kwargs)
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
 

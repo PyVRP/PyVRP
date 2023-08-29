@@ -5,7 +5,7 @@
 #include <cmath>
 
 using Client = size_t;
-using Locations = std::vector<Client>;
+using Clients = std::vector<Client>;
 using Route = pyvrp::Solution::Route;
 using Routes = std::vector<Route>;
 
@@ -178,8 +178,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     // Identify differences between route sets
     auto const selectedBNotA = selectedB & ~selectedA;
 
-    std::vector<Locations> visits1(nRoutesA);
-    std::vector<Locations> visits2(nRoutesA);
+    std::vector<Clients> visits1(nRoutesA);
+    std::vector<Clients> visits2(nRoutesA);
 
     // Replace selected routes from parent A with routes from parent B
     for (size_t r = 0; r < numMovedRoutes; r++)
