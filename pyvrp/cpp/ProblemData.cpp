@@ -54,13 +54,13 @@ std::pair<double, double> const &ProblemData::centroid() const
     return centroid_;
 }
 
-size_t ProblemData::numClients() const { return numClients_; }
+size_t ProblemData::numClients() const { return clients_.size(); }
 
-size_t ProblemData::numDepots() const { return numDepots_; }
+size_t ProblemData::numDepots() const { return depots_.size(); }
 
-size_t ProblemData::dimension() const { return numDepots_ + numClients_; }
+size_t ProblemData::dimension() const { return numDepots() + numClients(); }
 
-size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
+size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
@@ -75,9 +75,6 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       clients_(clients),
       depots_(depots),
       vehicleTypes_(vehicleTypes),
-      numClients_(clients.size()),
-      numDepots_(depots.size()),
-      numVehicleTypes_(vehicleTypes.size()),
       numVehicles_(std::accumulate(vehicleTypes.begin(),
                                    vehicleTypes.end(),
                                    0,

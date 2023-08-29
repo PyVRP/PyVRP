@@ -135,9 +135,6 @@ private:
     std::vector<Client> const depots_;             // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
 
-    size_t const numClients_;
-    size_t const numDepots_;
-    size_t const numVehicleTypes_;
     size_t const numVehicles_;
 
 public:
@@ -352,7 +349,7 @@ public:
 
 ProblemData::Client const &ProblemData::location(size_t idx) const
 {
-    return idx < numDepots_ ? depots_[idx] : clients_[idx - numDepots_];
+    return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
 }
 
 ProblemData::Client const &ProblemData::client(size_t idx) const
