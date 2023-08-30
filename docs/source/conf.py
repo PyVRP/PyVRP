@@ -29,7 +29,7 @@ autodoc_typehints = "signature"
 # -- numpydoc
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
-napoleon_include_special_with_doc = True
+numpydoc_attributes_as_param_list = False
 
 # -- nbsphinx
 nbsphinx_execute = "always"
@@ -39,7 +39,6 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx_immaterial",
     "nbsphinx",
