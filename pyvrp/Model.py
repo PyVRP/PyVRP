@@ -7,13 +7,14 @@ from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
+from pyvrp._pyvrp import Break as _Break
 from pyvrp._pyvrp import (
     Client,
     ProblemData,
     RandomNumberGenerator,
     Solution,
-    VehicleType,
 )
+from pyvrp._pyvrp import VehicleType as _VehicleType
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
@@ -35,6 +36,54 @@ class Edge:
         self.to = to
         self.distance = distance
         self.duration = duration
+
+
+class Break:
+    """
+    Wrapper around the native Break, because that takes indices, not
+    location objects, and the indices are not known yet during model
+    construction.
+    """
+
+    def __init__(
+        self,
+        location: Client,
+        duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
+    ):
+        self.location = location
+        self.duration = duration
+        self.tw_early = tw_early
+        self.tw_late = tw_late
+
+
+class VehicleType:
+    """
+    Wrapper around the native VehicleType, because that takes indices, not
+    location objects, and the indices are not known yet during model
+    construction.
+    """
+
+    def __init__(self, capacity: int, num_available: int, fixed_cost: int = 0):
+        self.capacity = capacity
+        self.num_available = num_available
+        self.fixed_cost = fixed_cost
+        self.breaks: List[Break] = []
+
+    def add_break(
+        self,
+        location: Client,
+        duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
+    ) -> Break:
+        """
+        Adds a break to this vehicle type.
+        """
+        brk = Break(location, duration, tw_early, tw_late)
+        self.breaks.append(brk)
+        return brk
 
 
 class Model:
@@ -98,10 +147,25 @@ class Model:
         self._clients = clients[1:]
         self._depots = clients[:1]
         self._edges = edges
-        vehicle_types = [
-            data.vehicle_type(i) for i in range(data.num_vehicle_types)
-        ]
-        self._vehicle_types = vehicle_types
+
+        self._vehicle_types = []
+        for idx in range(data.num_vehicle_types):
+            native_type = data.vehicle_type(idx)
+            vehicle_type = VehicleType(
+                native_type.capacity,
+                native_type.num_available,
+                native_type.fixed_cost,
+            )
+
+            for brk in native_type.breaks:
+                vehicle_type.add_break(
+                    clients[brk.location],
+                    brk.duration,
+                    brk.tw_early,
+                    brk.tw_late,
+                )
+
+            self.vehicle_types.append(vehicle_type)
 
         return self
 
@@ -225,7 +289,28 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        return ProblemData(locs, self.vehicle_types, distances, durations)
+        vehicle_types = []
+        for vehicle_type in self._vehicle_types:
+            breaks = [
+                _Break(
+                    loc2idx[id(brk.location)],
+                    brk.duration,
+                    brk.tw_early,
+                    brk.tw_late,
+                )
+                for brk in vehicle_type.breaks
+            ]
+
+            vehicle_types.append(
+                _VehicleType(
+                    vehicle_type.capacity,
+                    vehicle_type.num_available,
+                    vehicle_type.fixed_cost,
+                    breaks,
+                )
+            )
+
+        return ProblemData(locs, vehicle_types, distances, durations)
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
         """
