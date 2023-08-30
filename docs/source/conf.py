@@ -1,4 +1,6 @@
 import datetime
+import importlib
+import inspect
 import os
 import shutil
 import sys
@@ -26,6 +28,54 @@ autoclass_content = "class"
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 
+
+# -- sphinx.ext.linkcode
+def linkcode_resolve(domain: str, info: dict):
+    """
+    Returns the URL to source code corresponding to a object.
+
+    Parameters
+    ----------
+    domain: str
+        The domain of the object (e.g., "py" for Python, "cpp" for C++).
+    info: dict
+        A dictionary containing the information about the object.
+    """
+    # TODO make commit-specific
+    base_url = "https:///github.com/PyVRP/PyVRP/blob/main"
+
+    if domain != "py" or "module" not in info:
+        return None
+
+    assert domain == "py", "Expected only Python objects."
+    print(domain, info)
+
+    module = importlib.import_module(info["module"])
+
+    if "." in info["fullname"]:
+        objname, attrname = info["fullname"].split(".")
+        obj = getattr(module, objname)
+
+        try:
+            obj = getattr(obj, attrname)  # object is a method of a class
+        except AttributeError:
+            return None  # object is an attribute of a class
+    else:
+        obj = getattr(module, info["fullname"])
+
+    try:
+        source_file = inspect.getsourcefile(obj)
+        lines = inspect.getsourcelines(obj)
+        print(lines)
+    except Exception:
+        return None
+
+    source_file = os.path.relpath(source_file, os.path.abspath(".."))
+    start, end = lines[1], lines[1] + len(lines[0]) - 1
+
+    return f"{base_url}/{source_file}#L{start}-L{end}"
+
+
 # -- numpydoc
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
@@ -41,6 +91,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
     "sphinx_immaterial",
     "nbsphinx",
     "numpydoc",
