@@ -45,8 +45,8 @@ ProblemData::Client::Client(Coordinate x,
 ProblemData::VehicleType::VehicleType(Load capacity,
                                       size_t numAvailable,
                                       Cost fixedCost,
-                                      Duration twEarly,
-                                      Duration twLate)
+                                      std::optional<Duration> twEarly,
+                                      std::optional<Duration> twLate)
     : capacity(capacity),
       numAvailable(numAvailable),
       fixedCost(fixedCost),
@@ -62,11 +62,18 @@ ProblemData::VehicleType::VehicleType(Load capacity,
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
 
-    if (twEarly > twLate)
-        throw std::invalid_argument("tw_early must be <= tw_late.");
+    if ((twEarly && !twLate) || (!twEarly && twLate))
+        throw std::invalid_argument("Must pass either no shift time windows,"
+                                    " or both a start and end.");
 
-    if (twEarly < 0)
-        throw std::invalid_argument("tw_early must be >= 0.");
+    if (twEarly && twLate)
+    {
+        if (twEarly > twLate)
+            throw std::invalid_argument("tw_early must be <= tw_late.");
+
+        if (twEarly < 0)
+            throw std::invalid_argument("tw_early must be >= 0.");
+    }
 }
 
 std::pair<double, double> const &ProblemData::centroid() const

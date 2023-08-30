@@ -31,6 +31,11 @@ Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
 {
 }
 
+Route::NodeStats::NodeStats(TimeWindowSegment tws)
+    : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
+{
+}
+
 size_t Route::vehicleType() const { return vehicleType_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
@@ -69,10 +74,27 @@ void Route::clear()
     endDepot.route_ = this;
 
     auto const depot = startDepot.client();
+    auto const &depotData = data.client(depot);
+    auto const &vehicleType = data.vehicleType(vehicleType_);
+
+    // Time window is limited by both the depot open and closing times, and
+    // the vehicle's start and end of shift, whichever is tighter. If the
+    // vehicle does not have a shift time window, we default to the depot's
+    // open and close times.
+    auto const shiftStart = vehicleType.twEarly.value_or(depotData.twEarly);
+    auto const shiftEnd = vehicleType.twLate.value_or(depotData.twLate);
+
+    TWS tws = {depot,
+               depot,
+               0,
+               0,
+               std::max(depotData.twEarly, shiftStart),
+               std::min(depotData.twLate, shiftEnd),
+               0};
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(depot, data.client(depot));
-    stats.emplace_back(depot, data.client(depot));
+    stats.emplace_back(tws);
+    stats.emplace_back(tws);
 }
 
 void Route::insert(size_t idx, Node *node)

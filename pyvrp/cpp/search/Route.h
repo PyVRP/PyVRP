@@ -79,6 +79,7 @@ private:
         TimeWindowSegment twsBefore;  // TWS of depot -> client (incl.)
 
         NodeStats(size_t loc, ProblemData::Client const &client);
+        NodeStats(TimeWindowSegment tws);
     };
 
     ProblemData const &data;

@@ -5,6 +5,7 @@
 #include "Measure.h"
 
 #include <iosfwd>
+#include <optional>
 #include <vector>
 
 namespace pyvrp
@@ -110,8 +111,8 @@ public:
      *     capacity: int,
      *     num_available: int,
      *     fixed_cost: int = 0,
-     *     tw_early: int = 0,
-     *     tw_late: int = 0,
+     *     tw_early: Optional[int] = None,
+     *     tw_late: Optional[int] = None,
      * )
      *
      * Simple data object storing all vehicle type data as properties.
@@ -126,9 +127,11 @@ public:
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
-     *     Start of the vehicle type's shift. Default 0.
+     *     Start of the vehicle type's shift. Defaults to the depot's opening
+     *     time if not given.
      * tw_late
-     *     End of the vehicle type's shift. Default 0.
+     *     End of the vehicle type's shift. Defaults to the depot's closing
+     *     time if not given.
      *
      * Attributes
      * ----------
@@ -141,9 +144,9 @@ public:
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early
-     *     Start of the vehicle type's shift.
+     *     Start of the vehicle type's shift, if specified.
      * tw_late
-     *     End of the vehicle type's shift.
+     *     End of the vehicle type's shift, if specified
      */
     struct VehicleType
     {
@@ -151,14 +154,14 @@ public:
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
         Cost const fixedCost;       // Fixed cost of using this vehicle type
-        Duration const twEarly;     // Start of shift
-        Duration const twLate;      // End of shift
+        std::optional<Duration> const twEarly;  // Start of shift
+        std::optional<Duration> const twLate;   // End of shift
 
         VehicleType(Load capacity,
                     size_t numAvailable,
                     Cost fixedCost = 0,
-                    Duration twEarly = 0,
-                    Duration twLate = 0);
+                    std::optional<Duration> twEarly = std::nullopt,
+                    std::optional<Duration> twLate = std::nullopt);
     };
 
 private:
