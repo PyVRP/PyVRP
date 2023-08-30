@@ -112,7 +112,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
-        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost);
+        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
+        .def_readonly("breaks", &ProblemData::VehicleType::breaks);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,

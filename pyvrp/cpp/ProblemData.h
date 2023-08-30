@@ -193,11 +193,11 @@ public:
 
         Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
-        Cost const fixedCost;       // Fixed cost of using this vehicle type
         size_t const depot = 0;     // Departure and return depot location
+        Cost const fixedCost;       // Fixed cost of using this vehicle type
 
         using Breaks = std::vector<Break>;
-        Breaks breaks = {};
+        Breaks breaks;
 
         VehicleType(Load capacity,
                     size_t numAvailable,

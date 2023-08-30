@@ -301,10 +301,17 @@ def test_vehicle_type_does_not_raise_for_edge_cases():
     The vehicle type constructor should allow the following edge case, of no
     capacity and just a single vehicle.
     """
-    vehicle_type = VehicleType(capacity=0, num_available=1, fixed_cost=0)
+    vehicle_type = VehicleType(
+        capacity=0,
+        num_available=1,
+        fixed_cost=0,
+        breaks=None,
+    )
+
     assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.fixed_cost, 0)
+    assert_equal(vehicle_type.breaks, [])
 
 
 def test_vehicle_type_attribute_access():
@@ -312,7 +319,14 @@ def test_vehicle_type_attribute_access():
     Smoke test that checks all attributes are equal to the values they were
     given in the constructor's arguments.
     """
-    vehicle_type = VehicleType(capacity=13, num_available=7, fixed_cost=3)
+    vehicle_type = VehicleType(
+        capacity=13,
+        num_available=7,
+        fixed_cost=3,
+        breaks=[],
+    )
+
     assert_allclose(vehicle_type.capacity, 13)
     assert_equal(vehicle_type.num_available, 7)
     assert_allclose(vehicle_type.fixed_cost, 3)
+    assert_equal(vehicle_type.breaks, [])
