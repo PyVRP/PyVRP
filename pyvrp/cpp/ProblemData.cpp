@@ -49,6 +49,9 @@ ProblemData::VehicleType::VehicleType(Load capacity,
 
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
+
+    if (fixedCost < 0)
+        throw std::invalid_argument("fixed_cost must be >= 0.");
 }
 
 std::pair<double, double> const &ProblemData::centroid() const

@@ -110,6 +110,16 @@ public:
      *
      * Simple data object storing all vehicle type data as properties.
      *
+     * Parameters
+     * ----------
+     * capacity
+     *     Capacity (maximum total demand) of this vehicle type. Must be
+     *     non-negative.
+     * num_available
+     *     Number of vehicles of this type that are available. Must be positive.
+     * fixed_cost
+     *     Fixed cost of using a vehicle of this type. Default 0.
+     *
      * Attributes
      * ----------
      * capacity
