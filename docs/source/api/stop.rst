@@ -14,6 +14,7 @@ All stopping criteria implement the :class:`~pyvrp.stop.StoppingCriterion.Stoppi
 
    .. autoclass:: StoppingCriterion
       :members:
+      :special-members: __call__
 
 .. automodule:: pyvrp.stop.MaxIterations
 

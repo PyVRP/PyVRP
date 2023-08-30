@@ -75,8 +75,8 @@ def test_tw_penalty():
 def test_cost():
     """
     This test asserts that the cost is computed correctly for feasible
-    individuals, and is a large value (representing infinity) for infeasible
-    individuals.
+    solutions, and is a large value (representing infinity) for infeasible
+    solutions.
     """
     data = read("data/OkSmall.txt")
     default_cost_evaluator = CostEvaluator()
@@ -128,7 +128,7 @@ def test_penalised_cost():
     """
     The penalised cost represents the smoothed objective, where constraint
     violations are priced in using penalty terms. It can be computed for both
-    feasible and infeasible individuals. In case of the former, it is equal
+    feasible and infeasible solutions. In case of the former, it is equal
     to the actual cost: the penalty terms are all zero.
     """
     data = read("data/OkSmall.txt")
