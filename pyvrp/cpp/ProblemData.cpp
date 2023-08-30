@@ -35,14 +35,21 @@ ProblemData::Client::Client(Coordinate x,
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
 
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
+
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
 }
 
 ProblemData::VehicleType::VehicleType(Load capacity,
                                       size_t numAvailable,
-                                      Cost fixedCost)
-    : capacity(capacity), numAvailable(numAvailable), fixedCost(fixedCost)
+                                      Cost fixedCost,
+                                      std::optional<Breaks> breaks)
+    : capacity(capacity),
+      numAvailable(numAvailable),
+      fixedCost(fixedCost),
+      breaks(breaks.value_or(Breaks()))
 {
     if (capacity < 0)
         throw std::invalid_argument("capacity must be >= 0.");
@@ -52,6 +59,25 @@ ProblemData::VehicleType::VehicleType(Load capacity,
 
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
+}
+
+ProblemData::VehicleType::Break::Break(size_t location,
+                                       Duration breakDuration,
+                                       Duration twEarly,
+                                       Duration twLate)
+    : location(location),
+      breakDuration(breakDuration),
+      twEarly(twEarly),
+      twLate(twLate)
+{
+    if (breakDuration < 0)
+        throw std::invalid_argument("break_duration must be >= 0.");
+
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
 }
 
 std::pair<double, double> const &ProblemData::centroid() const

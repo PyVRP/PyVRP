@@ -82,12 +82,33 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("prize", &ProblemData::Client::prize)
         .def_readonly("required", &ProblemData::Client::required);
 
+    py::class_<ProblemData::VehicleType::Break>(
+        m, "Break", DOC(pyvrp, ProblemData, VehicleType, Break))
+        .def(py::init<size_t,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration>(),
+             py::arg("location"),
+             py::arg("break_duration") = 0,
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = 0)
+        .def_readonly("location", &ProblemData::VehicleType::Break::location)
+        .def_readonly("break_duration",
+                      &ProblemData::VehicleType::Break::breakDuration)
+        .def_readonly("tw_early", &ProblemData::VehicleType::Break::twEarly)
+        .def_readonly("tw_late", &ProblemData::VehicleType::Break::twLate);
+
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
-        .def(py::init<pyvrp::Load, size_t, pyvrp::Cost>(),
+        .def(py::init<
+                 pyvrp::Load,
+                 size_t,
+                 pyvrp::Cost,
+                 std::optional<std::vector<ProblemData::VehicleType::Break>>>(),
              py::arg("capacity"),
              py::arg("num_available"),
-             py::arg("fixed_cost") = 0)
+             py::arg("fixed_cost") = 0,
+             py::arg("breaks") = py::none())
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)

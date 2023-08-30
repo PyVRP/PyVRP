@@ -46,13 +46,31 @@ class Client:
         required: bool = True,
     ) -> None: ...
 
+class Break:
+    location: int
+    break_duration: int
+    tw_early: int
+    tw_late: int
+    def __init__(
+        self,
+        location: int,
+        break_duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
+    ) -> None: ...
+
 class VehicleType:
     capacity: int
     num_available: int
     depot: int
     fixed_cost: int
+    breaks: List[Break]
     def __init__(
-        self, capacity: int, num_available: int, fixed_cost: int = 0
+        self,
+        capacity: int,
+        num_available: int,
+        fixed_cost: int = 0,
+        breaks: Optional[List[Break]] = None,
     ) -> None: ...
 
 class ProblemData:
