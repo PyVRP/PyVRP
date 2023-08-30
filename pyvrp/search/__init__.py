@@ -13,6 +13,7 @@ from ._search import MoveTwoClientsReversed as MoveTwoClientsReversed
 from ._search import NodeOperator as NodeOperator
 from ._search import RelocateStar as RelocateStar
 from ._search import RouteOperator as RouteOperator
+from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
 from ._search import TwoOpt as TwoOpt
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
@@ -34,5 +35,6 @@ NODE_OPERATORS = [
 
 ROUTE_OPERATORS = [
     RelocateStar,
+    SwapRoutes,
     SwapStar,
 ]

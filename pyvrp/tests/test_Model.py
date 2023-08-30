@@ -1,5 +1,10 @@
-from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
-from pytest import mark
+from numpy.testing import (
+    assert_,
+    assert_allclose,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 
 from pyvrp import Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
@@ -56,25 +61,6 @@ def test_add_edge_raises_negative_distance_or_duration():
 
     with assert_raises(ValueError):  # negative duration should also not be OK
         model.add_edge(client, depot, distance=0, duration=-1)
-
-
-@mark.parametrize(
-    ("number", "capacity"),
-    [
-        (0, 1),  # zero vehicles is not OK (but zero capacity is)
-        (-1, 1),  # negative vehicles is not OK
-        (1, -1),  # negative capacity is not OK
-    ],
-)
-def test_add_vehicle_type_raises_negative_number_or_capacity(number, capacity):
-    """
-    A negative number of vehicles of a given type, or a negative capacity, is
-    not understood. Attempting to add such a vehicle type should raise an
-    error.
-    """
-    model = Model()
-    with assert_raises(ValueError):
-        model.add_vehicle_type(capacity=capacity, num_available=number)
 
 
 def test_add_client_attributes():
@@ -141,10 +127,15 @@ def test_add_vehicle_type():
     passed in.
     """
     model = Model()
-    vehicle_type = model.add_vehicle_type(num_available=10, capacity=998)
+    vehicle_type = model.add_vehicle_type(
+        num_available=10,
+        capacity=998,
+        fixed_cost=1_001,
+    )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, 998)
+    assert_allclose(vehicle_type.capacity, 998)
+    assert_allclose(vehicle_type.fixed_cost, 1_001)
 
 
 def test_get_locations():

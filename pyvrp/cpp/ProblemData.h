@@ -106,9 +106,19 @@ public:
     };
 
     /**
-     * VehicleType(capacity: int, num_available: int)
+     * VehicleType(capacity: int, num_available: int, fixed_cost: int = 0)
      *
      * Simple data object storing all vehicle type data as properties.
+     *
+     * Parameters
+     * ----------
+     * capacity
+     *     Capacity (maximum total demand) of this vehicle type. Must be
+     *     non-negative.
+     * num_available
+     *     Number of vehicles of this type that are available. Must be positive.
+     * fixed_cost
+     *     Fixed cost of using a vehicle of this type. Default 0.
      *
      * Attributes
      * ----------
@@ -118,12 +128,17 @@ public:
      *     Number of vehicles of this type that are available.
      * depot
      *     Depot associated with these vehicles.
+     * fixed_cost
+     *     Fixed cost of using a vehicle of this type.
      */
     struct VehicleType
     {
         Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
+        Cost fixedCost = 0;         // Fixed cost of using this vehicle type
+
+        VehicleType(Load capacity, size_t numAvailable, Cost fixedCost = 0);
     };
 
 private:
