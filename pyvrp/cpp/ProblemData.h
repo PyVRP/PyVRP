@@ -110,6 +110,8 @@ public:
      *     capacity: int,
      *     num_available: int,
      *     fixed_cost: int = 0,
+     *     tw_early: int = 0,
+     *     tw_late: int = 0,
      * )
      *
      * Simple data object storing all vehicle type data as properties.
@@ -123,6 +125,10 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
+     * tw_early
+     *     Start of the vehicle type's shift. Default 0.
+     * tw_late
+     *     End of the vehicle type's shift. Default 0.
      *
      * Attributes
      * ----------
@@ -134,6 +140,10 @@ public:
      *     Depot associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
+     * tw_early
+     *     Start of the vehicle type's shift.
+     * tw_late
+     *     End of the vehicle type's shift.
      */
     struct VehicleType
     {
@@ -141,8 +151,14 @@ public:
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
         Cost const fixedCost;       // Fixed cost of using this vehicle type
+        Duration const twEarly;     // Start of shift
+        Duration const twLate;      // End of shift
 
-        VehicleType(Load capacity, size_t numAvailable, Cost fixedCost = 0);
+        VehicleType(Load capacity,
+                    size_t numAvailable,
+                    Cost fixedCost = 0,
+                    Duration twEarly = 0,
+                    Duration twLate = 0);
     };
 
 private:

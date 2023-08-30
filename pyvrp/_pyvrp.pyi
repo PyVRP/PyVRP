@@ -51,8 +51,15 @@ class VehicleType:
     num_available: int
     depot: int
     fixed_cost: int
+    tw_early: int
+    tw_late: int
     def __init__(
-        self, capacity: int, num_available: int, fixed_cost: int = 0
+        self,
+        capacity: int,
+        num_available: int,
+        fixed_cost: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
     ) -> None: ...
 
 class ProblemData:

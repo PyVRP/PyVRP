@@ -84,14 +84,22 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
-        .def(py::init<pyvrp::Load, size_t, pyvrp::Cost>(),
+        .def(py::init<pyvrp::Load,
+                      size_t,
+                      pyvrp::Cost,
+                      pyvrp::Duration,
+                      pyvrp::Duration>(),
              py::arg("capacity"),
              py::arg("num_available"),
-             py::arg("fixed_cost") = 0)
+             py::arg("fixed_cost") = 0,
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = 0)
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
-        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost);
+        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
+        .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
+        .def_readonly("tw_late", &ProblemData::VehicleType::twLate);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
