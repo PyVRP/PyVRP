@@ -147,7 +147,7 @@ public:
         /**
          * Break(
          *     location: int,
-         *     break_duration: int = 0,
+         *     duration: int = 0,
          *     tw_early: int = 0,
          *     tw_late: int = 0,
          * )
@@ -159,7 +159,7 @@ public:
          * location
          *     Location where the break is had. The vehicle travels to this
          *     location to take the break.
-         * break_duration
+         * duration
          *     Duration of the break. Default 0.
          * tw_early
          *     Earliest time at which the break can begin. Default 0.
@@ -171,7 +171,7 @@ public:
          * location
          *     Location where the break is had. The vehicle travels to this
          *     location to take the break.
-         * break_duration
+         * duration
          *     Duration of the break.
          * tw_early
          *     Earliest time at which the break can begin.
@@ -180,13 +180,13 @@ public:
          */
         struct Break
         {
-            size_t const location;  // Location where break is had
-            Duration const breakDuration;
-            Duration const twEarly;  // Earliest possible start of break
-            Duration const twLate;   // Latest possible start of break
+            size_t const location;    // Location where break is had
+            Duration const duration;  // Break duration
+            Duration const twEarly;   // Earliest possible start of break
+            Duration const twLate;    // Latest possible start of break
 
             Break(size_t location,
-                  Duration breakDuration = 0,
+                  Duration duration = 0,
                   Duration twEarly = 0,
                   Duration twLate = 0);
         };

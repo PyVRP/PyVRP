@@ -62,16 +62,13 @@ ProblemData::VehicleType::VehicleType(Load capacity,
 }
 
 ProblemData::VehicleType::Break::Break(size_t location,
-                                       Duration breakDuration,
+                                       Duration duration,
                                        Duration twEarly,
                                        Duration twLate)
-    : location(location),
-      breakDuration(breakDuration),
-      twEarly(twEarly),
-      twLate(twLate)
+    : location(location), duration(duration), twEarly(twEarly), twLate(twLate)
 {
-    if (breakDuration < 0)
-        throw std::invalid_argument("break_duration must be >= 0.");
+    if (duration < 0)
+        throw std::invalid_argument("duration must be >= 0.");
 
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");

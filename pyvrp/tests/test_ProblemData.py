@@ -3,7 +3,7 @@ import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Client, ProblemData, VehicleType
+from pyvrp import Break, Client, ProblemData, VehicleType
 from pyvrp.tests.helpers import read
 
 
@@ -68,6 +68,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     ),
     [
         (1, 1, 1, 0, 1, 0, 0, 0),  # late < early
+        (1, 1, 1, 0, -1, 0, 0, 0),  # negative early
         (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
         (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
         (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
@@ -330,3 +331,31 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.num_available, 7)
     assert_allclose(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.breaks, [])
+
+
+@pytest.mark.parametrize(
+    ("duration", "tw_early", "tw_late"),
+    [
+        (0, 1, 0),  # late < early
+        (0, -1, 0),  # negative early
+        (-1, 0, 0),  # negative duration
+    ],
+)
+def test_break_raises_invalid_data(duration: int, tw_early: int, tw_late: int):
+    """
+    Tests that the break constructor raises when given invalid arguments.
+    """
+    with assert_raises(ValueError):
+        Break(0, duration, tw_early, tw_late)
+
+
+def test_break_attribute_access():
+    """
+    Smoke test that checks all attributes are equal to the values they were
+    given in the constructor's arguments.
+    """
+    brk = Break(97, 103, 241, 997)
+    assert_equal(brk.location, 97)
+    assert_allclose(brk.duration, 103)
+    assert_allclose(brk.tw_early, 241)
+    assert_allclose(brk.tw_late, 997)

@@ -48,13 +48,13 @@ class Client:
 
 class Break:
     location: int
-    break_duration: int
+    duration: int
     tw_early: int
     tw_late: int
     def __init__(
         self,
         location: int,
-        break_duration: int = 0,
+        duration: int = 0,
         tw_early: int = 0,
         tw_late: int = 0,
     ) -> None: ...

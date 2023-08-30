@@ -89,12 +89,11 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration>(),
              py::arg("location"),
-             py::arg("break_duration") = 0,
+             py::arg("duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = 0)
         .def_readonly("location", &ProblemData::VehicleType::Break::location)
-        .def_readonly("break_duration",
-                      &ProblemData::VehicleType::Break::breakDuration)
+        .def_readonly("duration", &ProblemData::VehicleType::Break::duration)
         .def_readonly("tw_early", &ProblemData::VehicleType::Break::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::Break::twLate);
 
