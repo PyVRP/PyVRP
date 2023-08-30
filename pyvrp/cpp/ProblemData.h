@@ -5,7 +5,6 @@
 #include "Measure.h"
 
 #include <iosfwd>
-#include <optional>
 #include <vector>
 
 namespace pyvrp
@@ -111,7 +110,6 @@ public:
      *     capacity: int,
      *     num_available: int,
      *     fixed_cost: int = 0,
-     *     breaks: Optional[List[Break]] = None,
      * )
      *
      * Simple data object storing all vehicle type data as properties.
@@ -125,9 +123,6 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
-     * breaks
-     *     Breaks this vehicle must take along the route. Default ``None``, in
-     *     which case no breaks are scheduled.
      *
      * Attributes
      * ----------
@@ -139,70 +134,15 @@ public:
      *     Depot associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
-     * breaks
-     *     Breaks this vehicle must take along the route.
      */
     struct VehicleType
     {
-        /**
-         * Break(
-         *     location: int,
-         *     duration: int = 0,
-         *     tw_early: int = 0,
-         *     tw_late: int = 0,
-         * )
-         *
-         * Models a break at a given location.
-         *
-         * Parameters
-         * ----------
-         * location
-         *     Location where the break is had. The vehicle travels to this
-         *     location to take the break.
-         * duration
-         *     Duration of the break. Default 0.
-         * tw_early
-         *     Earliest time at which the break can begin. Default 0.
-         * tw_late
-         *     Latest time at which the break can begin. Default 0.
-         *
-         * Attributes
-         * ----------
-         * location
-         *     Location where the break is had. The vehicle travels to this
-         *     location to take the break.
-         * duration
-         *     Duration of the break.
-         * tw_early
-         *     Earliest time at which the break can begin.
-         * tw_late
-         *     Latest time at which the break can begin.
-         */
-        struct Break
-        {
-            size_t const location;    // Location where break is had
-            Duration const duration;  // Break duration
-            Duration const twEarly;   // Earliest possible start of break
-            Duration const twLate;    // Latest possible start of break
-
-            Break(size_t location,
-                  Duration duration = 0,
-                  Duration twEarly = 0,
-                  Duration twLate = 0);
-        };
-
         Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
         Cost const fixedCost;       // Fixed cost of using this vehicle type
 
-        using Breaks = std::vector<Break>;
-        Breaks breaks;
-
-        VehicleType(Load capacity,
-                    size_t numAvailable,
-                    Cost fixedCost = 0,
-                    std::optional<Breaks> breaks = std::nullopt);
+        VehicleType(Load capacity, size_t numAvailable, Cost fixedCost = 0);
     };
 
 private:

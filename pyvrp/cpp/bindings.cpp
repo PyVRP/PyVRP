@@ -82,37 +82,16 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("prize", &ProblemData::Client::prize)
         .def_readonly("required", &ProblemData::Client::required);
 
-    py::class_<ProblemData::VehicleType::Break>(
-        m, "Break", DOC(pyvrp, ProblemData, VehicleType, Break))
-        .def(py::init<size_t,
-                      pyvrp::Duration,
-                      pyvrp::Duration,
-                      pyvrp::Duration>(),
-             py::arg("location"),
-             py::arg("duration") = 0,
-             py::arg("tw_early") = 0,
-             py::arg("tw_late") = 0)
-        .def_readonly("location", &ProblemData::VehicleType::Break::location)
-        .def_readonly("duration", &ProblemData::VehicleType::Break::duration)
-        .def_readonly("tw_early", &ProblemData::VehicleType::Break::twEarly)
-        .def_readonly("tw_late", &ProblemData::VehicleType::Break::twLate);
-
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
-        .def(py::init<
-                 pyvrp::Load,
-                 size_t,
-                 pyvrp::Cost,
-                 std::optional<std::vector<ProblemData::VehicleType::Break>>>(),
+        .def(py::init<pyvrp::Load, size_t, pyvrp::Cost>(),
              py::arg("capacity"),
              py::arg("num_available"),
-             py::arg("fixed_cost") = 0,
-             py::arg("breaks") = py::none())
+             py::arg("fixed_cost") = 0)
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
-        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
-        .def_readonly("breaks", &ProblemData::VehicleType::breaks);
+        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
