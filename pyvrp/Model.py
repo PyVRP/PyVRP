@@ -197,12 +197,17 @@ class Model:
         capacity: int,
         num_available: int,
         fixed_cost: int = 0,
+        tw_early: int = 0,
+        tw_late: int = 0,
     ) -> VehicleType:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
         created vehicle type.
         """
-        vehicle_type = VehicleType(capacity, num_available, fixed_cost)
+        vehicle_type = VehicleType(
+            capacity, num_available, fixed_cost, tw_early, tw_late
+        )
+
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
@@ -225,7 +230,7 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        return ProblemData(locs, self._vehicle_types, distances, durations)
+        return ProblemData(locs, self.vehicle_types, distances, durations)
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
         """

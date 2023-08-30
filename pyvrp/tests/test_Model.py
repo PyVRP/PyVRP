@@ -131,11 +131,15 @@ def test_add_vehicle_type():
         num_available=10,
         capacity=998,
         fixed_cost=1_001,
+        tw_early=17,
+        tw_late=19,
     )
 
     assert_equal(vehicle_type.num_available, 10)
     assert_allclose(vehicle_type.capacity, 998)
     assert_allclose(vehicle_type.fixed_cost, 1_001)
+    assert_allclose(vehicle_type.tw_early, 17)
+    assert_allclose(vehicle_type.tw_late, 19)
 
 
 def test_get_locations():
