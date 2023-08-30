@@ -279,9 +279,9 @@ def test_matrices_are_not_copies():
     ("capacity", "num_available", "fixed_cost"),
     [
         (0, 0, 0),  # num_available must be positive
-        (-1, 1, 0),  # capacity cannot be negative
+        (-1, 1, 1),  # capacity cannot be negative
         (-100, 1, 0),  # this is just wrong
-        (0, 1, -1),  # fixed_cost cannot be negative
+        (1, 1, -1),  # fixed_cost cannot be negative
         (0, 1, -100),  # this is just wrong
     ],
 )
