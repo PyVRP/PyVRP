@@ -2,8 +2,8 @@
    :synopsis: Search
 
 
-Search
-======
+Search methods
+==============
 
 The :mod:`pyvrp.search` module contains classes and search methods responsible for improving a newly created offspring solution.
 This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`. 
