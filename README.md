@@ -8,7 +8,7 @@
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports VRPs with:
 - Client demands (capacitated VRP);
-- Vehicles of different capacities;
+- Vehicles of different capacities and costs (heterogeneous fleet VRP);
 - Time windows, client service durations, and release times (VRP with time windows and release times);
 - Optional clients with prizes for visiting (prize collecting).
 

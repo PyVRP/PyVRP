@@ -1,13 +1,13 @@
 import numpy as np
+import pytest
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_raises
-from pytest import mark
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ProblemData, VehicleType
 from pyvrp.tests.helpers import read
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     (
         "x",
         "y",
@@ -55,7 +55,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     assert_allclose(client.prize, prize)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     (
         "x",
         "y",
@@ -67,8 +67,8 @@ def test_client_constructor_initialises_data_fields_correctly(
         "prize",
     ),
     [
-        (1, 1, 1, 1, 1, 0, 0, 0),  # late < early
-        (1, 1, 1, -1, 0, 1, 0, 0),  # negative service duration
+        (1, 1, 1, 0, 1, 0, 0, 0),  # late < early
+        (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
         (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
         (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
     ],
@@ -90,7 +90,7 @@ def test_raises_for_invalid_client_data(
         Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "x,y,demand,service,tw_early,tw_late,release_time,prize",
     [
         (0, 0, 1, 0, 0, 0, 0, 0),  # demand != 0
@@ -146,7 +146,7 @@ def test_problem_data_raises_when_no_clients_provided():
     )
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "matrix",
     [
         np.asarray([[0, 0]]),  # num rows < num clients
@@ -273,3 +273,46 @@ def test_matrices_are_not_copies():
     dur2 = data.duration_matrix()
     assert_(not dur1.flags["OWNDATA"])
     assert_(dur1.base is dur2.base)
+
+
+@pytest.mark.parametrize(
+    ("capacity", "num_available", "fixed_cost"),
+    [
+        (0, 0, 0),  # num_available must be positive
+        (-1, 1, 1),  # capacity cannot be negative
+        (-100, 1, 0),  # this is just wrong
+        (1, 1, -1),  # fixed_cost cannot be negative
+        (0, 1, -100),  # this is just wrong
+    ],
+)
+def test_vehicle_type_raises_invalid_data(
+    capacity: int, num_available: int, fixed_cost: int
+):
+    """
+    Tests that the vehicle type constructor raises when given invalid
+    arguments.
+    """
+    with assert_raises(ValueError):
+        VehicleType(capacity, num_available, fixed_cost)
+
+
+def test_vehicle_type_does_not_raise_for_edge_cases():
+    """
+    The vehicle type constructor should allow the following edge case, of no
+    capacity and just a single vehicle.
+    """
+    vehicle_type = VehicleType(capacity=0, num_available=1, fixed_cost=0)
+    assert_allclose(vehicle_type.capacity, 0)
+    assert_equal(vehicle_type.num_available, 1)
+    assert_equal(vehicle_type.fixed_cost, 0)
+
+
+def test_vehicle_type_attribute_access():
+    """
+    Smoke test that checks all attributes are equal to the values they were
+    given in the constructor's arguments.
+    """
+    vehicle_type = VehicleType(capacity=13, num_available=7, fixed_cost=3)
+    assert_allclose(vehicle_type.capacity, 13)
+    assert_equal(vehicle_type.num_available, 7)
+    assert_allclose(vehicle_type.fixed_cost, 3)

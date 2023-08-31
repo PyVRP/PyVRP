@@ -31,6 +31,7 @@ void Solution::evaluate(ProblemData const &data)
         distance_ += route.distance();
         timeWarp_ += route.timeWarp();
         excessLoad_ += route.excessLoad();
+        fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
@@ -60,6 +61,8 @@ bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 Distance Solution::distance() const { return distance_; }
 
 Load Solution::excessLoad() const { return excessLoad_; }
+
+Cost Solution::fixedVehicleCost() const { return fixedVehicleCost_; }
 
 Cost Solution::prizes() const { return prizes_; }
 
@@ -204,6 +207,7 @@ Solution::Solution(size_t numClients,
                    size_t numMissingClients,
                    Distance distance,
                    Load excessLoad,
+                   Cost fixedVehicleCost,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
@@ -213,6 +217,7 @@ Solution::Solution(size_t numClients,
       numMissingClients_(numMissingClients),
       distance_(distance),
       excessLoad_(excessLoad),
+      fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),

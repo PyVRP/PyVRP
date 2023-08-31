@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
 from pyvrp import (
@@ -320,3 +320,44 @@ def test_relocate_to_heterogeneous_empty_route():
         ],
     )
     assert_equal(ls.search(sol, cost_evaluator), expected)
+
+
+@mark.parametrize(
+    ("operator", "base_cost", "fixed_cost"),
+    [
+        (Exchange10, 2_346, 0),
+        (Exchange10, 2_346, 100),
+        (Exchange20, 1_417, 0),
+        (Exchange20, 1_417, 9),
+        (Exchange30, 135, 53),
+        (Exchange30, 135, 997),
+    ],
+)
+def test_relocate_fixed_vehicle_cost(operator, base_cost, fixed_cost):
+    """
+    Tests that relocate operators - (N, M)-exchange where M == 0 - also take
+    into account fixed vehicle costs changes if one of the routes is empty. In
+    particular, we fix the base cost of evaluating the route changes (that's
+    not changed), and vary the fixed vehicle cost. The total delta cost should
+    also vary as a result.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(data, [VehicleType(10, 2, fixed_cost)])
+
+    op = operator(data)
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [2, 4, 1, 3]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.update()
+
+    # First route is not empty, second route is. The operator evaluates moving
+    # some nodes to the second route, which would use both of them. That should
+    # add to the fixed vehicle cost.
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(
+        op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
+    )

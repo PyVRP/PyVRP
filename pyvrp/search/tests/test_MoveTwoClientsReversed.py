@@ -1,7 +1,15 @@
-from numpy.testing import assert_, assert_equal
+import numpy as np
+from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    ProblemData,
+    RandomNumberGenerator,
+    Solution,
+    VehicleType,
+)
 from pyvrp.search import (
     LocalSearch,
     MoveTwoClientsReversed,
@@ -9,6 +17,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
+from pyvrp.search._search import Node, Route
 from pyvrp.tests.helpers import read
 
 
@@ -69,3 +78,34 @@ def test_RC208_instance(seed: int):
     current_cost = cost_evaluator.penalised_cost(sol)
     improved_cost = cost_evaluator.penalised_cost(improved_sol)
     assert_(improved_cost < current_cost)
+
+
+def test_relocate_fixed_vehicle_cost():
+    """
+    Tests that when relocating two clients leaves a route empty, into a new
+    empty route correctly sums up the fixed vehicle cost if that's the only
+    cost change.
+    """
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
+        vehicle_types=[VehicleType(0, 1, 7), VehicleType(0, 1, 13)],
+        distance_matrix=np.zeros((3, 3), dtype=int),
+        duration_matrix=np.zeros((3, 3), dtype=int),
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route2 = Route(data, idx=1, vehicle_type=1)
+
+    for loc in [1, 2]:
+        route1.append(Node(loc=loc))
+
+    route1.update()
+    route2.update()
+
+    # All distances, durations, and loads are equal. So the only cost change
+    # can happen due to vehicle changes. In particular, we evaluate inserting
+    # the two clients on route1 into the empty route2. That leaves route1 empty
+    # and has a fixed vehicle cost change of 13 - 7 = 6.
+    op = MoveTwoClientsReversed(data)
+    cost_eval = CostEvaluator(0, 0)
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), 6)

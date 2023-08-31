@@ -26,6 +26,14 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
+    auto const &uVehicleType = data.vehicleType(uRoute->vehicleType());
+    auto const &vVehicleType = data.vehicleType(vRoute->vehicleType());
+
+    // We're going to incur V's fixed cost if V is currently empty. We lose U's
+    // fixed cost if we're moving all of U's clients with this operator.
+    deltaCost += Cost(vRoute->empty()) * vVehicleType.fixedCost;
+    deltaCost -= Cost(uRoute->size() == 2) * uVehicleType.fixedCost;
+
     if (uRoute != vRoute)
     {
         if (uRoute->isFeasible() && deltaCost >= 0)
