@@ -20,6 +20,11 @@ The configuration files used for benchmarking are ``configs/cvrp.toml`` (for CVR
      - CVRP
      - VRPTW
      - PC-VRPTW
+   * - 31 August 2023
+     - `0.6.0 <https://github.com/PyVRP/PyVRP/tree/7ce7bfe66cb4930496dab412eb0f1999b18fbfa8>`_
+     - 0.24%
+     - 0.54%
+     - 0.43%
    * - 1 August 2023
      - `0.5.0 <https://github.com/PyVRP/PyVRP/tree/d4799a810a8cf7d16ea2c8871204bdfb3a896d06>`_
      - 0.22%
