@@ -258,8 +258,9 @@ def test_model_and_solve():
             model.add_edge(other, client, to_client, to_client)
 
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+
     assert_(res.is_feasible())
+    assert_equal(res.cost(), 9_155)
 
 
 def test_partial_distance_duration_matrix():

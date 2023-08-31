@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -197,8 +197,8 @@ class Model:
         capacity: int,
         num_available: int,
         fixed_cost: int = 0,
-        tw_early: int = 0,
-        tw_late: int = 0,
+        tw_early: Optional[int] = None,
+        tw_late: Optional[int] = None,
     ) -> VehicleType:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
