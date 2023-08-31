@@ -3,6 +3,7 @@ import importlib
 import inspect
 import os
 import shutil
+import subprocess
 import sys
 
 import tomli
@@ -30,6 +31,18 @@ autodoc_typehints = "signature"
 
 
 # -- sphinx.ext.linkcode
+REVISION_CMD = "git rev-parse --short HEAD"
+
+
+def _get_git_revision():
+    try:
+        revision = subprocess.check_output(REVISION_CMD.split()).strip()
+    except (subprocess.CalledProcessError, OSError):
+        print("Failed to execute git to get revision")
+        return None
+    return revision.decode("utf-8")
+
+
 def linkcode_resolve(domain: str, info: dict):
     """
     Returns the URL to source code corresponding to a object.
@@ -41,14 +54,12 @@ def linkcode_resolve(domain: str, info: dict):
     info: dict
         A dictionary containing the information about the object.
     """
-    # TODO make commit-specific
-    base_url = "https:///github.com/PyVRP/PyVRP/blob/main"
+    # TODO make this commit-specific
+    base_url = "https:///github.com/PyVRP/PyVRP/blob"
 
-    if domain != "py" or "module" not in info:
+    if domain != "py" or not info.get("module") or not info.get("fullname"):
+        # Only accept Python objects with complete module and fullname info.
         return None
-
-    assert domain == "py", "Expected only Python objects."
-    print(domain, info)
 
     module = importlib.import_module(info["module"])
 
@@ -66,14 +77,16 @@ def linkcode_resolve(domain: str, info: dict):
     try:
         source_file = inspect.getsourcefile(obj)
         lines = inspect.getsourcelines(obj)
-        print(lines)
     except Exception:
+        print(info)
         return None
 
     source_file = os.path.relpath(source_file, os.path.abspath(".."))
-    start, end = lines[1], lines[1] + len(lines[0]) - 1
+    line_no = lines[1]
 
-    return f"{base_url}/{source_file}#L{start}-L{end}"
+    revision = _get_git_revision()
+    revision = "main"  # TODO use this during testing
+    return f"{base_url}/{revision}/{source_file}#L{line_no}"
 
 
 # -- numpydoc
