@@ -16,7 +16,6 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
     static_assert(sizeof(T) == sizeof(pyvrp::Value)
                   && std::is_constructible_v<T, pyvrp::Value>);
 
-public:
 #ifdef PYVRP_DOUBLE_PRECISION
     PYBIND11_TYPE_CASTER(pyvrp::Matrix<T>, _("numpy.ndarray[float]"));
 #else
@@ -72,7 +71,11 @@ public:
 // are just ints or doubles. This type caster converts between the two.
 template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
-    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("pyvrp.MeasureType"));
+#ifdef PYVRP_DOUBLE_PRECISION
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("float"));
+#else
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("int"));
+#endif
 
     bool load(pybind11::handle src,
               [[maybe_unused]] bool convert)  // Python -> C++

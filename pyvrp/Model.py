@@ -193,25 +193,16 @@ class Model:
         return edge
 
     def add_vehicle_type(
-        self, capacity: int, num_available: int
+        self,
+        capacity: int,
+        num_available: int,
+        fixed_cost: int = 0,
     ) -> VehicleType:
         """
-        Adds a vehicle type with the given number of available vehicles of
-        given capacity to the model. Returns the created vehicle type.
-
-        Raises
-        ------
-        ValueError
-            When the number of available vehicles or capacity is not a positive
-            value.
+        Adds a vehicle type with the given attributes to the model. Returns the
+        created vehicle type.
         """
-        if capacity < 0:
-            raise ValueError("Cannot have negative vehicle capacity.")
-
-        if num_available <= 0:
-            raise ValueError("Must have positive number of vehicles.")
-
-        vehicle_type = VehicleType(capacity, num_available)
+        vehicle_type = VehicleType(capacity, num_available, fixed_cost)
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 

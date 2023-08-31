@@ -29,6 +29,7 @@ autodoc_typehints = "signature"
 # -- numpydoc
 numpydoc_xref_param_type = True
 numpydoc_class_members_toctree = False
+numpydoc_attributes_as_param_list = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
@@ -39,8 +40,8 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinx_immaterial",
     "nbsphinx",
     "numpydoc",
@@ -137,7 +138,10 @@ python_transform_type_annotations_pep585 = True
 python_transform_type_annotations_pep604 = True
 object_description_options = [
     ("py:.*", dict(include_fields_in_toc=False, include_rubrics_in_toc=False)),
+    ("py:attribute", dict(include_in_toc=False)),
+    ("py:parameter", dict(include_in_toc=False)),
 ]
+
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"

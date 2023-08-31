@@ -217,6 +217,7 @@ private:
     size_t numMissingClients_ = 0;  // Number of required but missing clients
     Distance distance_ = 0;         // Total distance
     Load excessLoad_ = 0;           // Total excess load over all routes
+    Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
     Duration timeWarp_ = 0;         // Total time warp over all routes
@@ -356,6 +357,16 @@ public:
     [[nodiscard]] Load excessLoad() const;
 
     /**
+     * Returns the fixed vehicle cost of all vehicles used in this solution.
+     *
+     * Returns
+     * -------
+     * int
+     *     Total fixed vehicle cost.
+     */
+    [[nodiscard]] Cost fixedVehicleCost() const;
+
+    /**
      * Returns the total collected prize value over all routes.
      *
      * Returns
@@ -432,6 +443,7 @@ public:
              size_t numMissingClients,
              Distance distance,
              Load excessLoad,
+             Cost fixedVehicleCost,
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,

@@ -1,9 +1,11 @@
+from typing import Tuple
+
 import numpy as np
 from numpy.testing import assert_, assert_allclose
 from pytest import mark
 
-from pyvrp import CostEvaluator, Solution
-from pyvrp.tests.helpers import read
+from pyvrp import CostEvaluator, Route, Solution, VehicleType
+from pyvrp.tests.helpers import make_heterogeneous, read
 
 
 def test_load_penalty():
@@ -75,8 +77,8 @@ def test_tw_penalty():
 def test_cost():
     """
     This test asserts that the cost is computed correctly for feasible
-    individuals, and is a large value (representing infinity) for infeasible
-    individuals.
+    solutions, and is a large value (representing infinity) for infeasible
+    solutions.
     """
     data = read("data/OkSmall.txt")
     default_cost_evaluator = CostEvaluator()
@@ -127,7 +129,7 @@ def test_penalised_cost():
     """
     The penalised cost represents the smoothed objective, where constraint
     violations are priced in using penalty terms. It can be computed for both
-    feasible and infeasible individuals. In case of the former, it is equal
+    feasible and infeasible solutions. In case of the former, it is equal
     to the actual cost: the penalty terms are all zero.
     """
     data = read("data/OkSmall.txt")
@@ -157,3 +159,36 @@ def test_penalised_cost():
 
     # Default cost evaluator has 0 weights and only computes distance as cost
     assert_allclose(default_evaluator.penalised_cost(infeas), infeas_dist)
+
+
+@mark.parametrize(
+    ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
+)
+def test_cost_with_fixed_vehicle_cost(
+    assignment: Tuple[int, int], expected: int
+):
+    """
+    Tests that the cost evaluator counts the fixed cost when determining the
+    objective value of a solution.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(
+        data,
+        # First vehicle type is free, second costs 10 per vehicle. The solution
+        # should be able to track this.
+        [VehicleType(10, 2, fixed_cost=0), VehicleType(10, 2, fixed_cost=10)],
+    )
+
+    routes = [
+        Route(data, [1, 2], assignment[0]),
+        Route(data, [3, 4], assignment[1]),
+    ]
+
+    sol = Solution(data, routes)
+    cost_eval = CostEvaluator(1, 1)
+
+    # Solution is feasible, so penalised cost and regular cost are equal. Both
+    # should contain the fixed vehicle cost.
+    assert_(sol.is_feasible())
+    assert_allclose(cost_eval.cost(sol), sol.distance() + expected)
+    assert_allclose(cost_eval.penalised_cost(sol), sol.distance() + expected)
