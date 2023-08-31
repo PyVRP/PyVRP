@@ -22,7 +22,7 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(TimeWindowSegment tws)
+Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
     : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
 {
 }

@@ -63,7 +63,7 @@ ProblemData::VehicleType::VehicleType(Load capacity,
         throw std::invalid_argument("fixed_cost must be >= 0.");
 
     if ((twEarly && !twLate) || (!twEarly && twLate))
-        throw std::invalid_argument("Must pass either no shift time windows,"
+        throw std::invalid_argument("Must pass either no shift time window,"
                                     " or both a start and end.");
 
     if (twEarly && twLate)
