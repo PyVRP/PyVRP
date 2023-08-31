@@ -139,3 +139,39 @@ def test_evaluate_capacity_differences():
     # so evaluate(route1, route2) and evaluate(route2, route1) are the same.
     assert_allclose(op.evaluate(route1, route2, cost_eval), -200)
     assert_allclose(op.evaluate(route2, route1, cost_eval), -200)
+
+
+def test_evaluate_shift_time_window_differences():
+    """
+    Tests that SwapRoutes correctly evaluates changes in time warp due to
+    different shift time windows.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(
+        data,
+        [
+            VehicleType(10, 1, tw_early=10_000, tw_late=15_000),
+            VehicleType(10, 1, tw_early=15_000, tw_late=20_000),
+        ],
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 4]:  # depot -> 1 -> 4 -> depot
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=0, vehicle_type=1)
+    for loc in [3, 2]:  # depot -> 3 -> 2 -> depot
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    # Without shift time windows, both routes are feasible, and there is slack
+    # on either route: the first route can start between [14'056, 16'003], and
+    # the second between [9'002, 13'369]. Neither route can complete its visits
+    # within the shift time window of its assigned vehicle type. However, the
+    # other type has a shift duration that is much better aligned with its
+    # route. Thus, we should have that swapping the vehicle types results in
+    # a lower cost, due to decreased time warp on the routes.
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(1, 1)
+    assert_(op.evaluate(route1, route2, cost_eval) < 0)

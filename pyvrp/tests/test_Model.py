@@ -131,11 +131,15 @@ def test_add_vehicle_type():
         num_available=10,
         capacity=998,
         fixed_cost=1_001,
+        tw_early=17,
+        tw_late=19,
     )
 
     assert_equal(vehicle_type.num_available, 10)
     assert_allclose(vehicle_type.capacity, 998)
     assert_allclose(vehicle_type.fixed_cost, 1_001)
+    assert_allclose(vehicle_type.tw_early, 17)
+    assert_allclose(vehicle_type.tw_late, 19)
 
 
 def test_get_locations():
@@ -254,8 +258,9 @@ def test_model_and_solve():
             model.add_edge(other, client, to_client, to_client)
 
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+
     assert_(res.is_feasible())
+    assert_equal(res.cost(), 9_155)
 
 
 def test_partial_distance_duration_matrix():

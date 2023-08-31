@@ -845,3 +845,32 @@ def test_fixed_vehicle_cost(assignment: Tuple[int, int], expected: int):
 
     sol = Solution(data, routes)
     assert_allclose(sol.fixed_vehicle_cost(), expected)
+
+
+@mark.parametrize(
+    ("tw_early", "tw_late", "expected"),
+    [
+        (0, 0, 20_277),  # cannot be back at the depot before 20'277
+        (0, 20_000, 277),  # larger shift window decreases time warp
+        (0, 20_277, 0),  # and in this case there is no more time warp
+        (15_000, 20_000, 1_221),  # minimum route duration is 6'221
+        (10_000, 20_000, 277),  # before earliest possible return
+    ],
+)
+def test_route_shift_duration(tw_early: int, tw_late: int, expected: int):
+    """
+    Tests that Route computes time warp due to shift durations correctly on a
+    simple, two-client route.
+    """
+    data = read("data/OkSmall.txt")
+    data = make_heterogeneous(
+        data, [VehicleType(10, 2, tw_early=tw_early, tw_late=tw_late)]
+    )
+
+    # Overall route duration is, at the bare minimum, dist(0, 1) + dist(1, 2)
+    # + dist(2, 0) + serv(1) + serv(2). That's 1'544 + 1'992 + 1'965 + 360
+    # + 360 = 6'221. We cannot service client 1 before 15'600, and it takes
+    # 1'544 to get there from the depot, so we leave at 14'056. Thus, the
+    # earliest complete time is 14'056 + 6'221 = 20'277.
+    route = Route(data, [1, 2], vehicle_type=0)
+    assert_allclose(route.time_warp(), expected)
