@@ -66,18 +66,46 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
-    auto const uTWS = TWS::merge(data.durationMatrix(),
-                                 uRoute->twsBefore(U->idx()),
-                                 vRoute->twsAfter(V->idx() + 1));
+    if (V->idx() < vRoute->size())
+    {
+        auto const uTWS
+            = TWS::merge(data.durationMatrix(),
+                         uRoute->twsBefore(U->idx()),
+                         vRoute->twsBetween(V->idx() + 1, vRoute->size()),
+                         uRoute->tws(uRoute->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    }
+    else
+    {
+        auto const uTWS = TWS::merge(data.durationMatrix(),
+                                     uRoute->twsBefore(U->idx()),
+                                     uRoute->tws(uRoute->size() + 1));
+
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    }
+
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-    auto const vTWS = TWS::merge(data.durationMatrix(),
-                                 vRoute->twsBefore(V->idx()),
-                                 uRoute->twsAfter(U->idx() + 1));
+    if (U->idx() < uRoute->size())
+    {
+        auto const vTWS
+            = TWS::merge(data.durationMatrix(),
+                         vRoute->twsBefore(V->idx()),
+                         uRoute->twsBetween(U->idx() + 1, uRoute->size()),
+                         vRoute->tws(vRoute->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    }
+    else
+    {
+        auto const vTWS = TWS::merge(data.durationMatrix(),
+                                     vRoute->twsBefore(V->idx()),
+                                     vRoute->tws(vRoute->size() + 1));
+
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    }
+
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
     // Proposed move appends the segment after V to U, and the segment after U
