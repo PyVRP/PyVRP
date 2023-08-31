@@ -22,12 +22,8 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
-    : cumDist(0),
-      cumLoad(0),
-      tws(loc, client),
-      twsAfter(loc, client),
-      twsBefore(loc, client)
+Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
+    : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
 {
 }
 
@@ -68,11 +64,27 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const depot = startDepot.client();
+    auto const &vehicleType = data.vehicleType(vehicleType_);
+    auto const &depot = data.depot(vehicleType.depot);
+
+    // Time window is limited by both the depot open and closing times, and
+    // the vehicle's start and end of shift, whichever is tighter. If the
+    // vehicle does not have a shift time window, we default to the depot's
+    // open and close times.
+    auto const shiftStart = vehicleType.twEarly.value_or(depot.twEarly);
+    auto const shiftEnd = vehicleType.twLate.value_or(depot.twLate);
+
+    TWS depotTws(vehicleType.depot,
+                 vehicleType.depot,
+                 0,
+                 0,
+                 std::max(depot.twEarly, shiftStart),
+                 std::min(depot.twLate, shiftEnd),
+                 0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(depot, data.depot(depot));
-    stats.emplace_back(depot, data.depot(depot));
+    stats.emplace_back(depotTws);
+    stats.emplace_back(depotTws);
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -87,7 +99,7 @@ void Route::insert(size_t idx, Node *node)
     // We do not need to update the statistics; Route::update() will handle
     // that later.
     stats.insert(stats.begin() + idx,
-                 {node->client(), data.location(node->client())});
+                 TWS(node->client(), data.location(node->client())));
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;

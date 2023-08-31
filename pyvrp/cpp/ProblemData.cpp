@@ -35,14 +35,23 @@ ProblemData::Client::Client(Coordinate x,
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
 
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
+
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
 }
 
 ProblemData::VehicleType::VehicleType(Load capacity,
                                       size_t numAvailable,
-                                      Cost fixedCost)
-    : capacity(capacity), numAvailable(numAvailable), fixedCost(fixedCost)
+                                      Cost fixedCost,
+                                      std::optional<Duration> twEarly,
+                                      std::optional<Duration> twLate)
+    : capacity(capacity),
+      numAvailable(numAvailable),
+      fixedCost(fixedCost),
+      twEarly(twEarly),
+      twLate(twLate)
 {
     if (capacity < 0)
         throw std::invalid_argument("capacity must be >= 0.");
@@ -52,6 +61,19 @@ ProblemData::VehicleType::VehicleType(Load capacity,
 
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
+
+    if ((twEarly && !twLate) || (!twEarly && twLate))
+        throw std::invalid_argument("Must pass either no shift time window,"
+                                    " or both a start and end.");
+
+    if (twEarly && twLate)
+    {
+        if (twEarly > twLate)
+            throw std::invalid_argument("tw_early must be <= tw_late.");
+
+        if (twEarly < 0)
+            throw std::invalid_argument("tw_early must be >= 0.");
+    }
 }
 
 std::vector<ProblemData::Client> const &ProblemData::clients() const

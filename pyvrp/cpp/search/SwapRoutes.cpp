@@ -23,6 +23,23 @@ Cost SwapRoutes::evaluate(Route *U,
     deltaCost += costEvaluator.loadPenalty(V->load(), U->capacity());
     deltaCost -= costEvaluator.loadPenalty(V->load(), V->capacity());
 
+    // Changes in time warp.
+    auto const uTWS = TWS::merge(data.durationMatrix(),
+                                 V->tws(0),
+                                 U->twsBetween(1, U->size()),
+                                 V->tws(V->size() + 1));
+
+    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(U->timeWarp());
+
+    auto const vTWS = TWS::merge(data.durationMatrix(),
+                                 U->tws(0),
+                                 V->twsBetween(1, V->size()),
+                                 U->tws(U->size() + 1));
+
+    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    deltaCost -= costEvaluator.twPenalty(V->timeWarp());
+
     // TODO handle the case of depot differences (multiple depots). There is
     // some evaluation code for this in issue #188.
     return deltaCost;
