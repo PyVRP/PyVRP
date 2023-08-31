@@ -284,6 +284,8 @@ def test_matrices_are_not_copies():
         (-100, 1, 0, 0, 0),  # this is just wrong
         (1, 1, -1, 0, 0),  # fixed_cost cannot be negative
         (0, 1, -100, 0, 0),  # this is just wrong
+        (0, 1, 0, None, 0),  # both shift time windows must be given (if set)
+        (0, 1, 0, 0, None),  # both shift time windows must be given (if set)
         (0, 1, 0, 1, 0),  # early > late
         (0, 1, 0, -1, 0),  # negative early
     ],
@@ -306,12 +308,23 @@ def test_vehicle_type_raises_invalid_data(
 def test_vehicle_type_does_not_raise_for_edge_cases():
     """
     The vehicle type constructor should allow the following edge case, of no
-    capacity and just a single vehicle.
+    capacity, costs, and just a single vehicle.
     """
     vehicle_type = VehicleType(capacity=0, num_available=1, fixed_cost=0)
     assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.fixed_cost, 0)
+
+
+def test_vehicle_type_default_values():
+    """
+    Tests that the default values for costs and shift time windows are set
+    correctly.
+    """
+    vehicle_type = VehicleType(capacity=0, num_available=1)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_(vehicle_type.tw_early is None)
+    assert_(vehicle_type.tw_late is None)
 
 
 def test_vehicle_type_attribute_access():
