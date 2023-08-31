@@ -869,6 +869,8 @@ def test_route_shift_duration(tw_early: int, tw_late: int, expected: int):
 
     # Overall route duration is, at the bare minimum, dist(0, 1) + dist(1, 2)
     # + dist(2, 0) + serv(1) + serv(2). That's 1'544 + 1'992 + 1'965 + 360
-    # + 360 = 6'221.
+    # + 360 = 6'221. We cannot service client 1 before 15'600, and it takes
+    # 1'544 to get there from the depot, so we leave at 14'056. Thus, the
+    # earliest complete time is 14'056 + 6'221 = 20'277.
     route = Route(data, [1, 2], vehicle_type=0)
     assert_allclose(route.time_warp(), expected)

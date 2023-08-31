@@ -308,12 +308,21 @@ def test_vehicle_type_raises_invalid_data(
 def test_vehicle_type_does_not_raise_for_edge_cases():
     """
     The vehicle type constructor should allow the following edge case, of no
-    capacity, costs, and just a single vehicle.
+    capacity, costs, shift time windows, and just a single vehicle.
     """
-    vehicle_type = VehicleType(capacity=0, num_available=1, fixed_cost=0)
+    vehicle_type = VehicleType(
+        capacity=0,
+        num_available=1,
+        fixed_cost=0,
+        tw_early=0,
+        tw_late=0,
+    )
+
     assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.fixed_cost, 0)
+    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.tw_late, 0)
 
 
 def test_vehicle_type_default_values():
