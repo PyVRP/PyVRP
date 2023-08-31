@@ -64,28 +64,27 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const depot = startDepot.client();
-    auto const &depotData = data.client(depot);
     auto const &vehicleType = data.vehicleType(vehicleType_);
+    auto const &depot = data.client(vehicleType.depot);
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter. If the
     // vehicle does not have a shift time window, we default to the depot's
     // open and close times.
-    auto const shiftStart = vehicleType.twEarly.value_or(depotData.twEarly);
-    auto const shiftEnd = vehicleType.twLate.value_or(depotData.twLate);
+    auto const shiftStart = vehicleType.twEarly.value_or(depot.twEarly);
+    auto const shiftEnd = vehicleType.twLate.value_or(depot.twLate);
 
-    TWS tws = {depot,
-               depot,
-               0,
-               0,
-               std::max(depotData.twEarly, shiftStart),
-               std::min(depotData.twLate, shiftEnd),
-               0};
+    TWS depotTws(vehicleType.depot,
+                 vehicleType.depot,
+                 0,
+                 0,
+                 std::max(depot.twEarly, shiftStart),
+                 std::min(depot.twLate, shiftEnd),
+                 0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(tws);
-    stats.emplace_back(tws);
+    stats.emplace_back(depotTws);
+    stats.emplace_back(depotTws);
 }
 
 void Route::insert(size_t idx, Node *node)
