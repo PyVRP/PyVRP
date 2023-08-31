@@ -117,6 +117,12 @@ public:
      *
      * Simple data object storing all vehicle type data as properties.
      *
+     * .. note::
+     *
+     *    If ``tw_early`` is set, then also ``tw_late`` must be provided to
+     *    completely specify the shift duration (and vice versa). If neither
+     *    are given, the shift duration defaults to the depot's time window.
+     *
      * Parameters
      * ----------
      * capacity
@@ -146,7 +152,7 @@ public:
      * tw_early
      *     Start of the vehicle type's shift, if specified.
      * tw_late
-     *     End of the vehicle type's shift, if specified
+     *     End of the vehicle type's shift, if specified.
      */
     struct VehicleType
     {
