@@ -22,15 +22,6 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
-    : cumDist(0),
-      cumLoad(0),
-      tws(loc, client),
-      twsAfter(loc, client),
-      twsBefore(loc, client)
-{
-}
-
 Route::NodeStats::NodeStats(TimeWindowSegment tws)
     : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
 {
@@ -109,7 +100,7 @@ void Route::insert(size_t idx, Node *node)
     // We do not need to update the statistics; Route::update() will handle
     // that later.
     stats.insert(stats.begin() + idx,
-                 {node->client(), data.client(node->client())});
+                 TWS(node->client(), data.client(node->client())));
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
