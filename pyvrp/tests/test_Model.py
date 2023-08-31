@@ -343,3 +343,46 @@ def test_model_solves_instance_with_zero_or_one_clients():
     res = m.solve(stop=MaxIterations(1))
     solution = [r.visits() for r in res.best.get_routes()]
     assert_equal(solution, [[1]])
+
+
+def test_model_solves_small_instance_with_shift_durations():
+    """
+    High-level test that creates and solves a small instance with shift
+    durations, to see if the model (and thus the underlying solution algorithm)
+    can handle that.
+    """
+    m = Model()
+
+    # Two vehicle types with different shift time windows: the first has a
+    # shift time window of [0, 15], the second of [5, 25]. There are four
+    # vehicles in total, two for each vehicle type.
+    for tw_early, tw_late in [(0, 15), (5, 25)]:
+        m.add_vehicle_type(
+            capacity=0,
+            num_available=2,
+            tw_early=tw_early,
+            tw_late=tw_late,
+        )
+
+    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+
+    for idx in range(5):
+        # Vehicles of the first type can visit two clients before having to
+        # return to the depot. The second vehicle type can be used to visit
+        # a single client before having to return to the depot. So we need
+        # at least three routes.
+        m.add_client(
+            x=idx,
+            y=idx,
+            service_duration=1,
+            tw_early=0,
+            tw_late=20,
+        )
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=0, duration=5)
+
+    res = m.solve(stop=MaxIterations(100))
+    assert_(res.is_feasible())
+    assert_(res.best.num_routes() > 2)
