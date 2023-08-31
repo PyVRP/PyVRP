@@ -58,8 +58,7 @@ def linkcode_resolve(domain: str, info: dict):
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
 
     if domain != "py" or not info.get("module") or not info.get("fullname"):
-        # Only accept Python objects with complete module and fullname info.
-        return None
+        return  # only accept Python objects with complete module and name info.
 
     module = importlib.import_module(info["module"])
 
@@ -70,7 +69,7 @@ def linkcode_resolve(domain: str, info: dict):
         try:
             obj = getattr(obj, attrname)  # object is a method of a class
         except AttributeError:
-            return None  # object is an attribute of a class
+            return  # object is an attribute of a class
     else:
         obj = getattr(module, info["fullname"])
 
@@ -78,8 +77,7 @@ def linkcode_resolve(domain: str, info: dict):
         source_file = inspect.getsourcefile(obj)
         lines = inspect.getsourcelines(obj)
     except Exception:
-        print(info)
-        return None
+        return
 
     source_file = os.path.relpath(source_file, os.path.abspath(".."))
     line_no = lines[1]
