@@ -6,7 +6,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 from pyvrp import CostEvaluator, VehicleType
 from pyvrp.search import SwapRoutes
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import make_heterogeneous
 
 
 @pytest.mark.parametrize(
@@ -20,18 +20,16 @@ from pyvrp.tests.helpers import make_heterogeneous, read
         ([2, 3], [1, 4]),  # both non-empty equal length
     ],
 )
-def test_apply(visits1: List[int], visits2: List[int]):
+def test_apply(ok_small, visits1: List[int], visits2: List[int]):
     """
     Tests that applying SwapRoutes to two different routes indeed exchanges
     the visits.
     """
-    data = read("data/OkSmall.txt")
-
-    route1 = Route(data, idx=0, vehicle_type=0)
+    route1 = Route(ok_small, idx=0, vehicle_type=0)
     for loc in visits1:
         route1.append(Node(loc=loc))
 
-    route2 = Route(data, idx=1, vehicle_type=0)
+    route2 = Route(ok_small, idx=1, vehicle_type=0)
     for loc in visits2:
         route2.append(Node(loc=loc))
 
@@ -43,7 +41,7 @@ def test_apply(visits1: List[int], visits2: List[int]):
     assert_equal(visits1, [node.client for node in route1])
     assert_equal(visits2, [node.client for node in route2])
 
-    op = SwapRoutes(data)
+    op = SwapRoutes(ok_small)
     op.apply(route1, route2)
 
     # But after apply, the visits are now swapped.
@@ -51,15 +49,13 @@ def test_apply(visits1: List[int], visits2: List[int]):
     assert_equal(visits1, [node.client for node in route2])
 
 
-def test_evaluate_same_vehicle_type():
+def test_evaluate_same_vehicle_type(ok_small):
     """
     Tests that evaluate() returns 0 in case the same vehicle types are used,
     since in that case swapping cannot result in cost savings.
     """
-    data = read("data/OkSmall.txt")
-
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route2 = Route(data, idx=1, vehicle_type=0)
+    route1 = Route(ok_small, idx=0, vehicle_type=0)
+    route2 = Route(ok_small, idx=1, vehicle_type=0)
     assert_equal(route1.vehicle_type, route2.vehicle_type)
 
     route1.append(Node(loc=1))
@@ -68,17 +64,18 @@ def test_evaluate_same_vehicle_type():
     route1.update()
     route2.update()
 
-    op = SwapRoutes(data)
+    op = SwapRoutes(ok_small)
     cost_eval = CostEvaluator(1, 1)
     assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
 
 
-def test_evaluate_empty_routes():
+def test_evaluate_empty_routes(ok_small):
     """
     Tests that evaluate() returns 0 when one or both of the routes are empty.
     """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 3), VehicleType(10, 3)])
+    data = make_heterogeneous(
+        ok_small, [VehicleType(10, 3), VehicleType(10, 3)]
+    )
 
     route1 = Route(data, idx=0, vehicle_type=0)
     route2 = Route(data, idx=1, vehicle_type=1)
@@ -103,12 +100,13 @@ def test_evaluate_empty_routes():
     assert_allclose(op.evaluate(route3, route2, cost_eval), 0)
 
 
-def test_evaluate_capacity_differences():
+def test_evaluate_capacity_differences(ok_small):
     """
     Tests that changes in vehicle capacity violations are evaluated correctly.
     """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 1), VehicleType(20, 1)])
+    data = make_heterogeneous(
+        ok_small, [VehicleType(10, 1), VehicleType(20, 1)]
+    )
 
     route1 = Route(data, idx=0, vehicle_type=0)
     for loc in [1, 2, 4]:
@@ -141,14 +139,13 @@ def test_evaluate_capacity_differences():
     assert_allclose(op.evaluate(route2, route1, cost_eval), -200)
 
 
-def test_evaluate_shift_time_window_differences():
+def test_evaluate_shift_time_window_differences(ok_small):
     """
     Tests that SwapRoutes correctly evaluates changes in time warp due to
     different shift time windows.
     """
-    data = read("data/OkSmall.txt")
     data = make_heterogeneous(
-        data,
+        ok_small,
         [
             VehicleType(10, 1, tw_early=10_000, tw_late=15_000),
             VehicleType(10, 1, tw_early=15_000, tw_late=20_000),

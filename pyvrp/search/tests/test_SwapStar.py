@@ -18,30 +18,28 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import read
 
 
-def test_swap_star_identifies_additional_moves_over_regular_swap():
+def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
     """
     SWAP* can move two clients to any position in the routes, whereas regular
     swap ((1, 1)-exchange) must reinsert each client in the other's position.
     Thus, SWAP* should still be able to identify additional improving moves
     after (1, 1)-exchange gets stuck.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
     # For a fair comparison we should not hamper the node operator with
     # granularity restrictions.
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
+    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
 
-    ls.add_node_operator(Exchange11(data))
-    ls.add_route_operator(SwapStar(data))
+    ls.add_node_operator(Exchange11(rc208))
+    ls.add_route_operator(SwapStar(rc208))
 
     for _ in range(10):  # repeat a few times to really make sure
-        sol = Solution.make_random(data, rng)
+        sol = Solution.make_random(rc208, rng)
 
         swap_sol = ls.search(sol, cost_evaluator)
         swap_star_sol = ls.intensify(
@@ -59,22 +57,21 @@ def test_swap_star_identifies_additional_moves_over_regular_swap():
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
-def test_swap_star_on_RC208_instance(seed: int):
+def test_swap_star_on_RC208_instance(rc208, seed: int):
     """
     Evaluate SWAP* on the RC208 instance, over a few seeds.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=seed)
 
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_route_operator(SwapStar(data))
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
+    ls.add_route_operator(SwapStar(rc208))
 
     # Make an initial solution that consists of two routes, by randomly
     # splitting the single-route solution.
-    route = list(range(1, data.num_clients + 1))
-    split = rng.randint(data.num_clients)
-    sol = Solution(data, [route[:split], route[split:]])
+    route = list(range(1, rc208.num_clients + 1))
+    split = rng.randint(rc208.num_clients)
+    sol = Solution(rc208, [route[:split], route[split:]])
     improved_sol = ls.intensify(sol, cost_evaluator, overlap_tolerance=1)
 
     # The new solution should strictly improve on our original solution, but

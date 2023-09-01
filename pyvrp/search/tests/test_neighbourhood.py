@@ -5,7 +5,6 @@ from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
-from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
@@ -102,6 +101,7 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
     ],
 )
 def test_compute_neighbours(
+    rc208,
     weight_wait_time: int,
     weight_time_warp: int,
     nb_granular: int,
@@ -113,7 +113,6 @@ def test_compute_neighbours(
     """
     Tests ``compute_neighbours`` on several well-understood cases.
     """
-    data = read("data/RC208.txt", "solomon", "trunc1")
     params = NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,
@@ -121,9 +120,9 @@ def test_compute_neighbours(
         symmetric_proximity,
         symmetric_neighbours,
     )
-    neighbours = compute_neighbours(data, params)
+    neighbours = compute_neighbours(rc208, params)
 
-    assert_equal(len(neighbours), data.num_clients + 1)
+    assert_equal(len(neighbours), rc208.num_clients + 1)
     assert_equal(len(neighbours[0]), 0)
 
     # We compare sets because the expected data (from the old C++
@@ -137,68 +136,62 @@ def test_compute_neighbours(
             assert_equal(len(neighb), nb_granular)
 
 
-def test_neighbours_are_sorted_by_proximity():
+def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     Tests that the neighbourhood lists sort by their proximity: closest first.
     """
-    # E-n22-k4 is a CVRP instance, so the time component is irrelevant.
-    data = read("data/E-n22-k4.txt", round_func="trunc1")
-    params = NeighbourhoodParams(0, 0, data.num_clients)
-    neighbours = compute_neighbours(data, params)
-    clients = list(range(1, data.num_clients + 1))
+    params = NeighbourhoodParams(0, 0, small_cvrp.num_clients)
+    neighbours = compute_neighbours(small_cvrp, params)
+    clients = list(range(1, small_cvrp.num_clients + 1))
 
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
         # (using stable sort). The test below checks that this is the same as
         # what comes out of the granular neighbourhood calculation.
         valid = np.array([other for other in clients if other != client])
-        dists = [data.dist(client, other) for other in valid]
+        dists = [small_cvrp.dist(client, other) for other in valid]
         by_proximity = valid[np.argsort(dists, kind="stable")]
         assert_equal(by_proximity, neighbours[client])
 
 
-def test_symmetric_neighbours():
+def test_symmetric_neighbours(rc208):
     """
     Tests that when ``symmetric_neighbours`` is true, if an edge (i, j) is
     in the granular neighbourhood, then so is (j, i).
     """
-    data = read("data/RC208.txt", "solomon", "trunc1")
-
     # Symmetric neighbourhood structure: if (i, j) is in, then so is (j, i).
     params = NeighbourhoodParams(symmetric_neighbours=True)
-    sym_neighbours = [set(n) for n in compute_neighbours(data, params)]
+    sym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
 
-    for client in range(data.num_clients + 1):
+    for client in range(rc208.num_clients + 1):
         for neighbour in sym_neighbours[client]:
             assert_(client in sym_neighbours[neighbour])
 
     # But when neighbours are not symmetrised, this is typically not the case.
     params = NeighbourhoodParams(symmetric_neighbours=False)
-    asym_neighbours = [set(n) for n in compute_neighbours(data, params)]
+    asym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
     assert_(sym_neighbours != asym_neighbours)
 
 
-def test_more_neighbours_than_instance_size():
+def test_more_neighbours_than_instance_size(rc208):
     """
     Tests that a value for ``nb_granular`` larger than the problem instance's
     number of clients results in neighbourhoods of maximum size.
     """
-    data = read("data/RC208.txt", "solomon", round_func="trunc")
-    params = NeighbourhoodParams(nb_granular=data.num_clients)
-    neighbours = compute_neighbours(data, params)
+    params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    neighbours = compute_neighbours(rc208, params)
 
     for neighb in neighbours[1:]:
-        assert_equal(len(neighb), data.num_clients - 1)
+        assert_equal(len(neighb), rc208.num_clients - 1)
 
 
-def test_proximity_with_prizes():
+def test_proximity_with_prizes(prize_collecting):
     """
     Tests that prizes factor into the neighbourhood structure, and offset
     travel costs somewhat.
     """
-    data = read("data/p06-2-50.vrp", round_func="dimacs")
     params = NeighbourhoodParams(0, 0, nb_granular=10)
-    neighbours = compute_neighbours(data, params)
+    neighbours = compute_neighbours(prize_collecting, params)
 
     # We compare the number of times clients 20 and 36 are in other clients'
     # neighbourhoods. Client 20 is at location (57, 58), client 36 at (63, 69).

@@ -18,22 +18,21 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import make_heterogeneous
 
 
-def test_OkSmall_instance():
+def test_OkSmall_instance(ok_small):
     """
     Test 2-OPT on the OkSmall instance where we know exactly what's going on.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(TwoOpt(data))
+    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
+    ls.add_node_operator(TwoOpt(ok_small))
 
-    sol = Solution(data, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[1, 2, 3, 4]])
     improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
@@ -45,7 +44,7 @@ def test_OkSmall_instance():
     # First improving (U, V) node pair is (1, 3), which results in the route
     # [1, 3, 2, 4]. The second improving node pair involves the depot of an
     # empty route: (1, 0). This results in routes [1] and [3, 2, 4].
-    expected = Solution(data, [[1], [3, 2, 4]])
+    expected = Solution(ok_small, [[1], [3, 2, 4]])
     assert_equal(improved_sol, expected)
 
 
@@ -59,15 +58,16 @@ def test_OkSmall_instance():
         [VehicleType(8, 1), VehicleType(8, 1)],
     ],
 )
-def test_OkSmall_multiple_vehicle_types(vehicle_types: List[VehicleType]):
+def test_OkSmall_multiple_vehicle_types(
+    ok_small, vehicle_types: List[VehicleType]
+):
     """
     This test evaluates a 2-OPT move that is improving for some of the vehicle
     types, and not for others. Because the granular neighbourhood is very
     constrained, only a single 2-OPT can be applied. When it's better to do so,
     it should have been applied, and when it's not better, it should not.
     """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, vehicle_types)
+    data = make_heterogeneous(ok_small, vehicle_types)
 
     cost_evaluator = CostEvaluator(10_000, 6)  # large capacity penalty
     rng = RandomNumberGenerator(seed=42)
@@ -96,20 +96,19 @@ def test_OkSmall_multiple_vehicle_types(vehicle_types: List[VehicleType]):
 
 
 @mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
-def test_RC208_instance(seed: int):
+def test_RC208_instance(rc208, seed: int):
     """
     Test a larger instance over several seeds.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=seed)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(TwoOpt(data))
+    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
+    ls.add_node_operator(TwoOpt(rc208))
 
-    single_route = list(range(1, data.num_clients + 1))
-    sol = Solution(data, [single_route])
+    single_route = list(range(1, rc208.num_clients + 1))
+    sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
@@ -118,17 +117,16 @@ def test_RC208_instance(seed: int):
     assert_(improved_cost < current_cost)
 
 
-def test_within_route_move():
+def test_within_route_move(ok_small):
     """
     Within-route 2-OPT reverses the segment between U and V. This test checks
     that such a move is correctly evaluated and applied on a single-route
     solution to the OkSmall instance.
     """
-    data = read("data/OkSmall.txt")
-    nodes = [Node(loc=loc) for loc in range(data.num_clients + 1)]
+    nodes = [Node(loc=loc) for loc in range(ok_small.num_clients + 1)]
 
     # Current route is 4 -> 1 -> 2 -> 3.
-    route = Route(data, idx=0, vehicle_type=0)
+    route = Route(ok_small, idx=0, vehicle_type=0)
     route.append(nodes[4])
     route.append(nodes[1])
     route.append(nodes[2])
@@ -136,7 +134,7 @@ def test_within_route_move():
     route.update()
 
     cost_eval = CostEvaluator(1, 1)
-    two_opt = TwoOpt(data)
+    two_opt = TwoOpt(ok_small)
 
     # Current (relevant) part of the route has distance:
     #   dist(4, 1) + dist(1, 2) + dist(2, 3) + dist(3, 0)
