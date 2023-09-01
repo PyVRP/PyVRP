@@ -236,7 +236,6 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     // If U is not currently in the solution, we test if inserting it is an
     // improving move. Note that we always insert required clients.
-
     if (!U->route())
     {
         // We take this as a default value in case none of the client's
