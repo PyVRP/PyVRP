@@ -1,8 +1,11 @@
+import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
+    Client,
     CostEvaluator,
+    ProblemData,
     RandomNumberGenerator,
     Route,
     Solution,
@@ -383,7 +386,6 @@ def test_intensify_can_improve_solution_further():
     intensify_opt = ls.intensify(search_opt, cost_eval)
     intensify_cost = cost_eval.penalised_cost(intensify_opt)
 
-    print(search_cost, intensify_cost)
     assert_(intensify_cost < search_cost)
 
     # Both solutions are locally optimal. ``search_opt`` w.r.t. to the node
@@ -413,3 +415,43 @@ def test_local_search_completes_incomplete_solutions():
 
     new_sol = ls.search(sol, cost_eval)
     assert_(new_sol.is_complete())
+
+
+def test_local_search_does_not_remove_required_clients():
+    """
+    Tests that the local search object does not remove required clients, even
+    when that might result in a significant cost improvement.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0),
+            # This client cannot be removed, even though it causes significant
+            # load violations.
+            Client(x=1, y=1, demand=100, required=True),
+            # This client can be removed, and should be , because the prize is
+            # not worth the detour.
+            Client(x=2, y=2, prize=0, required=False),
+        ],
+        vehicle_types=[VehicleType(50, 1)],
+        distance_matrix=np.full((3, 3), fill_value=10),
+        duration_matrix=np.zeros((3, 3), dtype=int),
+    )
+
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    sol = Solution(data, [[1, 2]])
+    assert_(sol.is_complete())
+
+    # Test that the improved solution contains the first client, but removes
+    # the second. The first client is required, so could not be removed, but
+    # the could and that is an improving move.
+    cost_eval = CostEvaluator(100, 100)
+    new_sol = ls.search(sol, cost_eval)
+    assert_equal(new_sol.num_clients(), 1)
+    assert_(new_sol.is_complete())
+
+    sol_cost = cost_eval.penalised_cost(sol)
+    new_cost = cost_eval.penalised_cost(new_sol)
+    assert_(new_cost < sol_cost)
