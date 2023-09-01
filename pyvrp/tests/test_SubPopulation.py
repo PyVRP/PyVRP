@@ -10,16 +10,14 @@ from pyvrp import (
 )
 from pyvrp._pyvrp import SubPopulation
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.tests.helpers import read
 
 
 @mark.parametrize("nb_close", [5, 10, 25])
-def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
+def test_avg_distance_closest_is_same_up_to_nb_close(rc208, nb_close: int):
     """
     Tests that the average distance of a solution to other solutions only looks
     at the nearest ``nb_close`` solutions.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=5)
 
@@ -31,7 +29,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     assert_equal(len(subpop), 0)
 
     for _ in range(nb_close):
-        subpop.add(Solution.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     # The first nb_close solutions all have each other in their "closest"
     # list. The averages only differ because each solution is themselves not
@@ -43,7 +41,7 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
 
     # Let's add a significantly larger set of solutions.
     for _ in range(250 - nb_close):
-        subpop.add(Solution.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     # Now the "closest" lists should differ quite a bit between solutions,
     # and the average distances should thus not all be the same any more.
@@ -52,32 +50,31 @@ def test_avg_distance_closest_is_same_up_to_nb_close(nb_close: int):
     assert_(not np.allclose(distances, distances.mean(), rtol=1 / len(subpop)))
 
 
-def test_avg_distance_closest_for_single_route_solutions():
+def test_avg_distance_closest_for_single_route_solutions(rc208):
     """
     Tests that the closest computations are exactly right for a simple, single
     route solution where it's easy to reason about what's going on.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=0, nb_close=10)
 
     subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
 
-    single_route = [client for client in range(1, data.num_clients + 1)]
+    single_route = [client for client in range(1, rc208.num_clients + 1)]
 
     for offset in range(params.max_pop_size):
         # This is a single-route solution, but the route is continually shifted
         # (or rotated) around the depot.
         shifted_route = single_route[-offset:] + single_route[:-offset]
-        shifted = Solution(data, [shifted_route])
+        shifted = Solution(rc208, [shifted_route])
 
         for item in subpop:
             # Every solution already in the subpopulation has exactly two
             # broken links with this new shifted solution, both around the
             # depot. So the average broken pairs distance is 2 / num_clients
             # for all of them.
-            assert_equal(bpd(item.solution, shifted), 2 / data.num_clients)
+            assert_equal(bpd(item.solution, shifted), 2 / rc208.num_clients)
 
         subpop.add(shifted, cost_evaluator)
         assert_equal(len(subpop), offset + 1)
@@ -89,19 +86,18 @@ def test_avg_distance_closest_for_single_route_solutions():
         assert_allclose(distances, distances.mean())
 
 
-def test_fitness_is_purely_based_on_cost_when_only_elites():
+def test_fitness_is_purely_based_on_cost_when_only_elites(rc208):
     """
     Tests than when all solutions are considered elite, the fitness values
     are completely determines by the solutions' cost.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=51)
     params = PopulationParams(nb_elite=25, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Solution.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     # We need to call update_fitness before accessing the fitness
     subpop.update_fitness(cost_evaluator)
@@ -125,19 +121,18 @@ def test_fitness_is_purely_based_on_cost_when_only_elites():
     assert_allclose(actual_fitness, expected_fitness)
 
 
-def test_fitness_is_average_of_cost_and_diversity_when_no_elites():
+def test_fitness_is_average_of_cost_and_diversity_when_no_elites(rc208):
     """
     When there are no elite solutions, the fitness ranking averages the cost
     and diversity rank.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=52)
     params = PopulationParams(nb_elite=0, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
-        subpop.add(Solution.make_random(data, rng), cost_evaluator)
+        subpop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     # We need to call update_fitness before accessing the fitness
     subpop.update_fitness(cost_evaluator)

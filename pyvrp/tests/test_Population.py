@@ -17,7 +17,6 @@ from pyvrp import (
 )
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import EmptySolutionWarning
-from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
@@ -107,20 +106,19 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     assert_equal(params.max_pop_size, min_pop_size + generation_size)
 
 
-def test_add_triggers_purge():
+def test_add_triggers_purge(ok_small):
     """
     Tests that adding another solution to a population of maximum size triggers
     survivor selection, that is, a purge that reduces the relevant population
     back to minimum size.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
     params = PopulationParams()
     pop = Population(bpd, params=params)
     for _ in range(params.min_pop_size):
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
 
     # Population should initialise at least min_pop_size solutions
     assert_(len(pop) >= params.min_pop_size)
@@ -130,7 +128,7 @@ def test_add_triggers_purge():
     num_infeas = pop.num_infeasible()
 
     while True:  # keep adding feasible solutions until we are about to purge
-        sol = Solution.make_random(data, rng)
+        sol = Solution.make_random(ok_small, rng)
 
         if sol.is_feasible():
             pop.add(sol, cost_evaluator)
@@ -147,7 +145,7 @@ def test_add_triggers_purge():
     # trigger survivor selection (purge). Survivor selection reduces the
     # feasible subpopulation to min_pop_size, so the overal population is then
     # just num_infeas + min_pop_size.
-    sol = Solution.make_random(data, rng)
+    sol = Solution.make_random(ok_small, rng)
     assert_(sol.is_feasible())
 
     pop.add(sol, cost_evaluator)
@@ -155,12 +153,11 @@ def test_add_triggers_purge():
     assert_equal(len(pop), num_infeas + params.min_pop_size)
 
 
-def test_select_returns_same_parents_if_no_other_option():
+def test_select_returns_same_parents_if_no_other_option(ok_small):
     """
     Tests that the ``select()`` method tries to return two different parents,
     but will return the same solution twice if there is no other option.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=2_147_483_647)
 
@@ -169,7 +166,7 @@ def test_select_returns_same_parents_if_no_other_option():
 
     assert_equal(len(pop), 0)
 
-    pop.add(Solution(data, [[3, 2], [1, 4]]), cost_evaluator)
+    pop.add(Solution(ok_small, [[3, 2], [1, 4]]), cost_evaluator)
     assert_equal(len(pop), 1)
 
     # We added a single solution, so we should now get the same parent twice.
@@ -177,7 +174,7 @@ def test_select_returns_same_parents_if_no_other_option():
     assert_(parents[0] == parents[1])
 
     # Now we add another, different solution.
-    pop.add(Solution(data, [[3, 2], [1], [4]]), cost_evaluator)
+    pop.add(Solution(ok_small, [[3, 2], [1], [4]]), cost_evaluator)
     assert_equal(len(pop), 2)
 
     # We should now get two different solutions as parents, at least most of
@@ -196,13 +193,12 @@ def test_select_returns_same_parents_if_no_other_option():
     assert_(900 < different_parents < 1_000)
 
 
-def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
+def test_pop_is_empty_with_zero_min_pop_size_and_generation_size(ok_small):
     """
     Tests that the population can never grow when it starts empty and the
     generation size is set to 0: adding a new solution then immediately
     triggers survivor selection.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=12)
 
@@ -215,18 +211,17 @@ def test_population_is_empty_with_zero_min_pop_size_and_generation_size():
         # With zero min_pop_size and zero generation_size, every additional
         # solution triggers a purge. So the population size can never grow
         # beyond zero.
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
         assert_equal(len(pop), 0)
 
 
 @mark.parametrize("nb_elite", [5, 25])
-def test_elite_solutions_are_not_purged(nb_elite: int):
+def test_elite_solutions_are_not_purged(rc208, nb_elite: int):
     """
     Tests that elite solutions - those considered of such high quality that
     they should be given special treatment - are not purged during survivor
     selection.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(nb_elite=nb_elite)
     rng = RandomNumberGenerator(seed=42)
@@ -236,7 +231,7 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
     # Keep adding solutions until the infeasible subpopulation is of maximum
     # size.
     while pop.num_infeasible() != params.max_pop_size:
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     assert_equal(pop.num_infeasible(), params.max_pop_size)
 
@@ -247,8 +242,8 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
     elite_sols = best_sols[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
-    single_route = [client for client in range(1, data.num_clients + 1)]
-    pop.add(Solution(data, [single_route]), cost_evaluator)
+    single_route = [client for client in range(1, rc208.num_clients + 1)]
+    pop.add(Solution(rc208, [single_route]), cost_evaluator)
 
     # After the purge, there should remain min_pop_size infeasible solutions.
     assert_equal(pop.num_infeasible(), params.min_pop_size)
@@ -261,18 +256,17 @@ def test_elite_solutions_are_not_purged(nb_elite: int):
 
 
 @mark.parametrize("k", [2, 3])
-def test_tournament_ranks_by_fitness(k: int):
+def test_tournament_ranks_by_fitness(rc208, k: int):
     """
     Tests that the tournament-based parent selection on average returns
     solutions about as often as their relative fitness value would suggest.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
     for _ in range(50):
-        sol = Solution.make_random(data, rng)
+        sol = Solution.make_random(rc208, rng)
         if not sol.is_feasible():
             pop.add(sol, cost_evaluator)
 
@@ -311,41 +305,39 @@ def test_tournament_ranks_by_fitness(k: int):
 
 
 @mark.parametrize("k", [-100, -1, 0])  # k must be strictly positive
-def test_tournament_raises_for_invalid_k(k: int):
+def test_tournament_raises_for_invalid_k(rc208, k: int):
     """
     Tests that k >= 0 is required for tournament-based selection.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd)
     for _ in range(5):
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     with assert_raises(ValueError):
         pop.get_tournament(rng, cost_evaluator, k=k)
 
 
-def test_purge_removes_duplicates():
+def test_purge_removes_duplicates(rc208):
     """
     Tests that purging/survivor selection first removes duplicate solutions,
     before purging by (biased) fitness.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd, params=params)
     for _ in range(params.min_pop_size):
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     assert_equal(len(pop), params.min_pop_size)
 
     # This is the solution we are going to add a few times. That should make
     # sure the relevant subpopulation definitely contains duplicates.
-    sol = Solution.make_random(data, rng)
+    sol = Solution.make_random(rc208, rng)
     assert_(not sol.is_feasible())
 
     for _ in range(params.generation_size):
@@ -370,17 +362,16 @@ def test_purge_removes_duplicates():
     assert_equal(duplicates, 1)
 
 
-def test_clear():
+def test_clear(rc208):
     """
     Tests that clearing the population reduces its size to zero.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd)
     for _ in range(10):
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     assert_equal(len(pop), 10)
 
@@ -388,15 +379,14 @@ def test_clear():
     assert_equal(len(pop), 0)
 
 
-def test_add_emits_warning_when_solution_is_empty():
+def test_add_emits_warning_when_solution_is_empty(prize_collecting):
     """
     Tests that adding an empty solution to the population emits a warning. Such
     solutions could be generated when solving a prize-collecting instance, and
     typically indicate a scaling issue in the data.
     """
-    data = read("data/p06-2-50.vrp", round_func="dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     pop = Population(bpd)
 
     with assert_warns(EmptySolutionWarning):
-        pop.add(Solution(data, []), cost_evaluator)
+        pop.add(Solution(prize_collecting, []), cost_evaluator)
