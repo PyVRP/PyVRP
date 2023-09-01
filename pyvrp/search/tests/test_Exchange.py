@@ -26,7 +26,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import make_heterogeneous
 
 
 @mark.parametrize(
@@ -40,22 +40,21 @@ from pyvrp.tests.helpers import make_heterogeneous, read
         Exchange33,
     ],
 )
-def test_swap_single_route_stays_single_route(operator):
+def test_swap_single_route_stays_single_route(rc208, operator):
     """
     Swap operators ((N, M)-exchange operators with M > 0) on a single route can
     only move within the same route, so they can never find a solution that has
     more than one route.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(operator(data))
+    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
+    ls.add_node_operator(operator(rc208))
 
-    single_route = list(range(data.num_depots, data.dimension))
-    sol = Solution(data, [single_route])
+    single_route = list(range(rc208.num_depots, rc208.dimension))
+    sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution.
@@ -65,29 +64,21 @@ def test_swap_single_route_stays_single_route(operator):
     assert_(improved_cost < current_cost)
 
 
-@mark.parametrize(
-    "operator",
-    [
-        Exchange10,
-        Exchange20,
-        Exchange30,
-    ],
-)
-def test_relocate_uses_empty_routes(operator):
+@mark.parametrize("operator", [Exchange10, Exchange20, Exchange30])
+def test_relocate_uses_empty_routes(rc208, operator):
     """
     Unlike the swapping exchange operators, relocate should be able to relocate
     clients to empty routes if that is an improvement.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(operator(data))
+    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
+    ls.add_node_operator(operator(rc208))
 
-    single_route = list(range(data.num_depots, data.dimension))
-    sol = Solution(data, [single_route])
+    single_route = list(range(rc208.num_depots, rc208.dimension))
+    sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution, and
@@ -108,85 +99,81 @@ def test_relocate_uses_empty_routes(operator):
         Exchange33,
     ],
 )
-def test_cannot_exchange_when_parts_overlap_with_depot(operator):
+def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
     """
     (N, M)-exchange works by exchanging N nodes starting at some node U with
     M nodes starting at some node V. But when there is no sequence of N or M
     nodes that does not contain the depot (because the routes are very short),
     then no exchange is possible.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(operator(data))
+    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
+    ls.add_node_operator(operator(ok_small))
 
-    sol = Solution(data, [[1, 2], [3], [4]])
+    sol = Solution(ok_small, [[1, 2], [3], [4]])
     new_sol = ls.search(sol, cost_evaluator)
 
     assert_equal(new_sol, sol)
 
 
 @mark.parametrize("operator", [Exchange32, Exchange33])
-def test_cannot_exchange_when_segments_overlap(operator):
+def test_cannot_exchange_when_segments_overlap(ok_small, operator):
     """
     (3, 2)- and (3, 3)-exchange cannot exchange anything on a length-four
     single route solution: there's always overlap between the segments.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(operator(data))
+    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
+    ls.add_node_operator(operator(ok_small))
 
-    sol = Solution(data, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[1, 2, 3, 4]])
     new_sol = ls.search(sol, cost_evaluator)
 
     assert_equal(new_sol, sol)
 
 
-def test_cannot_swap_adjacent_segments():
+def test_cannot_swap_adjacent_segments(ok_small):
     """
     (2, 2)-exchange on a single route cannot swap adjacent segments, since
     that's already covered by (2, 0)-exchange.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(Exchange22(data))
+    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
+    ls.add_node_operator(Exchange22(ok_small))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
-    sol = Solution(data, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[1, 2, 3, 4]])
     new_sol = ls.search(sol, cost_evaluator)
 
     assert_equal(new_sol, sol)
 
 
-def test_swap_between_routes_OkSmall():
+def test_swap_between_routes_OkSmall(ok_small):
     """
     On the OkSmall example, (2, 1)-exchange should be able to swap parts of a
     two route solution, resulting in something better.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
-    ls.add_node_operator(Exchange21(data))
+    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
+    ls.add_node_operator(Exchange21(ok_small))
 
-    sol = Solution(data, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[1, 2], [3, 4]])
     improved_sol = ls.search(sol, cost_evaluator)
-    expected = Solution(data, [[3, 4, 2], [1]])
+    expected = Solution(ok_small, [[3, 4, 2], [1]])
     assert_equal(improved_sol, expected)
 
     current_cost = cost_evaluator.penalised_cost(sol)
@@ -194,18 +181,17 @@ def test_swap_between_routes_OkSmall():
     assert_(improved_cost < current_cost)
 
 
-def test_relocate_after_depot_should_work():
+def test_relocate_after_depot_should_work(ok_small):
     """
     This test exercises the bug identified in issue #142, involving a relocate
     action that should insert directly after the depot.
     """
-    data = read("data/OkSmall.txt")
-    op = Exchange10(data)
+    op = Exchange10(ok_small)
 
     # We create two routes: one with clients [1, 2, 3], and the other empty.
     # It is an improving move to insert client 3 into the empty route.
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route2 = Route(data, idx=1, vehicle_type=0)
+    route1 = Route(ok_small, idx=0, vehicle_type=0)
+    route2 = Route(ok_small, idx=1, vehicle_type=0)
 
     nodes = [Node(loc=client) for client in [1, 2, 3]]
     for node in nodes:
@@ -283,13 +269,14 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     assert_equal(ls.search(distance_optimal, cost_evaluator), duration_optimal)
 
 
-def test_relocate_to_heterogeneous_empty_route():
+def test_relocate_to_heterogeneous_empty_route(ok_small):
     """
     This test asserts that a customer will be relocated to a non-empty route
     with a different capacity even if there is another empty route in between.
     """
     vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
-    data = make_heterogeneous(read("data/OkSmall.txt"), vehicle_types)
+    data = make_heterogeneous(ok_small, vehicle_types)
+
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator(100_000, 6)
     rng = RandomNumberGenerator(seed=42)
@@ -323,7 +310,7 @@ def test_relocate_to_heterogeneous_empty_route():
 
 
 @mark.parametrize(
-    ("operator", "base_cost", "fixed_cost"),
+    ("op", "base_cost", "fixed_cost"),
     [
         (Exchange10, 2_346, 0),
         (Exchange10, 2_346, 100),
@@ -333,7 +320,7 @@ def test_relocate_to_heterogeneous_empty_route():
         (Exchange30, 135, 997),
     ],
 )
-def test_relocate_fixed_vehicle_cost(operator, base_cost, fixed_cost):
+def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     """
     Tests that relocate operators - (N, M)-exchange where M == 0 - also take
     into account fixed vehicle costs changes if one of the routes is empty. In
@@ -341,10 +328,8 @@ def test_relocate_fixed_vehicle_cost(operator, base_cost, fixed_cost):
     not changed), and vary the fixed vehicle cost. The total delta cost should
     also vary as a result.
     """
-    data = read("data/OkSmall.txt")
-    data = make_heterogeneous(data, [VehicleType(10, 2, fixed_cost)])
-
-    op = operator(data)
+    data = make_heterogeneous(ok_small, [VehicleType(10, 2, fixed_cost)])
+    op = op(data)
 
     route1 = Route(data, idx=0, vehicle_type=0)
     for loc in [2, 4, 1, 3]:
