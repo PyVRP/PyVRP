@@ -92,7 +92,7 @@ jobs:
           poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean --precision ${{ matrix.precision }}
       - name: Run tests
-        run: poetry run python -m pytest
+        run: poetry run pytest
       - if: matrix.compiler == 'gcc'
         # Clang does not generate accurate coverage reports, so there is no
         # point in uploading those.

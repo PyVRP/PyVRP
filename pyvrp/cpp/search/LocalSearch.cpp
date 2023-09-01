@@ -238,6 +238,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     // improving move. Note that we always insert required clients.
     if (!U->route())
     {
+        // We take this as a default value in case none of the client's
+        // neighbours are assigned, yet U is required.
         Route::Node *UAfter = routes[0][0];
         Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
 

@@ -19,8 +19,12 @@ include = [
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
+exclude = [
+    "docs/build",
+]
 packages = [
     { include = "pyvrp" },
+    { include = "docs" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -110,7 +114,7 @@ ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
-addopts = "--cov=. --cov-report=xml --cov-report=term -p pyvrp.tests.fixtures"
+addopts = "--cov --cov-report=xml --cov-report=term"
 testpaths = "pyvrp"
 
 
