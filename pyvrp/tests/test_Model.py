@@ -10,7 +10,6 @@ from pyvrp import Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import read
 
 
 def test_model_data():
@@ -170,55 +169,50 @@ def test_get_vehicle_types():
     assert_equal(model.vehicle_types[1], vehicle_type2)
 
 
-def test_from_data():
+def test_from_data(small_cvrp):
     """
     Tests that initialising the model from a data instance results in a valid
     model representation of that data instance.
     """
-    read_data = read("data/E-n22-k4.txt", round_func="dimacs")
-    model = Model.from_data(read_data)
+    model = Model.from_data(small_cvrp)
     model_data = model.data()
 
     # We can first check if the overall problem dimension numbers agree.
-    assert_equal(model_data.num_clients, read_data.num_clients)
-    assert_equal(model_data.num_vehicles, read_data.num_vehicles)
+    assert_equal(model_data.num_clients, small_cvrp.num_clients)
+    assert_equal(model_data.num_vehicles, small_cvrp.num_vehicles)
     assert_equal(
-        model_data.vehicle_type(0).capacity, read_data.vehicle_type(0).capacity
+        model_data.vehicle_type(0).capacity,
+        small_cvrp.vehicle_type(0).capacity,
     )
 
     # It's a bit cumbersome to compare the whole matrices, so we use a few
     # sample traces from the distance and duration matrices instead.
-    assert_equal(model_data.dist(3, 4), read_data.dist(3, 4))
-    assert_equal(model_data.duration(2, 1), read_data.duration(2, 1))
+    assert_equal(model_data.dist(3, 4), small_cvrp.dist(3, 4))
+    assert_equal(model_data.duration(2, 1), small_cvrp.duration(2, 1))
 
 
-def test_from_data_and_solve():
+def test_from_data_and_solve(small_cvrp, ok_small):
     """
     Tests that solving a model initialised from a data instance finds the
     correct (known) solutions.
     """
-    # Solve the small E-n22-k4 instance using the from_data constructor.
-    data = read("data/E-n22-k4.txt", round_func="dimacs")
-    model = Model.from_data(data)
+    model = Model.from_data(small_cvrp)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 3_743)
     assert_(res.is_feasible())
 
-    data = read("data/OkSmall.txt")
-    model = Model.from_data(data)
+    model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
 
-def test_model_and_solve():
+def test_model_and_solve(ok_small):
     """
     Tests that solving a model initialised using the modelling interface
     finds the correct (known) solutions.
     """
-    # Solve the small OkSmall instance using the from_data constructor.
-    data = read("data/OkSmall.txt")
-    model = Model.from_data(data)
+    model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())

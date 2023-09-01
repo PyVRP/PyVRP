@@ -8,21 +8,18 @@ from pyvrp import CostEvaluator, Population, RandomNumberGenerator, Solution
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import broken_pairs_distance
-from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
     ("routes", "num_iterations", "runtime"),
     [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4]], 100, 54.2)],
 )
-def test_fields_are_correctly_set(routes, num_iterations, runtime):
+def test_fields_are_correctly_set(ok_small, routes, num_iterations, runtime):
     """
     Tests that ``Result``'s data properties are correctly set after
     initialisation completes.
     """
-    data = read("data/OkSmall.txt")
-    sol = Solution(data, routes)
-
+    sol = Solution(ok_small, routes)
     res = Result(sol, Statistics(), num_iterations, runtime)
 
     assert_equal(res.is_feasible(), sol.is_feasible())
@@ -42,23 +39,21 @@ def test_fields_are_correctly_set(routes, num_iterations, runtime):
         (0, -1.0),  # runtime < 0
     ],
 )
-def test_init_raises_invalid_arguments(num_iterations, runtime):
+def test_init_raises_invalid_arguments(ok_small, num_iterations, runtime):
     """
     Tests that invalid arguments are rejected.
     """
-    data = read("data/OkSmall.txt")
-    sol = Solution(data, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[1, 2, 3, 4]])
 
     with assert_raises(ValueError):
         Result(sol, Statistics(), num_iterations, runtime)
 
 
 @mark.parametrize("num_iterations", [0, 1, 10])
-def test_num_iterations(num_iterations: int):
+def test_num_iterations(ok_small, num_iterations: int):
     """
     Tests access to the ``num_iterations`` property.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
@@ -67,7 +62,7 @@ def test_num_iterations(num_iterations: int):
     for _ in range(num_iterations):
         stats.collect_from(pop, cost_evaluator)
 
-    best = Solution.make_random(data, rng)
+    best = Solution.make_random(ok_small, rng)
     res = Result(best, stats, num_iterations, 0.0)
     assert_equal(res.num_iterations, num_iterations)
 
@@ -76,14 +71,12 @@ def test_num_iterations(num_iterations: int):
     "routes",
     [[[1, 2], [3], [4]], [[1, 2, 3, 4]]],
 )
-def test_str_contains_essential_information(routes):
+def test_str_contains_essential_information(ok_small, routes):
     """
     Tests that printing (or, in general, calling ```str(result)``) returns a
     bunch of useful information about the underlying solution.
     """
-    data = read("data/OkSmall.txt")
-
-    sol = Solution(data, routes)
+    sol = Solution(ok_small, routes)
     res = Result(sol, Statistics(), 0, 0.0)
     str_representation = str(res)
 
@@ -100,22 +93,21 @@ def test_str_contains_essential_information(routes):
 
 
 @mark.parametrize("num_iterations", [0, 1, 10])
-def test_result_can_be_pickled(num_iterations: int):
+def test_result_can_be_pickled(ok_small, num_iterations: int):
     """
     Tests that a ``Result`` object can be pickled: it can be serialised and
     unserialised. This is useful for e.g. storing results to disk.
     """
-    data = read("data/OkSmall.txt")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
 
     for _ in range(num_iterations):
-        pop.add(Solution.make_random(data, rng), cost_evaluator)
+        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
         stats.collect_from(pop, cost_evaluator)
 
-    best = Solution(data, [[1, 2], [3], [4]])
+    best = Solution(ok_small, [[1, 2], [3], [4]])
 
     before_pickle = Result(best, stats, num_iterations, 1.2)
     bytes = pickle.dumps(before_pickle)

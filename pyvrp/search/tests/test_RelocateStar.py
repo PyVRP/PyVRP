@@ -9,27 +9,25 @@ from pyvrp.search import (
     RelocateStar,
     compute_neighbours,
 )
-from pyvrp.tests.helpers import read
 
 
-def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
+def test_exchange10_and_relocate_star_are_same_large_neighbourhoods(rc208):
     """
     With sufficiently large granular neighbourhoods, (1, 0)-Exchange and
     RELOCATE* find the exact same solutions. Only when the granular
     neighbourhood is restricted do these solutions start to differ.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=data.num_clients)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
+    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
 
-    ls.add_node_operator(Exchange10(data))
-    ls.add_route_operator(RelocateStar(data))
+    ls.add_node_operator(Exchange10(rc208))
+    ls.add_route_operator(RelocateStar(rc208))
 
     for _ in range(10):  # repeat a few times to really make sure
-        sol = Solution.make_random(data, rng)
+        sol = Solution.make_random(rc208, rng)
         exchange_sol = ls.search(sol, cost_evaluator)
         relocate_sol = ls.intensify(
             exchange_sol, cost_evaluator, overlap_tolerance=1
@@ -44,22 +42,23 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods():
 
 
 @mark.parametrize("size", [2, 5, 10])
-def test_exchange10_and_relocate_star_differ_small_neighbourhoods(size: int):
+def test_exchange10_and_relocate_star_differ_small_neighbourhoods(
+    rc208, size: int
+):
     """
     This test restricts the sizes of the granular neighbourhoods, so now
     (1, 0)-Exchange and RELOCATE* should start to differ.
     """
-    data = read("data/RC208.txt", "solomon", "dimacs")
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)
-    ls = LocalSearch(data, rng, compute_neighbours(data, nb_params))
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
 
-    ls.add_node_operator(Exchange10(data))
-    ls.add_route_operator(RelocateStar(data))
+    ls.add_node_operator(Exchange10(rc208))
+    ls.add_route_operator(RelocateStar(rc208))
 
-    sol = Solution.make_random(data, rng)
+    sol = Solution.make_random(rc208, rng)
     exchange_sol = ls.search(sol, cost_evaluator)
     relocate_sol = ls.intensify(
         exchange_sol, cost_evaluator, overlap_tolerance=1
