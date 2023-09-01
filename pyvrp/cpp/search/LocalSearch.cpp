@@ -236,12 +236,13 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     // If U is not currently in the solution, we test if inserting it is an
     // improving move. Note that we always insert required clients.
+
     if (!U->route())
     {
         // We take this as a default value in case none of the client's
         // neighbours are assigned, yet U is required.
         Route::Node *UAfter = routes[0][0];
-        Cost bestCost = std::numeric_limits<Cost>::max();
+        Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
 
         for (auto const vClient : neighbours[uClient])
         {
@@ -251,13 +252,6 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                 continue;
 
             auto cost = insertCost(U, V, data, costEvaluator);
-            if (cost < 0)
-            {
-                V->route()->insert(V->idx() + 1, U);
-                update(V->route(), V->route());
-                return;
-            }
-
             if (cost < bestCost)
             {
                 bestCost = cost;
@@ -265,7 +259,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
             }
         }
 
-        if (uData.required)
+        if (uData.required || bestCost < 0)
         {
             UAfter->route()->insert(UAfter->idx() + 1, U);
             update(UAfter->route(), UAfter->route());
