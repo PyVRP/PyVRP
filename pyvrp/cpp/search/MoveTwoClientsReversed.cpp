@@ -72,20 +72,20 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
     }
     else  // within same route
     {
-        auto const *route = uRoute;
+        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        if (!route->hasTimeWarp() && deltaCost >= 0)
+        if (deltaCost >= 0)
             return deltaCost;
 
         if (U->idx() < V->idx())
         {
             auto const uTWS
                 = TWS::merge(data.durationMatrix(),
-                             route->twsBefore(U->idx() - 1),
-                             route->twsBetween(U->idx() + 2, V->idx()),
-                             route->tws(U->idx() + 1),
-                             route->tws(U->idx()),
-                             route->twsAfter(V->idx() + 1));
+                             uRoute->twsBefore(U->idx() - 1),
+                             uRoute->twsBetween(U->idx() + 2, V->idx()),
+                             uRoute->tws(U->idx() + 1),
+                             uRoute->tws(U->idx()),
+                             uRoute->twsAfter(V->idx() + 1));
 
             deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         }
@@ -93,16 +93,14 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
         {
             auto const uTWS
                 = TWS::merge(data.durationMatrix(),
-                             route->twsBefore(V->idx()),
-                             route->tws(U->idx() + 1),
-                             route->tws(U->idx()),
-                             route->twsBetween(V->idx() + 1, U->idx() - 1),
-                             route->twsAfter(U->idx() + 2));
+                             uRoute->twsBefore(V->idx()),
+                             uRoute->tws(U->idx() + 1),
+                             uRoute->tws(U->idx()),
+                             uRoute->twsBetween(V->idx() + 1, U->idx() - 1),
+                             uRoute->twsAfter(U->idx() + 2));
 
             deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         }
-
-        deltaCost -= costEvaluator.twPenalty(route->timeWarp());
     }
 
     return deltaCost;
