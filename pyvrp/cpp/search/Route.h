@@ -141,7 +141,7 @@ public:
     [[nodiscard]] inline Load load() const;
 
     /**
-     * @return The load capacity of this vehicle servicing this route.
+     * @return The load capacity of the vehicle servicing this route.
      */
     [[nodiscard]] inline Load capacity() const;
 
