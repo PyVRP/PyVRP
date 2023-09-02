@@ -83,9 +83,9 @@ private:
 
     ProblemData const &data;
 
-    // Cache the vehicle type object here for performance. Since the vehicle
-    // type's properties are called quite often, it's faster to have this
-    // object readily available, rather than take it by reference.
+    // Cache the vehicle type object here. Since the vehicle type's properties
+    // are called quite often, it's much better to have this object readily
+    // available, rather than take it by reference.
     ProblemData::VehicleType const vehicleType_;
     size_t const vehTypeIdx_;
     size_t const idx_;
