@@ -12,10 +12,11 @@ Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
-      vehicleType_(vehicleType),
+      vehicleType_(data.vehicleType(vehicleType)),
+      vehTypeIdx_(vehicleType),
       idx_(idx),
-      startDepot(data.vehicleType(vehicleType).depot),
-      endDepot(data.vehicleType(vehicleType).depot)
+      startDepot(vehicleType_.depot),
+      endDepot(vehicleType_.depot)
 {
     clear();
 }
@@ -27,7 +28,7 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
-size_t Route::vehicleType() const { return vehicleType_; }
+size_t Route::vehicleType() const { return vehTypeIdx_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
@@ -64,18 +65,17 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const &vehicleType = data.vehicleType(vehicleType_);
-    auto const &depot = data.client(vehicleType.depot);
+    auto const &depot = data.client(vehicleType_.depot);
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter. If the
     // vehicle does not have a shift time window, we default to the depot's
     // open and close times.
-    auto const shiftStart = vehicleType.twEarly.value_or(depot.twEarly);
-    auto const shiftEnd = vehicleType.twLate.value_or(depot.twLate);
+    auto const shiftStart = vehicleType_.twEarly.value_or(depot.twEarly);
+    auto const shiftEnd = vehicleType_.twLate.value_or(depot.twLate);
 
-    TWS depotTws(vehicleType.depot,
-                 vehicleType.depot,
+    TWS depotTws(vehicleType_.depot,
+                 vehicleType_.depot,
                  0,
                  0,
                  std::max(depot.twEarly, shiftStart),
