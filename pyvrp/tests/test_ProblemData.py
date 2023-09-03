@@ -4,7 +4,6 @@ from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ProblemData, VehicleType
-from pyvrp.tests.helpers import read
 
 
 @pytest.mark.parametrize(
@@ -173,15 +172,13 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, vehicle_types, other_matrix, matrix)
 
 
-def test_centroid():
+def test_centroid(ok_small):
     """
     Tests the computation of the centroid of all clients in the data instance.
     """
-    data = read("data/OkSmall.txt")
-
-    centroid = data.centroid()
-    x = [data.client(idx).x for idx in range(1, data.num_clients + 1)]
-    y = [data.client(idx).y for idx in range(1, data.num_clients + 1)]
+    centroid = ok_small.centroid()
+    x = [ok_small.client(idx).x for idx in range(1, ok_small.num_clients + 1)]
+    y = [ok_small.client(idx).y for idx in range(1, ok_small.num_clients + 1)]
 
     assert_allclose(centroid[0], np.mean(x))
     assert_allclose(centroid[1], np.mean(y))
