@@ -101,13 +101,10 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
-    auto const &uVehicleType = data.vehicleType(uRoute->vehicleType());
-    auto const &vVehicleType = data.vehicleType(vRoute->vehicleType());
-
     // We're going to incur V's fixed cost if V is currently empty. We lose U's
     // fixed cost if we're moving all of U's clients with this operator.
-    deltaCost += Cost(vRoute->empty()) * vVehicleType.fixedCost;
-    deltaCost -= Cost(uRoute->size() == N) * uVehicleType.fixedCost;
+    deltaCost += Cost(vRoute->empty()) * vRoute->fixedCost();
+    deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedCost();
 
     if (uRoute != vRoute)
     {
@@ -147,19 +144,19 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
     }
     else  // within same route
     {
-        auto const *route = uRoute;
+        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        if (!route->hasTimeWarp() && deltaCost >= 0)
+        if (deltaCost >= 0)
             return deltaCost;
 
         if (U->idx() < V->idx())
         {
             auto const tws = TimeWindowSegment::merge(
                 data.durationMatrix(),
-                route->twsBefore(U->idx() - 1),
-                route->twsBetween(U->idx() + N, V->idx()),
-                route->twsBetween(U->idx(), U->idx() + N - 1),
-                route->twsAfter(V->idx() + 1));
+                uRoute->twsBefore(U->idx() - 1),
+                uRoute->twsBetween(U->idx() + N, V->idx()),
+                uRoute->twsBetween(U->idx(), U->idx() + N - 1),
+                uRoute->twsAfter(V->idx() + 1));
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
@@ -167,15 +164,13 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         {
             auto const tws = TimeWindowSegment::merge(
                 data.durationMatrix(),
-                route->twsBefore(V->idx()),
-                route->twsBetween(U->idx(), U->idx() + N - 1),
-                route->twsBetween(V->idx() + 1, U->idx() - 1),
-                route->twsAfter(U->idx() + N));
+                uRoute->twsBefore(V->idx()),
+                uRoute->twsBetween(U->idx(), U->idx() + N - 1),
+                uRoute->twsBetween(V->idx() + 1, U->idx() - 1),
+                uRoute->twsAfter(U->idx() + N));
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
-
-        deltaCost -= costEvaluator.twPenalty(route->timeWarp());
     }
 
     return deltaCost;
@@ -248,20 +243,20 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
     }
     else  // within same route
     {
-        auto const *route = uRoute;
+        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        if (!route->hasTimeWarp() && deltaCost >= 0)
+        if (deltaCost >= 0)
             return deltaCost;
 
         if (U->idx() < V->idx())
         {
             auto const tws = TimeWindowSegment::merge(
                 data.durationMatrix(),
-                route->twsBefore(U->idx() - 1),
-                route->twsBetween(V->idx(), V->idx() + M - 1),
-                route->twsBetween(U->idx() + N, V->idx() - 1),
-                route->twsBetween(U->idx(), U->idx() + N - 1),
-                route->twsAfter(V->idx() + M));
+                uRoute->twsBefore(U->idx() - 1),
+                uRoute->twsBetween(V->idx(), V->idx() + M - 1),
+                uRoute->twsBetween(U->idx() + N, V->idx() - 1),
+                uRoute->twsBetween(U->idx(), U->idx() + N - 1),
+                uRoute->twsAfter(V->idx() + M));
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
@@ -269,16 +264,14 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         {
             auto const tws = TimeWindowSegment::merge(
                 data.durationMatrix(),
-                route->twsBefore(V->idx() - 1),
-                route->twsBetween(U->idx(), U->idx() + N - 1),
-                route->twsBetween(V->idx() + M, U->idx() - 1),
-                route->twsBetween(V->idx(), V->idx() + M - 1),
-                route->twsAfter(U->idx() + N));
+                uRoute->twsBefore(V->idx() - 1),
+                uRoute->twsBetween(U->idx(), U->idx() + N - 1),
+                uRoute->twsBetween(V->idx() + M, U->idx() - 1),
+                uRoute->twsBetween(V->idx(), V->idx() + M - 1),
+                uRoute->twsAfter(U->idx() + N));
 
             deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         }
-
-        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
     }
 
     return deltaCost;
