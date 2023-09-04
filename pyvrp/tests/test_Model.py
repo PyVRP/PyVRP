@@ -339,6 +339,31 @@ def test_model_solves_instance_with_zero_or_one_clients():
     assert_equal(solution, [[1]])
 
 
+def test_model_solves_small_instance_with_fixed_costs():
+    """
+    High-level test that creates and solves a small instance with vehicle fixed
+    costs, to see if the model (and thus the underlying solution algorithm)
+    can handle that. This test exercises the bug identified in issue #380.
+    Before fixing this bug, the solver would hang on this instance.
+    """
+    m = Model()
+
+    for idx in range(2):
+        m.add_vehicle_type(capacity=0, num_available=2, fixed_cost=10)
+
+    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+
+    for idx in range(5):
+        m.add_client(x=idx, y=idx, service_duration=1, tw_early=0, tw_late=20)
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=0, duration=5)
+
+    res = m.solve(stop=MaxIterations(2000))
+    assert_(res.is_feasible())
+
+
 def test_model_solves_small_instance_with_shift_durations():
     """
     High-level test that creates and solves a small instance with shift

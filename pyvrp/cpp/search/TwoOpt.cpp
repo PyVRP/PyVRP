@@ -64,6 +64,21 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
+    // We're going to incur fixed cost if a route is currently empty but
+    // becomes non-empty due to the proposed move.
+    if (uRoute->empty() && U->isDepot() && !n(V)->isDepot())
+        deltaCost += uRoute->fixedCost();
+
+    if (vRoute->empty() && V->isDepot() && !n(U)->isDepot())
+        deltaCost += vRoute->fixedCost();
+
+    // We lose fixed cost if a route becomes empty due to the proposed move.
+    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
+        deltaCost -= uRoute->fixedCost();
+
+    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
+        deltaCost -= vRoute->fixedCost();
+
     if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
