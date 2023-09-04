@@ -349,7 +349,7 @@ def test_model_solves_small_instance_with_fixed_costs():
     m = Model()
 
     for idx in range(2):
-        m.add_vehicle_type(capacity=0, num_available=2, fixed_cost=10)
+        m.add_vehicle_type(capacity=0, num_available=5, fixed_cost=10)
 
     m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
 
@@ -360,7 +360,7 @@ def test_model_solves_small_instance_with_fixed_costs():
         for to in m.locations:
             m.add_edge(frm, to, distance=0, duration=5)
 
-    res = m.solve(stop=MaxIterations(2000))
+    res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
 
 

@@ -163,8 +163,8 @@ def test_within_route_move(ok_small):
 
 def test_move_involving_empty_routes():
     """
-    This test checks that a 2-OPT move, which either involves an empty route
-    or turns a non-empty route into an empty route, is correctly evaluated.
+    This test checks that a 2-OPT move that turns an empty route into a
+    non-empty route (or vice-versa) is correctly evaluated.
     """
     data = ProblemData(
         clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
@@ -191,5 +191,5 @@ def test_move_involving_empty_routes():
 
     # This move creates routes (depot -> depot) and (depot -> 1 -> 2 -> depot),
     # turning route 1 into an empty route, while turning route 2 into a
-    # non-empty one. The fixed cost incurred is thus 100 - 10 = 90.
+    # non-empty route. The total fixed cost incurred is thus 100 - 10 = 90.
     assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), 90)
