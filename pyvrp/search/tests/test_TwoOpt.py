@@ -210,7 +210,7 @@ def test_move_involving_empty_routes():
     # This move does not change the route structure, so the delta cost is 0.
     assert_allclose(op.evaluate(route1[0], route2[2], cost_eval), 0)
 
-    # This move creates routes (depot -> 1 -> depot) and (depot -> 2 -> depot),
+    # This move creates routes (depot -> 2 -> depot) and (depot -> 1 -> depot),
     # making route 1 non-empty and thus incurring its fixed cost of 10.
     assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), 10)
 
