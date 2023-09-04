@@ -1,11 +1,13 @@
 from typing import List
 
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
 from pyvrp import (
+    Client,
     CostEvaluator,
+    ProblemData,
     RandomNumberGenerator,
     Solution,
     VehicleType,
@@ -149,7 +151,7 @@ def test_within_route_move(ok_small):
     # Load remains the same, but the time warp decreases substantially as well:
     # from 3633 (due to visiting client 3 far too late) to 0. This results in
     # a total delta cost of -3633 + 5176 - 6270 = -4727.
-    assert_equal(two_opt.evaluate(nodes[4], nodes[3], cost_eval), -4_727)
+    assert_allclose(two_opt.evaluate(nodes[4], nodes[3], cost_eval), -4_727)
 
     # Check that applying the proposed move indeed creates the correct route.
     two_opt.apply(nodes[4], nodes[3])
@@ -157,3 +159,62 @@ def test_within_route_move(ok_small):
     assert_equal(route[2].client, 3)
     assert_equal(route[3].client, 2)
     assert_equal(route[4].client, 1)
+
+
+def test_move_involving_empty_routes():
+    """
+    This test checks that a 2-OPT move that turns an empty route into a
+    non-empty route (or vice-versa) is correctly evaluated.
+    """
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
+        vehicle_types=[VehicleType(0, 1, 10), VehicleType(0, 1, 100)],
+        distance_matrix=np.zeros((3, 3), dtype=int),
+        duration_matrix=np.zeros((3, 3), dtype=int),
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route2 = Route(data, idx=1, vehicle_type=1)
+
+    for loc in [1, 2]:
+        route1.append(Node(loc=loc))
+
+    route1.update()  # depot -> 1 -> 2 -> depot
+    route2.update()  # depot -> depot
+
+    op = TwoOpt(data)
+    cost_eval = CostEvaluator(0, 0)
+
+    # This move does not change the route structure, so the delta cost is 0.
+    assert_allclose(op.evaluate(route1[2], route2[0], cost_eval), 0)
+
+    # This move creates routes (depot -> 1 -> depot) and (depot -> 2 -> depot),
+    # making route 2 non-empty and thus incurring its fixed cost of 100.
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), 100)
+
+    # This move creates routes (depot -> depot) and (depot -> 1 -> 2 -> depot),
+    # making route 1 empty, while making route 2 non-empty. The total fixed
+    # cost incurred is thus -10 + 100 = 90.
+    assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), 90)
+
+    # Now we reverse the visits of route 1 and 2, so that we can hit the cases
+    # where route 1 is empty.
+    route1.clear()
+
+    for loc in [1, 2]:
+        route2.append(Node(loc=loc))
+
+    route1.update()  # depot -> depot
+    route2.update()  # depot -> 1 -> 2 -> depot
+
+    # This move does not change the route structure, so the delta cost is 0.
+    assert_allclose(op.evaluate(route1[0], route2[2], cost_eval), 0)
+
+    # This move creates routes (depot -> 2 -> depot) and (depot -> 1 -> depot),
+    # making route 1 non-empty and thus incurring its fixed cost of 10.
+    assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), 10)
+
+    # This move creates routes (depot -> 1 -> 2 -> depot) and (depot -> depot),
+    # making route 1 non-empty, while making route 2 empty. The total fixed
+    # cost incurred is thus 10 - 100 = -90.
+    assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), -90)
