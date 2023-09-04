@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from typing import Optional
 
 import tomli
 
@@ -34,57 +35,67 @@ autodoc_typehints = "signature"
 REVISION_CMD = "git rev-parse --short HEAD"
 
 
-def _get_git_revision():
+def _get_git_revision() -> str:
+    """
+    Returns the current git revision as a string. If the revision cannot be
+    determined, returns "main".
+    """
     try:
         revision = subprocess.check_output(REVISION_CMD.split()).strip()
     except (subprocess.CalledProcessError, OSError):
-        print("Failed to execute git to get revision")
-        return None
+        print("Failed to execute git to get revision: returning 'main'.")
+        return "main"
     return revision.decode("utf-8")
 
 
-def linkcode_resolve(domain: str, info: dict):
+def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     """
-    Returns the URL to source code corresponding to a object.
+    Returns the URL to the GitHub source code corresponding to a object.
 
     Parameters
     ----------
     domain: str
         The domain of the object (e.g., "py" for Python, "cpp" for C++).
     info: dict
-        A dictionary containing the information about the object.
+        Dictionary containing the module and fullname of the object.
+
+    Returns
+    -------
+    Optional[str]
+        The URL to the GitHub source code corresponding to the object.
+        If a URL cannot be generated, returns None instead.
     """
-    # TODO make this commit-specific
-    base_url = "https:///github.com/PyVRP/PyVRP/blob"
 
     if domain != "py" or not info.get("module") or not info.get("fullname"):
-        return  # only accept Python objects with complete module and name info.
+        return None  # only allow Python objects with complete module and name.
 
+    # Find the object.
     module = importlib.import_module(info["module"])
 
-    if "." in info["fullname"]:
-        objname, attrname = info["fullname"].split(".")
-        obj = getattr(module, objname)
+    if "." in info["fullname"]:  # object is a method or attribute of a class
+        obj_name, attr_name = info["fullname"].split(".")
+        obj = getattr(module, obj_name)
 
         try:
-            obj = getattr(obj, attrname)  # object is a method of a class
+            obj = getattr(obj, attr_name)  # object is a method of a class
         except AttributeError:
-            return  # object is an attribute of a class
+            return None  # object is an attribute of a class
     else:
         obj = getattr(module, info["fullname"])
 
+    # Find the path to the source file and the object's start line number.
     try:
         source_file = inspect.getsourcefile(obj)
-        lines = inspect.getsourcelines(obj)
+        start_line_no = inspect.getsourcelines(obj)[1]  # first line number
+
+        assert source_file is not None
+        rel_path = os.path.relpath(source_file, os.path.abspath(".."))
     except Exception:
-        return
+        return None
 
-    source_file = os.path.relpath(source_file, os.path.abspath(".."))
-    line_no = lines[1]
-
+    base_url = "https:///github.com/PyVRP/PyVRP/blob"
     revision = _get_git_revision()
-    revision = "main"  # TODO use this during testing
-    return f"{base_url}/{revision}/{source_file}#L{line_no}"
+    return f"{base_url}/{revision}/{rel_path}#L{start_line_no}"
 
 
 # -- numpydoc
