@@ -185,11 +185,36 @@ def test_move_involving_empty_routes():
     op = TwoOpt(data)
     cost_eval = CostEvaluator(0, 0)
 
+    # This move does not change the route structure, so the delta cost is 0.
+    assert_allclose(op.evaluate(route1[2], route2[0], cost_eval), 0)
+
     # This move creates routes (depot -> 1 -> depot) and (depot -> 2 -> depot),
-    # turning route 2 into a non-empty route and thus incurring its fixed cost.
+    # making route 2 non-empty and thus incurring its fixed cost of 100.
     assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), 100)
 
     # This move creates routes (depot -> depot) and (depot -> 1 -> 2 -> depot),
-    # turning route 1 into an empty route, while turning route 2 into a
-    # non-empty route. The total fixed cost incurred is thus 100 - 10 = 90.
+    # making route 1 empty, while making route 2 non-empty. The total fixed
+    # cost incurred is thus -10 + 100 = 90.
     assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), 90)
+
+    # Now we reverse the visits of route 1 and 2, so that we can hit the cases
+    # where route 1 is empty.
+    route1.clear()
+
+    for loc in [1, 2]:
+        route2.append(Node(loc=loc))
+
+    route1.update()  # depot -> depot
+    route2.update()  # depot -> 1 -> 2 -> depot
+
+    # This move does not change the route structure, so the delta cost is 0.
+    assert_allclose(op.evaluate(route1[0], route2[2], cost_eval), 0)
+
+    # This move creates routes (depot -> 1 -> depot) and (depot -> 2 -> depot),
+    # making route 1 non-empty and thus incurring its fixed cost of 10.
+    assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), 10)
+
+    # This move creates routes (depot -> 1 -> 2 -> depot) and (depot -> depot),
+    # making route 1 non-empty, while making route 2 empty. The total fixed
+    # cost incurred is thus 10 - 100 = -90.
+    assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), -90)
