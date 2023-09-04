@@ -32,7 +32,9 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 
-    if (!route->hasTimeWarp() && deltaCost >= 0)
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+
+    if (deltaCost >= 0)
         return deltaCost;
 
     auto tws = route->twsBefore(U->idx());
@@ -41,7 +43,6 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;
 }
@@ -62,6 +63,21 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                               + data.dist(V->client(), n(U)->client());
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
+
+    // We're going to incur fixed cost if a route is currently empty but
+    // becomes non-empty due to the proposed move.
+    if (uRoute->empty() && U->isDepot() && !n(V)->isDepot())
+        deltaCost += uRoute->fixedCost();
+
+    if (vRoute->empty() && V->isDepot() && !n(U)->isDepot())
+        deltaCost += vRoute->fixedCost();
+
+    // We lose fixed cost if a route becomes empty due to the proposed move.
+    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
+        deltaCost -= uRoute->fixedCost();
+
+    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
+        deltaCost -= vRoute->fixedCost();
 
     if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;

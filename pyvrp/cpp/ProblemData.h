@@ -354,22 +354,22 @@ public:
     [[nodiscard]] size_t dimension() const;
 
     /**
-     * Number of vehicles in this problem instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of vehicles in this problem instance.
-     */
-    [[nodiscard]] size_t numVehicleTypes() const;
-
-    /**
      * Number of vehicle types in this problem instance.
      *
      * Returns
      * -------
      * int
      *     Number of vehicle types in this problem instance.
+     */
+    [[nodiscard]] size_t numVehicleTypes() const;
+
+    /**
+     * Number of vehicles in this problem instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of vehicles in this problem instance.
      */
     [[nodiscard]] size_t numVehicles() const;
 

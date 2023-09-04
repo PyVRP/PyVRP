@@ -82,7 +82,12 @@ private:
     };
 
     ProblemData const &data;
-    size_t const vehicleType_;
+
+    // Cache the vehicle type object here. Since the vehicle type's properties
+    // are called quite often, it's much better to have this object readily
+    // available, rather than take it by reference.
+    ProblemData::VehicleType const vehicleType_;
+    size_t const vehTypeIdx_;
     size_t const idx_;
 
     std::vector<Node *> nodes;     // Nodes in this route, including depots
@@ -136,9 +141,14 @@ public:
     [[nodiscard]] inline Load load() const;
 
     /**
-     * @return The load capacity of this route.
+     * @return The load capacity of the vehicle servicing this route.
      */
     [[nodiscard]] inline Load capacity() const;
+
+    /**
+     * @return The fixed cost of the vehicle servicing this route.
+     */
+    [[nodiscard]] inline Cost fixedCost() const;
 
     /**
      * @return Total distance travelled on this route.
@@ -308,7 +318,9 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
 Load Route::load() const { return stats.back().cumLoad; }
 
-Load Route::capacity() const { return data.vehicleType(vehicleType_).capacity; }
+Load Route::capacity() const { return vehicleType_.capacity; }
+
+Cost Route::fixedCost() const { return vehicleType_.fixedCost; }
 
 Distance Route::distance() const { return stats.back().cumDist; }
 

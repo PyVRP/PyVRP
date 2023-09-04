@@ -205,6 +205,17 @@ def test_excess_load(ok_small):
     assert_(route.has_excess_load())
 
 
+@pytest.mark.parametrize("fixed_cost", [0, 9])
+def test_fixed_cost(ok_small, fixed_cost: int):
+    """
+    Tests that the fixed cost method returns the assigned vehicle type's fixed
+    cost value.
+    """
+    data = make_heterogeneous(ok_small, [VehicleType(10, 2, fixed_cost)])
+    route = Route(data, idx=0, vehicle_type=0)
+    assert_allclose(route.fixed_cost(), fixed_cost)
+
+
 @pytest.mark.parametrize("client", [1, 2, 3, 4])
 def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     """
