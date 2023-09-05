@@ -174,15 +174,15 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
 
 def test_problem_data_replace():
     """
-    Tests that ``ProblemData.replace`` works as expected.
+    Tests that the ``ProblemData.replace`` method works as expected.
     """
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
-    other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
+    other_matrix = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
 
-    # Let's first replace the original without changing anything. The new
-    # data have different objects, but the same values.
+    # Let's first replace the original data without actually changing anything.
+    # The new instance should have different objects, but with the same values.
     new = original.replace()
 
     assert_(new != original)
