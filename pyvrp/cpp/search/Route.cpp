@@ -12,26 +12,23 @@ Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
-      vehicleType_(vehicleType),
+      vehicleType_(data.vehicleType(vehicleType)),
+      vehTypeIdx_(vehicleType),
       idx_(idx),
-      startDepot(data.vehicleType(vehicleType).depot),
-      endDepot(data.vehicleType(vehicleType).depot)
+      startDepot(vehicleType_.depot),
+      endDepot(vehicleType_.depot)
 {
     clear();
 }
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(size_t loc, ProblemData::Client const &client)
-    : cumDist(0),
-      cumLoad(0),
-      tws(loc, client),
-      twsAfter(loc, client),
-      twsBefore(loc, client)
+Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
+    : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
 {
 }
 
-size_t Route::vehicleType() const { return vehicleType_; }
+size_t Route::vehicleType() const { return vehTypeIdx_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
@@ -68,11 +65,26 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const depot = startDepot.client();
+    auto const &depot = data.client(vehicleType_.depot);
+
+    // Time window is limited by both the depot open and closing times, and
+    // the vehicle's start and end of shift, whichever is tighter. If the
+    // vehicle does not have a shift time window, we default to the depot's
+    // open and close times.
+    auto const shiftStart = vehicleType_.twEarly.value_or(depot.twEarly);
+    auto const shiftEnd = vehicleType_.twLate.value_or(depot.twLate);
+
+    TWS depotTws(vehicleType_.depot,
+                 vehicleType_.depot,
+                 0,
+                 0,
+                 std::max(depot.twEarly, shiftStart),
+                 std::min(depot.twLate, shiftEnd),
+                 0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(depot, data.client(depot));
-    stats.emplace_back(depot, data.client(depot));
+    stats.emplace_back(depotTws);
+    stats.emplace_back(depotTws);
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -87,7 +99,7 @@ void Route::insert(size_t idx, Node *node)
     // We do not need to update the statistics; Route::update() will handle
     // that later.
     stats.insert(stats.begin() + idx,
-                 {node->client(), data.client(node->client())});
+                 TWS(node->client(), data.client(node->client())));
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;

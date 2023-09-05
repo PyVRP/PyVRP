@@ -236,9 +236,22 @@ Solution::Route::Route(ProblemData const &data,
 
     auto const &vehType = data.vehicleType(vehicleType);
     auto const &depot = data.client(vehType.depot);
-    auto const &durMat = data.durationMatrix();
 
-    TimeWindowSegment depotTws(vehType.depot, depot);
+    // Time window is limited by both the depot open and closing times, and
+    // the vehicle's start and end of shift, whichever is tighter. If the
+    // vehicle does not have a shift time window, we default to the depot's
+    // open and close times.
+    auto const shiftStart = vehType.twEarly.value_or(depot.twEarly);
+    auto const shiftEnd = vehType.twLate.value_or(depot.twLate);
+
+    TimeWindowSegment depotTws(vehType.depot,
+                               vehType.depot,
+                               0,
+                               0,
+                               std::max(depot.twEarly, shiftStart),
+                               std::min(depot.twLate, shiftEnd),
+                               0);
+
     auto tws = depotTws;
     size_t prevClient = vehType.depot;
 
@@ -257,7 +270,7 @@ Solution::Route::Route(ProblemData const &data,
         centroid_.second += static_cast<double>(clientData.y) / size();
 
         auto const clientTws = TimeWindowSegment(client, clientData);
-        tws = TimeWindowSegment::merge(durMat, tws, clientTws);
+        tws = TimeWindowSegment::merge(data.durationMatrix(), tws, clientTws);
 
         prevClient = client;
     }
@@ -268,7 +281,7 @@ Solution::Route::Route(ProblemData const &data,
 
     excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
 
-    tws = TimeWindowSegment::merge(durMat, tws, depotTws);
+    tws = TimeWindowSegment::merge(data.durationMatrix(), tws, depotTws);
     duration_ = tws.duration();
     startTime_ = tws.twEarly();
     slack_ = tws.twLate() - tws.twEarly();

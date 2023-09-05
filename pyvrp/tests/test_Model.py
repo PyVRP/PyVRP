@@ -10,7 +10,6 @@ from pyvrp import Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import read
 
 
 def test_model_data():
@@ -131,11 +130,15 @@ def test_add_vehicle_type():
         num_available=10,
         capacity=998,
         fixed_cost=1_001,
+        tw_early=17,
+        tw_late=19,
     )
 
     assert_equal(vehicle_type.num_available, 10)
     assert_allclose(vehicle_type.capacity, 998)
     assert_allclose(vehicle_type.fixed_cost, 1_001)
+    assert_allclose(vehicle_type.tw_early, 17)
+    assert_allclose(vehicle_type.tw_late, 19)
 
 
 def test_get_locations():
@@ -166,55 +169,50 @@ def test_get_vehicle_types():
     assert_equal(model.vehicle_types[1], vehicle_type2)
 
 
-def test_from_data():
+def test_from_data(small_cvrp):
     """
     Tests that initialising the model from a data instance results in a valid
     model representation of that data instance.
     """
-    read_data = read("data/E-n22-k4.txt", round_func="dimacs")
-    model = Model.from_data(read_data)
+    model = Model.from_data(small_cvrp)
     model_data = model.data()
 
     # We can first check if the overall problem dimension numbers agree.
-    assert_equal(model_data.num_clients, read_data.num_clients)
-    assert_equal(model_data.num_vehicles, read_data.num_vehicles)
+    assert_equal(model_data.num_clients, small_cvrp.num_clients)
+    assert_equal(model_data.num_vehicles, small_cvrp.num_vehicles)
     assert_equal(
-        model_data.vehicle_type(0).capacity, read_data.vehicle_type(0).capacity
+        model_data.vehicle_type(0).capacity,
+        small_cvrp.vehicle_type(0).capacity,
     )
 
     # It's a bit cumbersome to compare the whole matrices, so we use a few
     # sample traces from the distance and duration matrices instead.
-    assert_equal(model_data.dist(3, 4), read_data.dist(3, 4))
-    assert_equal(model_data.duration(2, 1), read_data.duration(2, 1))
+    assert_equal(model_data.dist(3, 4), small_cvrp.dist(3, 4))
+    assert_equal(model_data.duration(2, 1), small_cvrp.duration(2, 1))
 
 
-def test_from_data_and_solve():
+def test_from_data_and_solve(small_cvrp, ok_small):
     """
     Tests that solving a model initialised from a data instance finds the
     correct (known) solutions.
     """
-    # Solve the small E-n22-k4 instance using the from_data constructor.
-    data = read("data/E-n22-k4.txt", round_func="dimacs")
-    model = Model.from_data(data)
+    model = Model.from_data(small_cvrp)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 3_743)
     assert_(res.is_feasible())
 
-    data = read("data/OkSmall.txt")
-    model = Model.from_data(data)
+    model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
 
-def test_model_and_solve():
+def test_model_and_solve(ok_small):
     """
     Tests that solving a model initialised using the modelling interface
     finds the correct (known) solutions.
     """
-    # Solve the small OkSmall instance using the from_data constructor.
-    data = read("data/OkSmall.txt")
-    model = Model.from_data(data)
+    model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
@@ -254,8 +252,9 @@ def test_model_and_solve():
             model.add_edge(other, client, to_client, to_client)
 
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+
     assert_(res.is_feasible())
+    assert_equal(res.cost(), 9_155)
 
 
 def test_partial_distance_duration_matrix():
@@ -338,3 +337,71 @@ def test_model_solves_instance_with_zero_or_one_clients():
     res = m.solve(stop=MaxIterations(1))
     solution = [r.visits() for r in res.best.get_routes()]
     assert_equal(solution, [[1]])
+
+
+def test_model_solves_small_instance_with_fixed_costs():
+    """
+    High-level test that creates and solves a small instance with vehicle fixed
+    costs, to see if the model (and thus the underlying solution algorithm)
+    can handle that. This test exercises the bug identified in issue #380.
+    Before fixing this bug, the solver would hang on this instance.
+    """
+    m = Model()
+
+    for idx in range(2):
+        m.add_vehicle_type(capacity=0, num_available=5, fixed_cost=10)
+
+    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+
+    for idx in range(5):
+        m.add_client(x=idx, y=idx, service_duration=1, tw_early=0, tw_late=20)
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=0, duration=5)
+
+    res = m.solve(stop=MaxIterations(100))
+    assert_(res.is_feasible())
+
+
+def test_model_solves_small_instance_with_shift_durations():
+    """
+    High-level test that creates and solves a small instance with shift
+    durations, to see if the model (and thus the underlying solution algorithm)
+    can handle that.
+    """
+    m = Model()
+
+    # Two vehicle types with different shift time windows: the first has a
+    # shift time window of [0, 15], the second of [5, 25]. There are four
+    # vehicles in total, two for each vehicle type.
+    for tw_early, tw_late in [(0, 15), (5, 25)]:
+        m.add_vehicle_type(
+            capacity=0,
+            num_available=2,
+            tw_early=tw_early,
+            tw_late=tw_late,
+        )
+
+    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+
+    for idx in range(5):
+        # Vehicles of the first type can visit two clients before having to
+        # return to the depot. The second vehicle type can be used to visit
+        # a single client before having to return to the depot. So we need
+        # at least three routes.
+        m.add_client(
+            x=idx,
+            y=idx,
+            service_duration=1,
+            tw_early=0,
+            tw_late=20,
+        )
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=0, duration=5)
+
+    res = m.solve(stop=MaxIterations(100))
+    assert_(res.is_feasible())
+    assert_(res.best.num_routes() > 2)

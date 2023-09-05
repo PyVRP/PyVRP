@@ -32,7 +32,9 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 
-    if (!route->hasTimeWarp() && deltaCost >= 0)
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+
+    if (deltaCost >= 0)
         return deltaCost;
 
     auto tws = route->twsBefore(U->idx());
@@ -41,7 +43,6 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;
 }
@@ -63,21 +64,64 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
+    // We're going to incur fixed cost if a route is currently empty but
+    // becomes non-empty due to the proposed move.
+    if (uRoute->empty() && U->isDepot() && !n(V)->isDepot())
+        deltaCost += uRoute->fixedCost();
+
+    if (vRoute->empty() && V->isDepot() && !n(U)->isDepot())
+        deltaCost += vRoute->fixedCost();
+
+    // We lose fixed cost if a route becomes empty due to the proposed move.
+    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
+        deltaCost -= uRoute->fixedCost();
+
+    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
+        deltaCost -= vRoute->fixedCost();
+
     if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
-    auto const uTWS = TWS::merge(data.durationMatrix(),
-                                 uRoute->twsBefore(U->idx()),
-                                 vRoute->twsAfter(V->idx() + 1));
+    if (V->idx() < vRoute->size())
+    {
+        auto const uTWS
+            = TWS::merge(data.durationMatrix(),
+                         uRoute->twsBefore(U->idx()),
+                         vRoute->twsBetween(V->idx() + 1, vRoute->size()),
+                         uRoute->tws(uRoute->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    }
+    else
+    {
+        auto const uTWS = TWS::merge(data.durationMatrix(),
+                                     uRoute->twsBefore(U->idx()),
+                                     uRoute->tws(uRoute->size() + 1));
+
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    }
+
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-    auto const vTWS = TWS::merge(data.durationMatrix(),
-                                 vRoute->twsBefore(V->idx()),
-                                 uRoute->twsAfter(U->idx() + 1));
+    if (U->idx() < uRoute->size())
+    {
+        auto const vTWS
+            = TWS::merge(data.durationMatrix(),
+                         vRoute->twsBefore(V->idx()),
+                         uRoute->twsBetween(U->idx() + 1, uRoute->size()),
+                         vRoute->tws(vRoute->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    }
+    else
+    {
+        auto const vTWS = TWS::merge(data.durationMatrix(),
+                                     vRoute->twsBefore(V->idx()),
+                                     vRoute->tws(vRoute->size() + 1));
+
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    }
+
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
     // Proposed move appends the segment after V to U, and the segment after U

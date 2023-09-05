@@ -4,7 +4,6 @@ from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ProblemData, VehicleType
-from pyvrp.tests.helpers import read
 
 
 @pytest.mark.parametrize(
@@ -68,6 +67,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     ),
     [
         (1, 1, 1, 0, 1, 0, 0, 0),  # late < early
+        (1, 1, 1, 0, -1, 0, 0, 0),  # negative early
         (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
         (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
         (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
@@ -172,15 +172,13 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, vehicle_types, other_matrix, matrix)
 
 
-def test_centroid():
+def test_centroid(ok_small):
     """
     Tests the computation of the centroid of all clients in the data instance.
     """
-    data = read("data/OkSmall.txt")
-
-    centroid = data.centroid()
-    x = [data.client(idx).x for idx in range(1, data.num_clients + 1)]
-    y = [data.client(idx).y for idx in range(1, data.num_clients + 1)]
+    centroid = ok_small.centroid()
+    x = [ok_small.client(idx).x for idx in range(1, ok_small.num_clients + 1)]
+    y = [ok_small.client(idx).y for idx in range(1, ok_small.num_clients + 1)]
 
     assert_allclose(centroid[0], np.mean(x))
     assert_allclose(centroid[1], np.mean(y))
@@ -276,35 +274,63 @@ def test_matrices_are_not_copies():
 
 
 @pytest.mark.parametrize(
-    ("capacity", "num_available", "fixed_cost"),
+    ("capacity", "num_available", "fixed_cost", "tw_early", "tw_late"),
     [
-        (0, 0, 0),  # num_available must be positive
-        (-1, 1, 1),  # capacity cannot be negative
-        (-100, 1, 0),  # this is just wrong
-        (1, 1, -1),  # fixed_cost cannot be negative
-        (0, 1, -100),  # this is just wrong
+        (0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 1, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0),  # this is just wrong
+        (1, 1, -1, 0, 0),  # fixed_cost cannot be negative
+        (0, 1, -100, 0, 0),  # this is just wrong
+        (0, 1, 0, None, 0),  # both shift time windows must be given (if set)
+        (0, 1, 0, 0, None),  # both shift time windows must be given (if set)
+        (0, 1, 0, 1, 0),  # early > late
+        (0, 1, 0, -1, 0),  # negative early
     ],
 )
 def test_vehicle_type_raises_invalid_data(
-    capacity: int, num_available: int, fixed_cost: int
+    capacity: int,
+    num_available: int,
+    fixed_cost: int,
+    tw_early: int,
+    tw_late: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
     arguments.
     """
     with assert_raises(ValueError):
-        VehicleType(capacity, num_available, fixed_cost)
+        VehicleType(capacity, num_available, fixed_cost, tw_early, tw_late)
 
 
 def test_vehicle_type_does_not_raise_for_edge_cases():
     """
     The vehicle type constructor should allow the following edge case, of no
-    capacity and just a single vehicle.
+    capacity, costs, shift time windows, and just a single vehicle.
     """
-    vehicle_type = VehicleType(capacity=0, num_available=1, fixed_cost=0)
+    vehicle_type = VehicleType(
+        capacity=0,
+        num_available=1,
+        fixed_cost=0,
+        tw_early=0,
+        tw_late=0,
+    )
+
     assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.fixed_cost, 0)
+    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.tw_late, 0)
+
+
+def test_vehicle_type_default_values():
+    """
+    Tests that the default values for costs and shift time windows are set
+    correctly.
+    """
+    vehicle_type = VehicleType(capacity=0, num_available=1)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_(vehicle_type.tw_early is None)
+    assert_(vehicle_type.tw_late is None)
 
 
 def test_vehicle_type_attribute_access():
@@ -312,7 +338,16 @@ def test_vehicle_type_attribute_access():
     Smoke test that checks all attributes are equal to the values they were
     given in the constructor's arguments.
     """
-    vehicle_type = VehicleType(capacity=13, num_available=7, fixed_cost=3)
+    vehicle_type = VehicleType(
+        capacity=13,
+        num_available=7,
+        fixed_cost=3,
+        tw_early=17,
+        tw_late=19,
+    )
+
     assert_allclose(vehicle_type.capacity, 13)
     assert_equal(vehicle_type.num_available, 7)
     assert_allclose(vehicle_type.fixed_cost, 3)
+    assert_allclose(vehicle_type.tw_early, 17)
+    assert_allclose(vehicle_type.tw_late, 19)

@@ -2,21 +2,18 @@ from numpy.testing import assert_allclose
 
 from pyvrp import Solution
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.tests.helpers import read
 
 
-def test_broken_pairs_distance():
+def test_broken_pairs_distance(ok_small):
     """
     Test broken pairs distance (BPD) calculations on a number of solutions to
     a small instance.
     """
-    data = read("data/OkSmall.txt")
-
-    sol1 = Solution(data, [[1, 2, 3, 4]])
-    sol2 = Solution(data, [[1, 2], [3], [4]])
-    sol3 = Solution(data, [[3], [4, 1, 2]])
-    sol4 = Solution(data, [[4, 3, 2, 1]])
-    sol5 = Solution(data, [[1, 2, 3]])
+    sol1 = Solution(ok_small, [[1, 2, 3, 4]])
+    sol2 = Solution(ok_small, [[1, 2], [3], [4]])
+    sol3 = Solution(ok_small, [[3], [4, 1, 2]])
+    sol4 = Solution(ok_small, [[4, 3, 2, 1]])
+    sol5 = Solution(ok_small, [[1, 2, 3]])
 
     # BPD of a solution and itself should be zero.
     for sol in [sol1, sol2, sol3, sol4]:
