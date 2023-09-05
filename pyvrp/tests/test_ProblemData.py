@@ -200,10 +200,10 @@ def test_problem_data_replace():
         assert_equal(new_veh_type.capacity, og_veh_type.capacity)
         assert_equal(new_veh_type.num_available, og_veh_type.num_available)
 
-    assert_(new.distance_matrix() != original.distance_matrix())
+    assert_(new.distance_matrix() is not original.distance_matrix())
     assert_allclose(new.distance_matrix(), original.distance_matrix())
 
-    assert_(new.duration_matrix() != original.duration_matrix())
+    assert_(new.duration_matrix() is not original.duration_matrix())
     assert_allclose(new.duration_matrix(), original.duration_matrix())
 
     assert_equal(new.num_clients, original.num_clients)
@@ -230,11 +230,11 @@ def test_problem_data_replace():
         assert_(new_veh_type.capacity != og_veh_type.capacity)
         assert_(new_veh_type.num_available != og_veh_type.num_available)
 
-    assert_(new.distance_matrix() != original.distance_matrix())
+    assert_(new.distance_matrix() is not original.distance_matrix())
     with assert_raises(AssertionError):
         assert_allclose(new.distance_matrix(), original.distance_matrix())
 
-    assert_(new.duration_matrix() != original.duration_matrix())
+    assert_(new.duration_matrix() is not original.duration_matrix())
     assert_allclose(new.duration_matrix(), original.duration_matrix())
 
     assert_equal(new.num_clients, original.num_clients)
