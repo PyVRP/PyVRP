@@ -172,6 +172,85 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, vehicle_types, other_matrix, matrix)
 
 
+def test_problem_data_replace():
+    """
+    Tests that ``ProblemData.replace`` works as expected.
+    """
+    clients = [Client(x=0, y=0), Client(x=0, y=0)]
+    vehicle_types = [VehicleType(1, 2)]
+    other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
+    original = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
+
+    # Let's first replace the original without changing anything. The new
+    # data have different objects, but the same values.
+    new = original.replace()
+
+    assert_(new != original)
+
+    for idx in range(new.num_clients):
+        assert_(new.client(idx) is not original.client(idx))
+        assert_equal(new.client(idx).x, original.client(idx).x)
+        assert_equal(new.client(idx).y, original.client(idx).y)
+
+    for idx in range(new.num_vehicle_types):
+        new_veh_type = new.vehicle_type(idx)
+        og_veh_type = original.vehicle_type(idx)
+
+        assert_(new_veh_type is not og_veh_type)
+        assert_equal(new_veh_type.capacity, og_veh_type.capacity)
+        assert_equal(new_veh_type.num_available, og_veh_type.num_available)
+
+    assert_(new.distance_matrix() != original.distance_matrix())
+    assert_allclose(new.distance_matrix(), original.distance_matrix())
+
+    assert_(new.duration_matrix() != original.duration_matrix())
+    assert_allclose(new.duration_matrix(), original.duration_matrix())
+
+    assert_equal(new.num_clients, original.num_clients)
+    assert_equal(new.num_vehicle_types, original.num_vehicle_types)
+
+    # Now let's replace the clients, vehicle types, and the distance matrix,
+    # each with different values than in the original data.
+    new = original.replace(
+        clients=[Client(x=1, y=1), Client(x=1, y=1)],
+        vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
+        distance_matrix=np.ones((2, 2), dtype=int),
+    )
+
+    for idx in range(new.num_clients):
+        assert_(new.client(idx) is not original.client(idx))
+        assert_(new.client(idx).x != original.client(idx).x)
+        assert_(new.client(idx).y != original.client(idx).y)
+
+    for idx in range(original.num_vehicle_types):  # only compare first type
+        new_veh_type = new.vehicle_type(idx)
+        og_veh_type = original.vehicle_type(idx)
+
+        assert_(new_veh_type is not og_veh_type)
+        assert_(new_veh_type.capacity != og_veh_type.capacity)
+        assert_(new_veh_type.num_available != og_veh_type.num_available)
+
+    assert_(new.distance_matrix() != original.distance_matrix())
+    with assert_raises(AssertionError):
+        assert_allclose(new.distance_matrix(), original.distance_matrix())
+
+    assert_(new.duration_matrix() != original.duration_matrix())
+    assert_allclose(new.duration_matrix(), original.duration_matrix())
+
+    assert_equal(new.num_clients, original.num_clients)
+    assert_(new.num_vehicle_types != original.num_vehicle_types)
+
+    # Replacing data with mismatched arguments should raise.
+    with assert_raises(ValueError):
+        new.replace(clients=[Client(x=1, y=1)])  # matrices are two-dimensional
+
+    with assert_raises(ValueError):
+        new.replace(distance_matrix=np.ones((3, 3), dtype=int))  # two clients
+
+    with assert_raises(ValueError):
+        new.replace(duration_matrix=np.ones((3, 3), dtype=int))  # two-clients
+
+
 def test_centroid(ok_small):
     """
     Tests the computation of the centroid of all clients in the data instance.
