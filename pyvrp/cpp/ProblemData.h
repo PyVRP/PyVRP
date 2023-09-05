@@ -300,8 +300,8 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
-     * Constructs a new ProblemData instance, replacing the given data
-     * with the given values, if provided.
+     * Returns a new ProblemData instance with the same data as this instance,
+     * except for the given parameters, which are used instead.
      *
      * Parameters
      * ----------
@@ -317,8 +317,7 @@ public:
      * Returns
      * -------
      * ProblemData
-     *    A new ProblemData instance with the same data as this instance,
-     *    except for those data replaced.
+     *    A new ProblemData instance with possibly replaced data.
      * */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
