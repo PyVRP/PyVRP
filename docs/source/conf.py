@@ -32,25 +32,10 @@ autodoc_typehints = "signature"
 
 
 # -- sphinx.ext.linkcode
-REVISION_CMD = "git rev-parse --short HEAD"
-
-
-def _get_git_revision() -> str:
-    """
-    Returns the current git revision as a string. If the revision cannot be
-    determined, returns "main".
-    """
-    try:
-        revision = subprocess.check_output(REVISION_CMD.split()).strip()
-    except (subprocess.CalledProcessError, OSError):
-        print("Failed to execute git to get revision: returning 'main'.")
-        return "main"
-    return revision.decode("utf-8")
-
-
 def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     """
-    Returns the URL to the GitHub source code corresponding to a object.
+    Returns the URL to the GitHub source code corresponding to a object,
+    if identified. Otherwise returns None.
 
     Parameters
     ----------
@@ -65,36 +50,39 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
         The URL to the GitHub source code corresponding to the object.
         If a URL cannot be generated, returns None instead.
     """
-
     if domain != "py" or not info.get("module") or not info.get("fullname"):
-        return None  # only allow Python objects with complete module and name.
+        return None
 
     # Find the object.
     module = importlib.import_module(info["module"])
 
-    if "." in info["fullname"]:  # object is a method or attribute of a class
+    if "." not in info["fullname"]:  # object is a class or function
+        obj = getattr(module, info["fullname"])
+    else:  # object is an attribute of a class
         obj_name, attr_name = info["fullname"].split(".")
         obj = getattr(module, obj_name)
+        obj = getattr(obj, attr_name)
 
-        try:
-            obj = getattr(obj, attr_name)  # object is a method of a class
-        except AttributeError:
-            return None  # object is an attribute of a class
-    else:
-        obj = getattr(module, info["fullname"])
-
-    # Find the path to the source file and the object's start line number.
+    # Find the object's source file and starting line number.
     try:
         source_file = inspect.getsourcefile(obj)
-        start_line_no = inspect.getsourcelines(obj)[1]  # first line number
-
-        assert source_file is not None
-        rel_path = os.path.relpath(source_file, os.path.abspath(".."))
-    except Exception:
+        assert source_file is not None, "Source file not found."
+    except (TypeError, AssertionError):
         return None
 
+    parent_dir_path = os.path.abspath("..")
+    rel_path = os.path.relpath(source_file, parent_dir_path)
+    start_line_no = inspect.getsourcelines(obj)[1]
+
+    # Get the current git revision. If it cannot be determined, return "main".
+    try:
+        cmd = "git rev-parse --short HEAD".split()
+        output = subprocess.check_output(cmd).strip()
+        revision = output.decode("utf-8")
+    except (subprocess.CalledProcessError, OSError):
+        revision = "main"
+
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
-    revision = _get_git_revision()
     return f"{base_url}/{revision}/{rel_path}#L{start_line_no}"
 
 
@@ -105,7 +93,7 @@ numpydoc_attributes_as_param_list = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
-nbsphinx_execute = "always"
+nbsphinx_execute = "never"
 
 # -- General configuration
 extensions = [
