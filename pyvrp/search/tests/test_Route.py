@@ -6,7 +6,6 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import Client, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous
 
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
@@ -26,7 +25,9 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     Tests that after initialisation, a Route has the given index and vehicle
     type.
     """
-    data = make_heterogeneous(ok_small, [VehicleType(1, 1), VehicleType(2, 2)])
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(1, 1), VehicleType(2, 2)]
+    )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
     assert_equal(route.idx, idx)
@@ -211,7 +212,7 @@ def test_fixed_cost(ok_small, fixed_cost: int):
     Tests that the fixed cost method returns the assigned vehicle type's fixed
     cost value.
     """
-    data = make_heterogeneous(ok_small, [VehicleType(10, 2, fixed_cost)])
+    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
     route = Route(data, idx=0, vehicle_type=0)
     assert_allclose(route.fixed_cost(), fixed_cost)
 

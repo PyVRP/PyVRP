@@ -14,7 +14,7 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.tests.helpers import make_heterogeneous, read
+from pyvrp.tests.helpers import read
 
 
 @mark.parametrize(
@@ -36,8 +36,8 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     """
     Tests that Solution's route constructor respects vehicle types.
     """
-    data = make_heterogeneous(
-        ok_small, [VehicleType(10, 1), VehicleType(20, 2)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 1), VehicleType(20, 2)]
     )
 
     sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
@@ -59,8 +59,8 @@ def test_route_eq(ok_small):
     """
     Tests ``Route``'s equality operator.
     """
-    data = make_heterogeneous(
-        ok_small, [VehicleType(10, 1), VehicleType(20, 2)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 1), VehicleType(20, 2)]
     )
 
     route1 = Route(data, [1, 2], 0)
@@ -119,8 +119,8 @@ def test_route_constructor_raises_too_many_vehicles(ok_small):
         Solution(ok_small, [[1], [2], [3], [4]])
 
     # Now test the case with multiple vehicle types.
-    data = make_heterogeneous(
-        ok_small, [VehicleType(10, 2), VehicleType(20, 1)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
     )
 
     # Only two routes (of type 0) should not raise.
@@ -297,8 +297,8 @@ def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):
     Tests that vehicles of different capacities result in different (excess)
     load calaculations.
     """
-    data = make_heterogeneous(
-        ok_small, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
     )
 
     # This instance has capacities 10 and 20 for vehicle type 0 and 1. The
@@ -568,8 +568,8 @@ def tests_that_not_specifying_the_vehicle_type_assumes_a_default(ok_small):
     first vehicle type to complete the routes. That could result in a solution
     using too many vehicles of the first type.
     """
-    data = make_heterogeneous(
-        ok_small, vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
     )
 
     sol = Solution(data, [[1, 2, 3, 4]])
@@ -653,8 +653,8 @@ def test_eq_with_multiple_vehicle_types(ok_small):
     # Make sure capacities are different but large enough (>18) to have no
     # violations so have the same attributes, such that we actually test if the
     # assignments are used for the equality comparison.
-    data = make_heterogeneous(
-        ok_small, vehicle_types=[VehicleType(20, 2), VehicleType(30, 1)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(20, 2), VehicleType(30, 1)]
     )
 
     # These two should be the same
@@ -705,8 +705,8 @@ def test_duplicate_vehicle_types(ok_small):
     Tests that it is allowed to have duplicate vehicle types. These will be
     considered completely different during optimisation.
     """
-    data = make_heterogeneous(
-        ok_small, [VehicleType(10, 1), VehicleType(10, 1)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 1), VehicleType(10, 1)]
     )
 
     sol1 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
@@ -723,7 +723,7 @@ def test_str_contains_routes(ok_small, vehicle_types):
     """
     Tests that the Solution's string representation contains each route.
     """
-    data = make_heterogeneous(ok_small, vehicle_types)
+    data = ok_small.replace(vehicle_types=vehicle_types)
     rng = RandomNumberGenerator(seed=2)
 
     for _ in range(5):  # let's do this a few times to really make sure
@@ -820,11 +820,13 @@ def test_fixed_vehicle_cost(
     Tests that the solution tracks the total fixed vehicle costs of the
     vehicles used for its routes.
     """
-    data = make_heterogeneous(
-        ok_small,
-        # First vehicle type is free, second costs 10 per vehicle. The solution
-        # should be able to track this.
-        [VehicleType(10, 2, fixed_cost=0), VehicleType(10, 2, fixed_cost=10)],
+    # First vehicle type is free, second costs 10 per vehicle. The solution
+    # should be able to track this.
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(10, 2, fixed_cost=0),
+            VehicleType(10, 2, fixed_cost=10),
+        ]
     )
 
     routes = [
@@ -853,8 +855,8 @@ def test_route_shift_duration(
     Tests that Route computes time warp due to shift durations correctly on a
     simple, two-client route.
     """
-    data = make_heterogeneous(
-        ok_small, [VehicleType(10, 2, tw_early=tw_early, tw_late=tw_late)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 2, tw_early=tw_early, tw_late=tw_late)]
     )
 
     # Overall route duration is, at the bare minimum, dist(0, 1) + dist(1, 2)

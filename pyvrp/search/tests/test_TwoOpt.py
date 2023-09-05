@@ -20,7 +20,6 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous
 
 
 def test_OkSmall_instance(ok_small):
@@ -69,7 +68,7 @@ def test_OkSmall_multiple_vehicle_types(
     constrained, only a single 2-OPT can be applied. When it's better to do so,
     it should have been applied, and when it's not better, it should not.
     """
-    data = make_heterogeneous(ok_small, vehicle_types)
+    data = ok_small.replace(vehicle_types=vehicle_types)
 
     cost_evaluator = CostEvaluator(10_000, 6)  # large capacity penalty
     rng = RandomNumberGenerator(seed=42)
