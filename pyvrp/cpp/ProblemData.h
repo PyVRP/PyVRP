@@ -307,11 +307,11 @@ public:
      * ----------
      * clients
      *    Optional list of clients (including depot at index 0).
-     * vehicleTypes
+     * vehicle_types
      *    Optional list of vehicle types.
-     * distMat
+     * distance_matrix
      *    Optional distance matrix.
-     * durMat
+     * duration_matrix
      *    Optional duration matrix.
      *
      * Returns
