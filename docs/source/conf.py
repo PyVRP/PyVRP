@@ -32,6 +32,14 @@ autodoc_typehints = "signature"
 
 
 # -- sphinx.ext.linkcode
+def _get_git_revision():
+    cmd = "git rev-parse --short HEAD".split()
+    return subprocess.check_output(cmd).strip().decode("ascii")
+
+
+REVISION = _get_git_revision()
+
+
 def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     """
     Returns the URL to the GitHub source code corresponding to a object,
@@ -74,16 +82,8 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     rel_path = os.path.relpath(source_file, parent_dir_path)
     start_line_no = inspect.getsourcelines(obj)[1]
 
-    # Get the current git revision. If it cannot be determined, return "main".
-    try:
-        cmd = "git rev-parse --short HEAD".split()
-        output = subprocess.check_output(cmd).strip()
-        revision = output.decode("utf-8")
-    except (subprocess.CalledProcessError, OSError):
-        revision = "main"
-
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
-    return f"{base_url}/{revision}/{rel_path}#L{start_line_no}"
+    return f"{base_url}/{REVISION}/{rel_path}#L{start_line_no}"
 
 
 # -- numpydoc
