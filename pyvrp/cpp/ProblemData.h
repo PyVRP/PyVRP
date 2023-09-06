@@ -4,6 +4,7 @@
 #include "Matrix.h"
 #include "Measure.h"
 
+#include <cassert>
 #include <iosfwd>
 #include <optional>
 #include <vector>
@@ -201,36 +202,6 @@ public:
     [[nodiscard]] inline Client const &location(size_t idx) const;
 
     /**
-     * Returns client data for the given client.
-     *
-     * Parameters
-     * ----------
-     * idx
-     *     Client index whose information to retrieve.
-     *
-     * Returns
-     * -------
-     * Client
-     *     A simple data object containing the requested client's information.
-     */
-    [[nodiscard]] inline Client const &client(size_t idx) const;
-
-    /**
-     * Returns depot data for the given depot.
-     *
-     * Parameters
-     * ----------
-     * idx
-     *     Depot index whose information to retrieve.
-     *
-     * Returns
-     * -------
-     * Client
-     *     A simple data object containing the requested depot's information.
-     */
-    [[nodiscard]] inline Client const &depot(size_t idx) const;
-
-    /**
      * Returns a list of all clients in the problem instance.
      *
      * Returns
@@ -421,17 +392,8 @@ public:
 
 ProblemData::Client const &ProblemData::location(size_t idx) const
 {
+    assert(idx < dimension());
     return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
-}
-
-ProblemData::Client const &ProblemData::client(size_t idx) const
-{
-    return clients_[idx];
-}
-
-ProblemData::Client const &ProblemData::depot(size_t idx) const
-{
-    return depots_[idx];
 }
 
 ProblemData::VehicleType const &

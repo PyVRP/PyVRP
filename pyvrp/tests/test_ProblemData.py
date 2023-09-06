@@ -202,9 +202,9 @@ def test_problem_data_replace_no_changes():
     assert_(new is not original)
 
     for idx in range(new.num_clients):
-        assert_(new.client(idx) is not original.client(idx))
-        assert_equal(new.client(idx).x, original.client(idx).x)
-        assert_equal(new.client(idx).y, original.client(idx).y)
+        assert_(new.location(idx) is not original.location(idx))
+        assert_equal(new.location(idx).x, original.location(idx).x)
+        assert_equal(new.location(idx).y, original.location(idx).y)
 
     for idx in range(new.num_vehicle_types):
         new_veh_type = new.vehicle_type(idx)
@@ -245,11 +245,9 @@ def test_problem_data_replace_with_changes():
     )
 
     assert_(new is not original)
-
-    for idx in range(new.num_clients):
-        assert_(new.client(idx) is not original.client(idx))
-        assert_(new.client(idx).x != original.client(idx).x)
-        assert_(new.client(idx).y != original.client(idx).y)
+    assert_(new.location(1) is not original.location(1))
+    assert_(new.location(1).x != original.location(1).x)
+    assert_(new.location(1).y != original.location(1).y)
 
     for idx in range(original.num_vehicle_types):  # only compare first type
         new_veh_type = new.vehicle_type(idx)
@@ -482,34 +480,13 @@ def test_vehicle_type_attribute_access():
     assert_allclose(vehicle_type.tw_late, 19)
 
 
-def test_depot_client_location_access():
+@pytest.mark.parametrize("idx", [5, 6])
+def test_location_raises_invalid_index(ok_small, idx: int):
     """
-    Tests that obtaining the depots and clients in a toy ProblemData instance
-    indeed return the correct data. Depots and clients are both locations, so
-    they may be accessed either through the locations() member, all at once
-    via depots() and clients(), or by index from depot() or client().
+    Tests that calling location(idx) raises when the index is out of bounds.
     """
-    mat = np.array([[0, 0], [0, 0]])
-    data = ProblemData(
-        clients=[Client(x=0, y=1)],
-        depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(1, 2)],
-        distance_matrix=mat,
-        duration_matrix=mat,
-    )
+    assert_equal(ok_small.num_depots, 1)
+    assert_equal(ok_small.num_clients, 4)
 
-    depot = data.depot(0)
-    assert_allclose(depot.x, 0)
-    assert_allclose(depot.y, 0)
-
-    assert_equal(data.location(0), depot)
-    assert_equal(data.depot(0), depot)
-    assert_equal(data.depots(), [depot])
-
-    client = data.client(0)
-    assert_allclose(client.x, 0)
-    assert_allclose(client.y, 1)
-
-    assert_equal(data.location(1), client)
-    assert_equal(data.client(0), client)
-    assert_equal(data.clients(), [client])
+    with assert_raises(IndexError):
+        ok_small.location(idx)

@@ -235,7 +235,7 @@ Solution::Route::Route(ProblemData const &data,
         return;
 
     auto const &vehType = data.vehicleType(vehicleType);
-    auto const &depot = data.depot(vehType.depot);
+    auto const &depot = data.location(vehType.depot);
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter. If the

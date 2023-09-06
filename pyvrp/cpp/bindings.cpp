@@ -135,21 +135,16 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_vehicles",
                                &ProblemData::numVehicles,
                                DOC(pyvrp, ProblemData, numVehicles))
-        .def("location",
-             &ProblemData::location,
-             py::arg("idx"),
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, location))
-        .def("client",
-             &ProblemData::client,
-             py::arg("idx"),
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, client))
-        .def("depot",
-             &ProblemData::depot,
-             py::arg("idx"),
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, depot))
+        .def(
+            "location",
+            [](ProblemData const &data, size_t idx) {
+                if (idx >= data.dimension())
+                    throw py::index_error();
+                return data.location(idx);
+            },
+            py::arg("idx"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, location))
         .def("clients",
              &ProblemData::clients,
              py::return_value_policy::reference_internal,
