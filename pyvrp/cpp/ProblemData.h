@@ -300,9 +300,34 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
-     * Constructs a ProblemData object with the given data. Assumes the list of
-     * clients contains the depot, such that each vector is one longer than the
-     * number of clients.
+     * Returns a new ProblemData instance with the same data as this instance,
+     * except for the given parameters, which are used instead.
+     *
+     * Parameters
+     * ----------
+     * clients
+     *    Optional list of clients (including depot at index 0).
+     * vehicle_types
+     *    Optional list of vehicle types.
+     * distance_matrix
+     *    Optional distance matrix.
+     * duration_matrix
+     *    Optional duration matrix.
+     *
+     * Returns
+     * -------
+     * ProblemData
+     *    A new ProblemData instance with possibly replaced data.
+     * */
+    ProblemData replace(std::optional<std::vector<Client>> &clients,
+                        std::optional<std::vector<VehicleType>> &vehicleTypes,
+                        std::optional<Matrix<Distance>> &distMat,
+                        std::optional<Matrix<Duration>> &durMat);
+
+    /**
+     * Constructs a ProblemData object with the given data. Assumes the list
+     * of clients contains the depot, such that each vector is one longer
+     * than the number of clients.
      *
      * @param clients      List of clients (including depot at index 0).
      * @param vehicleTypes List of vehicle types.
