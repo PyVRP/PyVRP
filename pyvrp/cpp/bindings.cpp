@@ -112,6 +112,14 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
+        .def("replace",
+             &ProblemData::replace,
+             py::arg("clients") = py::none(),
+             py::arg("depots") = py::none(),
+             py::arg("vehicle_types") = py::none(),
+             py::arg("distance_matrix") = py::none(),
+             py::arg("duration_matrix") = py::none(),
+             DOC(pyvrp, ProblemData, replace))
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
                                DOC(pyvrp, ProblemData, numClients))

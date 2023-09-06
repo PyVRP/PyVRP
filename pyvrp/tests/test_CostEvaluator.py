@@ -5,7 +5,6 @@ from numpy.testing import assert_, assert_allclose
 from pytest import mark
 
 from pyvrp import CostEvaluator, Route, Solution, VehicleType
-from pyvrp.tests.helpers import make_heterogeneous
 
 
 def test_load_penalty():
@@ -169,11 +168,13 @@ def test_cost_with_fixed_vehicle_cost(
     Tests that the cost evaluator counts the fixed cost when determining the
     objective value of a solution.
     """
-    data = make_heterogeneous(
-        ok_small,
-        # First vehicle type is free, second costs 10 per vehicle. The solution
-        # should be able to track this.
-        [VehicleType(10, 2, fixed_cost=0), VehicleType(10, 2, fixed_cost=10)],
+    # First vehicle type is free, second costs 10 per vehicle. The solution
+    # should be able to track this.
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(10, 2, fixed_cost=0),
+            VehicleType(10, 2, fixed_cost=10),
+        ]
     )
 
     routes = [

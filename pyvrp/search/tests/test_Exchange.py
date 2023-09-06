@@ -26,7 +26,6 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
-from pyvrp.tests.helpers import make_heterogeneous
 
 
 @mark.parametrize(
@@ -275,7 +274,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     with a different capacity even if there is another empty route in between.
     """
     vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
-    data = make_heterogeneous(ok_small, vehicle_types)
+    data = ok_small.replace(vehicle_types=vehicle_types)
 
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator(100_000, 6)
@@ -328,7 +327,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     not changed), and vary the fixed vehicle cost. The total delta cost should
     also vary as a result.
     """
-    data = make_heterogeneous(ok_small, [VehicleType(10, 2, fixed_cost)])
+    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
     op = op(data)
 
     route1 = Route(data, idx=0, vehicle_type=0)
