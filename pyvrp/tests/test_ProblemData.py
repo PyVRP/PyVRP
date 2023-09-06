@@ -184,7 +184,7 @@ def test_problem_data_replace_no_changes():
 
     new = original.replace()
 
-    assert_(new != original)
+    assert_(new is not original)
 
     for idx in range(new.num_clients):
         assert_(new.client(idx) is not original.client(idx))
@@ -221,12 +221,14 @@ def test_problem_data_replace_with_changes():
 
     # Let's replace the clients, vehicle types, and the distance matrix, each
     # with different values than in the original data. The duration matrix
-    # will be left unchanged.
+    # is left unchanged.
     new = original.replace(
         clients=[Client(x=1, y=1), Client(x=1, y=1)],
         vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
         distance_matrix=np.ones((2, 2), dtype=int),
     )
+
+    assert_(new is not original)
 
     for idx in range(new.num_clients):
         assert_(new.client(idx) is not original.client(idx))
