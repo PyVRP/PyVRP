@@ -172,17 +172,16 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, vehicle_types, other_matrix, matrix)
 
 
-def test_problem_data_replace():
+def test_problem_data_replace_no_changes():
     """
-    Tests that the ``ProblemData.replace`` method works as expected.
+    Tests that when using ``ProblemData.replace()`` without any arguments
+    returns a new instance with different objects, but with the same values.
     """
     clients = [Client(x=0, y=0), Client(x=0, y=0)]
     vehicle_types = [VehicleType(1, 2)]
     other_matrix = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
 
-    # Let's first replace the original data without actually changing anything.
-    # The new instance should have different objects, but with the same values.
     new = original.replace()
 
     assert_(new != original)
@@ -209,8 +208,20 @@ def test_problem_data_replace():
     assert_equal(new.num_clients, original.num_clients)
     assert_equal(new.num_vehicle_types, original.num_vehicle_types)
 
-    # Now let's replace the clients, vehicle types, and the distance matrix,
-    # each with different values than in the original data.
+
+def test_problem_data_replace_with_changes():
+    """
+    Tests that when calling ``ProblemData.replace()`` indeed replaces the
+    data values with those passed to the method.
+    """
+    clients = [Client(x=0, y=0), Client(x=0, y=0)]
+    vehicle_types = [VehicleType(1, 2)]
+    other_matrix = np.zeros((2, 2), dtype=int)
+    original = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
+
+    # Let's replace the clients, vehicle types, and the distance matrix, each
+    # with different values than in the original data. The duration matrix
+    # will be left unchanged.
     new = original.replace(
         clients=[Client(x=1, y=1), Client(x=1, y=1)],
         vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
@@ -240,15 +251,32 @@ def test_problem_data_replace():
     assert_equal(new.num_clients, original.num_clients)
     assert_(new.num_vehicle_types != original.num_vehicle_types)
 
-    # Replacing data with mismatched arguments should raise.
-    with assert_raises(ValueError):
-        new.replace(clients=[Client(x=1, y=1)])  # matrices are two-dimensional
+
+def test_problem_data_replace_raises_mismatched_argument_shapes():
+    """
+    Tests that a ValueError is raised when replacing data that result in
+    mismatched shape between the clients and the distance/duration matrices.
+    """
+    clients = [Client(x=0, y=0), Client(x=0, y=0)]
+    vehicle_types = [VehicleType(1, 2)]
+    other_matrix = np.zeros((2, 2), dtype=int)
+    data = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
 
     with assert_raises(ValueError):
-        new.replace(distance_matrix=np.ones((3, 3), dtype=int))  # two clients
+        data.replace(clients=[Client(x=1, y=1)])  # matrices are 2x2
 
     with assert_raises(ValueError):
-        new.replace(duration_matrix=np.ones((3, 3), dtype=int))  # two-clients
+        data.replace(distance_matrix=np.ones((3, 3), dtype=int))  # two clients
+
+    with assert_raises(ValueError):
+        data.replace(duration_matrix=np.ones((3, 3), dtype=int))  # two-clients
+
+    with assert_raises(ValueError):
+        data.replace(
+            clients=[Client(x=1, y=1)],
+            distance_matrix=np.ones((3, 3), dtype=int),
+            duration_matrix=np.ones((3, 3), dtype=int),
+        )
 
 
 def test_centroid(ok_small):
