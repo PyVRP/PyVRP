@@ -12,7 +12,6 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._crossover import selective_route_exchange as cpp_srex
-from pyvrp.tests.helpers import make_heterogeneous
 
 
 def test_same_parents_same_offspring(ok_small):
@@ -175,8 +174,8 @@ def test_srex_heterogeneous_changed_start_indices(ok_small):
     Tests the case where the initial start indices are changed in SREX for
     heterogeneous routes.
     """
-    data = make_heterogeneous(
-        ok_small, [VehicleType(10, 2), VehicleType(20, 1)]
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
     )
     cost_evaluator = CostEvaluator(20, 6)
 

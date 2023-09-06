@@ -87,6 +87,20 @@ size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
+ProblemData
+ProblemData::replace(std::optional<std::vector<Client>> &clients,
+                     std::optional<std::vector<VehicleType>> &vehicleTypes,
+                     std::optional<Matrix<Distance>> &distMat,
+                     std::optional<Matrix<Duration>> &durMat)
+{
+    auto const newClients = clients.value_or(clients_);
+    auto const newVehicleTypes = vehicleTypes.value_or(vehicleTypes_);
+    auto const newDistMat = distMat.value_or(dist_);
+    auto const newDurMat = durMat.value_or(dur_);
+
+    return ProblemData(newClients, newVehicleTypes, newDistMat, newDurMat);
+}
+
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> distMat,
