@@ -299,15 +299,13 @@ PYBIND11_MODULE(_search, m)
         .def("append",
              &Route::push_back,
              py::arg("node"),
-             py::keep_alive<1, 2>(),  // keep node alive
-             py::keep_alive<2, 1>())  // keep route alive
+             py::keep_alive<1, 2>())  // keep node alive
         .def("clear", &Route::clear)
         .def("insert",
              &Route::insert,
              py::arg("idx"),
              py::arg("node"),
-             py::keep_alive<1, 3>(),  // keep node alive
-             py::keep_alive<3, 1>())  // keep route alive
+             py::keep_alive<1, 3>())  // keep node alive
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
