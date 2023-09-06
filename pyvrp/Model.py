@@ -82,7 +82,7 @@ class Model:
         Model
             A model instance representing the given data.
         """
-        locs = [data.location(idx) for idx in range(data.dimension)]
+        locs = [data.location(idx) for idx in range(data.num_locations)]
         edges = [
             Edge(
                 locs[frm],
@@ -90,8 +90,8 @@ class Model:
                 data.dist(frm, to),
                 data.duration(frm, to),
             )
-            for frm in range(data.dimension)
-            for to in range(data.dimension)
+            for frm in range(data.num_locations)
+            for to in range(data.num_locations)
         ]
 
         self = Model()

@@ -82,7 +82,7 @@ def compute_neighbours(
         proximity = np.minimum(proximity, proximity.T)
 
     n = len(proximity)
-    k = min(params.nb_granular, n - data.num_depots - 1)  # n depots and self
+    k = min(params.nb_granular, data.num_clients - 1)  # excl. self
 
     np.fill_diagonal(proximity, np.inf)  # cannot be in own neighbourhood
     proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
@@ -91,7 +91,7 @@ def compute_neighbours(
     top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
 
     if not params.symmetric_neighbours:
-        return [[] for _ in range(data.num_depots)] + [*top_k.tolist()]
+        return [[] for _ in range(data.num_depots)] + top_k.tolist()
 
     # Construct a symmetric adjacency matrix and return the adjacent clients
     # as the neighbourhood structure.
@@ -120,8 +120,8 @@ def _compute_proximity(
     Returns
     -------
     np.ndarray[float]
-        A numpy array of size :py:attr:`~pyvrp._pyvrp.ProblemData.dimension`
-        by :py:attr:`~pyvrp._pyvrp.ProblemData.dimension`.
+        An array of size :py:attr:`~pyvrp._pyvrp.ProblemData.num_locations`
+        by :py:attr:`~pyvrp._pyvrp.ProblemData.num_locations`.
 
     References
     ----------
@@ -130,7 +130,7 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    clients = [data.location(loc) for loc in range(data.dimension)]
+    clients = [data.location(loc) for loc in range(data.num_locations)]
 
     early = np.asarray([client.tw_early for client in clients])
     late = np.asarray([client.tw_late for client in clients])

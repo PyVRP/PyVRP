@@ -202,7 +202,7 @@ def test_get_neighbours(ok_small):
         None,  # 4: unassigned
     ]
 
-    for loc in range(ok_small.dimension):
+    for loc in range(ok_small.num_locations):
         assert_equal(neighbours[loc], expected[loc])
 
 

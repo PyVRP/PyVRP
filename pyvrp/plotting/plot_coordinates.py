@@ -26,11 +26,11 @@ def plot_coordinates(
     if not ax:
         _, ax = plt.subplots()
 
-    dim = data.dimension
-    x_coords = np.array([data.location(loc).x for loc in range(dim)])
-    y_coords = np.array([data.location(loc).y for loc in range(dim)])
+    num_locs = data.num_locations
+    x_coords = np.array([data.location(loc).x for loc in range(num_locs)])
+    y_coords = np.array([data.location(loc).y for loc in range(num_locs)])
 
-    # This are the depots
+    # These are the depots
     kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
     ax.scatter(
         x_coords[: data.num_depots],

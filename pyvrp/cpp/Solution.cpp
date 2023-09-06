@@ -111,7 +111,7 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.dimension(), std::nullopt)
+    : neighbours_(data.numLocations(), std::nullopt)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<size_t>(data.numClients());
@@ -156,7 +156,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours_(data.dimension(), std::nullopt)
+    : routes_(routes), neighbours_(data.numLocations(), std::nullopt)
 {
     if (routes.size() > data.numVehicles())
     {
@@ -164,7 +164,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         throw std::runtime_error(msg);
     }
 
-    std::vector<size_t> visits(data.dimension(), 0);
+    std::vector<size_t> visits(data.numLocations(), 0);
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
@@ -176,7 +176,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             visits[client]++;
     }
 
-    for (size_t client = data.numDepots(); client != data.dimension(); ++client)
+    for (size_t client = data.numDepots(); client != data.numLocations();
+         ++client)
     {
         if (data.location(client).required && visits[client] == 0)
             numMissingClients_ += 1;

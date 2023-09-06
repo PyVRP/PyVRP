@@ -18,7 +18,7 @@ using SolRoutes = std::vector<Solution::Route>;
 
 namespace
 {
-// Populate the given clients and routes vectors with routes from the solution.
+// Populate the given locs and routes vectors with routes from the solution.
 void setupRoutes(Locations &locs,
                  Routes &routes,
                  SolRoutes const &solRoutes,
@@ -28,10 +28,10 @@ void setupRoutes(Locations &locs,
 
     // Doing this avoids re-allocations, which would break the pointer structure
     // that Route and Route::Node use.
-    locs.reserve(data.dimension());
+    locs.reserve(data.numLocations());
     routes.reserve(solRoutes.size());
 
-    for (size_t loc = 0; loc != data.dimension(); ++loc)
+    for (size_t loc = 0; loc != data.numLocations(); ++loc)
         locs.emplace_back(loc);
 
     size_t idx = 0;

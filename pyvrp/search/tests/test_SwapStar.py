@@ -69,7 +69,7 @@ def test_swap_star_on_RC208_instance(rc208, seed: int):
 
     # Make an initial solution that consists of two routes, by randomly
     # splitting the single-route solution.
-    route = list(range(rc208.num_depots, rc208.dimension))
+    route = list(range(rc208.num_depots, rc208.num_locations))
     split = rng.randint(rc208.num_clients)
     sol = Solution(rc208, [route[:split], route[split:]])
     improved_sol = ls.intensify(sol, cost_evaluator, overlap_tolerance=1)
@@ -107,7 +107,7 @@ def test_swap_star_can_swap_in_place():
         duration_matrix=np.zeros((4, 4), dtype=int),
     )
 
-    nodes = [Node(loc=loc) for loc in range(data.dimension)]
+    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
 
     # First route is 0 -> 1 -> 2 -> 0.
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -161,7 +161,7 @@ def test_wrong_load_calculation_bug():
         duration_matrix=np.zeros((5, 5), dtype=int),
     )
 
-    nodes = [Node(loc=loc) for loc in range(data.dimension)]
+    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
 
     # First route is 0 -> 1 -> 2 -> 0.
     route1 = Route(data, idx=0, vehicle_type=0)

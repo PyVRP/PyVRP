@@ -62,7 +62,7 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    for loc in range(data.dimension):
+    for loc in range(data.num_locations):
         assert_equal(data.location(loc).x, expected[loc][0])
         assert_equal(data.location(loc).y, expected[loc][1])
 
@@ -77,15 +77,15 @@ def test_reading_OkSmall_instance():
 
     # For instances read through VRPLIB/read(), distance is duration. So the
     # dist/durs should be the same as the expected edge weights above.
-    for frm in range(data.dimension):
-        for to in range(data.dimension):
+    for frm in range(data.num_locations):
+        for to in range(data.num_locations):
             assert_equal(data.dist(frm, to), expected[frm][to])
             assert_equal(data.duration(frm, to), expected[frm][to])
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
 
-    for loc in range(data.dimension):
+    for loc in range(data.num_locations):
         assert_equal(data.location(loc).demand, expected[loc])
 
     # From the TIME_WINDOW_SECTION in the file
@@ -97,14 +97,14 @@ def test_reading_OkSmall_instance():
         (12000, 19500),
     ]
 
-    for loc in range(data.dimension):
+    for loc in range(data.num_locations):
         assert_equal(data.location(loc).tw_early, expected[loc][0])
         assert_equal(data.location(loc).tw_late, expected[loc][1])
 
     # From the SERVICE_TIME_SECTION in the file
     expected = [0, 360, 360, 420, 360]
 
-    for loc in range(data.dimension):
+    for loc in range(data.num_locations):
         assert_equal(data.location(loc).service_duration, expected[loc])
 
 
@@ -116,7 +116,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
 
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
-    assert_equal(data.dimension, 22)
+    assert_equal(data.num_locations, 22)
     assert_equal(data.vehicle_type(0).capacity, 6_000)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
@@ -138,7 +138,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     assert_equal(data.dist(1, 0), 493)
 
     # This is a CVRP instance, so all other fields should have default values.
-    for loc in range(data.dimension):
+    for loc in range(data.num_locations):
         assert_equal(data.location(loc).service_duration, 0)
         assert_equal(data.location(loc).tw_early, 0)
         assert_equal(data.location(loc).tw_late, 0)
@@ -157,7 +157,7 @@ def test_reading_RC208_instance():  # Solomon style instance
 
     assert_equal(data.num_clients, 100)
     assert_equal(data.num_depots, 1)
-    assert_equal(data.dimension, 101)
+    assert_equal(data.num_locations, 101)
     assert_equal(data.vehicle_type(0).capacity, 1_000)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision

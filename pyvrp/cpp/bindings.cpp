@@ -126,9 +126,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_depots",
                                &ProblemData::numDepots,
                                DOC(pyvrp, ProblemData, numDepots))
-        .def_property_readonly("dimension",
-                               &ProblemData::dimension,
-                               DOC(pyvrp, ProblemData, dimension))
+        .def_property_readonly("num_locations",
+                               &ProblemData::numLocations,
+                               DOC(pyvrp, ProblemData, numLocations))
         .def_property_readonly("num_vehicle_types",
                                &ProblemData::numVehicleTypes,
                                DOC(pyvrp, ProblemData, numVehicleTypes))
@@ -138,7 +138,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(
             "location",
             [](ProblemData const &data, size_t idx) {
-                if (idx >= data.dimension())
+                if (idx >= data.numLocations())
                     throw py::index_error();
                 return data.location(idx);
             },

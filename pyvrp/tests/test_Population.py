@@ -242,7 +242,7 @@ def test_elite_solutions_are_not_purged(rc208, nb_elite: int):
     elite_sols = best_sols[:nb_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
-    single_route = list(range(rc208.num_depots, rc208.dimension))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     pop.add(Solution(rc208, [single_route]), cost_evaluator)
 
     # After the purge, there should remain min_pop_size infeasible solutions.

@@ -314,15 +314,15 @@ public:
     [[nodiscard]] size_t numDepots() const;
 
     /**
-     * Dimension of this problem instance, that is, the number of depots plus
-     * the number of clients in the instance.
+     * Number of locations in this problem instance, that is, the number of
+     * depots plus the number of clients in the instance.
      *
      * Returns
      * -------
      * int
-     *     Number of depots in the instance.
+     *     Number of depots plus the number of clients in the instance.
      */
-    [[nodiscard]] size_t dimension() const;
+    [[nodiscard]] size_t numLocations() const;
 
     /**
      * Number of vehicle types in this problem instance.
@@ -392,7 +392,7 @@ public:
 
 ProblemData::Client const &ProblemData::location(size_t idx) const
 {
-    assert(idx < dimension());
+    assert(idx < numLocations());
     return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
 }
 

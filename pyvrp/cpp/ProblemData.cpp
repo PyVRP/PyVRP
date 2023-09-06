@@ -95,7 +95,7 @@ size_t ProblemData::numClients() const { return clients_.size(); }
 
 size_t ProblemData::numDepots() const { return depots_.size(); }
 
-size_t ProblemData::dimension() const { return numDepots() + numClients(); }
+size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
@@ -136,13 +136,13 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
     if (depots.size() != 1)
         throw std::invalid_argument("Expected a single depot!");
 
-    if (dist_.numRows() != dimension() || dist_.numCols() != dimension())
+    if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
         throw std::invalid_argument("Distance matrix shape does not match the "
-                                    "problem dimension.");
+                                    "problem size.");
 
-    if (dur_.numRows() != dimension() || dur_.numCols() != dimension())
+    if (dur_.numRows() != numLocations() || dur_.numCols() != numLocations())
         throw std::invalid_argument("Duration matrix shape does not match the "
-                                    "problem dimension.");
+                                    "problem size.");
 
     auto const &depot = depots_[0];
 

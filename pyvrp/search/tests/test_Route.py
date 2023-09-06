@@ -345,14 +345,14 @@ def test_route_tws_access(ok_small):
     the route.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(ok_small.num_depots, ok_small.dimension):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
     route.update()
 
-    for loc in [0, 1, 2, 3, 4, 5]:  # = [depot, *clients, depot]
-        client = ok_small.location(loc % (len(route) + 1))
-        tws = route.tws(loc)
+    for idx in range(len(route) + 2):
+        client = ok_small.location(idx % (len(route) + 1))
+        tws = route.tws(idx)
 
         assert_equal(tws.tw_early(), client.tw_early)
         assert_equal(tws.tw_late(), client.tw_late)
@@ -388,7 +388,7 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot(ok_small):
     ``tws_after()`` when one side is the depot.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(ok_small.num_depots, ok_small.dimension):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
     route.update()
@@ -413,7 +413,7 @@ def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
     exactly where in the route time warp occurs.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(ok_small.num_depots, ok_small.dimension):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
     assert_equal(len(route), ok_small.num_clients)
@@ -441,7 +441,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     dist_between() with the start and end depot indices as arguments.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(ok_small.num_depots, ok_small.dimension):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
     route.update()
 

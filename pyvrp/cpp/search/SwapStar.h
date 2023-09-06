@@ -116,8 +116,8 @@ public:
 
     explicit SwapStar(ProblemData const &data)
         : LocalSearchOperator<Route>(data),
-          cache(data.numVehicles(), data.dimension()),
-          removalCosts(data.numVehicles(), data.dimension()),
+          cache(data.numVehicles(), data.numLocations()),
+          removalCosts(data.numVehicles(), data.numLocations()),
           updated(data.numVehicles(), true)
     {
     }

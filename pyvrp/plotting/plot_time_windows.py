@@ -30,7 +30,7 @@ def plot_time_windows(
     tw = np.array(
         [
             [data.location(loc).tw_early, data.location(loc).tw_late]
-            for loc in range(data.dimension)
+            for loc in range(data.num_locations)
         ]
     )
     # Lexicographic sort so for equal start we get shorter TW first
@@ -38,7 +38,7 @@ def plot_time_windows(
 
     lines = [((i, early), (i, late)) for i, (early, late) in enumerate(tw)]
     ax.add_collection(LineCollection(lines, linewidths=1))
-    ax.set_xlim([0, data.dimension])
+    ax.set_xlim([0, data.num_locations])
     ax.set_ylim([tw.min(), tw.max()])
 
     ax.set_title(title)

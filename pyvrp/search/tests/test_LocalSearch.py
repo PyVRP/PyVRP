@@ -33,7 +33,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours = [[] for _ in range(ok_small.dimension)]
+    neighbours = [[] for _ in range(ok_small.num_locations)]
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_node_operator(Exchange10(ok_small))
     ls.add_node_operator(Exchange11(ok_small))

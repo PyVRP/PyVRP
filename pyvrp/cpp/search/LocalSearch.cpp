@@ -55,7 +55,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
-    std::vector<int> lastTestedNodes(data.dimension(), -1);
+    std::vector<int> lastTestedNodes(data.numLocations(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
@@ -349,19 +349,20 @@ void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
-    if (neighbours.size() != data.dimension())
+    if (neighbours.size() != data.numLocations())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
-    for (size_t client = data.numDepots(); client != data.dimension(); ++client)
+    for (size_t client = data.numDepots(); client != data.numLocations();
+         ++client)
     {
         auto const beginPos = neighbours[client].begin();
         auto const endPos = neighbours[client].end();
 
-        auto const clientPos = std::find(beginPos, endPos, client);
-        auto pred = [&](auto item) { return item < data.numDepots(); };
-        auto const hasDepot = std::any_of(beginPos, endPos, pred);
+        auto const pred = [&](auto item) {
+            return item == client || item < data.numDepots();
+        };
 
-        if (clientPos != endPos || hasDepot)
+        if (std::any_of(beginPos, endPos, pred))
         {
             throw std::runtime_error("Neighbourhood of client "
                                      + std::to_string(client)
@@ -379,7 +380,7 @@ LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      neighbours(data.dimension()),
+      neighbours(data.numLocations()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
@@ -389,8 +390,8 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     std::iota(orderNodes.begin(), orderNodes.end(), 1);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    nodes.reserve(data.dimension());
-    for (size_t loc = 0; loc != data.dimension(); ++loc)
+    nodes.reserve(data.numLocations());
+    for (size_t loc = 0; loc != data.numLocations(); ++loc)
         nodes.emplace_back(loc);
 
     routes.reserve(data.numVehicles());

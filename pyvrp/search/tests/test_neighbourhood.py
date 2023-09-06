@@ -122,7 +122,7 @@ def test_compute_neighbours(
     )
     neighbours = compute_neighbours(rc208, params)
 
-    assert_equal(len(neighbours), rc208.dimension)
+    assert_equal(len(neighbours), rc208.num_locations)
     assert_equal(len(neighbours[0]), 0)
 
     # We compare sets because the expected data (from the old C++
@@ -142,7 +142,7 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     params = NeighbourhoodParams(0, 0, small_cvrp.num_clients)
     neighbours = compute_neighbours(small_cvrp, params)
-    clients = list(range(small_cvrp.num_depots, small_cvrp.dimension))
+    clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
 
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
@@ -163,7 +163,7 @@ def test_symmetric_neighbours(rc208):
     params = NeighbourhoodParams(symmetric_neighbours=True)
     sym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
 
-    for client in range(rc208.dimension):
+    for client in range(rc208.num_locations):
         for neighbour in sym_neighbours[client]:
             assert_(client in sym_neighbours[neighbour])
 
