@@ -85,7 +85,9 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     start_line_no = inspect.getsourcelines(obj)[1]
 
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
-    return f"{base_url}/{REVISION}/{rel_path}#L{start_line_no}"
+    url = f"{base_url}/{REVISION}/{rel_path}#L{start_line_no}"
+    print(url)
+    return url
 
 
 # -- numpydoc
