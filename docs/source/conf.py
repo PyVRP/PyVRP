@@ -80,9 +80,10 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     except (TypeError, AssertionError):
         return None
 
-    parent_dir_path = os.path.abspath("..")
+    parent_dir_path = os.path.abspath("../../")
     rel_path = os.path.relpath(source_file, parent_dir_path)
     start_line_no = inspect.getsourcelines(obj)[1]
+    print(source_file, rel_path, parent_dir_path)
 
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
     url = f"{base_url}/{REVISION}/{rel_path}#L{start_line_no}"
