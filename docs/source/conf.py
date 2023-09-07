@@ -39,6 +39,8 @@ def _get_git_revision():
 
 REVISION = _get_git_revision()
 
+print(f"Git revision: {REVISION}")
+
 
 def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     """
