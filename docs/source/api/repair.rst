@@ -19,4 +19,4 @@ The :mod:`pyvrp.repair` module provides operators that are responsible for repai
 
       :raises: ValueError: When the solution is empty but the list of unplanned clients is not.
 
-   ..autofunction:: nearest_route_insert
+   .. autofunction:: nearest_route_insert

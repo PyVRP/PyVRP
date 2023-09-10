@@ -19,8 +19,9 @@ def selective_route_exchange(
     This crossover operator due to Nagata and Kobayashi [1]_ combines routes
     from both parents to generate a new offspring solution. It does this by
     carefully selecting routes from the second parent that could be exchanged
-    with routes from the first parent. This often results in incomplete
-    offspring that can then be repaired using a search method.
+    with routes from the first parent. After exchanging these routes, the
+    resulting offspring solution is repaired using
+    :func:`~pyvrp.repair._repair.nearest_route_insert`.
 
     Parameters
     ----------
