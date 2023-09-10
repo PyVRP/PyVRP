@@ -34,27 +34,29 @@ Solution pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
         Route::Node *U = &clients[client];
         assert(!U->route());
 
-        auto const x = static_cast<double>(data.client(client).x);
-        auto const y = static_cast<double>(data.client(client).y);
-
         // Determine route with centroid nearest to this client.
         auto const cmp = [&](auto const &a, auto const &b) {
-            if (a.empty())
+            if (a.empty() && !b.empty())
                 return false;
 
-            if (b.empty())
+            if (b.empty() && !a.empty())
                 return true;
+
+            auto const x = static_cast<double>(data.client(client).x);
+            auto const y = static_cast<double>(data.client(client).y);
 
             auto const [aX, aY] = a.centroid();
             auto const [bX, bY] = b.centroid();
+
             return std::hypot(x - aX, y - aY) < std::hypot(x - bX, y - bY);
         };
 
-        auto &route = *std::max_element(routes.begin(), routes.end(), cmp);
+        auto &route = *std::min_element(routes.begin(), routes.end(), cmp);
 
-        // Find best insertion point in selected route.
+        // Find best insertion point in selected route, either after a client,
+        // or, initially, after the depot.
         Cost bestCost = insertCost(U, route[0], data, costEvaluator);
-        auto offset = 0;
+        auto offset = 1;
 
         for (auto *V : route)  // evaluate after V
         {

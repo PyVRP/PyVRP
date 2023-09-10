@@ -37,5 +37,6 @@ PYBIND11_MODULE(_repair, m)
           py::arg("routes"),
           py::arg("unplanned"),
           py::arg("data"),
-          py::arg("cost_evaluator"));
+          py::arg("cost_evaluator"),
+          DOC(pyvrp, repair, nearestRouteInsert));
 }

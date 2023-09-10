@@ -1,6 +1,6 @@
 import itertools
 
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
@@ -121,29 +121,24 @@ def test_srex_sorts_routes(ok_small):
             assert_equal(permuted_offspring, offspring)
 
 
-def test_srex_does_not_reinsert_unplanned_clients(ok_small):
+def test_srex_nearest_insert(ok_small):
     """
-    Tests the case where the routes are not perfectly complementary. In that
-    case, some clients will no longer in the solution after crossover: SREX
-    does not reinsert those, but instead leaves that to the search method.
+    Tests the case where nearest route insert is used during SREX crossover.
     """
     cost_evaluator = CostEvaluator(20, 6)
 
-    # Note that when routes are exchanged, some customers will necessarily be
-    # removed from the solution because the routes are overlapping. The
-    # offspring are thus incomplete.
     sol1 = Solution(ok_small, [[3, 4], [1, 2]])
     sol2 = Solution(ok_small, [[2, 3], [4, 1]])
 
     # The start indices do not change because there are no improving moves.
     # So, sol1's route [3, 4] will be replaced by sol2's route [2, 3].
     # This results in two incomplete offspring [[2, 3], [1]] and [[3], [1, 2]],
-    # the first with penalised cost 7898, the second with cost 9495. Thus, the
-    # first one is returned.
+    # which are both repaired using the nearest route insert operator. After
+    # repair, we obtain the offspring [[2, 3, 4], [1]] and [[3, 4], [1, 2]].
+    # The first one is returned since it has the lowest cost.
     offspring = cpp_srex((sol1, sol2), ok_small, cost_evaluator, (0, 0), 1)
-    expected = Solution(ok_small, [[2, 3], [1]])
+    expected = Solution(ok_small, [[2, 3, 4], [1]])
     assert_equal(offspring, expected)
-    assert_(not expected.is_complete())
 
 
 def test_srex_changed_start_indices(ok_small):

@@ -1,6 +1,7 @@
 #include "selective_route_exchange.h"
 
 #include "DynamicBitset.h"
+#include "repair/nearest_route_insert.h"
 
 #include <cmath>
 
@@ -222,8 +223,18 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
             routes2.emplace_back(data, visits2[r], routesA[r].vehicleType());
     }
 
-    auto const sol1 = Solution(data, routes1);
-    auto const sol2 = Solution(data, routes2);
+    // We have not yet inserted unplanned clients (those that were in the
+    // removed routes of A, but not the inserted routes of B). Let's insert
+    // those now.
+    std::vector<size_t> unplanned;
+    for (size_t client = 1; client <= data.numClients(); ++client)
+        if (selectedA[client] && !selectedB[client])
+            unplanned.push_back(client);
+
+    auto const sol1
+        = repair::nearestRouteInsert(routes1, unplanned, data, costEvaluator);
+    auto const sol2
+        = repair::nearestRouteInsert(routes2, unplanned, data, costEvaluator);
 
     auto const cost1 = costEvaluator.penalisedCost(sol1);
     auto const cost2 = costEvaluator.penalisedCost(sol2);

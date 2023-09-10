@@ -14,9 +14,10 @@ namespace pyvrp::repair
  * of unplanned clients into one of the given routes. It does so by first
  * determining which route has a center point closest to the client, and then
  * evaluating all possible insert moves of the client into that closest route.
- * The best move is applied. If there are quite a few routes, this operator
- * has a runtime much closer to linear (
- * *cf.* :func:`~pyvrp.repair._repair.greedy_repair`).
+ * The best move is applied. This operator has a quadratic runtime in the worst
+ * case, but is typically much more efficient than
+ * :func:`~pyvrp.repair._repair.greedy_repair`, at the cost of some solution
+ * quality.
  *
  * Parameters
  * ----------
