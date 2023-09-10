@@ -4,6 +4,7 @@
 #include "TimeWindowSegment.h"
 #include "search/primitives.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <limits>
@@ -36,28 +37,22 @@ Solution pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
         auto const x = static_cast<double>(data.client(client).x);
         auto const y = static_cast<double>(data.client(client).y);
 
-        // Determine non-empty route with centroid nearest to this client.
-        auto bestDistance = std::numeric_limits<double>::max();
-        auto bestRouteIdx = 0;
-        for (size_t rIdx = 0; rIdx != routes.size(); ++rIdx)
-        {
-            auto const &route = routes[rIdx];
+        // Determine route with centroid nearest to this client.
+        auto const cmp = [&](auto const &a, auto const &b) {
+            if (a.empty())
+                return false;
 
-            if (route.empty())
-                continue;
+            if (b.empty())
+                return true;
 
-            auto const distance = std::hypot(x - route.centroid().first,
-                                             y - route.centroid().second);
+            auto const [aX, aY] = a.centroid();
+            auto const [bX, bY] = b.centroid();
+            return std::hypot(x - aX, y - aY) < std::hypot(x - bX, y - bY);
+        };
 
-            if (distance < bestDistance)
-            {
-                bestRouteIdx = rIdx;
-                bestDistance = distance;
-            }
-        }
+        auto &route = *std::max_element(routes.begin(), routes.end(), cmp);
 
         // Find best insertion point in selected route.
-        auto &route = routes[bestRouteIdx];
         Cost bestCost = insertCost(U, route[0], data, costEvaluator);
         auto offset = 0;
 
