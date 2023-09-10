@@ -27,10 +27,9 @@ namespace pyvrp::crossover
  * @param startIndices     Start indices of routes in parent solutions.
  * @param numMovedRoutes   Number of routes to move.
  * @return A new offspring.
- *
- * Note that this is an internal docstring: the SREX operator is wrapped on
- * the Python side.
  */
+// The above is an internal docstring: the SREX operator is wrapped on the
+// Python side, and also documented there.
 Solution selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,

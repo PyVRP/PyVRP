@@ -38,7 +38,8 @@ namespace pyvrp::repair
  * Raises
  * ------
  * ValueError
- *     When the solution is empty but the list of unplanned clients is not.
+ *     When the list of routes is empty but the list of unplanned clients is
+ *     not.
  */
 Solution nearestRouteInsert(std::vector<Solution::Route> const &routes,
                             std::vector<size_t> const &unplanned,
