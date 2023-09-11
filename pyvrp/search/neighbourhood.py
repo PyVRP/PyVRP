@@ -137,14 +137,15 @@ def _compute_proximity(
     late = np.asarray([client.tw_late for client in clients])
     service = np.asarray([client.service_duration for client in clients])
     prize = np.asarray([client.prize for client in clients])
-    duration = np.asarray(data.duration_matrix(), dtype=float)
+    duration = data.duration_matrix()
 
-    min_wait_time = early[..., :] - duration - service[:, ...] - late[:, ...]
-    min_time_warp = early[:, ...] + service[:, ...] + duration - late[..., :]
+    # Minimum wait time and time warp of visiting j directly after i.
+    min_wait = early[None, :] - duration - service[:, None] - late[:, None]
+    min_tw = early[:, None] + service[:, None] + duration - late[None, :]
 
     return (
         np.asarray(data.distance_matrix(), dtype=float)
-        + weight_wait_time * np.maximum(min_wait_time, 0)
-        + weight_time_warp * np.maximum(min_time_warp, 0)
-        - prize[..., :]
+        + weight_wait_time * np.maximum(min_wait, 0)
+        + weight_time_warp * np.maximum(min_tw, 0)
+        - prize[None, :]
     )
