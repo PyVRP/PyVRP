@@ -1,4 +1,5 @@
 #include "greedy_repair.h"
+#include "nearest_route_insert.h"
 #include "repair_docs.h"
 
 #include <pybind11/pybind11.h>
@@ -30,4 +31,12 @@ PYBIND11_MODULE(_repair, m)
           py::arg("unplanned"),
           py::arg("data"),
           py::arg("cost_evaluator"));
+
+    m.def("nearest_route_insert",
+          &pyvrp::repair::nearestRouteInsert,
+          py::arg("routes"),
+          py::arg("unplanned"),
+          py::arg("data"),
+          py::arg("cost_evaluator"),
+          DOC(pyvrp, repair, nearestRouteInsert));
 }

@@ -485,3 +485,19 @@ def test_shift_duration_depot_time_window_interaction(
         tws = route.tws(idx)
         assert_allclose(tws.tw_early(), expected_tw[0])
         assert_allclose(tws.tw_late(), expected_tw[1])
+
+
+@pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
+def test_route_centroid(ok_small, clients):
+    """
+    Tests that Route computes the center point of client locations correctly.
+    """
+    route = Route(ok_small, 0, 0)
+    for client in clients:
+        route.append(Node(loc=client))
+
+    route.update()
+
+    x = [ok_small.client(client).x for client in clients]
+    y = [ok_small.client(client).y for client in clients]
+    assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))

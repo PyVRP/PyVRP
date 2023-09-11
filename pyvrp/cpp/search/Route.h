@@ -92,7 +92,7 @@ private:
 
     std::vector<Node *> nodes;     // Nodes in this route, including depots
     std::vector<NodeStats> stats;  // (Cumulative) statistics along the route
-    std::pair<double, double> centroid;  // Center point of route's clients
+    std::pair<double, double> centroid_;  // Center point of route's clients
 
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
@@ -200,6 +200,11 @@ public:
      * Calculates the load for segment [start, end].
      */
     [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
+
+    /**
+     * Center point of the client locations on this route.
+     */
+    [[nodiscard]] std::pair<double, double> const &centroid() const;
 
     /**
      * @return This route's vehicle type.

@@ -28,13 +28,15 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
+std::pair<double, double> const &Route::centroid() const { return centroid_; }
+
 size_t Route::vehicleType() const { return vehTypeIdx_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
     auto const [dataX, dataY] = data.centroid();
-    auto const [thisX, thisY] = centroid;
-    auto const [otherX, otherY] = other.centroid;
+    auto const [thisX, thisY] = centroid_;
+    auto const [otherX, otherY] = other.centroid_;
 
     // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
     auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
@@ -138,7 +140,7 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    centroid = {0, 0};
+    centroid_ = {0, 0};
 
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
@@ -147,8 +149,8 @@ void Route::update()
 
         if (!node->isDepot())
         {
-            centroid.first += static_cast<double>(clientData.x) / size();
-            centroid.second += static_cast<double>(clientData.y) / size();
+            centroid_.first += static_cast<double>(clientData.x) / size();
+            centroid_.second += static_cast<double>(clientData.y) / size();
         }
 
         auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
