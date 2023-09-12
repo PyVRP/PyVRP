@@ -1,29 +1,29 @@
-Supported VRPLIB fields
-=======================
+The VRPLIB format
+=================
 
-PyVRP supports reading benchmark instances in VRPLIB format through the `VRPLIB <https://github.com/leonlan/VRPLIB>`_ package.
-Although generally used, this format is not all that well standardised, so it merits some description which fields PyVRP supports.
-In addition to standard fields, PyVRP uses several fields that are not commonly found in (other) benchmark instances.
-On this page, we explain all fields and data sections that PyVRP understands.
+PyVRP supports reading benchmark instances in the VRPLIB format through the `VRPLIB <https://github.com/leonlan/VRPLIB>`_ package.
+Although generally used, this format is not all that well standardised, so it merits some description what PyVRP actually supports.
+In addition to standard specifications and data sections, PyVRP uses several data sections that are not commonly found in (other) benchmark instances.
+On this page, we explain all specifications and data sections that PyVRP understands.
 
-This can be useful in understanding how benchmark instances should be formatted to work with PyVRP.
-All instances in our `instances repository <https://github.com/PyVRP/Instances>`_ adhere to this format, and use the fields and data sections described below.
+This page can be useful in understanding how benchmark instances should be formatted to work with PyVRP's :meth:`~pyvrp.read.read` function.
+All instances in our `instances repository <https://github.com/PyVRP/Instances>`_ adhere to this format, and use the specifications and data sections described below.
 
 .. note::
 
-   Any section in a VRPLIB-formatted file that is *not* in the glossary below is not understood by PyVRP, and will be silently ignored.
+   Any specification or data section in a VRPLIB-formatted file that is *not* in the glossary below is not understood by PyVRP, and will be silently ignored.
 
+
+Specifications
+--------------
+
+Specifications are key-value pairs.
+PyVRP supports the following specifications:
 
 .. glossary::
    :sorted:
 
    ``CAPACITY``
-      TODO
-
-   ``DEMAND_SECTION``
-      TODO
-   
-   ``DEPOT_SECTION``
       TODO
 
    ``DIMENSION``
@@ -32,10 +32,29 @@ All instances in our `instances repository <https://github.com/PyVRP/Instances>`
    ``EDGE_WEIGHT_FORMAT``
       TODO
 
-   ``EDGE_WEIGHT_SECTION``
+   ``EDGE_WEIGHT_TYPE``
       TODO
 
-   ``EDGE_WEIGHT_TYPE``
+   ``VEHICLES``
+      TODO
+
+
+Data sections
+-------------
+
+Data sections are array-like values that specify the actual problem data.
+PyVRP supports the following data sections:
+
+.. glossary::
+   :sorted:
+
+   ``DEMAND_SECTION``
+      TODO
+   
+   ``DEPOT_SECTION``
+      TODO
+
+   ``EDGE_WEIGHT_SECTION``
       TODO
 
    ``NODE_COORD_SECTION``
@@ -51,7 +70,4 @@ All instances in our `instances repository <https://github.com/PyVRP/Instances>`
       TODO
 
    ``TIME_WINDOW_SECTION``
-      TODO
-
-   ``VEHICLES``
       TODO
