@@ -31,7 +31,7 @@ class LocalSearch
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
-    std::vector<Route::Node> clients;
+    std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
     std::vector<NodeOp *> nodeOps;

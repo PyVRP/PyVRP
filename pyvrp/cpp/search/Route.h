@@ -388,7 +388,7 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end < nodes.size());
 
-    auto const atStart = data.client(nodes[start]->client()).demand;
+    auto const atStart = data.location(nodes[start]->client()).demand;
     auto const startLoad = stats[start].cumLoad;
     auto const endLoad = stats[end].cumLoad;
 

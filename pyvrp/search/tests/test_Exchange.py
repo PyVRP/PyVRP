@@ -52,7 +52,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(operator(rc208))
 
-    single_route = list(range(1, rc208.num_clients + 1))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -76,7 +76,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(operator(rc208))
 
-    single_route = list(range(1, rc208.num_clients + 1))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -222,7 +222,6 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     feasibility before applying a move that improves the travelled distance.
     """
     clients = [
-        Client(x=0, y=0, tw_early=0, tw_late=10),
         Client(x=1, y=0, tw_early=0, tw_late=5),
         Client(x=2, y=0, tw_early=0, tw_late=5),
     ]
@@ -231,6 +230,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     # however, the best route is 0 -> 2 -> 1 -> 0.
     data = ProblemData(
         clients=clients,
+        depots=[Client(x=0, y=0, tw_early=0, tw_late=10)],
         vehicle_types=[VehicleType(0, 1)],
         distance_matrix=np.asarray(
             [
@@ -284,7 +284,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     # client moves allowed by it will not improve the initial solution created
     # below. So the only improvements (1, 0)-exchange can make must come from
     # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours = [[] for _ in range(data.num_locations)]
     neighbours[2].append(1)
 
     ls = LocalSearch(data, rng, neighbours)

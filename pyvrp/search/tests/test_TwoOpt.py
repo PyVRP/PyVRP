@@ -108,7 +108,7 @@ def test_RC208_instance(rc208, seed: int):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(TwoOpt(rc208))
 
-    single_route = list(range(1, rc208.num_clients + 1))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -124,7 +124,7 @@ def test_within_route_move(ok_small):
     that such a move is correctly evaluated and applied on a single-route
     solution to the OkSmall instance.
     """
-    nodes = [Node(loc=loc) for loc in range(ok_small.num_clients + 1)]
+    nodes = [Node(loc=loc) for loc in range(ok_small.num_locations)]
 
     # Current route is 4 -> 1 -> 2 -> 3.
     route = Route(ok_small, idx=0, vehicle_type=0)
@@ -166,7 +166,8 @@ def test_move_involving_empty_routes():
     non-empty route (or vice-versa) is correctly evaluated.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
+        clients=[Client(x=1, y=1), Client(x=1, y=0)],
+        depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(0, 1, 10), VehicleType(0, 1, 100)],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),

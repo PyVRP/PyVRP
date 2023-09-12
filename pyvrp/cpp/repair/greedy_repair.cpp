@@ -10,7 +10,7 @@ using pyvrp::Solution;
 using pyvrp::search::insertCost;
 using pyvrp::search::Route;
 
-using Clients = std::vector<Route::Node>;
+using Locations = std::vector<Route::Node>;
 using Routes = std::vector<Route>;
 using SolRoutes = std::vector<Solution::Route>;
 
@@ -30,13 +30,13 @@ Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
 
-    Clients clients;
+    Locations locs;
     Routes routes;
-    setupRoutes(clients, routes, solRoutes, data);
+    setupRoutes(locs, routes, solRoutes, data);
 
     for (auto const client : unplanned)
     {
-        Route::Node *U = &clients[client];
+        Route::Node *U = &locs[client];
         assert(!U->route());
 
         Route::Node *UAfter = nullptr;

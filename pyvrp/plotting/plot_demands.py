@@ -26,12 +26,10 @@ def plot_demands(
     if not ax:
         _, ax = plt.subplots()
 
-    dim = data.num_clients + 1
-    # Exclude depot
-    demand = np.array([data.client(client).demand for client in range(1, dim)])
+    demand = np.array([client.demand for client in data.clients()])
     demand = np.sort(demand)
 
-    ax.bar(np.arange(1, dim), demand)
+    ax.bar(np.arange(data.num_depots, data.num_locations), demand)
 
     if title is None:
         num_types = data.num_vehicle_types

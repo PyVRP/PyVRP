@@ -75,8 +75,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
     auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
 
-    DynamicBitset selectedA(data.numClients() + 1);
-    DynamicBitset selectedB(data.numClients() + 1);
+    DynamicBitset selectedA(data.numLocations());
+    DynamicBitset selectedB(data.numLocations());
 
     // Routes are sorted on polar angle, so selecting adjacent routes in both
     // parents should result in a large overlap when the start indices are

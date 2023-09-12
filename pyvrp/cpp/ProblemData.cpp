@@ -76,32 +76,47 @@ ProblemData::VehicleType::VehicleType(Load capacity,
     }
 }
 
+std::vector<ProblemData::Client> const &ProblemData::clients() const
+{
+    return clients_;
+}
+
+std::vector<ProblemData::Client> const &ProblemData::depots() const
+{
+    return depots_;
+}
+
 std::pair<double, double> const &ProblemData::centroid() const
 {
     return centroid_;
 }
 
-size_t ProblemData::numClients() const { return numClients_; }
+size_t ProblemData::numClients() const { return clients_.size(); }
 
-size_t ProblemData::numVehicleTypes() const { return numVehicleTypes_; }
+size_t ProblemData::numDepots() const { return depots_.size(); }
+
+size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
+
+size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 ProblemData
 ProblemData::replace(std::optional<std::vector<Client>> &clients,
+                     std::optional<std::vector<Client>> &depots,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<Matrix<Distance>> &distMat,
                      std::optional<Matrix<Duration>> &durMat)
 {
-    auto const newClients = clients.value_or(clients_);
-    auto const newVehicleTypes = vehicleTypes.value_or(vehicleTypes_);
-    auto const newDistMat = distMat.value_or(dist_);
-    auto const newDurMat = durMat.value_or(dur_);
-
-    return ProblemData(newClients, newVehicleTypes, newDistMat, newDurMat);
+    return ProblemData(clients.value_or(clients_),
+                       depots.value_or(depots_),
+                       vehicleTypes.value_or(vehicleTypes_),
+                       distMat.value_or(dist_),
+                       durMat.value_or(dur_));
 }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
+                         std::vector<Client> const &depots,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> distMat,
                          Matrix<Duration> durMat)
@@ -109,9 +124,8 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
       dist_(std::move(distMat)),
       dur_(std::move(durMat)),
       clients_(clients),
+      depots_(depots),
       vehicleTypes_(vehicleTypes),
-      numClients_(std::max<size_t>(clients.size(), 1) - 1),
-      numVehicleTypes_(vehicleTypes.size()),
       numVehicles_(std::accumulate(vehicleTypes.begin(),
                                    vehicleTypes.end(),
                                    0,
@@ -119,18 +133,18 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                                        return sum + type.numAvailable;
                                    }))
 {
-    if (dist_.numRows() != clients.size() || dist_.numCols() != clients.size())
+    if (depots.size() != 1)
+        throw std::invalid_argument("Expected a single depot!");
+
+    if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
         throw std::invalid_argument("Distance matrix shape does not match the "
-                                    "number of clients.");
+                                    "problem size.");
 
-    if (dur_.numRows() != clients.size() || dur_.numCols() != clients.size())
+    if (dur_.numRows() != numLocations() || dur_.numCols() != numLocations())
         throw std::invalid_argument("Duration matrix shape does not match the "
-                                    "number of clients.");
+                                    "problem size.");
 
-    if (clients.size() == 0)  // at least one client (the depot) is required
-        throw std::invalid_argument("Clients must not be empty.");
-
-    auto const &depot = clients[0];
+    auto const &depot = depots_[0];
 
     if (depot.demand != 0)
         throw std::invalid_argument("Depot demand must be 0.");
@@ -141,9 +155,9 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
     if (depot.releaseTime != 0)
         throw std::invalid_argument("Depot release time must be 0.");
 
-    for (size_t idx = 1; idx <= numClients(); ++idx)
+    for (auto &client : clients_)
     {
-        centroid_.first += static_cast<double>(clients[idx].x) / numClients();
-        centroid_.second += static_cast<double>(clients[idx].y) / numClients();
+        centroid_.first += static_cast<double>(client.x) / numClients();
+        centroid_.second += static_cast<double>(client.y) / numClients();
     }
 }

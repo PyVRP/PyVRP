@@ -61,7 +61,7 @@ def test_avg_distance_closest_for_single_route_solutions(rc208):
     subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
 
-    single_route = [client for client in range(1, rc208.num_clients + 1)]
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
 
     for offset in range(params.max_pop_size):
         # This is a single-route solution, but the route is continually shifted

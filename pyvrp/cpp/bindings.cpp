@@ -103,16 +103,19 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
+                      std::vector<ProblemData::Client> const &,
                       std::vector<ProblemData::VehicleType> const &,
                       Matrix<pyvrp::Distance>,
                       Matrix<pyvrp::Duration>>(),
              py::arg("clients"),
+             py::arg("depots"),
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
              py::arg("duration_matrix"))
         .def("replace",
              &ProblemData::replace,
              py::arg("clients") = py::none(),
+             py::arg("depots") = py::none(),
              py::arg("vehicle_types") = py::none(),
              py::arg("distance_matrix") = py::none(),
              py::arg("duration_matrix") = py::none(),
@@ -120,17 +123,36 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
                                DOC(pyvrp, ProblemData, numClients))
+        .def_property_readonly("num_depots",
+                               &ProblemData::numDepots,
+                               DOC(pyvrp, ProblemData, numDepots))
+        .def_property_readonly("num_locations",
+                               &ProblemData::numLocations,
+                               DOC(pyvrp, ProblemData, numLocations))
         .def_property_readonly("num_vehicle_types",
                                &ProblemData::numVehicleTypes,
                                DOC(pyvrp, ProblemData, numVehicleTypes))
         .def_property_readonly("num_vehicles",
                                &ProblemData::numVehicles,
                                DOC(pyvrp, ProblemData, numVehicles))
-        .def("client",
-             &ProblemData::client,
-             py::arg("client"),
+        .def(
+            "location",
+            [](ProblemData const &data, size_t idx) {
+                if (idx >= data.numLocations())
+                    throw py::index_error();
+                return data.location(idx);
+            },
+            py::arg("idx"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, location))
+        .def("clients",
+             &ProblemData::clients,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, client))
+             DOC(pyvrp, ProblemData, clients))
+        .def("depots",
+             &ProblemData::depots,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, depots))
         .def("centroid",
              &ProblemData::centroid,
              py::return_value_policy::reference_internal,

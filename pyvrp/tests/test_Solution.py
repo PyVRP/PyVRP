@@ -202,8 +202,8 @@ def test_get_neighbours(ok_small):
         None,  # 4: unassigned
     ]
 
-    for client in range(ok_small.num_clients + 1):  # incl. depot
-        assert_equal(neighbours[client], expected[client])
+    for loc in range(ok_small.num_locations):
+        assert_equal(neighbours[loc], expected[loc])
 
 
 def test_feasibility(ok_small):
@@ -332,10 +332,7 @@ def test_route_access_methods(ok_small):
     assert_allclose(routes[1].excess_load(), 0)
 
     # Total route demand.
-    demands = [
-        ok_small.client(idx).demand for idx in range(ok_small.num_clients + 1)
-    ]
-
+    demands = [ok_small.location(idx).demand for idx in range(5)]
     assert_allclose(routes[0].demand(), demands[1] + demands[3])
     assert_allclose(routes[1].demand(), demands[2] + demands[4])
 
@@ -345,10 +342,7 @@ def test_route_access_methods(ok_small):
     assert_(routes[1].is_feasible())
 
     # Total service duration.
-    services = [
-        ok_small.client(idx).service_duration
-        for idx in range(ok_small.num_clients + 1)
-    ]
+    services = [ok_small.location(idx).service_duration for idx in range(5)]
     assert_allclose(routes[0].service_duration(), services[1] + services[3])
     assert_allclose(routes[1].service_duration(), services[2] + services[4])
 
@@ -435,7 +429,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
-    start_time = ok_small.client(1).tw_early - ok_small.duration(0, 1)
+    start_time = ok_small.location(1).tw_early - ok_small.duration(0, 1)
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())
@@ -512,10 +506,10 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
     data = ProblemData(
         clients=[
-            Client(x=0, y=0, tw_late=10),
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
+        depots=[Client(x=0, y=0, tw_late=10)],
         vehicle_types=[VehicleType(0, 2)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
@@ -546,7 +540,8 @@ def test_time_warp_return_to_depot():
     travel back to the depot.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0, tw_late=1), Client(x=1, y=0)],
+        clients=[Client(x=1, y=0)],
+        depots=[Client(x=0, y=0, tw_late=1)],
         vehicle_types=[VehicleType(0, 1)],
         distance_matrix=np.asarray([[0, 0], [0, 0]]),
         duration_matrix=np.asarray([[0, 1], [1, 0]]),
@@ -558,7 +553,7 @@ def test_time_warp_return_to_depot():
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
     # more than the depot time window 1, giving a time warp of 1.
     assert_allclose(route.duration(), 2)
-    assert_allclose(data.client(0).tw_late, 1)
+    assert_allclose(data.location(0).tw_late, 1)
     assert_allclose(sol.time_warp(), 1)
 
 
@@ -682,15 +677,17 @@ def test_eq_unassigned():
     """
     Tests the equality operator for solutions with unassigned clients.
     """
-    clients = [
-        Client(x=0, y=0),
-        Client(x=0, y=1, required=False),
-        Client(x=1, y=0, required=False),
-    ]
-    vehicle_types = [VehicleType(1, 2)]
     dist = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
-
-    data = ProblemData(clients, vehicle_types, dist, dist)
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=1, required=False),
+            Client(x=1, y=0, required=False),
+        ],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, 2)],
+        distance_matrix=dist,
+        duration_matrix=dist,
+    )
 
     sol1 = Solution(data, [[1]])
     sol2 = Solution(data, [[1]])
@@ -768,8 +765,8 @@ def test_route_centroid(ok_small):
     Tests that each route's center point is the center point of all clients
     visited by that route.
     """
-    x = np.array([ok_small.client(client).x for client in range(5)])
-    y = np.array([ok_small.client(client).y for client in range(5)])
+    x = np.array([ok_small.location(idx).x for idx in range(5)])
+    y = np.array([ok_small.location(idx).y for idx in range(5)])
 
     routes = [
         Route(ok_small, [1, 2], 0),

@@ -26,15 +26,25 @@ def plot_coordinates(
     if not ax:
         _, ax = plt.subplots()
 
-    dim = data.num_clients + 1
-    x_coords = np.array([data.client(client).x for client in range(dim)])
-    y_coords = np.array([data.client(client).y for client in range(dim)])
+    num_locs = data.num_locations
+    x_coords = np.array([data.location(loc).x for loc in range(num_locs)])
+    y_coords = np.array([data.location(loc).y for loc in range(num_locs)])
 
-    # This is the depot
+    # These are the depots
     kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
-    ax.scatter(x_coords[0], y_coords[0], label="Depot", **kwargs)
+    ax.scatter(
+        x_coords[: data.num_depots],
+        y_coords[: data.num_depots],
+        label="Depot",
+        **kwargs,
+    )
 
-    ax.scatter(x_coords[1:], y_coords[1:], s=50, label="Clients")
+    ax.scatter(
+        x_coords[data.num_depots :],
+        y_coords[data.num_depots :],
+        s=50,
+        label="Clients",
+    )
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
 

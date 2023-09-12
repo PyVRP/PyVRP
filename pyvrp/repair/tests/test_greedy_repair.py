@@ -117,7 +117,7 @@ def test_RC208(rc208, seed: int):
     to_repair = Solution(rc208, routes)
 
     cost_eval = CostEvaluator(1, 1)
-    unplanned = list(range(rc208.num_vehicles + 1, rc208.num_clients + 1))
+    unplanned = list(range(rc208.num_vehicles + 1, rc208.num_locations))
 
     # Greedily repair the solution by inserting all clients that are not
     # already in the dummy routes.

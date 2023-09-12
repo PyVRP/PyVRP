@@ -18,11 +18,11 @@ void pyvrp::repair::setupRoutes(Locations &locs,
 
     // Doing this avoids re-allocations, which would break the pointer structure
     // that Route and Route::Node use.
-    locs.reserve(data.numClients() + 1);
+    locs.reserve(data.numLocations());
     routes.reserve(solRoutes.size());
 
-    for (size_t client = 0; client <= data.numClients(); ++client)
-        locs.emplace_back(client);
+    for (size_t loc = 0; loc != data.numLocations(); ++loc)
+        locs.emplace_back(loc);
 
     size_t idx = 0;
     for (auto const &solRoute : solRoutes)

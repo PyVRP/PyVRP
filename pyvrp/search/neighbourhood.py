@@ -81,23 +81,22 @@ def compute_neighbours(
     if params.symmetric_proximity:
         proximity = np.minimum(proximity, proximity.T)
 
-    # TODO generalise this when we have multiple depots
     n = len(proximity)
-    k = min(params.nb_granular, n - 2)  # excl. depot and self
+    k = min(params.nb_granular, data.num_clients - 1)  # excl. self
 
     np.fill_diagonal(proximity, np.inf)  # cannot be in own neighbourhood
-    proximity[0, :] = np.inf  # depot has no neighbours
-    proximity[:, 0] = np.inf  # clients do not neighbour depot
+    proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
+    proximity[:, : data.num_depots] = np.inf  # clients do not neighbour depots
 
-    top_k = np.argsort(proximity, axis=1, kind="stable")[1:, :k]  # excl. depot
+    top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
 
     if not params.symmetric_neighbours:
-        return [[], *top_k.tolist()]
+        return [[] for _ in range(data.num_depots)] + top_k.tolist()
 
     # Construct a symmetric adjacency matrix and return the adjacent clients
     # as the neighbourhood structure.
     adj = np.zeros_like(proximity, dtype=bool)
-    rows = np.expand_dims(np.arange(1, n), axis=1)
+    rows = np.expand_dims(np.arange(data.num_depots, n), axis=1)
     adj[rows, top_k] = True
     adj = adj | adj.transpose()
 
@@ -121,8 +120,8 @@ def _compute_proximity(
     Returns
     -------
     np.ndarray[float]
-        A numpy array of size n x n where n = data.num_clients containing
-        the proximities values between all clients (depot excluded).
+        An array of size :py:attr:`~pyvrp._pyvrp.ProblemData.num_locations`
+        by :py:attr:`~pyvrp._pyvrp.ProblemData.num_locations`.
 
     References
     ----------
@@ -131,7 +130,7 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    clients = [data.client(idx) for idx in range(data.num_clients + 1)]
+    clients = [data.location(loc) for loc in range(data.num_locations)]
 
     early = np.asarray([client.tw_early for client in clients])
     late = np.asarray([client.tw_late for client in clients])
