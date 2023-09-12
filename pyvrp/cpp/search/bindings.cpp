@@ -292,6 +292,7 @@ PYBIND11_MODULE(_search, m)
             "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))
         .def("tws_after", &Route::twsAfter, py::arg("start"))
         .def("tws_before", &Route::twsBefore, py::arg("end"))
+        .def("centroid", &Route::centroid)
         .def("overlaps_with",
              &Route::overlapsWith,
              py::arg("other"),

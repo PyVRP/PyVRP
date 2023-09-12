@@ -16,3 +16,9 @@ def greedy_repair(
     data: ProblemData,
     cost_evaluator: CostEvaluator,
 ) -> Solution: ...
+def nearest_route_insert(
+    routes: List[Route],
+    unplanned: List[int],
+    data: ProblemData,
+    cost_evaluator: CostEvaluator,
+) -> Solution: ...
