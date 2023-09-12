@@ -11,7 +11,7 @@ All instances in our `instances repository <https://github.com/PyVRP/Instances>`
 
 .. note::
 
-   Any specification or data section in a VRPLIB-formatted file that is *not* in the glossary below is not understood by PyVRP, and will be silently ignored.
+   Any specification or data section in a VRPLIB-formatted file that is *not* defined in the glossaries below is not understood by PyVRP, and will be silently ignored.
 
 
 Specifications
