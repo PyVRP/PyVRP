@@ -1,6 +1,7 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "CostEvaluator.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
@@ -202,6 +203,12 @@ public:
     [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
+     * @return Total penalised cost of this route.
+     */
+    [[nodiscard]] inline Cost
+    penalisedCost(CostEvaluator const &costEvaluator) const;
+
+    /**
      * @return This route's vehicle type.
      */
     [[nodiscard]] size_t vehicleType() const;
@@ -389,6 +396,12 @@ Load Route::loadBetween(size_t start, size_t end) const
 
     assert(startLoad <= endLoad);
     return endLoad - startLoad + atStart;
+}
+
+Cost Route::penalisedCost(CostEvaluator const &costEvaluator) const
+{
+    return costEvaluator.penalisedRouteCost(
+        size(), distance(), load(), timeWarp(), vehicleType_);
 }
 }  // namespace pyvrp::search
 

@@ -311,12 +311,12 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
 @mark.parametrize(
     ("op", "base_cost", "fixed_cost"),
     [
-        (Exchange10, 2_346, 0),
-        (Exchange10, 2_346, 100),
-        (Exchange20, 1_417, 0),
-        (Exchange20, 1_417, 9),
-        (Exchange30, 135, 53),
-        (Exchange30, 135, 997),
+        (Exchange10, -2_649, 0),
+        (Exchange10, -2_649, 100),
+        (Exchange20, -6_575, 0),
+        (Exchange20, -6_575, 9),
+        (Exchange30, -2_087_770, 53),
+        (Exchange30, -2_087_770, 997),
     ],
 )
 def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
@@ -341,7 +341,9 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     # First route is not empty, second route is. The operator evaluates moving
     # some nodes to the second route, which would use both of them. That should
     # add to the fixed vehicle cost.
-    cost_eval = CostEvaluator(1, 1)
+    # We use a large penalty such that it is always advantageous to apply the
+    # move, otherwise the operator may shortcut and return 0.
+    cost_eval = CostEvaluator(1_000, 1_000)
     assert_allclose(
         op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
     )

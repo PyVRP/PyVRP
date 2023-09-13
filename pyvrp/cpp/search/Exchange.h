@@ -90,48 +90,53 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
-    Distance const current = uRoute->distBetween(U->idx() - 1, U->idx() + N)
-                             + data.dist(V->client(), n(V)->client());
+    auto const &vehTypeU = data.vehicleType(uRoute->vehicleType());
+    auto const &vehTypeV = data.vehicleType(vRoute->vehicleType());
 
     auto *endU = N == 1 ? U : (*uRoute)[U->idx() + N - 1];
-    Distance const proposed = data.dist(V->client(), U->client())
-                              + uRoute->distBetween(U->idx(), U->idx() + N - 1)
-                              + data.dist(endU->client(), n(V)->client())
-                              + data.dist(p(U)->client(), n(endU)->client());
 
-    Cost deltaCost = static_cast<Cost>(proposed - current);
-
-    // We're going to incur V's fixed cost if V is currently empty. We lose U's
-    // fixed cost if we're moving all of U's clients with this operator.
-    deltaCost += Cost(vRoute->empty()) * vRoute->fixedCost();
-    deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedCost();
+    auto const deltaDistU = data.dist(p(U)->client(), n(endU)->client())
+                            - uRoute->distBetween(U->idx() - 1, U->idx() + N);
+    auto const deltaDistV = data.dist(V->client(), U->client())
+                            + uRoute->distBetween(U->idx(), U->idx() + N - 1)
+                            + data.dist(endU->client(), n(V)->client())
+                            - data.dist(V->client(), n(V)->client());
 
     if (uRoute != vRoute)
     {
-        if (uRoute->isFeasible() && deltaCost >= 0)
-            return deltaCost;
+        auto const currentCost = uRoute->penalisedCost(costEvaluator)
+                                 + vRoute->penalisedCost(costEvaluator);
 
+        // Compute lower bound for new cost based on clients, distance and load
+        auto const sizeU = uRoute->size() - N;
+        auto const sizeV = vRoute->size() + N;
+
+        auto const distU = uRoute->distance() + deltaDistU;
+        auto const distV = vRoute->distance() + deltaDistV;
+
+        auto const deltaLoad = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
+        auto const loadU = uRoute->load() - deltaLoad;
+        auto const loadV = vRoute->load() + deltaLoad;
+
+        auto const lbCostU = costEvaluator.penalisedRouteCost(
+            sizeU, distU, loadU, 0, vehTypeU);
+        auto const lbCostV = costEvaluator.penalisedRouteCost(
+            sizeV, distV, loadV, 0, vehTypeV);
+
+        if (lbCostU + lbCostV >= currentCost)
+            return 0;
+
+        // Add time warp for route U to get actual cost
         auto uTWS = TimeWindowSegment::merge(data.durationMatrix(),
                                              uRoute->twsBefore(U->idx() - 1),
                                              uRoute->twsAfter(U->idx() + N));
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+        auto const costU = costEvaluator.penalisedRouteCost(
+            sizeU, distU, loadU, uTWS.totalTimeWarp(), vehTypeU);
 
-        auto const loadDiff = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
-
-        deltaCost += costEvaluator.loadPenalty(uRoute->load() - loadDiff,
-                                               uRoute->capacity());
-        deltaCost
-            -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
-
-        if (deltaCost >= 0)    // if delta cost of just U's route is not enough
-            return deltaCost;  // even without V, the move will never be good.
-
-        deltaCost += costEvaluator.loadPenalty(vRoute->load() + loadDiff,
-                                               vRoute->capacity());
-        deltaCost
-            -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
+        // Small optimization, check intermediate bound
+        if (costU + lbCostV >= currentCost)
+            return 0;
 
         auto vTWS = TimeWindowSegment::merge(
             data.durationMatrix(),
@@ -139,16 +144,23 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             uRoute->twsBetween(U->idx(), U->idx() + N - 1),
             vRoute->twsAfter(V->idx() + 1));
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-        deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
+        auto const costV = costEvaluator.penalisedRouteCost(
+            sizeV, distV, loadV, vTWS.totalTimeWarp(), vehTypeV);
+
+        return costU + costV - currentCost;
     }
     else  // within same route
     {
-        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+        auto const currentCost = uRoute->penalisedCost(costEvaluator);
+        auto const dist = uRoute->distance() + deltaDistU + deltaDistV;
 
-        if (deltaCost >= 0)
-            return deltaCost;
+        // First compute bound based on dist and load
+        auto const lbCost = costEvaluator.penalisedRouteCost(
+            uRoute->size(), dist, uRoute->load(), 0, vehTypeU);
+        if (lbCost >= currentCost)
+            return 0;
 
+        // Add timing information for route to get actual cost
         if (U->idx() < V->idx())
         {
             auto const tws = TimeWindowSegment::merge(
@@ -158,7 +170,13 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->twsBetween(U->idx(), U->idx() + N - 1),
                 uRoute->twsAfter(V->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            auto const cost
+                = costEvaluator.penalisedRouteCost(uRoute->size(),
+                                                   dist,
+                                                   uRoute->load(),
+                                                   tws.totalTimeWarp(),
+                                                   vehTypeU);
+            return cost - currentCost;
         }
         else
         {
@@ -169,11 +187,15 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->twsBetween(V->idx() + 1, U->idx() - 1),
                 uRoute->twsAfter(U->idx() + N));
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            auto const cost
+                = costEvaluator.penalisedRouteCost(uRoute->size(),
+                                                   dist,
+                                                   uRoute->load(),
+                                                   tws.totalTimeWarp(),
+                                                   vehTypeU);
+            return cost - currentCost;
         }
     }
-
-    return deltaCost;
 }
 
 template <size_t N, size_t M>

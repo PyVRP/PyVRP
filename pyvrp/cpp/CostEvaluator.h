@@ -63,7 +63,19 @@ public:
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
 
     /**
-     * Computes a smoothed objective (penalised cost) for a given solution.
+     * Computes a smoothed objective (penalised cost) for a route given a set
+     * of properties.
+     */
+    [[nodiscard]] inline Cost
+    penalisedRouteCost(size_t const numClients,
+                       Distance const distance,
+                       Load const load,
+                       Duration const timeWarp,
+                       ProblemData::VehicleType const &vehicleType) const;
+
+    /**
+     * Computes a smoothed objective (penalised cost) for an object that is
+     * CostEvaluatable.
      */
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
@@ -144,6 +156,22 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
     // penalised cost in that case.
     return arg.isFeasible() ? penalisedCost(arg)
                             : std::numeric_limits<Cost>::max();
+}
+
+Cost CostEvaluator::penalisedRouteCost(
+    size_t const num_clients,
+    Distance const distance,
+    Load const load,
+    Duration const timeWarp,
+    ProblemData::VehicleType const &vehicleType) const
+{
+    auto const isUsed = num_clients > 0;
+    auto const fixedCost = static_cast<Cost>(isUsed) * vehicleType.fixedCost;
+    auto const distanceCost = static_cast<Cost>(distance);
+    auto const loadPen = loadPenalty(load, vehicleType.capacity);
+    auto const twPen = twPenalty(timeWarp);
+
+    return fixedCost + distanceCost + loadPen + twPen;
 }
 }  // namespace pyvrp
 
