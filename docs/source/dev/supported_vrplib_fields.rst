@@ -24,19 +24,21 @@ PyVRP supports the following specifications:
    :sorted:
 
    ``CAPACITY``
-      TODO
+      Homogeneous capacity of all vehicles in the instance.
+      The number of vehicles is provided using the :term:`VEHICLES` specification.
 
    ``DIMENSION``
-      TODO
+      Number of locations in the instance.
+      This is the sum of the number of depots and the number of clients.
 
    ``EDGE_WEIGHT_FORMAT``
-      TODO
+      Specifies the format of the :term:`EDGE_WEIGHT_SECTION` if the edge weights are given explicitly.
 
    ``EDGE_WEIGHT_TYPE``
-      TODO
+      Specifies how the edge weights (distances and durations) are given.
 
    ``VEHICLES``
-      TODO
+      Number of vehicles in the instance.
 
 
 Data sections
@@ -49,25 +51,31 @@ PyVRP supports the following data sections:
    :sorted:
 
    ``DEMAND_SECTION``
-      TODO
-   
+      Array of demands, one for each location.
+      The depot locations *must* have zero demand.
+
    ``DEPOT_SECTION``
-      TODO
+      Array of location indices that are depots.
 
    ``EDGE_WEIGHT_SECTION``
-      TODO
+      When provided, this section explicitly describes the distance and duration matrices.
+      If not provided, such matrices are computed based on what's specified for :term:`EDGE_WEIGHT_FORMAT` and :term:`EDGE_WEIGHT_TYPE`.
 
    ``NODE_COORD_SECTION``
-      TODO
+      Array of :math:`(x, y)` coordinates for each location.
 
    ``PRIZE_SECTION``
-      TODO
+      Array of prizes for visiting each location.
+      Must be zero for depots.
+      A value of zero for non-depots implies visiting that location is required.
 
    ``RELEASE_TIME_SECTION``
-      TODO
+      Array of release times for each location.
+      Must be zero for depots.
 
    ``SERVICE_TIME_SECTION``
-      TODO
+      Array of service durations for each location.
+      Must be zero for depots.
 
    ``TIME_WINDOW_SECTION``
-      TODO
+      Array of :math:`[e, l]` time window data, for each location.
