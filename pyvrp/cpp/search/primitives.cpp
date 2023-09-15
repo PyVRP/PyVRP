@@ -15,7 +15,7 @@ Cost pyvrp::search::insertCost(Route::Node *U,
         return 0;
 
     auto *route = V->route();
-    auto const &client = data.client(U->client());
+    auto const &client = data.location(U->client());
 
     Distance const deltaDist = data.dist(V->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
@@ -48,7 +48,7 @@ Cost pyvrp::search::removeCost(Route::Node *U,
         return 0;
 
     auto *route = U->route();
-    auto const &client = data.client(U->client());
+    auto const &client = data.location(U->client());
 
     Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                - data.dist(p(U)->client(), U->client())

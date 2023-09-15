@@ -154,8 +154,8 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
-    auto const loadDiff = data.client(U->client()).demand
-                          - data.client(remove->client()).demand;
+    auto const loadDiff = data.location(U->client()).demand
+                          - data.location(remove->client()).demand;
 
     deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
                                            route->capacity());
@@ -181,7 +181,7 @@ Cost SwapStar::evaluate(Route *routeU,
         updateRemovalCosts(routeV, costEvaluator);
         updated[routeV->idx()] = false;
 
-        for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
+        for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
             cache(routeV->idx(), idx).shouldUpdate = true;
     }
 
@@ -190,7 +190,7 @@ Cost SwapStar::evaluate(Route *routeU,
         updateRemovalCosts(routeU, costEvaluator);
         updated[routeV->idx()] = false;
 
-        for (size_t idx = 1; idx != data.numClients() + 1; ++idx)
+        for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
             cache(routeU->idx(), idx).shouldUpdate = true;
     }
 
@@ -199,8 +199,8 @@ Cost SwapStar::evaluate(Route *routeU,
         {
             Cost deltaCost = 0;
 
-            auto const uDemand = data.client(U->client()).demand;
-            auto const vDemand = data.client(V->client()).demand;
+            auto const uDemand = data.location(U->client()).demand;
+            auto const vDemand = data.location(V->client()).demand;
             auto const loadDiff = uDemand - vDemand;
 
             deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,

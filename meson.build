@@ -54,6 +54,8 @@ libcommon = static_library(
         SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
         SRC_DIR / 'repair' / 'greedy_repair.cpp',
+        SRC_DIR / 'repair' / 'nearest_route_insert.cpp',
+        SRC_DIR / 'repair' / 'repair.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'MoveTwoClientsReversed.cpp',

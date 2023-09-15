@@ -82,21 +82,21 @@ class Model:
         Model
             A model instance representing the given data.
         """
-        clients = [data.client(idx) for idx in range(data.num_clients + 1)]
+        locs = [data.location(idx) for idx in range(data.num_locations)]
         edges = [
             Edge(
-                clients[frm],
-                clients[to],
+                locs[frm],
+                locs[to],
                 data.dist(frm, to),
                 data.duration(frm, to),
             )
-            for frm in range(data.num_clients + 1)
-            for to in range(data.num_clients + 1)
+            for frm in range(data.num_locations)
+            for to in range(data.num_locations)
         ]
 
         self = Model()
-        self._clients = clients[1:]
-        self._depots = clients[:1]
+        self._clients = locs[data.num_depots :]
+        self._depots = locs[: data.num_depots]
         self._edges = edges
         vehicle_types = [
             data.vehicle_type(i) for i in range(data.num_vehicle_types)
@@ -230,7 +230,13 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        return ProblemData(locs, self.vehicle_types, distances, durations)
+        return ProblemData(
+            self._clients,
+            self._depots,
+            self.vehicle_types,
+            distances,
+            durations,
+        )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
         """
