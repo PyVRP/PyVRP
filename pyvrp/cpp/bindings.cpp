@@ -436,7 +436,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),
-             DOC(pyvrp, CostEvaluator, penalisedCost))
+             DOC(pyvrp, CostEvaluator, penalisedCost_2))
         .def("cost",
              &CostEvaluator::cost<Solution>,
              py::arg("solution"),

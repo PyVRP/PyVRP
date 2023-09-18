@@ -405,8 +405,8 @@ Load Route::loadBetween(size_t start, size_t end) const
 
 Cost Route::penalisedCost(CostEvaluator const &costEvaluator) const
 {
-    return costEvaluator.penalisedRouteCost(
-        size(), distance(), load(), timeWarp(), vehicleType_);
+    RouteData const routeData = {size(), distance(), load(), timeWarp()};
+    return costEvaluator.penalisedCost(routeData, vehicleType_);
 }
 }  // namespace pyvrp::search
 
