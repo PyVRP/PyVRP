@@ -110,7 +110,6 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const deltaLoad = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
 
         // Compute lower bound for new cost based on size, distance and load
-        // Compute lower bound for new cost based on size, distance, and load
         RouteData uRouteData(uRoute->size() - N,
                              uRoute->distance() + deltaDistU,
                              uRoute->load() - deltaLoad,
