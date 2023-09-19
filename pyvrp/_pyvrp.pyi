@@ -2,12 +2,27 @@ from typing import Callable, Iterator, List, Optional, Tuple, Union, overload
 
 import numpy as np
 
+class RouteData:
+    size: int
+    distance: int
+    load: int
+    timeWarp: int
+
+    def __init__(
+        self, size: int, distance: int, load: int, time_warp: int
+    ) -> None: ...
+
 class CostEvaluator:
     def __init__(
         self, capacity_penalty: int = 0, tw_penalty: int = 0
     ) -> None: ...
     def load_penalty(self, load: int, capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
+    @overload
+    def penalised_cost(
+        self, route_data: RouteData, vehicle_type: VehicleType
+    ) -> int: ...
+    @overload
     def penalised_cost(self, solution: Solution) -> int: ...
     def cost(self, solution: Solution) -> int: ...
 

@@ -110,15 +110,16 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const deltaLoad = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
 
         // Compute lower bound for new cost based on size, distance and load
-        RouteData uRouteData{.size = uRoute->size() - N,
-                             .distance = uRoute->distance() + deltaDistU,
-                             .load = uRoute->load() - deltaLoad,
-                             .timeWarp = 0};
+        // Compute lower bound for new cost based on size, distance, and load
+        RouteData uRouteData(uRoute->size() - N,
+                             uRoute->distance() + deltaDistU,
+                             uRoute->load() - deltaLoad,
+                             0);
 
-        RouteData vRouteData{.size = vRoute->size() + N,
-                             .distance = vRoute->distance() + deltaDistV,
-                             .load = vRoute->load() + deltaLoad,
-                             .timeWarp = 0};
+        RouteData vRouteData(vRoute->size() + N,
+                             vRoute->distance() + deltaDistV,
+                             vRoute->load() + deltaLoad,
+                             0);
 
         auto const lbCostU = costEvaluator.penalisedCost(uRouteData, vehTypeU);
         auto const lbCostV = costEvaluator.penalisedCost(vRouteData, vehTypeV);
@@ -152,11 +153,10 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const currentCost = uRoute->penalisedCost(costEvaluator);
 
         // First compute bound based on size, dist and load
-        RouteData routeData{.size = uRoute->size(),
-                            .distance
-                            = uRoute->distance() + deltaDistU + deltaDistV,
-                            .load = uRoute->load(),
-                            .timeWarp = 0};
+        RouteData routeData(uRoute->size(),
+                            uRoute->distance() + deltaDistU + deltaDistV,
+                            uRoute->load(),
+                            0);
 
         if (costEvaluator.penalisedCost(routeData, vehTypeU) >= currentCost)
             return 0;

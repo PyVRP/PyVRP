@@ -25,6 +25,7 @@ using pyvrp::Matrix;
 using pyvrp::PopulationParams;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
+using pyvrp::RouteData;
 using pyvrp::Solution;
 using pyvrp::SubPopulation;
 using TWS = pyvrp::TimeWindowSegment;
@@ -418,6 +419,17 @@ PYBIND11_MODULE(_pyvrp, m)
             return stream.str();
         });
 
+    py::class_<RouteData>(m, "RouteData")
+        .def(py::init<size_t, pyvrp::Distance, pyvrp::Load, pyvrp::Duration>(),
+             py::arg("size"),
+             py::arg("distance"),
+             py::arg("load"),
+             py::arg("time_warp"))
+        .def_readwrite("size", &RouteData::size)
+        .def_readwrite("distance", &RouteData::distance)
+        .def_readwrite("load", &RouteData::load)
+        .def_readwrite("time_warp", &RouteData::timeWarp);
+
     py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
         .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
                  return CostEvaluator(capacityPenalty, twPenalty);
@@ -433,6 +445,13 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::twPenalty,
              py::arg("time_warp"),
              DOC(pyvrp, CostEvaluator, twPenalty))
+        .def("penalised_cost",
+             static_cast<pyvrp::Cost (CostEvaluator::*)(
+                 RouteData const &, ProblemData::VehicleType const &) const>(
+                 &CostEvaluator::penalisedCost),
+             py::arg("route_data"),
+             py::arg("vehicle_type"),
+             DOC(pyvrp, CostEvaluator, penalisedCost_1))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),

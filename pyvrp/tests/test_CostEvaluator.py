@@ -5,6 +5,7 @@ from numpy.testing import assert_, assert_allclose
 from pytest import mark
 
 from pyvrp import CostEvaluator, Route, Solution, VehicleType
+from pyvrp._pyvrp import RouteData
 
 
 def test_load_penalty():
@@ -156,6 +157,38 @@ def test_penalised_cost(ok_small):
 
     # Default cost evaluator has 0 weights and only computes distance as cost
     assert_allclose(default_evaluator.penalised_cost(infeas), infeas_dist)
+
+
+def test_route_penalised_cost(ok_small):
+    """
+    The penalised cost represents the smoothed objective, where constraint
+    violations are priced in using penalty terms. This test tests the overload
+    that computes penalised cost for a specific route based on a
+    pyvrp::RouteData object.
+    """
+    penalty_capacity = 20
+    penalty_tw = 6
+    cost_evaluator = CostEvaluator(penalty_capacity, penalty_tw)
+
+    route_data = RouteData(size=1, distance=10, load=5, time_warp=0)
+    vehicle_type = VehicleType(10, 1, 100)
+
+    # No load violations and time warp, so we should have just fixed cost
+    # and distance = 100 + 10 = 110
+    cost = cost_evaluator.penalised_cost(route_data, vehicle_type)
+    assert_allclose(cost, 110)
+
+    route_data = RouteData(size=1, distance=10, load=5, time_warp=20)
+    vehicle_type = VehicleType(3, 1, 100)
+    # Now we should incur load penalty 20 * (5-3) = 40 and timewarp penalty
+    # 6 * 20 = 120, beyond the fixed and distance cost so 110 + 40 + 120 = 270
+    cost = cost_evaluator.penalised_cost(route_data, vehicle_type)
+    assert_allclose(cost, 270)
+
+    # Test empty route
+    route_data = RouteData(size=0, distance=0, load=0, time_warp=0)
+    cost = cost_evaluator.penalised_cost(route_data, vehicle_type)
+    assert_allclose(cost, 0)
 
 
 @mark.parametrize(

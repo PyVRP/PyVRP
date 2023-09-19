@@ -23,13 +23,49 @@ template <typename T> concept CostEvaluatable = requires(T arg)
     // clang-format on
 };
 
-// RouteData contains properties of a route used to compute cost for a route
+/**
+ * RouteData(
+ *     size: int,
+ *     distance: Distance,
+ *     load: Load,
+ *     timeWarp: Duration
+ * )
+ *
+ * Simple data object storing route data as properties.
+ *
+ * Parameters
+ * ----------
+ * size
+ *     Size of the route.
+ * distance
+ *     Distance traveled in the route.
+ * load
+ *     Load carried in the route.
+ * timeWarp
+ *     Time warp for the route.
+ *
+ * Attributes
+ * ----------
+ * size
+ *     Size of the route.
+ * distance
+ *     Distance traveled in the route.
+ * load
+ *     Load carried in the route.
+ * timeWarp
+ *     Time warp for the route.
+ */
 struct RouteData
 {
     size_t size;
     Distance distance;
     Load load;
     Duration timeWarp;
+
+    RouteData(size_t size, Distance distance, Load load, Duration timeWarp)
+        : size(size), distance(distance), load(load), timeWarp(timeWarp)
+    {
+    }
 };
 
 /**
