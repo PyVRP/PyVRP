@@ -65,4 +65,5 @@ Contents
 
    dev/benchmarking
    dev/contributing
+   dev/supported_vrplib_fields
    dev/new_vrp_variants

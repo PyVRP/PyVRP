@@ -52,6 +52,12 @@ def read(
     Reads the VRPLIB file at the given location, and returns a ProblemData
     instance.
 
+    .. note::
+
+       See the
+       :doc:`VRPLIB format explanation <../dev/supported_vrplib_fields>` page
+       for more details.
+
     Parameters
     ----------
     where
