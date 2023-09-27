@@ -159,7 +159,7 @@ def test_penalised_cost(ok_small):
     assert_allclose(default_evaluator.penalised_cost(infeas), infeas_dist)
 
 
-def test_route_penalised_cost(ok_small):
+def test_route_penalised_cost():
     """
     The penalised cost represents the smoothed objective, where constraint
     violations are priced in using penalty terms. This test tests the overload
