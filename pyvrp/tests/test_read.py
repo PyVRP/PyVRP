@@ -1,6 +1,11 @@
 from math import sqrt
 
-from numpy.testing import assert_equal, assert_raises, assert_warns
+from numpy.testing import (
+    assert_allclose,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 from pytest import mark
 
 from pyvrp.exceptions import ScalingWarning
@@ -243,3 +248,17 @@ def test_round_func_round_nearest():
     dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
     assert_equal(data.dist(0, 1), round(dist))
     assert_equal(data.dist(1, 0), round(dist))
+
+
+def test_service_time_specification():
+    """
+    Tests that specifying the service time as a specification (key-value pair)
+    results in a uniform service time for all clients.
+    """
+    data = read("data/ServiceTimeSpecification.txt")
+
+    # Clients should all have the same service time; the depot should have no
+    # service time.
+    services = [client.service_duration for client in data.clients()]
+    assert_allclose(services, 360)
+    assert_allclose(data.location(0).service_duration, 0)

@@ -128,8 +128,9 @@ def read(
         if isinstance(instance["service_time"], Number):
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
-            service_times = np.full(dimension, instance["service_time"], int)
+            service_times = np.full(dimension, instance["service_time"])
             service_times[0] = 0
+            service_times = round_func(service_times)
         else:
             service_times = round_func(instance["service_time"])
     else:
