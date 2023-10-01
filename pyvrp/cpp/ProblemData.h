@@ -140,6 +140,8 @@ public:
      * tw_late
      *     End of the vehicle type's shift. Defaults to the depot's closing
      *     time if not given.
+     * max_duration
+     *     Maximum route duration. Not constrained if not given.
      *
      * Attributes
      * ----------
@@ -155,6 +157,8 @@ public:
      *     Start of the vehicle type's shift, if specified.
      * tw_late
      *     End of the vehicle type's shift, if specified.
+     * max_duration
+     *     Maximum duration of the route this vehicle type is assigned to.
      */
     struct VehicleType
     {
@@ -165,11 +169,14 @@ public:
         std::optional<Duration> const twEarly;  // Start of shift
         std::optional<Duration> const twLate;   // End of shift
 
+        std::optional<Duration> const maxDuration;
+
         VehicleType(Load capacity,
                     size_t numAvailable,
                     Cost fixedCost = 0,
                     std::optional<Duration> twEarly = std::nullopt,
-                    std::optional<Duration> twLate = std::nullopt);
+                    std::optional<Duration> twLate = std::nullopt,
+                    std::optional<Duration> maxDuration = std::nullopt);
     };
 
 private:
