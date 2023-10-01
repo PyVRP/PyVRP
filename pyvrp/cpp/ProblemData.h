@@ -143,7 +143,7 @@ public:
      *     time if not given.
      * max_duration
      *     Maximum route duration. Defaults to :data:`sys.maxsize` if not
-     *     given, in which case this constraint is always satisfied.
+     *     given, in which case the maximum route duration is not constrained.
      *
      * Attributes
      * ----------

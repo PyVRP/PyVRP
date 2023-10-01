@@ -1,3 +1,4 @@
+import sys
 from typing import Callable, Iterator, List, Optional, Tuple, Union, overload
 
 import numpy as np
@@ -53,7 +54,7 @@ class VehicleType:
     fixed_cost: int
     tw_early: Optional[int]
     tw_late: Optional[int]
-    max_duration: Optional[int]
+    max_duration: int
     def __init__(
         self,
         capacity: int,
@@ -61,7 +62,7 @@ class VehicleType:
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
-        max_duration: Optional[int] = None,
+        max_duration: int = sys.maxsize,
     ) -> None: ...
 
 class ProblemData:
@@ -214,6 +215,7 @@ class TimeWindowSegment:
         tw_early: int,
         tw_late: int,
         release_time: int,
+        max_duration: int,
     ) -> None: ...
     @overload
     @staticmethod

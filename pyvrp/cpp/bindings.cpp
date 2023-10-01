@@ -550,6 +550,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
+                      pyvrp::Duration,
                       pyvrp::Duration>(),
              py::arg("idx_first"),
              py::arg("idx_last"),
@@ -557,7 +558,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("time_warp"),
              py::arg("tw_early"),
              py::arg("tw_late"),
-             py::arg("release_time"))
+             py::arg("release_time"),
+             py::arg("max_duration"))
         .def(
             "duration", &TWS::duration, DOC(pyvrp, TimeWindowSegment, duration))
         .def("tw_early", &TWS::twEarly, DOC(pyvrp, TimeWindowSegment, twEarly))

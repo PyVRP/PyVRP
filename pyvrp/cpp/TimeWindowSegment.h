@@ -41,13 +41,14 @@ class TimeWindowSegment
 {
     using TWS = TimeWindowSegment;
 
-    size_t idxFirst_ = 0;       // Index of the first client in the segment
-    size_t idxLast_ = 0;        // Index of the last client in the segment
-    Duration duration_ = 0;     // Total duration, incl. waiting and servicing
-    Duration timeWarp_ = 0;     // Cumulative time warp
-    Duration twEarly_ = 0;      // Earliest visit moment of first client
-    Duration twLate_ = 0;       // Latest visit moment of first client
-    Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
+    size_t idxFirst_;       // Index of the first client in the segment
+    size_t idxLast_;        // Index of the last client in the segment
+    Duration duration_;     // Total duration, incl. waiting and servicing
+    Duration timeWarp_;     // Cumulative time warp
+    Duration twEarly_;      // Earliest visit moment of first client
+    Duration twLate_;       // Latest visit moment of first client
+    Duration releaseTime_;  // Earliest allowed moment to leave the depot
+    Duration maxDuration_;  // Maximum segment duration
 
     [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
                                    TWS const &other) const;
@@ -102,7 +103,8 @@ public:
                              Duration timeWarp,
                              Duration twEarly,
                              Duration twLate,
-                             Duration releaseTime);
+                             Duration releaseTime,
+                             Duration maxDuration);
 };
 
 TimeWindowSegment TimeWindowSegment::merge(
@@ -110,7 +112,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] TimeWindowSegment const &other) const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
-    return {0, 0, 0, 0, 0, 0, 0};
+    return {0, 0, 0, 0, 0, 0, 0, 0};
 #else
     using Dur = pyvrp::Duration;
 
@@ -131,7 +133,8 @@ TimeWindowSegment TimeWindowSegment::merge(
             timeWarp_ + other.timeWarp_ + diffTw,
             std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
             std::min(other.twLate_ - atOther, twLate_) + diffTw,
-            std::max(releaseTime_, other.releaseTime_)};
+            std::max(releaseTime_, other.releaseTime_),
+            std::min(maxDuration_, other.maxDuration_)};
 #endif
 }
 
@@ -143,7 +146,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] Args... args)
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
-    return {0, 0, 0, 0, 0, 0, 0};
+    return {0, 0, 0, 0, 0, 0, 0, 0};
 #else
     auto const res = first.merge(durationMatrix, second);
 
@@ -156,7 +159,11 @@ TimeWindowSegment TimeWindowSegment::merge(
 
 Duration TimeWindowSegment::totalTimeWarp() const
 {
-    return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
+    // clang-format off
+    return timeWarp_ 
+           + std::max<Duration>(releaseTime_ - twLate_, 0)
+           + std::max<Duration>(duration_ - maxDuration_, 0);
+    // clang-format on
 }
 
 TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
@@ -165,14 +172,16 @@ TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
                                      Duration timeWarp,
                                      Duration twEarly,
                                      Duration twLate,
-                                     Duration releaseTime)
+                                     Duration releaseTime,
+                                     Duration maxDuration)
     : idxFirst_(idxFirst),
       idxLast_(idxLast),
       duration_(duration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),
-      releaseTime_(releaseTime)
+      releaseTime_(releaseTime),
+      maxDuration_(maxDuration)
 {
 }
 }  // namespace pyvrp
