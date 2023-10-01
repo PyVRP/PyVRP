@@ -1,13 +1,13 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
-from pytest import mark
+import pytest
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp._pyvrp import TimeWindowSegment
 
 _INT_MAX = np.iinfo(np.int32).max
 
 
-@mark.parametrize("existing_time_warp", [2, 5, 10])
+@pytest.mark.parametrize("existing_time_warp", [2, 5, 10])
 def test_total_time_warp_when_there_is_existing_time_warp(existing_time_warp):
     """
     Tests that the ``total_time_warp()`` returns existing time warp when no
@@ -106,3 +106,15 @@ def test_merging_two_previously_merged_tws():
     # (plus the existing unit). So we get 4 + 1 + 1 + 4 = 10 time warp.
     merged = TimeWindowSegment.merge(mat, merged12, merged21)
     assert_equal(merged.total_time_warp(), 10)
+
+
+@pytest.mark.parametrize(
+    ("duration", "max_duration", "expected"),
+    [(0, 5, 0), (10, 5, 5), (5, 5, 0), (8, 5, 3), (3, 2, 1)],
+)
+def test_max_duration(duration: int, max_duration: int, expected: int):
+    """
+    Tests that maximum duration violations result in time warp.
+    """
+    tws = TimeWindowSegment(0, 0, duration, 0, 0, 0, 0, max_duration)
+    assert_allclose(tws.total_time_warp(), expected)

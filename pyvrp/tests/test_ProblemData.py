@@ -429,6 +429,17 @@ def test_vehicle_type_raises_invalid_data(
         VehicleType(capacity, num_available, fixed_cost, tw_early, tw_late)
 
 
+def test_vehicle_type_init_max_duration_argument():
+    """
+    Tests valid and invalid edge cases of the max_duration argument.
+    """
+    with assert_raises(ValueError):
+        VehicleType(1, 1, max_duration=-1)  # negative max_duration
+
+    veh_type = VehicleType(1, 1, max_duration=0)  # valid edge case
+    assert_allclose(veh_type.max_duration, 0)
+
+
 def test_vehicle_type_does_not_raise_for_edge_cases():
     """
     The vehicle type constructor should allow the following edge case, of no
@@ -458,6 +469,7 @@ def test_vehicle_type_default_values():
     assert_allclose(vehicle_type.fixed_cost, 0)
     assert_(vehicle_type.tw_early is None)
     assert_(vehicle_type.tw_late is None)
+    assert_allclose(vehicle_type.max_duration, np.iinfo(np.int32).max)
 
 
 def test_vehicle_type_attribute_access():
@@ -471,6 +483,7 @@ def test_vehicle_type_attribute_access():
         fixed_cost=3,
         tw_early=17,
         tw_late=19,
+        max_duration=23,
     )
 
     assert_allclose(vehicle_type.capacity, 13)
@@ -478,6 +491,7 @@ def test_vehicle_type_attribute_access():
     assert_allclose(vehicle_type.fixed_cost, 3)
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)
+    assert_allclose(vehicle_type.max_duration, 23)
 
 
 @pytest.mark.parametrize("idx", [5, 6])
