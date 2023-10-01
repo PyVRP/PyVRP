@@ -115,6 +115,7 @@ public:
      *     fixed_cost: int = 0,
      *     tw_early: Optional[int] = None,
      *     tw_late: Optional[int] = None,
+     *     max_duration: int = sys.maxsize,
      * )
      *
      * Simple data object storing all vehicle type data as properties.
@@ -141,7 +142,8 @@ public:
      *     End of the vehicle type's shift. Defaults to the depot's closing
      *     time if not given.
      * max_duration
-     *     Maximum route duration. Not constrained if not given.
+     *     Maximum route duration. Defaults to :data:`sys.maxsize` if not
+     *     given, in which case this constraint is always satisfied.
      *
      * Attributes
      * ----------
@@ -168,15 +170,15 @@ public:
         Cost const fixedCost;       // Fixed cost of using this vehicle type
         std::optional<Duration> const twEarly;  // Start of shift
         std::optional<Duration> const twLate;   // End of shift
-
-        std::optional<Duration> const maxDuration;
+        Duration const maxDuration;
 
         VehicleType(Load capacity,
                     size_t numAvailable,
                     Cost fixedCost = 0,
                     std::optional<Duration> twEarly = std::nullopt,
                     std::optional<Duration> twLate = std::nullopt,
-                    std::optional<Duration> maxDuration = std::nullopt);
+                    Duration maxDuration
+                    = std::numeric_limits<Duration>::max());
     };
 
 private:

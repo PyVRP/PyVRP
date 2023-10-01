@@ -89,19 +89,20 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Cost,
                       std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>,
-                      std::optional<pyvrp::Duration>>(),
+                      pyvrp::Duration>(),
              py::arg("capacity"),
              py::arg("num_available"),
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = py::none(),
              py::arg("tw_late") = py::none(),
-             py::arg("max_duration") = py::none())
+             py::arg("max_duration") = std::numeric_limits<pyvrp::Value>::max())
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
-        .def_readonly("tw_late", &ProblemData::VehicleType::twLate);
+        .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
+        .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
