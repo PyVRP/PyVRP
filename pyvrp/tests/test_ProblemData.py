@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pytest
 from numpy.random import default_rng
@@ -469,7 +471,14 @@ def test_vehicle_type_default_values():
     assert_allclose(vehicle_type.fixed_cost, 0)
     assert_(vehicle_type.tw_early is None)
     assert_(vehicle_type.tw_late is None)
-    assert_allclose(vehicle_type.max_duration, np.iinfo(np.int32).max)
+
+    # The C++ extensions can be compiled with support for either integer or
+    # double precision. In each case, the default value for max_duration is
+    # the largest representable value.
+    if isinstance(vehicle_type.max_duration, int):
+        assert_equal(vehicle_type.max_duration, np.iinfo(np.int32).max)
+    else:
+        assert_allclose(vehicle_type.max_duration, sys.float_info.max)
 
 
 def test_vehicle_type_attribute_access():
