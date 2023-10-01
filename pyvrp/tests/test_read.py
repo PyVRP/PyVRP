@@ -124,6 +124,10 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     assert_equal(data.num_locations, 22)
     assert_equal(data.vehicle_type(0).capacity, 6_000)
 
+    assert_equal(len(data.depots()), data.num_depots)
+    assert_equal(len(data.clients()), data.num_clients)
+    assert_equal(data.num_locations, data.num_depots + data.num_clients)
+
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
     assert_equal(data.location(0).x, 1450)  # depot [x, y] location
     assert_equal(data.location(0).y, 2150)
