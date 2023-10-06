@@ -123,7 +123,9 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
-    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const adjustment
+        = (numClients > numVehicles && numClients % numVehicles != 0);
+    auto const perRoute = perVehicle + adjustment;
     auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
     std::vector<std::vector<Client>> routes(numRoutes);

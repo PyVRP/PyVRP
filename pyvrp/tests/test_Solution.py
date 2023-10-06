@@ -100,6 +100,32 @@ def test_random_constructor_cycles_over_routes(ok_small):
         assert_equal(len(routes[idx]), size)
 
 
+@mark.parametrize("num_vehicles", (4, 5, 1000))
+def test_random_constructor_with_more_vehicles_than_clients(num_vehicles):
+    """
+    Tests that the random constructed solution has exactly as many routes as
+    the number of clients when there are sufficient vehicles available.
+    """
+    num_clients = 4
+    data = ProblemData(
+        clients=[Client(0, 0) for _ in range(num_clients)],
+        depots=[Client(0, 0)],
+        vehicle_types=[VehicleType(1, num_vehicles)],
+        distance_matrix=np.zeros((5, 5), dtype=int),
+        duration_matrix=np.zeros((5, 5), dtype=int),
+    )
+    rng = RandomNumberGenerator(seed=42)
+
+    sol = Solution.make_random(data, rng)
+    routes = sol.get_routes()
+
+    assert_equal(sol.num_routes(), num_clients)
+    assert_equal(len(routes), num_clients)
+
+    for route in routes:
+        assert_equal(len(route), 1)
+
+
 def test_route_constructor_raises_too_many_vehicles(ok_small):
     """
     Tests that constructing a solution with more routes than available in the
