@@ -119,11 +119,14 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     std::shuffle(clients.begin(), clients.end(), rng);
 
     // Distribute clients evenly over the routes: the total number of clients
-    // per vehicle, with an adjustment in case the division is not perfect.
+    // per vehicle, with an adjustment in case the division is not perfect and
+    // there are not enough vehicles for single-client routes.
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
-    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const adjustment
+        = numClients > numVehicles && numClients % numVehicles != 0;
+    auto const perRoute = perVehicle + adjustment;
     auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
     std::vector<std::vector<Client>> routes(numRoutes);

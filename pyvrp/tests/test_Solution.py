@@ -100,6 +100,26 @@ def test_random_constructor_cycles_over_routes(ok_small):
         assert_equal(len(routes[idx]), size)
 
 
+@mark.parametrize("num_vehicles", (4, 5, 1_000))
+def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
+    """
+    Tests that the randomly constructed solution has exactly as many routes as
+    the number of clients when there are sufficient vehicles available.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(10, num_vehicles)])
+    assert_equal(data.num_clients, 4)
+
+    rng = RandomNumberGenerator(seed=42)
+    sol = Solution.make_random(data, rng)
+    routes = sol.get_routes()
+
+    for route in routes:
+        assert_equal(len(route), 1)
+
+    assert_equal(sol.num_routes(), data.num_clients)
+    assert_equal(len(routes), data.num_clients)
+
+
 def test_route_constructor_raises_too_many_vehicles(ok_small):
     """
     Tests that constructing a solution with more routes than available in the
