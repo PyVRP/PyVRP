@@ -4,6 +4,7 @@
 [![CI](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
 [![DOC](https://github.com/PyVRP/PyVRP/actions/workflows/DOC.yml/badge.svg?branch=main)](https://pyvrp.org/)
 [![codecov](https://codecov.io/gh/PyVRP/PyVRP/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/PyVRP/PyVRP)
+[![DOI:10.1287/ijoc.2023.0055](https://img.shields.io/badge/DOI-10.1287/ijoc.2023.0055-4CC61E.svg)](https://doi.org/10.1287/ijoc.2023.0055)
 
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports VRPs with:
@@ -52,7 +53,26 @@ If you are looking for help, please follow the instructions [here][3].
 
 ### How to cite PyVRP
 
-TODO
+If you use PyVRP in your research, please consider citing the following paper:
+
+> Wouda, N.A., L. Lan, and W. Kool (2023).
+> PyVRP: a high-performance VRP solver package.
+> _INFORMS Journal on Computing_, forthcoming.
+> https://doi.org/10.1287/ijoc.2023.0055
+
+Or, using the following BibTeX entry:
+
+```bibtex
+@article{Wouda_Lan_Kool_PyVRP_2023,
+  doi = {10.1287/ijoc.2023.0055},
+  url = {https://doi.org/10.1287/ijoc.2023.0055},
+  year = {2023},
+  publisher = {INFORMS},
+  author = {Niels A. Wouda and Leon Lan and Wouter Kool},
+  title = {{PyVRP}: a high-performance {VRP} solver package},
+  journal = {INFORMS Journal on Computing},
+}
+```
 
 
 [1]: https://pyvrp.org/
