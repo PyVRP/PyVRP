@@ -199,13 +199,19 @@ class Model:
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
+        max_duration: Optional[int] = None,
     ) -> VehicleType:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
         created vehicle type.
         """
         vehicle_type = VehicleType(
-            capacity, num_available, fixed_cost, tw_early, tw_late
+            capacity,
+            num_available,
+            fixed_cost,
+            tw_early,
+            tw_late,
+            max_duration,
         )
 
         self._vehicle_types.append(vehicle_type)

@@ -89,13 +89,13 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Cost,
                       std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>,
-                      pyvrp::Duration>(),
+                      std::optional<pyvrp::Duration>>(),
              py::arg("capacity"),
              py::arg("num_available"),
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = py::none(),
              py::arg("tw_late") = py::none(),
-             py::arg("max_duration") = std::numeric_limits<pyvrp::Value>::max())
+             py::arg("max_duration") = py::none())
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)

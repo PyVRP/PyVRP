@@ -47,13 +47,13 @@ ProblemData::VehicleType::VehicleType(Load capacity,
                                       Cost fixedCost,
                                       std::optional<Duration> twEarly,
                                       std::optional<Duration> twLate,
-                                      Duration maxDuration)
+                                      std::optional<Duration> maxDuration)
     : capacity(capacity),
       numAvailable(numAvailable),
       fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate),
-      maxDuration(maxDuration)
+      maxDuration(maxDuration.value_or(std::numeric_limits<Duration>::max()))
 {
     if (capacity < 0)
         throw std::invalid_argument("capacity must be >= 0.");
@@ -77,7 +77,7 @@ ProblemData::VehicleType::VehicleType(Load capacity,
             throw std::invalid_argument("tw_early must be >= 0.");
     }
 
-    if (maxDuration < 0)
+    if (this->maxDuration < 0)
         throw std::invalid_argument("max_duration must be >= 0.");
 }
 
