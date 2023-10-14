@@ -82,8 +82,7 @@ void Route::clear()
                  0,
                  std::max(depot.twEarly, shiftStart),
                  std::min(depot.twLate, shiftEnd),
-                 0,
-                 vehicleType_.maxDuration);
+                 0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
     stats.emplace_back(depotTws);

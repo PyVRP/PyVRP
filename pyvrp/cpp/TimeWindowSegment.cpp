@@ -21,7 +21,6 @@ TimeWindowSegment::TimeWindowSegment(size_t idx,
       timeWarp_(0),
       twEarly_(client.twEarly),
       twLate_(client.twLate),
-      releaseTime_(client.releaseTime),
-      maxDuration_(std::numeric_limits<Duration>::max())
+      releaseTime_(client.releaseTime)
 {
 }

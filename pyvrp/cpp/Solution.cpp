@@ -254,8 +254,7 @@ Solution::Route::Route(ProblemData const &data,
                                0,
                                std::max(depot.twEarly, shiftStart),
                                std::min(depot.twLate, shiftEnd),
-                               0,
-                               vehType.maxDuration);
+                               0);
 
     auto tws = depotTws;
     size_t prevClient = vehType.depot;

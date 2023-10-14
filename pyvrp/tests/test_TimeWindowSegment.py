@@ -1,10 +1,8 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp._pyvrp import TimeWindowSegment
-
-_INT_MAX = np.iinfo(np.int32).max
 
 
 @pytest.mark.parametrize("existing_time_warp", [2, 5, 10])
@@ -13,7 +11,7 @@ def test_total_time_warp_when_there_is_existing_time_warp(existing_time_warp):
     Tests that the ``total_time_warp()`` returns existing time warp when no
     segments have been merged yet.
     """
-    tws1 = TimeWindowSegment(0, 0, 0, existing_time_warp, 0, 0, 0, _INT_MAX)
+    tws1 = TimeWindowSegment(0, 0, 0, existing_time_warp, 0, 0, 0)
     assert_equal(tws1.total_time_warp(), existing_time_warp)
 
 
@@ -21,8 +19,8 @@ def test_merge_two():
     """
     Tests merging two time window segments.
     """
-    tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0, _INT_MAX)
-    tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6, 0, _INT_MAX)
+    tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0)
+    tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6, 0)
 
     mat = np.asarray([[1, 4], [1, 2]])
     merged = TimeWindowSegment.merge(mat, tws1, tws2)
@@ -37,7 +35,7 @@ def test_merge_two():
 
     # Now, let's add a bit of release time (3), so that the total time warp
     # should become 8 + 3 = 11.
-    tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6, 3, _INT_MAX)
+    tws2 = TimeWindowSegment(1, 1, 0, 5, 3, 6, 3)
     merged = TimeWindowSegment.merge(mat, tws1, tws2)
     assert_equal(merged.total_time_warp(), 11)
 
@@ -46,9 +44,9 @@ def test_merge_three():
     """
     Tests merging three time window segments.
     """
-    tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0, _INT_MAX)
-    tws2 = TimeWindowSegment(1, 1, 0, 0, 3, 6, 0, _INT_MAX)
-    tws3 = TimeWindowSegment(2, 2, 0, 0, 2, 3, 2, _INT_MAX)
+    tws1 = TimeWindowSegment(0, 0, 5, 0, 0, 5, 0)
+    tws2 = TimeWindowSegment(1, 1, 0, 0, 3, 6, 0)
+    tws3 = TimeWindowSegment(2, 2, 0, 0, 2, 3, 2)
 
     mat = np.asarray([[1, 4, 1], [1, 2, 4], [1, 1, 1]])
     merged1 = TimeWindowSegment.merge(mat, tws1, tws2)
@@ -70,8 +68,8 @@ def test_merging_two_previously_merged_tws():
     segments, when both have time warp.
     """
     time_warp = 1
-    tws1 = TimeWindowSegment(0, 0, 5, time_warp, 0, 5, 0, _INT_MAX)  # depot
-    tws2 = TimeWindowSegment(1, 1, 1, time_warp, 3, 6, 0, _INT_MAX)  # client 1
+    tws1 = TimeWindowSegment(0, 0, 5, time_warp, 0, 5, 0)  # depot
+    tws2 = TimeWindowSegment(1, 1, 1, time_warp, 3, 6, 0)  # client 1
 
     # Each of these segments has some initial time warp.
     assert_equal(tws1.total_time_warp(), 1)
@@ -106,15 +104,3 @@ def test_merging_two_previously_merged_tws():
     # (plus the existing unit). So we get 4 + 1 + 1 + 4 = 10 time warp.
     merged = TimeWindowSegment.merge(mat, merged12, merged21)
     assert_equal(merged.total_time_warp(), 10)
-
-
-@pytest.mark.parametrize(
-    ("duration", "max_duration", "expected"),
-    [(0, 5, 0), (10, 5, 5), (5, 5, 0), (8, 5, 3), (3, 2, 1)],
-)
-def test_max_duration(duration: int, max_duration: int, expected: int):
-    """
-    Tests that maximum duration violations result in time warp.
-    """
-    tws = TimeWindowSegment(0, 0, duration, 0, 0, 0, 0, max_duration)
-    assert_allclose(tws.total_time_warp(), expected)
