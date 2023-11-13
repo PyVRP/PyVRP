@@ -456,9 +456,7 @@ std::ostream &operator<<(std::ostream &out, pyvrp::Solution const &sol);
 std::ostream &operator<<(std::ostream &out,
                          pyvrp::Solution::Route const &route);
 
-namespace std
-{
-template <> struct hash<pyvrp::Solution>
+template <> struct std::hash<pyvrp::Solution>
 {
     size_t operator()(pyvrp::Solution const &sol) const
     {
@@ -471,6 +469,5 @@ template <> struct hash<pyvrp::Solution>
         return res;
     }
 };
-}  // namespace std
 
 #endif  // PYVRP_SOLUTION_H
