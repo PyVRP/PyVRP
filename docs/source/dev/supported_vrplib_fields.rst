@@ -39,7 +39,7 @@ PyVRP supports the following specifications:
 
    ``VEHICLES``
       Number of vehicles in the instance.
-      Defaults to the number of clients in the instance when this specification is not provided.
+      The number of vehicles defaults to the number of clients in the instance when this specification is not provided.
 
 
 Data sections
