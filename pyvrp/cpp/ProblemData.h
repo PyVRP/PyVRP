@@ -163,9 +163,9 @@ public:
      */
     struct VehicleType
     {
-        Load const capacity;        // This type's vehicle capacity
         size_t const numAvailable;  // Available vehicles of this type
         size_t const depot = 0;     // Departure and return depot location
+        Load const capacity;        // This type's vehicle capacity
         Cost const fixedCost;       // Fixed cost of using this vehicle type
         std::optional<Duration> const twEarly;  // Start of shift
         std::optional<Duration> const twLate;   // End of shift
