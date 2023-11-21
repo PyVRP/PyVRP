@@ -47,8 +47,8 @@ ProblemData::VehicleType::VehicleType(Load capacity,
                                       Cost fixedCost,
                                       std::optional<Duration> twEarly,
                                       std::optional<Duration> twLate)
-    : capacity(capacity),
-      numAvailable(numAvailable),
+    : numAvailable(numAvailable),
+      capacity(capacity),
       fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate)
