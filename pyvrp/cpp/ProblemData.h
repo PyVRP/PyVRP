@@ -142,7 +142,7 @@ public:
      *     End of the vehicle type's shift. Defaults to the depot's closing
      *     time if not given.
      * max_duration
-     *     Maximum route duration. Not constrained if not given.
+     *     Maximum route duration. Unconstrained if not explicitly set.
      *
      * Attributes
      * ----------
@@ -159,7 +159,8 @@ public:
      * tw_late
      *     End of the vehicle type's shift, if specified.
      * max_duration
-     *     Maximum duration of the route this vehicle type is assigned to.
+     *     Maximum duration of the route this vehicle type is assigned to. This
+     *     is a very large number when the maximum duration is unconstrained.
      */
     struct VehicleType
     {

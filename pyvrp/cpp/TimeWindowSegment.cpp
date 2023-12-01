@@ -1,7 +1,5 @@
 #include "TimeWindowSegment.h"
 
-#include <limits>
-
 using pyvrp::Duration;
 using pyvrp::TimeWindowSegment;
 

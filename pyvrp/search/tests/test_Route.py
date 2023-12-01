@@ -503,28 +503,26 @@ def test_route_centroid(ok_small, clients):
     assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))
 
 
-# @pytest.mark.parametrize(
-#     ("max_duration", "expected"),
-#     [
-#         (100_000, 3_633),  # large enough; same time warp as other tests
-#         (5_000, 6_583),  # now max_duration constraint applies
-#         (0, 11_583),  # the max_duration constraint scales linearly
-#     ],
-# )
-# def test_max_duration(
-#     ok_small: ProblemData, max_duration: int, expected: int
-# ):
-#     """
-#     Tests that the maximum duration attribute of vehicle types is reflected
-#     in the route's time warp calculations.
-#     """
-#     vehicle_type = VehicleType(10, 3, max_duration=max_duration)
-#     data = ok_small.replace(vehicle_types=[vehicle_type])
+@pytest.mark.parametrize(
+    ("max_duration", "expected"),
+    [
+        (100_000, 3_633),  # large enough; same time warp as other tests
+        (5_000, 6_583),  # now max_duration constraint applies
+        (0, 11_583),  # the max_duration constraint scales linearly
+    ],
+)
+def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
+    """
+    Tests that the maximum duration attribute of vehicle types is reflected
+    in the route's time warp calculations.
+    """
+    vehicle_type = VehicleType(10, 3, max_duration=max_duration)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
 
-#     route = Route(data, 0, 0)
-#     for client in range(data.num_depots, data.num_locations):
-#         route.append(Node(loc=client))
+    route = Route(data, 0, 0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
 
-#     route.update()
-#     assert_(route.has_time_warp())
-#     assert_allclose(route.time_warp(), expected)
+    route.update()
+    assert_(route.has_time_warp())
+    assert_allclose(route.time_warp(), expected)
