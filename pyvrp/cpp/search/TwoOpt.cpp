@@ -42,7 +42,9 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
         tws = TWS::merge(data.durationMatrix(), tws, route->tws(idx));
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+    auto const excessDuration = std::max<Duration>(
+        tws.duration() - data.vehicleType(route->vehicleType()).maxDuration, 0);
+    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration);
 
     return deltaCost;
 }
@@ -79,51 +81,6 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
         deltaCost -= vRoute->fixedCost();
 
-    if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
-        return deltaCost;
-
-    if (V->idx() < vRoute->size())
-    {
-        auto const uTWS
-            = TWS::merge(data.durationMatrix(),
-                         uRoute->twsBefore(U->idx()),
-                         vRoute->twsBetween(V->idx() + 1, vRoute->size()),
-                         uRoute->tws(uRoute->size() + 1));
-
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    }
-    else
-    {
-        auto const uTWS = TWS::merge(data.durationMatrix(),
-                                     uRoute->twsBefore(U->idx()),
-                                     uRoute->tws(uRoute->size() + 1));
-
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    }
-
-    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
-
-    if (U->idx() < uRoute->size())
-    {
-        auto const vTWS
-            = TWS::merge(data.durationMatrix(),
-                         vRoute->twsBefore(V->idx()),
-                         uRoute->twsBetween(U->idx() + 1, uRoute->size()),
-                         vRoute->tws(vRoute->size() + 1));
-
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    }
-    else
-    {
-        auto const vTWS = TWS::merge(data.durationMatrix(),
-                                     vRoute->twsBefore(V->idx()),
-                                     vRoute->tws(vRoute->size() + 1));
-
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    }
-
-    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
-
     // Proposed move appends the segment after V to U, and the segment after U
     // to V. So we need to make a distinction between the loads at U and V, and
     // the loads from clients visited after these nodes.
@@ -139,6 +96,70 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     deltaCost
         += costEvaluator.loadPenalty(vLoad + uLoadAfter, vRoute->capacity());
     deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
+
+    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+
+    if (deltaCost >= 0)
+        return deltaCost;
+
+    if (V->idx() < vRoute->size())
+    {
+        auto const uTWS
+            = TWS::merge(data.durationMatrix(),
+                         uRoute->twsBefore(U->idx()),
+                         vRoute->twsBetween(V->idx() + 1, vRoute->size()),
+                         uRoute->tws(uRoute->size() + 1));
+
+        auto const uExcessDuration = std::max<Duration>(
+            uTWS.duration()
+                - data.vehicleType(uRoute->vehicleType()).maxDuration,
+            0);
+        deltaCost
+            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+    }
+    else
+    {
+        auto const uTWS = TWS::merge(data.durationMatrix(),
+                                     uRoute->twsBefore(U->idx()),
+                                     uRoute->tws(uRoute->size() + 1));
+
+        auto const uExcessDuration = std::max<Duration>(
+            uTWS.duration()
+                - data.vehicleType(uRoute->vehicleType()).maxDuration,
+            0);
+        deltaCost
+            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+    }
+
+    if (U->idx() < uRoute->size())
+    {
+        auto const vTWS
+            = TWS::merge(data.durationMatrix(),
+                         vRoute->twsBefore(V->idx()),
+                         uRoute->twsBetween(U->idx() + 1, uRoute->size()),
+                         vRoute->tws(vRoute->size() + 1));
+
+        auto const vExcessDuration = std::max<Duration>(
+            vTWS.duration()
+                - data.vehicleType(vRoute->vehicleType()).maxDuration,
+            0);
+        deltaCost
+            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+    }
+    else
+    {
+        auto const vTWS = TWS::merge(data.durationMatrix(),
+                                     vRoute->twsBefore(V->idx()),
+                                     vRoute->tws(vRoute->size() + 1));
+
+        auto const vExcessDuration = std::max<Duration>(
+            vTWS.duration()
+                - data.vehicleType(vRoute->vehicleType()).maxDuration,
+            0);
+        deltaCost
+            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+    }
 
     return deltaCost;
 }

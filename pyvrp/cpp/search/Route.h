@@ -331,7 +331,9 @@ Distance Route::distance() const { return stats.back().cumDist; }
 
 Duration Route::timeWarp() const
 {
-    return stats.back().twsBefore.totalTimeWarp();
+    auto const &tws = stats.back().twsBefore;
+    return tws.totalTimeWarp()
+           + std::max<Duration>(tws.duration() - vehicleType_.maxDuration, 0);
 }
 
 bool Route::empty() const { return size() == 0; }

@@ -29,7 +29,10 @@ Cost SwapRoutes::evaluate(Route *U,
                                  U->twsBetween(1, U->size()),
                                  V->tws(V->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    auto const uExcessDuration = std::max<Duration>(
+        uTWS.duration() - data.vehicleType(U->vehicleType()).maxDuration, 0);
+    deltaCost
+        += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
     deltaCost -= costEvaluator.twPenalty(U->timeWarp());
 
     auto const vTWS = TWS::merge(data.durationMatrix(),
@@ -37,7 +40,10 @@ Cost SwapRoutes::evaluate(Route *U,
                                  V->twsBetween(1, V->size()),
                                  U->tws(U->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    auto const vExcessDuration = std::max<Duration>(
+        vTWS.duration() - data.vehicleType(V->vehicleType()).maxDuration, 0);
+    deltaCost
+        += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
     deltaCost -= costEvaluator.twPenalty(V->timeWarp());
 
     // TODO handle the case of depot differences (multiple depots). There is

@@ -7,22 +7,25 @@ using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 using TWS = pyvrp::TimeWindowSegment;
 
-void SwapStar::updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator)
+void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (auto *U : *R1)
+    for (auto *U : *R)
     {
-        auto twData = TWS::merge(data.durationMatrix(),
-                                 R1->twsBefore(U->idx() - 1),
-                                 R1->twsAfter(U->idx() + 1));
+        auto const tws = TWS::merge(data.durationMatrix(),
+                                    R->twsBefore(U->idx() - 1),
+                                    R->twsAfter(U->idx() + 1));
+
+        auto const excessDuration = std::max<Duration>(
+            tws.duration() - data.vehicleType(R->vehicleType()).maxDuration, 0);
 
         Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                    - data.dist(p(U)->client(), U->client())
                                    - data.dist(U->client(), n(U)->client());
 
-        removalCosts(R1->idx(), U->client())
+        removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(twData.totalTimeWarp())
-              - costEvaluator.twPenalty(R1->timeWarp());
+              + costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration)
+              - costEvaluator.twPenalty(R->timeWarp());
     }
 }
 
@@ -43,14 +46,18 @@ void SwapStar::updateInsertionCost(Route *R,
                                     U->route()->tws(U->idx()),
                                     R->twsAfter(idx + 1));
 
+        auto const excessDuration = std::max<Duration>(
+            tws.duration() - data.vehicleType(R->vehicleType()).maxDuration, 0);
+
         auto *V = (*R)[idx];
         auto const deltaDist = data.dist(V->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
                                - data.dist(V->client(), n(V)->client());
 
-        auto const deltaCost = static_cast<Cost>(deltaDist)
-                               + costEvaluator.twPenalty(tws.totalTimeWarp())
-                               - costEvaluator.twPenalty(R->timeWarp());
+        auto const deltaCost
+            = static_cast<Cost>(deltaDist)
+              + costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration)
+              - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
     }
@@ -69,17 +76,24 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
             return std::make_pair(best_.costs[idx], best_.locs[idx]);
 
     // As a fallback option, we consider inserting in the place of V.
-    auto const twData = TWS::merge(data.durationMatrix(),
-                                   V->route()->twsBefore(V->idx() - 1),
-                                   U->route()->tws(U->idx()),
-                                   V->route()->twsAfter(V->idx() + 1));
+    auto const tws = TWS::merge(data.durationMatrix(),
+                                V->route()->twsBefore(V->idx() - 1),
+                                U->route()->tws(U->idx()),
+                                V->route()->twsAfter(V->idx() + 1));
+
+    auto const excessDuration = std::max<Duration>(
+        tws.duration()
+            - data.vehicleType(V->route()->vehicleType()).maxDuration,
+        0);
 
     Distance const deltaDist = data.dist(p(V)->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
                                - data.dist(p(V)->client(), n(V)->client());
-    Cost const deltaCost = static_cast<Cost>(deltaDist)
-                           + costEvaluator.twPenalty(twData.totalTimeWarp())
-                           - costEvaluator.twPenalty(V->route()->timeWarp());
+
+    Cost const deltaCost
+        = static_cast<Cost>(deltaDist)
+          + costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration)
+          - costEvaluator.twPenalty(V->route()->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -113,7 +127,12 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                                     U->route()->tws(U->idx()),
                                     route->twsAfter(V->idx() + 2));
 
-        deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+        auto const excessDuration = std::max<Duration>(
+            tws.duration() - data.vehicleType(route->vehicleType()).maxDuration,
+            0);
+
+        deltaCost
+            += costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration);
     }
     else  // in non-adjacent parts of the route.
     {
@@ -137,7 +156,13 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              route->twsBetween(V->idx() + 1, remove->idx() - 1),
                              route->twsAfter(remove->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            auto const excessDuration = std::max<Duration>(
+                tws.duration()
+                    - data.vehicleType(route->vehicleType()).maxDuration,
+                0);
+
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
+                                                 + excessDuration);
         }
         else
         {
@@ -148,7 +173,13 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              U->route()->tws(U->idx()),
                              route->twsAfter(V->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            auto const excessDuration = std::max<Duration>(
+                tws.duration()
+                    - data.vehicleType(route->vehicleType()).maxDuration,
+                0);
+
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
+                                                 + excessDuration);
         }
     }
 
