@@ -27,7 +27,6 @@ exclude = [
 packages = [
     { include = "pyvrp" },
     { include = "docs" },
-    { include = "examples" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
