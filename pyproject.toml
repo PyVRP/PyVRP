@@ -9,6 +9,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
+homepage = "https://pyvrp.org/"
 repository = "https://github.com/PyVRP/PyVRP"
 include = [
     { path = "LICENSE.md" },
@@ -26,6 +27,7 @@ exclude = [
 packages = [
     { include = "pyvrp" },
     { include = "docs" },
+    { include = "examples" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
