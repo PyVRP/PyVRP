@@ -40,9 +40,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                                uRoute->twsBefore(U->idx() - 1),
                                uRoute->twsAfter(U->idx() + 2));
 
-        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            uTWS.timeWarp()
+            + std::max<Duration>(uTWS.duration() - uRoute->maxDuration(), 0));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         auto const loadDiff = uRoute->loadBetween(U->idx(), U->idx() + 1);
@@ -66,9 +66,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                                uRoute->tws(U->idx()),
                                vRoute->twsAfter(V->idx() + 1));
 
-        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            vTWS.timeWarp()
+            + std::max<Duration>(vTWS.duration() - vRoute->maxDuration(), 0));
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
     }
     else  // within same route
@@ -88,9 +88,11 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                              uRoute->tws(U->idx()),
                              uRoute->twsAfter(V->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-            deltaCost += costEvaluator.twPenalty(tws.duration(),
-                                                 uRoute->maxDuration());
+            auto const excessDuration
+                = std::max<Duration>(tws.duration() - uRoute->maxDuration(), 0);
+
+            deltaCost
+                += costEvaluator.twPenalty(tws.timeWarp() + excessDuration);
         }
         else
         {
@@ -102,9 +104,11 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                              uRoute->twsBetween(V->idx() + 1, U->idx() - 1),
                              uRoute->twsAfter(U->idx() + 2));
 
-            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-            deltaCost += costEvaluator.twPenalty(tws.duration(),
-                                                 uRoute->maxDuration());
+            auto const excessDuration
+                = std::max<Duration>(tws.duration() - uRoute->maxDuration(), 0);
+
+            deltaCost
+                += costEvaluator.twPenalty(tws.timeWarp() + excessDuration);
         }
     }
 

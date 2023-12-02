@@ -34,8 +34,9 @@ Cost pyvrp::search::insertCost(Route::Node *U,
                                 TWS(U->client(), client),
                                 route->twsAfter(V->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-    deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
+    deltaCost += costEvaluator.twPenalty(
+        tws.timeWarp()
+        + std::max<Duration>(tws.duration() - route->maxDuration(), 0));
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;
@@ -67,8 +68,9 @@ Cost pyvrp::search::removeCost(Route::Node *U,
                                 route->twsBefore(U->idx() - 1),
                                 route->twsAfter(U->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-    deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
+    deltaCost += costEvaluator.twPenalty(
+        tws.timeWarp()
+        + std::max<Duration>(tws.duration() - route->maxDuration(), 0));
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;

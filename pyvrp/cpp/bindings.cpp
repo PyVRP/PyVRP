@@ -434,10 +434,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("capacity"),
              DOC(pyvrp, CostEvaluator, loadPenalty, 1))
         .def("tw_penalty",
-             py::overload_cast<pyvrp::Duration>(&CostEvaluator::twPenalty,
-                                                py::const_),
+             &CostEvaluator::twPenalty,
              py::arg("time_warp"),
-             DOC(pyvrp, CostEvaluator, twPenalty, 1))
+             DOC(pyvrp, CostEvaluator, twPenalty))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),

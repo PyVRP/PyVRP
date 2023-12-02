@@ -15,14 +15,16 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
                                     R->twsBefore(U->idx() - 1),
                                     R->twsAfter(U->idx() + 1));
 
-        Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
-                                   - data.dist(p(U)->client(), U->client())
-                                   - data.dist(U->client(), n(U)->client());
+        auto const deltaDist = data.dist(p(U)->client(), n(U)->client())
+                               - data.dist(p(U)->client(), U->client())
+                               - data.dist(U->client(), n(U)->client());
+
+        auto const excessDuration
+            = std::max<Duration>(tws.duration() - R->maxDuration(), 0);
 
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(tws.timeWarp())
-              + costEvaluator.twPenalty(tws.duration(), R->maxDuration())
+              + costEvaluator.twPenalty(tws.timeWarp() + excessDuration)
               - costEvaluator.twPenalty(R->timeWarp());
     }
 }
@@ -49,10 +51,12 @@ void SwapStar::updateInsertionCost(Route *R,
                                + data.dist(U->client(), n(V)->client())
                                - data.dist(V->client(), n(V)->client());
 
+        auto const excessDuration
+            = std::max<Duration>(tws.duration() - R->maxDuration(), 0);
+
         auto const deltaCost
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(tws.timeWarp())
-              + costEvaluator.twPenalty(tws.duration(), R->maxDuration())
+              + costEvaluator.twPenalty(tws.timeWarp() + excessDuration)
               - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
@@ -77,17 +81,17 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
                                 U->route()->tws(U->idx()),
                                 V->route()->twsAfter(V->idx() + 1));
 
-    Distance const deltaDist = data.dist(p(V)->client(), U->client())
-                               + data.dist(U->client(), n(V)->client())
-                               - data.dist(p(V)->client(), n(V)->client());
+    auto const deltaDist = data.dist(p(V)->client(), U->client())
+                           + data.dist(U->client(), n(V)->client())
+                           - data.dist(p(V)->client(), n(V)->client());
 
-    // clang-format off
-    Cost const deltaCost
-        = static_cast<Cost>(deltaDist) 
-          + costEvaluator.twPenalty(tws.timeWarp())
-          + costEvaluator.twPenalty(tws.duration(), V->route()->maxDuration())
+    auto const excessDuration
+        = std::max<Duration>(tws.duration() - V->route()->maxDuration(), 0);
+
+    auto const deltaCost
+        = static_cast<Cost>(deltaDist)
+          + costEvaluator.twPenalty(tws.timeWarp() + excessDuration)
           - costEvaluator.twPenalty(V->route()->timeWarp());
-    // clang-format on
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -121,9 +125,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                                     U->route()->tws(U->idx()),
                                     route->twsAfter(V->idx() + 2));
 
-        deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            tws.timeWarp()
+            + std::max<Duration>(tws.duration() - route->maxDuration(), 0));
     }
     else  // in non-adjacent parts of the route.
     {
@@ -147,9 +151,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              route->twsBetween(V->idx() + 1, remove->idx() - 1),
                              route->twsAfter(remove->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-            deltaCost += costEvaluator.twPenalty(tws.duration(),
-                                                 route->maxDuration());
+            deltaCost += costEvaluator.twPenalty(
+                tws.timeWarp()
+                + std::max<Duration>(tws.duration() - route->maxDuration(), 0));
         }
         else
         {
@@ -160,9 +164,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              U->route()->tws(U->idx()),
                              route->twsAfter(V->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-            deltaCost += costEvaluator.twPenalty(tws.duration(),
-                                                 route->maxDuration());
+            deltaCost += costEvaluator.twPenalty(
+                tws.timeWarp()
+                + std::max<Duration>(tws.duration() - route->maxDuration(), 0));
         }
     }
 

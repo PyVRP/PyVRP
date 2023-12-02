@@ -42,8 +42,9 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
         tws = TWS::merge(data.durationMatrix(), tws, route->tws(idx));
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.timeWarp());
-    deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
+    deltaCost += costEvaluator.twPenalty(
+        tws.timeWarp()
+        + std::max<Duration>(tws.duration() - route->maxDuration(), 0));
 
     return deltaCost;
 }
@@ -110,9 +111,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                          vRoute->twsBetween(V->idx() + 1, vRoute->size()),
                          uRoute->tws(uRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            uTWS.timeWarp()
+            + std::max<Duration>(uTWS.duration() - uRoute->maxDuration(), 0));
     }
     else
     {
@@ -120,9 +121,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      uRoute->twsBefore(U->idx()),
                                      uRoute->tws(uRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            uTWS.timeWarp()
+            + std::max<Duration>(uTWS.duration() - uRoute->maxDuration(), 0));
     }
 
     if (U->idx() < uRoute->size())
@@ -133,9 +134,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                          uRoute->twsBetween(U->idx() + 1, uRoute->size()),
                          vRoute->tws(vRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            vTWS.timeWarp()
+            + std::max<Duration>(vTWS.duration() - vRoute->maxDuration(), 0));
     }
     else
     {
@@ -143,9 +144,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      vRoute->twsBefore(V->idx()),
                                      vRoute->tws(vRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
-        deltaCost
-            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
+        deltaCost += costEvaluator.twPenalty(
+            vTWS.timeWarp()
+            + std::max<Duration>(vTWS.duration() - vRoute->maxDuration(), 0));
     }
 
     return deltaCost;

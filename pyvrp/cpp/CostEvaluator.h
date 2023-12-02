@@ -63,12 +63,6 @@ public:
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
 
     /**
-     * Computes the total excess duration penalty for the given duration.
-     */
-    [[nodiscard]] inline Cost twPenalty(Duration duration,
-                                        Duration maxDuration) const;
-
-    /**
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
     // The docstring above is written for Python, where we only expose this
@@ -123,11 +117,6 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #else
     return static_cast<Cost>(timeWarp) * timeWarpPenalty;
 #endif
-}
-
-Cost CostEvaluator::twPenalty(Duration duration, Duration maxDuration) const
-{
-    return twPenalty(std::max<Duration>(duration - maxDuration, 0));
 }
 
 template <CostEvaluatable T>

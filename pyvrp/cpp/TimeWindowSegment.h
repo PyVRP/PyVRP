@@ -66,7 +66,15 @@ public:
     [[nodiscard]] Duration duration() const;
 
     /**
-     * Returns the total time warp on this route segment.
+     * Returns the time warp on this route segment. This is all time warp
+     * incurred due to time windows, service durations, travel, and client
+     * release times.
+     *
+     * .. note::
+     *
+     *    This method does not know about time warp incurred in other places,
+     *    e.g. due to route-level constraints on maximum duration. Such time
+     *    warp is tracked outside of :class:`~pyvrp._pyvrp.TimeWindowSegment`.
      *
      * Returns
      * -------
