@@ -73,7 +73,7 @@ public:
      * int
      *     Total time warp on this route segment.
      */
-    [[nodiscard]] inline Duration totalTimeWarp() const;
+    [[nodiscard]] inline Duration timeWarp() const;
 
     /**
      * Earliest start time for this route segment that results in minimum route
@@ -154,7 +154,7 @@ TimeWindowSegment TimeWindowSegment::merge(
 #endif
 }
 
-Duration TimeWindowSegment::totalTimeWarp() const
+Duration TimeWindowSegment::timeWarp() const
 {
     return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
 }

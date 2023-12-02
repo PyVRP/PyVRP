@@ -21,7 +21,7 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(tws.totalTimeWarp())
+              + costEvaluator.twPenalty(tws.timeWarp())
               + costEvaluator.twPenalty(tws.duration(), R->maxDuration())
               - costEvaluator.twPenalty(R->timeWarp());
     }
@@ -51,7 +51,7 @@ void SwapStar::updateInsertionCost(Route *R,
 
         auto const deltaCost
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(tws.totalTimeWarp())
+              + costEvaluator.twPenalty(tws.timeWarp())
               + costEvaluator.twPenalty(tws.duration(), R->maxDuration())
               - costEvaluator.twPenalty(R->timeWarp());
 
@@ -81,11 +81,13 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
                                + data.dist(U->client(), n(V)->client())
                                - data.dist(p(V)->client(), n(V)->client());
 
+    // clang-format off
     Cost const deltaCost
-        = static_cast<Cost>(deltaDist)
-          + costEvaluator.twPenalty(tws.totalTimeWarp())
+        = static_cast<Cost>(deltaDist) 
+          + costEvaluator.twPenalty(tws.timeWarp())
           + costEvaluator.twPenalty(tws.duration(), V->route()->maxDuration())
           - costEvaluator.twPenalty(V->route()->timeWarp());
+    // clang-format on
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -119,7 +121,7 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                                     U->route()->tws(U->idx()),
                                     route->twsAfter(V->idx() + 2));
 
-        deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(tws.timeWarp());
         deltaCost
             += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
     }
@@ -145,7 +147,7 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              route->twsBetween(V->idx() + 1, remove->idx() - 1),
                              route->twsAfter(remove->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
             deltaCost += costEvaluator.twPenalty(tws.duration(),
                                                  route->maxDuration());
         }
@@ -158,7 +160,7 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              U->route()->tws(U->idx()),
                              route->twsAfter(V->idx() + 1));
 
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.timeWarp());
             deltaCost += costEvaluator.twPenalty(tws.duration(),
                                                  route->maxDuration());
         }

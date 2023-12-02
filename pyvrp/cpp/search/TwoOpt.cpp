@@ -42,7 +42,7 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
         tws = TWS::merge(data.durationMatrix(), tws, route->tws(idx));
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(tws.timeWarp());
     deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
 
     return deltaCost;
@@ -110,7 +110,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                          vRoute->twsBetween(V->idx() + 1, vRoute->size()),
                          uRoute->tws(uRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         deltaCost
             += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
     }
@@ -120,7 +120,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      uRoute->twsBefore(U->idx()),
                                      uRoute->tws(uRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
         deltaCost
             += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
     }
@@ -133,7 +133,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                          uRoute->twsBetween(U->idx() + 1, uRoute->size()),
                          vRoute->tws(vRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
         deltaCost
             += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
     }
@@ -143,7 +143,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      vRoute->twsBefore(V->idx()),
                                      vRoute->tws(vRoute->size() + 1));
 
-        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+        deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
         deltaCost
             += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
     }

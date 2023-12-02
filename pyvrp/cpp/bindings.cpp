@@ -564,9 +564,9 @@ PYBIND11_MODULE(_pyvrp, m)
             "duration", &TWS::duration, DOC(pyvrp, TimeWindowSegment, duration))
         .def("tw_early", &TWS::twEarly, DOC(pyvrp, TimeWindowSegment, twEarly))
         .def("tw_late", &TWS::twLate, DOC(pyvrp, TimeWindowSegment, twLate))
-        .def("total_time_warp",
-             &TWS::totalTimeWarp,
-             DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
+        .def("time_warp",
+             &TWS::timeWarp,
+             DOC(pyvrp, TimeWindowSegment, timeWarp))
         .def_static("merge",
                     &TWS::merge<>,
                     py::arg("duration_matrix"),

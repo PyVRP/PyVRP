@@ -29,7 +29,7 @@ Cost SwapRoutes::evaluate(Route *U,
                                  U->twsBetween(1, U->size()),
                                  V->tws(V->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(uTWS.timeWarp());
     deltaCost += costEvaluator.twPenalty(uTWS.duration(), U->maxDuration());
     deltaCost -= costEvaluator.twPenalty(U->timeWarp());
 
@@ -38,7 +38,7 @@ Cost SwapRoutes::evaluate(Route *U,
                                  V->twsBetween(1, V->size()),
                                  U->tws(U->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(vTWS.timeWarp());
     deltaCost += costEvaluator.twPenalty(vTWS.duration(), V->maxDuration());
     deltaCost -= costEvaluator.twPenalty(V->timeWarp());
 
