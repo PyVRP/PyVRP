@@ -179,7 +179,7 @@ def test_evaluate_max_duration_constraints(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(10, 1, max_duration=3000),
+            VehicleType(10, 1, max_duration=3_000),
             VehicleType(10, 1),
         ]
     )
@@ -200,8 +200,8 @@ def test_evaluate_max_duration_constraints(ok_small):
     assert_allclose(route1.duration(), 5_332)
     assert_allclose(route1.time_warp(), 2_332)
 
-    # Second route takes 5'323, and has no maximum duration constrain. There is
-    # no other source of time warp, so total route time warp must be zero.
+    # Second route takes 5'323, and has no maximum duration constraint. There
+    # is no other source of time warp, so total route time warp must be zero.
     assert_allclose(route2.duration(), 5_323)
     assert_allclose(route2.time_warp(), 0)
 
