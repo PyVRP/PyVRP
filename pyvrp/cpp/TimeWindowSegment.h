@@ -18,7 +18,11 @@ namespace pyvrp
  *     release_time: int = 0,
  * )
  *
- * Creates a time window segment.
+ * Creates a time window segment (TWS).
+ *
+ * TWSs can be efficiently concatenated, and track statistics about route
+ * duration and time warp resulting from visiting clients in the concatenated
+ * order.
  *
  * Parameters
  * ----------
