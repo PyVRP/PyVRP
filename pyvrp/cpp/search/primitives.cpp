@@ -34,9 +34,8 @@ Cost pyvrp::search::insertCost(Route::Node *U,
                                 TWS(U->client(), client),
                                 route->twsAfter(V->idx() + 1));
 
-    auto const excessDuration = std::max<Duration>(
-        tws.duration() - data.vehicleType(route->vehicleType()).maxDuration, 0);
-    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration);
+    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;
@@ -64,13 +63,12 @@ Cost pyvrp::search::removeCost(Route::Node *U,
                                            route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
-    auto tws = TWS::merge(data.durationMatrix(),
-                          route->twsBefore(U->idx() - 1),
-                          route->twsAfter(U->idx() + 1));
+    auto const tws = TWS::merge(data.durationMatrix(),
+                                route->twsBefore(U->idx() - 1),
+                                route->twsAfter(U->idx() + 1));
 
-    auto const excessDuration = std::max<Duration>(
-        tws.duration() - data.vehicleType(route->vehicleType()).maxDuration, 0);
-    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration);
+    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;

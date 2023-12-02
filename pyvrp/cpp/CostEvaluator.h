@@ -55,12 +55,18 @@ public:
      * Computes the excess capacity penalty for the given excess load, that is,
      * the part of the load that exceeds the capacity.
      */
-    [[nodiscard]] inline Cost loadPenaltyExcess(Load excessLoad) const;
+    [[nodiscard]] inline Cost loadPenalty(Load excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
      */
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
+
+    /**
+     * Computes the total excess duration penalty for the given duration.
+     */
+    [[nodiscard]] inline Cost twPenalty(Duration duration,
+                                        Duration maxDuration) const;
 
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
@@ -100,19 +106,14 @@ public:
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
 
-Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
+Cost CostEvaluator::loadPenalty(Load excessLoad) const
 {
     return static_cast<Cost>(excessLoad) * capacityPenalty;
 }
 
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
-    // Branchless for performance: when load > capacity we return the excess
-    // load penalty; else zero. Note that when load - capacity wraps
-    // around, we return zero because load > capacity evaluates as zero
-    // (so there is no issue here due to unsignedness).
-    Cost penalty = loadPenaltyExcess(load - capacity);
-    return Cost(load > capacity) * penalty;
+    return loadPenalty(std::max<Load>(load - capacity, 0));
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
@@ -124,6 +125,11 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #endif
 }
 
+Cost CostEvaluator::twPenalty(Duration duration, Duration maxDuration) const
+{
+    return twPenalty(std::max<Duration>(duration - maxDuration, 0));
+}
+
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
@@ -133,7 +139,7 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
     return static_cast<Cost>(arg.distance())
            + arg.fixedVehicleCost()
            + arg.uncollectedPrizes()
-           + loadPenaltyExcess(arg.excessLoad())
+           + loadPenalty(arg.excessLoad())
            + twPenalty(arg.timeWarp());
     // clang-format on
 }

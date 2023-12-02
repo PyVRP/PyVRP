@@ -156,6 +156,16 @@ public:
     [[nodiscard]] inline Distance distance() const;
 
     /**
+     * @return The duration of this route.
+     */
+    [[nodiscard]] inline Duration duration() const;
+
+    /**
+     * @return The maximum duration of the vehicle servicing this route.
+     */
+    [[nodiscard]] inline Duration maxDuration() const;
+
+    /**
      * @return Total time warp on this route.
      */
     [[nodiscard]] inline Duration timeWarp() const;
@@ -329,11 +339,15 @@ Cost Route::fixedCost() const { return vehicleType_.fixedCost; }
 
 Distance Route::distance() const { return stats.back().cumDist; }
 
+Duration Route::duration() const { return stats.back().twsBefore.duration(); }
+
+Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
+
 Duration Route::timeWarp() const
 {
     auto const &tws = stats.back().twsBefore;
     return tws.totalTimeWarp()
-           + std::max<Duration>(tws.duration() - vehicleType_.maxDuration, 0);
+           + std::max<Duration>(duration() - maxDuration(), 0);
 }
 
 bool Route::empty() const { return size() == 0; }

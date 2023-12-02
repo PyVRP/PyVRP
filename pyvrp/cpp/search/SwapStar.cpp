@@ -15,16 +15,14 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
                                     R->twsBefore(U->idx() - 1),
                                     R->twsAfter(U->idx() + 1));
 
-        auto const excessDuration = std::max<Duration>(
-            tws.duration() - data.vehicleType(R->vehicleType()).maxDuration, 0);
-
         Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                    - data.dist(p(U)->client(), U->client())
                                    - data.dist(U->client(), n(U)->client());
 
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration)
+              + costEvaluator.twPenalty(tws.totalTimeWarp())
+              + costEvaluator.twPenalty(tws.duration(), R->maxDuration())
               - costEvaluator.twPenalty(R->timeWarp());
     }
 }
@@ -46,9 +44,6 @@ void SwapStar::updateInsertionCost(Route *R,
                                     U->route()->tws(U->idx()),
                                     R->twsAfter(idx + 1));
 
-        auto const excessDuration = std::max<Duration>(
-            tws.duration() - data.vehicleType(R->vehicleType()).maxDuration, 0);
-
         auto *V = (*R)[idx];
         auto const deltaDist = data.dist(V->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
@@ -56,7 +51,8 @@ void SwapStar::updateInsertionCost(Route *R,
 
         auto const deltaCost
             = static_cast<Cost>(deltaDist)
-              + costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration)
+              + costEvaluator.twPenalty(tws.totalTimeWarp())
+              + costEvaluator.twPenalty(tws.duration(), R->maxDuration())
               - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
@@ -81,18 +77,14 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
                                 U->route()->tws(U->idx()),
                                 V->route()->twsAfter(V->idx() + 1));
 
-    auto const excessDuration = std::max<Duration>(
-        tws.duration()
-            - data.vehicleType(V->route()->vehicleType()).maxDuration,
-        0);
-
     Distance const deltaDist = data.dist(p(V)->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
                                - data.dist(p(V)->client(), n(V)->client());
 
     Cost const deltaCost
         = static_cast<Cost>(deltaDist)
-          + costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration)
+          + costEvaluator.twPenalty(tws.totalTimeWarp())
+          + costEvaluator.twPenalty(tws.duration(), V->route()->maxDuration())
           - costEvaluator.twPenalty(V->route()->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
@@ -127,12 +119,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                                     U->route()->tws(U->idx()),
                                     route->twsAfter(V->idx() + 2));
 
-        auto const excessDuration = std::max<Duration>(
-            tws.duration() - data.vehicleType(route->vehicleType()).maxDuration,
-            0);
-
+        deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration);
+            += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
     }
     else  // in non-adjacent parts of the route.
     {
@@ -156,13 +145,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              route->twsBetween(V->idx() + 1, remove->idx() - 1),
                              route->twsAfter(remove->idx() + 1));
 
-            auto const excessDuration = std::max<Duration>(
-                tws.duration()
-                    - data.vehicleType(route->vehicleType()).maxDuration,
-                0);
-
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
-                                                 + excessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 route->maxDuration());
         }
         else
         {
@@ -173,13 +158,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                              U->route()->tws(U->idx()),
                              route->twsAfter(V->idx() + 1));
 
-            auto const excessDuration = std::max<Duration>(
-                tws.duration()
-                    - data.vehicleType(route->vehicleType()).maxDuration,
-                0);
-
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
-                                                 + excessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 route->maxDuration());
         }
     }
 

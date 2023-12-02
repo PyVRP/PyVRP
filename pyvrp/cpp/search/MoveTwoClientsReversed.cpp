@@ -40,12 +40,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                                uRoute->twsBefore(U->idx() - 1),
                                uRoute->twsAfter(U->idx() + 2));
 
-        auto const uExcessDuration = std::max<Duration>(
-            uTWS.duration()
-                - data.vehicleType(uRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         auto const loadDiff = uRoute->loadBetween(U->idx(), U->idx() + 1);
@@ -69,12 +66,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                                uRoute->tws(U->idx()),
                                vRoute->twsAfter(V->idx() + 1));
 
-        auto const vExcessDuration = std::max<Duration>(
-            vTWS.duration()
-                - data.vehicleType(vRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
     }
     else  // within same route
@@ -86,7 +80,7 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
 
         if (U->idx() < V->idx())
         {
-            auto const uTWS
+            auto const tws
                 = TWS::merge(data.durationMatrix(),
                              uRoute->twsBefore(U->idx() - 1),
                              uRoute->twsBetween(U->idx() + 2, V->idx()),
@@ -94,16 +88,13 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                              uRoute->tws(U->idx()),
                              uRoute->twsAfter(V->idx() + 1));
 
-            auto const uExcessDuration = std::max<Duration>(
-                uTWS.duration()
-                    - data.vehicleType(uRoute->vehicleType()).maxDuration,
-                0);
-            deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp()
-                                                 + uExcessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 uRoute->maxDuration());
         }
         else
         {
-            auto const uTWS
+            auto const tws
                 = TWS::merge(data.durationMatrix(),
                              uRoute->twsBefore(V->idx()),
                              uRoute->tws(U->idx() + 1),
@@ -111,12 +102,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                              uRoute->twsBetween(V->idx() + 1, U->idx() - 1),
                              uRoute->twsAfter(U->idx() + 2));
 
-            auto const uExcessDuration = std::max<Duration>(
-                uTWS.duration()
-                    - data.vehicleType(uRoute->vehicleType()).maxDuration,
-                0);
-            deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp()
-                                                 + uExcessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 uRoute->maxDuration());
         }
     }
 

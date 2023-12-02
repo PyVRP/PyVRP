@@ -115,12 +115,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                                              uRoute->twsBefore(U->idx() - 1),
                                              uRoute->twsAfter(U->idx() + N));
 
-        auto const uExcessDuration = std::max<Duration>(
-            uTWS.duration()
-                - data.vehicleType(uRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         auto const loadDiff = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
@@ -144,12 +141,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             uRoute->twsBetween(U->idx(), U->idx() + N - 1),
             vRoute->twsAfter(V->idx() + 1));
 
-        auto const vExcessDuration = std::max<Duration>(
-            vTWS.duration()
-                - data.vehicleType(vRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
     }
     else  // within same route
@@ -168,12 +162,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->twsBetween(U->idx(), U->idx() + N - 1),
                 uRoute->twsAfter(V->idx() + 1));
 
-            auto const excessDuration = std::max<Duration>(
-                tws.duration()
-                    - data.vehicleType(uRoute->vehicleType()).maxDuration,
-                0);
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
-                                                 + excessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 uRoute->maxDuration());
         }
         else
         {
@@ -184,12 +175,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->twsBetween(V->idx() + 1, U->idx() - 1),
                 uRoute->twsAfter(U->idx() + N));
 
-            auto const excessDuration = std::max<Duration>(
-                tws.duration()
-                    - data.vehicleType(uRoute->vehicleType()).maxDuration,
-                0);
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
-                                                 + excessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 uRoute->maxDuration());
         }
     }
 
@@ -235,12 +223,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
             vRoute->twsBetween(V->idx(), V->idx() + M - 1),
             uRoute->twsAfter(U->idx() + N));
 
-        auto const uExcessDuration = std::max<Duration>(
-            uTWS.duration()
-                - data.vehicleType(uRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         auto const loadU = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
@@ -258,12 +243,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
             uRoute->twsBetween(U->idx(), U->idx() + N - 1),
             vRoute->twsAfter(V->idx() + M));
 
-        auto const vExcessDuration = std::max<Duration>(
-            vTWS.duration()
-                - data.vehicleType(vRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
         deltaCost += costEvaluator.loadPenalty(vRoute->load() + loadDiff,
@@ -288,12 +270,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->twsBetween(U->idx(), U->idx() + N - 1),
                 uRoute->twsAfter(V->idx() + M));
 
-            auto const excessDuration = std::max<Duration>(
-                tws.duration()
-                    - data.vehicleType(uRoute->vehicleType()).maxDuration,
-                0);
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
-                                                 + excessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 uRoute->maxDuration());
         }
         else
         {
@@ -305,12 +284,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->twsBetween(V->idx(), V->idx() + M - 1),
                 uRoute->twsAfter(U->idx() + N));
 
-            auto const excessDuration = std::max<Duration>(
-                tws.duration()
-                    - data.vehicleType(uRoute->vehicleType()).maxDuration,
-                0);
-            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp()
-                                                 + excessDuration);
+            deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+            deltaCost += costEvaluator.twPenalty(tws.duration(),
+                                                 uRoute->maxDuration());
         }
     }
 

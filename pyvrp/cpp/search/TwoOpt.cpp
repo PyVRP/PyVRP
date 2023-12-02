@@ -42,9 +42,8 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
         tws = TWS::merge(data.durationMatrix(), tws, route->tws(idx));
     tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
 
-    auto const excessDuration = std::max<Duration>(
-        tws.duration() - data.vehicleType(route->vehicleType()).maxDuration, 0);
-    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp() + excessDuration);
+    deltaCost += costEvaluator.twPenalty(tws.totalTimeWarp());
+    deltaCost += costEvaluator.twPenalty(tws.duration(), route->maxDuration());
 
     return deltaCost;
 }
@@ -97,8 +96,8 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
         += costEvaluator.loadPenalty(vLoad + uLoadAfter, vRoute->capacity());
     deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
-    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
     if (deltaCost >= 0)
         return deltaCost;
@@ -111,12 +110,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                          vRoute->twsBetween(V->idx() + 1, vRoute->size()),
                          uRoute->tws(uRoute->size() + 1));
 
-        auto const uExcessDuration = std::max<Duration>(
-            uTWS.duration()
-                - data.vehicleType(uRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
     }
     else
     {
@@ -124,12 +120,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      uRoute->twsBefore(U->idx()),
                                      uRoute->tws(uRoute->size() + 1));
 
-        auto const uExcessDuration = std::max<Duration>(
-            uTWS.duration()
-                - data.vehicleType(uRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(uTWS.totalTimeWarp() + uExcessDuration);
+            += costEvaluator.twPenalty(uTWS.duration(), uRoute->maxDuration());
     }
 
     if (U->idx() < uRoute->size())
@@ -140,12 +133,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                          uRoute->twsBetween(U->idx() + 1, uRoute->size()),
                          vRoute->tws(vRoute->size() + 1));
 
-        auto const vExcessDuration = std::max<Duration>(
-            vTWS.duration()
-                - data.vehicleType(vRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
     }
     else
     {
@@ -153,12 +143,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      vRoute->twsBefore(V->idx()),
                                      vRoute->tws(vRoute->size() + 1));
 
-        auto const vExcessDuration = std::max<Duration>(
-            vTWS.duration()
-                - data.vehicleType(vRoute->vehicleType()).maxDuration,
-            0);
+        deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
         deltaCost
-            += costEvaluator.twPenalty(vTWS.totalTimeWarp() + vExcessDuration);
+            += costEvaluator.twPenalty(vTWS.duration(), vRoute->maxDuration());
     }
 
     return deltaCost;
