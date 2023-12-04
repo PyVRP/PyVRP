@@ -25,12 +25,11 @@ def test_merge_two():
     mat = np.asarray([[1, 4], [1, 2]])
     merged = TimeWindowSegment.merge(mat, tws1, tws2)
 
-    # There is no release time, so segment time warp and total time warp should
-    # be equal. The first stop (tws1) takes already has five duration, and
-    # starts at time 0. Then, we have to drive for 4 units (mat(0, 1) = 4) to
-    # get to the second stop (tws2). This second segment has 5 time warp, and
-    # we arrive there at time 5 + 4 = 9, which is 9 - 6 = 3 after its closing
-    # time window. So we get a final time warp of 5 + 3 = 8.
+    # There is no release time. The first stop (tws1) takes already has five
+    # duration, and starts at time 0. Then, we have to drive for 4 units
+    # (mat(0, 1) = 4) to get to the second stop (tws2). This second segment has
+    # 5 time warp, and we arrive there at time 5 + 4 = 9, which is 9 - 6 = 3
+    # after its closing time window. So we get a final time warp of 5 + 3 = 8.
     assert_equal(merged.time_warp(), 8)
 
     # Now, let's add a bit of release time (3), so that the total time warp
