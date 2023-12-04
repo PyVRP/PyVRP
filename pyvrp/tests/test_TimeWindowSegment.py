@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp._pyvrp import TimeWindowSegment
 
@@ -103,3 +103,15 @@ def test_merging_two_previously_merged_tws():
     # (plus the existing unit). So we get 4 + 1 + 1 + 4 = 10 time warp.
     merged = TimeWindowSegment.merge(mat, merged12, merged21)
     assert_equal(merged.time_warp(), 10)
+
+
+def test_max_duration_argument():
+    """
+    Tests that the optional ``max_duration`` argument is evaluated correctly,
+    and indeed increases the time warp if it's violated.
+    """
+    tws = TimeWindowSegment(0, 0, 5, 0, 0, 0, 0)  # five duration
+
+    assert_allclose(tws.time_warp(), 0)  # default not duration limited
+    assert_allclose(tws.time_warp(max_duration=2), 3)
+    assert_allclose(tws.time_warp(max_duration=0), 5)

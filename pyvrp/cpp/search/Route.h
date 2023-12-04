@@ -345,8 +345,7 @@ Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
 Duration Route::timeWarp() const
 {
-    auto const &tws = stats.back().twsBefore;
-    return tws.timeWarp() + std::max<Duration>(duration() - maxDuration(), 0);
+    return stats.back().twsBefore.timeWarp(maxDuration());
 }
 
 bool Route::empty() const { return size() == 0; }

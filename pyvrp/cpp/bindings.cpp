@@ -563,9 +563,14 @@ PYBIND11_MODULE(_pyvrp, m)
             "duration", &TWS::duration, DOC(pyvrp, TimeWindowSegment, duration))
         .def("tw_early", &TWS::twEarly, DOC(pyvrp, TimeWindowSegment, twEarly))
         .def("tw_late", &TWS::twLate, DOC(pyvrp, TimeWindowSegment, twLate))
-        .def("time_warp",
-             &TWS::timeWarp,
-             DOC(pyvrp, TimeWindowSegment, timeWarp))
+        .def(
+            "time_warp",
+            [](TWS const &tws, std::optional<pyvrp::Duration> maxDuration) {
+                return tws.timeWarp(maxDuration.value_or(
+                    std::numeric_limits<pyvrp::Duration>::max()));
+            },
+            py::arg("max_duration") = py::none(),
+            DOC(pyvrp, TimeWindowSegment, timeWarp))
         .def_static("merge",
                     &TWS::merge<>,
                     py::arg("duration_matrix"),

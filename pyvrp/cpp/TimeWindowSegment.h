@@ -70,22 +70,24 @@ public:
     [[nodiscard]] Duration duration() const;
 
     /**
-     * Returns the time warp on this route segment. This is all time warp
-     * incurred due to time windows, service durations, travel, and client
-     * release times.
+     * Returns the time warp on this route segment. Additionally, any time warp
+     * incurred by violating the maximum duration argument is also counted.
      *
-     * .. note::
-     *
-     *    This method does not know about time warp incurred in other places,
-     *    e.g. due to route-level constraints on maximum duration. Such time
-     *    warp is tracked outside of :class:`~pyvrp._pyvrp.TimeWindowSegment`.
+     * Parameters
+     * ----------
+     * max_duration
+     *     Maximum allowed duration, if provided. If the segment's duration
+     *     exceeds this value, any excess duration is counted as time warp.
+     *     Default unconstrained.
      *
      * Returns
      * -------
      * int
      *     Total time warp on this route segment.
      */
-    [[nodiscard]] inline Duration timeWarp() const;
+    [[nodiscard]] inline Duration
+    timeWarp(Duration const maxDuration
+             = std::numeric_limits<Duration>::max()) const;
 
     /**
      * Earliest start time for this route segment that results in minimum route
@@ -166,9 +168,13 @@ TimeWindowSegment TimeWindowSegment::merge(
 #endif
 }
 
-Duration TimeWindowSegment::timeWarp() const
+Duration TimeWindowSegment::timeWarp(Duration const maxDuration) const
 {
-    return timeWarp_ + std::max<Duration>(releaseTime_ - twLate_, 0);
+    // clang-format off
+    return timeWarp_
+         + std::max<Duration>(releaseTime_ - twLate_, 0)
+         + std::max<Duration>(duration_ - maxDuration, 0);
+    // clang-format on
 }
 
 TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
