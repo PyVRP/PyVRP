@@ -432,7 +432,7 @@ PYBIND11_MODULE(_pyvrp, m)
                  &CostEvaluator::loadPenalty, py::const_),
              py::arg("load"),
              py::arg("capacity"),
-             DOC(pyvrp, CostEvaluator, loadPenalty, 1))
+             DOC(pyvrp, CostEvaluator, loadPenalty, 2))
         .def("tw_penalty",
              &CostEvaluator::twPenalty,
              py::arg("time_warp"),

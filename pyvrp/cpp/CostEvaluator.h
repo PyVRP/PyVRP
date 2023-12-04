@@ -43,6 +43,13 @@ class CostEvaluator
     Cost capacityPenalty;
     Cost timeWarpPenalty;
 
+    /**
+     * Computes the excess capacity penalty for the given excess load, that is,
+     * the part of the load that exceeds the capacity.
+     */
+    // Internal, used in conjunction with the two-argument loadPenalty method.
+    [[nodiscard]] inline Cost loadPenalty(Load excessLoad) const;
+
 public:
     CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty);
 
@@ -50,12 +57,6 @@ public:
      * Computes the total excess capacity penalty for the given load.
      */
     [[nodiscard]] inline Cost loadPenalty(Load load, Load capacity) const;
-
-    /**
-     * Computes the excess capacity penalty for the given excess load, that is,
-     * the part of the load that exceeds the capacity.
-     */
-    [[nodiscard]] inline Cost loadPenalty(Load excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.

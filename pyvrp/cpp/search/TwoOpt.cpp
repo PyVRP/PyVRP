@@ -81,26 +81,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
         deltaCost -= vRoute->fixedCost();
 
-    // Proposed move appends the segment after V to U, and the segment after U
-    // to V. So we need to make a distinction between the loads at U and V, and
-    // the loads from clients visited after these nodes.
-    auto const uLoad = uRoute->loadBetween(0, U->idx());
-    auto const uLoadAfter = uRoute->load() - uLoad;
-    auto const vLoad = vRoute->loadBetween(0, V->idx());
-    auto const vLoadAfter = vRoute->load() - vLoad;
-
-    deltaCost
-        += costEvaluator.loadPenalty(uLoad + vLoadAfter, uRoute->capacity());
-    deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
-
-    deltaCost
-        += costEvaluator.loadPenalty(vLoad + uLoadAfter, vRoute->capacity());
-    deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
-
-    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
-    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
-
-    if (deltaCost >= 0)
+    if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;
 
     if (V->idx() < vRoute->size())
@@ -148,6 +129,25 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
             vTWS.timeWarp()
             + std::max<Duration>(vTWS.duration() - vRoute->maxDuration(), 0));
     }
+
+    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
+
+    // Proposed move appends the segment after V to U, and the segment after U
+    // to V. So we need to make a distinction between the loads at U and V, and
+    // the loads from clients visited after these nodes.
+    auto const uLoad = uRoute->loadBetween(0, U->idx());
+    auto const uLoadAfter = uRoute->load() - uLoad;
+    auto const vLoad = vRoute->loadBetween(0, V->idx());
+    auto const vLoadAfter = vRoute->load() - vLoad;
+
+    deltaCost
+        += costEvaluator.loadPenalty(uLoad + vLoadAfter, uRoute->capacity());
+    deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
+
+    deltaCost
+        += costEvaluator.loadPenalty(vLoad + uLoadAfter, vRoute->capacity());
+    deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
     return deltaCost;
 }
