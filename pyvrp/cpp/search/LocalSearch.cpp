@@ -127,7 +127,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
     {
         searchCompleted = true;
 
-        for (int const rU : orderRoutes)
+        for (auto const rU : orderRoutes)
         {
             auto &U = routes[rU];
 
