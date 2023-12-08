@@ -14,27 +14,7 @@ Cost SwapRoutes::evaluate(Route *U,
     if (U->vehicleType() == V->vehicleType() || U->empty() || V->empty())
         return 0;
 
-    // Changes in distance.
-    auto const &uVehicleType = data.vehicleType(U->vehicleType());
-    auto const &vVehicleType = data.vehicleType(V->vehicleType());
-
-    auto *uFirst = (*U)[1];
-    auto *uLast = (*U)[U->size()];
-
-    auto *vFirst = (*V)[1];
-    auto *vLast = (*V)[V->size()];
-
-    auto deltaDist = data.dist(uVehicleType.depot, vFirst->client())
-                     + data.dist(vLast->client(), uVehicleType.depot)
-                     + data.dist(vVehicleType.depot, uFirst->client())
-                     + data.dist(uLast->client(), vVehicleType.depot);
-
-    deltaDist -= data.dist(uVehicleType.depot, uFirst->client())
-                 + data.dist(uLast->client(), uVehicleType.depot)
-                 + data.dist(vVehicleType.depot, vFirst->client())
-                 + data.dist(vLast->client(), vVehicleType.depot);
-
-    Cost deltaCost = static_cast<Cost>(deltaDist);
+    Cost deltaCost = 0;
 
     // Changes in load capacity violations.
     deltaCost += costEvaluator.loadPenalty(U->load(), V->capacity());
@@ -42,6 +22,22 @@ Cost SwapRoutes::evaluate(Route *U,
 
     deltaCost += costEvaluator.loadPenalty(V->load(), U->capacity());
     deltaCost -= costEvaluator.loadPenalty(V->load(), V->capacity());
+
+    // Changes in distance from and to the depot.
+    auto const uDepot = data.vehicleType(U->vehicleType()).depot;
+    auto const vDepot = data.vehicleType(V->vehicleType()).depot;
+
+    auto const uDeltaDist = data.dist(uDepot, (*V->begin())->client())
+                            + data.dist((*V->end())->client(), uDepot)
+                            - data.dist(uDepot, (*U->begin())->client())
+                            - data.dist((*U->end())->client(), uDepot);
+
+    auto const vDeltaDist = data.dist(vDepot, (*U->begin())->client())
+                            + data.dist((*U->end())->client(), vDepot)
+                            - data.dist(vDepot, (*V->begin())->client())
+                            - data.dist((*V->end())->client(), vDepot);
+
+    deltaCost += static_cast<Cost>(uDeltaDist) + static_cast<Cost>(vDeltaDist);
 
     // Changes in time warp.
     auto const uTWS = TWS::merge(data.durationMatrix(),
