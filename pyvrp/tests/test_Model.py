@@ -395,8 +395,39 @@ def test_model_solves_small_instance_with_shift_durations():
     assert_(res.best.num_routes() > 2)
 
 
-def test_model_solves_small_instance_with_multiple_depots():
+def test_model_solves_line_instance_with_multiple_depots():
     """
-    TODO
+    High-level test that creates and solves a small instance on a line, where
+    there are two depots. This test checks that the model and underlying
+    algorithm correctly handles multiple depots.
     """
-    pass  # TODO
+    m = Model()
+
+    m.add_depot(x=0, y=0)  # location 0
+    m.add_depot(x=5, y=0)  # location 1
+
+    m.add_vehicle_type(1, depot=0)
+    m.add_vehicle_type(1, depot=1)
+
+    for idx in range(1, 5):  # locations 2, 3, 4, and 5
+        m.add_client(x=idx, y=0)
+
+    # All locations are on a horizontal line, with the depots on each end. The
+    # line is organised as follows:
+    #     D C C C C D   (depot or client)
+    #     0 2 3 4 5 1   (location index)
+    # Thus, clients 2 and 3 are closest to depot 0, and clients 4 and 5 are
+    # closest to depot 1.
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=abs(frm.x - to.x))
+
+    res = m.solve(stop=MaxIterations(100))
+    assert_(res.is_feasible())
+
+    # Test that there are two routes, with the clients closest to depot 0
+    # assigned to the first route, and clients closest to depot 1 assigned to
+    # the second route.
+    routes = res.best.get_routes()
+    assert_equal(routes[0].visits(), [2, 3])
+    assert_equal(routes[1].visits(), [5, 4])

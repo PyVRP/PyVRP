@@ -387,7 +387,7 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 {
     setNeighbours(neighbours);
 
-    std::iota(orderNodes.begin(), orderNodes.end(), 1);
+    std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
     nodes.reserve(data.numLocations());
