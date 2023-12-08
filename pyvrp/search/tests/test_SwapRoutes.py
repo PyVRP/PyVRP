@@ -73,7 +73,10 @@ def test_evaluate_empty_routes(ok_small):
     Tests that evaluate() returns 0 when one or both of the routes are empty.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(10, 3), VehicleType(10, 3)]
+        vehicle_types=[
+            VehicleType(3, capacity=10),
+            VehicleType(3, capacity=10),
+        ]
     )
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -104,7 +107,7 @@ def test_evaluate_capacity_differences(ok_small):
     Tests that changes in vehicle capacity violations are evaluated correctly.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(10, 1), VehicleType(20, 1)]
+        vehicle_types=[VehicleType(capacity=10), VehicleType(capacity=20)]
     )
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -145,8 +148,8 @@ def test_evaluate_shift_time_window_differences(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(10, 1, tw_early=10_000, tw_late=15_000),
-            VehicleType(10, 1, tw_early=15_000, tw_late=20_000),
+            VehicleType(capacity=10, tw_early=10_000, tw_late=15_000),
+            VehicleType(capacity=10, tw_early=15_000, tw_late=20_000),
         ]
     )
 

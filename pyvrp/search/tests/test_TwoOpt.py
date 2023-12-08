@@ -52,11 +52,11 @@ def test_OkSmall_instance(ok_small):
 @mark.parametrize(
     "vehicle_types",
     [
-        [VehicleType(10, 1), VehicleType(10, 1)],
-        [VehicleType(8, 1), VehicleType(10, 1)],
-        [VehicleType(10, 1), VehicleType(8, 1)],
-        [VehicleType(9, 1), VehicleType(9, 1)],
-        [VehicleType(8, 1), VehicleType(8, 1)],
+        [VehicleType(capacity=10), VehicleType(capacity=10)],
+        [VehicleType(capacity=8), VehicleType(capacity=10)],
+        [VehicleType(capacity=10), VehicleType(capacity=8)],
+        [VehicleType(capacity=9), VehicleType(capacity=9)],
+        [VehicleType(capacity=8), VehicleType(capacity=8)],
     ],
 )
 def test_OkSmall_multiple_vehicle_types(
@@ -168,7 +168,10 @@ def test_move_involving_empty_routes():
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(0, 1, 10), VehicleType(0, 1, 100)],
+        vehicle_types=[
+            VehicleType(fixed_cost=10),
+            VehicleType(fixed_cost=100),
+        ],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),
     )

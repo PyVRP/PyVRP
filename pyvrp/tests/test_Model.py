@@ -32,18 +32,6 @@ def test_model_data():
     assert_equal(data.num_vehicles, 1)
 
 
-def test_add_depot_raises_more_than_one_depot():
-    """
-    PyVRP does not currently support VRPs with multiple depots. Adding more
-    than one depot should raise.
-    """
-    model = Model()
-    model.add_depot(0, 0)  # first depot should be OK
-
-    with assert_raises(ValueError):
-        model.add_depot(0, 1)  # second (and more) should not be
-
-
 def test_add_edge_raises_negative_distance_or_duration():
     """
     Negative distances or durations are not understood. Attempting to add
@@ -220,7 +208,7 @@ def test_model_and_solve(ok_small):
     # Now do the same thing, but model the instance using the modelling API.
     # This should of course result in the same solution.
     model = Model()
-    model.add_vehicle_type(capacity=10, num_available=3)
+    model.add_vehicle_type(num_available=3, capacity=10)
     depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
     clients = [
         model.add_client(226, 1297, 5, 360, 15600, 22500),

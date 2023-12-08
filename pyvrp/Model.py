@@ -146,16 +146,7 @@ class Model:
         """
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
-
-        .. warning::
-
-           PyVRP does not yet support multi-depot VRPs. For now, only one depot
-           can be added to the model.
         """
-        if len(self._depots) >= 1:
-            msg = "PyVRP does not yet support multi-depot VRPs."
-            raise ValueError(msg)
-
         depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late)
         self._depots.append(depot)
         return depot
@@ -194,8 +185,9 @@ class Model:
 
     def add_vehicle_type(
         self,
-        capacity: int,
-        num_available: int,
+        num_available: int = 1,
+        depot: int = 0,
+        capacity: int = 0,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
@@ -205,7 +197,7 @@ class Model:
         created vehicle type.
         """
         vehicle_type = VehicleType(
-            capacity, num_available, fixed_cost, tw_early, tw_late
+            num_available, depot, capacity, fixed_cost, tw_early, tw_late
         )
 
         self._vehicle_types.append(vehicle_type)

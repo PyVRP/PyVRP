@@ -47,16 +47,17 @@ class Client:
     ) -> None: ...
 
 class VehicleType:
-    capacity: int
     num_available: int
     depot: int
+    capacity: int
     fixed_cost: int
     tw_early: Optional[int]
     tw_late: Optional[int]
     def __init__(
         self,
-        capacity: int,
-        num_available: int,
+        num_available: int = 1,
+        depot: int = 0,
+        capacity: int = 0,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,

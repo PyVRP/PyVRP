@@ -176,7 +176,7 @@ def read(
         )
         for idx in range(dimension)
     ]
-    vehicle_types = [VehicleType(capacity, num_vehicles)]
+    vehicle_types = [VehicleType(num_vehicles, capacity=capacity)]
 
     if max(distances.max(), durations.max()) > MAX_USER_VALUE:
         msg = """

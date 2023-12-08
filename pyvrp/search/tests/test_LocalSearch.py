@@ -248,7 +248,10 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
 
     # Now make the instance heterogeneous and update the local search.
     data = rc208.replace(
-        vehicle_types=[VehicleType(1000, 25), VehicleType(1000, 25)]
+        vehicle_types=[
+            VehicleType(25, capacity=1000),
+            VehicleType(25, capacity=1000),
+        ]
     )
 
     ls = cpp_LocalSearch(data, neighbours)
@@ -273,7 +276,10 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     more vehicles than the previous.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(10, 1), VehicleType(10, 2)]
+        vehicle_types=[
+            VehicleType(1, capacity=10),
+            VehicleType(2, capacity=10),
+        ]
     )
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
@@ -423,7 +429,7 @@ def test_local_search_does_not_remove_required_clients():
             Client(x=2, y=2, prize=0, required=False),
         ],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(50, 1)],
+        vehicle_types=[VehicleType(1, capacity=50)],
         distance_matrix=np.full((3, 3), fill_value=10),
         duration_matrix=np.zeros((3, 3), dtype=int),
     )

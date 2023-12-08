@@ -26,7 +26,7 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     type.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(1, 1), VehicleType(2, 2)]
+        vehicle_types=[VehicleType(1, capacity=1), VehicleType(2, capacity=2)]
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
@@ -212,7 +212,9 @@ def test_fixed_cost(ok_small, fixed_cost: int):
     Tests that the fixed cost method returns the assigned vehicle type's fixed
     cost value.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
+    )
     route = Route(data, idx=0, vehicle_type=0)
     assert_allclose(route.fixed_cost(), fixed_cost)
 
@@ -471,9 +473,7 @@ def test_shift_duration_depot_time_window_interaction(
     data = ProblemData(
         clients=[],
         depots=[Client(x=0, y=0, tw_early=0, tw_late=1_000)],
-        vehicle_types=[
-            VehicleType(0, 1, tw_early=shift_tw[0], tw_late=shift_tw[1])
-        ],
+        vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
         distance_matrix=np.zeros((1, 1), dtype=int),
         duration_matrix=np.zeros((1, 1), dtype=int),
     )
