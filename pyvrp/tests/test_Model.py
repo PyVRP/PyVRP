@@ -393,3 +393,10 @@ def test_model_solves_small_instance_with_shift_durations():
     res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
     assert_(res.best.num_routes() > 2)
+
+
+def test_model_solves_small_instance_with_multiple_depots():
+    """
+    TODO
+    """
+    pass  # TODO

@@ -173,3 +173,10 @@ def test_evaluate_shift_time_window_differences(ok_small):
     op = SwapRoutes(data)
     cost_eval = CostEvaluator(1, 1)
     assert_(op.evaluate(route1, route2, cost_eval) < 0)
+
+
+def test_evaluate_with_different_depots(ok_small):
+    """
+    TODO
+    """
+    pass
