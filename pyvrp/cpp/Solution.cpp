@@ -115,7 +115,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<size_t>(data.numClients());
-    std::iota(clients.begin(), clients.end(), 1);
+    std::iota(clients.begin(), clients.end(), data.numDepots());
     std::shuffle(clients.begin(), clients.end(), rng);
 
     // Distribute clients evenly over the routes: the total number of clients
