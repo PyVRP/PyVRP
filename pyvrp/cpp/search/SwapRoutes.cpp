@@ -14,7 +14,27 @@ Cost SwapRoutes::evaluate(Route *U,
     if (U->vehicleType() == V->vehicleType() || U->empty() || V->empty())
         return 0;
 
-    Cost deltaCost = 0;
+    // Changes in distance.
+    auto const &uVehicleType = data.vehicleType(U->vehicleType());
+    auto const &vVehicleType = data.vehicleType(V->vehicleType());
+
+    auto *uFirst = (*U)[1];
+    auto *uLast = (*U)[U->size()];
+
+    auto *vFirst = (*V)[1];
+    auto *vLast = (*V)[V->size()];
+
+    auto deltaDist = data.dist(uVehicleType.depot, vFirst->client())
+                     + data.dist(vLast->client(), uVehicleType.depot)
+                     + data.dist(vVehicleType.depot, uFirst->client())
+                     + data.dist(uLast->client(), vVehicleType.depot);
+
+    deltaDist -= data.dist(uVehicleType.depot, uFirst->client())
+                 + data.dist(uLast->client(), uVehicleType.depot)
+                 + data.dist(vVehicleType.depot, vFirst->client())
+                 + data.dist(vLast->client(), vVehicleType.depot);
+
+    Cost deltaCost = static_cast<Cost>(deltaDist);
 
     // Changes in load capacity violations.
     deltaCost += costEvaluator.loadPenalty(U->load(), V->capacity());
@@ -40,8 +60,6 @@ Cost SwapRoutes::evaluate(Route *U,
     deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
     deltaCost -= costEvaluator.twPenalty(V->timeWarp());
 
-    // TODO handle the case of depot differences (multiple depots). There is
-    // some evaluation code for this in issue #188.
     return deltaCost;
 }
 
