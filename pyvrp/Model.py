@@ -198,9 +198,7 @@ class Model:
 
         .. note::
 
-           Defaults to the first depot if ``depot`` is not provided. Similarly,
-           defaults to the depot's time windows if ``tw_early`` or ``tw_late``
-           are not provided.
+           Defaults to the first depot if ``depot`` is not provided.
         """
         if depot is None:
             depot_idx = 0
