@@ -1,41 +1,40 @@
+import pytest
 from numpy.testing import assert_allclose
 
 from pyvrp import Solution
 from pyvrp.diversity import broken_pairs_distance as bpd
 
 
-def test_broken_pairs_distance(ok_small):
+def test_bpd_same_solution_is_zero(ok_small):
     """
-    Test broken pairs distance (BPD) calculations on a number of solutions to
-    a small instance.
+    Broken pairs distance of a solution with itself should be zero.
     """
     sol1 = Solution(ok_small, [[1, 2, 3, 4]])
+    assert_allclose(bpd(sol1, sol1), 0.0)
+
     sol2 = Solution(ok_small, [[1, 2], [3], [4]])
-    sol3 = Solution(ok_small, [[3], [4, 1, 2]])
-    sol4 = Solution(ok_small, [[4, 3, 2, 1]])
-    sol5 = Solution(ok_small, [[1, 2, 3]])
+    assert_allclose(bpd(sol2, sol2), 0.0)
 
-    # BPD of a solution and itself should be zero.
-    for sol in [sol1, sol2, sol3, sol4]:
-        assert_allclose(bpd(sol, sol), 0.0)
 
-    # BPD of sol1 and sol2. The two broken pairs are (2, 3) and (3, 4).
-    assert_allclose(bpd(sol1, sol2), 0.5)
-    assert_allclose(bpd(sol2, sol1), 0.5)
+@pytest.mark.parametrize(
+    ("routes", "expected"),
+    [
+        ([[1, 2], [3], [4]], 0.4),  # (2, 3) and (3, 4) are broken
+        ([[3], [4, 1, 2]], 0.6),  # (0, 1), (2, 3), (3, 4) are broken
+        ([[4, 3, 2, 1]], 0.8),  # reverses reference, so all edges are broken
+        # Broken pairs are (3, 4) counted for both 3 and 4 (weight 2) and
+        # (4, 0) counted for only 4 (weight 1).
+        ([[1, 2, 3]], 0.3),
+    ],
+)
+def test_bpd_calculations_on_examples(ok_small, routes, expected):
+    """
+    Test broken pairs distance calculations of a reference solution w.r.t. an
+    for an instance with five locations (1 depot, 4 clients).
+    """
+    reference = Solution(ok_small, [[1, 2, 3, 4]])
+    alternative = Solution(ok_small, routes)
 
-    # BPD of sol1 and sol3. The three broken pairs are (0, 1), (2, 3), (3, 4).
-    assert_allclose(bpd(sol1, sol3), 0.75)
-    assert_allclose(bpd(sol3, sol1), 0.75)
-
-    # BPD of sol1 and sol4. sol4 reverses sol1, so all pairs are broken.
-    assert_allclose(bpd(sol1, sol4), 1.0)
-    assert_allclose(bpd(sol4, sol1), 1.0)
-
-    # BPD of sol2 and sol3. The broken pair is (0, 1).
-    assert_allclose(bpd(sol2, sol3), 0.25)
-    assert_allclose(bpd(sol3, sol2), 0.25)
-
-    # BPD of sol1 and sol5. Broken pairs are (3, 4) counted for both 3 and 4
-    # (weight 2) and (4, 0) counted for only 4 (weight 1), so 3/8.
-    assert_allclose(bpd(sol1, sol5), 0.375)
-    assert_allclose(bpd(sol5, sol1), 0.375)
+    # Test that BPD is as expected, and that it is symmetric.
+    assert_allclose(bpd(reference, alternative), expected)
+    assert_allclose(bpd(alternative, reference), expected)
