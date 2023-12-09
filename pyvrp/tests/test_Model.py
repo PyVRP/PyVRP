@@ -129,6 +129,28 @@ def test_add_vehicle_type():
     assert_allclose(vehicle_type.tw_late, 19)
 
 
+def test_add_vehicle_type_default_depot():
+    """
+    Tests that ``Model.add_vehicle_type`` correctly sets the (default) depot
+    attribute on the vehicle type.
+    """
+    m = Model()
+    depot1 = m.add_depot(x=0, y=0)
+    depot2 = m.add_depot(x=1, y=1)
+
+    # No depot specified: should default to the first (location index 0).
+    vehicle_type1 = m.add_vehicle_type()
+    assert_equal(vehicle_type1.depot, 0)
+
+    # First depot specified, should set first (location index 0).
+    vehicle_type2 = m.add_vehicle_type(depot=depot1)
+    assert_equal(vehicle_type2.depot, 0)
+
+    # Second depot specified, should set second (location index 1).
+    vehicle_type3 = m.add_vehicle_type(depot=depot2)
+    assert_equal(vehicle_type3.depot, 1)
+
+
 def test_get_locations():
     """
     Checks that the ``locations`` property returns the depot and all clients.
@@ -149,8 +171,8 @@ def test_get_vehicle_types():
     Tests the ``vehicle_types`` property.
     """
     model = Model()
-    vehicle_type1 = model.add_vehicle_type(1, 2)
-    vehicle_type2 = model.add_vehicle_type(1, 3)
+    vehicle_type1 = model.add_vehicle_type(1, capacity=2)
+    vehicle_type2 = model.add_vehicle_type(1, capacity=3)
 
     # Test that we can get the vehicle types by index.
     assert_equal(model.vehicle_types[0], vehicle_type1)
@@ -403,11 +425,11 @@ def test_model_solves_line_instance_with_multiple_depots():
     """
     m = Model()
 
-    m.add_depot(x=0, y=0)  # location 0
-    m.add_depot(x=5, y=0)  # location 1
+    depot1 = m.add_depot(x=0, y=0)  # location 0
+    depot2 = m.add_depot(x=5, y=0)  # location 1
 
-    m.add_vehicle_type(1, depot=0)
-    m.add_vehicle_type(1, depot=1)
+    m.add_vehicle_type(1, depot=depot1)
+    m.add_vehicle_type(1, depot=depot2)
 
     for idx in range(1, 5):  # locations 2, 3, 4, and 5
         m.add_client(x=idx, y=0)

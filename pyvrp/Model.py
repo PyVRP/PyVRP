@@ -186,7 +186,7 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        depot: int = 0,
+        depot: Optional[Depot] = None,
         capacity: int = 0,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
@@ -195,9 +195,26 @@ class Model:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
         created vehicle type.
+
+        .. note::
+
+           Defaults to the first depot if ``depot`` is not provided. Similarly,
+           defaults to the depot's time windows if ``tw_early`` or ``tw_late``
+           are not provided.
         """
+        if depot is None:
+            depot_idx = 0
+        else:
+            gen = (idx for idx, dep in enumerate(self._depots) if dep == depot)
+            depot_idx = next(gen)
+
         vehicle_type = VehicleType(
-            num_available, depot, capacity, fixed_cost, tw_early, tw_late
+            num_available,
+            depot_idx,
+            capacity,
+            fixed_cost,
+            tw_early,
+            tw_late,
         )
 
         self._vehicle_types.append(vehicle_type)
