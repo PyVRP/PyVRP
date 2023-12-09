@@ -33,7 +33,7 @@ numpydoc_attributes_as_param_list = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
-nbsphinx_execute = "never"
+nbsphinx_execute = "always"
 
 # -- General configuration
 extensions = [
