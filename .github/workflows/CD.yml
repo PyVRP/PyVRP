@@ -1,10 +1,8 @@
 name: CD
 
 on:
-  # release:
-  #   types: [ created ]
-  pull_request:
-    branches: [ main ]
+  release:
+    types: [ created ]
 
 concurrency:
   group: ${{ github.ref }}
@@ -36,29 +34,29 @@ jobs:
           name: dist
           path: ./dist/*
 
-  # deploy:
-  #   name: Deploy to PyPI
-  #   needs: [ build ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: 3.12
-  #     - name: Update pip and poetry
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install poetry
-  #     - uses: actions/download-artifact@v3  # download previously built wheels
-  #       with:
-  #         name: dist
-  #         path: dist/
-  #     - name: Build sdist
-  #       run: poetry build --format sdist
-  #     - name: List packaged distributions
-  #       run: ls -la dist/
-  #     - name: Deploy to PyPI
-  #       run: |
-  #         poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-  #         poetry publish
+  deploy:
+    name: Deploy to PyPI
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - uses: actions/download-artifact@v3  # download previously built wheels
+        with:
+          name: dist
+          path: dist/
+      - name: Build sdist
+        run: poetry build --format sdist
+      - name: List packaged distributions
+        run: ls -la dist/
+      - name: Deploy to PyPI
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish
