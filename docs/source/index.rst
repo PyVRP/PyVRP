@@ -8,6 +8,7 @@ It currently supports VRPs with:
 * Client demands (capacitated VRP);
 * Vehicles of different capacities, costs, and shift durations (heterogeneous fleet VRP);
 * Time windows, client service durations, and release times (VRP with time windows and release times);
+- Multiple depots (multi-depot VRP);
 * Optional clients with prizes for visiting (prize collecting).
 
 The implementation builds on `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.

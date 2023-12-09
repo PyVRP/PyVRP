@@ -20,7 +20,7 @@ from pyvrp.tests.helpers import read
         ("somewhere that does not exist", FileNotFoundError),
         ("data/FileWithUnknownSection.txt", ValueError),
         ("data/DepotNotOne.txt", ValueError),
-        ("data/MoreThanOneDepot.txt", ValueError),
+        ("data/DepotsNotLowerIndices.txt", ValueError),
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
@@ -262,3 +262,32 @@ def test_service_time_specification():
     services = [client.service_duration for client in data.clients()]
     assert_allclose(services, 360)
     assert_allclose(data.location(0).service_duration, 0)
+
+
+def test_multiple_depots():
+    """
+    Tests parsing a slightly modified version of the OkSmall instance, which
+    now has two depots rather than one.
+    """
+    data = read("data/OkSmallMultipleDepots.txt")
+
+    # Still five locations, but now with two depots and three clients.
+    assert_equal(data.num_locations, 5)
+    assert_equal(data.num_depots, 2)
+    assert_equal(data.num_clients, 3)
+
+    depot1, depot2 = data.depots()
+
+    # Test that the depot data has been parsed correctly. The first depot has
+    # not changed.
+    assert_allclose(depot1.x, 2_334)
+    assert_allclose(depot1.y, 726)
+    assert_allclose(depot1.tw_early, 0)
+    assert_allclose(depot1.tw_late, 45_000)
+
+    # But the second depot has the location data of what used to be the first
+    # client, and a tighter time window than the other depot.
+    assert_allclose(depot2.x, 226)
+    assert_allclose(depot2.y, 1_297)
+    assert_allclose(depot2.tw_early, 5_000)
+    assert_allclose(depot2.tw_late, 20_000)

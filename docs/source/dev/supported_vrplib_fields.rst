@@ -57,6 +57,7 @@ PyVRP supports the following data sections:
 
    ``DEPOT_SECTION``
       Array of location indices that are depots.
+      These location indices should be the contiguous lower indices, starting from 1.
 
    ``EDGE_WEIGHT_SECTION``
       When provided, this section explicitly describes the distance and duration matrices.
