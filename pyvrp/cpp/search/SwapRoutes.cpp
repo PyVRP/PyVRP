@@ -25,17 +25,20 @@ Cost SwapRoutes::evaluate(Route *U,
 
     // Changes in distance from and to the depot.
     auto const uDepot = data.vehicleType(U->vehicleType()).depot;
+    auto const uFirstClient = (*U)[1]->client();
+    auto const uLastClient = (*U)[U->size()]->client();
+
     auto const vDepot = data.vehicleType(V->vehicleType()).depot;
+    auto const vFirstClient = (*V)[1]->client();
+    auto const vLastClient = (*V)[V->size()]->client();
 
-    auto const uDeltaDist = data.dist(uDepot, (*V->begin())->client())
-                            + data.dist((*V->end())->client(), uDepot)
-                            - data.dist(uDepot, (*U->begin())->client())
-                            - data.dist((*U->end())->client(), uDepot);
+    auto const uDeltaDist
+        = data.dist(uDepot, vFirstClient) + data.dist(vLastClient, uDepot)
+          - data.dist(uDepot, uFirstClient) - data.dist(uLastClient, uDepot);
 
-    auto const vDeltaDist = data.dist(vDepot, (*U->begin())->client())
-                            + data.dist((*U->end())->client(), vDepot)
-                            - data.dist(vDepot, (*V->begin())->client())
-                            - data.dist((*V->end())->client(), vDepot);
+    auto const vDeltaDist
+        = data.dist(vDepot, uFirstClient) + data.dist(uLastClient, vDepot)
+          - data.dist(vDepot, vFirstClient) - data.dist(vLastClient, vDepot);
 
     deltaCost += static_cast<Cost>(uDeltaDist) + static_cast<Cost>(vDeltaDist);
 

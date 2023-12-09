@@ -1,9 +1,10 @@
 from typing import List
 
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import CostEvaluator, VehicleType
+from pyvrp import Client, CostEvaluator, ProblemData, VehicleType
 from pyvrp.search import SwapRoutes
 from pyvrp.search._search import Node, Route
 
@@ -114,7 +115,7 @@ def test_evaluate_capacity_differences(ok_small):
     for loc in [1, 2, 4]:
         route1.append(Node(loc=loc))
 
-    route2 = Route(data, idx=0, vehicle_type=1)
+    route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=3))
 
     route1.update()
@@ -158,7 +159,7 @@ def test_evaluate_shift_time_window_differences(ok_small):
         route1.append(Node(loc=loc))
     route1.update()
 
-    route2 = Route(data, idx=0, vehicle_type=1)
+    route2 = Route(data, idx=1, vehicle_type=1)
     for loc in [3, 2]:  # depot -> 3 -> 2 -> depot
         route2.append(Node(loc=loc))
     route2.update()
@@ -175,8 +176,40 @@ def test_evaluate_shift_time_window_differences(ok_small):
     assert_(op.evaluate(route1, route2, cost_eval) < 0)
 
 
-def test_evaluate_with_different_depots(ok_small):
+def test_evaluate_with_different_depots():
     """
-    TODO
+    Tests that SwapRoutes correctly evaluates distance changes due to different
+    start and end depots of different vehicle types.
     """
-    pass
+    data = ProblemData(
+        clients=[Client(x=1, y=1), Client(x=4, y=4)],
+        depots=[Client(x=0, y=0), Client(x=5, y=5)],
+        vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
+        distance_matrix=[
+            [0, 10, 2, 8],
+            [10, 0, 8, 2],
+            [2, 8, 0, 6],
+            [8, 2, 6, 0],
+        ],
+        duration_matrix=np.zeros((4, 4), dtype=int),
+    )
+
+    # First route is first depot -> second client -> first depot.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=3))
+    route1.update()
+
+    # Second route is second depot -> first client -> second depot.
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=2))
+    route2.update()
+
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(1, 1)
+
+    # The routes each cost 16 distance which is not as efficient as swapping
+    # them, as that would reduce each route's cost to 4, for an improvement
+    # of 2 * 12 = 24.
+    assert_allclose(route1.distance(), 16)
+    assert_allclose(route2.distance(), 16)
+    assert_allclose(op.evaluate(route1, route2, cost_eval), -24)
