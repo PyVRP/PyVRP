@@ -198,7 +198,8 @@ class Model:
 
         .. note::
 
-           Defaults to the first depot if ``depot`` is not provided.
+           The vehicle type is assigned to the first depot if ``depot`` is not
+           provided.
         """
         if depot is None:
             depot_idx = 0
