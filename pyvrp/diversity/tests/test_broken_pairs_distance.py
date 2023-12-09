@@ -29,8 +29,9 @@ def test_bpd_same_solution_is_zero(ok_small):
 )
 def test_bpd_calculations_on_examples(ok_small, routes, expected):
     """
-    Test broken pairs distance calculations of a reference solution w.r.t. an
-    for an instance with five locations (1 depot, 4 clients).
+    Test BPD calculations of a single-route reference solution of [1, 2, 3, 4]
+    w.r.t. alternative routes for an instance with five locations (1 depot, and
+    4 clients).
     """
     reference = Solution(ok_small, [[1, 2, 3, 4]])
     alternative = Solution(ok_small, routes)
