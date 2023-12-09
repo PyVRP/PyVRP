@@ -21,7 +21,7 @@ typedef std::function<double(Solution const &, Solution const &)>
  * Formally, given two solutions :math:`f` and :math:`s`, let :math:`p_f(i)`
  * and :math:`p_s(i)` be the preceding location of location
  * :math:`i = 1, \ldots, n` in :math:`f` and :math:`s`, respectively.
- * Here, :math:`n` represents the number of locations (depots *and* clients).
+ * Here, :math:`n` represents the number of locations (clients *and* depots).
  * Similarly define :math:`s_f(i)` and :math:`s_s(i)` for the succeeding
  * location. Then, we have
  *
