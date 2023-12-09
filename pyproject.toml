@@ -42,8 +42,8 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.8,<4.0"
-numpy = ">=1.15.2"
+python = "^3.9,<4.0"
+numpy = ">=1.26.0"
 matplotlib = ">=2.2.0"
 vrplib = "^1.0.0"
 tqdm = "^4.64.1"
@@ -140,9 +140,9 @@ exclude_lines = [
 
 
 [tool.cibuildwheel]
-# We do not support old Python versions (<3.8) and somewhat uncommon platforms.
+# We do not support old Python versions (<3.9) and somewhat uncommon platforms.
 # For musllinux-based builds we assume users can compile the thing themselves.
-skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-verbosity = "3"
 build-frontend = "build"
 
