@@ -158,8 +158,8 @@ def read(
     # Checks
     if len(depots) == 0 or (depots != np.arange(len(depots))).any():
         msg = """
-        Source file depots should should contain at least one depot in the 
-        contiguous lower indices, starting from 1.
+        Source file should contain at least one depot in the contiguous lower
+        indices, starting from 1.
         """
         raise ValueError(msg)
 

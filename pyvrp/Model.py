@@ -203,10 +203,13 @@ class Model:
            provided.
         """
         if depot is None:
-            depot_idx = 0
+            depot_idx: Optional[int] = 0
         else:
             gen = (idx for idx, dep in enumerate(self._depots) if dep == depot)
-            depot_idx = next(gen)
+            depot_idx = next(gen, None)
+
+        if depot_idx is None:
+            raise ValueError("The given depot is not in this model instance.")
 
         vehicle_type = VehicleType(
             num_available,

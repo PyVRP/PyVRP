@@ -6,7 +6,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Model
+from pyvrp import Client, Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -151,6 +151,18 @@ def test_add_vehicle_type_default_depot():
     # Second depot specified, should set second (location index 1).
     vehicle_type3 = m.add_vehicle_type(depot=depot2)
     assert_equal(vehicle_type3.depot, 1)
+
+
+def test_add_vehicle_type_raises_for_unknown_depot():
+    """
+    Tests that adding a vehicle type with a depot that's not known to the model
+    raises a ValueError.
+    """
+    m = Model()
+    depot = Client(x=0, y=0)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(depot=depot)
 
 
 def test_get_locations():
