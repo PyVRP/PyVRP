@@ -10,7 +10,7 @@ It currently supports VRPs with:
 - Client demands (capacitated VRP);
 - Vehicles of different capacities, costs, and shift durations (heterogeneous fleet VRP);
 - Time windows, client service durations, and release times (VRP with time windows and release times);
-- Optional clients with prizes for visiting (prize collecting).
+- Optional clients with prizes for visiting (prize collecting, team orienteering problem).
 
 The implementation builds on Thibaut Vidal's [HGS-CVRP][8], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
 Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.

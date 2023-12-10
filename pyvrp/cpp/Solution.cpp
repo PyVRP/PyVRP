@@ -289,7 +289,7 @@ Solution::Route::Route(ProblemData const &data,
     duration_ = tws.duration();
     startTime_ = tws.twEarly();
     slack_ = tws.twLate() - tws.twEarly();
-    timeWarp_ = tws.totalTimeWarp();
+    timeWarp_ = tws.timeWarp(vehType.maxDuration);
     release_ = tws.releaseTime();
 }
 

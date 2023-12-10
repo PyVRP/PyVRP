@@ -88,18 +88,21 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Cost,
                       std::optional<pyvrp::Duration>,
+                      std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>>(),
              py::arg("capacity"),
              py::arg("num_available"),
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = py::none(),
-             py::arg("tw_late") = py::none())
+             py::arg("tw_late") = py::none(),
+             py::arg("max_duration") = py::none())
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
-        .def_readonly("tw_late", &ProblemData::VehicleType::twLate);
+        .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
+        .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
@@ -425,10 +428,11 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("capacity_penalty") = 0,
              py::arg("tw_penalty") = 0)
         .def("load_penalty",
-             &CostEvaluator::loadPenalty,
+             py::overload_cast<pyvrp::Load, pyvrp::Load>(
+                 &CostEvaluator::loadPenalty, py::const_),
              py::arg("load"),
              py::arg("capacity"),
-             DOC(pyvrp, CostEvaluator, loadPenalty))
+             DOC(pyvrp, CostEvaluator, loadPenalty, 2))
         .def("tw_penalty",
              &CostEvaluator::twPenalty,
              py::arg("time_warp"),
@@ -559,9 +563,14 @@ PYBIND11_MODULE(_pyvrp, m)
             "duration", &TWS::duration, DOC(pyvrp, TimeWindowSegment, duration))
         .def("tw_early", &TWS::twEarly, DOC(pyvrp, TimeWindowSegment, twEarly))
         .def("tw_late", &TWS::twLate, DOC(pyvrp, TimeWindowSegment, twLate))
-        .def("total_time_warp",
-             &TWS::totalTimeWarp,
-             DOC(pyvrp, TimeWindowSegment, totalTimeWarp))
+        .def(
+            "time_warp",
+            [](TWS const &tws, std::optional<pyvrp::Duration> maxDuration) {
+                return tws.timeWarp(maxDuration.value_or(
+                    std::numeric_limits<pyvrp::Duration>::max()));
+            },
+            py::arg("max_duration") = py::none(),
+            DOC(pyvrp, TimeWindowSegment, timeWarp))
         .def_static("merge",
                     &TWS::merge<>,
                     py::arg("duration_matrix"),

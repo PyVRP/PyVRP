@@ -278,6 +278,8 @@ PYBIND11_MODULE(_search, m)
         .def("fixed_cost", &Route::fixedCost)
         .def("load", &Route::load)
         .def("distance", &Route::distance)
+        .def("duration", &Route::duration)
+        .def("max_duration", &Route::maxDuration)
         .def("time_warp", &Route::timeWarp)
         .def("dist_between",
              &Route::distBetween,

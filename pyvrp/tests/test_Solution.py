@@ -273,6 +273,36 @@ def test_feasibility_release_times():
     assert_(sol.is_feasible())
 
 
+def test_feasibility_max_duration(ok_small):
+    """
+    Tests that the maximum duration constraint can affect the feasibility of
+    particular solutions.
+    """
+    # First check that these two routes are feasible when there is no maximum
+    # duration constraint.
+    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    assert_(sol.is_feasible())
+
+    # Modify the data to impose a maximum route duration constraint of 3'000,
+    # and check that the previously feasible solution is now not feasible.
+    vehicle_type = VehicleType(10, 4, max_duration=3_000)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    sol = Solution(data, [[1, 2], [3, 4]])
+    routes = sol.get_routes()
+
+    # First route has duration 6'221, and the second route duration 5'004.
+    # Since the maximum duration is 3'000, these routes incur time warp of
+    # 3'221 + 2'004 = 5'225, and the solution is thus no longer feasible.
+    assert_allclose(routes[0].duration(), 6_221)
+    assert_allclose(routes[1].duration(), 5_004)
+    assert_allclose(sol.time_warp(), 5_225)
+
+    assert_(not routes[0].is_feasible())
+    assert_(not routes[1].is_feasible())
+    assert_(not sol.is_feasible())
+
+
 def test_distance_calculation(ok_small):
     """
     Tests that route distance calculations are correct, and that the overall
