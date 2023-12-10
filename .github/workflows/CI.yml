@@ -22,7 +22,7 @@ jobs:
       matrix:
         compiler: [gcc, clang]
         compiler-version: ['10', '12', 'latest']
-        python-version: ['3.8', '3.11']
+        python-version: ['3.9', '3.12']
         precision: [integer, double]
         exclude:
           - compiler: clang
@@ -34,15 +34,15 @@ jobs:
           # saves a bit in the CI process.
           - compiler: gcc
             compiler-version: '10'
-            python-version: '3.11'
+            python-version: '3.12'
           - compiler: clang
             compiler-version: '12'
-            python-version: '3.11'
+            python-version: '3.12'
 
           # No need to test 'new' compilers with 'old' Python versions. This
           # saves a bit in the CI process.
           - compiler-version: latest
-            python-version: '3.8'
+            python-version: '3.9'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python

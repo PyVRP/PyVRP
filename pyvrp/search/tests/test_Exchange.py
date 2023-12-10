@@ -346,3 +346,43 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     assert_allclose(
         op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
     )
+
+
+@mark.parametrize(
+    ("op", "max_dur", "cost"),
+    [
+        (Exchange20, 0, -841),
+        (Exchange20, 5_000, 4_159),
+        (Exchange21, 0, -2_780),
+        (Exchange21, 5_000, -1_410),
+    ],
+)
+def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
+    """
+    Tests that the exchange operators correctly evaluate time warp due to
+    maximum duration violations.
+    """
+    vehicle_type = VehicleType(2, capacity=10, max_duration=max_dur)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    op = op(data)
+
+    # Two routes: first route 0 -> 2 -> 4 -> 0, second route 0 -> 1 -> 3 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [2, 4]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=0)
+    for loc in [1, 3]:
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    # Both routes are substantially longer than 5K duration units. So there's
+    # always a max duration violation. Consolidation - either into a single
+    # route, or more into the same route - is typically improving, especially
+    # when the maximum duration violations are significant.
+    assert_allclose(route1.duration(), 5_229)
+    assert_allclose(route2.duration(), 5_814)
+
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), cost)

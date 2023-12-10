@@ -359,7 +359,7 @@ def test_route_tws_access(ok_small):
         assert_equal(tws.tw_early(), client.tw_early)
         assert_equal(tws.tw_late(), client.tw_late)
         assert_equal(tws.duration(), client.service_duration)
-        assert_equal(tws.total_time_warp(), 0)
+        assert_equal(tws.time_warp(), 0)
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
@@ -399,14 +399,12 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot(ok_small):
         before = route.tws_before(idx)
         between_before = route.tws_between(0, idx)
         assert_equal(before.duration(), between_before.duration())
-        assert_equal(
-            before.total_time_warp(), between_before.total_time_warp()
-        )
+        assert_equal(before.time_warp(), between_before.time_warp())
 
         after = route.tws_after(idx)
         between_after = route.tws_between(idx, len(route) + 1)
         assert_equal(after.duration(), between_after.duration())
-        assert_equal(after.total_time_warp(), between_after.total_time_warp())
+        assert_equal(after.time_warp(), between_after.time_warp())
 
 
 def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
@@ -422,19 +420,19 @@ def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
 
     route.update()
     assert_(route.has_time_warp())
-    assert_equal(route.tws_between(0, 5).total_time_warp(), route.time_warp())
+    assert_equal(route.tws_between(0, 5).time_warp(), route.time_warp())
 
     # Client #1 (at idx 1) causes the time warp in combination with client #3:
     # #1 can only be visited after #3's window has already closed.
     assert_equal(route.time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 4).total_time_warp(), 3_633)
-    assert_equal(route.tws_between(0, 4).total_time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 5).total_time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 3).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 4).time_warp(), 3_633)
+    assert_equal(route.tws_between(0, 4).time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 5).time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 3).time_warp(), 3_633)
 
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
-        assert_equal(route.tws_between(start, end).total_time_warp(), 0)
+        assert_equal(route.tws_between(start, end).time_warp(), 0)
 
 
 def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
@@ -501,3 +499,28 @@ def test_route_centroid(ok_small, clients):
     x = [ok_small.location(client).x for client in clients]
     y = [ok_small.location(client).y for client in clients]
     assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))
+
+
+@pytest.mark.parametrize(
+    ("max_duration", "expected"),
+    [
+        (100_000, 3_633),  # large enough; same time warp as other tests
+        (5_000, 6_583),  # now max_duration constraint applies
+        (0, 11_583),  # the max_duration constraint scales linearly
+    ],
+)
+def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
+    """
+    Tests that the maximum duration attribute of vehicle types is reflected
+    in the route's time warp calculations.
+    """
+    vehicle_type = VehicleType(3, capacity=10, max_duration=max_duration)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, 0, 0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
+
+    route.update()
+    assert_(route.has_time_warp())
+    assert_allclose(route.time_warp(), expected)

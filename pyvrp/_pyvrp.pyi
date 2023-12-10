@@ -53,6 +53,7 @@ class VehicleType:
     fixed_cost: int
     tw_early: Optional[int]
     tw_late: Optional[int]
+    max_duration: Optional[int]
     def __init__(
         self,
         num_available: int = 1,
@@ -61,6 +62,7 @@ class VehicleType:
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
+        max_duration: Optional[int] = None,
     ) -> None: ...
 
 class ProblemData:
@@ -232,7 +234,7 @@ class TimeWindowSegment:
     def duration(self) -> int: ...
     def tw_early(self) -> int: ...
     def tw_late(self) -> int: ...
-    def total_time_warp(self) -> int: ...
+    def time_warp(self, max_duration: Optional[int]) -> int: ...
 
 class RandomNumberGenerator:
     @overload

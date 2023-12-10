@@ -176,6 +176,46 @@ def test_evaluate_shift_time_window_differences(ok_small):
     assert_(op.evaluate(route1, route2, cost_eval) < 0)
 
 
+def test_evaluate_max_duration_constraints(ok_small):
+    """
+    Tests that SwapRoutes correctly evaluates changes in time warp due to
+    different maximum duration constraints.
+    """
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(capacity=10, max_duration=3_000),
+            VehicleType(capacity=10),
+        ]
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 4]:  # depot -> 1 -> 4 -> depot
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=1)
+    for loc in [3, 2]:  # depot -> 3 -> 2 -> depot
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    # First route takes 5'332, which is 2'332 more than its maximum duration
+    # allows. There is no other source of time warp, so the total route time
+    # warp must be 2'332.
+    assert_allclose(route1.duration(), 5_332)
+    assert_allclose(route1.time_warp(), 2_332)
+
+    # Second route takes 5'323, and has no maximum duration constraint. There
+    # is no other source of time warp, so total route time warp must be zero.
+    assert_allclose(route2.duration(), 5_323)
+    assert_allclose(route2.time_warp(), 0)
+
+    # Swapping the routes results in a reduction of 5'332 - 5'323 = 9 units of
+    # time warp.
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(op.evaluate(route1, route2, cost_eval), -9)
+
+
 def test_evaluate_with_different_depots():
     """
     Tests that SwapRoutes correctly evaluates distance changes due to different

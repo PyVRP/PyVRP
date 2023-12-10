@@ -43,21 +43,22 @@ Cost SwapRoutes::evaluate(Route *U,
     deltaCost += static_cast<Cost>(uDeltaDist) + static_cast<Cost>(vDeltaDist);
 
     // Changes in time warp.
+    deltaCost -= costEvaluator.twPenalty(U->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(V->timeWarp());
+
     auto const uTWS = TWS::merge(data.durationMatrix(),
                                  V->tws(0),
                                  U->twsBetween(1, U->size()),
                                  V->tws(V->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(uTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(U->timeWarp());
+    deltaCost += costEvaluator.twPenalty(uTWS.timeWarp(V->maxDuration()));
 
     auto const vTWS = TWS::merge(data.durationMatrix(),
                                  U->tws(0),
                                  V->twsBetween(1, V->size()),
                                  U->tws(U->size() + 1));
 
-    deltaCost += costEvaluator.twPenalty(vTWS.totalTimeWarp());
-    deltaCost -= costEvaluator.twPenalty(V->timeWarp());
+    deltaCost += costEvaluator.twPenalty(vTWS.timeWarp(U->maxDuration()));
 
     return deltaCost;
 }
