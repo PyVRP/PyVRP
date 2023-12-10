@@ -119,13 +119,10 @@ public:
                              Duration releaseTime);
 };
 
-TimeWindowSegment TimeWindowSegment::merge(
-    [[maybe_unused]] Matrix<Duration> const &durationMatrix,
-    [[maybe_unused]] TimeWindowSegment const &other) const
+TimeWindowSegment
+TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
+                         TimeWindowSegment const &other) const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {0, 0, 0, 0, 0, 0, 0};
-#else
     using Dur = pyvrp::Duration;
 
     // edgeDuration is the travel duration from our last to the other's first
@@ -146,7 +143,6 @@ TimeWindowSegment TimeWindowSegment::merge(
             std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
             std::min(other.twLate_ - atOther, twLate_) + diffTw,
             std::max(releaseTime_, other.releaseTime_)};
-#endif
 }
 
 template <typename... Args>
