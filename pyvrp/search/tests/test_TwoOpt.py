@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
@@ -60,7 +58,7 @@ def test_OkSmall_instance(ok_small):
     ],
 )
 def test_OkSmall_multiple_vehicle_types(
-    ok_small, vehicle_types: List[VehicleType]
+    ok_small, vehicle_types: list[VehicleType]
 ):
     """
     This test evaluates a 2-OPT move that is improving for some of the vehicle
@@ -73,7 +71,7 @@ def test_OkSmall_multiple_vehicle_types(
     cost_evaluator = CostEvaluator(10_000, 6)  # large capacity penalty
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours: List[List[int]] = [[], [2], [], [], []]  # only 1 -> 2
+    neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)
     ls.add_node_operator(TwoOpt(data))
 

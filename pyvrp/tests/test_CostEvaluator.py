@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.testing import assert_, assert_allclose
 from pytest import mark
@@ -162,7 +160,7 @@ def test_penalised_cost(ok_small):
     ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
 )
 def test_cost_with_fixed_vehicle_cost(
-    ok_small, assignment: Tuple[int, int], expected: int
+    ok_small, assignment: tuple[int, int], expected: int
 ):
     """
     Tests that the cost evaluator counts the fixed cost when determining the

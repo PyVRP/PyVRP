@@ -1,6 +1,5 @@
 import pickle
 from copy import copy, deepcopy
-from typing import Tuple
 
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
@@ -866,7 +865,7 @@ def test_route_can_be_pickled(rc208):
     ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
 )
 def test_fixed_vehicle_cost(
-    ok_small, assignment: Tuple[int, int], expected: int
+    ok_small, assignment: tuple[int, int], expected: int
 ):
     """
     Tests that the solution tracks the total fixed vehicle costs of the

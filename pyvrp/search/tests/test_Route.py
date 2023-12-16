@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -328,7 +328,7 @@ def test_data_is_not_updated_until_update_call(ok_small):
 
 
 @pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
-def test_str_contains_route(ok_small, locs: List[int]):
+def test_str_contains_route(ok_small, locs: list[int]):
     """
     Test that each client in the route is also printed in the route's __str__.
     """
@@ -459,8 +459,8 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     ],
 )
 def test_shift_duration_depot_time_window_interaction(
-    shift_tw: Tuple[Optional[int], Optional[int]],
-    expected_tw: Tuple[int, int],
+    shift_tw: tuple[Optional[int], Optional[int]],
+    expected_tw: tuple[int, int],
 ):
     """
     Tests that the route's depot time window is restricted to the most

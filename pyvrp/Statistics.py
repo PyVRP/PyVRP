@@ -4,7 +4,7 @@ from math import nan
 from pathlib import Path
 from statistics import fmean
 from time import perf_counter
-from typing import List, Union
+from typing import Union
 
 from pyvrp.Population import Population, SubPopulation
 from pyvrp._pyvrp import CostEvaluator
@@ -48,10 +48,10 @@ class Statistics:
     performance.
     """
 
-    runtimes: List[float]
+    runtimes: list[float]
     num_iterations: int
-    feas_stats: List[_Datum]
-    infeas_stats: List[_Datum]
+    feas_stats: list[_Datum]
+    infeas_stats: list[_Datum]
 
     def __init__(self):
         self.runtimes = []

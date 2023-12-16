@@ -1,7 +1,7 @@
 import functools
 import pathlib
 from numbers import Number
-from typing import Callable, Dict, List, Union
+from typing import Callable, Union
 from warnings import warn
 
 import numpy as np
@@ -11,7 +11,7 @@ from pyvrp._pyvrp import Client, ProblemData, VehicleType
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
-_Routes = List[List[int]]
+_Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int32).max
@@ -34,7 +34,7 @@ def no_rounding(vals):
 
 
 INSTANCE_FORMATS = ["vrplib", "solomon"]
-ROUND_FUNCS: Dict[str, _RoundingFunc] = {
+ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
     "trunc": convert_to_int,
     "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
