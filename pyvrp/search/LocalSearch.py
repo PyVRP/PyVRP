@@ -16,7 +16,7 @@ class LocalSearch:
     rng
         Random number generator.
     neighbours
-        list of lists that defines the local search neighbourhood.
+        List of lists that defines the local search neighbourhood.
     """
 
     def __init__(

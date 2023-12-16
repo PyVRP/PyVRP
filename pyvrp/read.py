@@ -208,7 +208,7 @@ def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     Returns
     -------
     list
-        list of routes, where each route is a list of client numbers.
+        List of routes, where each route is a list of client numbers.
     """
     sol = vrplib.read_solution(str(where))
     return sol["routes"]  # type: ignore
