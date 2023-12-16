@@ -84,7 +84,7 @@ class SwapStar : public LocalSearchOperator<Route>
     BestMove best;
 
     // Updates the removal costs of clients in the given route
-    void updateRemovalCosts(Route *R1, CostEvaluator const &costEvaluator);
+    void updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator);
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).

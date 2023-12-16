@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generator, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Generator, Optional
 from warnings import warn
 
 from pyvrp._pyvrp import PopulationParams, SubPopulation
@@ -139,7 +139,7 @@ class Population:
         rng: RandomNumberGenerator,
         cost_evaluator: CostEvaluator,
         k: int = 2,
-    ) -> Tuple[Solution, Solution]:
+    ) -> tuple[Solution, Solution]:
         """
         Selects two (if possible non-identical) parents by tournament, subject
         to a diversity restriction.

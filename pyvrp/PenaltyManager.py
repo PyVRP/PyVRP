@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from statistics import fmean
-from typing import List
 
 from pyvrp._pyvrp import CostEvaluator
 
@@ -118,8 +117,8 @@ class PenaltyManager:
         params: PenaltyParams = PenaltyParams(),
     ):
         self._params = params
-        self._load_feas: List[bool] = []  # tracks recent load feasibility
-        self._time_feas: List[bool] = []  # track recent time feasibility
+        self._load_feas: list[bool] = []  # tracks recent load feasibility
+        self._time_feas: list[bool] = []  # track recent time feasibility
         self._capacity_penalty = params.init_capacity_penalty
         self._tw_penalty = params.init_time_warp_penalty
         self._cost_evaluator = CostEvaluator(

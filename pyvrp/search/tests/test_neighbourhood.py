@@ -1,5 +1,3 @@
-from typing import Set
-
 import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
@@ -108,7 +106,7 @@ def test_compute_neighbours(
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
     idx_check: int,
-    expected_neighbours_check: Set[int],
+    expected_neighbours_check: set[int],
 ):
     """
     Tests ``compute_neighbours`` on several well-understood cases.

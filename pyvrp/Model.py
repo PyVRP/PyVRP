@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -43,13 +43,13 @@ class Model:
     """
 
     def __init__(self) -> None:
-        self._clients: List[Client] = []
-        self._depots: List[Depot] = []
-        self._edges: List[Edge] = []
-        self._vehicle_types: List[VehicleType] = []
+        self._clients: list[Client] = []
+        self._depots: list[Depot] = []
+        self._edges: list[Edge] = []
+        self._vehicle_types: list[VehicleType] = []
 
     @property
-    def locations(self) -> List[Client]:
+    def locations(self) -> list[Client]:
         """
         Returns all locations (depots and clients) in the current model. The
         clients in the routes of the solution returned by :meth:`~solve` can be
@@ -58,7 +58,7 @@ class Model:
         return self._depots + self._clients
 
     @property
-    def vehicle_types(self) -> List[VehicleType]:
+    def vehicle_types(self) -> list[VehicleType]:
         """
         Returns the vehicle types in the current model. The routes of the
         solution returned by :meth:`~solve` have a property
@@ -199,13 +199,19 @@ class Model:
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
+        max_duration: Optional[int] = None,
     ) -> VehicleType:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
         created vehicle type.
         """
         vehicle_type = VehicleType(
-            capacity, num_available, fixed_cost, tw_early, tw_late
+            capacity,
+            num_available,
+            fixed_cost,
+            tw_early,
+            tw_late,
+            max_duration,
         )
 
         self._vehicle_types.append(vehicle_type)

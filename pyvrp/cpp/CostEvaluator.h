@@ -43,6 +43,13 @@ class CostEvaluator
     Cost capacityPenalty;
     Cost timeWarpPenalty;
 
+    /**
+     * Computes the excess capacity penalty for the given excess load, that is,
+     * the part of the load that exceeds the capacity.
+     */
+    // Internal, used in conjunction with the two-argument loadPenalty method.
+    [[nodiscard]] inline Cost loadPenalty(Load excessLoad) const;
+
 public:
     CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty);
 
@@ -50,12 +57,6 @@ public:
      * Computes the total excess capacity penalty for the given load.
      */
     [[nodiscard]] inline Cost loadPenalty(Load load, Load capacity) const;
-
-    /**
-     * Computes the excess capacity penalty for the given excess load, that is,
-     * the part of the load that exceeds the capacity.
-     */
-    [[nodiscard]] inline Cost loadPenaltyExcess(Load excessLoad) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
@@ -100,19 +101,14 @@ public:
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
 
-Cost CostEvaluator::loadPenaltyExcess(Load excessLoad) const
+Cost CostEvaluator::loadPenalty(Load excessLoad) const
 {
     return static_cast<Cost>(excessLoad) * capacityPenalty;
 }
 
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
-    // Branchless for performance: when load > capacity we return the excess
-    // load penalty; else zero. Note that when load - capacity wraps
-    // around, we return zero because load > capacity evaluates as zero
-    // (so there is no issue here due to unsignedness).
-    Cost penalty = loadPenaltyExcess(load - capacity);
-    return Cost(load > capacity) * penalty;
+    return loadPenalty(std::max<Load>(load - capacity, 0));
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
@@ -133,7 +129,7 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
     return static_cast<Cost>(arg.distance())
            + arg.fixedVehicleCost()
            + arg.uncollectedPrizes()
-           + loadPenaltyExcess(arg.excessLoad())
+           + loadPenalty(arg.excessLoad())
            + twPenalty(arg.timeWarp());
     // clang-format on
 }

@@ -9,6 +9,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
+homepage = "https://pyvrp.org/"
 repository = "https://github.com/PyVRP/PyVRP"
 include = [
     { path = "LICENSE.md" },
@@ -28,12 +29,6 @@ packages = [
     { include = "docs" },
 ]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Development Status :: 5 - Production/Stable",
@@ -47,8 +42,12 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.8,<4.0"
-numpy = ">=1.15.2"
+python = "^3.9,<4.0"
+numpy = [
+    # Numpy 1.26 is the first version of numpy that supports Python 3.12.
+    { version = ">=1.15.2", python = "<3.12" },
+    { version = ">=1.26.0", python = ">=3.12" }
+]
 matplotlib = ">=2.2.0"
 vrplib = "^1.0.0"
 tqdm = "^4.64.1"
@@ -63,7 +62,7 @@ optional = true
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
-sphinx-immaterial = ">=0.11.6"
+sphinx-immaterial = ">=0.11.9"
 
 
 [tool.poetry.group.examples]
@@ -73,6 +72,11 @@ optional = true
 [tool.poetry.group.examples.dependencies]
 jupyter = ">=1.0.0"
 tabulate = "^0.9.0"
+
+# <4.0 because 4.0 breaks Poetry's version resolution, leading it to believe
+# it needs to downgrade the virtualenv installation in RTD. That breaks RTD in
+# turn, so we constrain this dependency here explicitly.
+platformdirs = ">=2.5, <4.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -86,7 +90,7 @@ codecov = "*"
 meson = "^1.0.0"
 ninja = "^1.11.1"
 mypy = "^0.991"
-docblock = "^0.0.5"
+docblock = "^0.1.1"
 
 
 [tool.poetry.scripts]
@@ -140,10 +144,10 @@ exclude_lines = [
 
 
 [tool.cibuildwheel]
-# We do not support old Python versions (<3.8) and somewhat uncommon platforms.
+# We do not support old Python versions (<3.9) and somewhat uncommon platforms.
 # For musllinux-based builds we assume users can compile the thing themselves.
-skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
-build-verbosity = "3"
+skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+build-verbosity = 3
 build-frontend = "build"
 
 
