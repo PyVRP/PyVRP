@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
@@ -60,7 +58,7 @@ def test_rand(seed: int):
 
 
 @mark.parametrize("state", [[1, 2, 3, 4], [10, 14, 274, 83]])
-def test_rng_has_given_state(state: List[int]):
+def test_rng_has_given_state(state: list[int]):
     """
     Tests that setting the RNG with a given state, and then requesting that
     state, returns the same state.

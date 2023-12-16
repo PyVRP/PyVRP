@@ -1,7 +1,7 @@
 import argparse
 from functools import partial
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -37,7 +37,7 @@ from pyvrp.search import (
 from pyvrp.stop import MaxIterations, MaxRuntime
 
 
-def tabulate(headers: List[str], rows: np.ndarray) -> str:
+def tabulate(headers: list[str], rows: np.ndarray) -> str:
     """
     Creates a simple table from the given header and row data.
     """
@@ -70,7 +70,7 @@ def solve(
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     **kwargs,
-) -> Tuple[str, str, float, int, float]:
+) -> tuple[str, str, float, int, float]:
     """
     Solves a single VRPLIB instance.
 
@@ -99,7 +99,7 @@ def solve(
 
     Returns
     -------
-    Tuple[str, str, float, int, float]
+    tuple[str, str, float, int, float]
         A tuple containing the instance name, whether the solution is feasible,
         the solution cost, the number of iterations, and the runtime.
     """
@@ -171,7 +171,7 @@ def solve(
     )
 
 
-def benchmark(instances: List[Path], num_procs: int = 1, **kwargs):
+def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.

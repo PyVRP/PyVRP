@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -55,7 +55,7 @@ class NeighbourhoodParams:
 
 def compute_neighbours(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
-) -> List[List[int]]:
+) -> list[list[int]]:
     """
     Computes neighbours defining the neighbourhood for a problem instance.
 

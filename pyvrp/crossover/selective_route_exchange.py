@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from pyvrp._pyvrp import (
     CostEvaluator,
     ProblemData,
@@ -10,7 +8,7 @@ from pyvrp.crossover._crossover import selective_route_exchange as _srex
 
 
 def selective_route_exchange(
-    parents: Tuple[Solution, Solution],
+    parents: tuple[Solution, Solution],
     data: ProblemData,
     cost_evaluator: CostEvaluator,
     rng: RandomNumberGenerator,

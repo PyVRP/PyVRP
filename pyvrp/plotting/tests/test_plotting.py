@@ -66,6 +66,10 @@ def test_plot_result():
     plotting.plot_result(res, data)
 
 
+def test_plot_result_multiple_depots():
+    pass
+
+
 @img_comp(["plot_instance"], **IMG_KWARGS)
 def test_plot_instance():
     """
@@ -73,6 +77,10 @@ def test_plot_instance():
     """
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     plotting.plot_instance(data)
+
+
+def test_plot_instance_multiple_depots():
+    pass
 
 
 @img_comp(["plot_route_schedule"], **IMG_KWARGS)
