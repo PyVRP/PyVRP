@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Collection, Tuple
+from typing import TYPE_CHECKING, Callable, Collection
 
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
@@ -98,7 +98,7 @@ class GeneticAlgorithm:
         search_method: SearchMethod,
         crossover_op: Callable[
             [
-                Tuple[Solution, Solution],
+                tuple[Solution, Solution],
                 ProblemData,
                 CostEvaluator,
                 RandomNumberGenerator,

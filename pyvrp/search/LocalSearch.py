@@ -1,5 +1,3 @@
-from typing import List
-
 from pyvrp import CostEvaluator, ProblemData, RandomNumberGenerator, Solution
 from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import NodeOperator, RouteOperator
@@ -25,7 +23,7 @@ class LocalSearch:
         self,
         data: ProblemData,
         rng: RandomNumberGenerator,
-        neighbours: List[List[int]],
+        neighbours: list[list[int]],
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng
@@ -55,7 +53,7 @@ class LocalSearch:
         """
         self._ls.add_route_operator(op)
 
-    def set_neighbours(self, neighbours: List[List[int]]):
+    def set_neighbours(self, neighbours: list[list[int]]):
         """
         Convenience method to replace the current granular neighbourhood used
         by the local search object.
@@ -67,7 +65,7 @@ class LocalSearch:
         """
         self._ls.set_neighbours(neighbours)
 
-    def get_neighbours(self) -> List[List[int]]:
+    def get_neighbours(self) -> list[list[int]]:
         """
         Returns the granular neighbourhood currently used by the local search.
 

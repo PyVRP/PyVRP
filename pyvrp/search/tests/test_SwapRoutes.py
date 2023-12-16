@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
@@ -19,7 +17,7 @@ from pyvrp.search._search import Node, Route
         ([2, 3], [1, 4]),  # both non-empty equal length
     ],
 )
-def test_apply(ok_small, visits1: List[int], visits2: List[int]):
+def test_apply(ok_small, visits1: list[int], visits2: list[int]):
     """
     Tests that applying SwapRoutes to two different routes indeed exchanges
     the visits.
