@@ -201,14 +201,18 @@ class Model:
 
            The vehicle type is assigned to the first depot if ``depot`` is not
            provided.
+
+        Raises
+        ------
+        ValueError
+            When the given ``depot`` is not already added to this model
+            instance.
         """
         if depot is None:
-            depot_idx: Optional[int] = 0
+            depot_idx = 0
+        elif depot in self._depots:
+            depot_idx = self._depots.index(depot)
         else:
-            gen = (idx for idx, dep in enumerate(self._depots) if dep == depot)
-            depot_idx = next(gen, None)
-
-        if depot_idx is None:
             raise ValueError("The given depot is not in this model instance.")
 
         vehicle_type = VehicleType(
