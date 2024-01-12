@@ -111,8 +111,8 @@ public:
     /**
      * VehicleType(
      *     num_available: int = 1,
-     *     depot: int = 0,
      *     capacity: int = 0,
+     *     depot: int = 0,
      *     fixed_cost: int = 0,
      *     tw_early: Optional[int] = None,
      *     tw_late: Optional[int] = None,
@@ -132,12 +132,12 @@ public:
      * num_available
      *     Number of vehicles of this type that are available. Must be positive.
      *     Default 1.
-     * depot
-     *     Depot (location index) that vehicles of this type dispatch from, and
-     *     return to at the end of their routes. Default 0 (first depot).
      * capacity
      *     Capacity (maximum total demand) of this vehicle type. Must be
      *     non-negative. Default 0.
+     * depot
+     *     Depot (location index) that vehicles of this type dispatch from, and
+     *     return to at the end of their routes. Default 0 (first depot).
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
@@ -178,8 +178,8 @@ public:
         Duration const maxDuration;
 
         VehicleType(size_t numAvailable = 1,
-                    size_t depot = 0,
                     Load capacity = 0,
+                    size_t depot = 0,
                     Cost fixedCost = 0,
                     std::optional<Duration> twEarly = std::nullopt,
                     std::optional<Duration> twLate = std::nullopt,

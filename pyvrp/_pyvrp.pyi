@@ -57,8 +57,8 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        depot: int = 0,
         capacity: int = 0,
+        depot: int = 0,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,

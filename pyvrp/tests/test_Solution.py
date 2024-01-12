@@ -206,8 +206,8 @@ def test_route_constructor_allows_incomplete_solutions(ok_small_prizes):
 
 def test_get_neighbours(ok_small):
     """
-    Tests that accessing the neighbour structur of (pred, succ) pairs for each
-    client in the solution works correctly.
+    Tests that the neighbour structure of (pred, succ) pairs for each client in
+    the solution works correctly.
     """
     assert_equal(ok_small.num_clients, 4)
 
@@ -217,10 +217,42 @@ def test_get_neighbours(ok_small):
     neighbours = sol.get_neighbours()
     expected = [
         None,  # 0: is depot
-        (0, 2),  # 1: between depot (0) to 2
+        (0, 2),  # 1: between depot (0) and 2
         (1, 0),  # 2: between 1 and depot (0)
         (0, 0),  # 3: between depot (0) and depot (0)
         None,  # 4: unassigned
+    ]
+
+    for loc in range(ok_small.num_locations):
+        assert_equal(neighbours[loc], expected[loc])
+
+
+def test_get_neighbours_multi_depot(ok_small):
+    """
+    Tests that the neighbour structure of (pred, succ) pairs for each client in
+    the solution works correctly when there are multiple depots.
+    """
+    # Make a two-depot instance by changing the first client in ok_small into
+    # a depot, and adding a vehicle type that operates out of that depot.
+    locations = ok_small.depots() + ok_small.clients()
+    locations[1] = Client(locations[1].x, locations[1].y)
+
+    data = ok_small.replace(
+        depots=locations[:2],
+        clients=locations[2:],
+        vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
+    )
+
+    sol = Solution(data, [Route(data, [4], 0), Route(data, [2, 3], 1)])
+    assert_(sol.is_complete())
+
+    neighbours = sol.get_neighbours()
+    expected = [
+        None,  # 0: is depot
+        None,  # 1: is depot
+        (1, 3),  # 2: between depot (1) and 3
+        (2, 1),  # 3: between 2 and depot (1)
+        (0, 0),  # 4: between depot (0) and depot (0)
     ]
 
     for loc in range(ok_small.num_locations):

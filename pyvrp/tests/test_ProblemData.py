@@ -418,7 +418,7 @@ def test_vehicle_type_raises_invalid_data(
     arguments.
     """
     with assert_raises(ValueError):
-        VehicleType(num_available, 0, capacity, fixed_cost, tw_early, tw_late)
+        VehicleType(num_available, capacity, 0, fixed_cost, tw_early, tw_late)
 
 
 def test_vehicle_type_init_max_duration_argument():

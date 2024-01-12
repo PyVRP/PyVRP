@@ -85,15 +85,15 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<size_t,
-                      size_t,
                       pyvrp::Load,
+                      size_t,
                       pyvrp::Cost,
                       std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>>(),
              py::arg("num_available") = 1,
-             py::arg("depot") = 0,
              py::arg("capacity") = 0,
+             py::arg("depot") = 0,
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = py::none(),
              py::arg("tw_late") = py::none(),

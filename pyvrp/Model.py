@@ -186,8 +186,8 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        depot: Optional[Depot] = None,
         capacity: int = 0,
+        depot: Optional[Depot] = None,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
@@ -217,8 +217,8 @@ class Model:
 
         vehicle_type = VehicleType(
             num_available,
-            depot_idx,
             capacity,
+            depot_idx,
             fixed_cost,
             tw_early,
             tw_late,

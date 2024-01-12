@@ -43,8 +43,8 @@ ProblemData::Client::Client(Coordinate x,
 }
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
-                                      size_t depot,
                                       Load capacity,
+                                      size_t depot,
                                       Cost fixedCost,
                                       std::optional<Duration> twEarly,
                                       std::optional<Duration> twLate,

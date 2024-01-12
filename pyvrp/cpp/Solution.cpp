@@ -70,13 +70,17 @@ Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Solution::makeNeighbours()
+void Solution::makeNeighbours(ProblemData const &data)
 {
     for (auto const &route : routes_)
+    {
+        auto const depot = data.vehicleType(route.vehicleType()).depot;
+
         for (size_t idx = 0; idx != route.size(); ++idx)
             neighbours_[route[idx]]
-                = {idx == 0 ? 0 : route[idx - 1],                  // pred
-                   idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
+                = {idx == 0 ? depot : route[idx - 1],                  // pred
+                   idx == route.size() - 1 ? depot : route[idx + 1]};  // succ
+    }
 }
 
 bool Solution::operator==(Solution const &other) const
@@ -143,7 +147,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
                 routes_.emplace_back(data, routes[count++], vehType);
     }
 
-    makeNeighbours();
+    makeNeighbours(data);
     evaluate(data);
 }
 
@@ -203,7 +207,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             throw std::runtime_error(msg.str());
         }
 
-    makeNeighbours();
+    makeNeighbours(data);
     evaluate(data);
 }
 
