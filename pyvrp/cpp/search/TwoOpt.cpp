@@ -51,27 +51,40 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator) const
 {
-    assert(U->route() && V->route());
+    if (n(U)->isDepot() && n(V)->isDepot())  // is a no-op
+        return 0;
+
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
-    // There could be distance changes due to different depots if we switch
-    // routes. These clients are at the end of each route, and would then be
-    // inserted into
-    auto const *endU = p(*uRoute->end());
-    auto const *endV = p(*vRoute->end());
-
     // Two routes. Current situation is U -> n(U), and V -> n(V). Proposed move
     // is U -> n(V) and V -> n(U).
-    Distance const current = data.dist(U->client(), n(U)->client())
-                             + data.dist(V->client(), n(V)->client())
-                             + data.dist(endU->client(), uRoute->depot())
-                             + data.dist(endV->client(), vRoute->depot());
+    Distance current = data.dist(U->client(), n(U)->client())
+                       + data.dist(V->client(), n(V)->client());
 
-    Distance const proposed = data.dist(U->client(), n(V)->client())
-                              + data.dist(V->client(), n(U)->client())
-                              + data.dist(endU->client(), vRoute->depot())
-                              + data.dist(endV->client(), uRoute->depot());
+    // Proposed distances are either to the other segment, if that segment
+    // exists, or back to the depot.  Some caveats are handled below.
+    auto const nU = n(V)->isDepot() ? uRoute->depot() : n(V)->client();
+    auto const nV = n(U)->isDepot() ? vRoute->depot() : n(U)->client();
+    Distance proposed = data.dist(U->client(), nU) + data.dist(V->client(), nV);
+
+    // If n(U) is not the end depot, we might have distance changes due to the
+    // segment after U now ending at V's route's depot.
+    if (!n(U)->isDepot())
+    {
+        auto const *endU = p(*uRoute->end());
+        proposed += data.dist(endU->client(), vRoute->depot());
+        current += data.dist(endU->client(), uRoute->depot());
+    }
+
+    // If n(V) is not the end depot, we might have distance changes due to the
+    // segment after V now ending at U's route's depot.
+    if (!n(V)->isDepot())
+    {
+        auto const *endV = p(*vRoute->end());
+        proposed += data.dist(endV->client(), uRoute->depot());
+        current += data.dist(endV->client(), vRoute->depot());
+    }
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
