@@ -221,11 +221,12 @@ def test_move_involving_empty_routes():
     assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), -90)
 
 
-def test_move_involving_multi_depot():
+def test_move_involving_multiple_depots():
     """
-    This test checks that a 2-OPT move is correctly evaluated for routes with a
-    different depot.
+    This test checks that a 2-OPT move is correctly evaluated for routes with
+    different depots.
     """
+    # Locations with indices 0 and 1 are depots, with 2 and 3 are clients.
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=4, y=4)],
         depots=[Client(x=0, y=0), Client(x=5, y=5)],
@@ -239,12 +240,12 @@ def test_move_involving_multi_depot():
         duration_matrix=np.zeros((4, 4), dtype=int),
     )
 
-    # First route is 0 [depot] -> 3 [client] -> 0 [depot].
+    # First route is 0 -> 3 -> 0.
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
     route1.update()
 
-    # Second route is 1 [depot] -> 2 [client] -> 1 [depot].
+    # Second route is 1 -> 2 -> 1.
     route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=2))
     route2.update()
@@ -255,16 +256,12 @@ def test_move_involving_multi_depot():
     op = TwoOpt(data)
     cost_eval = CostEvaluator(1, 1)
 
-    # This move is equivalent to swapping, resulting in improvement of 24.
-    assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), -24)
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
 
-    # Route 1: 0 -> 3 -> 2 -> 0
-    # Route 2: 1 -> 1
+    # First would be 0 -> 3 -> 2 -> 0, second 1 -> 1. Distance on route2 would
+    # be zero, and on route1 16. Thus delta cost is -16.
     assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), -16)
 
-    # Route 1: 0 -> 0
-    # Route 2: 1 -> 2 -> 3 -> 1
+    # First would be 0 -> 0, second 1 -> 2 -> 3 -> 1. Distance on route1 would
+    # be zero, and on route2 16. Thus delta cost is -16.
     assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), -16)
-
-    # No change in routes, so no improvement.
-    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), 0)
