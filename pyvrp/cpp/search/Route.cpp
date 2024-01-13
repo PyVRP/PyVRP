@@ -99,10 +99,6 @@ void Route::clear()
 
 void Route::insert(size_t idx, Node *node)
 {
-#ifndef NDEBUG
-    dirty = true;
-#endif
-
     assert(0 < idx && idx < nodes.size());
     assert(!node->route());  // must previously have been unassigned
 
@@ -117,23 +113,23 @@ void Route::insert(size_t idx, Node *node)
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 
 void Route::push_back(Node *node)
 {
+    insert(size() + 1, node);
+
 #ifndef NDEBUG
     dirty = true;
 #endif
-
-    insert(size() + 1, node);
 }
 
 void Route::remove(size_t idx)
 {
-#ifndef NDEBUG
-    dirty = true;
-#endif
-
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
@@ -147,15 +143,14 @@ void Route::remove(size_t idx)
 
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 
 void Route::swap(Node *first, Node *second)
 {
-#ifndef NDEBUG
-    first->route_->dirty = true;
-    second->route_->dirty = true;
-#endif
-
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
@@ -164,6 +159,11 @@ void Route::swap(Node *first, Node *second)
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
+
+#ifndef NDEBUG
+    first->route_->dirty = true;
+    second->route_->dirty = true;
+#endif
 }
 
 void Route::update()
