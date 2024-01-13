@@ -28,7 +28,11 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
-std::pair<double, double> const &Route::centroid() const { return centroid_; }
+std::pair<double, double> const &Route::centroid() const
+{
+    assert(!dirty);
+    return centroid_;
+}
 
 size_t Route::vehicleType() const { return vehTypeIdx_; }
 
@@ -87,10 +91,18 @@ void Route::clear()
     stats.clear();  // clear stats and reinsert depot statistics.
     stats.emplace_back(depotTws);
     stats.emplace_back(depotTws);
+
+#ifndef NDEBUG
+    dirty = false;
+#endif
 }
 
 void Route::insert(size_t idx, Node *node)
 {
+#ifndef NDEBUG
+    dirty = true;
+#endif
+
     assert(0 < idx && idx < nodes.size());
     assert(!node->route());  // must previously have been unassigned
 
@@ -107,10 +119,21 @@ void Route::insert(size_t idx, Node *node)
         nodes[after]->idx_ = after;
 }
 
-void Route::push_back(Node *node) { insert(size() + 1, node); }
+void Route::push_back(Node *node)
+{
+#ifndef NDEBUG
+    dirty = true;
+#endif
+
+    insert(size() + 1, node);
+}
 
 void Route::remove(size_t idx)
 {
+#ifndef NDEBUG
+    dirty = true;
+#endif
+
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
@@ -128,6 +151,11 @@ void Route::remove(size_t idx)
 
 void Route::swap(Node *first, Node *second)
 {
+#ifndef NDEBUG
+    first->route_->dirty = true;
+    second->route_->dirty = true;
+#endif
+
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
@@ -168,6 +196,10 @@ void Route::update()
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
         stats[idx - 1].twsAfter = TWS::merge(
             data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
+#endif
+
+#ifndef NDEBUG
+    dirty = false;
 #endif
 }
 

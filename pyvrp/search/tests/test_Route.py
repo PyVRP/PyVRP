@@ -285,46 +285,6 @@ def test_all_routes_overlap_with_maximum_tolerance_value(ok_small):
     assert_(route2.overlaps_with(route1, 1))
 
 
-def test_data_is_not_updated_until_update_call(ok_small):
-    """
-    Tests that route statistics like distance, time window segments, and load
-    are not updated until ``update()`` has been called.
-    """
-    route = Route(ok_small, idx=0, vehicle_type=0)
-
-    # Add a new client to the route. update() has not been called, so the route
-    # statistics are not correct.
-    route.append(Node(loc=1))
-
-    assert_(route.load() != ok_small.location(1).demand)
-    assert_(
-        route.dist_between(0, 2) != ok_small.dist(0, 1) + ok_small.dist(1, 0)
-    )
-
-    # Update. This recalculates the statistics, which should now be correct.
-    route.update()
-    assert_equal(route.load(), ok_small.location(1).demand)
-    assert_equal(
-        route.dist_between(0, 2), ok_small.dist(0, 1) + ok_small.dist(1, 0)
-    )
-
-    # Same story with another client: incorrect before update, correct after.
-    route.append(Node(loc=2))
-    assert_(
-        route.load()
-        != ok_small.location(1).demand + ok_small.location(2).demand
-    )
-
-    route.update()
-    assert_equal(
-        route.load(), ok_small.location(1).demand + ok_small.location(2).demand
-    )
-    assert_equal(
-        route.dist_between(0, 3),
-        ok_small.dist(0, 1) + ok_small.dist(1, 2) + ok_small.dist(2, 0),
-    )
-
-
 @pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
 def test_str_contains_route(ok_small, locs: list[int]):
     """
