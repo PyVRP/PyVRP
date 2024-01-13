@@ -134,10 +134,20 @@ def test_evaluate_capacity_differences(ok_small):
     # Swapping the route plans should alleviate the excess load, since the load
     # of 15 on route1 is below route2's capacity, and similarly for route2's
     # load and route1's capacity. Since we price unit load violations at 40,
-    # this should result in a delta cost of -200. The operator is symmetric,
-    # so evaluate(route1, route2) and evaluate(route2, route1) are the same.
+    # this should result in a delta cost of -200.
     assert_allclose(op.evaluate(route1, route2, cost_eval), -200)
-    assert_allclose(op.evaluate(route2, route1, cost_eval), -200)
+
+    # Apply the move, update the routes, and then check if they're now both
+    # feasible.
+    op.apply(route1, route2)
+    route1.update()
+    route2.update()
+
+    assert_equal(len(route1), 1)
+    assert_(route1.is_feasible())
+
+    assert_equal(len(route2), 3)
+    assert_(route2.is_feasible())
 
 
 def test_evaluate_shift_time_window_differences(ok_small):
