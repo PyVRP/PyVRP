@@ -55,12 +55,23 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
+    // There could be distance changes due to different depots if we switch
+    // routes. These clients are at the end of each route, and would then be
+    // inserted into
+    auto const *endU = p(*uRoute->end());
+    auto const *endV = p(*vRoute->end());
+
     // Two routes. Current situation is U -> n(U), and V -> n(V). Proposed move
     // is U -> n(V) and V -> n(U).
     Distance const current = data.dist(U->client(), n(U)->client())
-                             + data.dist(V->client(), n(V)->client());
+                             + data.dist(V->client(), n(V)->client())
+                             + data.dist(endU->client(), uRoute->depot())
+                             + data.dist(endV->client(), vRoute->depot());
+
     Distance const proposed = data.dist(U->client(), n(V)->client())
-                              + data.dist(V->client(), n(U)->client());
+                              + data.dist(V->client(), n(U)->client())
+                              + data.dist(endU->client(), vRoute->depot())
+                              + data.dist(endV->client(), uRoute->depot());
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
