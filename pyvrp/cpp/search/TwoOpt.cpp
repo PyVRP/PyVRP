@@ -51,11 +51,8 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator) const
 {
-    if (n(U)->isDepot() && n(V)->isDepot())  // is a no-op
-        return 0;
-
-    auto *uRoute = U->route();
-    auto *vRoute = V->route();
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
 
     // Two routes. Current situation is U -> n(U), and V -> n(V). Proposed move
     // is U -> n(V) and V -> n(U).
@@ -211,6 +208,9 @@ Cost TwoOpt::evaluate(Route::Node *U,
                       Route::Node *V,
                       CostEvaluator const &costEvaluator)
 {
+    assert(U->route());
+    assert(V->route());
+
     if (U->route()->idx() > V->route()->idx())  // tackled in a later iteration
         return 0;
 

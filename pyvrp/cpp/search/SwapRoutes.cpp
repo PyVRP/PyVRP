@@ -11,7 +11,7 @@ Cost SwapRoutes::evaluate(Route *U,
                           Route *V,
                           CostEvaluator const &costEvaluator)
 {
-    if (U->vehicleType() == V->vehicleType() || (U->empty() && V->empty()))
+    if (U->vehicleType() == V->vehicleType())
         return 0;
 
     // Evaluate swapping the routes after the two depots using 2-OPT.
