@@ -50,11 +50,11 @@ def test_OkSmall_instance(ok_small):
 @mark.parametrize(
     "vehicle_types",
     [
-        [VehicleType(10, 1), VehicleType(10, 1)],
-        [VehicleType(8, 1), VehicleType(10, 1)],
-        [VehicleType(10, 1), VehicleType(8, 1)],
-        [VehicleType(9, 1), VehicleType(9, 1)],
-        [VehicleType(8, 1), VehicleType(8, 1)],
+        [VehicleType(capacity=10), VehicleType(capacity=10)],
+        [VehicleType(capacity=8), VehicleType(capacity=10)],
+        [VehicleType(capacity=10), VehicleType(capacity=8)],
+        [VehicleType(capacity=9), VehicleType(capacity=9)],
+        [VehicleType(capacity=8), VehicleType(capacity=8)],
     ],
 )
 def test_OkSmall_multiple_vehicle_types(
@@ -166,7 +166,10 @@ def test_move_involving_empty_routes():
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(0, 1, 10), VehicleType(0, 1, 100)],
+        vehicle_types=[
+            VehicleType(fixed_cost=10),
+            VehicleType(fixed_cost=100),
+        ],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),
     )
@@ -216,3 +219,49 @@ def test_move_involving_empty_routes():
     # making route 1 non-empty, while making route 2 empty. The total fixed
     # cost incurred is thus 10 - 100 = -90.
     assert_allclose(op.evaluate(route1[0], route2[0], cost_eval), -90)
+
+
+def test_move_involving_multiple_depots():
+    """
+    This test checks that a 2-OPT move is correctly evaluated for routes with
+    different depots.
+    """
+    # Locations with indices 0 and 1 are depots, with 2 and 3 are clients.
+    data = ProblemData(
+        clients=[Client(x=1, y=1), Client(x=4, y=4)],
+        depots=[Client(x=0, y=0), Client(x=5, y=5)],
+        vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
+        distance_matrix=[
+            [0, 10, 2, 8],
+            [10, 0, 8, 2],
+            [2, 8, 0, 6],
+            [8, 2, 6, 0],
+        ],
+        duration_matrix=np.zeros((4, 4), dtype=int),
+    )
+
+    # First route is 0 -> 3 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=3))
+    route1.update()
+
+    # Second route is 1 -> 2 -> 1.
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=2))
+    route2.update()
+
+    assert_allclose(route1.distance(), 16)
+    assert_allclose(route2.distance(), 16)
+
+    op = TwoOpt(data)
+    cost_eval = CostEvaluator(1, 1)
+
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
+
+    # First would be 0 -> 3 -> 2 -> 0, second 1 -> 1. Distance on route2 would
+    # be zero, and on route1 16. Thus delta cost is -16.
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), -16)
+
+    # First would be 0 -> 0, second 1 -> 2 -> 3 -> 1. Distance on route1 would
+    # be zero, and on route2 16. Thus delta cost is -16.
+    assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), -16)

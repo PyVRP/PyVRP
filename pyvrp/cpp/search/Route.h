@@ -117,10 +117,13 @@ public:
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
 
+    // First client in the route if the route is non-empty. Else it is the
+    // end depot. In either case the iterator is valid!
     [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
-
     [[nodiscard]] inline std::vector<Node *>::iterator begin();
+
+    // End depot. The iterator is valid!
+    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
     [[nodiscard]] inline std::vector<Node *>::iterator end();
 
     /**
@@ -153,6 +156,11 @@ public:
      * @return The load capacity of the vehicle servicing this route.
      */
     [[nodiscard]] inline Load capacity() const;
+
+    /**
+     * @return The location index of this route's depot.
+     */
+    [[nodiscard]] inline size_t depot() const;
 
     /**
      * @return The fixed cost of the vehicle servicing this route.
@@ -356,6 +364,8 @@ Load Route::load() const
 }
 
 Load Route::capacity() const { return vehicleType_.capacity; }
+
+size_t Route::depot() const { return vehicleType_.depot; }
 
 Cost Route::fixedCost() const { return vehicleType_.fixedCost; }
 

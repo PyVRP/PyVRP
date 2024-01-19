@@ -231,7 +231,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     data = ProblemData(
         clients=clients,
         depots=[Client(x=0, y=0, tw_early=0, tw_late=10)],
-        vehicle_types=[VehicleType(0, 1)],
+        vehicle_types=[VehicleType(1)],
         distance_matrix=np.asarray(
             [
                 [0, 1, 5],
@@ -273,7 +273,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     This test asserts that a customer will be relocated to a non-empty route
     with a different capacity even if there is another empty route in between.
     """
-    vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
+    vehicle_types = [VehicleType(1, capacity=cap) for cap in [12, 5, 1, 3]]
     data = ok_small.replace(vehicle_types=vehicle_types)
 
     # Use a huge cost for load penalties to make other aspects irrelevant
@@ -327,7 +327,8 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     not changed), and vary the fixed vehicle cost. The total delta cost should
     also vary as a result.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
+    vehicle_type = VehicleType(2, capacity=10, fixed_cost=fixed_cost)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -361,7 +362,7 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
     Tests that the exchange operators correctly evaluate time warp due to
     maximum duration violations.
     """
-    vehicle_type = VehicleType(10, 2, max_duration=max_dur)
+    vehicle_type = VehicleType(2, capacity=10, max_duration=max_dur)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 

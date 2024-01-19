@@ -8,27 +8,25 @@ double pyvrp::diversity::brokenPairsDistance(pyvrp::Solution const &first,
     auto const &fNeighbours = first.getNeighbours();
     auto const &sNeighbours = second.getNeighbours();
 
-    // The neighbours vector contains the depot, so its size is always at least
-    // one. Thus numClients >= 0.
-    size_t const numClients = fNeighbours.size() - 1;
+    size_t const numLocations = fNeighbours.size();
     size_t numBrokenPairs = 0;
 
-    for (size_t j = 1; j <= numClients; j++)
+    for (size_t location = 0; location != numLocations; location++)
     {
-        // Large default value in case a client is not in one of the solutions.
+        // Large default in case a location is not in one of the solutions.
         size_t constexpr max = std::numeric_limits<size_t>::max();
         std::pair<size_t, size_t> constexpr unassigned = {max, max};
 
-        auto const [fPred, fSucc] = fNeighbours[j].value_or(unassigned);
-        auto const [sPred, sSucc] = sNeighbours[j].value_or(unassigned);
+        auto const [fPred, fSucc] = fNeighbours[location].value_or(unassigned);
+        auto const [sPred, sSucc] = sNeighbours[location].value_or(unassigned);
 
-        // An edge pair (fPred, j) or (j, fSucc) from the first solution is
-        // broken if it is not in the second solution.
+        // An edge pair (fPred, location) or (location, fSucc) from the first
+        // solution is broken if it is not in the second solution.
         numBrokenPairs += fSucc != sSucc;
         numBrokenPairs += fPred != sPred;
     }
 
     // numBrokenPairs is at most 2n since we can count at most two broken edges
-    // for each client. Here, we normalise the distance to [0, 1].
-    return numBrokenPairs / (2. * std::max<size_t>(numClients, 1));
+    // for each location. Here, we normalise the distance to [0, 1].
+    return numBrokenPairs / (2. * numLocations);
 }
