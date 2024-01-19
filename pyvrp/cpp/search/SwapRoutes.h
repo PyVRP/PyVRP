@@ -3,6 +3,7 @@
 
 #include "LocalSearchOperator.h"
 #include "Measure.h"
+#include "TwoOpt.h"
 
 namespace pyvrp::search
 {
@@ -14,6 +15,8 @@ namespace pyvrp::search
  */
 class SwapRoutes : public LocalSearchOperator<Route>
 {
+    TwoOpt opt;
+
 public:
     Cost
     evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;

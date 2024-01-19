@@ -86,7 +86,7 @@ def test_relocate_fixed_vehicle_cost():
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(0, 1, 7), VehicleType(0, 1, 13)],
+        vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),
     )
