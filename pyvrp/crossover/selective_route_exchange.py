@@ -27,9 +27,9 @@ def selective_route_exchange(
     .. note::
 
        Since SREX exchanges *routes*, it is not an appropriate crossover
-       operator for TSP instance where each solution consists of just one
+       operator for TSP instances where each solution consists of just one
        route. SREX warns when used for TSPs, and another crossover operator
-       should ideally be used.
+       should ideally be used when solving such instances.
 
     Parameters
     ----------

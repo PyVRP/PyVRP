@@ -63,3 +63,24 @@ def test_prize_collecting_instance(prize_collecting):
     # From the second route we get [2, 3, 4, 5], for a total of six clients.
     offspring = cpp_ox((sol1, sol2), data, (2, 4))
     assert_equal(offspring.num_clients(), 6)
+
+
+def test_empty_solution(prize_collecting):
+    """
+    Tests that OX returns the other parent when one of the solutions is empty.
+    This can occur during prize collecting, and in that case there is nothing
+    to exchange via crossover.
+    """
+    data = prize_collecting.replace(vehicle_types=[VehicleType()])
+
+    cost_evaluator = CostEvaluator(20, 6)
+    rng = RandomNumberGenerator(seed=42)
+
+    empty = Solution(data, [])
+    nonempty = Solution(data, [[1, 2, 3, 4]])
+
+    # If one of the two parents is empty but the other is not, the returned
+    # solution is the nonempty parent.
+    for parents in [(empty, nonempty), (nonempty, empty)]:
+        offspring = ox(parents, data, cost_evaluator, rng)
+        assert_equal(offspring, nonempty)

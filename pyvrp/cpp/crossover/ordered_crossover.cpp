@@ -11,7 +11,7 @@ using Client = size_t;
 pyvrp::Solution pyvrp::crossover::orderedCrossover(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
-    std::pair<size_t, size_t> const indices)
+    std::pair<size_t, size_t> const &indices)
 {
     assert(data.numVehicles() == 1);
 

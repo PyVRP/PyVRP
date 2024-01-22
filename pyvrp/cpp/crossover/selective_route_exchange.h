@@ -32,7 +32,7 @@ Solution selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
     CostEvaluator const &costEvaluator,
-    std::pair<size_t, size_t> const startIndices,
+    std::pair<size_t, size_t> const &startIndices,
     size_t const numMovedRoutes);
 }  // namespace pyvrp::crossover
 

@@ -26,7 +26,7 @@ namespace pyvrp::crossover
 Solution
 orderedCrossover(std::pair<Solution const *, Solution const *> const &parents,
                  ProblemData const &data,
-                 std::pair<size_t, size_t> const indices);
+                 std::pair<size_t, size_t> const &indices);
 }  // namespace pyvrp::crossover
 
 #endif  // PYVRP_ORDERED_CROSSOVER_H
