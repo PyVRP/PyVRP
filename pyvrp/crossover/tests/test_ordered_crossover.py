@@ -1,10 +1,6 @@
 from numpy.testing import assert_equal, assert_raises
 
-from pyvrp import (
-    CostEvaluator,
-    RandomNumberGenerator,
-    Solution,
-)
+from pyvrp import CostEvaluator, RandomNumberGenerator, Solution, VehicleType
 from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover._crossover import ordered_crossover as cpp_ox
 
@@ -46,3 +42,24 @@ def test_edge_cases_return_parents(pr107):
     # second solution.
     offspring = cpp_ox((sol1, sol2), pr107, (0, 0))
     assert_equal(offspring, sol2)
+
+
+def test_prize_collecting_instance(prize_collecting):
+    """
+    Tests that OX functions correctly when there are optional clients.
+    """
+    data = prize_collecting.replace(vehicle_types=[VehicleType()])
+
+    sol1 = Solution(data, [[4, 5, 6, 7, 8]])
+    sol2 = Solution(data, [[2, 3, 4, 5]])
+
+    # From the first route we take [4, 5], which are also in the second route.
+    # Thus, we only get the values [2, 3] from the second route, for a total of
+    # four clients in the offspring solution.
+    offspring = cpp_ox((sol1, sol2), data, (0, 2))
+    assert_equal(offspring.num_clients(), 4)
+
+    # From the first route we take [6, 7], which are not in the second route.
+    # From the second route we get [2, 3, 4, 5], for a total of six clients.
+    offspring = cpp_ox((sol1, sol2), data, (2, 4))
+    assert_equal(offspring.num_clients(), 6)

@@ -60,10 +60,16 @@ def ordered_crossover(
     if second.num_clients() == 0:
         return first
 
-    start = rng.randint(data.num_clients)
-    end = rng.randint(data.num_clients)
+    # Generate [start, end) indices in the route of the first parent solution.
+    # If end < start, the index segment wraps around. Clients in this index
+    # segment are copied verbatim into the offspring solution.
+    first_route = first.get_routes()[0]
+    start = rng.randint(len(first_route))
+    end = rng.randint(len(first_route))
 
-    while end == start and data.num_clients > 1:
-        end = rng.randint(data.num_clients)
+    # When start == end we try to find a different end index, such that the
+    # offspring actually inherits something from each parent.
+    while start == end and len(first_route) > 1:
+        end = rng.randint(len(first_route))
 
     return _ox(parents, data, (start, end))
