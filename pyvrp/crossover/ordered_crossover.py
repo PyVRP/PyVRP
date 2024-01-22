@@ -21,8 +21,8 @@ def ordered_crossover(
 
     .. warning::
 
-       This operator explicitly assumes the problem instance describes a TSP.
-       You should use a different crossover operator if that is not the case.
+       This operator explicitly assumes the problem instance is a TSP. You
+       should use a different crossover operator if that is not the case.
 
     Parameters
     ----------
@@ -43,8 +43,8 @@ def ordered_crossover(
     Raises
     ------
     ValueError
-        When the given data instance does not describe a TSP, particularly,
-        when there is more than one vehicle in the data.
+        When the given data instance is not a TSP, particularly, when there is
+        more than one vehicle in the data.
 
     References
     ----------
