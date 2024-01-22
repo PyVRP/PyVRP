@@ -12,7 +12,7 @@ using Client = size_t;
 
 // Depot value, which is never in a route (since it's not a client). We use
 // this as filler to account for possibly missing clients.
-static constexpr size_t NOT_IN_ROUTE = 0;
+static constexpr size_t UNUSED = 0;
 }  // namespace
 
 pyvrp::Solution pyvrp::crossover::orderedCrossover(
@@ -26,8 +26,10 @@ pyvrp::Solution pyvrp::crossover::orderedCrossover(
     auto const [start, end] = indices;
     auto const numClients = data.numClients();
 
-    DynamicBitset isInserted(data.numLocations());
-    std::vector<Client> newRoute(numClients, NOT_IN_ROUTE);
+    // New route. This route is initially empty, indicated by all UNUSED
+    // values. Any such values that remain after crossover are filtered away.
+    std::vector<Client> newRoute(numClients, UNUSED);
+    DynamicBitset isInserted(data.numLocations());  // tracks inserted clients
 
     // Insert the clients from the first route into the new route, from start
     // to end (possibly wrapping around the end of the route).
@@ -52,14 +54,14 @@ pyvrp::Solution pyvrp::crossover::orderedCrossover(
         }
     }
 
-    // Remove the "not in route" entries from the new route. These were needed
-    // because we cannot assume each route has the same clients when optional
-    // clients are present.
+    // Remove the UNUSED values from the new route. These were needed because
+    // we cannot assume both parent solutions have all the same clients (for
+    // example, solutions to instances with optional clients typically do not).
     std::vector<Client> offspring;
     std::copy_if(newRoute.begin(),
                  newRoute.end(),
                  std::back_inserter(offspring),
-                 [](auto client) { return client != NOT_IN_ROUTE; });
+                 [](auto client) { return client != UNUSED; });
 
     return {data, {offspring}};
 }
