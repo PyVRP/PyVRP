@@ -12,8 +12,8 @@ namespace pyvrp::crossover
 {
 /**
  * Performs an ordered crossover (OX) operation between the two given parents.
- * The clients between the [start, end) from the first route are copied into
- * a new solution, and any missing clients that are present in the second
+ * The clients between the [start, end) indices from the first route are copied
+ * into a new solution, and any missing clients that are present in the second
  * solution are then copied in as well.
  *
  * @param parents   The parent solutions.

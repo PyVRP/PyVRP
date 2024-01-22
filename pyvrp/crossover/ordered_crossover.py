@@ -14,18 +14,21 @@ def ordered_crossover(
     rng: RandomNumberGenerator,
 ) -> Solution:
     """
-    TODO
+    Performs an ordered crossover (OX) operation between the two given parents.
+    The clients between two randomly selected indices of the first route are
+    copied into a new solution, and any missing clients that are present in the
+    second solution are then copied in as well. See [1]_ for details.
 
     Parameters
     ----------
     parents
-        TODO
+        The two parent solutions to create an offspring from.
     data
-        TODO
+        The problem instance.
     cost_evaluator
-        TODO
+        Cost evaluator object. Unused by this operator.
     rng
-        TODO
+        The random number generator to use.
 
     Returns
     -------
