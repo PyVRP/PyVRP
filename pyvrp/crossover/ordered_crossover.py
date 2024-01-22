@@ -17,7 +17,12 @@ def ordered_crossover(
     Performs an ordered crossover (OX) operation between the two given parents.
     The clients between two randomly selected indices of the first route are
     copied into a new solution, and any missing clients that are present in the
-    second solution are then copied in as well. See [1]_ for details.
+    second route are then copied in as well. See [1]_ for details.
+
+    .. warning::
+
+       This operator explicitly assumes the problem instance describes a TSP.
+       You should use a different crossover operator if that is not the case.
 
     Parameters
     ----------
