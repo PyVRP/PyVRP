@@ -1,3 +1,5 @@
+from warnings import warn
+
 from pyvrp._pyvrp import (
     CostEvaluator,
     ProblemData,
@@ -5,6 +7,7 @@ from pyvrp._pyvrp import (
     Solution,
 )
 from pyvrp.crossover._crossover import selective_route_exchange as _srex
+from pyvrp.exceptions import TspWarning
 
 
 def selective_route_exchange(
@@ -43,6 +46,13 @@ def selective_route_exchange(
            Exchange Crossover. *Parallel Problem Solving from Nature*, PPSN XI,
            536 - 545.
     """
+    if data.num_vehicles == 1:
+        msg = """
+        SREX always returns one of the parent solutions for TSP instances. 
+        Consider using a different crossover.
+        """
+        warn(msg, TspWarning)
+
     first, second = parents
 
     if first.num_clients() == 0:

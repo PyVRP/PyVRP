@@ -2,11 +2,10 @@
 #define PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
 
 #include "CostEvaluator.h"
-#include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
 
-#include <functional>
+#include <utility>
 #include <vector>
 
 namespace pyvrp::crossover
