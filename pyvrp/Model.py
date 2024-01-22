@@ -15,6 +15,7 @@ from pyvrp._pyvrp import (
     VehicleType,
 )
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
+from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
@@ -298,6 +299,9 @@ class Model:
             for _ in range(pop_params.min_pop_size)
         ]
 
-        gen_args = (data, pm, rng, pop, ls, srex, init)
+        # We use SREX when the instance is a proper VRP; else OX for TSP.
+        crossover = srex if data.num_vehicles > 1 else ox
+
+        gen_args = (data, pm, rng, pop, ls, crossover, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
         return algo.run(stop)

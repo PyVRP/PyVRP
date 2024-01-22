@@ -3,6 +3,7 @@
 #include "DynamicBitset.h"
 
 #include <cmath>
+#include <vector>
 
 using Client = size_t;
 using Clients = std::vector<Client>;

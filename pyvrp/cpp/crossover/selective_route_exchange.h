@@ -6,7 +6,6 @@
 #include "Solution.h"
 
 #include <utility>
-#include <vector>
 
 namespace pyvrp::crossover
 {
