@@ -319,8 +319,8 @@ def test_mdvrptw_instance():
         # capacities and maximum route durations.
         assert_equal(vehicle_type.num_available, 10)
         assert_equal(vehicle_type.depot, idx)
-        assert_allclose(vehicle_type.capacity, 200)
-        assert_allclose(vehicle_type.max_duration, 450)
+        assert_allclose(vehicle_type.capacity, 200_000)
+        assert_allclose(vehicle_type.max_duration, 450_000)
 
     # We haven't seen many instances with negative coordinates, but this
     # MDVRPTW instance has those. That should be allowed.
