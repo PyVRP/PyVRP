@@ -32,13 +32,13 @@ def test_edge_cases_return_parents(pr107):
 
     # When the indices cover the whole range of clients, all clients from the
     # first route are copied in and there is nothing left to obtain from the
-    # second route. Thus, the offspring solution is indentical to the first
+    # second route. Thus, the offspring solution is identical to the first
     # solution.
     offspring = cpp_ox((sol1, sol2), pr107, (0, pr107.num_clients - 1))
     assert_equal(offspring, sol1)
 
     # When nothing is copied from the first route, everything is taken from
-    # the second route. Thus, the offspring solution is indentical to the
+    # the second route. Thus, the offspring solution is identical to the
     # second solution.
     offspring = cpp_ox((sol1, sol2), pr107, (0, 0))
     assert_equal(offspring, sol2)
@@ -57,12 +57,16 @@ def test_prize_collecting_instance(prize_collecting):
     # Thus, we only get the values [2, 3] from the second route, for a total of
     # four clients in the offspring solution.
     offspring = cpp_ox((sol1, sol2), data, (0, 2))
+    route = offspring.get_routes()[0]
     assert_equal(offspring.num_clients(), 4)
+    assert_equal(route.visits(), [4, 5, 2, 3])
 
     # From the first route we take [6, 7], which are not in the second route.
     # From the second route we get [2, 3, 4, 5], for a total of six clients.
     offspring = cpp_ox((sol1, sol2), data, (2, 4))
+    route = offspring.get_routes()[0]
     assert_equal(offspring.num_clients(), 6)
+    assert_equal(route.visits(), [6, 7, 2, 3, 4, 5])
 
 
 def test_empty_solution(prize_collecting):
@@ -84,3 +88,21 @@ def test_empty_solution(prize_collecting):
     for parents in [(empty, nonempty), (nonempty, empty)]:
         offspring = ox(parents, data, cost_evaluator, rng)
         assert_equal(offspring, nonempty)
+
+
+def test_wrap_around(ok_small):
+    """
+    Tests that OX wraps around properly on a small instance.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType()])
+
+    sol1 = Solution(data, [[1, 3, 2, 4]])
+    sol2 = Solution(data, [[4, 1, 2, 3]])
+
+    # Since the start index is bigger than the end index, this call to OX will
+    # wrap around. In particular, the offspring inherits the segment [4, 1]
+    # from sol1 as [1, *, *, 4], and gets [2, 3] from sol2 as [1, 2, 3, 4].
+    offspring = cpp_ox((sol1, sol2), data, (3, 1))
+    route = offspring.get_routes()[0]
+    assert_equal(offspring.num_clients(), 4)
+    assert_equal(route.visits(), [1, 2, 3, 4])
