@@ -1,5 +1,6 @@
 import functools
 import pathlib
+from collections import Counter
 from numbers import Number
 from typing import Callable, Union
 from warnings import warn
@@ -112,6 +113,13 @@ def read(
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
 
+    # If this value is supplied, we should pass it through the round func and
+    # then unwrap the result. If it's not given, the default value is None,
+    # which PyVRP understands.
+    max_duration: int | None = instance.get("vehicles_max_duration")
+    if max_duration is not None:
+        max_duration = round_func(np.array([max_duration])).item()
+
     distances: np.ndarray = round_func(instance["edge_weight"])
 
     if "demand" in instance:
@@ -147,6 +155,15 @@ def read(
         durations = np.zeros_like(distances)
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
+
+    if "vehicles_depot" in instance:
+        counts = Counter(instance["vehicles_depot"]).items()
+        depot_vehicle_pairs = [  # pairs of (depot idx, # vehicles at depot)
+            (depot_idx - 1, num_available)
+            for depot_idx, num_available in counts
+        ]
+    else:
+        depot_vehicle_pairs = [(0, num_vehicles)]
 
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
@@ -184,7 +201,16 @@ def read(
         )
         for idx in range(dimension)
     ]
-    vehicle_types = [VehicleType(num_vehicles, capacity=capacity)]
+
+    vehicle_types = [
+        VehicleType(
+            num_available,
+            capacity,
+            depot_idx,
+            max_duration=max_duration,
+        )
+        for depot_idx, num_available in depot_vehicle_pairs
+    ]
 
     return ProblemData(
         clients[len(depots) :],
