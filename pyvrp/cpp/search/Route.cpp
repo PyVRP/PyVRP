@@ -28,12 +28,18 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
-std::pair<double, double> const &Route::centroid() const { return centroid_; }
+std::pair<double, double> const &Route::centroid() const
+{
+    assert(!dirty);
+    return centroid_;
+}
 
 size_t Route::vehicleType() const { return vehTypeIdx_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
+    assert(!dirty && !other.dirty);
+
     auto const [dataX, dataY] = data.centroid();
     auto const [thisX, thisY] = centroid_;
     auto const [otherX, otherY] = other.centroid_;
@@ -87,6 +93,10 @@ void Route::clear()
     stats.clear();  // clear stats and reinsert depot statistics.
     stats.emplace_back(depotTws);
     stats.emplace_back(depotTws);
+
+#ifndef NDEBUG
+    dirty = false;
+#endif
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -105,9 +115,20 @@ void Route::insert(size_t idx, Node *node)
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 
-void Route::push_back(Node *node) { insert(size() + 1, node); }
+void Route::push_back(Node *node)
+{
+    insert(size() + 1, node);
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
+}
 
 void Route::remove(size_t idx)
 {
@@ -124,6 +145,10 @@ void Route::remove(size_t idx)
 
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 
 void Route::swap(Node *first, Node *second)
@@ -136,6 +161,11 @@ void Route::swap(Node *first, Node *second)
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
+
+#ifndef NDEBUG
+    first->route_->dirty = true;
+    second->route_->dirty = true;
+#endif
 }
 
 void Route::update()
@@ -168,6 +198,10 @@ void Route::update()
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
         stats[idx - 1].twsAfter = TWS::merge(
             data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
+#endif
+
+#ifndef NDEBUG
+    dirty = false;
 #endif
 }
 
