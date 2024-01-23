@@ -97,6 +97,15 @@ private:
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
 
+#ifndef NDEBUG
+    // When debug assertions are enabled, we use this flag to check whether
+    // the statistics are still in sync with the route's nodes list. Statistics
+    // are only updated after calling ``update()``. If that function has not
+    // yet been called after inserting or removing nodes, this flag is active,
+    // and asserts on statistics getters will fail.
+    bool dirty = false;
+#endif
+
 public:
     /**
      * Route index.
@@ -303,15 +312,24 @@ bool Route::Node::isDepot() const
     return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
-bool Route::isFeasible() const { return !hasExcessLoad() && !hasTimeWarp(); }
+bool Route::isFeasible() const
+{
+    assert(!dirty);
+    return !hasExcessLoad() && !hasTimeWarp();
+}
 
-bool Route::hasExcessLoad() const { return load() > capacity(); }
+bool Route::hasExcessLoad() const
+{
+    assert(!dirty);
+    return load() > capacity();
+}
 
 bool Route::hasTimeWarp() const
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return false;
 #else
+    assert(!dirty);
     return timeWarp() > 0;
 #endif
 }
@@ -339,7 +357,11 @@ std::vector<Route::Node *>::iterator Route::begin()
 }
 std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
-Load Route::load() const { return stats.back().cumLoad; }
+Load Route::load() const
+{
+    assert(!dirty);
+    return stats.back().cumLoad;
+}
 
 Load Route::capacity() const { return vehicleType_.capacity; }
 
@@ -347,14 +369,23 @@ size_t Route::depot() const { return vehicleType_.depot; }
 
 Cost Route::fixedCost() const { return vehicleType_.fixedCost; }
 
-Distance Route::distance() const { return stats.back().cumDist; }
+Distance Route::distance() const
+{
+    assert(!dirty);
+    return stats.back().cumDist;
+}
 
-Duration Route::duration() const { return stats.back().twsBefore.duration(); }
+Duration Route::duration() const
+{
+    assert(!dirty);
+    return stats.back().twsBefore.duration();
+}
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
 Duration Route::timeWarp() const
 {
+    assert(!dirty);
     return stats.back().twsBefore.timeWarp(maxDuration());
 }
 
@@ -368,13 +399,16 @@ size_t Route::size() const
 
 TimeWindowSegment Route::tws(size_t idx) const
 {
+    assert(!dirty);
     assert(idx < nodes.size());
+
     return stats[idx].tws;
 }
 
 TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
 {
     using TWS = TimeWindowSegment;
+    assert(!dirty);
     assert(start <= end && end < nodes.size());
 
     auto tws = stats[start].tws;
@@ -387,18 +421,21 @@ TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
 
 TimeWindowSegment Route::twsAfter(size_t start) const
 {
+    assert(!dirty);
     assert(start < nodes.size());
     return stats[start].twsAfter;
 }
 
 TimeWindowSegment Route::twsBefore(size_t end) const
 {
+    assert(!dirty);
     assert(end < nodes.size());
     return stats[end].twsBefore;
 }
 
 Distance Route::distBetween(size_t start, size_t end) const
 {
+    assert(!dirty);
     assert(start <= end && end < nodes.size());
 
     auto const startDist = stats[start].cumDist;
@@ -410,6 +447,7 @@ Distance Route::distBetween(size_t start, size_t end) const
 
 Load Route::loadBetween(size_t start, size_t end) const
 {
+    assert(!dirty);
     assert(start <= end && end < nodes.size());
 
     auto const atStart = data.location(nodes[start]->client()).demand;
