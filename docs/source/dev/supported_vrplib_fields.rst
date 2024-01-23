@@ -41,6 +41,10 @@ PyVRP supports the following specifications:
       Number of vehicles in the instance.
       The number of vehicles defaults to the number of clients in the instance when this specification is not provided: PyVRP assumes an unlimited fleet in this case.
 
+   ``VEHICLES_MAX_DURATION``
+      Maximum route duration for each vehicle.
+      Route durations are assumed to be unconstrained if this value is not specified.
+
 
 Data sections
 -------------
@@ -81,3 +85,7 @@ PyVRP supports the following data sections:
 
    ``TIME_WINDOW_SECTION``
       Array of :math:`[e, l]` time window data, for each location.
+
+   ``VEHICLES_DEPOT_SECTION``
+      Depot assignments for each vehicle, typically used in multi-depot instances.
+      Vehicles are assigned to the first depot if this section is not provided.

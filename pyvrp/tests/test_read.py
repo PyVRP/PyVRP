@@ -1,6 +1,7 @@
 from math import sqrt
 
 from numpy.testing import (
+    assert_,
     assert_allclose,
     assert_equal,
     assert_raises,
@@ -295,3 +296,35 @@ def test_multiple_depots():
     assert_allclose(depot2.y, 1_297)
     assert_allclose(depot2.tw_early, 5_000)
     assert_allclose(depot2.tw_late, 20_000)
+
+
+def test_mdvrptw_instance():
+    """
+    Tests that reading an MDVRPTW instance happens correctly, particularly the
+    maximum route duration and multiple depot aspects.
+    """
+    data = read("data/PR11A.vrp", round_func="trunc")
+
+    assert_equal(data.num_locations, 364)
+    assert_equal(data.num_depots, 4)
+    assert_equal(data.num_clients, 360)
+
+    assert_equal(data.num_vehicles, 40)
+    assert_equal(data.num_vehicle_types, 4)  # one vehicle type per depot
+
+    for idx in range(data.num_vehicle_types):
+        vehicle_type = data.vehicle_type(idx)
+
+        # There should be ten vehicles for each depot, with the following
+        # capacities and maximum route durations.
+        assert_equal(vehicle_type.num_available, 10)
+        assert_equal(vehicle_type.depot, idx)
+        assert_allclose(vehicle_type.capacity, 200)
+        assert_allclose(vehicle_type.max_duration, 450)
+
+    # We haven't seen many instances with negative coordinates, but this
+    # MDVRPTW instance has those. That should be allowed.
+    assert_(any(depot.x < 0) for depot in data.depots())
+    assert_(any(depot.y < 0) for depot in data.depots())
+    assert_(any(client.x < 0) for client in data.clients())
+    assert_(any(client.y < 0) for client in data.clients())
