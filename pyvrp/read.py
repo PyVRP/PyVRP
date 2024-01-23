@@ -2,7 +2,7 @@ import functools
 import pathlib
 from collections import Counter
 from numbers import Number
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -116,7 +116,7 @@ def read(
     # If this value is supplied, we should pass it through the round func and
     # then unwrap the result. If it's not given, the default value is None,
     # which PyVRP understands.
-    max_duration: int | None = instance.get("vehicles_max_duration")
+    max_duration: Optional[int] = instance.get("vehicles_max_duration")
     if max_duration is not None:
         max_duration = round_func(np.array([max_duration])).item()
 
