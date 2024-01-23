@@ -38,6 +38,8 @@ size_t Route::vehicleType() const { return vehTypeIdx_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
+    assert(!dirty && !other.dirty);
+
     auto const [dataX, dataY] = data.centroid();
     auto const [thisX, thisY] = centroid_;
     auto const [otherX, otherY] = other.centroid_;
