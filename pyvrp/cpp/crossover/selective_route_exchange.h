@@ -2,12 +2,10 @@
 #define PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
 
 #include "CostEvaluator.h"
-#include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "Solution.h"
 
-#include <functional>
-#include <vector>
+#include <utility>
 
 namespace pyvrp::crossover
 {
@@ -34,7 +32,7 @@ Solution selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
     CostEvaluator const &costEvaluator,
-    std::pair<size_t, size_t> const startIndices,
+    std::pair<size_t, size_t> const &startIndices,
     size_t const numMovedRoutes);
 }  // namespace pyvrp::crossover
 

@@ -1,3 +1,5 @@
+from warnings import warn
+
 from pyvrp._pyvrp import (
     CostEvaluator,
     ProblemData,
@@ -5,6 +7,7 @@ from pyvrp._pyvrp import (
     Solution,
 )
 from pyvrp.crossover._crossover import selective_route_exchange as _srex
+from pyvrp.exceptions import TspWarning
 
 
 def selective_route_exchange(
@@ -14,11 +17,19 @@ def selective_route_exchange(
     rng: RandomNumberGenerator,
 ) -> Solution:
     """
-    This crossover operator due to Nagata and Kobayashi [1]_ combines routes
-    from both parents to generate a new offspring solution. It does this by
-    carefully selecting routes from the second parent that could be exchanged
-    with routes from the first parent. This often results in incomplete
-    offspring that can then be repaired using a search method.
+    The selective route exchange crossover (SREX) operator due to Nagata and
+    Kobayashi [1]_ combines routes from both parents to generate a new
+    offspring solution. It does this by carefully selecting routes from the
+    second parent that could be exchanged with routes from the first parent.
+    This often results in incomplete offspring that can then be repaired using
+    a search method.
+
+    .. note::
+
+       Since SREX exchanges *routes*, it is not an appropriate crossover
+       operator for TSP instances where each solution consists of just one
+       route. SREX warns when used for TSPs, and another crossover operator
+       should ideally be used when solving such instances.
 
     Parameters
     ----------
@@ -43,6 +54,13 @@ def selective_route_exchange(
            Exchange Crossover. *Parallel Problem Solving from Nature*, PPSN XI,
            536 - 545.
     """
+    if data.num_vehicles == 1:
+        msg = """
+        SREX always returns one of the parent solutions for TSP instances. 
+        Consider using a different crossover.
+        """
+        warn(msg, TspWarning)
+
     first, second = parents
 
     if first.num_clients() == 0:

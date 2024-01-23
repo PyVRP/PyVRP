@@ -3,6 +3,7 @@
 #include "DynamicBitset.h"
 
 #include <cmath>
+#include <vector>
 
 using Client = size_t;
 using Clients = std::vector<Client>;
@@ -34,7 +35,7 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     std::pair<Solution const *, Solution const *> const &parents,
     ProblemData const &data,
     CostEvaluator const &costEvaluator,
-    std::pair<size_t, size_t> const startIndices,
+    std::pair<size_t, size_t> const &startIndices,
     size_t const numMovedRoutes)
 {
     // We create two candidate offsprings, both based on parent A:

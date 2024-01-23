@@ -121,44 +121,34 @@ def test_raises_for_invalid_depot_data(
         ProblemData(
             clients=[],
             depots=[depot],
-            vehicle_types=[VehicleType(1, 2)],
+            vehicle_types=[VehicleType(2, capacity=1)],
             distance_matrix=np.asarray([[0]], dtype=int),
             duration_matrix=np.asarray([[0]], dtype=int),
         )
 
 
-def test_problem_data_raises_when_not_exactly_one_depot_is_provided():
+def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
-    not exactly one depot is provided.
+    no depots are provided.
     """
     with assert_raises(ValueError):
         ProblemData(
             clients=[],
             depots=[],
-            vehicle_types=[VehicleType(1, 2)],
+            vehicle_types=[VehicleType(2, capacity=1)],
             distance_matrix=np.asarray([[]], dtype=int),
             duration_matrix=np.asarray([[]], dtype=int),
         )
 
-    # One depot should not raise.
+    # One (or more) depots should not raise.
     ProblemData(
         clients=[],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(1, 2)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=np.asarray([[0]]),
         duration_matrix=np.asarray([[0]]),
     )
-
-    # But multiple (for now) do: PyVRP does not yet support multi-depot VRPs.
-    with assert_raises(ValueError):
-        ProblemData(
-            clients=[],
-            depots=[Client(x=0, y=0), Client(x=0, y=0)],
-            vehicle_types=[VehicleType(1, 2)],
-            distance_matrix=np.zeros((2, 2), dtype=int),
-            duration_matrix=np.zeros((2, 2), dtype=int),
-        )
 
 
 @pytest.mark.parametrize(
@@ -178,7 +168,7 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     """
     clients = [Client(x=0, y=0)]
     depots = [Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
+    vehicle_types = [VehicleType(2, capacity=1)]
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
@@ -195,7 +185,7 @@ def test_problem_data_replace_no_changes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
+    vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, depots, vehicle_types, mat, mat)
 
@@ -233,7 +223,7 @@ def test_problem_data_replace_with_changes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
+    vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, depots, vehicle_types, mat, mat)
 
@@ -277,7 +267,7 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
+    vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
     data = ProblemData(clients, depots, vehicle_types, mat, mat)
 
@@ -328,7 +318,7 @@ def test_matrix_access():
     data = ProblemData(
         clients=clients[1:],
         depots=clients[:1],
-        vehicle_types=[VehicleType(1, 2)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
     )
@@ -354,7 +344,7 @@ def test_matrices_are_not_writeable():
     data = ProblemData(
         clients=[],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(1, 2)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=np.array([[0]]),
         duration_matrix=np.array([[0]]),
     )
@@ -379,7 +369,7 @@ def test_matrices_are_not_copies():
     data = ProblemData(
         clients=[Client(x=0, y=1)],
         depots=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(1, 2)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=mat,
         duration_matrix=mat,
     )
@@ -428,7 +418,7 @@ def test_vehicle_type_raises_invalid_data(
     arguments.
     """
     with assert_raises(ValueError):
-        VehicleType(capacity, num_available, fixed_cost, tw_early, tw_late)
+        VehicleType(num_available, capacity, 0, fixed_cost, tw_early, tw_late)
 
 
 def test_vehicle_type_init_max_duration_argument():
@@ -448,18 +438,20 @@ def test_vehicle_type_does_not_raise_for_edge_cases():
     capacity, costs, shift time windows, and just a single vehicle.
     """
     vehicle_type = VehicleType(
-        capacity=0,
         num_available=1,
+        depot=0,
+        capacity=0,
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
     )
 
-    assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.tw_late, 0)
+    assert_equal(vehicle_type.depot, 0)
+    assert_allclose(vehicle_type.capacity, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.tw_early, 0)
+    assert_allclose(vehicle_type.tw_late, 0)
 
 
 def test_vehicle_type_default_values():
@@ -467,7 +459,10 @@ def test_vehicle_type_default_values():
     Tests that the default values for costs and shift time windows are set
     correctly.
     """
-    vehicle_type = VehicleType(capacity=0, num_available=1)
+    vehicle_type = VehicleType()
+    assert_equal(vehicle_type.num_available, 1)
+    assert_equal(vehicle_type.depot, 0)
+    assert_allclose(vehicle_type.capacity, 0)
     assert_allclose(vehicle_type.fixed_cost, 0)
     assert_(vehicle_type.tw_early is None)
     assert_(vehicle_type.tw_late is None)
@@ -487,16 +482,18 @@ def test_vehicle_type_attribute_access():
     given in the constructor's arguments.
     """
     vehicle_type = VehicleType(
-        capacity=13,
         num_available=7,
+        depot=29,
+        capacity=13,
         fixed_cost=3,
         tw_early=17,
         tw_late=19,
         max_duration=23,
     )
 
-    assert_allclose(vehicle_type.capacity, 13)
     assert_equal(vehicle_type.num_available, 7)
+    assert_equal(vehicle_type.depot, 29)
+    assert_allclose(vehicle_type.capacity, 13)
     assert_allclose(vehicle_type.fixed_cost, 3)
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)

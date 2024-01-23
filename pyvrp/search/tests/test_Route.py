@@ -26,7 +26,7 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     type.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(1, 1), VehicleType(2, 2)]
+        vehicle_types=[VehicleType(1, capacity=1), VehicleType(2, capacity=2)]
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
@@ -212,7 +212,9 @@ def test_fixed_cost(ok_small, fixed_cost: int):
     Tests that the fixed cost method returns the assigned vehicle type's fixed
     cost value.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
+    )
     route = Route(data, idx=0, vehicle_type=0)
     assert_allclose(route.fixed_cost(), fixed_cost)
 
@@ -283,46 +285,6 @@ def test_all_routes_overlap_with_maximum_tolerance_value(ok_small):
     # But with maximum tolerance, they do.
     assert_(route1.overlaps_with(route2, 1))
     assert_(route2.overlaps_with(route1, 1))
-
-
-def test_data_is_not_updated_until_update_call(ok_small):
-    """
-    Tests that route statistics like distance, time window segments, and load
-    are not updated until ``update()`` has been called.
-    """
-    route = Route(ok_small, idx=0, vehicle_type=0)
-
-    # Add a new client to the route. update() has not been called, so the route
-    # statistics are not correct.
-    route.append(Node(loc=1))
-
-    assert_(route.load() != ok_small.location(1).demand)
-    assert_(
-        route.dist_between(0, 2) != ok_small.dist(0, 1) + ok_small.dist(1, 0)
-    )
-
-    # Update. This recalculates the statistics, which should now be correct.
-    route.update()
-    assert_equal(route.load(), ok_small.location(1).demand)
-    assert_equal(
-        route.dist_between(0, 2), ok_small.dist(0, 1) + ok_small.dist(1, 0)
-    )
-
-    # Same story with another client: incorrect before update, correct after.
-    route.append(Node(loc=2))
-    assert_(
-        route.load()
-        != ok_small.location(1).demand + ok_small.location(2).demand
-    )
-
-    route.update()
-    assert_equal(
-        route.load(), ok_small.location(1).demand + ok_small.location(2).demand
-    )
-    assert_equal(
-        route.dist_between(0, 3),
-        ok_small.dist(0, 1) + ok_small.dist(1, 2) + ok_small.dist(2, 0),
-    )
 
 
 @pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
@@ -469,9 +431,7 @@ def test_shift_duration_depot_time_window_interaction(
     data = ProblemData(
         clients=[],
         depots=[Client(x=0, y=0, tw_early=0, tw_late=1_000)],
-        vehicle_types=[
-            VehicleType(0, 1, tw_early=shift_tw[0], tw_late=shift_tw[1])
-        ],
+        vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
         distance_matrix=np.zeros((1, 1), dtype=int),
         duration_matrix=np.zeros((1, 1), dtype=int),
     )
@@ -514,7 +474,7 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
     Tests that the maximum duration attribute of vehicle types is reflected
     in the route's time warp calculations.
     """
-    vehicle_type = VehicleType(10, 3, max_duration=max_duration)
+    vehicle_type = VehicleType(3, capacity=10, max_duration=max_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)

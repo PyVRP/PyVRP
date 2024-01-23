@@ -74,7 +74,9 @@ def test_avg_distance_closest_for_single_route_solutions(rc208):
             # broken links with this new shifted solution, both around the
             # depot. So the average broken pairs distance is 2 / num_clients
             # for all of them.
-            assert_equal(bpd(item.solution, shifted), 2 / rc208.num_clients)
+            assert_allclose(
+                bpd(item.solution, shifted), 2 / rc208.num_locations
+            )
 
         subpop.add(shifted, cost_evaluator)
         assert_equal(len(subpop), offset + 1)

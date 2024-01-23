@@ -1,6 +1,12 @@
 import itertools
 
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import (
+    assert_,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+    suppress_warnings,
+)
 from pytest import mark
 
 from pyvrp import (
@@ -12,6 +18,7 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.crossover._crossover import selective_route_exchange as cpp_srex
+from pyvrp.exceptions import TspWarning
 
 
 def test_same_parents_same_offspring(ok_small):
@@ -175,7 +182,10 @@ def test_srex_heterogeneous_changed_start_indices(ok_small):
     heterogeneous routes.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(10, 2), VehicleType(20, 1)]
+        vehicle_types=[
+            VehicleType(2, capacity=10),
+            VehicleType(1, capacity=20),
+        ]
     )
     cost_evaluator = CostEvaluator(20, 6)
 
@@ -305,3 +315,40 @@ def test_srex_b_right_move(ok_small):
     offspring = cpp_srex((sol1, sol2), ok_small, cost_evaluator, (2, 1), 1)
     expected = Solution(ok_small, [[4], [2], [1, 3]])
     assert_equal(offspring, expected)
+
+
+def test_srex_warns_for_tsp_instances(pr107):
+    """
+    Tests that applying SREX to problems that are TSPs results in a warning,
+    since in those cases SREX cannot do anything but return one of the two
+    parent solutions.
+    """
+    cost_eval = CostEvaluator(20, 6)
+    rng = RandomNumberGenerator(seed=42)
+
+    sol1 = Solution.make_random(pr107, rng)
+    sol2 = Solution.make_random(pr107, rng)
+
+    with assert_warns(TspWarning):
+        assert_equal(pr107.num_vehicles, 1)
+        srex((sol1, sol2), pr107, cost_eval, rng)
+
+
+def test_srex_tsp_instance_returns_a_parent_solution(pr107):
+    """
+    Tests that applying SREX to problems with just one vehicle (a TSP) results
+    in one the return of one of the two parent solutions. No new solution can
+    be created in this case, and SREX is not the right tool to use!
+    """
+    cost_eval = CostEvaluator(20, 6)
+    rng = RandomNumberGenerator(seed=42)
+
+    sol1 = Solution.make_random(pr107, rng)
+    sol2 = Solution.make_random(pr107, rng)
+
+    with suppress_warnings() as sup:
+        sup.filter(TspWarning)  # we do not care about the warning here.
+
+        for _ in range(10):  # a few times to be sure
+            offspring = srex((sol1, sol2), pr107, cost_eval, rng)
+            assert_(offspring in (sol1, sol2))

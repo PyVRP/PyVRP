@@ -42,24 +42,26 @@ ProblemData::Client::Client(Coordinate x,
         throw std::invalid_argument("prize must be >= 0.");
 }
 
-ProblemData::VehicleType::VehicleType(Load capacity,
-                                      size_t numAvailable,
+ProblemData::VehicleType::VehicleType(size_t numAvailable,
+                                      Load capacity,
+                                      size_t depot,
                                       Cost fixedCost,
                                       std::optional<Duration> twEarly,
                                       std::optional<Duration> twLate,
                                       std::optional<Duration> maxDuration)
     : numAvailable(numAvailable),
+      depot(depot),
       capacity(capacity),
       fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate),
       maxDuration(maxDuration.value_or(std::numeric_limits<Duration>::max()))
 {
-    if (capacity < 0)
-        throw std::invalid_argument("capacity must be >= 0.");
-
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
+
+    if (capacity < 0)
+        throw std::invalid_argument("capacity must be >= 0.");
 
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
@@ -138,8 +140,8 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                                        return sum + type.numAvailable;
                                    }))
 {
-    if (depots.size() != 1)
-        throw std::invalid_argument("Expected a single depot!");
+    if (depots.empty())
+        throw std::invalid_argument("Expected at least one depot!");
 
     if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
         throw std::invalid_argument("Distance matrix shape does not match the "
@@ -149,18 +151,19 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
         throw std::invalid_argument("Duration matrix shape does not match the "
                                     "problem size.");
 
-    auto const &depot = depots_[0];
+    for (auto const &depot : depots_)
+    {
+        if (depot.demand != 0)
+            throw std::invalid_argument("Depot demand must be 0.");
 
-    if (depot.demand != 0)
-        throw std::invalid_argument("Depot demand must be 0.");
+        if (depot.serviceDuration != 0)
+            throw std::invalid_argument("Depot service duration must be 0.");
 
-    if (depot.serviceDuration != 0)
-        throw std::invalid_argument("Depot service duration must be 0.");
+        if (depot.releaseTime != 0)
+            throw std::invalid_argument("Depot release time must be 0.");
+    }
 
-    if (depot.releaseTime != 0)
-        throw std::invalid_argument("Depot release time must be 0.");
-
-    for (auto &client : clients_)
+    for (auto const &client : clients_)
     {
         centroid_.first += static_cast<double>(client.x) / numClients();
         centroid_.second += static_cast<double>(client.y) / numClients();

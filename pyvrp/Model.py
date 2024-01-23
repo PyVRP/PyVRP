@@ -15,6 +15,7 @@ from pyvrp._pyvrp import (
     VehicleType,
 )
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
+from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
@@ -146,16 +147,7 @@ class Model:
         """
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
-
-        .. warning::
-
-           PyVRP does not yet support multi-depot VRPs. For now, only one depot
-           can be added to the model.
         """
-        if len(self._depots) >= 1:
-            msg = "PyVRP does not yet support multi-depot VRPs."
-            raise ValueError(msg)
-
         depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late)
         self._depots.append(depot)
         return depot
@@ -194,8 +186,9 @@ class Model:
 
     def add_vehicle_type(
         self,
-        capacity: int,
-        num_available: int,
+        num_available: int = 1,
+        capacity: int = 0,
+        depot: Optional[Depot] = None,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
@@ -204,10 +197,29 @@ class Model:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
         created vehicle type.
+
+        .. note::
+
+           The vehicle type is assigned to the first depot if ``depot`` is not
+           provided.
+
+        Raises
+        ------
+        ValueError
+            When the given ``depot`` is not already added to this model
+            instance.
         """
+        if depot is None:
+            depot_idx = 0
+        elif depot in self._depots:
+            depot_idx = self._depots.index(depot)
+        else:
+            raise ValueError("The given depot is not in this model instance.")
+
         vehicle_type = VehicleType(
-            capacity,
             num_available,
+            capacity,
+            depot_idx,
             fixed_cost,
             tw_early,
             tw_late,
@@ -287,6 +299,9 @@ class Model:
             for _ in range(pop_params.min_pop_size)
         ]
 
-        gen_args = (data, pm, rng, pop, ls, srex, init)
+        # We use SREX when the instance is a proper VRP; else OX for TSP.
+        crossover = srex if data.num_vehicles > 1 else ox
+
+        gen_args = (data, pm, rng, pop, ls, crossover, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
         return algo.run(stop)

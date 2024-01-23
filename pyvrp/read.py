@@ -156,11 +156,19 @@ def read(
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
-    if len(depots) != 1 or depots[0] != 0:
-        raise ValueError(
-            "Source file should contain single depot with index 1 "
-            + "(depot index should be 0 after subtracting offset 1)"
-        )
+    if len(depots) == 0 or (depots != np.arange(len(depots))).any():
+        msg = """
+        Source file should contain at least one depot in the contiguous lower
+        indices, starting from 1.
+        """
+        raise ValueError(msg)
+
+    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
+        msg = """
+        The maximum distance or duration value is very large. This might
+        impact numerical stability. Consider rescaling your input data.
+        """
+        warn(msg, ScalingWarning)
 
     clients = [
         Client(
@@ -176,18 +184,11 @@ def read(
         )
         for idx in range(dimension)
     ]
-    vehicle_types = [VehicleType(capacity, num_vehicles)]
-
-    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
-        msg = """
-        The maximum distance or duration value is very large. This might
-        impact numerical stability. Consider rescaling your input data.
-        """
-        warn(msg, ScalingWarning)
+    vehicle_types = [VehicleType(num_vehicles, capacity=capacity)]
 
     return ProblemData(
-        clients[1:],
-        clients[:1],
+        clients[len(depots) :],
+        clients[: len(depots)],
         vehicle_types,
         distances,
         durations,
