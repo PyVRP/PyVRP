@@ -241,6 +241,8 @@ class Model:
         # not set below are never traversed.
         distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
         durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
+        np.fill_diagonal(distances, 0)
+        np.fill_diagonal(durations, 0)
 
         for edge in self._edges:
             frm = loc2idx[id(edge.frm)]

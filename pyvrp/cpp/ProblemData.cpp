@@ -163,6 +163,16 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
             throw std::invalid_argument("Depot release time must be 0.");
     }
 
+    // Check that diagonal of distance and duration matrix is equal to 0.
+    for (size_t i = 0; i < numLocations(); ++i)
+    {
+        if (dist_(i, i) != 0)
+            throw std::invalid_argument("Distance matrix diagonal must be 0.");
+
+        if (dur_(i, i) != 0)
+            throw std::invalid_argument("Duration matrix diagonal must be 0.");
+    }
+
     for (auto const &client : clients_)
     {
         centroid_.first += static_cast<double>(client.x) / numClients();

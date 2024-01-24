@@ -178,6 +178,35 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
 
 
+# test that problem data raises if one of the matrix diagonal elements is not 0
+def test_problem_data_raises_matrix_diagonal_nonzero():
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    the distance or duration matrix has a non-zero value on the diagonal.
+    """
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
+    vehicle_types = [VehicleType(2, capacity=1)]
+
+    # distance matrix with non-zero value on the diagonal
+    distance_matrix = np.array([[0, 0], [0, 1]], dtype=int)
+    duration_matrix = np.zeros((2, 2), dtype=int)
+
+    with assert_raises(ValueError):
+        ProblemData(
+            clients, depots, vehicle_types, distance_matrix, duration_matrix
+        )
+
+    # duration matrix with non-zero value on the diagonal
+    distance_matrix = np.zeros((2, 2), dtype=int)
+    duration_matrix = np.array([[0, 0], [0, 1]], dtype=int)
+
+    with assert_raises(ValueError):
+        ProblemData(
+            clients, depots, vehicle_types, distance_matrix, duration_matrix
+        )
+
+
 def test_problem_data_replace_no_changes():
     """
     Tests that when using ``ProblemData.replace()`` without any arguments
