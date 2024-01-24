@@ -17,9 +17,6 @@ namespace
 static char *duplicate(const char *src)
 {
     char *dst = new char[std::strlen(src) + 1];  // space for src + null
-    if (!dst)
-        return dst;
-
     std::strcpy(dst, src);
     return dst;
 }
