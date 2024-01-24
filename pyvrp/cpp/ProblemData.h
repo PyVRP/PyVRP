@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iosfwd>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace pyvrp
@@ -52,6 +53,7 @@ public:
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
+     *    name: str = "",
      * )
      *
      * Simple data object storing all client data as (read-only) properties.
@@ -84,6 +86,8 @@ public:
      * required
      *     Whether this client must be part of a feasible solution. Default
      *     True.
+     * name
+     *     Free-form name field for this client. Default empty.
      */
     struct Client
     {
@@ -94,8 +98,9 @@ public:
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
-        Cost const prize = 0;        // Prize for visiting this client
-        bool const required = true;  // Must client be in solution?
+        Cost const prize;            // Prize for visiting this client
+        std::string const name;      // Location name (for reference)
+        bool const required;         // Must client be in solution?
 
         Client(Coordinate x,
                Coordinate y,
@@ -105,7 +110,8 @@ public:
                Duration twLate = 0,
                Duration releaseTime = 0,
                Cost prize = 0,
-               bool required = true);
+               bool required = true,
+               std::string name = "");
     };
 
     /**
@@ -117,6 +123,7 @@ public:
      *     tw_early: Optional[int] = None,
      *     tw_late: Optional[int] = None,
      *     max_duration: Optional[int] = None,
+     *     name: str = "",
      * )
      *
      * Simple data object storing all vehicle type data as properties.
@@ -148,6 +155,8 @@ public:
      *     time if not given.
      * max_duration
      *     Maximum route duration. Unconstrained if not explicitly set.
+     * name
+     *     Free-form name field for this vehicle type. Default empty.
      *
      * Attributes
      * ----------
@@ -166,6 +175,8 @@ public:
      * max_duration
      *     Maximum duration of the route this vehicle type is assigned to. This
      *     is a very large number when the maximum duration is unconstrained.
+     * name
+     *     Free-form name field for this vehicle type.
      */
     struct VehicleType
     {
@@ -175,7 +186,8 @@ public:
         Cost const fixedCost;       // Fixed cost of using this vehicle type
         std::optional<Duration> const twEarly;  // Start of shift
         std::optional<Duration> const twLate;   // End of shift
-        Duration const maxDuration;
+        std::string const name;                 // Type name (for reference)
+        Duration const maxDuration;             // Maximum route duration
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
@@ -183,7 +195,8 @@ public:
                     Cost fixedCost = 0,
                     std::optional<Duration> twEarly = std::nullopt,
                     std::optional<Duration> twLate = std::nullopt,
-                    std::optional<Duration> maxDuration = std::nullopt);
+                    std::optional<Duration> maxDuration = std::nullopt,
+                    std::string name = "");
     };
 
 private:

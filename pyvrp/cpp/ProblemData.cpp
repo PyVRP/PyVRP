@@ -15,7 +15,8 @@ ProblemData::Client::Client(Coordinate x,
                             Duration twLate,
                             Duration releaseTime,
                             Cost prize,
-                            bool required)
+                            bool required,
+                            std::string name)
     : x(x),
       y(y),
       demand(demand),
@@ -24,6 +25,7 @@ ProblemData::Client::Client(Coordinate x,
       twLate(twLate),
       releaseTime(releaseTime),
       prize(prize),
+      name(name),
       required(required)
 {
     if (demand < 0)
@@ -48,13 +50,15 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost fixedCost,
                                       std::optional<Duration> twEarly,
                                       std::optional<Duration> twLate,
-                                      std::optional<Duration> maxDuration)
+                                      std::optional<Duration> maxDuration,
+                                      std::string name)
     : numAvailable(numAvailable),
       depot(depot),
       capacity(capacity),
       fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate),
+      name(name),
       maxDuration(maxDuration.value_or(std::numeric_limits<Duration>::max()))
 {
     if (numAvailable == 0)
