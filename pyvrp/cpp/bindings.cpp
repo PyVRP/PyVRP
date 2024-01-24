@@ -88,9 +88,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       py::return_value_policy::reference_internal)
         .def(
             "__str__",
-            [](ProblemData::Client const &client) -> py::str {
-                return client.name;
-            },
+            [](ProblemData::Client const &client) { return client.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::VehicleType>(
@@ -123,7 +121,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       py::return_value_policy::reference_internal)
         .def(
             "__str__",
-            [](ProblemData::VehicleType const &vehType) -> py::str {
+            [](ProblemData::VehicleType const &vehType) {
                 return vehType.name;
             },
             py::return_value_policy::reference_internal);
