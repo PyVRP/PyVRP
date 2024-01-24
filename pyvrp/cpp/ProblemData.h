@@ -7,7 +7,6 @@
 #include <cassert>
 #include <iosfwd>
 #include <optional>
-#include <string>
 #include <vector>
 
 namespace pyvrp
@@ -99,7 +98,7 @@ public:
         Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
-        std::string const name;      // Location name (for reference)
+        char const *name;            // Location name (for reference)
         bool const required;         // Must client be in solution?
 
         Client(Coordinate x,
@@ -111,7 +110,15 @@ public:
                Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true,
-               std::string name = "");
+               char const *name = "");
+
+        Client(Client const &client);
+        Client(Client &&client);
+
+        Client &operator=(Client const &client) = delete;
+        Client &operator=(Client &&client) = delete;
+
+        ~Client();
     };
 
     /**
@@ -186,7 +193,7 @@ public:
         Cost const fixedCost;       // Fixed cost of using this vehicle type
         std::optional<Duration> const twEarly;  // Start of shift
         std::optional<Duration> const twLate;   // End of shift
-        std::string const name;                 // Type name (for reference)
+        char const *name;                       // Type name (for reference)
         Duration const maxDuration;             // Maximum route duration
 
         VehicleType(size_t numAvailable = 1,
@@ -196,7 +203,15 @@ public:
                     std::optional<Duration> twEarly = std::nullopt,
                     std::optional<Duration> twLate = std::nullopt,
                     std::optional<Duration> maxDuration = std::nullopt,
-                    std::string name = "");
+                    char const *name = "");
+
+        VehicleType(VehicleType const &vehicleType);
+        VehicleType(VehicleType &&vehicleType);
+
+        VehicleType &operator=(VehicleType const &vehicleType) = delete;
+        VehicleType &operator=(VehicleType &&vehicleType) = delete;
+
+        ~VehicleType();
     };
 
 private:

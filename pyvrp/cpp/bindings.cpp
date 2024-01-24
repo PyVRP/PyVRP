@@ -16,7 +16,6 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
-#include <string>
 
 namespace py = pybind11;
 
@@ -64,7 +63,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Cost,
                       bool,
-                      std::string>(),
+                      char const *>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
@@ -84,9 +83,15 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("release_time", &ProblemData::Client::releaseTime)
         .def_readonly("prize", &ProblemData::Client::prize)
         .def_readonly("required", &ProblemData::Client::required)
-        .def_readonly("name", &ProblemData::Client::name)
-        .def("__str__",
-             [](ProblemData::Client const &client) { return client.name; });
+        .def_readonly("name",
+                      &ProblemData::Client::name,
+                      py::return_value_policy::reference_internal)
+        .def(
+            "__str__",
+            [](ProblemData::Client const &client) -> py::str {
+                return client.name;
+            },
+            py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
@@ -97,7 +102,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>,
                       std::optional<pyvrp::Duration>,
-                      std::string>(),
+                      char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
              py::arg("depot") = 0,
@@ -113,10 +118,15 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
-        .def_readonly("name", &ProblemData::VehicleType::name)
-        .def("__str__", [](ProblemData::VehicleType const &vehType) {
-            return vehType.name;
-        });
+        .def_readonly("name",
+                      &ProblemData::VehicleType::name,
+                      py::return_value_policy::reference_internal)
+        .def(
+            "__str__",
+            [](ProblemData::VehicleType const &vehType) -> py::str {
+                return vehType.name;
+            },
+            py::return_value_policy::reference_internal);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
