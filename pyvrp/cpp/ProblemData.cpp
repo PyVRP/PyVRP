@@ -14,7 +14,7 @@ namespace
 // which my compiler does not (yet) have. See here for the actual recipe:
 // https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
 // malloc).
-static char *duplicate(const char *src)
+static char *duplicate(char const *src)
 {
     char *dst = new char[std::strlen(src) + 1];  // space for src + null
     std::strcpy(dst, src);
