@@ -33,6 +33,7 @@ class Client:
     release_time: int
     prize: int
     required: bool
+    name: str
     def __init__(
         self,
         x: int,
@@ -44,6 +45,7 @@ class Client:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        name: str = "",
     ) -> None: ...
 
 class VehicleType:
@@ -54,6 +56,7 @@ class VehicleType:
     tw_early: Optional[int]
     tw_late: Optional[int]
     max_duration: Optional[int]
+    name: str
     def __init__(
         self,
         num_available: int = 1,
@@ -63,6 +66,7 @@ class VehicleType:
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
         max_duration: Optional[int] = None,
+        name: str = "",
     ) -> None: ...
 
 class ProblemData:
