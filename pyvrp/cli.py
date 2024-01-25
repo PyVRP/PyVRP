@@ -36,7 +36,12 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.stop import MaxIterations, MaxRuntime
+from pyvrp.stop import (
+    MaxIterations,
+    MaxRuntime,
+    MultipleCriteria,
+    NoImprovement,
+)
 
 
 def tabulate(headers: list[str], rows: np.ndarray) -> str:
@@ -94,6 +99,7 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
+    no_improvement: Optional[int],
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     **kwargs,
@@ -114,11 +120,11 @@ def solve(
     seed
         Seed to use for the RNG.
     max_runtime
-        Maximum runtime (in seconds) for solving. Either ``max_runtime`` or
-        ``max_iterations`` must be specified.
+        Maximum runtime (in seconds) for solving.
     max_iterations
-        Maximum number of iterations for solving. Either ``max_runtime`` or
-        ``max_iterations`` must be specified.
+        Maximum number of iterations for solving.
+    no_improvement
+        Maximum number of iterations without improvement.
     stats_dir
         The directory to write runtime statistics to.
     sol_dir
@@ -170,11 +176,12 @@ def solve(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
     )
 
-    if max_runtime is not None:
-        stop = MaxRuntime(max_runtime)
-    else:
-        assert max_iterations is not None
-        stop = MaxIterations(max_iterations)  # type: ignore
+    criteria = [
+        MaxIterations(max_iterations) if max_iterations is not None else None,
+        NoImprovement(no_improvement) if no_improvement is not None else None,
+        MaxRuntime(max_runtime) if max_runtime is not None else None,
+    ]
+    stop = MultipleCriteria([crit for crit in criteria if crit is not None])
 
     result = algo.run(stop)
     instance_name = data_loc.stem
@@ -285,13 +292,16 @@ def main():
     msg = "Number of processors to use for solving instances. Default 1."
     parser.add_argument("--num_procs", type=int, default=1, help=msg)
 
-    stop = parser.add_mutually_exclusive_group(required=True)
+    stop = parser.add_argument_group("Stopping criteria")
 
     msg = "Maximum runtime for each instance, in seconds."
     stop.add_argument("--max_runtime", type=float, help=msg)
 
     msg = "Maximum number of iterations for solving each instance."
     stop.add_argument("--max_iterations", type=int, help=msg)
+
+    msg = "Maximum number of iterations without improvement."
+    stop.add_argument("--no_improvement", type=int, help=msg)
 
     benchmark(**vars(parser.parse_args()))
 
