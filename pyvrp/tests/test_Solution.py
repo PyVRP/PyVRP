@@ -570,9 +570,9 @@ def test_route_release_time():
 @mark.parametrize(
     "dist_mat",
     [
-        np.full((3, 3), fill_value=100, dtype=int),
-        np.full((3, 3), fill_value=1, dtype=int),
-        np.full((3, 3), fill_value=1000, dtype=int),
+        np.where(np.eye(3), 0, 100),
+        np.where(np.eye(3), 0, 1),
+        np.where(np.eye(3), 0, 1000),
     ],
 )
 def test_time_warp_for_a_very_constrained_problem(dist_mat):

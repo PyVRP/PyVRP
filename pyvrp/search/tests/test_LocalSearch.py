@@ -430,7 +430,7 @@ def test_local_search_does_not_remove_required_clients():
         ],
         depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(1, capacity=50)],
-        distance_matrix=np.full((3, 3), fill_value=10),
+        distance_matrix=np.where(np.eye(3), 0, 10),  # All 10 except diagonal
         duration_matrix=np.zeros((3, 3), dtype=int),
     )
 
