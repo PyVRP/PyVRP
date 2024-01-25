@@ -162,7 +162,7 @@ def read(
 
         depot_vehicle_pairs = items
     else:
-        depot_vehicle_pairs = [list(range(1, num_vehicles + 1))]
+        depot_vehicle_pairs = [[idx + 1 for idx in range(num_vehicles)]]
 
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
