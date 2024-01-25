@@ -178,6 +178,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::depots,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, depots))
+        .def("vehicle_types",
+             &ProblemData::vehicleTypes,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, vehicleTypes))
         .def("centroid",
              &ProblemData::centroid,
              py::return_value_policy::reference_internal,

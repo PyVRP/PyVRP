@@ -321,9 +321,7 @@ def test_mdvrptw_instance():
     assert_equal(data.num_vehicles, 40)
     assert_equal(data.num_vehicle_types, 4)  # one vehicle type per depot
 
-    for idx in range(data.num_vehicle_types):
-        vehicle_type = data.vehicle_type(idx)
-
+    for idx, vehicle_type in enumerate(data.vehicle_types()):
         # There should be ten vehicles for each depot, with the following
         # capacities and maximum route durations.
         assert_equal(vehicle_type.num_available, 10)

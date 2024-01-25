@@ -170,6 +170,11 @@ std::vector<ProblemData::Client> const &ProblemData::depots() const
     return depots_;
 }
 
+std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
+{
+    return vehicleTypes_;
+}
+
 std::pair<double, double> const &ProblemData::centroid() const
 {
     return centroid_;
