@@ -1,6 +1,5 @@
 import functools
 import pathlib
-from collections import Counter
 from numbers import Number
 from typing import Callable, Optional, Union
 from warnings import warn
@@ -157,13 +156,13 @@ def read(
         time_windows = np.zeros((dimension, 2), dtype=int)
 
     if "vehicles_depot" in instance:
-        counts = Counter(instance["vehicles_depot"]).items()
-        depot_vehicle_pairs = [  # pairs of (depot idx, # vehicles at depot)
-            (depot_idx - 1, num_available)
-            for depot_idx, num_available in counts
-        ]
+        items: list[list[int]] = [[] for _ in depots]
+        for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
+            items[depot - 1].append(vehicle)
+
+        depot_vehicle_pairs = items
     else:
-        depot_vehicle_pairs = [(0, num_vehicles)]
+        depot_vehicle_pairs = [list(range(1, num_vehicles + 1))]
 
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
@@ -204,12 +203,15 @@ def read(
 
     vehicle_types = [
         VehicleType(
-            num_available,
+            len(vehicles),
             capacity,
             depot_idx,
             max_duration=max_duration,
+            # A bit hacky, but this csv-like name is really useful to track the
+            # actual vehicles that make up this vehicle type.
+            name=",".join(map(str, vehicles)),
         )
-        for depot_idx, num_available in depot_vehicle_pairs
+        for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
     ]
 
     return ProblemData(
