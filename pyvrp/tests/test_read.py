@@ -168,7 +168,16 @@ def test_reading_RC208_instance():  # Solomon style instance
     assert_equal(data.num_clients, 100)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_locations, 101)
-    assert_equal(data.vehicle_type(0).capacity, 1_000)
+
+    assert_equal(data.num_vehicles, 25)
+    assert_equal(data.num_vehicle_types, 1)
+
+    vehicle_type = data.vehicle_type(0)
+    expected_name = ",".join(str(idx + 1) for idx in range(data.num_vehicles))
+
+    assert_equal(vehicle_type.num_available, 25)
+    assert_equal(vehicle_type.capacity, 1_000)
+    assert_equal(vehicle_type.name, expected_name)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision
     assert_equal(data.location(0).x, 400)  # depot [x, y] location
@@ -198,8 +207,8 @@ def test_reading_RC208_instance():  # Solomon style instance
     for client in data.clients():
         assert_equal(client.service_duration, 100)
 
-    # This is a VRPTW instance, so all other fields should have default values.
-    for client in data.clients():
+        # This is a VRPTW instance, so all other fields should have their
+        # default values.
         assert_equal(client.release_time, 0)
         assert_equal(client.prize, 0)
         assert_equal(client.required, True)
