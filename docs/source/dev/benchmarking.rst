@@ -25,7 +25,7 @@ Particularly:
   These instances are each run for two hours on a reference CPU with PassMark score 2000.
   For this benchmark, the ``dimacs`` rounding function should be used.
 
-* For the MDVRPTW, we use the `large MDVRPTW instance of Vidal et al. (2013) <https://github.com/PyVRP/Instances/tree/main/MDVRPTW>`_.
+* For the MDVRPTW, we use `the large MDVRPTW instances of Vidal et al. (2013) <https://github.com/PyVRP/Instances/tree/main/MDVRPTW>`_.
   These instances range in size from 360 to 960 customers.
   The instances are run with a stopping criterion of 2500 iterations without improvement, or five hours of runtime, whichever occurs first, on a reference CPU with PassMark score 1186.
   For this benchmark, PyVRP needs to be compiled in double precision mode, and no rounding function (``none``) should be used.
