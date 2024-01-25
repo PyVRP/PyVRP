@@ -180,8 +180,8 @@ class Model:
             """
             warn(msg, ScalingWarning)
 
-        if frm == to:
-            raise ValueError("Cannot have an edge from a node to itself.")
+        if frm == to and (distance != 0 or duration != 0):
+            raise ValueError("A self-loop edge must have 0 distance/duration.")
 
         edge = Edge(frm, to, distance, duration)
         self._edges.append(edge)

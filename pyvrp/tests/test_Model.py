@@ -50,22 +50,29 @@ def test_add_edge_raises_negative_distance_or_duration():
         model.add_edge(client, depot, distance=0, duration=-1)
 
 
-def test_add_edge_raises_self_connection():
+def test_add_edge_raises_self_connection_nonzero_distance_or_duration():
     """
-    Edges cannot connect a node to itself. Attempting to add such edges should
-    raise an error.
+    Edges connecting a node to itself must have 0 distance and duration.
     """
     model = Model()
     depot = model.add_depot(0, 0)
     client = model.add_client(0, 1)
 
-    model.add_edge(depot, client, distance=0, duration=0)  # should be OK
+    model.add_edge(depot, client, distance=1, duration=1)  # should be OK
+    model.add_edge(depot, depot, distance=0, duration=0)  # should be OK
+    model.add_edge(client, client, distance=0, duration=0)  # should be OK
 
-    with assert_raises(ValueError):  # depot self loop should not be OK
-        model.add_edge(depot, depot, distance=0, duration=0)
+    with assert_raises(ValueError):  # self loop with nonzero distance not OK
+        model.add_edge(depot, depot, distance=1, duration=0)
 
-    with assert_raises(ValueError):  # client self loop should not be OK
-        model.add_edge(client, client, distance=0, duration=0)
+    with assert_raises(ValueError):  # self loop with nonzero duration not OK
+        model.add_edge(depot, depot, distance=0, duration=1)
+
+    with assert_raises(ValueError):  # self loop with nonzero distance not OK
+        model.add_edge(client, client, distance=1, duration=0)
+
+    with assert_raises(ValueError):  # self loop with nonzero duration not OK
+        model.add_edge(client, client, distance=0, duration=1)
 
 
 def test_add_client_attributes():
@@ -400,7 +407,8 @@ def test_model_solves_small_instance_with_fixed_costs():
 
     for frm in m.locations:
         for to in m.locations:
-            m.add_edge(frm, to, distance=0, duration=5)
+            if frm != to:
+                m.add_edge(frm, to, distance=0, duration=5)
 
     res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
@@ -442,7 +450,8 @@ def test_model_solves_small_instance_with_shift_durations():
 
     for frm in m.locations:
         for to in m.locations:
-            m.add_edge(frm, to, distance=0, duration=5)
+            if frm != to:
+                m.add_edge(frm, to, distance=0, duration=5)
 
     res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
