@@ -178,7 +178,6 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
 
 
-# test that problem data raises if one of the matrix diagonal elements is not 0
 def test_problem_data_raises_matrix_diagonal_nonzero():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
