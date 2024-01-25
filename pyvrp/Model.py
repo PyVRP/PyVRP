@@ -180,6 +180,9 @@ class Model:
             """
             warn(msg, ScalingWarning)
 
+        if frm == to:
+            raise ValueError("Cannot have an edge from a node to itself.")
+
         edge = Edge(frm, to, distance, duration)
         self._edges.append(edge)
         return edge

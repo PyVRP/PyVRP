@@ -50,6 +50,24 @@ def test_add_edge_raises_negative_distance_or_duration():
         model.add_edge(client, depot, distance=0, duration=-1)
 
 
+def test_add_edge_raises_self_connection():
+    """
+    Edges cannot connect a node to itself. Attempting to add such edges should
+    raise an error.
+    """
+    model = Model()
+    depot = model.add_depot(0, 0)
+    client = model.add_client(0, 1)
+
+    model.add_edge(depot, client, distance=0, duration=0)  # should be OK
+
+    with assert_raises(ValueError):  # depot self loop should not be OK
+        model.add_edge(depot, depot, distance=0, duration=0)
+
+    with assert_raises(ValueError):  # client self loop should not be OK
+        model.add_edge(client, client, distance=0, duration=0)
+
+
 def test_add_client_attributes():
     """
     Smoke test that checks, for a single client, that the model adds a client
