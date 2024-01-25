@@ -4,7 +4,7 @@ from typing import Optional
 
 class MaxRuntime:
     """
-    Criterion that stops after a specified maximum runtime.
+    Criterion that stops after a specified maximum runtime (in seconds).
     """
 
     def __init__(self, max_runtime: float):

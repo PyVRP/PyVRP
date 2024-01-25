@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_raises
 from pytest import mark
 
-from pyvrp.stop import MaxRuntime, MultipleCriteria, NoImprovement
+from pyvrp.stop import MaxIterations, MaxRuntime, MultipleCriteria
 from pyvrp.tests.helpers import sleep
 
 
@@ -18,7 +18,7 @@ def test_stops_if_zero_max_iterations():
     Tests that the stopping criterion stops immediately if zero maximum
     iterations are allowed.
     """
-    stop = MultipleCriteria([NoImprovement(0), MaxRuntime(0.100)])
+    stop = MultipleCriteria([MaxIterations(0), MaxRuntime(0.100)])
     assert_(stop(1))
 
 
@@ -28,7 +28,7 @@ def test_before_max_runtime(max_runtime):
     Tests that the stopping criterion allows iterations if the maximum runtime
     has not yet been violated.
     """
-    stop = MultipleCriteria([NoImprovement(101), MaxRuntime(max_runtime)])
+    stop = MultipleCriteria([MaxIterations(101), MaxRuntime(max_runtime)])
 
     for _ in range(100):
         assert_(not stop(1))
@@ -40,7 +40,7 @@ def test_after_max_runtime(max_runtime):
     Tests that stopping criterion stops after maximum runtime, regardless
     of maximum number of iterations.
     """
-    stop = MultipleCriteria([NoImprovement(101), MaxRuntime(max_runtime)])
+    stop = MultipleCriteria([MaxIterations(101), MaxRuntime(max_runtime)])
     assert_(not stop(1))  # trigger the first time measurement
 
     sleep(max_runtime)
