@@ -264,6 +264,16 @@ public:
     [[nodiscard]] std::vector<Client> const &depots() const;
 
     /**
+     * Returns a list of all vehicle types in the problem instance.
+     *
+     * Returns
+     * -------
+     * List[VehicleType]
+     *     List of all vehicle types in the problem instance.
+     */
+    [[nodiscard]] std::vector<VehicleType> const &vehicleTypes() const;
+
+    /**
      * Center point of all client locations (excluding depots).
      *
      * Returns
