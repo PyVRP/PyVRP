@@ -72,6 +72,10 @@ class LocalSearch
     void intensify(CostEvaluator const &costEvaluator,
                    double overlapTolerance = 0.05);
 
+#ifdef PYVRP_CONSISTENCY_CHECKS
+    Cost getCost(CostEvaluator const &CostEvaluator) const;
+#endif
+
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.

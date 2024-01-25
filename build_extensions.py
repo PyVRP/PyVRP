@@ -31,6 +31,11 @@ def parse_args():
         help="Double is more precise, integer faster. Defaults to 'integer'.",
     )
     parser.add_argument(
+        "--consistency_checks",
+        action="store_true",
+        help="Enable or disable consistency checks. Defaults to False.",
+    )
+    parser.add_argument(
         "--clean",
         action="store_true",
         help="Clean build and installation directories before building.",
@@ -85,6 +90,7 @@ def build(
     build_type: str,
     problem: str,
     precision: str,
+    consistency_checks: bool,
     additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
@@ -95,6 +101,7 @@ def build(
         f"-Dproblem={problem}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         f"-Dprecision={precision}",
+        f"-Dconsistency_checks={'true' if consistency_checks else 'false'}",
         *additional,
         # fmt: on
     ]
@@ -121,6 +128,7 @@ def main():
         args.build_type,
         args.problem,
         args.precision,
+        args.consistency_checks,
         args.additional,
     )
 

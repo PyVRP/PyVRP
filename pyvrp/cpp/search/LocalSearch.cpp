@@ -47,6 +47,13 @@ Solution LocalSearch::intensify(Solution const &solution,
     return exportSolution();
 }
 
+#ifdef PYVRP_CONSISTENCY_CHECKS
+pyvrp::Cost LocalSearch::getCost(CostEvaluator const &CostEvaluator) const
+{
+    return CostEvaluator.penalisedCost(exportSolution());
+}
+#endif
+
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
     if (nodeOps.empty())
@@ -171,12 +178,19 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
     for (auto *nodeOp : nodeOps)
         if (nodeOp->evaluate(U, V, costEvaluator) < 0)
         {
+#ifdef PYVRP_CONSISTENCY_CHECKS
+            auto const costBefore = getCost(costEvaluator);
+            auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
+#endif
             auto *routeU = U->route();  // copy these because the operator can
             auto *routeV = V->route();  // modify the node's route membership
 
             nodeOp->apply(U, V);
             update(routeU, routeV);
 
+#ifdef PYVRP_CONSISTENCY_CHECKS
+            assert(getCost(costEvaluator) == costBefore + deltaCost);
+#endif
             return true;
         }
 
@@ -190,9 +204,16 @@ bool LocalSearch::applyRouteOps(Route *U,
     for (auto *routeOp : routeOps)
         if (routeOp->evaluate(U, V, costEvaluator) < 0)
         {
+#ifdef PYVRP_CONSISTENCY_CHECKS
+            auto const costBefore = getCost(costEvaluator);
+            auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
+#endif
             routeOp->apply(U, V);
             update(U, V);
 
+#ifdef PYVRP_CONSISTENCY_CHECKS
+            assert(getCost(costEvaluator) == costBefore + deltaCost);
+#endif
             return true;
         }
 
@@ -229,9 +250,16 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     // First test removing U. This is allowed when U is not required.
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
+#ifdef PYVRP_CONSISTENCY_CHECKS
+        auto const costBefore = getCost(costEvaluator);
+        auto const deltaCost = removeCost(U, data, costEvaluator);
+#endif
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
+#ifdef PYVRP_CONSISTENCY_CHECKS
+        assert(getCost(costEvaluator) == costBefore + deltaCost);
+#endif
     }
 
     // If U is not currently in the solution, we test if inserting it is an
@@ -260,8 +288,15 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
         if (uData.required || bestCost < 0)
         {
+#ifdef PYVRP_CONSISTENCY_CHECKS
+            auto const costBefore = getCost(costEvaluator);
+            auto const deltaCost = bestCost;
+#endif
             UAfter->route()->insert(UAfter->idx() + 1, U);
             update(UAfter->route(), UAfter->route());
+#ifdef PYVRP_CONSISTENCY_CHECKS
+            assert(getCost(costEvaluator) == costBefore + deltaCost);
+#endif
         }
     }
 }
@@ -319,6 +354,12 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
+
+#ifdef PYVRP_CONSISTENCY_CHECKS
+    // Check that instance was loaded correctly
+    auto const loadedSolution = exportSolution();
+    assert(loadedSolution == solution);
+#endif
 }
 
 Solution LocalSearch::exportSolution() const

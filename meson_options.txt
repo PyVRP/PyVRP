@@ -13,3 +13,10 @@ option(
     choices: ['integer', 'double'], 
     description: 'Precision type to compile.'
 )
+
+option(
+    'consistency_checks',
+    type: 'boolean',
+    value: true,
+    description: 'Enable or disable consistency checks.'
+)

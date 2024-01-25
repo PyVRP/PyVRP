@@ -34,6 +34,13 @@ if get_option('precision') == 'double'  # default is integer
     add_project_arguments('-DPYVRP_DOUBLE_PRECISION', language: 'cpp')
 endif
 
+if get_option('consistency_checks')
+    add_project_arguments('-DPYVRP_CONSISTENCY_CHECKS', language: 'cpp')
+    # With this option, we also check for undefined behavior such as overflow
+    add_project_arguments('-fsanitize=undefined', language: 'cpp')
+    add_project_link_arguments('-fsanitize=undefined', language: 'cpp')
+endif
+
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
 # installation directories here, as a shorthand.
