@@ -21,7 +21,9 @@ from pyvrp import (
     PenaltyParams,
     Population,
     PopulationParams,
+    ProblemData,
     RandomNumberGenerator,
+    Result,
     Solution,
 )
 from pyvrp.crossover import selective_route_exchange as srex
@@ -34,7 +36,12 @@ from pyvrp.search import (
     NeighbourhoodParams,
     compute_neighbours,
 )
-from pyvrp.stop import MaxIterations, MaxRuntime
+from pyvrp.stop import (
+    MaxIterations,
+    MaxRuntime,
+    MultipleCriteria,
+    NoImprovement,
+)
 
 
 def tabulate(headers: list[str], rows: np.ndarray) -> str:
@@ -60,6 +67,31 @@ def tabulate(headers: list[str], rows: np.ndarray) -> str:
     return "\n".join(header + content)
 
 
+def write_solution(where: Path, data: ProblemData, result: Result):
+    with open(where, "w") as fh:
+        if data.num_vehicle_types == 1:
+            fh.write(str(result.best))
+            fh.write(f"Cost: {round(result.cost(), 2)}\n")
+            return
+
+        # Since there are multiple vehicle types, we need to take some care
+        # to assign the routes to the proper vehicle. We print all routes,
+        # including empty ones. The route indices correspond to the vehicles.
+        type2vehicle = [
+            (int(vehicle) - 1 for vehicle in vehicle_type.name.split(","))
+            for vehicle_type in data.vehicle_types()
+        ]
+
+        routes = [f"Route {idx + 1}: " for idx in range(data.num_vehicles)]
+        for route in result.best.get_routes():
+            visits = map(str, route.visits())
+            vehicle = next(type2vehicle[route.vehicle_type()])
+            routes[vehicle] += " ".join(visits)
+
+        fh.writelines(route + "\n" for route in routes)
+        fh.write(f"Cost: {round(result.cost(), 2)}\n")
+
+
 def solve(
     data_loc: Path,
     instance_format: str,
@@ -67,6 +99,7 @@ def solve(
     seed: int,
     max_runtime: Optional[float],
     max_iterations: Optional[int],
+    no_improvement: Optional[int],
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     **kwargs,
@@ -87,11 +120,11 @@ def solve(
     seed
         Seed to use for the RNG.
     max_runtime
-        Maximum runtime (in seconds) for solving. Either ``max_runtime`` or
-        ``max_iterations`` must be specified.
+        Maximum runtime (in seconds) for solving.
     max_iterations
-        Maximum number of iterations for solving. Either ``max_runtime`` or
-        ``max_iterations`` must be specified.
+        Maximum number of iterations for solving.
+    no_improvement
+        Maximum number of iterations without improvement.
     stats_dir
         The directory to write runtime statistics to.
     sol_dir
@@ -143,11 +176,12 @@ def solve(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
     )
 
-    if max_runtime is not None:
-        stop = MaxRuntime(max_runtime)
-    else:
-        assert max_iterations is not None
-        stop = MaxIterations(max_iterations)  # type: ignore
+    criteria = [
+        MaxIterations(max_iterations) if max_iterations is not None else None,
+        NoImprovement(no_improvement) if no_improvement is not None else None,
+        MaxRuntime(max_runtime) if max_runtime is not None else None,
+    ]
+    stop = MultipleCriteria([crit for crit in criteria if crit is not None])
 
     result = algo.run(stop)
     instance_name = data_loc.stem
@@ -158,9 +192,7 @@ def solve(
 
     if sol_dir:
         sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
-        with open(sol_dir / (instance_name + ".sol"), "w") as fh:
-            fh.write(str(result.best))
-            fh.write(f"Cost: {result.cost()}\n")
+        write_solution(sol_dir / (instance_name + ".sol"), data, result)
 
     return (
         instance_name,
@@ -260,13 +292,16 @@ def main():
     msg = "Number of processors to use for solving instances. Default 1."
     parser.add_argument("--num_procs", type=int, default=1, help=msg)
 
-    stop = parser.add_mutually_exclusive_group(required=True)
+    stop = parser.add_argument_group("Stopping criteria")
 
     msg = "Maximum runtime for each instance, in seconds."
     stop.add_argument("--max_runtime", type=float, help=msg)
 
     msg = "Maximum number of iterations for solving each instance."
     stop.add_argument("--max_iterations", type=int, help=msg)
+
+    msg = "Maximum number of iterations without improvement."
+    stop.add_argument("--no_improvement", type=int, help=msg)
 
     benchmark(**vars(parser.parse_args()))
 

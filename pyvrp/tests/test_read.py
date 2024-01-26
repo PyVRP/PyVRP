@@ -1,6 +1,7 @@
 from math import sqrt
 
 from numpy.testing import (
+    assert_,
     assert_allclose,
     assert_equal,
     assert_raises,
@@ -167,7 +168,16 @@ def test_reading_RC208_instance():  # Solomon style instance
     assert_equal(data.num_clients, 100)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_locations, 101)
-    assert_equal(data.vehicle_type(0).capacity, 1_000)
+
+    assert_equal(data.num_vehicles, 25)
+    assert_equal(data.num_vehicle_types, 1)
+
+    vehicle_type = data.vehicle_type(0)
+    expected_name = ",".join(str(idx + 1) for idx in range(data.num_vehicles))
+
+    assert_equal(vehicle_type.num_available, 25)
+    assert_equal(vehicle_type.capacity, 1_000)
+    assert_equal(vehicle_type.name, expected_name)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision
     assert_equal(data.location(0).x, 400)  # depot [x, y] location
@@ -197,8 +207,8 @@ def test_reading_RC208_instance():  # Solomon style instance
     for client in data.clients():
         assert_equal(client.service_duration, 100)
 
-    # This is a VRPTW instance, so all other fields should have default values.
-    for client in data.clients():
+        # This is a VRPTW instance, so all other fields should have their
+        # default values.
         assert_equal(client.release_time, 0)
         assert_equal(client.prize, 0)
         assert_equal(client.required, True)
@@ -295,3 +305,40 @@ def test_multiple_depots():
     assert_allclose(depot2.y, 1_297)
     assert_allclose(depot2.tw_early, 5_000)
     assert_allclose(depot2.tw_late, 20_000)
+
+
+def test_mdvrptw_instance():
+    """
+    Tests that reading an MDVRPTW instance happens correctly, particularly the
+    maximum route duration and multiple depot aspects.
+    """
+    data = read("data/PR11A.vrp", round_func="trunc")
+
+    assert_equal(data.num_locations, 364)
+    assert_equal(data.num_depots, 4)
+    assert_equal(data.num_clients, 360)
+
+    assert_equal(data.num_vehicles, 40)
+    assert_equal(data.num_vehicle_types, 4)  # one vehicle type per depot
+
+    for idx, vehicle_type in enumerate(data.vehicle_types()):
+        # There should be ten vehicles for each depot, with the following
+        # capacities and maximum route durations.
+        assert_equal(vehicle_type.num_available, 10)
+        assert_equal(vehicle_type.depot, idx)
+        assert_allclose(vehicle_type.capacity, 200)
+        assert_allclose(vehicle_type.max_duration, 450)
+
+        # Essentially all vehicle indices for each depot, separated by a comma.
+        # Each depot has ten vehicles, and they are nicely grouped (so the
+        # first ten are assigned to the first depot, the second ten to the
+        # second depot, etc.).
+        expected_name = ",".join(str(10 * idx + veh + 1) for veh in range(10))
+        assert_equal(vehicle_type.name, expected_name)
+
+    # We haven't seen many instances with negative coordinates, but this
+    # MDVRPTW instance has those. That should be allowed.
+    assert_(any(depot.x < 0) for depot in data.depots())
+    assert_(any(depot.y < 0) for depot in data.depots())
+    assert_(any(client.x < 0) for client in data.clients())
+    assert_(any(client.y < 0) for client in data.clients())

@@ -49,3 +49,11 @@ def small_cvrp():
     Fixture that returns a small CVRP instance with just 21 clients.
     """
     return read("data/E-n22-k4.txt", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
+def pr107():
+    """
+    Fixture that returns a TSP instance with 107 clients.
+    """
+    return read("data/pr107.tsp", round_func="dimacs")

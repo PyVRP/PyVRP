@@ -1,7 +1,7 @@
 import functools
 import pathlib
 from numbers import Number
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -112,6 +112,13 @@ def read(
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
 
+    # If this value is supplied, we should pass it through the round func and
+    # then unwrap the result. If it's not given, the default value is None,
+    # which PyVRP understands.
+    max_duration: Optional[int] = instance.get("vehicles_max_duration")
+    if max_duration is not None:
+        max_duration = round_func(np.array([max_duration])).item()
+
     distances: np.ndarray = round_func(instance["edge_weight"])
 
     if "demand" in instance:
@@ -147,6 +154,15 @@ def read(
         durations = np.zeros_like(distances)
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
+
+    if "vehicles_depot" in instance:
+        items: list[list[int]] = [[] for _ in depots]
+        for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
+            items[depot - 1].append(vehicle)
+
+        depot_vehicle_pairs = items
+    else:
+        depot_vehicle_pairs = [[idx + 1 for idx in range(num_vehicles)]]
 
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
@@ -184,7 +200,19 @@ def read(
         )
         for idx in range(dimension)
     ]
-    vehicle_types = [VehicleType(num_vehicles, capacity=capacity)]
+
+    vehicle_types = [
+        VehicleType(
+            len(vehicles),
+            capacity,
+            depot_idx,
+            max_duration=max_duration,
+            # A bit hacky, but this csv-like name is really useful to track the
+            # actual vehicles that make up this vehicle type.
+            name=",".join(map(str, vehicles)),
+        )
+        for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
+    ]
 
     return ProblemData(
         clients[len(depots) :],

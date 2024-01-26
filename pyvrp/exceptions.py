@@ -10,3 +10,10 @@ class ScalingWarning(UserWarning):
     Raised when the distance or duration values in the problem are very large,
     which could cause the algorithm to start using forbidden edges as well.
     """
+
+
+class TspWarning(UserWarning):
+    """
+    Raised when the problem is a TSP but a component is used that explicitly
+    requires the presence of two or more vehicles (i.e., a proper VRP).
+    """

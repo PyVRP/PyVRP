@@ -1,5 +1,10 @@
 from pyvrp import CostEvaluator, ProblemData, Solution
 
+def ordered_crossover(
+    parents: tuple[Solution, Solution],
+    data: ProblemData,
+    indices: tuple[int, int],
+) -> Solution: ...
 def selective_route_exchange(
     parents: tuple[Solution, Solution],
     data: ProblemData,
