@@ -39,31 +39,31 @@ def _get_git_revision():
 
 REVISION = _get_git_revision()
 
-print(f"Git revision: {REVISION}")
-
 
 def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     """
-    Returns the URL to the GitHub source code corresponding to a object,
-    if identified. Otherwise returns None.
+    Generates a URL pointing to the source code of a specified object located
+    in the PyVRP Github repository. This currently only works for native Python
+    objects.
 
     Parameters
     ----------
     domain: str
         The domain of the object (e.g., "py" for Python, "cpp" for C++).
     info: dict
-        Dictionary containing the module and fullname of the object.
+        A dictionary with keys "module" and "fullname". "module" contains
+        the module name as a string, and "fullname" contains the full object
+        name as a string.
 
     Returns
     -------
     Optional[str]
-        The URL to the GitHub source code corresponding to the object.
-        If a URL cannot be generated, returns None instead.
+        URL pointing to the identified object's source code in the PyVRP
+        Github repository. Returns None if the object cannot be identified.
     """
     if domain != "py" or not info.get("module") or not info.get("fullname"):
         return None
 
-    # Find the object.
     module = importlib.import_module(info["module"])
 
     if "." not in info["fullname"]:  # object is a class or function
@@ -80,15 +80,12 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     except (TypeError, AssertionError):
         return None
 
-    parent_dir_path = os.path.abspath("../../")
-    rel_path = os.path.relpath(source_file, parent_dir_path)
-    start_line_no = inspect.getsourcelines(obj)[1]
-    print(source_file, rel_path, parent_dir_path)
-
+    parts = source_file.split("/")
+    rel_path = "/".join(parts[parts.index("pyvrp") :])
+    line_num = inspect.getsourcelines(obj)[1]
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
-    url = f"{base_url}/{REVISION}/{rel_path}#L{start_line_no}"
-    print(url)
-    return url
+
+    return f"{base_url}/{REVISION}/{rel_path}#L{line_num}"
 
 
 # -- numpydoc
