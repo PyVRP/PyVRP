@@ -75,13 +75,12 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
 
     # Find the object's source file and starting line number.
     try:
-        source_file = inspect.getsourcefile(obj)
-        assert source_file is not None, "Source file not found."
+        source = inspect.getsourcefile(obj)
+        assert source is not None, "Source file not found."
     except (TypeError, AssertionError):
         return None
 
-    parts = source_file.split("/")
-    rel_path = "/".join(parts[parts.index("pyvrp") :])
+    rel_path = source[source.rfind("pyvrp/") :]
     line_num = inspect.getsourcelines(obj)[1]
     base_url = "https:///github.com/PyVRP/PyVRP/blob"
 
