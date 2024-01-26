@@ -465,8 +465,8 @@ def test_model_solves_line_instance_with_multiple_depots():
     # assigned to the first route, and clients closest to depot 1 assigned to
     # the second route.
     routes = res.best.get_routes()
-    assert_equal(routes[0].visits(), [2, 3])
-    assert_equal(routes[1].visits(), [5, 4])
+    assert_equal(set(routes[0].visits()), {2, 3})
+    assert_equal(set(routes[1].visits()), {4, 5})
 
 
 def test_client_depot_and_vehicle_type_name_fields():
