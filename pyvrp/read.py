@@ -1,7 +1,7 @@
 import functools
 import pathlib
 from numbers import Number
-from typing import Callable, Dict, List, Union
+from typing import Callable, Union
 from warnings import warn
 
 import numpy as np
@@ -11,7 +11,7 @@ from pyvrp._pyvrp import Client, ProblemData, VehicleType
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
-_Routes = List[List[int]]
+_Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int32).max
@@ -34,7 +34,7 @@ def no_rounding(vals):
 
 
 INSTANCE_FORMATS = ["vrplib", "solomon"]
-ROUND_FUNCS: Dict[str, _RoundingFunc] = {
+ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
     "trunc": convert_to_int,
     "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
@@ -51,6 +51,12 @@ def read(
     """
     Reads the VRPLIB file at the given location, and returns a ProblemData
     instance.
+
+    .. note::
+
+       See the
+       :doc:`VRPLIB format explanation <../dev/supported_vrplib_fields>` page
+       for more details.
 
     Parameters
     ----------
@@ -122,8 +128,9 @@ def read(
         if isinstance(instance["service_time"], Number):
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
-            service_times = np.full(dimension, instance["service_time"], int)
+            service_times = np.full(dimension, instance["service_time"])
             service_times[0] = 0
+            service_times = round_func(service_times)
         else:
             service_times = round_func(instance["service_time"])
     else:
@@ -149,11 +156,19 @@ def read(
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
-    if len(depots) != 1 or depots[0] != 0:
-        raise ValueError(
-            "Source file should contain single depot with index 1 "
-            + "(depot index should be 0 after subtracting offset 1)"
-        )
+    if len(depots) == 0 or (depots != np.arange(len(depots))).any():
+        msg = """
+        Source file should contain at least one depot in the contiguous lower
+        indices, starting from 1.
+        """
+        raise ValueError(msg)
+
+    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
+        msg = """
+        The maximum distance or duration value is very large. This might
+        impact numerical stability. Consider rescaling your input data.
+        """
+        warn(msg, ScalingWarning)
 
     clients = [
         Client(
@@ -169,17 +184,11 @@ def read(
         )
         for idx in range(dimension)
     ]
-    vehicle_types = [VehicleType(capacity, num_vehicles)]
-
-    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
-        msg = """
-        The maximum distance or duration value is very large. This might
-        impact numerical stability. Consider rescaling your input data.
-        """
-        warn(msg, ScalingWarning)
+    vehicle_types = [VehicleType(num_vehicles, capacity=capacity)]
 
     return ProblemData(
-        clients,
+        clients[len(depots) :],
+        clients[: len(depots)],
         vehicle_types,
         distances,
         durations,

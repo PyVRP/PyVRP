@@ -92,7 +92,7 @@ private:
 
     std::vector<Node *> nodes;     // Nodes in this route, including depots
     std::vector<NodeStats> stats;  // (Cumulative) statistics along the route
-    std::pair<double, double> centroid;  // Center point of route's clients
+    std::pair<double, double> centroid_;  // Center point of route's clients
 
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
@@ -108,10 +108,13 @@ public:
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
 
+    // First client in the route if the route is non-empty. Else it is the
+    // end depot. In either case the iterator is valid!
     [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
-
     [[nodiscard]] inline std::vector<Node *>::iterator begin();
+
+    // End depot. The iterator is valid!
+    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
     [[nodiscard]] inline std::vector<Node *>::iterator end();
 
     /**
@@ -146,6 +149,11 @@ public:
     [[nodiscard]] inline Load capacity() const;
 
     /**
+     * @return The location index of this route's depot.
+     */
+    [[nodiscard]] inline size_t depot() const;
+
+    /**
      * @return The fixed cost of the vehicle servicing this route.
      */
     [[nodiscard]] inline Cost fixedCost() const;
@@ -154,6 +162,16 @@ public:
      * @return Total distance travelled on this route.
      */
     [[nodiscard]] inline Distance distance() const;
+
+    /**
+     * @return The duration of this route.
+     */
+    [[nodiscard]] inline Duration duration() const;
+
+    /**
+     * @return The maximum duration of the vehicle servicing this route.
+     */
+    [[nodiscard]] inline Duration maxDuration() const;
 
     /**
      * @return Total time warp on this route.
@@ -200,6 +218,11 @@ public:
      * Calculates the load for segment [start, end].
      */
     [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
+
+    /**
+     * Center point of the client locations on this route.
+     */
+    [[nodiscard]] std::pair<double, double> const &centroid() const;
 
     /**
      * @return This route's vehicle type.
@@ -320,13 +343,19 @@ Load Route::load() const { return stats.back().cumLoad; }
 
 Load Route::capacity() const { return vehicleType_.capacity; }
 
+size_t Route::depot() const { return vehicleType_.depot; }
+
 Cost Route::fixedCost() const { return vehicleType_.fixedCost; }
 
 Distance Route::distance() const { return stats.back().cumDist; }
 
+Duration Route::duration() const { return stats.back().twsBefore.duration(); }
+
+Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
+
 Duration Route::timeWarp() const
 {
-    return stats.back().twsBefore.totalTimeWarp();
+    return stats.back().twsBefore.timeWarp(maxDuration());
 }
 
 bool Route::empty() const { return size() == 0; }
@@ -383,7 +412,7 @@ Load Route::loadBetween(size_t start, size_t end) const
 {
     assert(start <= end && end < nodes.size());
 
-    auto const atStart = data.client(nodes[start]->client()).demand;
+    auto const atStart = data.location(nodes[start]->client()).demand;
     auto const startLoad = stats[start].cumLoad;
     auto const endLoad = stats[end].cumLoad;
 

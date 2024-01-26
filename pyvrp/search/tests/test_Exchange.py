@@ -52,7 +52,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(operator(rc208))
 
-    single_route = list(range(1, rc208.num_clients + 1))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -76,7 +76,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(operator(rc208))
 
-    single_route = list(range(1, rc208.num_clients + 1))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -222,7 +222,6 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     feasibility before applying a move that improves the travelled distance.
     """
     clients = [
-        Client(x=0, y=0, tw_early=0, tw_late=10),
         Client(x=1, y=0, tw_early=0, tw_late=5),
         Client(x=2, y=0, tw_early=0, tw_late=5),
     ]
@@ -231,7 +230,8 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     # however, the best route is 0 -> 2 -> 1 -> 0.
     data = ProblemData(
         clients=clients,
-        vehicle_types=[VehicleType(0, 1)],
+        depots=[Client(x=0, y=0, tw_early=0, tw_late=10)],
+        vehicle_types=[VehicleType(1)],
         distance_matrix=np.asarray(
             [
                 [0, 1, 5],
@@ -273,7 +273,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     This test asserts that a customer will be relocated to a non-empty route
     with a different capacity even if there is another empty route in between.
     """
-    vehicle_types = [VehicleType(cap, 1) for cap in [12, 5, 1, 3]]
+    vehicle_types = [VehicleType(1, capacity=cap) for cap in [12, 5, 1, 3]]
     data = ok_small.replace(vehicle_types=vehicle_types)
 
     # Use a huge cost for load penalties to make other aspects irrelevant
@@ -284,7 +284,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     # client moves allowed by it will not improve the initial solution created
     # below. So the only improvements (1, 0)-exchange can make must come from
     # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_clients + 1)]
+    neighbours = [[] for _ in range(data.num_locations)]
     neighbours[2].append(1)
 
     ls = LocalSearch(data, rng, neighbours)
@@ -327,7 +327,8 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     not changed), and vary the fixed vehicle cost. The total delta cost should
     also vary as a result.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
+    vehicle_type = VehicleType(2, capacity=10, fixed_cost=fixed_cost)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -345,3 +346,43 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     assert_allclose(
         op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
     )
+
+
+@mark.parametrize(
+    ("op", "max_dur", "cost"),
+    [
+        (Exchange20, 0, -841),
+        (Exchange20, 5_000, 4_159),
+        (Exchange21, 0, -2_780),
+        (Exchange21, 5_000, -1_410),
+    ],
+)
+def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
+    """
+    Tests that the exchange operators correctly evaluate time warp due to
+    maximum duration violations.
+    """
+    vehicle_type = VehicleType(2, capacity=10, max_duration=max_dur)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    op = op(data)
+
+    # Two routes: first route 0 -> 2 -> 4 -> 0, second route 0 -> 1 -> 3 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [2, 4]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=0)
+    for loc in [1, 3]:
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    # Both routes are substantially longer than 5K duration units. So there's
+    # always a max duration violation. Consolidation - either into a single
+    # route, or more into the same route - is typically improving, especially
+    # when the maximum duration violations are significant.
+    assert_allclose(route1.duration(), 5_229)
+    assert_allclose(route2.duration(), 5_814)
+
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), cost)

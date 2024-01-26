@@ -55,7 +55,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     // Caches the last time nodes were tested for modification (uses numMoves to
     // track this). The lastModified field, in contrast, track when a route was
     // last *actually* modified.
-    std::vector<int> lastTestedNodes(data.numClients() + 1, -1);
+    std::vector<int> lastTestedNodes(data.numLocations(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
     searchCompleted = false;
@@ -68,7 +68,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
-            auto *U = &clients[uClient];
+            auto *U = &nodes[uClient];
 
             auto const lastTestedNode = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
@@ -84,7 +84,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours[uClient])
             {
-                auto *V = &clients[vClient];
+                auto *V = &nodes[vClient];
 
                 if (!V->route())
                     continue;
@@ -127,7 +127,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
     {
         searchCompleted = true;
 
-        for (int const rU : orderRoutes)
+        for (auto const rU : orderRoutes)
         {
             auto &U = routes[rU];
 
@@ -224,7 +224,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
     auto const uClient = U->client();
-    auto const &uData = data.client(uClient);
+    auto const &uData = data.location(uClient);
 
     // First test removing U. This is allowed when U is not required.
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
@@ -245,7 +245,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
         for (auto const vClient : neighbours[uClient])
         {
-            auto *V = &clients[vClient];
+            auto *V = &nodes[vClient];
 
             if (!V->route())
                 continue;
@@ -312,7 +312,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
         assert(route.empty());  // should have been emptied above.
         for (auto const client : solRoute)
-            route.push_back(&clients[client]);
+            route.push_back(&nodes[client]);
 
         route.update();
     }
@@ -349,22 +349,24 @@ void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
-    if (neighbours.size() != data.numClients() + 1)
+    if (neighbours.size() != data.numLocations())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
-    for (size_t client = 0; client <= data.numClients(); ++client)
+    for (size_t client = data.numDepots(); client != data.numLocations();
+         ++client)
     {
         auto const beginPos = neighbours[client].begin();
         auto const endPos = neighbours[client].end();
 
-        auto const clientPos = std::find(beginPos, endPos, client);
-        auto const depotPos = std::find(beginPos, endPos, 0);
+        auto const pred = [&](auto item) {
+            return item == client || item < data.numDepots();
+        };
 
-        if (clientPos != endPos || depotPos != endPos)
+        if (std::any_of(beginPos, endPos, pred))
         {
             throw std::runtime_error("Neighbourhood of client "
                                      + std::to_string(client)
-                                     + " contains itself or the depot.");
+                                     + " contains itself or a depot.");
         }
     }
 
@@ -378,19 +380,19 @@ LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      neighbours(data.numClients() + 1),
+      neighbours(data.numLocations()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);
 
-    std::iota(orderNodes.begin(), orderNodes.end(), 1);
+    std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    clients.reserve(data.numClients() + 1);
-    for (size_t client = 0; client <= data.numClients(); ++client)
-        clients.emplace_back(client);
+    nodes.reserve(data.numLocations());
+    for (size_t loc = 0; loc != data.numLocations(); ++loc)
+        nodes.emplace_back(loc);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;

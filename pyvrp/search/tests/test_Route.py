@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -26,7 +26,7 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     type.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(1, 1), VehicleType(2, 2)]
+        vehicle_types=[VehicleType(1, capacity=1), VehicleType(2, capacity=2)]
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
@@ -212,7 +212,9 @@ def test_fixed_cost(ok_small, fixed_cost: int):
     Tests that the fixed cost method returns the assigned vehicle type's fixed
     cost value.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(10, 2, fixed_cost)])
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
+    )
     route = Route(data, idx=0, vehicle_type=0)
     assert_allclose(route.fixed_cost(), fixed_cost)
 
@@ -229,12 +231,12 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
 
     # Only the client has any demand, so the total route load should be equal
     # to it.
-    assert_equal(route.load(), ok_small.client(client).demand)
-    assert_equal(route.load_between(0, 2), ok_small.client(client).demand)
+    assert_equal(route.load(), ok_small.location(client).demand)
+    assert_equal(route.load_between(0, 2), ok_small.location(client).demand)
 
     # The load_between() function is inclusive.
     assert_equal(route.load_between(0, 0), 0)
-    assert_equal(route.load_between(1, 1), ok_small.client(client).demand)
+    assert_equal(route.load_between(1, 1), ok_small.location(client).demand)
 
     # Distances on various segments of the route.
     assert_equal(route.dist_between(0, 1), ok_small.dist(0, client))
@@ -295,14 +297,15 @@ def test_data_is_not_updated_until_update_call(ok_small):
     # Add a new client to the route. update() has not been called, so the route
     # statistics are not correct.
     route.append(Node(loc=1))
-    assert_(route.load() != ok_small.client(1).demand)
+
+    assert_(route.load() != ok_small.location(1).demand)
     assert_(
         route.dist_between(0, 2) != ok_small.dist(0, 1) + ok_small.dist(1, 0)
     )
 
     # Update. This recalculates the statistics, which should now be correct.
     route.update()
-    assert_equal(route.load(), ok_small.client(1).demand)
+    assert_equal(route.load(), ok_small.location(1).demand)
     assert_equal(
         route.dist_between(0, 2), ok_small.dist(0, 1) + ok_small.dist(1, 0)
     )
@@ -310,12 +313,13 @@ def test_data_is_not_updated_until_update_call(ok_small):
     # Same story with another client: incorrect before update, correct after.
     route.append(Node(loc=2))
     assert_(
-        route.load() != ok_small.client(1).demand + ok_small.client(2).demand
+        route.load()
+        != ok_small.location(1).demand + ok_small.location(2).demand
     )
 
     route.update()
     assert_equal(
-        route.load(), ok_small.client(1).demand + ok_small.client(2).demand
+        route.load(), ok_small.location(1).demand + ok_small.location(2).demand
     )
     assert_equal(
         route.dist_between(0, 3),
@@ -324,7 +328,7 @@ def test_data_is_not_updated_until_update_call(ok_small):
 
 
 @pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
-def test_str_contains_route(ok_small, locs: List[int]):
+def test_str_contains_route(ok_small, locs: list[int]):
     """
     Test that each client in the route is also printed in the route's __str__.
     """
@@ -343,22 +347,19 @@ def test_route_tws_access(ok_small):
     the route.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(1, ok_small.num_clients + 1):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
     route.update()
 
-    for loc in [0, 1, 2, 3, 4, 5]:  # = [depot, *clients, depot]
-        if 0 < loc < len(route) + 1:
-            client = ok_small.client(loc)  # if actual client
-        else:
-            client = ok_small.client(0)  # else depot
+    for idx in range(len(route) + 2):
+        client = ok_small.location(idx % (len(route) + 1))
+        tws = route.tws(idx)
 
-        tws = route.tws(loc)
         assert_equal(tws.tw_early(), client.tw_early)
         assert_equal(tws.tw_late(), client.tw_late)
         assert_equal(tws.duration(), client.service_duration)
-        assert_equal(tws.total_time_warp(), 0)
+        assert_equal(tws.time_warp(), 0)
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
@@ -367,7 +368,7 @@ def test_tws_between_same_client_returns_node_tws(ok_small, loc: int):
     Tests that calling the ``tws_between()`` with the same start and end
     arguments returns a node's time window segment data.
     """
-    client = ok_small.client(loc)
+    client = ok_small.location(loc)
 
     route = Route(ok_small, idx=0, vehicle_type=0)
     route.append(Node(loc=loc))
@@ -389,7 +390,7 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot(ok_small):
     ``tws_after()`` when one side is the depot.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(1, ok_small.num_clients + 1):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
     route.update()
@@ -398,14 +399,12 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot(ok_small):
         before = route.tws_before(idx)
         between_before = route.tws_between(0, idx)
         assert_equal(before.duration(), between_before.duration())
-        assert_equal(
-            before.total_time_warp(), between_before.total_time_warp()
-        )
+        assert_equal(before.time_warp(), between_before.time_warp())
 
         after = route.tws_after(idx)
         between_after = route.tws_between(idx, len(route) + 1)
         assert_equal(after.duration(), between_after.duration())
-        assert_equal(after.total_time_warp(), between_after.total_time_warp())
+        assert_equal(after.time_warp(), between_after.time_warp())
 
 
 def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
@@ -414,26 +413,26 @@ def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
     exactly where in the route time warp occurs.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(1, ok_small.num_clients + 1):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
     assert_equal(len(route), ok_small.num_clients)
 
     route.update()
     assert_(route.has_time_warp())
-    assert_equal(route.tws_between(0, 5).total_time_warp(), route.time_warp())
+    assert_equal(route.tws_between(0, 5).time_warp(), route.time_warp())
 
     # Client #1 (at idx 1) causes the time warp in combination with client #3:
     # #1 can only be visited after #3's window has already closed.
     assert_equal(route.time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 4).total_time_warp(), 3_633)
-    assert_equal(route.tws_between(0, 4).total_time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 5).total_time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 3).total_time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 4).time_warp(), 3_633)
+    assert_equal(route.tws_between(0, 4).time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 5).time_warp(), 3_633)
+    assert_equal(route.tws_between(1, 3).time_warp(), 3_633)
 
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
-        assert_equal(route.tws_between(start, end).total_time_warp(), 0)
+        assert_equal(route.tws_between(start, end).time_warp(), 0)
 
 
 def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
@@ -442,7 +441,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     dist_between() with the start and end depot indices as arguments.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    for client in range(1, ok_small.num_clients + 1):
+    for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
     route.update()
 
@@ -460,8 +459,8 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     ],
 )
 def test_shift_duration_depot_time_window_interaction(
-    shift_tw: Tuple[Optional[int], Optional[int]],
-    expected_tw: Tuple[int, int],
+    shift_tw: tuple[Optional[int], Optional[int]],
+    expected_tw: tuple[int, int],
 ):
     """
     Tests that the route's depot time window is restricted to the most
@@ -470,10 +469,9 @@ def test_shift_duration_depot_time_window_interaction(
     varies around that.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0, tw_early=0, tw_late=1_000)],
-        vehicle_types=[
-            VehicleType(0, 1, tw_early=shift_tw[0], tw_late=shift_tw[1])
-        ],
+        clients=[],
+        depots=[Client(x=0, y=0, tw_early=0, tw_late=1_000)],
+        vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
         distance_matrix=np.zeros((1, 1), dtype=int),
         duration_matrix=np.zeros((1, 1), dtype=int),
     )
@@ -485,3 +483,44 @@ def test_shift_duration_depot_time_window_interaction(
         tws = route.tws(idx)
         assert_allclose(tws.tw_early(), expected_tw[0])
         assert_allclose(tws.tw_late(), expected_tw[1])
+
+
+@pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
+def test_route_centroid(ok_small, clients):
+    """
+    Tests that Route computes the center point of client locations correctly.
+    """
+    route = Route(ok_small, 0, 0)
+    for client in clients:
+        route.append(Node(loc=client))
+
+    route.update()
+
+    x = [ok_small.location(client).x for client in clients]
+    y = [ok_small.location(client).y for client in clients]
+    assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))
+
+
+@pytest.mark.parametrize(
+    ("max_duration", "expected"),
+    [
+        (100_000, 3_633),  # large enough; same time warp as other tests
+        (5_000, 6_583),  # now max_duration constraint applies
+        (0, 11_583),  # the max_duration constraint scales linearly
+    ],
+)
+def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
+    """
+    Tests that the maximum duration attribute of vehicle types is reflected
+    in the route's time warp calculations.
+    """
+    vehicle_type = VehicleType(3, capacity=10, max_duration=max_duration)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, 0, 0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
+
+    route.update()
+    assert_(route.has_time_warp())
+    assert_allclose(route.time_warp(), expected)

@@ -6,7 +6,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Model
+from pyvrp import Client, Model
 from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -30,18 +30,6 @@ def test_model_data():
     assert_equal(data.num_clients, 1)
     assert_equal(data.num_vehicle_types, 1)
     assert_equal(data.num_vehicles, 1)
-
-
-def test_add_depot_raises_more_than_one_depot():
-    """
-    PyVRP does not currently support VRPs with multiple depots. Adding more
-    than one depot should raise.
-    """
-    model = Model()
-    model.add_depot(0, 0)  # first depot should be OK
-
-    with assert_raises(ValueError):
-        model.add_depot(0, 1)  # second (and more) should not be
 
 
 def test_add_edge_raises_negative_distance_or_duration():
@@ -132,6 +120,7 @@ def test_add_vehicle_type():
         fixed_cost=1_001,
         tw_early=17,
         tw_late=19,
+        max_duration=93,
     )
 
     assert_equal(vehicle_type.num_available, 10)
@@ -139,6 +128,41 @@ def test_add_vehicle_type():
     assert_allclose(vehicle_type.fixed_cost, 1_001)
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)
+    assert_allclose(vehicle_type.max_duration, 93)
+
+
+def test_add_vehicle_type_default_depot():
+    """
+    Tests that ``Model.add_vehicle_type`` correctly sets the (default) depot
+    attribute on the vehicle type.
+    """
+    m = Model()
+    depot1 = m.add_depot(x=0, y=0)
+    depot2 = m.add_depot(x=1, y=1)
+
+    # No depot specified: should default to the first (location index 0).
+    vehicle_type1 = m.add_vehicle_type()
+    assert_equal(vehicle_type1.depot, 0)
+
+    # First depot specified, should set first (location index 0).
+    vehicle_type2 = m.add_vehicle_type(depot=depot1)
+    assert_equal(vehicle_type2.depot, 0)
+
+    # Second depot specified, should set second (location index 1).
+    vehicle_type3 = m.add_vehicle_type(depot=depot2)
+    assert_equal(vehicle_type3.depot, 1)
+
+
+def test_add_vehicle_type_raises_for_unknown_depot():
+    """
+    Tests that adding a vehicle type with a depot that's not known to the model
+    raises a ValueError.
+    """
+    m = Model()
+    depot = Client(x=0, y=0)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(depot=depot)
 
 
 def test_get_locations():
@@ -161,8 +185,8 @@ def test_get_vehicle_types():
     Tests the ``vehicle_types`` property.
     """
     model = Model()
-    vehicle_type1 = model.add_vehicle_type(1, 2)
-    vehicle_type2 = model.add_vehicle_type(1, 3)
+    vehicle_type1 = model.add_vehicle_type(1, capacity=2)
+    vehicle_type2 = model.add_vehicle_type(1, capacity=3)
 
     # Test that we can get the vehicle types by index.
     assert_equal(model.vehicle_types[0], vehicle_type1)
@@ -220,7 +244,7 @@ def test_model_and_solve(ok_small):
     # Now do the same thing, but model the instance using the modelling API.
     # This should of course result in the same solution.
     model = Model()
-    model.add_vehicle_type(capacity=10, num_available=3)
+    model.add_vehicle_type(num_available=3, capacity=10)
     depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
     clients = [
         model.add_client(226, 1297, 5, 360, 15600, 22500),
@@ -405,3 +429,41 @@ def test_model_solves_small_instance_with_shift_durations():
     res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
     assert_(res.best.num_routes() > 2)
+
+
+def test_model_solves_line_instance_with_multiple_depots():
+    """
+    High-level test that creates and solves a small instance on a line, where
+    there are two depots. This test checks that the model and underlying
+    algorithm correctly handles multiple depots.
+    """
+    m = Model()
+
+    depot1 = m.add_depot(x=0, y=0)  # location 0
+    depot2 = m.add_depot(x=5, y=0)  # location 1
+
+    m.add_vehicle_type(1, depot=depot1)
+    m.add_vehicle_type(1, depot=depot2)
+
+    for idx in range(1, 5):  # locations 2, 3, 4, and 5
+        m.add_client(x=idx, y=0)
+
+    # All locations are on a horizontal line, with the depots on each end. The
+    # line is organised as follows:
+    #     D C C C C D   (depot or client)
+    #     0 2 3 4 5 1   (location index)
+    # Thus, clients 2 and 3 are closest to depot 0, and clients 4 and 5 are
+    # closest to depot 1.
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=abs(frm.x - to.x))
+
+    res = m.solve(stop=MaxIterations(100))
+    assert_(res.is_feasible())
+
+    # Test that there are two routes, with the clients closest to depot 0
+    # assigned to the first route, and clients closest to depot 1 assigned to
+    # the second route.
+    routes = res.best.get_routes()
+    assert_equal(routes[0].visits(), [2, 3])
+    assert_equal(routes[1].visits(), [5, 4])

@@ -33,7 +33,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     cost_evaluator = CostEvaluator(20, 6)
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours = [[] for _ in range(ok_small.num_clients + 1)]
+    neighbours = [[] for _ in range(ok_small.num_locations)]
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_node_operator(Exchange10(ok_small))
     ls.add_node_operator(Exchange11(ok_small))
@@ -248,7 +248,10 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
 
     # Now make the instance heterogeneous and update the local search.
     data = rc208.replace(
-        vehicle_types=[VehicleType(1000, 25), VehicleType(1000, 25)]
+        vehicle_types=[
+            VehicleType(25, capacity=1000),
+            VehicleType(25, capacity=1000),
+        ]
     )
 
     ls = cpp_LocalSearch(data, neighbours)
@@ -273,7 +276,10 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     more vehicles than the previous.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(10, 1), VehicleType(10, 2)]
+        vehicle_types=[
+            VehicleType(1, capacity=10),
+            VehicleType(2, capacity=10),
+        ]
     )
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
@@ -415,7 +421,6 @@ def test_local_search_does_not_remove_required_clients():
     rng = RandomNumberGenerator(seed=42)
     data = ProblemData(
         clients=[
-            Client(x=0, y=0),
             # This client cannot be removed, even though it causes significant
             # load violations.
             Client(x=1, y=1, demand=100, required=True),
@@ -423,7 +428,8 @@ def test_local_search_does_not_remove_required_clients():
             # not worth the detour.
             Client(x=2, y=2, prize=0, required=False),
         ],
-        vehicle_types=[VehicleType(50, 1)],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(1, capacity=50)],
         distance_matrix=np.full((3, 3), fill_value=10),
         duration_matrix=np.zeros((3, 3), dtype=int),
     )

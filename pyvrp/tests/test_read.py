@@ -1,6 +1,11 @@
 from math import sqrt
 
-from numpy.testing import assert_equal, assert_raises, assert_warns
+from numpy.testing import (
+    assert_allclose,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 from pytest import mark
 
 from pyvrp.exceptions import ScalingWarning
@@ -15,7 +20,7 @@ from pyvrp.tests.helpers import read
         ("somewhere that does not exist", FileNotFoundError),
         ("data/FileWithUnknownSection.txt", ValueError),
         ("data/DepotNotOne.txt", ValueError),
-        ("data/MoreThanOneDepot.txt", ValueError),
+        ("data/DepotsNotLowerIndices.txt", ValueError),
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
@@ -62,9 +67,9 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).x, expected[client][0])
-        assert_equal(data.client(client).y, expected[client][1])
+    for loc in range(data.num_locations):
+        assert_equal(data.location(loc).x, expected[loc][0])
+        assert_equal(data.location(loc).y, expected[loc][1])
 
     # From the EDGE_WEIGHT_SECTION in the file
     expected = [
@@ -77,16 +82,16 @@ def test_reading_OkSmall_instance():
 
     # For instances read through VRPLIB/read(), distance is duration. So the
     # dist/durs should be the same as the expected edge weights above.
-    for frm in range(data.num_clients + 1):  # incl. depot
-        for to in range(data.num_clients + 1):  # incl. depot
+    for frm in range(data.num_locations):
+        for to in range(data.num_locations):
             assert_equal(data.dist(frm, to), expected[frm][to])
             assert_equal(data.duration(frm, to), expected[frm][to])
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
 
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).demand, expected[client])
+    for loc in range(data.num_locations):
+        assert_equal(data.location(loc).demand, expected[loc])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
@@ -97,15 +102,15 @@ def test_reading_OkSmall_instance():
         (12000, 19500),
     ]
 
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).tw_early, expected[client][0])
-        assert_equal(data.client(client).tw_late, expected[client][1])
+    for loc in range(data.num_locations):
+        assert_equal(data.location(loc).tw_early, expected[loc][0])
+        assert_equal(data.location(loc).tw_late, expected[loc][1])
 
     # From the SERVICE_TIME_SECTION in the file
     expected = [0, 360, 360, 420, 360]
 
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).service_duration, expected[client])
+    for loc in range(data.num_locations):
+        assert_equal(data.location(loc).service_duration, expected[loc])
 
 
 def test_reading_En22k4_instance():  # instance from CVRPLIB
@@ -115,14 +120,20 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
     assert_equal(data.num_clients, 21)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_locations, 22)
     assert_equal(data.vehicle_type(0).capacity, 6_000)
 
-    # Coordinates are scaled by 10 to align with 1 decimal distance precision
-    assert_equal(data.client(0).x, 1450)  # depot [x, y] location
-    assert_equal(data.client(0).y, 2150)
+    assert_equal(len(data.depots()), data.num_depots)
+    assert_equal(len(data.clients()), data.num_clients)
+    assert_equal(data.num_locations, data.num_depots + data.num_clients)
 
-    assert_equal(data.client(1).x, 1510)  # first customer [x, y] location
-    assert_equal(data.client(1).y, 2640)
+    # Coordinates are scaled by 10 to align with 1 decimal distance precision
+    assert_equal(data.location(0).x, 1450)  # depot [x, y] location
+    assert_equal(data.location(0).y, 2150)
+
+    assert_equal(data.location(1).x, 1510)  # first customer [x, y] location
+    assert_equal(data.location(1).y, 2640)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -136,13 +147,13 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     assert_equal(data.dist(1, 0), 493)
 
     # This is a CVRP instance, so all other fields should have default values.
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).service_duration, 0)
-        assert_equal(data.client(client).tw_early, 0)
-        assert_equal(data.client(client).tw_late, 0)
-        assert_equal(data.client(client).release_time, 0)
-        assert_equal(data.client(client).prize, 0)
-        assert_equal(data.client(client).required, True)
+    for loc in range(data.num_locations):
+        assert_equal(data.location(loc).service_duration, 0)
+        assert_equal(data.location(loc).tw_early, 0)
+        assert_equal(data.location(loc).tw_late, 0)
+        assert_equal(data.location(loc).release_time, 0)
+        assert_equal(data.location(loc).prize, 0)
+        assert_equal(data.location(loc).required, True)
 
 
 def test_reading_RC208_instance():  # Solomon style instance
@@ -153,22 +164,24 @@ def test_reading_RC208_instance():  # Solomon style instance
         "data/RC208.txt", instance_format="solomon", round_func="trunc1"
     )
 
-    assert_equal(data.num_clients, 100)  # Excl. depot
+    assert_equal(data.num_clients, 100)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_locations, 101)
     assert_equal(data.vehicle_type(0).capacity, 1_000)
 
     # Coordinates and times are scaled by 10 for 1 decimal distance precision
-    assert_equal(data.client(0).x, 400)  # depot [x, y] location
-    assert_equal(data.client(0).y, 500)
-    assert_equal(data.client(0).tw_early, 0)
-    assert_equal(data.client(0).tw_late, 9600)
+    assert_equal(data.location(0).x, 400)  # depot [x, y] location
+    assert_equal(data.location(0).y, 500)
+    assert_equal(data.location(0).tw_early, 0)
+    assert_equal(data.location(0).tw_late, 9600)
 
     # Note: everything except demand is scaled by 10
-    assert_equal(data.client(1).x, 250)  # first customer [x, y] location
-    assert_equal(data.client(1).y, 850)
-    assert_equal(data.client(1).demand, 20)
-    assert_equal(data.client(1).tw_early, 3880)
-    assert_equal(data.client(1).tw_late, 9110)
-    assert_equal(data.client(1).service_duration, 100)
+    assert_equal(data.location(1).x, 250)  # first customer [x, y] location
+    assert_equal(data.location(1).y, 850)
+    assert_equal(data.location(1).demand, 20)
+    assert_equal(data.location(1).tw_early, 3880)
+    assert_equal(data.location(1).tw_late, 9110)
+    assert_equal(data.location(1).service_duration, 100)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -181,14 +194,14 @@ def test_reading_RC208_instance():  # Solomon style instance
     assert_equal(data.dist(0, 1), 380)
     assert_equal(data.dist(1, 0), 380)
 
-    for client in range(1, data.num_clients + 1):  # excl. depot
-        assert_equal(data.client(client).service_duration, 100)
+    for client in data.clients():
+        assert_equal(client.service_duration, 100)
 
     # This is a VRPTW instance, so all other fields should have default values.
-    for client in range(data.num_clients + 1):  # incl. depot
-        assert_equal(data.client(client).release_time, 0)
-        assert_equal(data.client(client).prize, 0)
-        assert_equal(data.client(client).required, True)
+    for client in data.clients():
+        assert_equal(client.release_time, 0)
+        assert_equal(client.prize, 0)
+        assert_equal(client.required, True)
 
 
 def test_warns_about_scaling_issues():
@@ -229,13 +242,56 @@ def test_round_func_round_nearest():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.client(0).x, 40)
-    assert_equal(data.client(0).y, 50)
+    assert_equal(data.location(0).x, 40)
+    assert_equal(data.location(0).y, 50)
 
-    assert_equal(data.client(1).x, 25)
-    assert_equal(data.client(1).y, 85)
+    assert_equal(data.location(1).x, 25)
+    assert_equal(data.location(1).y, 85)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
     assert_equal(data.dist(0, 1), round(dist))
     assert_equal(data.dist(1, 0), round(dist))
+
+
+def test_service_time_specification():
+    """
+    Tests that specifying the service time as a specification (key-value pair)
+    results in a uniform service time for all clients.
+    """
+    data = read("data/ServiceTimeSpecification.txt")
+
+    # Clients should all have the same service time; the depot should have no
+    # service time.
+    services = [client.service_duration for client in data.clients()]
+    assert_allclose(services, 360)
+    assert_allclose(data.location(0).service_duration, 0)
+
+
+def test_multiple_depots():
+    """
+    Tests parsing a slightly modified version of the OkSmall instance, which
+    now has two depots rather than one.
+    """
+    data = read("data/OkSmallMultipleDepots.txt")
+
+    # Still five locations, but now with two depots and three clients.
+    assert_equal(data.num_locations, 5)
+    assert_equal(data.num_depots, 2)
+    assert_equal(data.num_clients, 3)
+
+    depot1, depot2 = data.depots()
+
+    # Test that the depot data has been parsed correctly. The first depot has
+    # not changed.
+    assert_allclose(depot1.x, 2_334)
+    assert_allclose(depot1.y, 726)
+    assert_allclose(depot1.tw_early, 0)
+    assert_allclose(depot1.tw_late, 45_000)
+
+    # But the second depot has the location data of what used to be the first
+    # client, and a tighter time window than the other depot.
+    assert_allclose(depot2.x, 226)
+    assert_allclose(depot2.y, 1_297)
+    assert_allclose(depot2.tw_early, 5_000)
+    assert_allclose(depot2.tw_late, 20_000)

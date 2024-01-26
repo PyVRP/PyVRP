@@ -187,9 +187,8 @@ std::ostream &operator<<(std::ostream &out, pyvrp::Measure<Type> const measure)
 }
 
 // Specialisations for hashing and numerical limits.
-namespace std
-{
-template <pyvrp::MeasureType Type> struct hash<pyvrp::Measure<Type>>
+
+template <pyvrp::MeasureType Type> struct std::hash<pyvrp::Measure<Type>>
 {
     size_t operator()(pyvrp::Measure<Type> const measure) const
     {
@@ -204,7 +203,8 @@ template <pyvrp::MeasureType Type> struct hash<pyvrp::Measure<Type>>
     }
 };
 
-template <pyvrp::MeasureType Type> class numeric_limits<pyvrp::Measure<Type>>
+template <pyvrp::MeasureType Type>
+class std::numeric_limits<pyvrp::Measure<Type>>
 {
 public:
     static pyvrp::Value max()
@@ -217,6 +217,5 @@ public:
         return std::numeric_limits<pyvrp::Value>::min();
     }
 };
-}  // namespace std
 
 #endif  // PYVRP_MEASURE_H

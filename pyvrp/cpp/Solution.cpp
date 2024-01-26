@@ -20,8 +20,8 @@ using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 void Solution::evaluate(ProblemData const &data)
 {
     Cost allPrizes = 0;
-    for (size_t client = 1; client <= data.numClients(); ++client)
-        allPrizes += data.client(client).prize;
+    for (auto const &client : data.clients())
+        allPrizes += client.prize;
 
     for (auto const &route : routes_)
     {
@@ -70,13 +70,17 @@ Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Solution::makeNeighbours()
+void Solution::makeNeighbours(ProblemData const &data)
 {
     for (auto const &route : routes_)
+    {
+        auto const depot = data.vehicleType(route.vehicleType()).depot;
+
         for (size_t idx = 0; idx != route.size(); ++idx)
             neighbours_[route[idx]]
-                = {idx == 0 ? 0 : route[idx - 1],                  // pred
-                   idx == route.size() - 1 ? 0 : route[idx + 1]};  // succ
+                = {idx == 0 ? depot : route[idx - 1],                  // pred
+                   idx == route.size() - 1 ? depot : route[idx + 1]};  // succ
+    }
 }
 
 bool Solution::operator==(Solution const &other) const
@@ -111,19 +115,22 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.numClients() + 1, std::nullopt)
+    : neighbours_(data.numLocations(), std::nullopt)
 {
     // Shuffle clients (to create random routes)
     auto clients = std::vector<size_t>(data.numClients());
-    std::iota(clients.begin(), clients.end(), 1);
+    std::iota(clients.begin(), clients.end(), data.numDepots());
     std::shuffle(clients.begin(), clients.end(), rng);
 
     // Distribute clients evenly over the routes: the total number of clients
-    // per vehicle, with an adjustment in case the division is not perfect.
+    // per vehicle, with an adjustment in case the division is not perfect and
+    // there are not enough vehicles for single-client routes.
     auto const numVehicles = data.numVehicles();
     auto const numClients = data.numClients();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
-    auto const perRoute = perVehicle + (numClients % numVehicles != 0);
+    auto const adjustment
+        = numClients > numVehicles && numClients % numVehicles != 0;
+    auto const perRoute = perVehicle + adjustment;
     auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
     std::vector<std::vector<Client>> routes(numRoutes);
@@ -140,7 +147,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
                 routes_.emplace_back(data, routes[count++], vehType);
     }
 
-    makeNeighbours();
+    makeNeighbours(data);
     evaluate(data);
 }
 
@@ -156,7 +163,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours_(data.numClients() + 1, std::nullopt)
+    : routes_(routes), neighbours_(data.numLocations(), std::nullopt)
 {
     if (routes.size() > data.numVehicles())
     {
@@ -164,7 +171,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         throw std::runtime_error(msg);
     }
 
-    std::vector<size_t> visits(data.numClients() + 1, 0);
+    std::vector<size_t> visits(data.numLocations(), 0);
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
@@ -176,9 +183,10 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             visits[client]++;
     }
 
-    for (size_t client = 1; client <= data.numClients(); ++client)
+    for (size_t client = data.numDepots(); client != data.numLocations();
+         ++client)
     {
-        if (data.client(client).required && visits[client] == 0)
+        if (data.location(client).required && visits[client] == 0)
             numMissingClients_ += 1;
 
         if (visits[client] > 1)
@@ -199,7 +207,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             throw std::runtime_error(msg.str());
         }
 
-    makeNeighbours();
+    makeNeighbours(data);
     evaluate(data);
 }
 
@@ -235,7 +243,7 @@ Solution::Route::Route(ProblemData const &data,
         return;
 
     auto const &vehType = data.vehicleType(vehicleType);
-    auto const &depot = data.client(vehType.depot);
+    auto const &depot = data.location(vehType.depot);
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter. If the
@@ -258,7 +266,7 @@ Solution::Route::Route(ProblemData const &data,
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
-        auto const &clientData = data.client(client);
+        auto const &clientData = data.location(client);
 
         distance_ += data.dist(prevClient, client);
         travel_ += data.duration(prevClient, client);
@@ -285,7 +293,7 @@ Solution::Route::Route(ProblemData const &data,
     duration_ = tws.duration();
     startTime_ = tws.twEarly();
     slack_ = tws.twLate() - tws.twEarly();
-    timeWarp_ = tws.totalTimeWarp();
+    timeWarp_ = tws.timeWarp(vehType.maxDuration);
     release_ = tws.releaseTime();
 }
 

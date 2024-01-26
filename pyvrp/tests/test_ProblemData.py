@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pytest
 from numpy.random import default_rng
@@ -117,30 +119,33 @@ def test_raises_for_invalid_depot_data(
 
     with assert_raises(ValueError):
         ProblemData(
-            clients=[depot],
-            vehicle_types=[VehicleType(1, 2)],
+            clients=[],
+            depots=[depot],
+            vehicle_types=[VehicleType(2, capacity=1)],
             distance_matrix=np.asarray([[0]], dtype=int),
             duration_matrix=np.asarray([[0]], dtype=int),
         )
 
 
-def test_problem_data_raises_when_no_clients_provided():
+def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
-    no clients are provided.
+    no depots are provided.
     """
     with assert_raises(ValueError):
         ProblemData(
             clients=[],
-            vehicle_types=[VehicleType(1, 2)],
+            depots=[],
+            vehicle_types=[VehicleType(2, capacity=1)],
             distance_matrix=np.asarray([[]], dtype=int),
             duration_matrix=np.asarray([[]], dtype=int),
         )
 
-    # One client (the depot) should not raise.
+    # One (or more) depots should not raise.
     ProblemData(
-        clients=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(1, 2)],
+        clients=[],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=np.asarray([[0]]),
         duration_matrix=np.asarray([[0]]),
     )
@@ -161,15 +166,16 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     the distance or duration matrix does not match the number of clients in
     dimension size.
     """
-    clients = [Client(x=0, y=0), Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
+    vehicle_types = [VehicleType(2, capacity=1)]
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, matrix, other_matrix)
+        ProblemData(clients, depots, vehicle_types, matrix, other_matrix)
 
     with assert_raises(ValueError):
-        ProblemData(clients, vehicle_types, other_matrix, matrix)
+        ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
 
 
 def test_problem_data_replace_no_changes():
@@ -177,19 +183,20 @@ def test_problem_data_replace_no_changes():
     Tests that when using ``ProblemData.replace()`` without any arguments
     returns a new instance with different objects, but with the same values.
     """
-    clients = [Client(x=0, y=0), Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
-    other_matrix = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
+    vehicle_types = [VehicleType(2, capacity=1)]
+    mat = np.zeros((2, 2), dtype=int)
+    original = ProblemData(clients, depots, vehicle_types, mat, mat)
 
     new = original.replace()
 
     assert_(new is not original)
 
     for idx in range(new.num_clients):
-        assert_(new.client(idx) is not original.client(idx))
-        assert_equal(new.client(idx).x, original.client(idx).x)
-        assert_equal(new.client(idx).y, original.client(idx).y)
+        assert_(new.location(idx) is not original.location(idx))
+        assert_equal(new.location(idx).x, original.location(idx).x)
+        assert_equal(new.location(idx).y, original.location(idx).y)
 
     for idx in range(new.num_vehicle_types):
         new_veh_type = new.vehicle_type(idx)
@@ -214,26 +221,25 @@ def test_problem_data_replace_with_changes():
     Tests that when calling ``ProblemData.replace()`` indeed replaces the
     data values with those passed to the method.
     """
-    clients = [Client(x=0, y=0), Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
-    other_matrix = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
+    vehicle_types = [VehicleType(2, capacity=1)]
+    mat = np.zeros((2, 2), dtype=int)
+    original = ProblemData(clients, depots, vehicle_types, mat, mat)
 
     # Let's replace the clients, vehicle types, and the distance matrix, each
     # with different values than in the original data. The duration matrix
     # is left unchanged.
     new = original.replace(
-        clients=[Client(x=1, y=1), Client(x=1, y=1)],
+        clients=[Client(x=1, y=1)],
         vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
         distance_matrix=np.ones((2, 2), dtype=int),
     )
 
     assert_(new is not original)
-
-    for idx in range(new.num_clients):
-        assert_(new.client(idx) is not original.client(idx))
-        assert_(new.client(idx).x != original.client(idx).x)
-        assert_(new.client(idx).y != original.client(idx).y)
+    assert_(new.location(1) is not original.location(1))
+    assert_(new.location(1).x != original.location(1).x)
+    assert_(new.location(1).y != original.location(1).y)
 
     for idx in range(original.num_vehicle_types):  # only compare first type
         new_veh_type = new.vehicle_type(idx)
@@ -259,19 +265,20 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     Tests that a ValueError is raised when replacing data that result in
     mismatched shape between the clients and the distance/duration matrices.
     """
-    clients = [Client(x=0, y=0), Client(x=0, y=0)]
-    vehicle_types = [VehicleType(1, 2)]
-    other_matrix = np.zeros((2, 2), dtype=int)
-    data = ProblemData(clients, vehicle_types, other_matrix, other_matrix)
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
+    vehicle_types = [VehicleType(2, capacity=1)]
+    mat = np.zeros((2, 2), dtype=int)
+    data = ProblemData(clients, depots, vehicle_types, mat, mat)
 
     with assert_raises(ValueError):
-        data.replace(clients=[Client(x=1, y=1)])  # matrices are 2x2
+        data.replace(clients=[])  # matrices are 2x2
 
     with assert_raises(ValueError):
         data.replace(distance_matrix=np.ones((3, 3), dtype=int))  # two clients
 
     with assert_raises(ValueError):
-        data.replace(duration_matrix=np.ones((3, 3), dtype=int))  # two-clients
+        data.replace(duration_matrix=np.ones((3, 3), dtype=int))  # two clients
 
     with assert_raises(ValueError):
         data.replace(
@@ -286,8 +293,8 @@ def test_centroid(ok_small):
     Tests the computation of the centroid of all clients in the data instance.
     """
     centroid = ok_small.centroid()
-    x = [ok_small.client(idx).x for idx in range(1, ok_small.num_clients + 1)]
-    y = [ok_small.client(idx).y for idx in range(1, ok_small.num_clients + 1)]
+    x = [client.x for client in ok_small.clients()]
+    y = [client.y for client in ok_small.clients()]
 
     assert_allclose(centroid[0], np.mean(x))
     assert_allclose(centroid[1], np.mean(y))
@@ -309,8 +316,9 @@ def test_matrix_access():
     ]
 
     data = ProblemData(
-        clients=clients,
-        vehicle_types=[VehicleType(1, 2)],
+        clients=clients[1:],
+        depots=clients[:1],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
     )
@@ -334,8 +342,9 @@ def test_matrices_are_not_writeable():
     changes from Python causes undefined behaviour on the C++ side.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0)],
-        vehicle_types=[VehicleType(1, 2)],
+        clients=[],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=np.array([[0]]),
         duration_matrix=np.array([[0]]),
     )
@@ -358,8 +367,9 @@ def test_matrices_are_not_copies():
     """
     mat = np.array([[0, 0], [0, 0]])
     data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=0, y=1)],
-        vehicle_types=[VehicleType(1, 2)],
+        clients=[Client(x=0, y=1)],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=mat,
         duration_matrix=mat,
     )
@@ -408,7 +418,18 @@ def test_vehicle_type_raises_invalid_data(
     arguments.
     """
     with assert_raises(ValueError):
-        VehicleType(capacity, num_available, fixed_cost, tw_early, tw_late)
+        VehicleType(num_available, capacity, 0, fixed_cost, tw_early, tw_late)
+
+
+def test_vehicle_type_init_max_duration_argument():
+    """
+    Tests valid and invalid edge cases of the max_duration argument.
+    """
+    with assert_raises(ValueError):
+        VehicleType(1, 1, max_duration=-1)  # negative max_duration
+
+    veh_type = VehicleType(1, 1, max_duration=0)  # valid edge case
+    assert_allclose(veh_type.max_duration, 0)
 
 
 def test_vehicle_type_does_not_raise_for_edge_cases():
@@ -417,18 +438,20 @@ def test_vehicle_type_does_not_raise_for_edge_cases():
     capacity, costs, shift time windows, and just a single vehicle.
     """
     vehicle_type = VehicleType(
-        capacity=0,
         num_available=1,
+        depot=0,
+        capacity=0,
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
     )
 
-    assert_allclose(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.tw_late, 0)
+    assert_equal(vehicle_type.depot, 0)
+    assert_allclose(vehicle_type.capacity, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.tw_early, 0)
+    assert_allclose(vehicle_type.tw_late, 0)
 
 
 def test_vehicle_type_default_values():
@@ -436,10 +459,21 @@ def test_vehicle_type_default_values():
     Tests that the default values for costs and shift time windows are set
     correctly.
     """
-    vehicle_type = VehicleType(capacity=0, num_available=1)
+    vehicle_type = VehicleType()
+    assert_equal(vehicle_type.num_available, 1)
+    assert_equal(vehicle_type.depot, 0)
+    assert_allclose(vehicle_type.capacity, 0)
     assert_allclose(vehicle_type.fixed_cost, 0)
     assert_(vehicle_type.tw_early is None)
     assert_(vehicle_type.tw_late is None)
+
+    # The C++ extensions can be compiled with support for either integer or
+    # double precision. In each case, the default value for max_duration is
+    # the largest representable value.
+    if isinstance(vehicle_type.max_duration, int):
+        assert_equal(vehicle_type.max_duration, np.iinfo(np.int32).max)
+    else:
+        assert_allclose(vehicle_type.max_duration, sys.float_info.max)
 
 
 def test_vehicle_type_attribute_access():
@@ -448,15 +482,31 @@ def test_vehicle_type_attribute_access():
     given in the constructor's arguments.
     """
     vehicle_type = VehicleType(
-        capacity=13,
         num_available=7,
+        depot=29,
+        capacity=13,
         fixed_cost=3,
         tw_early=17,
         tw_late=19,
+        max_duration=23,
     )
 
-    assert_allclose(vehicle_type.capacity, 13)
     assert_equal(vehicle_type.num_available, 7)
+    assert_equal(vehicle_type.depot, 29)
+    assert_allclose(vehicle_type.capacity, 13)
     assert_allclose(vehicle_type.fixed_cost, 3)
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)
+    assert_allclose(vehicle_type.max_duration, 23)
+
+
+@pytest.mark.parametrize("idx", [5, 6])
+def test_location_raises_invalid_index(ok_small, idx: int):
+    """
+    Tests that calling location(idx) raises when the index is out of bounds.
+    """
+    assert_equal(ok_small.num_depots, 1)
+    assert_equal(ok_small.num_clients, 4)
+
+    with assert_raises(IndexError):
+        ok_small.location(idx)

@@ -61,7 +61,7 @@ def test_avg_distance_closest_for_single_route_solutions(rc208):
     subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
 
-    single_route = [client for client in range(1, rc208.num_clients + 1)]
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
 
     for offset in range(params.max_pop_size):
         # This is a single-route solution, but the route is continually shifted
@@ -74,7 +74,9 @@ def test_avg_distance_closest_for_single_route_solutions(rc208):
             # broken links with this new shifted solution, both around the
             # depot. So the average broken pairs distance is 2 / num_clients
             # for all of them.
-            assert_equal(bpd(item.solution, shifted), 2 / rc208.num_clients)
+            assert_allclose(
+                bpd(item.solution, shifted), 2 / rc208.num_locations
+            )
 
         subpop.add(shifted, cost_evaluator)
         assert_equal(len(subpop), offset + 1)

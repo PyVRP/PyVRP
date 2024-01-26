@@ -2,7 +2,6 @@ import argparse
 import os
 import pathlib
 from subprocess import check_call
-from typing import List
 
 
 def parse_args():
@@ -86,7 +85,7 @@ def build(
     build_type: str,
     problem: str,
     precision: str,
-    additional: List[str],
+    additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
     args = [

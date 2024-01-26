@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -43,13 +43,13 @@ class Model:
     """
 
     def __init__(self) -> None:
-        self._clients: List[Client] = []
-        self._depots: List[Depot] = []
-        self._edges: List[Edge] = []
-        self._vehicle_types: List[VehicleType] = []
+        self._clients: list[Client] = []
+        self._depots: list[Depot] = []
+        self._edges: list[Edge] = []
+        self._vehicle_types: list[VehicleType] = []
 
     @property
-    def locations(self) -> List[Client]:
+    def locations(self) -> list[Client]:
         """
         Returns all locations (depots and clients) in the current model. The
         clients in the routes of the solution returned by :meth:`~solve` can be
@@ -58,7 +58,7 @@ class Model:
         return self._depots + self._clients
 
     @property
-    def vehicle_types(self) -> List[VehicleType]:
+    def vehicle_types(self) -> list[VehicleType]:
         """
         Returns the vehicle types in the current model. The routes of the
         solution returned by :meth:`~solve` have a property
@@ -82,21 +82,21 @@ class Model:
         Model
             A model instance representing the given data.
         """
-        clients = [data.client(idx) for idx in range(data.num_clients + 1)]
+        locs = [data.location(idx) for idx in range(data.num_locations)]
         edges = [
             Edge(
-                clients[frm],
-                clients[to],
+                locs[frm],
+                locs[to],
                 data.dist(frm, to),
                 data.duration(frm, to),
             )
-            for frm in range(data.num_clients + 1)
-            for to in range(data.num_clients + 1)
+            for frm in range(data.num_locations)
+            for to in range(data.num_locations)
         ]
 
         self = Model()
-        self._clients = clients[1:]
-        self._depots = clients[:1]
+        self._clients = locs[data.num_depots :]
+        self._depots = locs[: data.num_depots]
         self._edges = edges
         vehicle_types = [
             data.vehicle_type(i) for i in range(data.num_vehicle_types)
@@ -146,16 +146,7 @@ class Model:
         """
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
-
-        .. warning::
-
-           PyVRP does not yet support multi-depot VRPs. For now, only one depot
-           can be added to the model.
         """
-        if len(self._depots) >= 1:
-            msg = "PyVRP does not yet support multi-depot VRPs."
-            raise ValueError(msg)
-
         depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late)
         self._depots.append(depot)
         return depot
@@ -194,18 +185,44 @@ class Model:
 
     def add_vehicle_type(
         self,
-        capacity: int,
-        num_available: int,
+        num_available: int = 1,
+        capacity: int = 0,
+        depot: Optional[Depot] = None,
         fixed_cost: int = 0,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
+        max_duration: Optional[int] = None,
     ) -> VehicleType:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
         created vehicle type.
+
+        .. note::
+
+           The vehicle type is assigned to the first depot if ``depot`` is not
+           provided.
+
+        Raises
+        ------
+        ValueError
+            When the given ``depot`` is not already added to this model
+            instance.
         """
+        if depot is None:
+            depot_idx = 0
+        elif depot in self._depots:
+            depot_idx = self._depots.index(depot)
+        else:
+            raise ValueError("The given depot is not in this model instance.")
+
         vehicle_type = VehicleType(
-            capacity, num_available, fixed_cost, tw_early, tw_late
+            num_available,
+            capacity,
+            depot_idx,
+            fixed_cost,
+            tw_early,
+            tw_late,
+            max_duration,
         )
 
         self._vehicle_types.append(vehicle_type)
@@ -230,7 +247,13 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        return ProblemData(locs, self.vehicle_types, distances, durations)
+        return ProblemData(
+            self._clients,
+            self._depots,
+            self.vehicle_types,
+            distances,
+            durations,
+        )
 
     def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
         """

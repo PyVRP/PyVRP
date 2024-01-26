@@ -275,9 +275,12 @@ PYBIND11_MODULE(_search, m)
         .def("has_excess_load", &Route::hasExcessLoad)
         .def("has_time_warp", &Route::hasTimeWarp)
         .def("capacity", &Route::capacity)
+        .def("depot", &Route::depot)
         .def("fixed_cost", &Route::fixedCost)
         .def("load", &Route::load)
         .def("distance", &Route::distance)
+        .def("duration", &Route::duration)
+        .def("max_duration", &Route::maxDuration)
         .def("time_warp", &Route::timeWarp)
         .def("dist_between",
              &Route::distBetween,
@@ -292,6 +295,7 @@ PYBIND11_MODULE(_search, m)
             "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))
         .def("tws_after", &Route::twsAfter, py::arg("start"))
         .def("tws_before", &Route::twsBefore, py::arg("end"))
+        .def("centroid", &Route::centroid)
         .def("overlaps_with",
              &Route::overlapsWith,
              py::arg("other"),
@@ -299,13 +303,15 @@ PYBIND11_MODULE(_search, m)
         .def("append",
              &Route::push_back,
              py::arg("node"),
-             py::keep_alive<1, 2>())  // keep node alive
+             py::keep_alive<1, 2>(),  // keep node alive
+             py::keep_alive<2, 1>())  // keep route alive
         .def("clear", &Route::clear)
         .def("insert",
              &Route::insert,
              py::arg("idx"),
              py::arg("node"),
-             py::keep_alive<1, 3>())  // keep node alive
+             py::keep_alive<1, 3>(),  // keep node alive
+             py::keep_alive<3, 1>())  // keep route alive
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))

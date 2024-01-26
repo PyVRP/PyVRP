@@ -67,7 +67,7 @@ def test_RC208_instance(rc208, seed: int):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(MoveTwoClientsReversed(rc208))
 
-    single_route = list(range(1, rc208.num_clients + 1))
+    single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
     improved_sol = ls.search(sol, cost_evaluator)
 
@@ -84,8 +84,9 @@ def test_relocate_fixed_vehicle_cost():
     cost change.
     """
     data = ProblemData(
-        clients=[Client(x=0, y=0), Client(x=1, y=1), Client(x=1, y=0)],
-        vehicle_types=[VehicleType(0, 1, 7), VehicleType(0, 1, 13)],
+        clients=[Client(x=1, y=1), Client(x=1, y=0)],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),
     )

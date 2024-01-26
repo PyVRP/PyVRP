@@ -28,13 +28,15 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
+std::pair<double, double> const &Route::centroid() const { return centroid_; }
+
 size_t Route::vehicleType() const { return vehTypeIdx_; }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
     auto const [dataX, dataY] = data.centroid();
-    auto const [thisX, thisY] = centroid;
-    auto const [otherX, otherY] = other.centroid;
+    auto const [thisX, thisY] = centroid_;
+    auto const [otherX, otherY] = other.centroid_;
 
     // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
     auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
@@ -65,7 +67,7 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const &depot = data.client(vehicleType_.depot);
+    auto const &depot = data.location(vehicleType_.depot);
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter. If the
@@ -99,7 +101,7 @@ void Route::insert(size_t idx, Node *node)
     // We do not need to update the statistics; Route::update() will handle
     // that later.
     stats.insert(stats.begin() + idx,
-                 TWS(node->client(), data.client(node->client())));
+                 TWS(node->client(), data.location(node->client())));
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
@@ -138,17 +140,17 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    centroid = {0, 0};
+    centroid_ = {0, 0};
 
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto *node = nodes[idx];
-        auto const &clientData = data.client(node->client());
+        auto const &clientData = data.location(node->client());
 
         if (!node->isDepot())
         {
-            centroid.first += static_cast<double>(clientData.x) / size();
-            centroid.second += static_cast<double>(clientData.y) / size();
+            centroid_.first += static_cast<double>(clientData.x) / size();
+            centroid_.second += static_cast<double>(clientData.y) / size();
         }
 
         auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
