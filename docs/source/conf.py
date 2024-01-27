@@ -16,6 +16,7 @@ now = datetime.date.today()
 
 project = "PyVRP"
 authors = "PyVRP contributors"
+repo_url = "https://github.com/PyVRP/PyVRP/"
 copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
@@ -32,19 +33,10 @@ autodoc_typehints = "signature"
 
 
 # -- sphinx.ext.linkcode
-def _get_git_revision():
-    cmd = "git rev-parse --short HEAD".split()
-    return subprocess.check_output(cmd).strip().decode("ascii")
-
-
-REVISION = _get_git_revision()
-
-
 def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     """
     Generates a URL pointing to the source code of a specified object located
-    in the PyVRP Github repository. This currently only works for native Python
-    objects.
+    in the PyVRP repository.
 
     Parameters
     ----------
@@ -59,32 +51,32 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     -------
     Optional[str]
         URL pointing to the identified object's source code in the PyVRP
-        Github repository. Returns None if the object cannot be identified.
+        repository, if the object can be identified.
     """
     if domain != "py" or not info.get("module") or not info.get("fullname"):
         return None
 
     module = importlib.import_module(info["module"])
-
-    if "." not in info["fullname"]:  # object is a class or function
-        obj = getattr(module, info["fullname"])
-    else:  # object is an attribute of a class
-        obj_name, attr_name = info["fullname"].split(".")
-        obj = getattr(module, obj_name)
+    obj = module
+    for attr_name in info["fullname"].split("."):
         obj = getattr(obj, attr_name)
 
-    # Find the object's source file and starting line number.
     try:
         source = inspect.getsourcefile(obj)
-        assert source is not None, "Source file not found."
-    except (TypeError, AssertionError):
+    except TypeError:
+        return None
+
+    if source is None:
+        # This is one of the native extensions, which we cannot yet handle.
         return None
 
     rel_path = source[source.rfind("pyvrp/") :]
     line_num = inspect.getsourcelines(obj)[1]
-    base_url = "https:///github.com/PyVRP/PyVRP/blob"
 
-    return f"{base_url}/{REVISION}/{rel_path}#L{line_num}"
+    cmd = "git rev-parse --short HEAD".split()
+    revision = subprocess.check_output(cmd).strip().decode("ascii")
+
+    return f"{repo_url}/blob/{revision}/{rel_path}#L{line_num}"
 
 
 # -- numpydoc
@@ -129,7 +121,7 @@ html_theme = "sphinx_immaterial"
 html_logo = "assets/images/icon.svg"
 html_theme_options = {
     "site_url": "https://pyvrp.org/",
-    "repo_url": "https://github.com/PyVRP/PyVRP/",
+    "repo_url": repo_url,
     "icon": {
         "repo": "fontawesome/brands/github",
         "edit": "material/file-edit-outline",
