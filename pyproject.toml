@@ -157,6 +157,6 @@ requires = [
     "poetry >= 1.5.0",
     "meson >= 1.0.0",
     "ninja >= 1.11.1",
-    "docblock >= 0.1.1"
+    "docblock >= 0.1.1",
 ]
 build-backend = "poetry.core.masonry.api"
