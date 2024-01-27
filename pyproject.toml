@@ -147,7 +147,6 @@ exclude_lines = [
 # We do not support old Python versions (<3.9) and somewhat uncommon platforms.
 # For musllinux-based builds we assume users can compile the thing themselves.
 skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
-build-verbosity = 2
 build-frontend = "build"
 
 
@@ -159,5 +158,11 @@ script = "build_extensions.py"
 [build-system]
 # We need meson and ninja to build the C++ extensions, and docblock to extract
 # documentation for the extensions.
-requires = ["poetry", "meson", "ninja", "docblock"]
+# meson = "^1.0.0"
+requires = [
+    "poetry >= 1.7.0",
+    "meson >= 1.0.0", 
+    "ninja >= 1.11.1",
+    "docblock >= 0.1.1",
+]
 build-backend = "poetry.core.masonry.api"
