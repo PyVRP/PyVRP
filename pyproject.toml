@@ -73,11 +73,6 @@ optional = true
 jupyter = ">=1.0.0"
 tabulate = "^0.9.0"
 
-# <4.0 because 4.0 breaks Poetry's version resolution, leading it to believe
-# it needs to downgrade the virtualenv installation in RTD. That breaks RTD in
-# turn, so we constrain this dependency here explicitly.
-# platformdirs = ">=2.5, <4.0"
-
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"
@@ -158,5 +153,10 @@ script = "build_extensions.py"
 [build-system]
 # We need meson and ninja to build the C++ extensions, and docblock to extract
 # documentation for the extensions.
-requires = ["poetry", "meson", "ninja >= 1.11.1", "docblock"]
+requires = [
+    "poetry >= 1.5.0",
+    "meson >= 1.0.0",
+    "ninja >= 1.11.1",
+    "docblock >= 0.1.1"
+]
 build-backend = "poetry.core.masonry.api"
