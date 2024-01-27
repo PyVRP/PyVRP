@@ -98,7 +98,5 @@ The reported values represent the average gaps to the best-known solutions (at t
      - 0.00% [#f1]_
 
 
-.. rubric:: Footnotes
-
 .. [#f1] Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
          This is an average gap over five seeds, rather than the usual ten.
