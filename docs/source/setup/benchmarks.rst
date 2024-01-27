@@ -2,19 +2,21 @@ Benchmarks
 ==========
 
 This page lists benchmark results obtained by recent versions of the PyVRP package and reference VRP solvers.
-See the :doc:`benchmarking instructions <../dev/benchmarking>` for how these benchmarks are run. 
+
+.. hint::
+
+   See the :doc:`benchmarking instructions <../dev/benchmarking>` for details on how we benchmark. 
 
 PyVRP
 -----
 
 The table below contains the benchmark results obtained by each new significant version of PyVRP.
 The reported values represent the percentage gap to the best-known solutions at the time of the benchmark, averaged over ten seeds.
-These best-known solutions are tracked in the ``PyVRP/Instances`` repository - see the :doc:`benchmarking instructions <../dev/benchmarking>` for details.
+These best-known solutions are tracked in the `PyVRP/Instances <https://github.com/PyVRP/Instances>`_ repository.
 
 .. note::
 
    We always benchmark against the most recent best-known solutions.
-   These best-known solutions are a moving target, so our gaps also change over time!   
 
 .. list-table::
    :header-rows: 1
@@ -95,8 +97,12 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
-     - 0.00% [#f1]_
+     - 0.00% [#note1]_
 
 
-.. [#f1] Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
-         This is an average gap over five seeds, rather than the usual ten.
+.. rubric:: Notes
+
+.. [#note1]
+   Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
+   This is an average gap over five seeds, rather than the usual ten.
+   Note that this paper introduced the MDVRPTW benchmark instances.
