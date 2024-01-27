@@ -44,6 +44,11 @@ def parse_args():
         """,
     )
     parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Whether to print more verbose compilation output.",
+    )
+    parser.add_argument(
         "--additional",
         nargs=argparse.REMAINDER,
         default=[],
@@ -80,7 +85,7 @@ def regenerate_stubs(install_dir: pathlib.Path):
         regen(extension)
 
 
-def build(
+def configure(
     build_dir: pathlib.Path,
     build_type: str,
     problem: str,
@@ -90,6 +95,7 @@ def build(
     cwd = pathlib.Path.cwd()
     args = [
         # fmt: off
+        build_dir,
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
         f"-Dproblem={problem}",
@@ -100,8 +106,15 @@ def build(
     ]
 
     cmd = "configure" if build_dir.exists() else "setup"
-    check_call(["meson", cmd, build_dir, *args])
-    check_call(["meson", "compile", "-C", build_dir])
+    check_call(["meson", cmd, *args])  # type: ignore
+
+
+def compile(build_dir: pathlib.Path, verbose: bool):
+    args = ["-C", build_dir] + (["--verbose"] if verbose else [])
+    check_call(["meson", "compile", *args])  # type: ignore
+
+
+def install(build_dir: pathlib.Path):
     check_call(["meson", "install", "-C", build_dir])
 
 
@@ -116,13 +129,15 @@ def main():
         # the CI. Else only do so when expressly asked.
         clean(build_dir, install_dir)
 
-    build(
+    configure(
         build_dir,
         args.build_type,
         args.problem,
         args.precision,
         args.additional,
     )
+    compile(build_dir, args.verbose)
+    install(build_dir)
 
     if args.regenerate_type_stubs:
         regenerate_stubs(install_dir)
