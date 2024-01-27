@@ -1,6 +1,10 @@
 name: CD
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   release:
     types: [ created ]
 
@@ -56,7 +60,7 @@ jobs:
         run: poetry build --format sdist
       - name: List packaged distributions
         run: ls -la dist/
-      - name: Deploy to PyPI
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-          poetry publish
+      # - name: Deploy to PyPI
+      #   run: |
+      #     poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+      #     poetry publish
