@@ -56,8 +56,7 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
     if domain != "py" or not info.get("module") or not info.get("fullname"):
         return None
 
-    module = importlib.import_module(info["module"])
-    obj = module
+    obj = importlib.import_module(info["module"])
     for attr_name in info["fullname"].split("."):
         obj = getattr(obj, attr_name)
 
