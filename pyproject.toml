@@ -147,7 +147,7 @@ exclude_lines = [
 # We do not support old Python versions (<3.9) and somewhat uncommon platforms.
 # For musllinux-based builds we assume users can compile the thing themselves.
 skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
-build-verbosity = 3
+build-verbosity = 2
 build-frontend = "build"
 
 

@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-20.04, windows-2019, macos-11 ]
+        os: [ macos-11 ]  # ubuntu-20.04, windows-2019, 
     steps:
       - uses: actions/checkout@v4
       - name: Install rtools
@@ -36,11 +36,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install poetry
-      - name: Build sdist and set version
+      - name: Build sdist
         run: |
           poetry build --format sdist
           echo PYVRP_VERSION=`poetry version --short` >> $GITHUB_ENV
-      - name: Build wheels
+      - name: Build wheels from sdist
         uses: pypa/cibuildwheel@v2.16.3
         with:
           package-dir: dist/pyvrp-${{ env.PYVRP_VERSION }}.tar.gz
