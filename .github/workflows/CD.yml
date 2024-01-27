@@ -28,10 +28,14 @@ jobs:
           # on Windows systems; also works fine for us.
           choco install rtools -y --no-progress --force --version=4.0.0.20220206
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
+      - name: Build sdist and set version
+        run: |
+          poetry build --format sdist
+          echo PYVRP_VERSION=`poetry version --short` >> $GITHUB_ENV
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.3
         with:
-          package-dir: .
+          package-dir: dist/pyvrp-${{ env.PYVRP_VERSION }}.tar.gz
           output-dir: dist
       - uses: actions/upload-artifact@v3  # upload all wheels
         with:
@@ -52,12 +56,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install poetry
-      - uses: actions/download-artifact@v3  # download previously built wheels
+      - uses: actions/download-artifact@v3  # download built artifacts
         with:
           name: dist
           path: dist/
-      - name: Build sdist
-        run: poetry build --format sdist
       - name: List packaged distributions
         run: ls -la dist/
       # - name: Deploy to PyPI
