@@ -5,8 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [ created ]
+  # release:
+  #   types: [ created ]
 
 concurrency:
   group: ${{ github.ref }}
