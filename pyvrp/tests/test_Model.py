@@ -463,7 +463,8 @@ def test_model_solves_line_instance_with_multiple_depots():
 
     # Test that there are two routes, with the clients closest to depot 0
     # assigned to the first route, and clients closest to depot 1 assigned to
-    # the second route.
+    # the second route. Route membership is compared using sets because the
+    # optimal visit order is not unique.
     routes = res.best.get_routes()
     assert_equal(set(routes[0].visits()), {2, 3})
     assert_equal(set(routes[1].visits()), {4, 5})
