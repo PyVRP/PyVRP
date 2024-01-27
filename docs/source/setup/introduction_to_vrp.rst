@@ -26,9 +26,9 @@ In this section, we introduce the VRP variants that PyVRP currently supports.
 An extensive list of VRP variants can be found in `Toth and Vigo (2014) <https://doi.org/10.1137/1.9780898718515>`_.
 
 In the following, we consider a complete graph :math:`G=(V,A)`, where :math:`V` is the vertex set and :math:`A` is the arc set.
-The vertex set :math:`V` is partitioned into :math:`V= V_d \cup V_c`, where :math:`V_d = \{0, 1, \ldots, d \}` represent the depots and :math:`V_c=\{d + 1, \dots, n + d\}` denotes the set of :math:`n` clients.
+The vertex set :math:`V` is partitioned into :math:`V= V_d \cup V_c`, where :math:`V_d = \{0, 1, \ldots, d - 1 \}` represent the set of :math:`d` depots, and :math:`V_c=\{d, \dots, n + d\}` denotes the set of :math:`n` clients.
 Each arc :math:`(i, j) \in A` has a weight :math:`d_{ij} \ge 0` that represents the travelling cost (e.g., distance) when going from :math:`i \in V` to :math:`j \in V`.
-A fleet of vehicles :math:`K_i = \{1, 2, \dots, |K_i| \}` is assumed to be available at each depot :math:`i \in V_d`.
+A fleet of vehicles :math:`K_i` is assumed to be available at each depot :math:`i \in V_d`.
 
 .. note::
 
