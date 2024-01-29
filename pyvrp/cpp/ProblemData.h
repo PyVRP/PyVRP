@@ -336,12 +336,24 @@ public:
     [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
 
     /**
-     * @return The full travel distance matrix.
+     * The full travel distance matrix.
+     *
+     * .. note::
+     *
+     *    This method returns a read-only view of the underlying data. No
+     *    matrix is copied, but the resulting data cannot be modified in any
+     *    way!
      */
     [[nodiscard]] inline Matrix<Distance> const &distanceMatrix() const;
 
     /**
-     * @return The full travel duration matrix.
+     * The full travel duration matrix.
+     *
+     * .. note::
+     *
+     *    This method returns a read-only view of the underlying data. No
+     *    matrix is copied, but the resulting data cannot be modified in any
+     *    way!
      */
     [[nodiscard]] inline Matrix<Duration> const &durationMatrix() const;
 

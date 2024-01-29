@@ -85,7 +85,7 @@ numpydoc_attributes_as_param_list = False
 napoleon_include_special_with_doc = True
 
 # -- nbsphinx
-nbsphinx_execute = "always"
+nbsphinx_execute = "always"  # change to "never" to avoid running notebooks
 
 # -- General configuration
 extensions = [

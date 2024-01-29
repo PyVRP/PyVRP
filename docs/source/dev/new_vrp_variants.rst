@@ -96,4 +96,8 @@ We hope that the guidelines on this page will prove helpful when adding support 
 
 .. note::
 
-   For further inspiration, you may want to look at the pull requests that added `release time support <https://github.com/PyVRP/PyVRP/pull/254>`_ and support for `multiple vehicle types <https://github.com/PyVRP/PyVRP/pull/245>`_.
+   For further inspiration, you may want to look at the pull requests that added:
+
+   * Support for `client release times <https://github.com/PyVRP/PyVRP/pull/254>`_.
+   * Support for `multiple vehicle types <https://github.com/PyVRP/PyVRP/pull/245>`_.
+   * Support for `multiple depots <https://github.com/PyVRP/PyVRP/pull/411>`_.
