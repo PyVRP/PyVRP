@@ -1,7 +1,11 @@
 import datetime
+import importlib
+import inspect
 import os
 import shutil
+import subprocess
 import sys
+from typing import Optional
 
 import tomli
 
@@ -12,6 +16,7 @@ now = datetime.date.today()
 
 project = "PyVRP"
 authors = "PyVRP contributors"
+repo_url = "https://github.com/PyVRP/PyVRP/"
 copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
@@ -25,6 +30,53 @@ shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
 autoclass_content = "class"
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
+
+
+# -- sphinx.ext.linkcode
+def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
+    """
+    Generates a URL pointing to the source code of a specified object located
+    in the PyVRP repository.
+
+    Parameters
+    ----------
+    domain: str
+        The domain of the object (e.g., "py" for Python, "cpp" for C++).
+    info: dict
+        A dictionary with keys "module" and "fullname". "module" contains
+        the module name as a string, and "fullname" contains the full object
+        name as a string.
+
+    Returns
+    -------
+    Optional[str]
+        URL pointing to the identified object's source code in the PyVRP
+        repository, if the object can be identified.
+    """
+    if domain != "py" or not info.get("module") or not info.get("fullname"):
+        return None
+
+    obj = importlib.import_module(info["module"])
+    for attr_name in info["fullname"].split("."):
+        obj = getattr(obj, attr_name)
+
+    try:
+        source = inspect.getsourcefile(obj)
+    except TypeError:
+        return None
+
+    if source is None:
+        # This is one of the native extensions, which we cannot yet handle.
+        return None
+
+    rel_path = source[source.rfind("pyvrp/") :]
+    line_num = inspect.getsourcelines(obj)[1]
+
+    cmd = "git rev-parse --short HEAD".split()
+    revision = subprocess.check_output(cmd).strip().decode("ascii")
+
+    return f"{repo_url}/blob/{revision}/{rel_path}#L{line_num}"
+
 
 # -- numpydoc
 numpydoc_xref_param_type = True
@@ -41,6 +93,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx_immaterial",
     "nbsphinx",
@@ -67,7 +120,7 @@ html_theme = "sphinx_immaterial"
 html_logo = "assets/images/icon.svg"
 html_theme_options = {
     "site_url": "https://pyvrp.org/",
-    "repo_url": "https://github.com/PyVRP/PyVRP/",
+    "repo_url": repo_url,
     "icon": {
         "repo": "fontawesome/brands/github",
         "edit": "material/file-edit-outline",

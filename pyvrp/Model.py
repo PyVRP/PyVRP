@@ -117,6 +117,7 @@ class Model:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        name: str = "",
     ) -> Client:
         """
         Adds a client with the given attributes to the model. Returns the
@@ -132,6 +133,7 @@ class Model:
             release_time,
             prize,
             required,
+            name,
         )
 
         self._clients.append(client)
@@ -143,12 +145,13 @@ class Model:
         y: int,
         tw_early: int = 0,
         tw_late: int = 0,
+        name: str = "",
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
         """
-        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late)
+        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
         return depot
 
@@ -197,6 +200,7 @@ class Model:
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
         max_duration: Optional[int] = None,
+        name: str = "",
     ) -> VehicleType:
         """
         Adds a vehicle type with the given attributes to the model. Returns the
@@ -228,6 +232,7 @@ class Model:
             tw_early,
             tw_late,
             max_duration,
+            name,
         )
 
         self._vehicle_types.append(vehicle_type)

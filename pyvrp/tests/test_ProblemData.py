@@ -18,15 +18,16 @@ from pyvrp import Client, ProblemData, VehicleType
         "tw_late",
         "release_time",
         "prize",
+        "name",
     ),
     [
-        (1, 1, 1, 1, 0, 1, 0, 0),  # normal
-        (1, 1, 1, 0, 0, 1, 0, 0),  # zero duration
-        (1, 1, 0, 1, 0, 1, 0, 0),  # zero demand
-        (1, 1, 1, 1, 0, 0, 0, 0),  # zero length time interval
-        (-1, -1, 1, 1, 0, 1, 0, 0),  # negative coordinates
-        (1, 1, 1, 1, 0, 1, 1, 0),  # positive release time
-        (0, 0, 1, 1, 0, 1, 0, 1),  # positive prize
+        (1, 1, 1, 1, 0, 1, 0, 0, "test name"),  # normal
+        (1, 1, 1, 0, 0, 1, 0, 0, "1234"),  # zero duration
+        (1, 1, 0, 1, 0, 1, 0, 0, "1,2,3,4"),  # zero demand
+        (1, 1, 1, 1, 0, 0, 0, 0, ""),  # zero length time interval
+        (-1, -1, 1, 1, 0, 1, 0, 0, ""),  # negative coordinates
+        (1, 1, 1, 1, 0, 1, 1, 0, ""),  # positive release time
+        (0, 0, 1, 1, 0, 1, 0, 1, ""),  # positive prize
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
@@ -38,13 +39,22 @@ def test_client_constructor_initialises_data_fields_correctly(
     tw_late: int,
     release_time: int,
     prize: int,
+    name: str,
 ):
     """
     Tests that the access properties return the data that was given to the
     Client's constructor.
     """
     client = Client(
-        x, y, demand, service_duration, tw_early, tw_late, release_time, prize
+        x,
+        y,
+        demand,
+        service_duration,
+        tw_early,
+        tw_late,
+        release_time,
+        prize,
+        name=name,
     )
     assert_allclose(client.x, x)
     assert_allclose(client.y, y)
@@ -54,6 +64,9 @@ def test_client_constructor_initialises_data_fields_correctly(
     assert_allclose(client.tw_late, tw_late)
     assert_allclose(client.release_time, release_time)
     assert_allclose(client.prize, prize)
+
+    assert_equal(client.name, name)
+    assert_equal(str(client), name)
 
 
 @pytest.mark.parametrize(
@@ -490,6 +503,7 @@ def test_vehicle_type_default_values():
     assert_allclose(vehicle_type.fixed_cost, 0)
     assert_(vehicle_type.tw_early is None)
     assert_(vehicle_type.tw_late is None)
+    assert_equal(vehicle_type.name, "")
 
     # The C++ extensions can be compiled with support for either integer or
     # double precision. In each case, the default value for max_duration is
@@ -513,6 +527,7 @@ def test_vehicle_type_attribute_access():
         tw_early=17,
         tw_late=19,
         max_duration=23,
+        name="vehicle_type name",
     )
 
     assert_equal(vehicle_type.num_available, 7)
@@ -522,6 +537,9 @@ def test_vehicle_type_attribute_access():
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)
     assert_allclose(vehicle_type.max_duration, 23)
+
+    assert_equal(vehicle_type.name, "vehicle_type name")
+    assert_equal(str(vehicle_type), "vehicle_type name")
 
 
 @pytest.mark.parametrize("idx", [5, 6])

@@ -26,12 +26,12 @@ All stopping criteria implement the :class:`~pyvrp.stop.StoppingCriterion.Stoppi
    .. autoclass:: MaxRuntime
       :members:
 
+.. automodule:: pyvrp.stop.MultipleCriteria
+
+   .. autoclass:: MultipleCriteria
+      :members:
+
 .. automodule:: pyvrp.stop.NoImprovement
 
    .. autoclass:: NoImprovement
-      :members:
-
-.. automodule:: pyvrp.stop.TimedNoImprovement
-
-   .. autoclass:: TimedNoImprovement
       :members:

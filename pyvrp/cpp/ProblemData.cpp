@@ -1,11 +1,26 @@
 #include "ProblemData.h"
 
+#include <cstring>
 #include <numeric>
 
 using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
+
+namespace
+{
+// Small local helper for what is essentially strdup() from the C23 standard,
+// which my compiler does not (yet) have. See here for the actual recipe:
+// https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
+// malloc).
+static char *duplicate(char const *src)
+{
+    char *dst = new char[std::strlen(src) + 1];  // space for src + null
+    std::strcpy(dst, src);
+    return dst;
+}
+}  // namespace
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
@@ -15,7 +30,8 @@ ProblemData::Client::Client(Coordinate x,
                             Duration twLate,
                             Duration releaseTime,
                             Cost prize,
-                            bool required)
+                            bool required,
+                            char const *name)
     : x(x),
       y(y),
       demand(demand),
@@ -24,6 +40,7 @@ ProblemData::Client::Client(Coordinate x,
       twLate(twLate),
       releaseTime(releaseTime),
       prize(prize),
+      name(duplicate(name)),
       required(required)
 {
     if (demand < 0)
@@ -42,19 +59,52 @@ ProblemData::Client::Client(Coordinate x,
         throw std::invalid_argument("prize must be >= 0.");
 }
 
+ProblemData::Client::Client(Client const &client)
+    : x(client.x),
+      y(client.y),
+      demand(client.demand),
+      serviceDuration(client.serviceDuration),
+      twEarly(client.twEarly),
+      twLate(client.twLate),
+      releaseTime(client.releaseTime),
+      prize(client.prize),
+      name(duplicate(client.name)),
+      required(client.required)
+{
+}
+
+ProblemData::Client::Client(Client &&client)
+    : x(client.x),
+      y(client.y),
+      demand(client.demand),
+      serviceDuration(client.serviceDuration),
+      twEarly(client.twEarly),
+      twLate(client.twLate),
+      releaseTime(client.releaseTime),
+      prize(client.prize),
+      name(client.name),  // we can steal
+      required(client.required)
+{
+    client.name = nullptr;  // stolen
+}
+
+ProblemData::Client::~Client() { delete[] name; }
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
                                       Cost fixedCost,
                                       std::optional<Duration> twEarly,
                                       std::optional<Duration> twLate,
-                                      std::optional<Duration> maxDuration)
+                                      std::optional<Duration> maxDuration,
+                                      char const *name)
     : numAvailable(numAvailable),
       depot(depot),
       capacity(capacity),
       fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate),
+      name(duplicate(name)),
       maxDuration(maxDuration.value_or(std::numeric_limits<Duration>::max()))
 {
     if (numAvailable == 0)
@@ -83,6 +133,33 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
         throw std::invalid_argument("max_duration must be >= 0.");
 }
 
+ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
+    : numAvailable(vehicleType.numAvailable),
+      depot(vehicleType.depot),
+      capacity(vehicleType.capacity),
+      fixedCost(vehicleType.fixedCost),
+      twEarly(vehicleType.twEarly),
+      twLate(vehicleType.twLate),
+      name(duplicate(vehicleType.name)),
+      maxDuration(vehicleType.maxDuration)
+{
+}
+
+ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
+    : numAvailable(vehicleType.numAvailable),
+      depot(vehicleType.depot),
+      capacity(vehicleType.capacity),
+      fixedCost(vehicleType.fixedCost),
+      twEarly(vehicleType.twEarly),
+      twLate(vehicleType.twLate),
+      name(vehicleType.name),  // we can steal
+      maxDuration(vehicleType.maxDuration)
+{
+    vehicleType.name = nullptr;  // stolen
+}
+
+ProblemData::VehicleType::~VehicleType() { delete[] name; }
+
 std::vector<ProblemData::Client> const &ProblemData::clients() const
 {
     return clients_;
@@ -91,6 +168,11 @@ std::vector<ProblemData::Client> const &ProblemData::clients() const
 std::vector<ProblemData::Client> const &ProblemData::depots() const
 {
     return depots_;
+}
+
+std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
+{
+    return vehicleTypes_;
 }
 
 std::pair<double, double> const &ProblemData::centroid() const
