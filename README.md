@@ -56,7 +56,7 @@ If you are looking for help, please follow the instructions [here][3].
 
 If you use PyVRP in your research, please consider citing the following paper:
 
-> Wouda, N.A., L. Lan, and W. Kool (2023).
+> Wouda, N.A., L. Lan, and W. Kool (2024).
 > PyVRP: a high-performance VRP solver package.
 > _INFORMS Journal on Computing_, forthcoming.
 > https://doi.org/10.1287/ijoc.2023.0055
@@ -64,10 +64,10 @@ If you use PyVRP in your research, please consider citing the following paper:
 Or, using the following BibTeX entry:
 
 ```bibtex
-@article{Wouda_Lan_Kool_PyVRP_2023,
+@article{Wouda_Lan_Kool_PyVRP_2024,
   doi = {10.1287/ijoc.2023.0055},
   url = {https://doi.org/10.1287/ijoc.2023.0055},
-  year = {2023},
+  year = {2024},
   publisher = {INFORMS},
   author = {Niels A. Wouda and Leon Lan and Wouter Kool},
   title = {{PyVRP}: a high-performance {VRP} solver package},

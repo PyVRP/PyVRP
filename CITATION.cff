@@ -12,7 +12,7 @@ authors:
     orcid: "https://orcid.org/0000-0002-1837-1454"
 title: "PyVRP"
 version: "v0.5.0"
-date-released: "2023-10-12"
+date-released: "2023-08-02"
 doi: "10.1287/ijoc.2023.0055.cd"
 url: "https://github.com/PyVRP/PyVRP"
 preferred-citation:
@@ -29,5 +29,5 @@ preferred-citation:
     orcid: "https://orcid.org/0000-0002-1837-1454"
   title: "PyVRP: a high-performance VRP solver package"
   journal: "INFORMS Journal on Computing"
-  year: 2023
+  year: 2024
   doi: "10.1287/ijoc.2023.0055"
