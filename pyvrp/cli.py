@@ -82,11 +82,11 @@ def write_solution(where: Path, data: ProblemData, result: Result):
             for vehicle_type in data.vehicle_types()
         ]
 
-        routes = [f"Route {idx + 1}: " for idx in range(data.num_vehicles)]
+        routes = [f"Route #{idx + 1}:" for idx in range(data.num_vehicles)]
         for route in result.best.get_routes():
             visits = map(str, route.visits())
             vehicle = next(type2vehicle[route.vehicle_type()])
-            routes[vehicle] += " ".join(visits)
+            routes[vehicle] += " " + " ".join(visits)
 
         fh.writelines(route + "\n" for route in routes)
         fh.write(f"Cost: {round(result.cost(), 2)}\n")
