@@ -191,6 +191,27 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
         ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
 
 
+@pytest.mark.parametrize(
+    ("dist_mat", "dur_mat"),
+    [
+        (np.eye(2, dtype=int), np.zeros((2, 2), dtype=int)),  # distance diag
+        (np.zeros((2, 2), dtype=int), np.eye(2, dtype=int)),  # duration diag
+        (np.eye(2, dtype=int), np.eye(2, dtype=int)),  # both diags nonzero
+    ],
+)
+def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    the distance or duration matrix has a non-zero value on the diagonal.
+    """
+    clients = [Client(x=0, y=0)]
+    depots = [Client(x=0, y=0)]
+    vehicle_types = [VehicleType(2, capacity=1)]
+
+    with assert_raises(ValueError):
+        ProblemData(clients, depots, vehicle_types, dist_mat, dur_mat)
+
+
 def test_problem_data_replace_no_changes():
     """
     Tests that when using ``ProblemData.replace()`` without any arguments
@@ -246,7 +267,7 @@ def test_problem_data_replace_with_changes():
     new = original.replace(
         clients=[Client(x=1, y=1)],
         vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
-        distance_matrix=np.ones((2, 2), dtype=int),
+        distance_matrix=np.where(np.eye(2), 0, 2),
     )
 
     assert_(new is not original)
@@ -288,16 +309,16 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
         data.replace(clients=[])  # matrices are 2x2
 
     with assert_raises(ValueError):
-        data.replace(distance_matrix=np.ones((3, 3), dtype=int))  # two clients
+        data.replace(distance_matrix=np.where(np.eye(3), 0, 1))  # two clients
 
     with assert_raises(ValueError):
-        data.replace(duration_matrix=np.ones((3, 3), dtype=int))  # two clients
+        data.replace(duration_matrix=np.where(np.eye(3), 0, 1))  # two clients
 
     with assert_raises(ValueError):
         data.replace(
             clients=[Client(x=1, y=1)],
-            distance_matrix=np.ones((3, 3), dtype=int),
-            duration_matrix=np.ones((3, 3), dtype=int),
+            distance_matrix=np.where(np.eye(3), 0, 1),
+            duration_matrix=np.where(np.eye(3), 0, 1),
         )
 
 
@@ -323,6 +344,9 @@ def test_matrix_access():
 
     dist_mat = gen.integers(500, size=(size, size))
     dur_mat = gen.integers(500, size=(size, size))
+    np.fill_diagonal(dist_mat, 0)
+    np.fill_diagonal(dur_mat, 0)
+
     clients = [
         Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10)
         for _ in range(size)

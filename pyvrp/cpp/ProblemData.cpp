@@ -233,6 +233,15 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
         throw std::invalid_argument("Duration matrix shape does not match the "
                                     "problem size.");
 
+    for (size_t idx = 0; idx != numLocations(); ++idx)
+    {
+        if (dist_(idx, idx) != 0)
+            throw std::invalid_argument("Distance matrix diagonal must be 0.");
+
+        if (dur_(idx, idx) != 0)
+            throw std::invalid_argument("Duration matrix diagonal must be 0.");
+    }
+
     for (auto const &depot : depots_)
     {
         if (depot.demand != 0)
