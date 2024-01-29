@@ -171,10 +171,14 @@ class Model:
         Raises
         ------
         ValueError
-            When either distance or duration is a negative value.
+            When either distance or duration is a negative value, or when self
+            loops have nonzero distance or duration values.
         """
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
+
+        if frm == to and (distance != 0 or duration != 0):
+            raise ValueError("A self loop must have 0 distance and duration.")
 
         if max(distance, duration) > MAX_USER_VALUE:
             msg = """
@@ -246,6 +250,8 @@ class Model:
         # not set below are never traversed.
         distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
         durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
+        np.fill_diagonal(distances, 0)
+        np.fill_diagonal(durations, 0)
 
         for edge in self._edges:
             frm = loc2idx[id(edge.frm)]
