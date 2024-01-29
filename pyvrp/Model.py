@@ -168,10 +168,14 @@ class Model:
         Raises
         ------
         ValueError
-            When either distance or duration is a negative value.
+            When either distance or duration is a negative value, or when self
+            loops have nonzero distance or duration values.
         """
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
+
+        if frm == to and (distance != 0 or duration != 0):
+            raise ValueError("A self loop must have 0 distance and duration.")
 
         if max(distance, duration) > MAX_USER_VALUE:
             msg = """
@@ -179,9 +183,6 @@ class Model:
             numerical stability. Consider rescaling your input data.
             """
             warn(msg, ScalingWarning)
-
-        if frm == to and (distance != 0 or duration != 0):
-            raise ValueError("A self-loop edge must have 0 distance/duration.")
 
         edge = Edge(frm, to, distance, duration)
         self._edges.append(edge)
