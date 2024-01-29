@@ -9,8 +9,7 @@ To find out about available options, run
 
    pyvrp --help
 
-We use various different instances to benchmark PyVRP.
-Particularly:
+We use the following instances and configurations to benchmark PyVRP:
 
 * For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
   Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2183.
