@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the following metadata."
+authors:
+  - family-names: "Wouda"
+    given-names: "Niels A."
+    orcid: "https://orcid.org/0000-0003-2463-0309"
+  - family-names: "Lan"
+    given-names: "Leon"
+    orcid: "https://orcid.org/0000-0001-7479-0218"
+  - family-names: "Kool"
+    given-names: "Wouter"
+    orcid: "https://orcid.org/0000-0002-1837-1454"
+title: "PyVRP"
+version: "v0.5.0"
+date-released: "2023-10-12"
+doi: "10.1287/ijoc.2023.0055.cd"
+url: "https://github.com/PyVRP/PyVRP"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Wouda"
+    given-names: "Niels A."
+    orcid: "https://orcid.org/0000-0003-2463-0309"
+  - family-names: "Lan"
+    given-names: "Leon"
+    orcid: "https://orcid.org/0000-0001-7479-0218"
+  - family-names: "Kool"
+    given-names: "Wouter"
+    orcid: "https://orcid.org/0000-0002-1837-1454"
+  title: "PyVRP: a high-performance VRP solver package"
+  journal: "INFORMS Journal on Computing"
+  year: 2023
+  doi: "10.1287/ijoc.2023.0055"
