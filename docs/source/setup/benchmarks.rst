@@ -97,7 +97,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
-     - 0.00% [#note1]_
+     - 0.71% [#note1]_
 
 
 .. rubric:: Notes
