@@ -39,6 +39,7 @@ Contents
    setup/installation
    setup/getting_help
    setup/benchmarks
+   setup/citing
 
 .. toctree::
    :maxdepth: 1
