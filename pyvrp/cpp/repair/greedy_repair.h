@@ -35,7 +35,7 @@ namespace pyvrp::repair
  * ------
  * ValueError
  *     When the list of routes is empty but the list of unplanned clients is
- * not.
+ *     not.
  */
 std::vector<Solution::Route>
 greedyRepair(std::vector<Solution::Route> const &routes,
