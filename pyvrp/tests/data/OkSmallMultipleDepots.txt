@@ -40,4 +40,8 @@ DEPOT_SECTION
 # First customer has been turned into a depot
 2
 -1
+VEHICLES_DEPOT_SECTION
+1   1
+2   1
+3   2
 EOF

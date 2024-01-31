@@ -289,6 +289,18 @@ def test_multiple_depots():
     assert_equal(data.num_locations, 5)
     assert_equal(data.num_depots, 2)
     assert_equal(data.num_clients, 3)
+    assert_equal(data.num_vehicle_types, 2)  # two, each at a different depot
+    assert_equal(data.num_vehicles, 3)
+
+    # First vehicle type should have two vehicles at the first depot.
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.depot, 0)
+    assert_equal(veh_type1.num_available, 2)
+
+    # Second vehicle type should have one vehicle at the second depot.
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.depot, 1)
+    assert_equal(veh_type2.num_available, 1)
 
     depot1, depot2 = data.depots()
 

@@ -57,3 +57,12 @@ def pr107():
     Fixture that returns a TSP instance with 107 clients.
     """
     return read("data/pr107.tsp", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
+def ok_small_multi_depot():
+    """
+    Fixture that returns the OkSmall instance, but where the first client has
+    been turned into a second depot.
+    """
+    return read("data/OkSmallMultipleDepots.txt", round_func="dimacs")
