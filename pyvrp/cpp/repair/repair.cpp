@@ -35,8 +35,8 @@ void pyvrp::repair::setupRoutes(Locations &locs,
     }
 }
 
-Solution pyvrp::repair::exportRoutes(ProblemData const &data,
-                                     Routes const &routes)
+std::vector<Solution::Route>
+pyvrp::repair::exportRoutes(ProblemData const &data, Routes const &routes)
 {
     std::vector<Solution::Route> solRoutes;
     solRoutes.reserve(routes.size());
@@ -52,5 +52,5 @@ Solution pyvrp::repair::exportRoutes(ProblemData const &data,
         solRoutes.emplace_back(data, visits, route.vehicleType());
     }
 
-    return {data, solRoutes};
+    return solRoutes;
 }
