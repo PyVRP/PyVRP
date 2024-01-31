@@ -32,8 +32,8 @@ namespace pyvrp::repair
  *
  * Returns
  * -------
- * Solution
- *     The repaired solution.
+ * list[Route]
+ *     The list of repaired routes.
  *
  * Raises
  * ------
@@ -41,10 +41,11 @@ namespace pyvrp::repair
  *     When the list of routes is empty but the list of unplanned clients is
  *     not.
  */
-Solution nearestRouteInsert(std::vector<Solution::Route> const &routes,
-                            std::vector<size_t> const &unplanned,
-                            ProblemData const &data,
-                            CostEvaluator const &costEvaluator);
+std::vector<Solution::Route>
+nearestRouteInsert(std::vector<Solution::Route> const &routes,
+                   std::vector<size_t> const &unplanned,
+                   ProblemData const &data,
+                   CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::repair
 
 #endif  // PYVRP_REPAIR_NEAREST_ROUTE_INSERT_H
