@@ -54,6 +54,19 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
 
+def test_route_depot_accessor(ok_small_multi_depot):
+    """
+    Tests that Route's depot() member returns the correct depot location index.
+    """
+    routes = [
+        Route(ok_small_multi_depot, [1, 2], 0),
+        Route(ok_small_multi_depot, [3, 4], 1),
+    ]
+
+    assert_equal(routes[0].depot(), 0)
+    assert_equal(routes[1].depot(), 1)
+
+
 def test_route_eq(ok_small):
     """
     Tests ``Route``'s equality operator.

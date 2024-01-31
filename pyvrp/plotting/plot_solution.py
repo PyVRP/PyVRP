@@ -46,7 +46,7 @@ def plot_solution(
     for idx, route in enumerate(solution.get_routes(), 1):
         x = x_coords[route]
         y = y_coords[route]
-        depot = data.vehicle_type(route.vehicle_type()).depot
+        depot = route.depot()
 
         # Coordinates of clients served by this route.
         if len(route) == 1 or plot_clients:
