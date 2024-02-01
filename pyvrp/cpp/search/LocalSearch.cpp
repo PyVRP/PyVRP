@@ -200,8 +200,6 @@ bool LocalSearch::applyRouteOps(Route *U,
                                 Route *V,
                                 CostEvaluator const &costEvaluator)
 {
-    assert(U != V);
-
     for (auto *routeOp : routeOps)
     {
         auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
@@ -209,14 +207,14 @@ bool LocalSearch::applyRouteOps(Route *U,
         {
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*U)
-                  + costEvaluator.penalisedCost(*V);
+                  + Cost(U != V) * costEvaluator.penalisedCost(*V);
 
             routeOp->apply(U, V);
             update(U, V);
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*U)
-                  + costEvaluator.penalisedCost(*V);
+                  + Cost(U != V) * costEvaluator.penalisedCost(*V);
 
             assert(costAfter == costBefore + deltaCost);
 
