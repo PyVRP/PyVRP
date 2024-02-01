@@ -153,6 +153,11 @@ public:
     [[nodiscard]] inline Load load() const;
 
     /**
+     * Demand in excess of the vehicle's capacity.
+     */
+    [[nodiscard]] inline Load excessLoad() const;
+
+    /**
      * @return The load capacity of the vehicle servicing this route.
      */
     [[nodiscard]] inline Load capacity() const;
@@ -165,7 +170,7 @@ public:
     /**
      * @return The fixed cost of the vehicle servicing this route.
      */
-    [[nodiscard]] inline Cost fixedCost() const;
+    [[nodiscard]] inline Cost fixedVehicleCost() const;
 
     /**
      * @return Total distance travelled on this route.
@@ -363,11 +368,17 @@ Load Route::load() const
     return stats.back().cumLoad;
 }
 
+Load Route::excessLoad() const
+{
+    assert(!dirty);
+    return std::max<Load>(load() - capacity(), 0);
+}
+
 Load Route::capacity() const { return vehicleType_.capacity; }
 
 size_t Route::depot() const { return vehicleType_.depot; }
 
-Cost Route::fixedCost() const { return vehicleType_.fixedCost; }
+Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 
 Distance Route::distance() const
 {

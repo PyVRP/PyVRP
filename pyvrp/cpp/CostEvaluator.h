@@ -18,8 +18,18 @@ template <typename T> concept CostEvaluatable = requires(T arg)
     { arg.excessLoad() } -> std::same_as<Load>;
     { arg.fixedVehicleCost() }  -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
-    { arg.uncollectedPrizes() } -> std::same_as<Cost>;
     { arg.isFeasible() } -> std::same_as<bool>;
+    // clang-format on
+};
+
+// If, additionally, methods related to optional clients and prize collecting
+// are implemented we can also take that aspect into account. See the
+// CostEvaluator implementation for details.
+template <typename T>
+concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg)
+{
+    // clang-format off
+    { arg.uncollectedPrizes() } -> std::same_as<Cost>;
     // clang-format on
 };
 
@@ -126,12 +136,16 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
     // Standard objective plus penalty terms for capacity- and time-related
     // infeasibilities.
     // clang-format off
-    return static_cast<Cost>(arg.distance())
+    auto const cost = static_cast<Cost>(arg.distance())
            + arg.fixedVehicleCost()
-           + arg.uncollectedPrizes()
            + loadPenalty(arg.excessLoad())
            + twPenalty(arg.timeWarp());
     // clang-format on
+
+    if constexpr (PrizeCostEvaluatable<T>)
+        return cost + arg.uncollectedPrizes();
+
+    return cost;
 }
 
 template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
