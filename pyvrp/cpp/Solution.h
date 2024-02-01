@@ -246,6 +246,7 @@ private:
     Solution &operator=(Solution &&other) = default;
 
 public:
+    // C++ side helper. Solution is empty when it has no routes and no clients.
     [[nodiscard]] bool empty() const;
 
     /**
