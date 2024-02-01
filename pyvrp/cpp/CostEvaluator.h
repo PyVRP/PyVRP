@@ -16,9 +16,9 @@ template <typename T> concept CostEvaluatable = requires(T arg)
     // clang-format off
     { arg.distance() } -> std::same_as<Distance>;
     { arg.excessLoad() } -> std::same_as<Load>;
-    { arg.empty() } -> std::same_as<bool>;
     { arg.fixedVehicleCost() }  -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
+    { arg.empty() } -> std::same_as<bool>;
     { arg.isFeasible() } -> std::same_as<bool>;
     // clang-format on
 };
