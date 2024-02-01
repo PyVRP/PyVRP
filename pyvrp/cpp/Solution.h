@@ -246,6 +246,8 @@ private:
     Solution &operator=(Solution &&other) = default;
 
 public:
+    [[nodiscard]] bool empty() const;
+
     /**
      * Number of routes in this solution.
      *

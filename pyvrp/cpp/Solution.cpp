@@ -37,6 +37,8 @@ void Solution::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
+bool Solution::empty() const { return numClients_ == 0; }
+
 size_t Solution::numRoutes() const { return routes_.size(); }
 
 size_t Solution::numClients() const { return numClients_; }

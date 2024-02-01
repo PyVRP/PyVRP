@@ -169,16 +169,29 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                                CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
-        if (nodeOp->evaluate(U, V, costEvaluator) < 0)
+    {
+        auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
+        if (deltaCost < 0)
         {
-            auto *routeU = U->route();  // copy these because the operator can
-            auto *routeV = V->route();  // modify the node's route membership
+            auto *rU = U->route();  // copy these because the operator can
+            auto *rV = V->route();  // modify the nodes' route membership
+
+            [[maybe_unused]] auto const costBefore
+                = costEvaluator.penalisedCost(*rU)
+                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
             nodeOp->apply(U, V);
-            update(routeU, routeV);
+            update(rU, rV);
+
+            [[maybe_unused]] auto const costAfter
+                = costEvaluator.penalisedCost(*rU)
+                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+
+            assert(costAfter == costBefore + deltaCost);
 
             return true;
         }
+    }
 
     return false;
 }
@@ -187,14 +200,29 @@ bool LocalSearch::applyRouteOps(Route *U,
                                 Route *V,
                                 CostEvaluator const &costEvaluator)
 {
+    assert(U != V);
+
     for (auto *routeOp : routeOps)
-        if (routeOp->evaluate(U, V, costEvaluator) < 0)
+    {
+        auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
+        if (deltaCost < 0)
         {
+            [[maybe_unused]] auto const costBefore
+                = costEvaluator.penalisedCost(*U)
+                  + costEvaluator.penalisedCost(*V);
+
             routeOp->apply(U, V);
             update(U, V);
 
+            [[maybe_unused]] auto const costAfter
+                = costEvaluator.penalisedCost(*U)
+                  + costEvaluator.penalisedCost(*V);
+
+            assert(costAfter == costBefore + deltaCost);
+
             return true;
         }
+    }
 
     return false;
 }
