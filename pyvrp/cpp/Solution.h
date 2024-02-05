@@ -246,6 +246,9 @@ private:
     Solution &operator=(Solution &&other) = default;
 
 public:
+    // Solution is empty when it has no routes and no clients.
+    [[nodiscard]] bool empty() const;
+
     /**
      * Number of routes in this solution.
      *

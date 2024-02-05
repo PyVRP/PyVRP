@@ -88,17 +88,17 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     // We're going to incur fixed cost if a route is currently empty but
     // becomes non-empty due to the proposed move.
     if (uRoute->empty() && U->isDepot() && !n(V)->isDepot())
-        deltaCost += uRoute->fixedCost();
+        deltaCost += uRoute->fixedVehicleCost();
 
     if (vRoute->empty() && V->isDepot() && !n(U)->isDepot())
-        deltaCost += vRoute->fixedCost();
+        deltaCost += vRoute->fixedVehicleCost();
 
     // We lose fixed cost if a route becomes empty due to the proposed move.
     if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
-        deltaCost -= uRoute->fixedCost();
+        deltaCost -= uRoute->fixedVehicleCost();
 
     if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
-        deltaCost -= vRoute->fixedCost();
+        deltaCost -= vRoute->fixedVehicleCost();
 
     if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
         return deltaCost;

@@ -169,16 +169,32 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                                CostEvaluator const &costEvaluator)
 {
     for (auto *nodeOp : nodeOps)
-        if (nodeOp->evaluate(U, V, costEvaluator) < 0)
+    {
+        auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
+        if (deltaCost < 0)
         {
-            auto *routeU = U->route();  // copy these because the operator can
-            auto *routeV = V->route();  // modify the node's route membership
+            auto *rU = U->route();  // copy these because the operator can
+            auto *rV = V->route();  // modify the nodes' route membership
+
+            [[maybe_unused]] auto const costBefore
+                = costEvaluator.penalisedCost(*rU)
+                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
             nodeOp->apply(U, V);
-            update(routeU, routeV);
+            update(rU, rV);
+
+            [[maybe_unused]] auto const costAfter
+                = costEvaluator.penalisedCost(*rU)
+                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+
+            // When there is an improving move, the delta cost evaluation must
+            // be exact. The resulting cost is then the sum of the cost before
+            // the move, plus the delta cost.
+            assert(costAfter == costBefore + deltaCost);
 
             return true;
         }
+    }
 
     return false;
 }
@@ -188,13 +204,29 @@ bool LocalSearch::applyRouteOps(Route *U,
                                 CostEvaluator const &costEvaluator)
 {
     for (auto *routeOp : routeOps)
-        if (routeOp->evaluate(U, V, costEvaluator) < 0)
+    {
+        auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
+        if (deltaCost < 0)
         {
+            [[maybe_unused]] auto const costBefore
+                = costEvaluator.penalisedCost(*U)
+                  + Cost(U != V) * costEvaluator.penalisedCost(*V);
+
             routeOp->apply(U, V);
             update(U, V);
 
+            [[maybe_unused]] auto const costAfter
+                = costEvaluator.penalisedCost(*U)
+                  + Cost(U != V) * costEvaluator.penalisedCost(*V);
+
+            // When there is an improving move, the delta cost evaluation must
+            // be exact. The resulting cost is then the sum of the cost before
+            // the move, plus the delta cost.
+            assert(costAfter == costBefore + deltaCost);
+
             return true;
         }
+    }
 
     return false;
 }

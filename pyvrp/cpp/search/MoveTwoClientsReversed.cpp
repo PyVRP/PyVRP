@@ -28,8 +28,8 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
 
     // We're going to incur V's fixed cost if V is currently empty. We lose U's
     // fixed cost if we're moving all of U's clients with this operator.
-    deltaCost += Cost(vRoute->empty()) * vRoute->fixedCost();
-    deltaCost -= Cost(uRoute->size() == 2) * uRoute->fixedCost();
+    deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
+    deltaCost -= Cost(uRoute->size() == 2) * uRoute->fixedVehicleCost();
 
     if (uRoute != vRoute)
     {
