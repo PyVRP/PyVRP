@@ -187,6 +187,9 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
+            // When there is an improving move, the delta cost evaluation must
+            // be exact. The resulting cost is then the sum of the cost before
+            // the move, plus the delta cost.
             assert(costAfter == costBefore + deltaCost);
 
             return true;
@@ -216,6 +219,9 @@ bool LocalSearch::applyRouteOps(Route *U,
                 = costEvaluator.penalisedCost(*U)
                   + Cost(U != V) * costEvaluator.penalisedCost(*V);
 
+            // When there is an improving move, the delta cost evaluation must
+            // be exact. The resulting cost is then the sum of the cost before
+            // the move, plus the delta cost.
             assert(costAfter == costBefore + deltaCost);
 
             return true;
