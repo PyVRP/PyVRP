@@ -608,7 +608,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     py::arg("first"),
                     py::arg("second"))
         .def_static("merge",
-                    &TWS::merge<TWS>,
+                    &TWS::merge<TWS const &>,
                     py::arg("duration_matrix"),
                     py::arg("first"),
                     py::arg("second"),
