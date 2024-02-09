@@ -52,7 +52,7 @@ jobs:
       - name: Build documentation
         run: poetry run make html --directory=docs
       - name: Upload documentation
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: 'docs/build/html'
       - name: Deploy documentation
