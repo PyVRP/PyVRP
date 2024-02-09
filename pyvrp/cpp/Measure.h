@@ -1,6 +1,7 @@
 #ifndef PYVRP_MEASURE_H
 #define PYVRP_MEASURE_H
 
+#include <cassert>
 #include <cmath>
 #include <compare>
 #include <functional>
@@ -98,6 +99,11 @@ template <MeasureType Type> Value Measure<Type>::get() const { return value; }
 template <MeasureType Type>
 Measure<Type> &Measure<Type>::operator+=(Measure<Type> const &rhs)
 {
+#ifndef PYVRP_DOUBLE_PRECISION  // only for integers
+    [[maybe_unused]] Value res = 0;
+    assert(!__builtin_add_overflow(this->value, rhs.value, &res));
+#endif
+
     this->value += rhs.value;
     return *this;
 }
@@ -105,6 +111,11 @@ Measure<Type> &Measure<Type>::operator+=(Measure<Type> const &rhs)
 template <MeasureType Type>
 Measure<Type> &Measure<Type>::operator-=(Measure<Type> const &rhs)
 {
+#ifndef PYVRP_DOUBLE_PRECISION  // only for integers
+    [[maybe_unused]] Value res = 0;
+    assert(!__builtin_sub_overflow(this->value, rhs.value, &res));
+#endif
+
     this->value -= rhs.value;
     return *this;
 }
@@ -112,6 +123,11 @@ Measure<Type> &Measure<Type>::operator-=(Measure<Type> const &rhs)
 template <MeasureType Type>
 Measure<Type> &Measure<Type>::operator*=(Measure<Type> const &rhs)
 {
+#ifndef PYVRP_DOUBLE_PRECISION  // only for integers
+    [[maybe_unused]] Value res = 0;
+    assert(!__builtin_mul_overflow(this->value, rhs.value, &res));
+#endif
+
     this->value *= rhs.value;
     return *this;
 }
@@ -147,6 +163,11 @@ int Measure<Type>::operator<=>(Measure<Type> const &other) const
 template <MeasureType Type>
 Measure<Type> operator+(Measure<Type> const lhs, Measure<Type> const rhs)
 {
+#ifndef PYVRP_DOUBLE_PRECISION  // only for integers
+    [[maybe_unused]] Value res = 0;
+    assert(!__builtin_add_overflow(lhs.get(), rhs.get(), &res));
+#endif
+
     return lhs.get() + rhs.get();
 }
 
@@ -158,6 +179,11 @@ template <MeasureType Type> Measure<Type> operator+(Measure<Type> const lhs)
 template <MeasureType Type>
 Measure<Type> operator-(Measure<Type> const lhs, Measure<Type> const rhs)
 {
+#ifndef PYVRP_DOUBLE_PRECISION  // only for integers
+    [[maybe_unused]] Value res = 0;
+    assert(!__builtin_sub_overflow(lhs.get(), rhs.get(), &res));
+#endif
+
     return lhs.get() - rhs.get();
 }
 
@@ -169,6 +195,11 @@ template <MeasureType Type> Measure<Type> operator-(Measure<Type> const lhs)
 template <MeasureType Type>
 Measure<Type> operator*(Measure<Type> const lhs, Measure<Type> const rhs)
 {
+#ifndef PYVRP_DOUBLE_PRECISION  // only for integers
+    [[maybe_unused]] Value res = 0;
+    assert(!__builtin_mul_overflow(lhs.get(), rhs.get(), &res));
+#endif
+
     return lhs.get() * rhs.get();
 }
 
