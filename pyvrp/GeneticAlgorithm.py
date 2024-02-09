@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from importlib.metadata import version
 from typing import TYPE_CHECKING, Callable, Collection
 
 from pyvrp.Result import Result
@@ -34,6 +35,8 @@ class GeneticAlgorithmParams:
     nb_iter_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
+    log
+        Whether to print logs.
 
     Attributes
     ----------
@@ -41,6 +44,8 @@ class GeneticAlgorithmParams:
         Probability of repairing an infeasible solution.
     nb_iter_no_improvement
         Number of iterations without improvement before a restart occurs.
+    log
+        Whether to print logs.
 
     Raises
     ------
@@ -51,6 +56,7 @@ class GeneticAlgorithmParams:
 
     repair_probability: float = 0.80
     nb_iter_no_improvement: int = 20_000
+    log: bool = False
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
@@ -143,6 +149,10 @@ class GeneticAlgorithm:
         Result
             A Result object, containing statistics and the best found solution.
         """
+
+        if self._params.log:
+            print(_log_start(self._data))
+
         start = time.perf_counter()
         stats = Statistics()
         iters = 0
@@ -178,7 +188,14 @@ class GeneticAlgorithm:
 
             stats.collect_from(self._pop, self._cost_evaluator)
 
+            if self._params.log and iters % 500 == 0:
+                print(_log_solver_entry(curr_best, stats))
+
         end = time.perf_counter() - start
+
+        if self._params.log:
+            print(_log_summary(iters, end, curr_best))
+
         return Result(self._best, stats, iters, end)
 
     def _improve_offspring(self, sol: Solution):
@@ -211,3 +228,59 @@ class GeneticAlgorithm:
 
             if is_new_best(sol):
                 self._best = sol
+
+
+def _centerize(msg: str, length=82) -> str:
+    padding = "-" * ((length - len(msg)) // 2)
+    ending = "-" if (length - len(msg)) % 2 else ""
+    return f"{padding} {msg} {padding}{ending}"
+
+
+def _pluralize(num: int, word: str) -> str:
+    return f"{num} {word}{'s' if num != 1 else ''}"
+
+
+def _log_start(data: ProblemData) -> str:
+    msg = _centerize(f"PyVRP v{version('pyvrp')}") + "\n\n"
+
+    msg += "Solving an instance with "
+    msg += f"{_pluralize(data.num_depots, 'depot')}, "
+    msg += f"{_pluralize(data.num_clients, 'client')}, "
+    msg += f"and {_pluralize(data.num_vehicles, 'vehicle')}.\n\n"
+
+    msg += _centerize("Solver progress") + "\n\n"
+    msg += f"{'Statistics':^26} | {'Feasible':^26} | {'Infeasible':^26}\n"
+    msg += f"{'Iters':>7} {'T (s)':>7} {'Best':>10} | "
+    msg += f"{'Size':>4} {'Avg':>10} {'Best':>10} | "
+    msg += f"{'Size':>4} {'Avg':>10} {'Best':>10}\n"
+
+    return msg
+
+
+def _log_solver_entry(global_best: float, stats: Statistics) -> str:
+    iters = stats.num_iterations
+    elapsed = round(sum(stats.runtimes), 2)
+
+    msg = f"{iters:>7} {elapsed:>7} {global_best:>10} | "
+
+    def _format_pop_stats(pop):
+        size = pop.size
+        avg_cost = round(pop.avg_cost, 2)
+        best_cost = round(pop.best_cost, 2)
+        return f"{size:>4} {avg_cost:>10} {best_cost:>10}"
+
+    msg += _format_pop_stats(stats.feas_stats[-1]) + " | "
+    msg += _format_pop_stats(stats.infeas_stats[-1])
+
+    return msg
+
+
+def _log_summary(iters: int, end: float, best_cost: float) -> str:
+    msg = "\n" + _centerize("Summary") + "\n\n"
+    msg += (
+        f"Search terminated after {iters} iterations and {end:.2f} seconds.\n"
+    )
+    msg += f"Best-found solution has cost {best_cost}.\n\n"
+    msg += _centerize("End")
+
+    return msg
