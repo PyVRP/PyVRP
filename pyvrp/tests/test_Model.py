@@ -306,6 +306,25 @@ def test_model_and_solve(ok_small):
     assert_equal(res.cost(), 9_155)
 
 
+def test_model_solve_log(ok_small, capsys):
+    """
+    Tests that solving a model with logging enabled produces the expected
+    output.
+    """
+    model = Model.from_data(ok_small)
+
+    # First solve without logging, we should not see any output.
+    model.solve(stop=MaxIterations(1000), seed=0, log=False)
+    captured = capsys.readouterr()
+
+    assert_equal(captured.out, "")
+
+    # Now solve with logging, we should see some output.
+    model.solve(stop=MaxIterations(1000), seed=0)
+    captured = capsys.readouterr()
+    # TODO
+
+
 def test_partial_distance_duration_matrix():
     """
     Tests that adding a full distance or duration matrix is not required. Any
