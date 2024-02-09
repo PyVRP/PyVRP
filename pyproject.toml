@@ -11,12 +11,21 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://pyvrp.org/"
 repository = "https://github.com/PyVRP/PyVRP"
+keywords = [
+    "vehicle routing problem",
+    "hybrid genetic search",
+    "metaheuristic",
+]
 include = [
+    { path = "docs/", format = "sdist" },
+    { path = "tests/", format = "sdist" },
+
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
     { path = "build_extensions.py", format = "sdist" },
     { path = "extract_docstrings.py", format = "sdist" },
     { path = "subprojects/*.wrap", format = "sdist" },
+
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
@@ -25,8 +34,6 @@ exclude = [
 ]
 packages = [
     { include = "pyvrp" },
-    { include = "tests", format = "sdist" },
-    { include = "docs", format = "sdist" },
 ]
 classifiers = [
     "Intended Audience :: Developers",
