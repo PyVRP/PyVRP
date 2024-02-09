@@ -26,6 +26,7 @@ exclude = [
 ]
 packages = [
     { include = "pyvrp" },
+    { include = "tests" },
     { include = "docs" },
 ]
 classifiers = [
@@ -120,7 +121,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report=xml --cov-report=term"
-testpaths = "pyvrp"
+testpaths = "tests"
 
 
 [tool.coverage.run]

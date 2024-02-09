@@ -2,7 +2,7 @@ from numpy.testing import assert_, assert_raises
 from pytest import mark
 
 from pyvrp.stop import MaxIterations, MaxRuntime, MultipleCriteria
-from pyvrp.tests.helpers import sleep
+from tests.helpers import sleep
 
 
 def test_raises_if_empty():

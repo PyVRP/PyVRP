@@ -13,7 +13,7 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.tests.helpers import read
+from tests.helpers import read
 
 
 @mark.parametrize(
