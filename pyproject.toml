@@ -12,7 +12,6 @@ readme = "README.md"
 homepage = "https://pyvrp.org/"
 repository = "https://github.com/PyVRP/PyVRP"
 include = [
-    { path = "LICENSE.md" },
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
     { path = "build_extensions.py", format = "sdist" },
@@ -26,8 +25,8 @@ exclude = [
 ]
 packages = [
     { include = "pyvrp" },
-    { include = "tests" },
-    { include = "docs" },
+    { include = "tests", format = "sdist" },
+    { include = "docs", format = "sdist" },
 ]
 classifiers = [
     "Intended Audience :: Developers",
