@@ -131,12 +131,13 @@ TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
     Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
     Dur const atOther = duration_ - timeWarp_ + edgeDuration;
 
-    // Wait duration increases if we arrive at the other's first client before
-    // opening, whereas time warp increases if we arrive there after closing.
+    // Time warp increases if we arrive at the other's first client after its
+    // time window closes, whereas wait duration increases if we arrive there
+    // before opening.
+    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
     Dur const diffWait = other.twEarly_ - atOther > twLate_
                              ? other.twEarly_ - atOther - twLate_
-                             : 0;
-    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
+                             : 0;  // ternary rather than max avoids underflow
 
     return {idxFirst_,
             other.idxLast_,
