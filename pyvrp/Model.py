@@ -3,7 +3,7 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm
+from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
@@ -267,7 +267,9 @@ class Model:
             durations,
         )
 
-    def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
+    def solve(
+        self, stop: StoppingCriterion, seed: int = 0, log: bool = True
+    ) -> Result:
         """
         Solve this model.
 
@@ -277,6 +279,8 @@ class Model:
             Stopping criterion to use.
         seed
             Seed value to use for the PRNG, by default 0.
+        log
+            Whether to log the progress of the algorithm, by default True.
 
         Returns
         -------
@@ -312,7 +316,8 @@ class Model:
 
         # We use SREX when the instance is a proper VRP; else OX for TSP.
         crossover = srex if data.num_vehicles > 1 else ox
+        gen_params = GeneticAlgorithmParams(log=log)
 
-        gen_args = (data, pm, rng, pop, ls, crossover, init)
+        gen_args = (data, pm, rng, pop, ls, crossover, init, gen_params)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
         return algo.run(stop)
