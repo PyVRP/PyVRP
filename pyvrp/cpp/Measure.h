@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <compare>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <limits>
