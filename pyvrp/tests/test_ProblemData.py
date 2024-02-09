@@ -85,6 +85,8 @@ def test_client_constructor_initialises_data_fields_correctly(
         (1, 1, 1, 0, -1, 0, 0, 0),  # negative early
         (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
         (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
+        (1, 1, 0, 0, 0, 1, -1, 0),  # negative release time
+        (1, 1, 0, 0, 0, 1, 2, 0),  # release time > late
         (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
     ],
 )
