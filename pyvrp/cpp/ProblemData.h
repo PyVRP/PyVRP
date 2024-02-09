@@ -77,7 +77,7 @@ public:
      *     Earliest time at which we can visit this client. Default 0.
      * tw_late
      *     Latest time at which we can visit this client. Unconstrained if not
-     *     set.
+     *     provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
      *     time at which a vehicle may leave the depot to visit this client.
@@ -153,9 +153,9 @@ public:
      * tw_early
      *     Start of the vehicle type's shift. Default 0.
      * tw_late
-     *     End of the vehicle type's shift. Unconstrained if not set.
+     *     End of the vehicle type's shift. Unconstrained if not provided.
      * max_duration
-     *     Maximum route duration. Unconstrained if not explicitly set.
+     *     Maximum route duration. Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *

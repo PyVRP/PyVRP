@@ -149,12 +149,13 @@ def read(
         durations = distances
         time_windows: np.ndarray = round_func(instance["time_window"])
     else:
-        # No time window data. So the time window component is not relevant,
-        # and we set all time-related fields to zero.
+        # No time window data. So the time window component is not relevant.
         durations = np.zeros_like(distances)
         service_times = np.zeros(dimension, dtype=int)
-        time_windows = np.zeros((dimension, 2), dtype=int)
-        time_windows[:, 1] = np.iinfo(np.int32).max
+
+        time_windows = np.empty((dimension, 2), dtype=int)
+        time_windows[:, 0] = 0
+        time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
         items: list[list[int]] = [[] for _ in depots]
