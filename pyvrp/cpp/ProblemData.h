@@ -68,14 +68,16 @@ public:
      * demand
      *     The amount this client's demanding. Default 0.
      * service_duration
-     *     This client's service duration, that is, the amount of time we need
-     *     to visit the client for. Service should start (but not necessarily
-     *     end) within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
+     *     Amount of time a vehicle needs to spend at this client before
+     *     resuming its route. Service should start (but not necessarily end)
+     *     within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
      *     Default 0.
      * tw_early
-     *     Earliest time at which we can visit this client. Default 0.
+     *     Earliest time at which this client may be visited to start service.
+     *     Default 0.
      * tw_late
-     *     Latest time at which we can visit this client. Default 0.
+     *     Latest time at which this client may be visited to start service.
+     *     Default 0.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
      *     time at which a vehicle may leave the depot to visit this client.
@@ -87,6 +89,31 @@ public:
      *     True.
      * name
      *     Free-form name field for this client. Default empty.
+     *
+     * Attributes
+     * ----------
+     * x
+     *     Horizontal coordinate of this client.
+     * y
+     *     Vertical coordinate of this client.
+     * demand
+     *     Client demand.
+     * service_duration
+     *     Amount of time a vehicle needs to spend at this client before
+     *     resuming its route.
+     * tw_early
+     *     Earliest time at which this client may be visited to start service.
+     * tw_late
+     *     Latest time at which this client may be visited to start service.
+     * release_time
+     *     Earliest time at which a vehicle may leave the depot to visit this
+     *     client.
+     * prize
+     *     Prize collected by visiting this client.
+     * required
+     *     Whether visiting this client is required.
+     * name
+     *     Free-form name field for this client.
      */
     struct Client
     {
@@ -169,10 +196,10 @@ public:
      * ----------
      * num_available
      *     Number of vehicles of this type that are available.
-     * depot
-     *     Depot associated with these vehicles.
      * capacity
      *     Capacity (maximum total demand) of this vehicle type.
+     * depot
+     *     Depot associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early

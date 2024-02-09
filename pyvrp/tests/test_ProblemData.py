@@ -18,16 +18,18 @@ from pyvrp import Client, ProblemData, VehicleType
         "tw_late",
         "release_time",
         "prize",
+        "required",
         "name",
     ),
     [
-        (1, 1, 1, 1, 0, 1, 0, 0, "test name"),  # normal
-        (1, 1, 1, 0, 0, 1, 0, 0, "1234"),  # zero duration
-        (1, 1, 0, 1, 0, 1, 0, 0, "1,2,3,4"),  # zero demand
-        (1, 1, 1, 1, 0, 0, 0, 0, ""),  # zero length time interval
-        (-1, -1, 1, 1, 0, 1, 0, 0, ""),  # negative coordinates
-        (1, 1, 1, 1, 0, 1, 1, 0, ""),  # positive release time
-        (0, 0, 1, 1, 0, 1, 0, 1, ""),  # positive prize
+        (1, 1, 1, 1, 0, 1, 0, 0, True, "test name"),  # normal
+        (1, 1, 1, 0, 0, 1, 0, 0, True, "1234"),  # zero duration
+        (1, 1, 0, 1, 0, 1, 0, 0, True, "1,2,3,4"),  # zero demand
+        (1, 1, 1, 1, 0, 0, 0, 0, True, ""),  # zero length time interval
+        (-1, -1, 1, 1, 0, 1, 0, 0, True, ""),  # negative coordinates
+        (1, 1, 1, 1, 0, 1, 1, 0, True, ""),  # positive release time
+        (0, 0, 1, 1, 0, 1, 0, 1, True, ""),  # positive prize
+        (0, 0, 1, 1, 0, 1, 0, 1, False, ""),  # not required
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
@@ -39,6 +41,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     tw_late: int,
     release_time: int,
     prize: int,
+    required: bool,
     name: str,
 ):
     """
@@ -54,8 +57,10 @@ def test_client_constructor_initialises_data_fields_correctly(
         tw_late,
         release_time,
         prize,
+        required=required,
         name=name,
     )
+
     assert_allclose(client.x, x)
     assert_allclose(client.y, y)
     assert_allclose(client.demand, demand)
@@ -64,7 +69,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     assert_allclose(client.tw_late, tw_late)
     assert_allclose(client.release_time, release_time)
     assert_allclose(client.prize, prize)
-
+    assert_equal(client.required, required)
     assert_equal(client.name, name)
     assert_equal(str(client), name)
 
