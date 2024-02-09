@@ -36,7 +36,7 @@ class GeneticAlgorithmParams:
         Number of iterations without any improvement needed before a restart
         occurs.
     log
-        Whether to print logs.
+        Whether to print logs about the algorithm progress.
 
     Attributes
     ----------
@@ -45,7 +45,7 @@ class GeneticAlgorithmParams:
     nb_iter_no_improvement
         Number of iterations without improvement before a restart occurs.
     log
-        Whether to print logs.
+        Whether to print logs about the algorithm progress.
 
     Raises
     ------
@@ -171,6 +171,9 @@ class GeneticAlgorithm:
                 for sol in self._initial_solutions:
                     self._pop.add(sol, self._cost_evaluator)
 
+                if self._params.log:
+                    print(_log_restart(self._params.nb_iter_no_improvement))
+
             curr_best = self._cost_evaluator.cost(self._best)
 
             parents = self._pop.select(self._rng, self._cost_evaluator)
@@ -255,6 +258,13 @@ def _log_start(data: ProblemData) -> str:
     msg += f"{'Size':>4} {'Avg':>10} {'Best':>10}\n"
 
     return msg
+
+
+def _log_restart(iters_no_improvement: int) -> str:
+    return (
+        f"{iters_no_improvement} iterations without improving the best "
+        "solution. Restarting the genetic algorithm.\n"
+    )
 
 
 def _log_solver_entry(global_best: float, stats: Statistics) -> str:
