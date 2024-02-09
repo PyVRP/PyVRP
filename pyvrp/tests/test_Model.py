@@ -336,9 +336,6 @@ def test_partial_distance_duration_matrix():
     assert_(res.is_feasible())
 
 
-test_partial_distance_duration_matrix()
-
-
 def test_data_warns_about_scaling_issues(recwarn):
     """
     Tests that the modelling interface warns when an edge is added whose
