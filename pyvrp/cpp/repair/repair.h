@@ -16,9 +16,9 @@ void setupRoutes(std::vector<search::Route::Node> &locs,
                  std::vector<Solution::Route> const &solRoutes,
                  ProblemData const &data);
 
-// Turns the given routes into a solution.
-Solution exportRoutes(ProblemData const &data,
-                      std::vector<search::Route> const &routes);
+// Turns the given search routes into solution routes.
+std::vector<Solution::Route>
+exportRoutes(ProblemData const &data, std::vector<search::Route> const &routes);
 }  // namespace pyvrp::repair
 
 #endif  // PYVRP_REPAIR_H

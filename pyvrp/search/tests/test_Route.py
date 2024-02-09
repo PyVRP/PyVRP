@@ -201,22 +201,23 @@ def test_excess_load(ok_small):
     # The instance has four clients, which have a total demand of 18. The only
     # vehicle type in the instance has a capacity of 10, so this route has
     # excess load.
-    assert_equal(route.load(), 18)
-    assert_equal(route.capacity(), 10)
     assert_(route.has_excess_load())
+    assert_allclose(route.excess_load(), 8)
+    assert_allclose(route.load(), 18)
+    assert_allclose(route.capacity(), 10)
 
 
 @pytest.mark.parametrize("fixed_cost", [0, 9])
-def test_fixed_cost(ok_small, fixed_cost: int):
+def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     """
-    Tests that the fixed cost method returns the assigned vehicle type's fixed
-    cost value.
+    Tests that the fixed vehicle cost method returns the assigned vehicle
+    type's fixed cost value.
     """
     data = ok_small.replace(
         vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
     )
     route = Route(data, idx=0, vehicle_type=0)
-    assert_allclose(route.fixed_cost(), fixed_cost)
+    assert_allclose(route.fixed_vehicle_cost(), fixed_cost)
 
 
 @pytest.mark.parametrize("client", [1, 2, 3, 4])

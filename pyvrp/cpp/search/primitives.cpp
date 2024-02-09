@@ -23,7 +23,7 @@ Cost pyvrp::search::insertCost(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(deltaDist) - client.prize;
 
-    deltaCost += Cost(route->empty()) * route->fixedCost();
+    deltaCost += Cost(route->empty()) * route->fixedVehicleCost();
 
     deltaCost += costEvaluator.loadPenalty(route->load() + client.demand,
                                            route->capacity());
@@ -56,7 +56,7 @@ Cost pyvrp::search::removeCost(Route::Node *U,
 
     Cost deltaCost = static_cast<Cost>(deltaDist) + client.prize;
 
-    deltaCost -= Cost(route->size() == 1) * route->fixedCost();
+    deltaCost -= Cost(route->size() == 1) * route->fixedVehicleCost();
 
     deltaCost += costEvaluator.loadPenalty(route->load() - client.demand,
                                            route->capacity());

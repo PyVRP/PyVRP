@@ -9,7 +9,6 @@ from pyvrp import (
     Route,
     Solution,
     Statistics,
-    VehicleType,
     plotting,
 )
 from pyvrp.diversity import broken_pairs_distance
@@ -40,13 +39,6 @@ def test_plot_solution_multiple_depots():
     drawn).
     """
     data = read("data/OkSmallMultipleDepots.txt", round_func="trunc")
-    data = data.replace(
-        vehicle_types=[
-            VehicleType(capacity=10, depot=0),
-            VehicleType(capacity=10, depot=1),
-        ]
-    )
-
     routes = [
         Route(data, [2, 3], vehicle_type=0),
         Route(data, [4], vehicle_type=1),

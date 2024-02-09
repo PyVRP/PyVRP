@@ -62,7 +62,7 @@ public:
     merge(Matrix<Duration> const &durationMatrix,
           TWS const &first,
           TWS const &second,
-          Args... args);
+          Args &&...args);
 
     /**
      * The total duration of this route segment.
@@ -150,7 +150,7 @@ TimeWindowSegment TimeWindowSegment::merge(
     [[maybe_unused]] Matrix<Duration> const &durationMatrix,
     [[maybe_unused]] TimeWindowSegment const &first,
     [[maybe_unused]] TimeWindowSegment const &second,
-    [[maybe_unused]] Args... args)
+    [[maybe_unused]] Args &&...args)
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {0, 0, 0, 0, 0, 0, 0};

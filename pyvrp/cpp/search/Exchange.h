@@ -103,8 +103,8 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
 
     // We're going to incur V's fixed cost if V is currently empty. We lose U's
     // fixed cost if we're moving all of U's clients with this operator.
-    deltaCost += Cost(vRoute->empty()) * vRoute->fixedCost();
-    deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedCost();
+    deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
+    deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedVehicleCost();
 
     if (uRoute != vRoute)
     {

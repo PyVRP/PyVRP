@@ -37,6 +37,8 @@ void Solution::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
+bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
+
 size_t Solution::numRoutes() const { return routes_.size(); }
 
 size_t Solution::numClients() const { return numClients_; }
@@ -239,25 +241,26 @@ Solution::Route::Route(ProblemData const &data,
                        size_t const vehicleType)
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
+    auto const &vehType = data.vehicleType(vehicleType);
+    depot_ = vehType.depot;
+
     if (visits_.empty())
         return;
-
-    auto const &vehType = data.vehicleType(vehicleType);
-    auto const &depot = data.location(vehType.depot);
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter. If the
     // vehicle does not have a shift time window, we default to the depot's
     // open and close times.
-    auto const shiftStart = vehType.twEarly.value_or(depot.twEarly);
-    auto const shiftEnd = vehType.twLate.value_or(depot.twLate);
+    auto const &depotLocation = data.location(depot_);
+    auto const shiftStart = vehType.twEarly.value_or(depotLocation.twEarly);
+    auto const shiftEnd = vehType.twLate.value_or(depotLocation.twLate);
 
-    TimeWindowSegment depotTws(vehType.depot,
-                               vehType.depot,
+    TimeWindowSegment depotTws(depot_,
+                               depot_,
                                0,
                                0,
-                               std::max(depot.twEarly, shiftStart),
-                               std::min(depot.twLate, shiftEnd),
+                               std::max(depotLocation.twEarly, shiftStart),
+                               std::min(depotLocation.twLate, shiftEnd),
                                0);
 
     auto tws = depotTws;
@@ -311,7 +314,8 @@ Solution::Route::Route(Visits visits,
                        Duration slack,
                        Cost prizes,
                        std::pair<double, double> centroid,
-                       size_t vehicleType)
+                       size_t vehicleType,
+                       size_t depot)
     : visits_(std::move(visits)),
       distance_(distance),
       demand_(demand),
@@ -326,7 +330,8 @@ Solution::Route::Route(Visits visits,
       slack_(slack),
       prizes_(prizes),
       centroid_(centroid),
-      vehicleType_(vehicleType)
+      vehicleType_(vehicleType),
+      depot_(depot)
 {
 }
 
@@ -383,6 +388,8 @@ std::pair<double, double> const &Solution::Route::centroid() const
 }
 
 size_t Solution::Route::vehicleType() const { return vehicleType_; }
+
+size_t Solution::Route::depot() const { return depot_; }
 
 bool Solution::Route::isFeasible() const
 {

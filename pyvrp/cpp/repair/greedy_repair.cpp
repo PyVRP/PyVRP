@@ -14,18 +14,11 @@ using Locations = std::vector<Route::Node>;
 using Routes = std::vector<Route>;
 using SolRoutes = std::vector<Solution::Route>;
 
-Solution pyvrp::repair::greedyRepair(Solution const &solution,
-                                     std::vector<size_t> const &unplanned,
-                                     ProblemData const &data,
-                                     CostEvaluator const &costEvaluator)
-{
-    return greedyRepair(solution.getRoutes(), unplanned, data, costEvaluator);
-}
-
-Solution pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
-                                     std::vector<size_t> const &unplanned,
-                                     ProblemData const &data,
-                                     CostEvaluator const &costEvaluator)
+std::vector<Solution::Route>
+pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
+                            std::vector<size_t> const &unplanned,
+                            ProblemData const &data,
+                            CostEvaluator const &costEvaluator)
 {
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");

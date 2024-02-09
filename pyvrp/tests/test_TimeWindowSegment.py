@@ -115,3 +115,47 @@ def test_max_duration_argument():
     assert_allclose(tws.time_warp(), 0)  # default not duration limited
     assert_allclose(tws.time_warp(max_duration=2), 3)
     assert_allclose(tws.time_warp(max_duration=0), 5)
+
+
+def test_OkSmall_with_time_warp(ok_small):
+    """
+    Tests a small example route using the OkSmall instance. In particular, we
+    also check that duration does not include time warp.
+    """
+    segments = [
+        TimeWindowSegment(
+            idx_first=idx,
+            idx_last=idx,
+            duration=loc.service_duration,
+            time_warp=0,
+            tw_early=loc.tw_early,
+            tw_late=loc.tw_late,
+            release_time=loc.release_time,
+        )
+        for idx, loc in enumerate(ok_small.depots() + ok_small.clients())
+    ]
+
+    # Create the TWS associated with route 0 -> 1 -> 3 -> 0 (so depot to 1,
+    # to 3, and back to depot).
+    tws = segments[0]
+    for idx in [1, 3, 0]:
+        mat = ok_small.duration_matrix()
+        tws = TimeWindowSegment.merge(mat, tws, segments[idx])
+
+    # First the route's duration. This depends on the travel duration, service
+    # time, and possible waiting time. We do not have waiting time on this
+    # route. So all we need to determine is:
+    #   Travel durations:
+    #       - 0 -> 1: 1544
+    #       - 1 -> 3: 1427
+    #       - 3 -> 0: 2063
+    #   Service times:
+    #       - 1: 360
+    #       - 3: 420
+    assert_allclose(tws.duration(), 1544 + 1427 + 2063 + 360 + 420)
+
+    # But there is time warp as well, because 1's time window opens at 15600,
+    # while 3's time window closes at 15300. So we leave 1 at 15600 + 360, then
+    # drive 1427 and arrive at 3 at 15600 + 360 + 1427 = 17387. We then warp
+    # back in time to 15300, for 17387 - 15300 = 2087 time warp.
+    assert_allclose(tws.time_warp(), 2087)

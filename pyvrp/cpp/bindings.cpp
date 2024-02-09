@@ -264,6 +264,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("vehicle_type",
              &Solution::Route::vehicleType,
              DOC(pyvrp, Solution, Route, vehicleType))
+        .def("depot",
+             &Solution::Route::depot,
+             DOC(pyvrp, Solution, Route, depot))
         .def("is_feasible", &Solution::Route::isFeasible)
         .def("has_excess_load", &Solution::Route::hasExcessLoad)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)
@@ -302,7 +305,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.slack(),
                                       route.prizes(),
                                       route.centroid(),
-                                      route.vehicleType());
+                                      route.vehicleType(),
+                                      route.depot());
             },
             [](py::tuple t) {  // __setstate__
                 Solution::Route route = Solution::Route(
@@ -320,7 +324,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[11].cast<pyvrp::Duration>(),            // slack
                     t[12].cast<pyvrp::Cost>(),                // prizes
                     t[13].cast<std::pair<double, double>>(),  // centroid
-                    t[14].cast<size_t>());                    // vehicle type
+                    t[14].cast<size_t>(),                     // vehicle type
+                    t[15].cast<size_t>());                    // depot
 
                 return route;
             }))
@@ -603,7 +608,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     py::arg("first"),
                     py::arg("second"))
         .def_static("merge",
-                    &TWS::merge<TWS>,
+                    &TWS::merge<TWS const &>,
                     py::arg("duration_matrix"),
                     py::arg("first"),
                     py::arg("second"),

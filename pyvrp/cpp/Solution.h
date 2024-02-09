@@ -38,6 +38,7 @@ namespace pyvrp
 class Solution
 {
     using Client = size_t;
+    using Depot = size_t;
     using VehicleType = size_t;
 
 public:
@@ -68,8 +69,9 @@ public:
         Duration slack_ = 0;      // Total time slack on this route
         Cost prizes_ = 0;         // Total value of prizes on this route
 
-        std::pair<double, double> centroid_;  // center of the route
-        VehicleType vehicleType_ = 0;         // Type of vehicle of this route
+        std::pair<double, double> centroid_;  // Route center
+        VehicleType vehicleType_;             // Type of vehicle
+        Depot depot_;                         // Assigned depot
 
     public:
         [[nodiscard]] bool empty() const;
@@ -179,13 +181,19 @@ public:
          */
         [[nodiscard]] VehicleType vehicleType() const;
 
+        /**
+         * Location index of the route's depot.
+         */
+        [[nodiscard]] Depot depot() const;
+
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
         bool operator==(Route const &other) const;
 
-        Route() = default;  // default is empty
+        Route() = delete;
+
         Route(ProblemData const &data,
               Visits visits,
               VehicleType const vehicleType);
@@ -206,7 +214,8 @@ public:
               Duration slack,
               Cost prizes,
               std::pair<double, double> centroid,
-              VehicleType vehicleType);
+              VehicleType vehicleType,
+              Depot depot);
     };
 
 private:
@@ -237,6 +246,9 @@ private:
     Solution &operator=(Solution &&other) = default;
 
 public:
+    // Solution is empty when it has no routes and no clients.
+    [[nodiscard]] bool empty() const;
+
     /**
      * Number of routes in this solution.
      *
