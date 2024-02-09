@@ -133,7 +133,9 @@ TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
 
     // Wait duration increases if we arrive at the other's first client before
     // opening, whereas time warp increases if we arrive there after closing.
-    Dur const diffWait = std::max<Dur>(other.twEarly_ - atOther - twLate_, 0);
+    Dur const diffWait = other.twEarly_ - atOther > twLate_
+                             ? other.twEarly_ - atOther - twLate_
+                             : 0;
     Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
 
     return {idxFirst_,

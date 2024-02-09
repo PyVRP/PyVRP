@@ -88,7 +88,7 @@ def test_add_client_attributes():
         service_duration=4,
         tw_early=5,
         tw_late=6,
-        release_time=7,
+        release_time=0,
         prize=8,
         required=False,
     )
@@ -99,7 +99,7 @@ def test_add_client_attributes():
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
-    assert_equal(client.release_time, 7)
+    assert_equal(client.release_time, 0)
     assert_equal(client.prize, 8)
     assert_(not client.required)
 
@@ -334,6 +334,9 @@ def test_partial_distance_duration_matrix():
     assert_equal(res.best.num_routes(), 1)
     assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
     assert_(res.is_feasible())
+
+
+test_partial_distance_duration_matrix()
 
 
 def test_data_warns_about_scaling_issues(recwarn):

@@ -55,6 +55,12 @@ ProblemData::Client::Client(Coordinate x,
     if (twEarly < 0)
         throw std::invalid_argument("tw_early must be >= 0.");
 
+    if (releaseTime > twLate)
+        throw std::invalid_argument("release_time must be <= tw_late");
+
+    if (releaseTime < 0)
+        throw std::invalid_argument("release_time must be >= 0.");
+
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
 }
@@ -94,9 +100,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
                                       Cost fixedCost,
-                                      std::optional<Duration> twEarly,
-                                      std::optional<Duration> twLate,
-                                      std::optional<Duration> maxDuration,
+                                      Duration twEarly,
+                                      Duration twLate,
+                                      Duration maxDuration,
                                       char const *name)
     : numAvailable(numAvailable),
       depot(depot),
@@ -105,7 +111,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       twEarly(twEarly),
       twLate(twLate),
       name(duplicate(name)),
-      maxDuration(maxDuration.value_or(std::numeric_limits<Duration>::max()))
+      maxDuration(maxDuration)
 {
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
@@ -116,20 +122,13 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
 
-    if ((twEarly && !twLate) || (!twEarly && twLate))
-        throw std::invalid_argument("Must pass either no shift time window,"
-                                    " or both a start and end.");
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
 
-    if (twEarly && twLate)
-    {
-        if (twEarly > twLate)
-            throw std::invalid_argument("tw_early must be <= tw_late.");
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
 
-        if (twEarly < 0)
-            throw std::invalid_argument("tw_early must be >= 0.");
-    }
-
-    if (this->maxDuration < 0)
+    if (maxDuration < 0)
         throw std::invalid_argument("max_duration must be >= 0.");
 }
 

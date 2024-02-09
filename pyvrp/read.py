@@ -1,7 +1,7 @@
 import functools
 import pathlib
 from numbers import Number
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 from warnings import warn
 
 import numpy as np
@@ -115,8 +115,8 @@ def read(
     # If this value is supplied, we should pass it through the round func and
     # then unwrap the result. If it's not given, the default value is None,
     # which PyVRP understands.
-    max_duration: Optional[int] = instance.get("vehicles_max_duration")
-    if max_duration is not None:
+    max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
+    if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
 
     distances: np.ndarray = round_func(instance["edge_weight"])
@@ -154,6 +154,7 @@ def read(
         durations = np.zeros_like(distances)
         service_times = np.zeros(dimension, dtype=int)
         time_windows = np.zeros((dimension, 2), dtype=int)
+        time_windows[:, 1] = np.iinfo(np.int32).max
 
     if "vehicles_depot" in instance:
         items: list[list[int]] = [[] for _ in depots]
