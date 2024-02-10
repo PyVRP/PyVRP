@@ -12,7 +12,7 @@ from pyvrp import (
     plotting,
 )
 from pyvrp.diversity import broken_pairs_distance
-from pyvrp.tests.helpers import read, read_solution
+from tests.helpers import read, read_solution
 
 IMG_KWARGS = dict(remove_text=True, tol=8, extensions=["png"], style="mpl20")
 

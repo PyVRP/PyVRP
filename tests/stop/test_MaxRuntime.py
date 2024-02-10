@@ -2,7 +2,7 @@ from numpy.testing import assert_, assert_raises
 from pytest import mark
 
 from pyvrp.stop import MaxRuntime
-from pyvrp.tests.helpers import sleep
+from tests.helpers import sleep
 
 
 @mark.parametrize("max_runtime", [-0.001, -1, -10.1])
