@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Collection
 
-from pyvrp.ProgressLogger import ProgressLogger
+from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 
@@ -149,8 +149,8 @@ class GeneticAlgorithm:
         Result
             A Result object, containing statistics and the best found solution.
         """
-        log_progress = ProgressLogger(log=self._params.log)
-        log_progress.log_start(self._data)
+        print_progress = ProgressPrinter(should_print=self._params.log)
+        print_progress.start(self._data)
 
         start = time.perf_counter()
         stats = Statistics()
@@ -164,7 +164,7 @@ class GeneticAlgorithm:
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
-                log_progress.log_restart(self._params.nb_iter_no_improvement)
+                print_progress.restart(self._params.nb_iter_no_improvement)
 
                 iters_no_improvement = 1
                 self._pop.clear()
@@ -188,10 +188,10 @@ class GeneticAlgorithm:
                 iters_no_improvement += 1
 
             stats.collect_from(self._pop, self._cost_evaluator)
-            log_progress.log_progress(curr_best, stats)
+            print_progress.iteration(stats)
 
         end = time.perf_counter() - start
-        log_progress.log_end(iters, end, self._cost_evaluator.cost(self._best))
+        print_progress.end(iters, end, self._cost_evaluator.cost(self._best))
 
         return Result(self._best, stats, iters, end)
 
