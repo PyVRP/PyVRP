@@ -119,7 +119,9 @@ def read(
     if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
 
-    distances: np.ndarray = round_func(instance["edge_weight"])
+    # VRPLIB instances typically do not have a duration data field, so we
+    # assume duration == distance if the instance has time windows.
+    durations = distances = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
@@ -144,15 +146,9 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
 
     if "time_window" in instance:
-        # VRPLIB instances typically do not have a duration data field, so we
-        # assume duration == distance if the instance has time windows.
-        durations = distances
         time_windows: np.ndarray = round_func(instance["time_window"])
     else:
         # No time window data. So the time window component is not relevant.
-        durations = np.zeros_like(distances)
-        service_times = np.zeros(dimension, dtype=int)
-
         time_windows = np.empty((dimension, 2), dtype=int)
         time_windows[:, 0] = 0
         time_windows[:, 1] = _INT_MAX
