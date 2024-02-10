@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <compare>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -14,7 +15,7 @@ namespace pyvrp
 #ifdef PYVRP_DOUBLE_PRECISION
 using Value = double;
 #else
-using Value = int;
+using Value = int32_t;
 #endif
 
 enum class MeasureType
