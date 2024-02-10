@@ -1,7 +1,7 @@
 import functools
 import pathlib
 from numbers import Number
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 from warnings import warn
 
 import numpy as np
@@ -115,11 +115,13 @@ def read(
     # If this value is supplied, we should pass it through the round func and
     # then unwrap the result. If it's not given, the default value is None,
     # which PyVRP understands.
-    max_duration: Optional[int] = instance.get("vehicles_max_duration")
-    if max_duration is not None:
+    max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
+    if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
 
-    distances: np.ndarray = round_func(instance["edge_weight"])
+    # VRPLIB instances typically do not have a duration data field, so we
+    # assume duration == distance if the instance has time windows.
+    durations = distances = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
@@ -144,16 +146,12 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
 
     if "time_window" in instance:
-        # VRPLIB instances typically do not have a duration data field, so we
-        # assume duration == distance if the instance has time windows.
-        durations = distances
         time_windows: np.ndarray = round_func(instance["time_window"])
     else:
-        # No time window data. So the time window component is not relevant,
-        # and we set all time-related fields to zero.
-        durations = np.zeros_like(distances)
-        service_times = np.zeros(dimension, dtype=int)
-        time_windows = np.zeros((dimension, 2), dtype=int)
+        # No time window data. So the time window component is not relevant.
+        time_windows = np.empty((dimension, 2), dtype=int)
+        time_windows[:, 0] = 0
+        time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
         items: list[list[int]] = [[] for _ in depots]

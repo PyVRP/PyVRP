@@ -1,6 +1,6 @@
 import pytest
 
-from pyvrp.tests.helpers import read
+from tests.helpers import read
 
 
 @pytest.fixture(scope="session")

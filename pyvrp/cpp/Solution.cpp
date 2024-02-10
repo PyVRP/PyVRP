@@ -248,19 +248,14 @@ Solution::Route::Route(ProblemData const &data,
         return;
 
     // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter. If the
-    // vehicle does not have a shift time window, we default to the depot's
-    // open and close times.
+    // the vehicle's start and end of shift, whichever is tighter.
     auto const &depotLocation = data.location(depot_);
-    auto const shiftStart = vehType.twEarly.value_or(depotLocation.twEarly);
-    auto const shiftEnd = vehType.twLate.value_or(depotLocation.twLate);
-
     TimeWindowSegment depotTws(depot_,
                                depot_,
                                0,
                                0,
-                               std::max(depotLocation.twEarly, shiftStart),
-                               std::min(depotLocation.twLate, shiftEnd),
+                               std::max(depotLocation.twEarly, vehType.twEarly),
+                               std::min(depotLocation.twLate, vehType.twLate),
                                0);
 
     auto tws = depotTws;

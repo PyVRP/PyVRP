@@ -17,7 +17,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.search import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
-from pyvrp.tests.helpers import read_solution
+from tests.helpers import read_solution
 
 
 @mark.parametrize(

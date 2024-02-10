@@ -41,7 +41,7 @@ class Client:
         demand: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
-        tw_late: int = 0,
+        tw_late: int = ...,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
@@ -53,9 +53,9 @@ class VehicleType:
     depot: int
     capacity: int
     fixed_cost: int
-    tw_early: Optional[int]
-    tw_late: Optional[int]
-    max_duration: Optional[int]
+    tw_early: int
+    tw_late: int
+    max_duration: int
     name: str
     def __init__(
         self,
@@ -63,9 +63,9 @@ class VehicleType:
         capacity: int = 0,
         depot: int = 0,
         fixed_cost: int = 0,
-        tw_early: Optional[int] = None,
-        tw_late: Optional[int] = None,
-        max_duration: Optional[int] = None,
+        tw_early: int = 0,
+        tw_late: int = ...,
+        max_duration: int = ...,
         name: str = "",
     ) -> None: ...
 
@@ -240,7 +240,7 @@ class TimeWindowSegment:
     def duration(self) -> int: ...
     def tw_early(self) -> int: ...
     def tw_late(self) -> int: ...
-    def time_warp(self, max_duration: Optional[int] = None) -> int: ...
+    def time_warp(self, max_duration: int = ...) -> int: ...
 
 class RandomNumberGenerator:
     @overload
