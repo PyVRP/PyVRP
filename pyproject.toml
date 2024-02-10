@@ -118,7 +118,7 @@ select = [
 
 [tool.ruff.isort]
 case-sensitive = true
-known-first-party = ["pyvrp"]
+known-first-party = ["pyvrp", "tests"]
 
 
 [tool.mypy]
