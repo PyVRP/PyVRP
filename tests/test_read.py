@@ -10,7 +10,7 @@ from numpy.testing import (
 from pytest import mark
 
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.tests.helpers import read
+from tests.helpers import read
 
 
 @mark.parametrize(
