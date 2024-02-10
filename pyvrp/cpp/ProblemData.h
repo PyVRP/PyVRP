@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <iosfwd>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -48,7 +49,7 @@ public:
      *    demand: int = 0,
      *    service_duration: int = 0,
      *    tw_early: int = 0,
-     *    tw_late: int = 0,
+     *    tw_late: int = np.iinfo(np.int32).max,
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
@@ -77,7 +78,7 @@ public:
      *     Default 0.
      * tw_late
      *     Latest time at which this client may be visited to start service.
-     *     Default 0.
+     *     Unconstrained if not provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
      *     time at which a vehicle may leave the depot to visit this client.
@@ -133,7 +134,7 @@ public:
                Load demand = 0,
                Duration serviceDuration = 0,
                Duration twEarly = 0,
-               Duration twLate = 0,
+               Duration twLate = std::numeric_limits<Duration>::max(),
                Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true,
@@ -154,19 +155,13 @@ public:
      *     capacity: int = 0,
      *     depot: int = 0,
      *     fixed_cost: int = 0,
-     *     tw_early: Optional[int] = None,
-     *     tw_late: Optional[int] = None,
-     *     max_duration: Optional[int] = None,
+     *     tw_early: int = 0,
+     *     tw_late: int = np.iinfo(np.int32).max,
+     *     max_duration: int = np.iinfo(np.int32).max,
      *     name: str = "",
      * )
      *
      * Simple data object storing all vehicle type data as properties.
-     *
-     * .. note::
-     *
-     *    If ``tw_early`` is set, then also ``tw_late`` must be provided to
-     *    completely specify the shift duration (and vice versa). If neither
-     *    are given, the shift duration defaults to the depot's time window.
      *
      * Parameters
      * ----------
@@ -182,13 +177,11 @@ public:
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
-     *     Start of the vehicle type's shift. Defaults to the depot's opening
-     *     time if not given.
+     *     Start of the vehicle type's shift. Default 0.
      * tw_late
-     *     End of the vehicle type's shift. Defaults to the depot's closing
-     *     time if not given.
+     *     End of the vehicle type's shift. Unconstrained if not provided.
      * max_duration
-     *     Maximum route duration. Unconstrained if not explicitly set.
+     *     Maximum route duration. Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -214,22 +207,22 @@ public:
      */
     struct VehicleType
     {
-        size_t const numAvailable;  // Available vehicles of this type
-        size_t const depot;         // Departure and return depot location
-        Load const capacity;        // This type's vehicle capacity
-        Cost const fixedCost;       // Fixed cost of using this vehicle type
-        std::optional<Duration> const twEarly;  // Start of shift
-        std::optional<Duration> const twLate;   // End of shift
-        char const *name;                       // Type name (for reference)
-        Duration const maxDuration;             // Maximum route duration
+        size_t const numAvailable;   // Available vehicles of this type
+        size_t const depot;          // Departure and return depot location
+        Load const capacity;         // This type's vehicle capacity
+        Cost const fixedCost;        // Fixed cost of using this vehicle type
+        Duration const twEarly;      // Start of shift
+        Duration const twLate;       // End of shift
+        char const *name;            // Type name (for reference)
+        Duration const maxDuration;  // Maximum route duration
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
                     size_t depot = 0,
                     Cost fixedCost = 0,
-                    std::optional<Duration> twEarly = std::nullopt,
-                    std::optional<Duration> twLate = std::nullopt,
-                    std::optional<Duration> maxDuration = std::nullopt,
+                    Duration twEarly = 0,
+                    Duration twLate = std::numeric_limits<Duration>::max(),
+                    Duration maxDuration = std::numeric_limits<Duration>::max(),
                     char const *name = "");
 
         VehicleType(VehicleType const &vehicleType);

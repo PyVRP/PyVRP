@@ -69,7 +69,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("demand") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
-             py::arg("tw_late") = 0,
+             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("release_time") = 0,
              py::arg("prize") = 0,
              py::arg("required") = true,
@@ -97,17 +97,18 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Load,
                       size_t,
                       pyvrp::Cost,
-                      std::optional<pyvrp::Duration>,
-                      std::optional<pyvrp::Duration>,
-                      std::optional<pyvrp::Duration>,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
              py::arg("depot") = 0,
              py::arg("fixed_cost") = 0,
-             py::arg("tw_early") = py::none(),
-             py::arg("tw_late") = py::none(),
-             py::arg("max_duration") = py::none(),
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("max_duration")
+             = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
@@ -594,14 +595,11 @@ PYBIND11_MODULE(_pyvrp, m)
             "duration", &TWS::duration, DOC(pyvrp, TimeWindowSegment, duration))
         .def("tw_early", &TWS::twEarly, DOC(pyvrp, TimeWindowSegment, twEarly))
         .def("tw_late", &TWS::twLate, DOC(pyvrp, TimeWindowSegment, twLate))
-        .def(
-            "time_warp",
-            [](TWS const &tws, std::optional<pyvrp::Duration> maxDuration) {
-                return tws.timeWarp(maxDuration.value_or(
-                    std::numeric_limits<pyvrp::Duration>::max()));
-            },
-            py::arg("max_duration") = py::none(),
-            DOC(pyvrp, TimeWindowSegment, timeWarp))
+        .def("time_warp",
+             &TWS::timeWarp,
+             py::arg("max_duration")
+             = std::numeric_limits<pyvrp::Duration>::max(),
+             DOC(pyvrp, TimeWindowSegment, timeWarp))
         .def_static("merge",
                     &TWS::merge<>,
                     py::arg("duration_matrix"),

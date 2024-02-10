@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
@@ -412,7 +410,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
 @pytest.mark.parametrize(
     ("shift_tw", "expected_tw"),
     [
-        ((None, None), (0, 1000)),  # not set; should default to depot
+        ((0, np.iinfo(np.int32).max), (0, 1000)),  # should default to depot
         ((0, 1000), (0, 1000)),  # same as depot
         ((0, 500), (0, 500)),  # earlier tw_late, should lower tw_late
         ((250, 1000), (250, 1000)),  # later tw_early, should increase tw_early
@@ -420,8 +418,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     ],
 )
 def test_shift_duration_depot_time_window_interaction(
-    shift_tw: tuple[Optional[int], Optional[int]],
-    expected_tw: tuple[int, int],
+    shift_tw: tuple[int, int], expected_tw: tuple[int, int]
 ):
     """
     Tests that the route's depot time window is restricted to the most

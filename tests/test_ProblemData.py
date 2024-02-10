@@ -90,6 +90,8 @@ def test_client_constructor_initialises_data_fields_correctly(
         (1, 1, 1, 0, -1, 0, 0, 0),  # negative early
         (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
         (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
+        (1, 1, 0, 0, 0, 1, -1, 0),  # negative release time
+        (1, 1, 0, 0, 0, 1, 2, 0),  # release time > late
         (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
     ],
 )
@@ -115,7 +117,7 @@ def test_raises_for_invalid_client_data(
     [
         (0, 0, 1, 0, 0, 0, 0, 0),  # demand != 0
         (0, 0, 0, 1, 0, 0, 0, 0),  # service duration != 0
-        (0, 0, 0, 0, 0, 0, 1, 0),  # release time != 0
+        (0, 0, 0, 0, 0, 1, 1, 0),  # release time != 0
     ],
 )
 def test_raises_for_invalid_depot_data(
@@ -442,10 +444,9 @@ def test_matrices_are_not_copies():
         (-100, 1, 0, 0, 0),  # this is just wrong
         (1, 1, -1, 0, 0),  # fixed_cost cannot be negative
         (0, 1, -100, 0, 0),  # this is just wrong
-        (0, 1, 0, None, 0),  # both shift time windows must be given (if set)
-        (0, 1, 0, 0, None),  # both shift time windows must be given (if set)
         (0, 1, 0, 1, 0),  # early > late
         (0, 1, 0, -1, 0),  # negative early
+        (0, 1, 0, 0, -1),  # negative late
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -506,16 +507,17 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.depot, 0)
     assert_allclose(vehicle_type.capacity, 0)
     assert_allclose(vehicle_type.fixed_cost, 0)
-    assert_(vehicle_type.tw_early is None)
-    assert_(vehicle_type.tw_late is None)
+    assert_allclose(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.name, "")
 
     # The C++ extensions can be compiled with support for either integer or
-    # double precision. In each case, the default value for max_duration is
-    # the largest representable value.
+    # double precision. In each case, the default value for the following
+    # fields is the largest representable value.
     if isinstance(vehicle_type.max_duration, int):
+        assert_allclose(vehicle_type.tw_late, np.iinfo(np.int32).max)
         assert_equal(vehicle_type.max_duration, np.iinfo(np.int32).max)
     else:
+        assert_allclose(vehicle_type.tw_late, sys.float_info.max)
         assert_allclose(vehicle_type.max_duration, sys.float_info.max)
 
 

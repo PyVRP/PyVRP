@@ -107,8 +107,8 @@ def test_merging_two_previously_merged_tws():
 
 def test_max_duration_argument():
     """
-    Tests that the optional ``max_duration`` argument is evaluated correctly,
-    and indeed increases the time warp if it's violated.
+    Tests that the ``max_duration`` argument is evaluated correctly, and indeed
+    increases the time warp if it's violated.
     """
     tws = TimeWindowSegment(0, 0, 5, 0, 0, 0, 0)  # five duration
 

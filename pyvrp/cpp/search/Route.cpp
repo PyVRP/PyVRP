@@ -73,21 +73,15 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const &depot = data.location(vehicleType_.depot);
-
     // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter. If the
-    // vehicle does not have a shift time window, we default to the depot's
-    // open and close times.
-    auto const shiftStart = vehicleType_.twEarly.value_or(depot.twEarly);
-    auto const shiftEnd = vehicleType_.twLate.value_or(depot.twLate);
-
+    // the vehicle's start and end of shift, whichever is tighter.
+    auto const &depot = data.location(vehicleType_.depot);
     TWS depotTws(vehicleType_.depot,
                  vehicleType_.depot,
                  0,
                  0,
-                 std::max(depot.twEarly, shiftStart),
-                 std::min(depot.twLate, shiftEnd),
+                 std::max(depot.twEarly, vehicleType_.twEarly),
+                 std::min(depot.twLate, vehicleType_.twLate),
                  0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
