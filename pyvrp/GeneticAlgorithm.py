@@ -35,8 +35,6 @@ class GeneticAlgorithmParams:
     nb_iter_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    log
-        Whether to output information about the solver progress to the console.
 
     Attributes
     ----------
@@ -44,8 +42,6 @@ class GeneticAlgorithmParams:
         Probability of repairing an infeasible solution.
     nb_iter_no_improvement
         Number of iterations without improvement before a restart occurs.
-    log
-        Whether to output information about the solver progress to the console.
 
     Raises
     ------
@@ -56,7 +52,6 @@ class GeneticAlgorithmParams:
 
     repair_probability: float = 0.80
     nb_iter_no_improvement: int = 20_000
-    log: bool = False
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
@@ -134,7 +129,7 @@ class GeneticAlgorithm:
     def _cost_evaluator(self) -> CostEvaluator:
         return self._pm.get_cost_evaluator()
 
-    def run(self, stop: StoppingCriterion):
+    def run(self, stop: StoppingCriterion, log: bool = False):
         """
         Runs the genetic algorithm with the provided stopping criterion.
 
@@ -143,13 +138,16 @@ class GeneticAlgorithm:
         stop
             Stopping criterion to use. The algorithm runs until the first time
             the stopping criterion returns ``True``.
+        log
+            Whether to output information about the solver progress to the
+            console. Default ``False``.
 
         Returns
         -------
         Result
             A Result object, containing statistics and the best found solution.
         """
-        print_progress = ProgressPrinter(should_print=self._params.log)
+        print_progress = ProgressPrinter(should_print=log)
         print_progress.start(self._data)
 
         start = time.perf_counter()
