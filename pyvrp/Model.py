@@ -271,7 +271,7 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
-        log: bool = True,
+        display: bool = True,
     ) -> Result:
         """
         Solve this model.
@@ -282,7 +282,7 @@ class Model:
             Stopping criterion to use.
         seed
             Seed value to use for the random number stream. Default 0.
-        log
+        display
             Whether to display information about the solver progress. Default
             ``True``.
 
@@ -323,4 +323,4 @@ class Model:
 
         gen_args = (data, pm, rng, pop, ls, crossover, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop, log)
+        return algo.run(stop, display)

@@ -61,7 +61,7 @@ class ProgressPrinter:
         msg = _ITERATION.format(
             special="H" if feas.best_cost < self._best_cost else " ",
             iters=stats.num_iterations,
-            elapsed=str(round(sum(stats.runtimes))),
+            elapsed=round(sum(stats.runtimes)),
             feas_size=feas.size,
             feas_avg=round(feas.avg_cost),
             feas_best=round(feas.best_cost),

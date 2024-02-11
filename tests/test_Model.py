@@ -306,23 +306,33 @@ def test_model_and_solve(ok_small):
     assert_equal(res.cost(), 9_155)
 
 
-def test_model_solve_log(ok_small, capsys):
+def test_model_solve_display_argument(ok_small, capsys):
     """
-    Tests that solving a model with logging enabled produces the expected
-    output.
+    Tests that solving a model displays solver progress when the ``display``
+    argument is ``True``.
     """
     model = Model.from_data(ok_small)
 
-    # First solve without logging, we should not see any output.
-    model.solve(stop=MaxIterations(1000), seed=0, log=False)
-    captured = capsys.readouterr()
+    # First solve with display turned off. We should not see any output in this
+    # case.
+    model.solve(stop=MaxIterations(1000), seed=0, display=False)
+    printed = capsys.readouterr().out
+    assert_equal(printed, "")
 
-    assert_equal(captured.out, "")
+    # Now solve with display turned on. We should see output now.
+    res = model.solve(stop=MaxIterations(1000), seed=0, display=True)
+    printed = capsys.readouterr().out
 
-    # Now solve with logging, we should see some output.
-    model.solve(stop=MaxIterations(1000), seed=0)
-    captured = capsys.readouterr()
-    # TODO
+    # Check that some of the header data is in the output.
+    assert_("PyVRP" in printed)
+    assert_("Time" in printed)
+    assert_("Iters" in printed)
+    assert_("Feasible" in printed)
+    assert_("Infeasible" in printed)
+
+    # Check that we include the cost and total runtime in the output somewhere.
+    assert_(str(round(res.cost())) in printed)
+    assert_(str(round(res.runtime)) in printed)
 
 
 def test_partial_distance_duration_matrix():
