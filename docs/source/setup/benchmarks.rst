@@ -88,7 +88,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - MDVRPTW
    * - 11 February 2024
      - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note3]_
-     - TODO
+     - 5.23%
      - 10.86%
      - 13.24%
      -
