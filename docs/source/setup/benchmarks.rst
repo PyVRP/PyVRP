@@ -86,6 +86,12 @@ The reported values represent the average gaps to the best-known solutions (at t
      - VRPTW
      - PC-VRPTW
      - MDVRPTW
+   * - 11 February 2024
+     - `Google OR-Tools <https://developers.google.com/optimization/routing>` [#note3]_
+     - TODO
+     - 10.86%
+     - 13.24%
+     -
    * - 28 February 2023
      - `HGS-CVRP <https://github.com/vidalt/HGS-CVRP>`_
      - 0.11%
@@ -117,3 +123,8 @@ The reported values represent the average gaps to the best-known solutions (at t
    Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
    This is an average gap over five seeds, rather than the usual ten.
    Note that this paper introduced the MDVRPTW benchmark instances.
+
+.. [#note3]
+   Google OR-Tools `v9.8.3296 <https://pypi.org/project/ortools/9.8.3296/>`_.
+   The reported average gap is over one seed, because the solver is deterministic.
+   The code used to benchmark Google OR-tools can be found in `this issue <https://github.com/PyVRP/PyVRP/issues/453>`_.
