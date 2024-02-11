@@ -87,7 +87,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - PC-VRPTW
      - MDVRPTW
    * - 11 February 2024
-     - `Google OR-Tools <https://developers.google.com/optimization/routing>` [#note3]_
+     - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note3]_
      - TODO
      - 10.86%
      - 13.24%
@@ -125,6 +125,6 @@ The reported values represent the average gaps to the best-known solutions (at t
    Note that this paper introduced the MDVRPTW benchmark instances.
 
 .. [#note3]
-   Google OR-Tools `v9.8.3296 <https://pypi.org/project/ortools/9.8.3296/>`_.
-   The reported average gap is over one seed, because the solver is deterministic.
+   Results obtained using Google OR-Tools `v9.8.3296 <https://pypi.org/project/ortools/9.8.3296/>`_.
+   The reported average gap is over only one seed, because there is no interface to set the seed.
    The code used to benchmark Google OR-tools can be found in `this issue <https://github.com/PyVRP/PyVRP/issues/453>`_.
