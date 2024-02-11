@@ -17,7 +17,7 @@ _START = """PyVRP v{version}
 Solving an instance with:
     {num_depots} depots
     {num_clients} clients
-    {num_vehicles} vehicles [{num_vehicle_types} types]
+    {num_vehicles} vehicles ({num_vehicle_types} types)
 
                   |       Feasible        |      Infeasible
     Iters    Time |   #      Avg     Best |   #      Avg     Best"""
