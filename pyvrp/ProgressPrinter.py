@@ -15,9 +15,9 @@ _ITERATION = (
 _START = """PyVRP v{version}
 
 Solving an instance with:
-    - {num_depots} depots;
-    - {num_clients} clients;
-    - {num_vehicles} vehicles.
+    {num_depots} depots
+    {num_clients} clients
+    {num_vehicles} vehicles [{num_vehicle_types} types]
 
                   |       Feasible        |      Infeasible
     Iters    Time |   #      Avg     Best |   #      Avg     Best"""
@@ -32,7 +32,14 @@ _RESTART = "R                 |        restart        |        restart"
 
 class ProgressPrinter:
     """
-    TODO
+    A helper class that prints relevant solver progress information to the
+    console, if desired.
+
+    Parameters
+    ----------
+    should_print
+        Whether to print information to the console. When ``False``, nothing is
+        printed.
     """
 
     def __init__(self, should_print: bool):
@@ -41,7 +48,9 @@ class ProgressPrinter:
 
     def iteration(self, stats: Statistics):
         """
-        TODO
+        Outputs relevant information every few hundred iterations. The output
+        contains information about the feasible and infeasible populations,
+        whether a new best solution has been found, and the search duration.
         """
         if not self._print or stats.num_iterations % 500 != 0:
             return
@@ -67,7 +76,8 @@ class ProgressPrinter:
 
     def start(self, data: ProblemData):
         """
-        TODO
+        Outputs information about PyVRP and the data instance that is being
+        solved.
         """
         if self._print:
             msg = _START.format(
@@ -75,12 +85,14 @@ class ProgressPrinter:
                 num_depots=data.num_depots,
                 num_clients=data.num_clients,
                 num_vehicles=data.num_vehicles,
+                num_vehicle_types=data.num_vehicle_types,
             )
             print(msg)
 
     def end(self, result: Result):
         """
-        TODO
+        Outputs information about the search duration and the best-found
+        solution.
         """
         if self._print:
             msg = _END.format(
@@ -92,7 +104,8 @@ class ProgressPrinter:
 
     def restart(self):
         """
-        TODO
+        Indicates in the progress information that the algorithm has restarted
+        the search.
         """
         if self._print:
             print(_RESTART)
