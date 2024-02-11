@@ -2,6 +2,7 @@ from importlib.metadata import version
 
 from pyvrp._pyvrp import ProblemData
 
+from .Result import Result
 from .Statistics import Statistics
 
 # Templates for various different outputs.
@@ -16,8 +17,8 @@ Solving an instance with:
     Iters    Time |   #      Avg     Best |   #      Avg     Best"""
 
 _FOOTER = """
-Search terminated in {run_time:.2f}s after {iters} iterations.
-Best-found solution has cost {best_cost:.1f}.
+Search terminated in {runtime:.2f}s after {iters} iterations.
+Best-found solution has cost {best_cost:.0f}.
 """
 
 _ITER = (
@@ -76,15 +77,15 @@ class ProgressPrinter:
             )
             print(msg)
 
-    def end(self, iters: int, run_time: float):
+    def end(self, result: Result):
         """
         TODO
         """
         if self._print:
             msg = _FOOTER.format(
-                iters=iters,
-                run_time=run_time,
-                best_cost=self._best_cost,
+                iters=result.num_iterations,
+                runtime=result.runtime,
+                best_cost=result.cost(),
             )
             print(msg)
 

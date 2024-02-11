@@ -191,9 +191,11 @@ class GeneticAlgorithm:
             print_progress.iteration(stats)
 
         end = time.perf_counter() - start
-        print_progress.end(iters, end)
+        res = Result(self._best, stats, iters, end)
 
-        return Result(self._best, stats, iters, end)
+        print_progress.end(res)
+
+        return res
 
     def _improve_offspring(self, sol: Solution):
         def is_new_best(sol):
