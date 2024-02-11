@@ -6,7 +6,13 @@ from .Result import Result
 from .Statistics import Statistics
 
 # Templates for various different outputs.
-_HEADER = """PyVRP v{version}
+_ITERATION = (
+    "{special} {iters:>7} {elapsed:>6}s | "
+    "{feas_size:>3} {feas_avg:>8} {feas_best:>8} | "
+    "{infeas_size:>3} {infeas_avg:>8} {infeas_best:>8}"
+)
+
+_START = """PyVRP v{version}
 
 Solving an instance with:
     - {num_depots} depots;
@@ -16,16 +22,11 @@ Solving an instance with:
                   |       Feasible        |      Infeasible
     Iters    Time |   #      Avg     Best |   #      Avg     Best"""
 
-_FOOTER = """
+_END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
 Best-found solution has cost {best_cost:.0f}.
 """
 
-_ITER = (
-    "{special} {iters:>7} {elapsed:>6}s | "
-    "{feas_size:>3} {feas_avg:>8} {feas_best:>8} | "
-    "{infeas_size:>3} {infeas_avg:>8} {infeas_best:>8}"
-)
 _RESTART = "R                 |        restart        |        restart"
 
 
@@ -48,7 +49,7 @@ class ProgressPrinter:
         feas = stats.feas_stats[-1]
         infeas = stats.infeas_stats[-1]
 
-        msg = _ITER.format(
+        msg = _ITERATION.format(
             special="H" if feas.best_cost < self._best_cost else " ",
             iters=stats.num_iterations,
             elapsed=str(round(sum(stats.runtimes))),
@@ -69,7 +70,7 @@ class ProgressPrinter:
         TODO
         """
         if self._print:
-            msg = _HEADER.format(
+            msg = _START.format(
                 version=version("pyvrp"),
                 num_depots=data.num_depots,
                 num_clients=data.num_clients,
@@ -82,7 +83,7 @@ class ProgressPrinter:
         TODO
         """
         if self._print:
-            msg = _FOOTER.format(
+            msg = _END.format(
                 iters=result.num_iterations,
                 runtime=result.runtime,
                 best_cost=result.cost(),
