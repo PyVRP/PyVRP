@@ -283,8 +283,8 @@ class Model:
         seed
             Seed value to use for the random number stream. Default 0.
         log
-            Whether to output information about the solver progress to the
-            console. Default ``True``.
+            Whether to display information about the solver progress. Default
+            ``True``.
 
         Returns
         -------

@@ -139,8 +139,8 @@ class GeneticAlgorithm:
             Stopping criterion to use. The algorithm runs until the first time
             the stopping criterion returns ``True``.
         log
-            Whether to output information about the solver progress to the
-            console. Default ``False``.
+            Whether to display information about the solver progress. Default
+            ``False``.
 
         Returns
         -------
