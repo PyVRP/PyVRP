@@ -36,7 +36,7 @@ class GeneticAlgorithmParams:
         Number of iterations without any improvement needed before a restart
         occurs.
     log
-        Whether to print logs about the algorithm progress.
+        Whether to output information about the solver progress to the console.
 
     Attributes
     ----------
@@ -45,7 +45,7 @@ class GeneticAlgorithmParams:
     nb_iter_no_improvement
         Number of iterations without improvement before a restart occurs.
     log
-        Whether to print logs about the algorithm progress.
+        Whether to output information about the solver progress to the console.
 
     Raises
     ------
@@ -164,7 +164,7 @@ class GeneticAlgorithm:
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
-                print_progress.restart(self._params.nb_iter_no_improvement)
+                print_progress.restart()
 
                 iters_no_improvement = 1
                 self._pop.clear()
@@ -191,7 +191,7 @@ class GeneticAlgorithm:
             print_progress.iteration(stats)
 
         end = time.perf_counter() - start
-        print_progress.end(iters, end, self._cost_evaluator.cost(self._best))
+        print_progress.end(iters, end)
 
         return Result(self._best, stats, iters, end)
 
