@@ -186,24 +186,24 @@ def read(
 
     clients = [
         Client(
-            coords[idx][0],  # x
-            coords[idx][1],  # y
-            demands[idx],
-            service_times[idx],
-            time_windows[idx][0],  # TW early
-            time_windows[idx][1],  # TW late
-            release_times[idx],
-            prizes[idx],
-            np.isclose(prizes[idx], 0),  # required only when prize is zero
+            x=coords[idx][0],
+            y=coords[idx][1],
+            demand=demands[idx],
+            service_duration=service_times[idx],
+            tw_early=time_windows[idx][0],
+            tw_late=time_windows[idx][1],
+            release_time=release_times[idx],
+            prize=prizes[idx],
+            required=np.isclose(prizes[idx], 0),  # only when prize is zero
         )
         for idx in range(dimension)
     ]
 
     vehicle_types = [
         VehicleType(
-            len(vehicles),
-            capacity,
-            depot_idx,
+            num_available=len(vehicles),
+            capacity=capacity,
+            depot=depot_idx,
             max_duration=max_duration,
             # A bit hacky, but this csv-like name is really useful to track the
             # actual vehicles that make up this vehicle type.

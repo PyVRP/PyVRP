@@ -47,6 +47,7 @@ public:
      *    x: int,
      *    y: int,
      *    demand: int = 0,
+     *    supply: int = 0,
      *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int32).max,
@@ -67,7 +68,9 @@ public:
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple.
      * demand
-     *     The amount this client's demanding. Default 0.
+     *     The amount this client demands from the depot. Default 0.
+     * supply
+     *     The amount this client ships back to the depot. Default 0.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route. Service should start (but not necessarily end)
@@ -98,7 +101,9 @@ public:
      * y
      *     Vertical coordinate of this client.
      * demand
-     *     Client demand.
+     *     Client demand from depot.
+     * supply
+     *     Client supply to depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route.
@@ -121,6 +126,7 @@ public:
         Coordinate const x;
         Coordinate const y;
         Load const demand;
+        Load const supply;
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
@@ -132,6 +138,7 @@ public:
         Client(Coordinate x,
                Coordinate y,
                Load demand = 0,
+               Load supply = 0,
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = std::numeric_limits<Duration>::max(),

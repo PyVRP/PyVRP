@@ -25,6 +25,7 @@ static char *duplicate(char const *src)
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
                             Load demand,
+                            Load supply,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -35,6 +36,7 @@ ProblemData::Client::Client(Coordinate x,
     : x(x),
       y(y),
       demand(demand),
+      supply(supply),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -45,6 +47,9 @@ ProblemData::Client::Client(Coordinate x,
 {
     if (demand < 0)
         throw std::invalid_argument("demand must be >= 0.");
+
+    if (supply < 0)
+        throw std::invalid_argument("supply must be >= 0.");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0.");
@@ -69,6 +74,7 @@ ProblemData::Client::Client(Client const &client)
     : x(client.x),
       y(client.y),
       demand(client.demand),
+      supply(client.supply),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -83,6 +89,7 @@ ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
       demand(client.demand),
+      supply(client.supply),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -245,6 +252,9 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
     {
         if (depot.demand != 0)
             throw std::invalid_argument("Depot demand must be 0.");
+
+        if (depot.supply != 0)
+            throw std::invalid_argument("Depot supply must be 0.");
 
         if (depot.serviceDuration != 0)
             throw std::invalid_argument("Depot service duration must be 0.");

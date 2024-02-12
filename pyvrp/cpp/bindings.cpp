@@ -57,6 +57,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<pyvrp::Coordinate,
                       pyvrp::Coordinate,
                       pyvrp::Load,
+                      pyvrp::Load,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
@@ -67,6 +68,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("x"),
              py::arg("y"),
              py::arg("demand") = 0,
+             py::arg("supply") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
@@ -77,6 +79,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
         .def_readonly("demand", &ProblemData::Client::demand)
+        .def_readonly("supply", &ProblemData::Client::supply)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)

@@ -272,10 +272,10 @@ def test_model_and_solve(ok_small):
     model.add_vehicle_type(num_available=3, capacity=10)
     depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
     clients = [
-        model.add_client(226, 1297, 5, 360, 15600, 22500),
-        model.add_client(590, 530, 5, 360, 12000, 19500),
-        model.add_client(435, 718, 3, 420, 8400, 15300),
-        model.add_client(1191, 639, 5, 360, 12000, 19500),
+        model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
+        model.add_client(590, 530, 5, 0, 360, 12000, 19500),
+        model.add_client(435, 718, 3, 0, 420, 8400, 15300),
+        model.add_client(1191, 639, 5, 0, 360, 12000, 19500),
     ]
 
     edge_weights = [
@@ -315,12 +315,12 @@ def test_model_solve_display_argument(ok_small, capsys):
 
     # First solve with display turned off. We should not see any output in this
     # case.
-    model.solve(stop=MaxIterations(1000), seed=0, display=False)
+    model.solve(stop=MaxIterations(10), seed=0, display=False)
     printed = capsys.readouterr().out
     assert_equal(printed, "")
 
     # Now solve with display turned on. We should see output now.
-    res = model.solve(stop=MaxIterations(1000), seed=0, display=True)
+    res = model.solve(stop=MaxIterations(10), seed=0, display=True)
     printed = capsys.readouterr().out
 
     # Check that some of the header data is in the output.

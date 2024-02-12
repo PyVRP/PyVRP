@@ -27,6 +27,7 @@ class Client:
     x: int
     y: int
     demand: int
+    supply: int
     service_duration: int
     tw_early: int
     tw_late: int
@@ -39,6 +40,7 @@ class Client:
         x: int,
         y: int,
         demand: int = 0,
+        supply: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
