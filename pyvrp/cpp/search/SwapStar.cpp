@@ -12,8 +12,8 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
     for (auto *U : *R)
     {
         auto const tws = TWS::merge(data.durationMatrix(),
-                                    R->twsBefore(U->idx() - 1),
-                                    R->twsAfter(U->idx() + 1));
+                                    R->before(U->idx() - 1),
+                                    R->after(U->idx() + 1));
 
         auto const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                - data.dist(p(U)->client(), U->client())
@@ -39,9 +39,9 @@ void SwapStar::updateInsertionCost(Route *R,
     {
         // Insert cost of U just after V (V -> U -> ...).
         auto const tws = TWS::merge(data.durationMatrix(),
-                                    R->twsBefore(idx),
-                                    U->route()->tws(U->idx()),
-                                    R->twsAfter(idx + 1));
+                                    R->before(idx),
+                                    U->route()->at(U->idx()),
+                                    R->after(idx + 1));
 
         auto *V = (*R)[idx];
         auto const deltaDist = data.dist(V->client(), U->client())
@@ -72,9 +72,9 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
 
     // As a fallback option, we consider inserting in the place of V.
     auto const tws = TWS::merge(data.durationMatrix(),
-                                route->twsBefore(V->idx() - 1),
-                                U->route()->tws(U->idx()),
-                                route->twsAfter(V->idx() + 1));
+                                route->before(V->idx() - 1),
+                                U->route()->at(U->idx()),
+                                route->after(V->idx() + 1));
 
     auto const deltaDist = data.dist(p(V)->client(), U->client())
                            + data.dist(U->client(), n(V)->client())
@@ -113,9 +113,9 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         deltaCost += static_cast<Cost>(deltaDist);
 
         auto const tws = TWS::merge(data.durationMatrix(),
-                                    route->twsBefore(V->idx()),
-                                    U->route()->tws(U->idx()),
-                                    route->twsAfter(V->idx() + 2));
+                                    route->before(V->idx()),
+                                    U->route()->at(U->idx()),
+                                    route->after(V->idx() + 2));
 
         deltaCost
             += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
@@ -137,10 +137,10 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         {
             auto const tws
                 = TWS::merge(data.durationMatrix(),
-                             route->twsBefore(V->idx()),
-                             U->route()->tws(U->idx()),
-                             route->twsBetween(V->idx() + 1, remove->idx() - 1),
-                             route->twsAfter(remove->idx() + 1));
+                             route->before(V->idx()),
+                             U->route()->at(U->idx()),
+                             route->between(V->idx() + 1, remove->idx() - 1),
+                             route->after(remove->idx() + 1));
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
@@ -149,10 +149,10 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         {
             auto const tws
                 = TWS::merge(data.durationMatrix(),
-                             route->twsBefore(remove->idx() - 1),
-                             route->twsBetween(remove->idx() + 1, V->idx()),
-                             U->route()->tws(U->idx()),
-                             route->twsAfter(V->idx() + 1));
+                             route->before(remove->idx() - 1),
+                             route->between(remove->idx() + 1, V->idx()),
+                             U->route()->at(U->idx()),
+                             route->after(V->idx() + 1));
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));

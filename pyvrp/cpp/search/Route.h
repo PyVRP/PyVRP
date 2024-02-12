@@ -81,6 +81,62 @@ private:
         NodeStats(TimeWindowSegment const &tws);
     };
 
+    class StatsProxyAt
+    {
+        NodeStats const *at;
+
+    public:
+        StatsProxyAt(NodeStats const *at) : at(at) {}
+
+        operator TimeWindowSegment const &() const { return at->tws; }
+    };
+
+    class StatsProxyBetween
+    {
+        ProblemData const *data;
+        NodeStats const *start;
+        NodeStats const *end;
+
+    public:
+        StatsProxyBetween(ProblemData const *data,
+                          NodeStats const *start,
+                          NodeStats const *end)
+            : data(data), start(start), end(end)
+        {
+        }
+
+        operator TimeWindowSegment() const
+        {
+            auto tws = start->tws;
+
+            for (auto *step = start; step != end; ++step)
+                tws = TimeWindowSegment::merge(
+                    data->durationMatrix(), tws, step->tws);
+
+            return tws;
+        }
+    };
+
+    class StatsProxyBefore
+    {
+        NodeStats const *end;
+
+    public:
+        StatsProxyBefore(NodeStats const *end) : end(end) {}
+
+        operator TimeWindowSegment const &() const { return end->twsBefore; }
+    };
+
+    class StatsProxyAfter
+    {
+        NodeStats const *start;
+
+    public:
+        StatsProxyAfter(NodeStats const *start) : start(start) {}
+
+        operator TimeWindowSegment const &() const { return start->twsAfter; }
+    };
+
     ProblemData const &data;
 
     // Cache the vehicle type object here. Since the vehicle type's properties
@@ -201,6 +257,12 @@ public:
      * @return Number of clients in this route.
      */
     [[nodiscard]] inline size_t size() const;
+
+    [[nodiscard]] inline StatsProxyAt at(size_t idx) const;
+    [[nodiscard]] inline StatsProxyBetween between(size_t start,
+                                                   size_t end) const;
+    [[nodiscard]] inline StatsProxyAfter after(size_t start) const;
+    [[nodiscard]] inline StatsProxyBefore before(size_t end) const;
 
     /**
      * Returns the time window data of the node at ``idx``.
@@ -467,6 +529,34 @@ Load Route::loadBetween(size_t start, size_t end) const
 
     assert(startLoad <= endLoad);
     return endLoad - startLoad + atStart;
+}
+
+Route::StatsProxyAt Route::at(size_t idx) const
+{
+    assert(!dirty);
+    assert(idx < nodes.size());
+    return StatsProxyAt(&stats[idx]);
+}
+
+Route::StatsProxyBetween Route::between(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+    return StatsProxyBetween(&data, &stats[start], &stats[end]);
+}
+
+Route::StatsProxyAfter Route::after(size_t start) const
+{
+    assert(!dirty);
+    assert(start < nodes.size());
+    return StatsProxyAfter(&stats[start]);
+}
+
+Route::StatsProxyBefore Route::before(size_t end) const
+{
+    assert(!dirty);
+    assert(end < nodes.size());
+    return StatsProxyBefore(&stats[end]);
 }
 }  // namespace pyvrp::search
 
