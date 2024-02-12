@@ -287,15 +287,40 @@ PYBIND11_MODULE(_search, m)
              &Route::distBetween,
              py::arg("start"),
              py::arg("end"))
-        .def("load_between",
-             &Route::loadBetween,
-             py::arg("start"),
-             py::arg("end"))
-        .def("tws", &Route::tws, py::arg("idx"))
         .def(
-            "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))
-        .def("tws_after", &Route::twsAfter, py::arg("start"))
-        .def("tws_before", &Route::twsBefore, py::arg("end"))
+            "load_between",
+            [](Route const &route, size_t start, size_t end) {
+                return static_cast<pyvrp::Load>(route.between(start, end));
+            },
+            py::arg("start"),
+            py::arg("end"))
+        .def(
+            "tws",
+            [](Route const &route, size_t idx) {
+                return static_cast<pyvrp::TimeWindowSegment>(route.at(idx));
+            },
+            py::arg("idx"))
+        .def(
+            "tws_between",
+            [](Route const &route, size_t start, size_t end) {
+                return static_cast<pyvrp::TimeWindowSegment>(
+                    route.between(start, end));
+            },
+            py::arg("start"),
+            py::arg("end"))
+        .def(
+            "tws_after",
+            [](Route const &route, size_t start) {
+                return static_cast<pyvrp::TimeWindowSegment>(
+                    route.after(start));
+            },
+            py::arg("start"))
+        .def(
+            "tws_before",
+            [](Route const &route, size_t end) {
+                return static_cast<pyvrp::TimeWindowSegment>(route.before(end));
+            },
+            py::arg("end"))
         .def("centroid", &Route::centroid)
         .def("overlaps_with",
              &Route::overlapsWith,

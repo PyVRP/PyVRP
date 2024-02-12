@@ -291,42 +291,35 @@ public:
      */
     [[nodiscard]] inline size_t size() const;
 
+    /**
+     * Returns a proxy object that can be queried for data associated with
+     * the node at idx.
+     */
     [[nodiscard]] inline StatsProxyAt at(size_t idx) const;
+
+    /**
+     * Returns a proxy object that can be queried for data associated with
+     * the segment between [start, end].
+     */
     [[nodiscard]] inline StatsProxyBetween between(size_t start,
                                                    size_t end) const;
+
+    /**
+     * Returns a proxy object that can be queried for data associated with
+     * the segment starting at start.
+     */
     [[nodiscard]] inline StatsProxyAfter after(size_t start) const;
+
+    /**
+     * Returns a proxy object that can be queried for data associated with
+     * the segment ending at end.
+     */
     [[nodiscard]] inline StatsProxyBefore before(size_t end) const;
-
-    /**
-     * Returns the time window data of the node at ``idx``.
-     */
-    [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
-
-    /**
-     * Calculates time window data for segment [start, end].
-     */
-    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
-                                                      size_t end) const;
-
-    /**
-     * Returns time window data for segment [start, 0].
-     */
-    [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
-
-    /**
-     * Returns time window data for segment [0, end].
-     */
-    [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
 
     /**
      * Calculates the distance for segment [start, end].
      */
     [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
-
-    /**
-     * Calculates the load for segment [start, end].
-     */
-    [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -503,42 +496,6 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-TimeWindowSegment Route::tws(size_t idx) const
-{
-    assert(!dirty);
-    assert(idx < nodes.size());
-
-    return stats[idx].tws;
-}
-
-TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
-{
-    using TWS = TimeWindowSegment;
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto tws = stats[start].tws;
-
-    for (size_t step = start; step != end; ++step)
-        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
-
-    return tws;
-}
-
-TimeWindowSegment Route::twsAfter(size_t start) const
-{
-    assert(!dirty);
-    assert(start < nodes.size());
-    return stats[start].twsAfter;
-}
-
-TimeWindowSegment Route::twsBefore(size_t end) const
-{
-    assert(!dirty);
-    assert(end < nodes.size());
-    return stats[end].twsBefore;
-}
-
 Distance Route::distBetween(size_t start, size_t end) const
 {
     assert(!dirty);
@@ -549,19 +506,6 @@ Distance Route::distBetween(size_t start, size_t end) const
 
     assert(startDist <= endDist);
     return endDist - startDist;
-}
-
-Load Route::loadBetween(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto const atStart = data.location(nodes[start]->client()).demand;
-    auto const startLoad = stats[start].cumLoad;
-    auto const endLoad = stats[end].cumLoad;
-
-    assert(startLoad <= endLoad);
-    return endLoad - startLoad + atStart;
 }
 
 Route::StatsProxyAt Route::at(size_t idx) const
