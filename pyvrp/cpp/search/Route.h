@@ -1,6 +1,7 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "LoadSegment.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
@@ -72,13 +73,17 @@ public:
 private:
     struct NodeStats
     {
-        Distance cumDist;             // Cumulative dist to this node (incl.)
-        Load cumLoad;                 // Cumulative load to this node (incl.)
+        Distance cumDist;  // Cumulative dist to this node (incl.)
+
+        LoadSegment ls;        // Node's load data
+        LoadSegment lsAfter;   // LS of client -> depot (incl)
+        LoadSegment lsBefore;  // LS of depot -> client (incl)
+
         TimeWindowSegment tws;        // Node's time window data
         TimeWindowSegment twsAfter;   // TWS of client -> depot (incl.)
         TimeWindowSegment twsBefore;  // TWS of depot -> client (incl.)
 
-        NodeStats(TimeWindowSegment const &tws);
+        NodeStats(LoadSegment const &ls, TimeWindowSegment const &tws);
     };
 
     ProblemData const &data;
@@ -365,13 +370,13 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 Load Route::load() const
 {
     assert(!dirty);
-    return stats.back().cumLoad;
+    return stats.back().lsBefore.maxLoad();
 }
 
 Load Route::excessLoad() const
 {
     assert(!dirty);
-    return std::max<Load>(load() - capacity(), 0);
+    return stats.back().lsBefore.excessLoad(vehicleType_.capacity);
 }
 
 Load Route::capacity() const { return vehicleType_.capacity; }
@@ -461,12 +466,12 @@ Load Route::loadBetween(size_t start, size_t end) const
     assert(!dirty);
     assert(start <= end && end < nodes.size());
 
-    auto const atStart = data.location(nodes[start]->client()).demand;
-    auto const startLoad = stats[start].cumLoad;
-    auto const endLoad = stats[end].cumLoad;
+    auto ls = stats[start].ls;
 
-    assert(startLoad <= endLoad);
-    return endLoad - startLoad + atStart;
+    for (size_t step = start; step != end; ++step)
+        ls = LoadSegment::merge(ls, stats[step + 1].ls);
+
+    return ls.maxLoad();
 }
 }  // namespace pyvrp::search
 
