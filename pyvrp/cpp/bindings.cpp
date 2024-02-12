@@ -585,11 +585,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
              py::arg("demand"),
              py::arg("supply"),
-             py::arg("max_load"))
+             py::arg("load"))
         .def("demand", &LoadSegment::demand, DOC(pyvrp, LoadSegment, demand))
         .def("supply", &LoadSegment::supply, DOC(pyvrp, LoadSegment, supply))
-        .def(
-            "max_load", &LoadSegment::maxLoad, DOC(pyvrp, LoadSegment, maxLoad))
+        .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
         .def("excess_load",
              &LoadSegment::excessLoad,
              py::arg("capacity"),

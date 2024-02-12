@@ -287,10 +287,10 @@ PYBIND11_MODULE(_search, m)
              &Route::distBetween,
              py::arg("start"),
              py::arg("end"))
-        .def("load_between",
-             &Route::loadBetween,
-             py::arg("start"),
-             py::arg("end"))
+        .def("ls", &Route::ls, py::arg("idx"))
+        .def("ls_between", &Route::lsBetween, py::arg("start"), py::arg("end"))
+        .def("ls_after", &Route::lsAfter, py::arg("start"))
+        .def("ls_before", &Route::lsBefore, py::arg("end"))
         .def("tws", &Route::tws, py::arg("idx"))
         .def(
             "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))

@@ -148,20 +148,16 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
-    // Proposed move appends the segment after V to U, and the segment after U
-    // to V. So we need to make a distinction between the loads at U and V, and
-    // the loads from clients visited after these nodes.
-    auto const uLoad = uRoute->loadBetween(0, U->idx());
-    auto const uLoadAfter = uRoute->load() - uLoad;
-    auto const vLoad = vRoute->loadBetween(0, V->idx());
-    auto const vLoadAfter = vRoute->load() - vLoad;
+    auto const uLS = LoadSegment::merge(uRoute->lsBefore(U->idx()),
+                                        vRoute->lsAfter(V->idx() + 1));
 
-    deltaCost
-        += costEvaluator.loadPenalty(uLoad + vLoadAfter, uRoute->capacity());
+    deltaCost += costEvaluator.loadPenalty(uLS.load(), uRoute->capacity());
     deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
 
-    deltaCost
-        += costEvaluator.loadPenalty(vLoad + uLoadAfter, vRoute->capacity());
+    auto const vLS = LoadSegment::merge(vRoute->lsBefore(V->idx()),
+                                        uRoute->lsAfter(U->idx() + 1));
+
+    deltaCost += costEvaluator.loadPenalty(vLS.load(), vRoute->capacity());
     deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
     return deltaCost;

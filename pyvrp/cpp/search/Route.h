@@ -234,9 +234,24 @@ public:
     [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
 
     /**
-     * Calculates the load for segment [start, end].
+     * TODO
      */
-    [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline LoadSegment ls(size_t idx) const;
+
+    /**
+     * Returns load data for segment [start, end].
+     */
+    [[nodiscard]] inline LoadSegment lsBetween(size_t start, size_t end) const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] inline LoadSegment lsAfter(size_t start) const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] inline LoadSegment lsBefore(size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -370,7 +385,7 @@ std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 Load Route::load() const
 {
     assert(!dirty);
-    return stats.back().lsBefore.maxLoad();
+    return stats.back().lsBefore.load();
 }
 
 Load Route::excessLoad() const
@@ -461,7 +476,7 @@ Distance Route::distBetween(size_t start, size_t end) const
     return endDist - startDist;
 }
 
-Load Route::loadBetween(size_t start, size_t end) const
+LoadSegment Route::lsBetween(size_t start, size_t end) const
 {
     assert(!dirty);
     assert(start <= end && end < nodes.size());
@@ -471,7 +486,29 @@ Load Route::loadBetween(size_t start, size_t end) const
     for (size_t step = start; step != end; ++step)
         ls = LoadSegment::merge(ls, stats[step + 1].ls);
 
-    return ls.maxLoad();
+    return ls;
+}
+
+LoadSegment Route::ls(size_t idx) const
+{
+    assert(!dirty);
+    assert(idx < nodes.size());
+
+    return stats[idx].ls;
+}
+
+LoadSegment Route::lsAfter(size_t start) const
+{
+    assert(!dirty);
+    assert(start < nodes.size());
+    return stats[start].lsAfter;
+}
+
+LoadSegment Route::lsBefore(size_t end) const
+{
+    assert(!dirty);
+    assert(end < nodes.size());
+    return stats[end].lsBefore;
 }
 }  // namespace pyvrp::search
 

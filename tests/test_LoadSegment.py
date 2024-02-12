@@ -18,7 +18,7 @@ def test_attribute_getters(demand: int, supply: int, max_load: int):
     load_segment = LoadSegment(demand, supply, max_load)
     assert_allclose(load_segment.demand(), demand)
     assert_allclose(load_segment.supply(), supply)
-    assert_allclose(load_segment.max_load(), max_load)
+    assert_allclose(load_segment.load(), max_load)
 
 
 def test_merge_two():
@@ -35,7 +35,7 @@ def test_merge_two():
 
     # Maximum load on the concatenated segment is a bit more involved, as
     # that is computed as max(max_load1 + demand2, max_load2 + supply1).
-    assert_allclose(merged.max_load(), max(8 + 3, 11 + 8))
+    assert_allclose(merged.load(), max(8 + 3, 11 + 8))
 
 
 @pytest.mark.parametrize(

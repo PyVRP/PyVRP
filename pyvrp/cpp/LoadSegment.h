@@ -7,7 +7,7 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(demand: int = 0, supply: int = 0, max_load: int = 0)
+ * LoadSegment(demand: int = 0, supply: int = 0, load: int = 0)
  *
  * Creates a new load segment. Load segments can be efficiently concatenated,
  * and track statistics about capacity violations resulting from visiting
@@ -19,14 +19,14 @@ namespace pyvrp
  *     Total demand on this segment.
  * supply
  *     Total supply on this segment.
- * max_load
+ * load
  *     Maximum load on this segment.
  */
 class LoadSegment
 {
     Load demand_;
     Load supply_;
-    Load maxLoad_;
+    Load load_;
 
     [[nodiscard]] inline LoadSegment merge(LoadSegment const &other) const;
 
@@ -61,13 +61,13 @@ public:
     /**
      * Returns the maximum load encountered on this segment.
      */
-    [[nodiscard]] Load maxLoad() const;
+    [[nodiscard]] inline Load load() const;
 
     // Construct from attributes of the given client.
     LoadSegment(ProblemData::Client const &client);
 
     // Construct from raw data.
-    LoadSegment(Load demand, Load supply, Load maxLoad);
+    LoadSegment(Load demand, Load supply, Load load);
 };
 
 LoadSegment LoadSegment::merge(LoadSegment const &other) const
@@ -76,7 +76,7 @@ LoadSegment LoadSegment::merge(LoadSegment const &other) const
     // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
     return {demand_ + other.demand_,
             supply_ + other.supply_,
-            std::max(maxLoad_ + other.demand_, other.maxLoad_ + supply_)};
+            std::max(load_ + other.demand_, other.load_ + supply_)};
 }
 
 template <typename... Args>
@@ -94,8 +94,11 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
 
 Load LoadSegment::excessLoad(Load capacity) const
 {
-    return std::max<Load>(maxLoad_ - capacity, 0);
+    return std::max<Load>(load_ - capacity, 0);
 }
+
+Load LoadSegment::load() const { return load_; }
+
 }  // namespace pyvrp
 
 #endif  // PYVRP_LOADSEGMENT_H
