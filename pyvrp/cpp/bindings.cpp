@@ -1,6 +1,7 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
+#include "LoadSegment.h"
 #include "Matrix.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -21,6 +22,7 @@ namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
 using pyvrp::DynamicBitset;
+using pyvrp::LoadSegment;
 using pyvrp::Matrix;
 using pyvrp::PopulationParams;
 using pyvrp::ProblemData;
@@ -578,6 +580,27 @@ PYBIND11_MODULE(_pyvrp, m)
              &SubPopulation::updateFitness,
              py::arg("cost_evaluator"),
              DOC(pyvrp, SubPopulation, updateFitness));
+
+    py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
+        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
+             py::arg("demand"),
+             py::arg("supply"),
+             py::arg("max_load"))
+        .def("demand", &LoadSegment::demand, DOC(pyvrp, LoadSegment, demand))
+        .def("supply", &LoadSegment::supply, DOC(pyvrp, LoadSegment, supply))
+        .def(
+            "max_load", &LoadSegment::maxLoad, DOC(pyvrp, LoadSegment, maxLoad))
+        .def("excess_load",
+             &LoadSegment::excessLoad,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, excessLoad))
+        .def_static(
+            "merge", &LoadSegment::merge<>, py::arg("first"), py::arg("second"))
+        .def_static("merge",
+                    &LoadSegment::merge<LoadSegment const &>,
+                    py::arg("first"),
+                    py::arg("second"),
+                    py::arg("third"));
 
     py::class_<TWS>(m, "TimeWindowSegment", DOC(pyvrp, TimeWindowSegment))
         .def(py::init<size_t,

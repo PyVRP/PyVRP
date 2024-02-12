@@ -213,6 +213,31 @@ class SubPopulationItem:
     def solution(self) -> Solution: ...
     def avg_distance_closest(self) -> float: ...
 
+class LoadSegment:
+    def __init__(
+        self,
+        demand: int,
+        supply: int,
+        max_load: int,
+    ) -> None: ...
+    @overload
+    @staticmethod
+    def merge(
+        first: LoadSegment,
+        second: LoadSegment,
+    ) -> LoadSegment: ...
+    @overload
+    @staticmethod
+    def merge(
+        first: LoadSegment,
+        second: LoadSegment,
+        third: LoadSegment,
+    ) -> LoadSegment: ...
+    def demand(self) -> int: ...
+    def supply(self) -> int: ...
+    def max_load(self) -> int: ...
+    def excess_load(self, capacity: int) -> int: ...
+
 class TimeWindowSegment:
     def __init__(
         self,
