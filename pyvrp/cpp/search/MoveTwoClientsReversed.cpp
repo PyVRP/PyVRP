@@ -44,7 +44,7 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
             += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        auto const loadDiff = uRoute->loadBetween(U->idx(), U->idx() + 1);
+        Load const loadDiff = uRoute->between(U->idx(), U->idx() + 1);
 
         deltaCost += costEvaluator.loadPenalty(uRoute->load() - loadDiff,
                                                uRoute->capacity());

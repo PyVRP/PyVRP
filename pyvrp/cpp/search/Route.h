@@ -83,59 +83,92 @@ private:
 
     class StatsProxyAt
     {
-        NodeStats const *at;
+        Route const *route;
+        size_t at;
 
     public:
-        StatsProxyAt(NodeStats const *at) : at(at) {}
+        StatsProxyAt(Route const *route, size_t at) : route(route), at(at) {}
 
-        operator TimeWindowSegment const &() const { return at->tws; }
+        operator TimeWindowSegment const &() const
+        {
+            return route->stats[at].tws;
+        }
     };
 
     class StatsProxyBetween
     {
-        ProblemData const *data;
-        NodeStats const *start;
-        NodeStats const *end;
+        Route const *route;
+        size_t const start;
+        size_t const end;
 
     public:
-        StatsProxyBetween(ProblemData const *data,
-                          NodeStats const *start,
-                          NodeStats const *end)
-            : data(data), start(start), end(end)
+        StatsProxyBetween(Route const *route, size_t start, size_t end)
+            : route(route), start(start), end(end)
         {
         }
 
         operator TimeWindowSegment() const
         {
-            auto tws = start->tws;
+            auto tws = route->stats[start].tws;
 
-            for (auto *step = start; step != end; ++step)
-                tws = TimeWindowSegment::merge(
-                    data->durationMatrix(), tws, step->tws);
+            for (size_t step = start; step != end; ++step)
+                tws = TimeWindowSegment::merge(route->data.durationMatrix(),
+                                               tws,
+                                               route->stats[step + 1].tws);
 
             return tws;
+        }
+
+        operator Load() const
+        {
+            auto const client = route->nodes[start]->client();
+            auto const atStart = route->data.location(client).demand;
+            auto const startLoad = route->stats[start].cumLoad;
+            auto const endLoad = route->stats[end].cumLoad;
+
+            assert(startLoad <= endLoad);
+            return endLoad - startLoad + atStart;
         }
     };
 
     class StatsProxyBefore
     {
-        NodeStats const *end;
+        Route const *route;
+        size_t const end;
 
     public:
-        StatsProxyBefore(NodeStats const *end) : end(end) {}
+        StatsProxyBefore(Route const *route, size_t end)
+            : route(route), end(end)
+        {
+        }
 
-        operator TimeWindowSegment const &() const { return end->twsBefore; }
+        operator TimeWindowSegment const &() const
+        {
+            return route->stats[end].twsBefore;
+        }
     };
 
     class StatsProxyAfter
     {
-        NodeStats const *start;
+        Route const *route;
+        size_t const start;
 
     public:
-        StatsProxyAfter(NodeStats const *start) : start(start) {}
+        StatsProxyAfter(Route const *route, size_t start)
+            : route(route), start(start)
+        {
+        }
 
-        operator TimeWindowSegment const &() const { return start->twsAfter; }
+        operator TimeWindowSegment const &() const
+        {
+            return route->stats[start].twsAfter;
+        }
     };
+
+    friend class StatsProxyAt;
+    friend class StatsProxyBetween;
+    friend class StatsProxyAfter;
+    friend class StatsProxyBefore;
 
     ProblemData const &data;
 
@@ -535,28 +568,28 @@ Route::StatsProxyAt Route::at(size_t idx) const
 {
     assert(!dirty);
     assert(idx < nodes.size());
-    return StatsProxyAt(&stats[idx]);
+    return StatsProxyAt(this, idx);
 }
 
 Route::StatsProxyBetween Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
     assert(start <= end && end < nodes.size());
-    return StatsProxyBetween(&data, &stats[start], &stats[end]);
+    return StatsProxyBetween(this, start, end);
 }
 
 Route::StatsProxyAfter Route::after(size_t start) const
 {
     assert(!dirty);
     assert(start < nodes.size());
-    return StatsProxyAfter(&stats[start]);
+    return StatsProxyAfter(this, start);
 }
 
 Route::StatsProxyBefore Route::before(size_t end) const
 {
     assert(!dirty);
     assert(end < nodes.size());
-    return StatsProxyBefore(&stats[end]);
+    return StatsProxyBefore(this, end);
 }
 }  // namespace pyvrp::search
 

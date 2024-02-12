@@ -151,10 +151,10 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     // Proposed move appends the segment after V to U, and the segment after U
     // to V. So we need to make a distinction between the loads at U and V, and
     // the loads from clients visited after these nodes.
-    auto const uLoad = uRoute->loadBetween(0, U->idx());
-    auto const uLoadAfter = uRoute->load() - uLoad;
-    auto const vLoad = vRoute->loadBetween(0, V->idx());
-    auto const vLoadAfter = vRoute->load() - vLoad;
+    Load const uLoad = uRoute->between(0, U->idx());
+    Load const uLoadAfter = uRoute->load() - uLoad;
+    Load const vLoad = vRoute->between(0, V->idx());
+    Load const vLoadAfter = vRoute->load() - vLoad;
 
     deltaCost
         += costEvaluator.loadPenalty(uLoad + vLoadAfter, uRoute->capacity());

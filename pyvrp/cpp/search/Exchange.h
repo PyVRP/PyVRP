@@ -119,7 +119,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        auto const loadDiff = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
+        Load const loadDiff = uRoute->between(U->idx(), U->idx() + N - 1);
 
         deltaCost += costEvaluator.loadPenalty(uRoute->load() - loadDiff,
                                                uRoute->capacity());
@@ -223,9 +223,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
             += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        auto const loadU = uRoute->loadBetween(U->idx(), U->idx() + N - 1);
-        auto const loadV = vRoute->loadBetween(V->idx(), V->idx() + M - 1);
-        auto const loadDiff = loadU - loadV;
+        Load const loadU = uRoute->between(U->idx(), U->idx() + N - 1);
+        Load const loadV = vRoute->between(V->idx(), V->idx() + M - 1);
+        Load const loadDiff = loadU - loadV;
 
         deltaCost += costEvaluator.loadPenalty(uRoute->load() - loadDiff,
                                                uRoute->capacity());
