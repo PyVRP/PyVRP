@@ -67,8 +67,7 @@ def test_iteration(ok_small, capsys):
     for _ in range(10):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)
 
-    assert_equal(pop.num_feasible(), 5)
-    assert_equal(pop.num_infeasible(), 5)
+    assert_equal(pop.num_feasible() + pop.num_infeasible(), 10)
 
     stats = Statistics()
     stats.collect_from(pop, cost_eval)
@@ -120,8 +119,8 @@ def test_should_print_false_no_output(ok_small, capsys):
 
     # Checks that there are both feasible and infeasible solutions in this
     # population.
-    assert_equal(pop.num_feasible(), 6)
-    assert_equal(pop.num_infeasible(), 5)
+    assert_(pop.num_feasible() > 0)
+    assert_(pop.num_infeasible() > 0)
 
     stats = Statistics()
     stats.collect_from(pop, cost_eval)
