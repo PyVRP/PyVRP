@@ -21,9 +21,20 @@ def test_start(ok_small, capsys):
     printer.start(ok_small)
 
     out = capsys.readouterr().out
-    assert_(f"{ok_small.num_depots} depots" in out)
+    assert_(f"{ok_small.num_depots} depot" in out)
     assert_(f"{ok_small.num_clients} clients" in out)
     assert_(f"{ok_small.num_vehicles} vehicles" in out)
+
+
+def test_start_multiple_depot_plural(ok_small_multi_depot, capsys):
+    """
+    Tests that "depots" is plural when there are multiple depots.
+    """
+    printer = ProgressPrinter(should_print=True)
+    printer.start(ok_small_multi_depot)
+
+    out = capsys.readouterr().out
+    assert_(f"{ok_small_multi_depot.num_depots} depots" in out)
 
 
 def test_end(ok_small, capsys):
@@ -67,7 +78,8 @@ def test_iteration(ok_small, capsys):
     for _ in range(10):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)
 
-    assert_equal(pop.num_feasible() + pop.num_infeasible(), 10)
+    assert_(pop.num_feasible() > 0)
+    assert_(pop.num_infeasible() > 0)
 
     stats = Statistics()
     stats.collect_from(pop, cost_eval)

@@ -15,9 +15,9 @@ _ITERATION = (
 _START = """PyVRP v{version}
 
 Solving an instance with:
-    {num_depots} depots
-    {num_clients} clients
-    {num_vehicles} vehicles ({num_vehicle_types} types)
+    {depot_text}
+    {client_text}
+    {vehicle_text} ({vehicle_type_text})
 
                   |       Feasible        |      Infeasible
     Iters    Time |   #      Avg     Best |   #      Avg     Best"""
@@ -79,15 +79,29 @@ class ProgressPrinter:
         Outputs information about PyVRP and the data instance that is being
         solved.
         """
-        if self._print:
-            msg = _START.format(
-                version=version("pyvrp"),
-                num_depots=data.num_depots,
-                num_clients=data.num_clients,
-                num_vehicles=data.num_vehicles,
-                num_vehicle_types=data.num_vehicle_types,
-            )
-            print(msg)
+        if not self._print:
+            return
+
+        num_d = data.num_depots
+        depot_text = f"{num_d} depot{'s' if num_d > 1 else ''}"
+
+        num_c = data.num_clients
+        client_text = f"{num_c} client{'s' if num_c > 1 else ''}"
+
+        num_v = data.num_vehicles
+        vehicle_text = f"{num_v} vehicle{'s' if num_v > 1 else ''}"
+
+        num_vt = data.num_vehicle_types
+        vehicle_type_text = f"{num_vt} vehicle type{'s' if num_vt > 1 else ''}"
+
+        msg = _START.format(
+            version=version("pyvrp"),
+            depot_text=depot_text,
+            client_text=client_text,
+            vehicle_text=vehicle_text,
+            vehicle_type_text=vehicle_type_text,
+        )
+        print(msg)
 
     def end(self, result: Result):
         """
