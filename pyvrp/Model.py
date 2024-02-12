@@ -267,7 +267,12 @@ class Model:
             durations,
         )
 
-    def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
+    def solve(
+        self,
+        stop: StoppingCriterion,
+        seed: int = 0,
+        display: bool = True,
+    ) -> Result:
         """
         Solve this model.
 
@@ -276,7 +281,10 @@ class Model:
         stop
             Stopping criterion to use.
         seed
-            Seed value to use for the PRNG, by default 0.
+            Seed value to use for the random number stream. Default 0.
+        display
+            Whether to display information about the solver progress. Default
+            ``True``.
 
         Returns
         -------
@@ -315,4 +323,4 @@ class Model:
 
         gen_args = (data, pm, rng, pop, ls, crossover, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop)
+        return algo.run(stop, display)

@@ -237,10 +237,10 @@ def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
     headers = ["Instance", "OK", "Obj.", "Iters. (#)", "Time (s)"]
 
     print("\n", tabulate(headers, data), "\n", sep="")
-    print(f"      Avg. objective: {data['obj'].mean():.0f}")
-    print(f"     Avg. iterations: {data['iters'].mean():.0f}")
-    print(f"   Avg. run-time (s): {data['time'].mean():.2f}")
-    print(f"        Total not OK: {np.count_nonzero(data['ok'] == 'N')}")
+    print(f"     Avg. objective: {data['obj'].mean():.0f}")
+    print(f"    Avg. iterations: {data['iters'].mean():.0f}")
+    print(f"      Avg. run-time: {data['time'].mean():.2f}s")
+    print(f"       Total not OK: {np.count_nonzero(data['ok'] == 'N')}")
 
 
 def main():

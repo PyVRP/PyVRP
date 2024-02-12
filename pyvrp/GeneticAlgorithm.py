@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Collection
 
+from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 
@@ -128,7 +129,7 @@ class GeneticAlgorithm:
     def _cost_evaluator(self) -> CostEvaluator:
         return self._pm.get_cost_evaluator()
 
-    def run(self, stop: StoppingCriterion):
+    def run(self, stop: StoppingCriterion, display: bool = False):
         """
         Runs the genetic algorithm with the provided stopping criterion.
 
@@ -137,12 +138,18 @@ class GeneticAlgorithm:
         stop
             Stopping criterion to use. The algorithm runs until the first time
             the stopping criterion returns ``True``.
+        display
+            Whether to display information about the solver progress. Default
+            ``False``.
 
         Returns
         -------
         Result
             A Result object, containing statistics and the best found solution.
         """
+        print_progress = ProgressPrinter(should_print=display)
+        print_progress.start(self._data)
+
         start = time.perf_counter()
         stats = Statistics()
         iters = 0
@@ -155,6 +162,8 @@ class GeneticAlgorithm:
             iters += 1
 
             if iters_no_improvement == self._params.nb_iter_no_improvement:
+                print_progress.restart()
+
                 iters_no_improvement = 1
                 self._pop.clear()
 
@@ -177,9 +186,14 @@ class GeneticAlgorithm:
                 iters_no_improvement += 1
 
             stats.collect_from(self._pop, self._cost_evaluator)
+            print_progress.iteration(stats)
 
         end = time.perf_counter() - start
-        return Result(self._best, stats, iters, end)
+        res = Result(self._best, stats, iters, end)
+
+        print_progress.end(res)
+
+        return res
 
     def _improve_offspring(self, sol: Solution):
         def is_new_best(sol):
