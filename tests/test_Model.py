@@ -85,6 +85,7 @@ def test_add_client_attributes():
         x=1,
         y=2,
         demand=3,
+        supply=9,
         service_duration=4,
         tw_early=5,
         tw_late=6,
@@ -96,6 +97,7 @@ def test_add_client_attributes():
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
     assert_equal(client.demand, 3)
+    assert_equal(client.supply, 9)
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
