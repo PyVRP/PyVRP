@@ -90,14 +90,15 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
-    Distance const current = uRoute->distBetween(U->idx() - 1, U->idx() + N)
-                             + data.dist(V->client(), n(V)->client());
+    auto const current = Distance(uRoute->between(U->idx() - 1, U->idx() + N))
+                         + data.dist(V->client(), n(V)->client());
 
     auto *endU = N == 1 ? U : (*uRoute)[U->idx() + N - 1];
-    Distance const proposed = data.dist(V->client(), U->client())
-                              + uRoute->distBetween(U->idx(), U->idx() + N - 1)
-                              + data.dist(endU->client(), n(V)->client())
-                              + data.dist(p(U)->client(), n(endU)->client());
+    auto const proposed
+        = data.dist(V->client(), U->client())
+          + Distance(uRoute->between(U->idx(), U->idx() + N - 1))
+          + data.dist(endU->client(), n(V)->client())
+          + data.dist(p(U)->client(), n(endU)->client());
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 
@@ -191,8 +192,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
-    Distance const current = uRoute->distBetween(U->idx() - 1, U->idx() + N)
-                             + vRoute->distBetween(V->idx() - 1, V->idx() + M);
+    auto const current
+        = Distance(uRoute->between(U->idx() - 1, U->idx() + N))
+          + Distance(vRoute->between(V->idx() - 1, V->idx() + M));
 
     auto *endU = N == 1 ? U : (*uRoute)[U->idx() + N - 1];
     auto *endV = M == 1 ? V : (*vRoute)[V->idx() + M - 1];
@@ -200,10 +202,10 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         //   p(U) -> V -> ... -> endV -> n(endU)
         // + p(V) -> U -> ... -> endU -> n(endV)
         = data.dist(p(U)->client(), V->client())
-          + vRoute->distBetween(V->idx(), V->idx() + M - 1)
+          + Distance(vRoute->between(V->idx(), V->idx() + M - 1))
           + data.dist(endV->client(), n(endU)->client())
           + data.dist(p(V)->client(), U->client())
-          + uRoute->distBetween(U->idx(), U->idx() + N - 1)
+          + Distance(uRoute->between(U->idx(), U->idx() + N - 1))
           + data.dist(endU->client(), n(endV)->client());
 
     Cost deltaCost = static_cast<Cost>(proposed - current);

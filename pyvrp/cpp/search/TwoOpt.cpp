@@ -23,12 +23,12 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     for (auto *node = V; node != n(U); node = p(node))
         segmentReversalDistance += data.dist(node->client(), p(node)->client());
 
-    Distance const deltaDist = data.dist(U->client(), V->client())
-                               + data.dist(n(U)->client(), n(V)->client())
-                               + segmentReversalDistance
-                               - data.dist(U->client(), n(U)->client())
-                               - data.dist(V->client(), n(V)->client())
-                               - route->distBetween(U->idx() + 1, V->idx());
+    auto const deltaDist = data.dist(U->client(), V->client())
+                           + data.dist(n(U)->client(), n(V)->client())
+                           + segmentReversalDistance
+                           - data.dist(U->client(), n(U)->client())
+                           - data.dist(V->client(), n(V)->client())
+                           - Distance(route->between(U->idx() + 1, V->idx()));
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 

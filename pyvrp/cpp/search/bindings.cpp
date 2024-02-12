@@ -283,10 +283,13 @@ PYBIND11_MODULE(_search, m)
         .def("duration", &Route::duration)
         .def("max_duration", &Route::maxDuration)
         .def("time_warp", &Route::timeWarp)
-        .def("dist_between",
-             &Route::distBetween,
-             py::arg("start"),
-             py::arg("end"))
+        .def(
+            "dist_between",
+            [](Route const &route, size_t start, size_t end) {
+                return static_cast<pyvrp::Distance>(route.between(start, end));
+            },
+            py::arg("start"),
+            py::arg("end"))
         .def(
             "load_between",
             [](Route const &route, size_t start, size_t end) {

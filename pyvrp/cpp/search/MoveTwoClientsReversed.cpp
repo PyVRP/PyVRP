@@ -17,12 +17,12 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
-    Distance const current = uRoute->distBetween(U->idx() - 1, U->idx() + 2)
-                             + data.dist(V->client(), n(V)->client());
-    Distance const proposed = data.dist(p(U)->client(), n(n(U))->client())
-                              + data.dist(V->client(), n(U)->client())
-                              + data.dist(n(U)->client(), U->client())
-                              + data.dist(U->client(), n(V)->client());
+    auto const current = Distance(uRoute->between(U->idx() - 1, U->idx() + 2))
+                         + data.dist(V->client(), n(V)->client());
+    auto const proposed = data.dist(p(U)->client(), n(n(U))->client())
+                          + data.dist(V->client(), n(U)->client())
+                          + data.dist(n(U)->client(), U->client())
+                          + data.dist(U->client(), n(V)->client());
 
     Cost deltaCost = static_cast<Cost>(proposed - current);
 

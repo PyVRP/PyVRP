@@ -81,13 +81,13 @@ private:
         NodeStats(TimeWindowSegment const &tws);
     };
 
-    class StatsProxyAt
+    class ProxyAt
     {
         Route const *route;
         size_t at;
 
     public:
-        StatsProxyAt(Route const *route, size_t at) : route(route), at(at) {}
+        ProxyAt(Route const *route, size_t at) : route(route), at(at) {}
 
         operator TimeWindowSegment const &() const
         {
@@ -95,14 +95,14 @@ private:
         }
     };
 
-    class StatsProxyBetween
+    class ProxyBetween
     {
         Route const *route;
         size_t const start;
         size_t const end;
 
     public:
-        StatsProxyBetween(Route const *route, size_t start, size_t end)
+        ProxyBetween(Route const *route, size_t start, size_t end)
             : route(route), start(start), end(end)
         {
         }
@@ -129,18 +129,24 @@ private:
             assert(startLoad <= endLoad);
             return endLoad - startLoad + atStart;
         }
+
+        operator Distance() const
+        {
+            auto const startDist = route->stats[start].cumDist;
+            auto const endDist = route->stats[end].cumDist;
+
+            assert(startDist <= endDist);
+            return endDist - startDist;
+        }
     };
 
-    class StatsProxyBefore
+    class ProxyBefore
     {
         Route const *route;
         size_t const end;
 
     public:
-        StatsProxyBefore(Route const *route, size_t end)
-            : route(route), end(end)
-        {
-        }
+        ProxyBefore(Route const *route, size_t end) : route(route), end(end) {}
 
         operator TimeWindowSegment const &() const
         {
@@ -148,13 +154,13 @@ private:
         }
     };
 
-    class StatsProxyAfter
+    class ProxyAfter
     {
         Route const *route;
         size_t const start;
 
     public:
-        StatsProxyAfter(Route const *route, size_t start)
+        ProxyAfter(Route const *route, size_t start)
             : route(route), start(start)
         {
         }
@@ -165,10 +171,10 @@ private:
         }
     };
 
-    friend class StatsProxyAt;
-    friend class StatsProxyBetween;
-    friend class StatsProxyAfter;
-    friend class StatsProxyBefore;
+    friend class ProxyAt;
+    friend class ProxyBetween;
+    friend class ProxyAfter;
+    friend class ProxyBefore;
 
     ProblemData const &data;
 
@@ -295,31 +301,25 @@ public:
      * Returns a proxy object that can be queried for data associated with
      * the node at idx.
      */
-    [[nodiscard]] inline StatsProxyAt at(size_t idx) const;
+    [[nodiscard]] inline ProxyAt at(size_t idx) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
      * the segment between [start, end].
      */
-    [[nodiscard]] inline StatsProxyBetween between(size_t start,
-                                                   size_t end) const;
+    [[nodiscard]] inline ProxyBetween between(size_t start, size_t end) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
      * the segment starting at start.
      */
-    [[nodiscard]] inline StatsProxyAfter after(size_t start) const;
+    [[nodiscard]] inline ProxyAfter after(size_t start) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
      * the segment ending at end.
      */
-    [[nodiscard]] inline StatsProxyBefore before(size_t end) const;
-
-    /**
-     * Calculates the distance for segment [start, end].
-     */
-    [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline ProxyBefore before(size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -496,44 +496,32 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-Distance Route::distBetween(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto const startDist = stats[start].cumDist;
-    auto const endDist = stats[end].cumDist;
-
-    assert(startDist <= endDist);
-    return endDist - startDist;
-}
-
-Route::StatsProxyAt Route::at(size_t idx) const
+Route::ProxyAt Route::at(size_t idx) const
 {
     assert(!dirty);
     assert(idx < nodes.size());
-    return StatsProxyAt(this, idx);
+    return ProxyAt(this, idx);
 }
 
-Route::StatsProxyBetween Route::between(size_t start, size_t end) const
+Route::ProxyBetween Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
     assert(start <= end && end < nodes.size());
-    return StatsProxyBetween(this, start, end);
+    return ProxyBetween(this, start, end);
 }
 
-Route::StatsProxyAfter Route::after(size_t start) const
+Route::ProxyAfter Route::after(size_t start) const
 {
     assert(!dirty);
     assert(start < nodes.size());
-    return StatsProxyAfter(this, start);
+    return ProxyAfter(this, start);
 }
 
-Route::StatsProxyBefore Route::before(size_t end) const
+Route::ProxyBefore Route::before(size_t end) const
 {
     assert(!dirty);
     assert(end < nodes.size());
-    return StatsProxyBefore(this, end);
+    return ProxyBefore(this, end);
 }
 }  // namespace pyvrp::search
 
