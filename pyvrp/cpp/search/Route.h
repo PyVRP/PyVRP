@@ -81,20 +81,6 @@ private:
         NodeStats(TimeWindowSegment const &tws);
     };
 
-    class ProxyAt
-    {
-        Route const *route;
-        size_t at;
-
-    public:
-        ProxyAt(Route const *route, size_t at) : route(route), at(at) {}
-
-        operator TimeWindowSegment const &() const
-        {
-            return route->stats[at].tws;
-        }
-    };
-
     class ProxyBetween
     {
         Route const *route;
@@ -102,13 +88,16 @@ private:
         size_t const end;
 
     public:
-        ProxyBetween(Route const *route, size_t start, size_t end)
-            : route(route), start(start), end(end)
+        ProxyBetween(Route const &route, size_t start, size_t end)
+            : route(&route), start(start), end(end)
         {
         }
 
         operator TimeWindowSegment() const
         {
+            if (start == 0)
+                return route->stats[end].twsBefore;
+
             auto tws = route->stats[start].tws;
 
             for (size_t step = start; step != end; ++step)
@@ -140,28 +129,14 @@ private:
         }
     };
 
-    class ProxyBefore
-    {
-        Route const *route;
-        size_t const end;
-
-    public:
-        ProxyBefore(Route const *route, size_t end) : route(route), end(end) {}
-
-        operator TimeWindowSegment const &() const
-        {
-            return route->stats[end].twsBefore;
-        }
-    };
-
     class ProxyAfter
     {
         Route const *route;
         size_t const start;
 
     public:
-        ProxyAfter(Route const *route, size_t start)
-            : route(route), start(start)
+        ProxyAfter(Route const &route, size_t start)
+            : route(&route), start(start)
         {
         }
 
@@ -301,7 +276,7 @@ public:
      * Returns a proxy object that can be queried for data associated with
      * the node at idx.
      */
-    [[nodiscard]] inline ProxyAt at(size_t idx) const;
+    [[nodiscard]] inline ProxyBetween at(size_t idx) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
@@ -319,7 +294,7 @@ public:
      * Returns a proxy object that can be queried for data associated with
      * the segment ending at end.
      */
-    [[nodiscard]] inline ProxyBefore before(size_t end) const;
+    [[nodiscard]] inline ProxyBetween before(size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -496,32 +471,32 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-Route::ProxyAt Route::at(size_t idx) const
+Route::ProxyBetween Route::at(size_t idx) const
 {
     assert(!dirty);
     assert(idx < nodes.size());
-    return ProxyAt(this, idx);
+    return ProxyBetween(*this, idx, idx);
 }
 
 Route::ProxyBetween Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
     assert(start <= end && end < nodes.size());
-    return ProxyBetween(this, start, end);
+    return ProxyBetween(*this, start, end);
 }
 
 Route::ProxyAfter Route::after(size_t start) const
 {
     assert(!dirty);
     assert(start < nodes.size());
-    return ProxyAfter(this, start);
+    return ProxyAfter(*this, start);
 }
 
-Route::ProxyBefore Route::before(size_t end) const
+Route::ProxyBetween Route::before(size_t end) const
 {
     assert(!dirty);
     assert(end < nodes.size());
-    return ProxyBefore(this, end);
+    return ProxyBetween(*this, 0, end);
 }
 }  // namespace pyvrp::search
 
