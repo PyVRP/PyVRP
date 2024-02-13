@@ -110,12 +110,12 @@ public:
     /**
      * Route index.
      */
-    [[nodiscard]] size_t idx() const;
+    [[nodiscard]] inline size_t idx() const;
 
     /**
      * @return The client or depot node at the given ``idx``.
      */
-    [[nodiscard]] Node *operator[](size_t idx);
+    [[nodiscard]] inline Node *operator[](size_t idx);
 
     // First client in the route if the route is non-empty. Else it is the
     // end depot. In either case the iterator is valid!
@@ -131,46 +131,46 @@ public:
      *
      * @return true if the route is feasible, false otherwise.
      */
-    [[nodiscard]] bool isFeasible() const;
+    [[nodiscard]] inline bool isFeasible() const;
 
     /**
      * Determines whether this route is load-feasible.
      *
      * @return true if the route exceeds the capacity, false otherwise.
      */
-    [[nodiscard]] bool hasExcessLoad() const;
+    [[nodiscard]] inline bool hasExcessLoad() const;
 
     /**
      * Determines whether this route is time-feasible.
      *
      * @return true if the route has time warp, false otherwise.
      */
-    [[nodiscard]] bool hasTimeWarp() const;
+    [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
      * @return Total load on this route.
      */
-    [[nodiscard]] Load load() const;
+    [[nodiscard]] inline Load load() const;
 
     /**
      * Demand in excess of the vehicle's capacity.
      */
-    [[nodiscard]] Load excessLoad() const;
+    [[nodiscard]] inline Load excessLoad() const;
 
     /**
      * @return The load capacity of the vehicle servicing this route.
      */
-    [[nodiscard]] Load capacity() const;
+    [[nodiscard]] inline Load capacity() const;
 
     /**
      * @return The location index of this route's depot.
      */
-    [[nodiscard]] size_t depot() const;
+    [[nodiscard]] inline size_t depot() const;
 
     /**
      * @return The fixed cost of the vehicle servicing this route.
      */
-    [[nodiscard]] Cost fixedVehicleCost() const;
+    [[nodiscard]] inline Cost fixedVehicleCost() const;
 
     /**
      * @return Total distance travelled on this route.
@@ -185,12 +185,12 @@ public:
     /**
      * @return The maximum duration of the vehicle servicing this route.
      */
-    [[nodiscard]] Duration maxDuration() const;
+    [[nodiscard]] inline Duration maxDuration() const;
 
     /**
      * @return Total time warp on this route.
      */
-    [[nodiscard]] Duration timeWarp() const;
+    [[nodiscard]] inline Duration timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -205,32 +205,33 @@ public:
     /**
      * Returns the time window data of the node at ``idx``.
      */
-    [[nodiscard]] TimeWindowSegment tws(size_t idx) const;
-
-    /**
-     * Calculates time window data for segment [start, end].
-     */
-    [[nodiscard]] TimeWindowSegment twsBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
 
     /**
      * Returns time window data for segment [start, 0].
      */
-    [[nodiscard]] TimeWindowSegment twsAfter(size_t start) const;
+    [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
 
     /**
      * Returns time window data for segment [0, end].
      */
-    [[nodiscard]] TimeWindowSegment twsBefore(size_t end) const;
+    [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
+
+    /**
+     * Calculates time window data for segment [start, end].
+     */
+    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
+                                                      size_t end) const;
 
     /**
      * Calculates the distance for segment [start, end].
      */
-    [[nodiscard]] Distance distBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
 
     /**
      * Calculates the load for segment [start, end].
      */
-    [[nodiscard]] Load loadBetween(size_t start, size_t end) const;
+    [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -316,12 +317,128 @@ bool Route::Node::isDepot() const
     return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
+bool Route::isFeasible() const
+{
+    assert(!dirty);
+    return !hasExcessLoad() && !hasTimeWarp();
+}
+
+bool Route::hasExcessLoad() const
+{
+    assert(!dirty);
+    return load() > capacity();
+}
+
+bool Route::hasTimeWarp() const
+{
+#ifdef PYVRP_NO_TIME_WINDOWS
+    return false;
+#else
+    assert(!dirty);
+    return timeWarp() > 0;
+#endif
+}
+
+size_t Route::idx() const { return idx_; }
+
+Route::Node *Route::operator[](size_t idx)
+{
+    assert(idx < nodes.size());
+    return nodes[idx];
+}
+
+Load Route::load() const
+{
+    assert(!dirty);
+    return stats.back().cumLoad;
+}
+
+Load Route::excessLoad() const
+{
+    assert(!dirty);
+    return std::max<Load>(load() - capacity(), 0);
+}
+
+Load Route::capacity() const { return vehicleType_.capacity; }
+
+size_t Route::depot() const { return vehicleType_.depot; }
+
+Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
+
+Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
+
+Duration Route::timeWarp() const
+{
+    assert(!dirty);
+    return stats.back().twsBefore.timeWarp(maxDuration());
+}
+
 bool Route::empty() const { return size() == 0; }
 
 size_t Route::size() const
 {
     assert(nodes.size() >= 2);  // excl. depots
     return nodes.size() - 2;
+}
+
+TimeWindowSegment Route::tws(size_t idx) const
+{
+    assert(!dirty);
+    assert(idx < nodes.size());
+    return stats[idx].tws;
+}
+
+TimeWindowSegment Route::twsAfter(size_t start) const
+{
+    assert(!dirty);
+    assert(start < nodes.size());
+    return stats[start].twsAfter;
+}
+
+TimeWindowSegment Route::twsBefore(size_t end) const
+{
+    assert(!dirty);
+    assert(end < nodes.size());
+    return stats[end].twsBefore;
+}
+
+TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
+{
+    using TWS = TimeWindowSegment;
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto tws = stats[start].tws;
+
+    for (size_t step = start; step != end; ++step)
+        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
+
+    return tws;
+}
+
+Distance Route::distBetween(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto const startDist = stats[start].cumDist;
+    auto const endDist = stats[end].cumDist;
+
+    assert(startDist <= endDist);
+    return endDist - startDist;
+}
+
+Load Route::loadBetween(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto const atStart = data.location(nodes[start]->client()).demand;
+    auto const startLoad = stats[start].cumLoad;
+    auto const endLoad = stats[end].cumLoad;
+
+    assert(startLoad <= endLoad);
+    return endLoad - startLoad + atStart;
 }
 }  // namespace pyvrp::search
 

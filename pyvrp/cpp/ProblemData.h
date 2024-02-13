@@ -260,7 +260,7 @@ public:
      *     A simple data object containing the requested location's
      *     information.
      */
-    [[nodiscard]] Client const &location(size_t idx) const;
+    [[nodiscard]] inline Client const &location(size_t idx) const;
 
     /**
      * Returns a list of all clients in the problem instance.
@@ -472,6 +472,12 @@ public:
                 Matrix<Duration> durMat);
 };
 
+ProblemData::Client const &ProblemData::location(size_t idx) const
+{
+    assert(idx < numLocations());
+    return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
+}
+
 Distance ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
@@ -481,7 +487,6 @@ Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }
-
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

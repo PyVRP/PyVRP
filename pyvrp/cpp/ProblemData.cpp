@@ -170,31 +170,25 @@ std::vector<ProblemData::Client> const &ProblemData::depots() const
     return depots_;
 }
 
-std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
-{
-    return vehicleTypes_;
-}
-
-std::pair<double, double> const &ProblemData::centroid() const
-{
-    return centroid_;
-}
-
-ProblemData::Client const &ProblemData::location(size_t idx) const
-{
-    assert(idx < numLocations());
-    return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
-}
-
 ProblemData::VehicleType const &
 ProblemData::vehicleType(size_t vehicleType) const
 {
     return vehicleTypes_[vehicleType];
 }
 
+std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
+{
+    return vehicleTypes_;
+}
+
 Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
 Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
+
+std::pair<double, double> const &ProblemData::centroid() const
+{
+    return centroid_;
+}
 
 size_t ProblemData::numClients() const { return clients_.size(); }
 
