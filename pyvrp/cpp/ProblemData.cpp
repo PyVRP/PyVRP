@@ -1,5 +1,6 @@
 #include "ProblemData.h"
 
+#include <cassert>
 #include <cstring>
 #include <numeric>
 
@@ -178,6 +179,32 @@ std::pair<double, double> const &ProblemData::centroid() const
 {
     return centroid_;
 }
+
+ProblemData::Client const &ProblemData::location(size_t idx) const
+{
+    assert(idx < numLocations());
+    return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
+}
+
+ProblemData::VehicleType const &
+ProblemData::vehicleType(size_t vehicleType) const
+{
+    return vehicleTypes_[vehicleType];
+}
+
+Distance ProblemData::dist(size_t first, size_t second) const
+{
+    return dist_(first, second);
+}
+
+Duration ProblemData::duration(size_t first, size_t second) const
+{
+    return dur_(first, second);
+}
+
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 size_t ProblemData::numClients() const { return clients_.size(); }
 

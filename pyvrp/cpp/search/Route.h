@@ -48,25 +48,25 @@ public:
         /**
          * Returns the location represented by this node.
          */
-        [[nodiscard]] inline size_t client() const;  // TODO rename to loc
+        [[nodiscard]] size_t client() const;  // TODO rename to loc
 
         /**
          * Returns this node's position in a route. This value is ``0`` when
          * the node is *not* in a route.
          */
-        [[nodiscard]] inline size_t idx() const;
+        [[nodiscard]] size_t idx() const;
 
         /**
          * Returns the route this node is currently in. If the node is not in
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
-        [[nodiscard]] inline Route *route() const;
+        [[nodiscard]] Route *route() const;
 
         /**
          * Returns whether this node is a depot. A node can only be a depot if
          * it is in a route.
          */
-        [[nodiscard]] inline bool isDepot() const;
+        [[nodiscard]] bool isDepot() const;
     };
 
 private:
@@ -110,128 +110,127 @@ public:
     /**
      * Route index.
      */
-    [[nodiscard]] inline size_t idx() const;
+    [[nodiscard]] size_t idx() const;
 
     /**
      * @return The client or depot node at the given ``idx``.
      */
-    [[nodiscard]] inline Node *operator[](size_t idx);
+    [[nodiscard]] Node *operator[](size_t idx);
 
     // First client in the route if the route is non-empty. Else it is the
     // end depot. In either case the iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator begin();
+    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] std::vector<Node *>::iterator begin();
 
     // End depot. The iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator end();
+    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
+    [[nodiscard]] std::vector<Node *>::iterator end();
 
     /**
      * Tests if this route is feasible.
      *
      * @return true if the route is feasible, false otherwise.
      */
-    [[nodiscard]] inline bool isFeasible() const;
+    [[nodiscard]] bool isFeasible() const;
 
     /**
      * Determines whether this route is load-feasible.
      *
      * @return true if the route exceeds the capacity, false otherwise.
      */
-    [[nodiscard]] inline bool hasExcessLoad() const;
+    [[nodiscard]] bool hasExcessLoad() const;
 
     /**
      * Determines whether this route is time-feasible.
      *
      * @return true if the route has time warp, false otherwise.
      */
-    [[nodiscard]] inline bool hasTimeWarp() const;
+    [[nodiscard]] bool hasTimeWarp() const;
 
     /**
      * @return Total load on this route.
      */
-    [[nodiscard]] inline Load load() const;
+    [[nodiscard]] Load load() const;
 
     /**
      * Demand in excess of the vehicle's capacity.
      */
-    [[nodiscard]] inline Load excessLoad() const;
+    [[nodiscard]] Load excessLoad() const;
 
     /**
      * @return The load capacity of the vehicle servicing this route.
      */
-    [[nodiscard]] inline Load capacity() const;
+    [[nodiscard]] Load capacity() const;
 
     /**
      * @return The location index of this route's depot.
      */
-    [[nodiscard]] inline size_t depot() const;
+    [[nodiscard]] size_t depot() const;
 
     /**
      * @return The fixed cost of the vehicle servicing this route.
      */
-    [[nodiscard]] inline Cost fixedVehicleCost() const;
+    [[nodiscard]] Cost fixedVehicleCost() const;
 
     /**
      * @return Total distance travelled on this route.
      */
-    [[nodiscard]] inline Distance distance() const;
+    [[nodiscard]] Distance distance() const;
 
     /**
      * @return The duration of this route.
      */
-    [[nodiscard]] inline Duration duration() const;
+    [[nodiscard]] Duration duration() const;
 
     /**
      * @return The maximum duration of the vehicle servicing this route.
      */
-    [[nodiscard]] inline Duration maxDuration() const;
+    [[nodiscard]] Duration maxDuration() const;
 
     /**
      * @return Total time warp on this route.
      */
-    [[nodiscard]] inline Duration timeWarp() const;
+    [[nodiscard]] Duration timeWarp() const;
 
     /**
      * @return true if this route is empty, false otherwise.
      */
-    [[nodiscard]] inline bool empty() const;
+    [[nodiscard]] bool empty() const;
 
     /**
      * @return Number of clients in this route.
      */
-    [[nodiscard]] inline size_t size() const;
+    [[nodiscard]] size_t size() const;
 
     /**
      * Returns the time window data of the node at ``idx``.
      */
-    [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
+    [[nodiscard]] TimeWindowSegment tws(size_t idx) const;
 
     /**
      * Calculates time window data for segment [start, end].
      */
-    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
-                                                      size_t end) const;
+    [[nodiscard]] TimeWindowSegment twsBetween(size_t start, size_t end) const;
 
     /**
      * Returns time window data for segment [start, 0].
      */
-    [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
+    [[nodiscard]] TimeWindowSegment twsAfter(size_t start) const;
 
     /**
      * Returns time window data for segment [0, end].
      */
-    [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
+    [[nodiscard]] TimeWindowSegment twsBefore(size_t end) const;
 
     /**
      * Calculates the distance for segment [start, end].
      */
-    [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
+    [[nodiscard]] Distance distBetween(size_t start, size_t end) const;
 
     /**
      * Calculates the load for segment [start, end].
      */
-    [[nodiscard]] inline Load loadBetween(size_t start, size_t end) const;
+    [[nodiscard]] Load loadBetween(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -302,171 +301,6 @@ inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route();
     return route[node->idx() + 1];
-}
-
-size_t Route::Node::client() const { return loc_; }
-
-size_t Route::Node::idx() const { return idx_; }
-
-Route *Route::Node::route() const { return route_; }
-
-bool Route::Node::isDepot() const
-{
-    // We need to be in a route to be the depot. If we are, then we need to
-    // be either the route's start or end depot.
-    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
-}
-
-bool Route::isFeasible() const
-{
-    assert(!dirty);
-    return !hasExcessLoad() && !hasTimeWarp();
-}
-
-bool Route::hasExcessLoad() const
-{
-    assert(!dirty);
-    return load() > capacity();
-}
-
-bool Route::hasTimeWarp() const
-{
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return false;
-#else
-    assert(!dirty);
-    return timeWarp() > 0;
-#endif
-}
-
-size_t Route::idx() const { return idx_; }
-
-Route::Node *Route::operator[](size_t idx)
-{
-    assert(idx < nodes.size());
-    return nodes[idx];
-}
-
-std::vector<Route::Node *>::const_iterator Route::begin() const
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;
-}
-
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
-
-Load Route::load() const
-{
-    assert(!dirty);
-    return stats.back().cumLoad;
-}
-
-Load Route::excessLoad() const
-{
-    assert(!dirty);
-    return std::max<Load>(load() - capacity(), 0);
-}
-
-Load Route::capacity() const { return vehicleType_.capacity; }
-
-size_t Route::depot() const { return vehicleType_.depot; }
-
-Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
-
-Distance Route::distance() const
-{
-    assert(!dirty);
-    return stats.back().cumDist;
-}
-
-Duration Route::duration() const
-{
-    assert(!dirty);
-    return stats.back().twsBefore.duration();
-}
-
-Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
-
-Duration Route::timeWarp() const
-{
-    assert(!dirty);
-    return stats.back().twsBefore.timeWarp(maxDuration());
-}
-
-bool Route::empty() const { return size() == 0; }
-
-size_t Route::size() const
-{
-    assert(nodes.size() >= 2);  // excl. depots
-    return nodes.size() - 2;
-}
-
-TimeWindowSegment Route::tws(size_t idx) const
-{
-    assert(!dirty);
-    assert(idx < nodes.size());
-
-    return stats[idx].tws;
-}
-
-TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
-{
-    using TWS = TimeWindowSegment;
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto tws = stats[start].tws;
-
-    for (size_t step = start; step != end; ++step)
-        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
-
-    return tws;
-}
-
-TimeWindowSegment Route::twsAfter(size_t start) const
-{
-    assert(!dirty);
-    assert(start < nodes.size());
-    return stats[start].twsAfter;
-}
-
-TimeWindowSegment Route::twsBefore(size_t end) const
-{
-    assert(!dirty);
-    assert(end < nodes.size());
-    return stats[end].twsBefore;
-}
-
-Distance Route::distBetween(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto const startDist = stats[start].cumDist;
-    auto const endDist = stats[end].cumDist;
-
-    assert(startDist <= endDist);
-    return endDist - startDist;
-}
-
-Load Route::loadBetween(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto const atStart = data.location(nodes[start]->client()).demand;
-    auto const startLoad = stats[start].cumLoad;
-    auto const endLoad = stats[end].cumLoad;
-
-    assert(startLoad <= endLoad);
-    return endLoad - startLoad + atStart;
 }
 }  // namespace pyvrp::search
 

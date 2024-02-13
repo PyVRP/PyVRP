@@ -20,6 +20,20 @@ bool DynamicBitset::operator==(DynamicBitset const &other) const
     return data_ == other.data_;
 }
 
+bool DynamicBitset::operator[](size_t idx) const
+{
+    auto const q = idx / BLOCK_SIZE;
+    auto const r = idx % BLOCK_SIZE;
+    return data_[q][r];
+}
+
+DynamicBitset::Block::reference DynamicBitset::operator[](size_t idx)
+{
+    auto const q = idx / BLOCK_SIZE;
+    auto const r = idx % BLOCK_SIZE;
+    return data_[q][r];
+}
+
 DynamicBitset &DynamicBitset::operator&=(DynamicBitset const &other)
 {
     assert(size() == other.size());  // assumed true during runtime

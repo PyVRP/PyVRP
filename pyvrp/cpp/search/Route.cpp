@@ -28,6 +28,170 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
+size_t Route::Node::client() const { return loc_; }
+
+size_t Route::Node::idx() const { return idx_; }
+
+Route *Route::Node::route() const { return route_; }
+
+bool Route::Node::isDepot() const
+{
+    // We need to be in a route to be the depot. If we are, then we need to
+    // be either the route's start or end depot.
+    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
+}
+
+bool Route::isFeasible() const
+{
+    assert(!dirty);
+    return !hasExcessLoad() && !hasTimeWarp();
+}
+
+bool Route::hasExcessLoad() const
+{
+    assert(!dirty);
+    return load() > capacity();
+}
+
+bool Route::hasTimeWarp() const
+{
+#ifdef PYVRP_NO_TIME_WINDOWS
+    return false;
+#else
+    assert(!dirty);
+    return timeWarp() > 0;
+#endif
+}
+
+size_t Route::idx() const { return idx_; }
+
+Route::Node *Route::operator[](size_t idx)
+{
+    assert(idx < nodes.size());
+    return nodes[idx];
+}
+
+std::vector<Route::Node *>::const_iterator Route::begin() const
+{
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::const_iterator Route::end() const
+{
+    return nodes.end() - 1;
+}
+
+std::vector<Route::Node *>::iterator Route::begin()
+{
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
+
+pyvrp::Load Route::load() const
+{
+    assert(!dirty);
+    return stats.back().cumLoad;
+}
+
+pyvrp::Load Route::excessLoad() const
+{
+    assert(!dirty);
+    return std::max<Load>(load() - capacity(), 0);
+}
+
+pyvrp::Load Route::capacity() const { return vehicleType_.capacity; }
+
+size_t Route::depot() const { return vehicleType_.depot; }
+
+pyvrp::Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
+
+pyvrp::Distance Route::distance() const
+{
+    assert(!dirty);
+    return stats.back().cumDist;
+}
+
+pyvrp::Duration Route::duration() const
+{
+    assert(!dirty);
+    return stats.back().twsBefore.duration();
+}
+
+pyvrp::Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
+
+pyvrp::Duration Route::timeWarp() const
+{
+    assert(!dirty);
+    return stats.back().twsBefore.timeWarp(maxDuration());
+}
+
+bool Route::empty() const { return size() == 0; }
+
+size_t Route::size() const
+{
+    assert(nodes.size() >= 2);  // excl. depots
+    return nodes.size() - 2;
+}
+
+TWS Route::tws(size_t idx) const
+{
+    assert(!dirty);
+    assert(idx < nodes.size());
+
+    return stats[idx].tws;
+}
+
+TWS Route::twsBetween(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto tws = stats[start].tws;
+
+    for (size_t step = start; step != end; ++step)
+        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
+
+    return tws;
+}
+
+TWS Route::twsAfter(size_t start) const
+{
+    assert(!dirty);
+    assert(start < nodes.size());
+    return stats[start].twsAfter;
+}
+
+TWS Route::twsBefore(size_t end) const
+{
+    assert(!dirty);
+    assert(end < nodes.size());
+    return stats[end].twsBefore;
+}
+
+pyvrp::Distance Route::distBetween(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto const startDist = stats[start].cumDist;
+    auto const endDist = stats[end].cumDist;
+
+    assert(startDist <= endDist);
+    return endDist - startDist;
+}
+
+pyvrp::Load Route::loadBetween(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto const atStart = data.location(nodes[start]->client()).demand;
+    auto const startLoad = stats[start].cumLoad;
+    auto const endLoad = stats[end].cumLoad;
+
+    assert(startLoad <= endLoad);
+    return endLoad - startLoad + atStart;
+}
+
 std::pair<double, double> const &Route::centroid() const
 {
     assert(!dirty);

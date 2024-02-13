@@ -27,13 +27,13 @@ class Exchange : public LocalSearchOperator<Route::Node>
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 
     // Tests if the segment starting at node of given length contains the depot
-    inline bool containsDepot(Route::Node *node, size_t segLength) const;
+    bool containsDepot(Route::Node *node, size_t segLength) const;
 
     // Tests if the segments of U and V overlap in the same route
-    inline bool overlap(Route::Node *U, Route::Node *V) const;
+    bool overlap(Route::Node *U, Route::Node *V) const;
 
     // Tests if the segments of U and V are adjacent in the same route
-    inline bool adjacent(Route::Node *U, Route::Node *V) const;
+    bool adjacent(Route::Node *U, Route::Node *V) const;
 
     // Special case that's applied when M == 0
     Cost evalRelocateMove(Route::Node *U,

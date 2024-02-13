@@ -59,7 +59,7 @@ class CostEvaluator
      * the part of the load that exceeds the capacity.
      */
     // Internal, used in conjunction with the two-argument loadPenalty method.
-    [[nodiscard]] inline Cost loadPenalty(Load excessLoad) const;
+    [[nodiscard]] Cost loadPenalty(Load excessLoad) const;
 
 public:
     CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty);
@@ -67,12 +67,12 @@ public:
     /**
      * Computes the total excess capacity penalty for the given load.
      */
-    [[nodiscard]] inline Cost loadPenalty(Load load, Load capacity) const;
+    [[nodiscard]] Cost loadPenalty(Load load, Load capacity) const;
 
     /**
      * Computes the time warp penalty for the given time warp.
      */
-    [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
+    [[nodiscard]] Cost twPenalty(Duration timeWarp) const;
 
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
@@ -111,25 +111,6 @@ public:
     // method for Solution.
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
-
-Cost CostEvaluator::loadPenalty(Load excessLoad) const
-{
-    return static_cast<Cost>(excessLoad) * capacityPenalty;
-}
-
-Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
-{
-    return loadPenalty(std::max<Load>(load - capacity, 0));
-}
-
-Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
-{
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
-    return static_cast<Cost>(timeWarp) * timeWarpPenalty;
-#endif
-}
 
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const

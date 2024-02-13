@@ -53,16 +53,15 @@ class TimeWindowSegment
     Duration twLate_;       // Latest visit moment of first client
     Duration releaseTime_;  // Earliest allowed moment to leave the depot
 
-    [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
-                                   TWS const &other) const;
+    [[nodiscard]] TWS merge(Matrix<Duration> const &durationMatrix,
+                            TWS const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS
-    merge(Matrix<Duration> const &durationMatrix,
-          TWS const &first,
-          TWS const &second,
-          Args &&...args);
+    [[nodiscard]] static TWS merge(Matrix<Duration> const &durationMatrix,
+                                   TWS const &first,
+                                   TWS const &second,
+                                   Args &&...args);
 
     /**
      * The total duration of this route segment.
@@ -85,7 +84,7 @@ public:
      * int
      *     Total time warp on this route segment.
      */
-    [[nodiscard]] inline Duration
+    [[nodiscard]] Duration
     timeWarp(Duration const maxDuration
              = std::numeric_limits<Duration>::max()) const;
 
@@ -110,43 +109,14 @@ public:
     TimeWindowSegment(size_t idx, ProblemData::Client const &client);
 
     // Construct from raw data.
-    inline TimeWindowSegment(size_t idxFirst,
-                             size_t idxLast,
-                             Duration duration,
-                             Duration timeWarp,
-                             Duration twEarly,
-                             Duration twLate,
-                             Duration releaseTime);
+    TimeWindowSegment(size_t idxFirst,
+                      size_t idxLast,
+                      Duration duration,
+                      Duration timeWarp,
+                      Duration twEarly,
+                      Duration twLate,
+                      Duration releaseTime);
 };
-
-TimeWindowSegment
-TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
-                         TimeWindowSegment const &other) const
-{
-    using Dur = pyvrp::Duration;
-
-    // edgeDuration is the travel duration from our last to the other's first
-    // client, and atOther the time (after starting from our first client) at
-    // which we arrive there.
-    Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
-    Dur const atOther = duration_ - timeWarp_ + edgeDuration;
-
-    // Time warp increases if we arrive at the other's first client after its
-    // time window closes, whereas wait duration increases if we arrive there
-    // before opening.
-    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
-    Dur const diffWait = other.twEarly_ - atOther > twLate_
-                             ? other.twEarly_ - atOther - twLate_
-                             : 0;  // ternary rather than max avoids underflow
-
-    return {idxFirst_,
-            other.idxLast_,
-            duration_ + other.duration_ + edgeDuration + diffWait,
-            timeWarp_ + other.timeWarp_ + diffTw,
-            std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
-            std::min(other.twLate_ - atOther, twLate_) + diffTw,
-            std::max(releaseTime_, other.releaseTime_)};
-}
 
 template <typename... Args>
 TimeWindowSegment TimeWindowSegment::merge(
@@ -165,32 +135,6 @@ TimeWindowSegment TimeWindowSegment::merge(
     else
         return merge(durationMatrix, res, args...);
 #endif
-}
-
-Duration TimeWindowSegment::timeWarp(Duration const maxDuration) const
-{
-    // clang-format off
-    return timeWarp_
-         + std::max<Duration>(releaseTime_ - twLate_, 0)
-         + std::max<Duration>(duration_ - maxDuration, 0);
-    // clang-format on
-}
-
-TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
-                                     size_t idxLast,
-                                     Duration duration,
-                                     Duration timeWarp,
-                                     Duration twEarly,
-                                     Duration twLate,
-                                     Duration releaseTime)
-    : idxFirst_(idxFirst),
-      idxLast_(idxLast),
-      duration_(duration),
-      timeWarp_(timeWarp),
-      twEarly_(twEarly),
-      twLate_(twLate),
-      releaseTime_(releaseTime)
-{
 }
 }  // namespace pyvrp
 
