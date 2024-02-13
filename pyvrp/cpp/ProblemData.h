@@ -333,7 +333,7 @@ public:
      * int
      *     Travel distance between the given clients.
      */
-    [[nodiscard]] Distance dist(size_t first, size_t second) const;
+    [[nodiscard]] inline Distance dist(size_t first, size_t second) const;
 
     /**
      * Returns the travel duration between the first and second argument,
@@ -351,7 +351,7 @@ public:
      * int
      *     Travel duration between the given clients.
      */
-    [[nodiscard]] Duration duration(size_t first, size_t second) const;
+    [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
 
     /**
      * The full travel distance matrix.
@@ -471,6 +471,17 @@ public:
                 Matrix<Distance> distMat,
                 Matrix<Duration> durMat);
 };
+
+Distance ProblemData::dist(size_t first, size_t second) const
+{
+    return dist_(first, second);
+}
+
+Duration ProblemData::duration(size_t first, size_t second) const
+{
+    return dur_(first, second);
+}
+
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

@@ -192,16 +192,6 @@ ProblemData::vehicleType(size_t vehicleType) const
     return vehicleTypes_[vehicleType];
 }
 
-Distance ProblemData::dist(size_t first, size_t second) const
-{
-    return dist_(first, second);
-}
-
-Duration ProblemData::duration(size_t first, size_t second) const
-{
-    return dur_(first, second);
-}
-
 Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
 Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
