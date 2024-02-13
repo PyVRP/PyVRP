@@ -48,25 +48,25 @@ public:
         /**
          * Returns the location represented by this node.
          */
-        [[nodiscard]] size_t client() const;  // TODO rename to loc
+        [[nodiscard]] inline size_t client() const;  // TODO rename to loc
 
         /**
          * Returns this node's position in a route. This value is ``0`` when
          * the node is *not* in a route.
          */
-        [[nodiscard]] size_t idx() const;
+        [[nodiscard]] inline size_t idx() const;
 
         /**
          * Returns the route this node is currently in. If the node is not in
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
-        [[nodiscard]] Route *route() const;
+        [[nodiscard]] inline Route *route() const;
 
         /**
          * Returns whether this node is a depot. A node can only be a depot if
          * it is in a route.
          */
-        [[nodiscard]] bool isDepot() const;
+        [[nodiscard]] inline bool isDepot() const;
     };
 
 private:
@@ -195,12 +195,12 @@ public:
     /**
      * @return true if this route is empty, false otherwise.
      */
-    [[nodiscard]] bool empty() const;
+    [[nodiscard]] inline bool empty() const;
 
     /**
      * @return Number of clients in this route.
      */
-    [[nodiscard]] size_t size() const;
+    [[nodiscard]] inline size_t size() const;
 
     /**
      * Returns the time window data of the node at ``idx``.
@@ -301,6 +301,27 @@ inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route();
     return route[node->idx() + 1];
+}
+
+size_t Route::Node::client() const { return loc_; }
+
+size_t Route::Node::idx() const { return idx_; }
+
+Route *Route::Node::route() const { return route_; }
+
+bool Route::Node::isDepot() const
+{
+    // We need to be in a route to be the depot. If we are, then we need to
+    // be either the route's start or end depot.
+    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
+}
+
+bool Route::empty() const { return size() == 0; }
+
+size_t Route::size() const
+{
+    assert(nodes.size() >= 2);  // excl. depots
+    return nodes.size() - 2;
 }
 }  // namespace pyvrp::search
 

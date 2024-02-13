@@ -28,19 +28,6 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
-size_t Route::Node::client() const { return loc_; }
-
-size_t Route::Node::idx() const { return idx_; }
-
-Route *Route::Node::route() const { return route_; }
-
-bool Route::Node::isDepot() const
-{
-    // We need to be in a route to be the depot. If we are, then we need to
-    // be either the route's start or end depot.
-    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
-}
-
 bool Route::isFeasible() const
 {
     assert(!dirty);
@@ -124,19 +111,10 @@ pyvrp::Duration Route::timeWarp() const
     return stats.back().twsBefore.timeWarp(maxDuration());
 }
 
-bool Route::empty() const { return size() == 0; }
-
-size_t Route::size() const
-{
-    assert(nodes.size() >= 2);  // excl. depots
-    return nodes.size() - 2;
-}
-
 TWS Route::tws(size_t idx) const
 {
     assert(!dirty);
     assert(idx < nodes.size());
-
     return stats[idx].tws;
 }
 
