@@ -28,6 +28,33 @@ Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
 {
 }
 
+std::vector<Route::Node *>::const_iterator Route::begin() const
+{
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::const_iterator Route::end() const
+{
+    return nodes.end() - 1;
+}
+
+std::vector<Route::Node *>::iterator Route::begin()
+{
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
+
+pyvrp::Distance Route::distance() const
+{
+    assert(!dirty);
+    return stats.back().cumDist;
+}
+
+pyvrp::Duration Route::duration() const
+{
+    assert(!dirty);
+    return stats.back().twsBefore.duration();
+}
+
 std::pair<double, double> const &Route::centroid() const
 {
     assert(!dirty);

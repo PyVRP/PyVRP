@@ -58,11 +58,10 @@ class TimeWindowSegment
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static TWS
-    merge(Matrix<Duration> const &durationMatrix,
-          TWS const &first,
-          TWS const &second,
-          Args &&...args);
+    [[nodiscard]] static TWS merge(Matrix<Duration> const &durationMatrix,
+                                   TWS const &first,
+                                   TWS const &second,
+                                   Args &&...args);
 
     /**
      * The total duration of this route segment.

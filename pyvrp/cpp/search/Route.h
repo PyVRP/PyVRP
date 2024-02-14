@@ -137,12 +137,12 @@ public:
 
     // First client in the route if the route is non-empty. Else it is the
     // end depot. In either case the iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator begin();
+    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] std::vector<Node *>::iterator begin();
 
     // End depot. The iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator end();
+    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
+    [[nodiscard]] std::vector<Node *>::iterator end();
 
     /**
      * Tests if this route is feasible.
@@ -193,12 +193,12 @@ public:
     /**
      * @return Total distance travelled on this route.
      */
-    [[nodiscard]] inline Distance distance() const;
+    [[nodiscard]] Distance distance() const;
 
     /**
      * @return The duration of this route.
      */
-    [[nodiscard]] inline Duration duration() const;
+    [[nodiscard]] Duration duration() const;
 
     /**
      * @return The maximum duration of the vehicle servicing this route.
@@ -228,12 +228,6 @@ public:
 
     /**
      * Returns a proxy object that can be queried for data associated with
-     * the segment between [start, end].
-     */
-    [[nodiscard]] inline Proxy between(size_t start, size_t end) const;
-
-    /**
-     * Returns a proxy object that can be queried for data associated with
      * the segment starting at start.
      */
     [[nodiscard]] inline Proxy after(size_t start) const;
@@ -243,6 +237,12 @@ public:
      * the segment ending at end.
      */
     [[nodiscard]] inline Proxy before(size_t end) const;
+
+    /**
+     * Returns a proxy object that can be queried for data associated with
+     * the segment between [start, end].
+     */
+    [[nodiscard]] inline Proxy between(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -400,21 +400,6 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
-std::vector<Route::Node *>::const_iterator Route::begin() const
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;
-}
-
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
-
 Load Route::load() const
 {
     assert(!dirty);
@@ -432,18 +417,6 @@ Load Route::capacity() const { return vehicleType_.capacity; }
 size_t Route::depot() const { return vehicleType_.depot; }
 
 Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
-
-Distance Route::distance() const
-{
-    assert(!dirty);
-    return stats.back().cumDist;
-}
-
-Duration Route::duration() const
-{
-    assert(!dirty);
-    return stats.back().twsBefore.duration();
-}
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
@@ -468,13 +441,6 @@ Route::Proxy Route::at(size_t idx) const
     return Proxy(*this, idx, idx);
 }
 
-Route::Proxy Route::between(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-    return Proxy(*this, start, end);
-}
-
 Route::Proxy Route::after(size_t start) const
 {
     assert(!dirty);
@@ -487,6 +453,13 @@ Route::Proxy Route::before(size_t end) const
     assert(!dirty);
     assert(end < nodes.size());
     return Proxy(*this, 0, end);
+}
+
+Route::Proxy Route::between(size_t start, size_t end) const
+{
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+    return Proxy(*this, start, end);
 }
 }  // namespace pyvrp::search
 

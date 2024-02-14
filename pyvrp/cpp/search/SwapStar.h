@@ -94,15 +94,15 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
-    inline std::pair<Cost, Route::Node *> getBestInsertPoint(
+    std::pair<Cost, Route::Node *> getBestInsertPoint(
         Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator);
 
     // Evaluates the delta cost for ``V``'s route of inserting ``U`` after
     // ``V``, while removing ``remove`` from ``V``'s route.
-    inline Cost evaluateMove(Route::Node *U,
-                             Route::Node *V,
-                             Route::Node *remove,
-                             CostEvaluator const &costEvaluator);
+    Cost evaluateMove(Route::Node *U,
+                      Route::Node *V,
+                      Route::Node *remove,
+                      CostEvaluator const &costEvaluator);
 
 public:
     void init(Solution const &solution) override;
