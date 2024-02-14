@@ -119,12 +119,12 @@ public:
 
     // First client in the route if the route is non-empty. Else it is the
     // end depot. In either case the iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator begin();
+    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] std::vector<Node *>::iterator begin();
 
     // End depot. The iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator end();
+    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
+    [[nodiscard]] std::vector<Node *>::iterator end();
 
     /**
      * Tests if this route is feasible.
@@ -175,12 +175,12 @@ public:
     /**
      * @return Total distance travelled on this route.
      */
-    [[nodiscard]] inline Distance distance() const;
+    [[nodiscard]] Distance distance() const;
 
     /**
      * @return The duration of this route.
      */
-    [[nodiscard]] inline Duration duration() const;
+    [[nodiscard]] Duration duration() const;
 
     /**
      * @return The maximum duration of the vehicle servicing this route.
@@ -208,12 +208,6 @@ public:
     [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
 
     /**
-     * Calculates time window data for segment [start, end].
-     */
-    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
-                                                      size_t end) const;
-
-    /**
      * Returns time window data for segment [start, 0].
      */
     [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
@@ -222,6 +216,12 @@ public:
      * Returns time window data for segment [0, end].
      */
     [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
+
+    /**
+     * Calculates time window data for segment [start, end].
+     */
+    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
+                                                      size_t end) const;
 
     /**
      * Calculates the distance for segment [start, end].
@@ -347,21 +347,6 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
-std::vector<Route::Node *>::const_iterator Route::begin() const
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;
-}
-
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
-
 Load Route::load() const
 {
     assert(!dirty);
@@ -379,18 +364,6 @@ Load Route::capacity() const { return vehicleType_.capacity; }
 size_t Route::depot() const { return vehicleType_.depot; }
 
 Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
-
-Distance Route::distance() const
-{
-    assert(!dirty);
-    return stats.back().cumDist;
-}
-
-Duration Route::duration() const
-{
-    assert(!dirty);
-    return stats.back().twsBefore.duration();
-}
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
@@ -412,22 +385,7 @@ TimeWindowSegment Route::tws(size_t idx) const
 {
     assert(!dirty);
     assert(idx < nodes.size());
-
     return stats[idx].tws;
-}
-
-TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
-{
-    using TWS = TimeWindowSegment;
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto tws = stats[start].tws;
-
-    for (size_t step = start; step != end; ++step)
-        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
-
-    return tws;
 }
 
 TimeWindowSegment Route::twsAfter(size_t start) const
@@ -442,6 +400,20 @@ TimeWindowSegment Route::twsBefore(size_t end) const
     assert(!dirty);
     assert(end < nodes.size());
     return stats[end].twsBefore;
+}
+
+TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
+{
+    using TWS = TimeWindowSegment;
+    assert(!dirty);
+    assert(start <= end && end < nodes.size());
+
+    auto tws = stats[start].tws;
+
+    for (size_t step = start; step != end; ++step)
+        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
+
+    return tws;
 }
 
 Distance Route::distBetween(size_t start, size_t end) const
