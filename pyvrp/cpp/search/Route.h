@@ -321,6 +321,13 @@ size_t Route::Node::idx() const { return idx_; }
 
 Route *Route::Node::route() const { return route_; }
 
+bool Route::Node::isDepot() const
+{
+    // We need to be in a route to be the depot. If we are, then we need to
+    // be either the route's start or end depot.
+    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
+}
+
 Route::Proxy::Proxy(Route const &route, size_t start, size_t end)
     : route(&route), start(start), end(end)
 {
@@ -361,13 +368,6 @@ Route::Proxy::operator Distance() const
 
     assert(startDist <= endDist);
     return endDist - startDist;
-}
-
-bool Route::Node::isDepot() const
-{
-    // We need to be in a route to be the depot. If we are, then we need to
-    // be either the route's start or end depot.
-    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
 bool Route::isFeasible() const
