@@ -372,46 +372,6 @@ public:
     inline operator Distance() const;
 };
 
-class ProxyAfter
-{
-    Route const *route;
-    size_t const start;
-
-public:
-    inline ProxyAfter(Route const &route, size_t start);
-
-    inline operator TimeWindowSegment const &() const;
-    inline operator Load() const;
-    inline operator Distance() const;
-};
-
-class ProxyBefore
-{
-    Route const *route;
-    size_t const end;
-
-public:
-    inline ProxyBefore(Route const &route, size_t end);
-
-    inline operator TimeWindowSegment const &() const;
-    inline operator Load() const;
-    inline operator Distance() const;
-};
-
-class ProxyBetween
-{
-    Route const *route;
-    size_t const start;
-    size_t const end;
-
-public:
-    inline ProxyBetween(Route const &route, size_t start, size_t end);
-
-    inline operator TimeWindowSegment() const;
-    inline operator Load() const;
-    inline operator Distance() const;
-};
-
 Route::ProxyAt::ProxyAt(Route const &route, size_t idx)
     : route(&route), idx(idx)
 {
