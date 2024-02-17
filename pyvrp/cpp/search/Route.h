@@ -379,17 +379,17 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
 {
 }
 
-Route::ProxyAt::operator const pyvrp::TimeWindowSegment &() const
+Route::ProxyAt::operator pyvrp::TimeWindowSegment const &() const
 {
     return route->stats[idx].tws;
 }
 
-Route::ProxyAfter::operator const pyvrp::TimeWindowSegment &() const
+Route::ProxyAfter::operator pyvrp::TimeWindowSegment const &() const
 {
     return route->stats[start].twsAfter;
 }
 
-Route::ProxyBefore::operator const pyvrp::TimeWindowSegment &() const
+Route::ProxyBefore::operator pyvrp::TimeWindowSegment const &() const
 {
     return route->stats[end].twsBefore;
 }
