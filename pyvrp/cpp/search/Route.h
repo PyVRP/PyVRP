@@ -359,19 +359,6 @@ bool Route::Node::isDepot() const
     return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
-class ProxyAt
-{
-    Route const *route;
-    size_t const idx;
-
-public:
-    inline ProxyAt(Route const &route, size_t idx);
-
-    inline operator TimeWindowSegment const &() const;
-    inline operator Load() const;
-    inline operator Distance() const;
-};
-
 Route::ProxyAt::ProxyAt(Route const &route, size_t idx)
     : route(&route), idx(idx)
 {
