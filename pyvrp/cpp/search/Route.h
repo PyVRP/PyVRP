@@ -23,11 +23,18 @@ namespace pyvrp::search
  * .. note::
  *
  *    Modifications to the ``Route`` object do not immediately propagate to its
- *    statitics like time window data, or load and distance attributes. To make
- *    that happen, ``Route::update()`` must be called!
+ *    statistics like time window, load and distance data. To make that happen,
+ *    ``Route::update()`` must be called!
  */
 class Route
 {
+    // These proxy classes (defined further below) handle transparent access
+    // to the route's segment-specific statistics.
+    friend class ProxyAt;
+    friend class ProxyAfter;
+    friend class ProxyBefore;
+    friend class ProxyBetween;
+
 public:
     /**
      * Light wrapper class around a client or depot location. This class tracks
@@ -81,6 +88,10 @@ private:
         NodeStats(TimeWindowSegment const &tws);
     };
 
+    /**
+     * Proxy class for querying data related to a single location in the route,
+     * identified by ``idx``.
+     */
     class ProxyAt
     {
         Route const *route;
@@ -91,6 +102,10 @@ private:
         inline operator TimeWindowSegment const &() const;
     };
 
+    /**
+     * Proxy class for querying data related to the route segment starting at
+     * ``start``, and ending at the depot (inclusive).
+     */
     class ProxyAfter
     {
         Route const *route;
@@ -101,6 +116,10 @@ private:
         inline operator TimeWindowSegment const &() const;
     };
 
+    /**
+     * Proxy class for querying data related to the route segment starting at
+     * the depot, and ending at ``end`` (inclusive).
+     */
     class ProxyBefore
     {
         Route const *route;
@@ -111,6 +130,10 @@ private:
         inline operator TimeWindowSegment const &() const;
     };
 
+    /**
+     * Proxy class for querying data related to the route segment starting at
+     * ``start``, and ending at ``end`` (inclusive).
+     */
     class ProxyBetween
     {
         Route const *route;
@@ -119,16 +142,10 @@ private:
 
     public:
         inline ProxyBetween(Route const &route, size_t start, size_t end);
-
         inline operator TimeWindowSegment() const;
         inline operator Load() const;
         inline operator Distance() const;
     };
-
-    friend class ProxyAt;
-    friend class ProxyAfter;
-    friend class ProxyBefore;
-    friend class ProxyBetween;
 
     ProblemData const &data;
 
