@@ -362,21 +362,25 @@ bool Route::Node::isDepot() const
 Route::ProxyAt::ProxyAt(Route const &route, size_t idx)
     : route(&route), idx(idx)
 {
+    assert(idx < route.nodes.size());
 }
 
 Route::ProxyAfter::ProxyAfter(Route const &route, size_t start)
     : route(&route), start(start)
 {
+    assert(start < route.nodes.size());
 }
 
 Route::ProxyBefore::ProxyBefore(Route const &route, size_t end)
     : route(&route), end(end)
 {
+    assert(end < route.nodes.size());
 }
 
 Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
     : route(&route), start(start), end(end)
 {
+    assert(start <= end && end < route.nodes.size());
 }
 
 Route::ProxyAt::operator pyvrp::TimeWindowSegment const &() const
@@ -407,13 +411,14 @@ Route::ProxyBetween::operator TimeWindowSegment() const
 
 Route::ProxyBetween::operator Load() const
 {
-    auto const client = route->nodes[start]->client();
-    auto const atStart = route->data.location(client).demand;
-    auto const startLoad = route->stats[start].cumLoad;
+    // We need to include the load at start, so we subtract one from start if
+    // we do not already count from the starting depot.
+    auto const start_ = start > 0 ? start - 1 : start;
+    auto const startLoad = route->stats[start_].cumLoad;
     auto const endLoad = route->stats[end].cumLoad;
 
     assert(startLoad <= endLoad);
-    return endLoad - startLoad + atStart;
+    return endLoad - startLoad;
 }
 
 Route::ProxyBetween::operator Distance() const
@@ -492,28 +497,24 @@ size_t Route::size() const
 Route::ProxyAt Route::at(size_t idx) const
 {
     assert(!dirty);
-    assert(idx < nodes.size());
     return ProxyAt(*this, idx);
 }
 
 Route::ProxyAfter Route::after(size_t start) const
 {
     assert(!dirty);
-    assert(start < nodes.size());
     return ProxyAfter(*this, start);
 }
 
 Route::ProxyBefore Route::before(size_t end) const
 {
     assert(!dirty);
-    assert(end < nodes.size());
     return ProxyBefore(*this, end);
 }
 
 Route::ProxyBetween Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
-    assert(start <= end && end < nodes.size());
     return ProxyBetween(*this, start, end);
 }
 }  // namespace pyvrp::search
