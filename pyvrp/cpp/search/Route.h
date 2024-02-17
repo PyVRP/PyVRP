@@ -81,23 +81,54 @@ private:
         NodeStats(TimeWindowSegment const &tws);
     };
 
-    // TODO template different cases?
-    class Proxy
+    class ProxyAt
+    {
+        Route const *route;
+        size_t const idx;
+
+    public:
+        inline ProxyAt(Route const &route, size_t idx);
+        inline operator TimeWindowSegment const &() const;
+    };
+
+    class ProxyAfter
+    {
+        Route const *route;
+        size_t const start;
+
+    public:
+        inline ProxyAfter(Route const &route, size_t start);
+        inline operator TimeWindowSegment const &() const;
+    };
+
+    class ProxyBefore
+    {
+        Route const *route;
+        size_t const end;
+
+    public:
+        inline ProxyBefore(Route const &route, size_t end);
+        inline operator TimeWindowSegment const &() const;
+    };
+
+    class ProxyBetween
     {
         Route const *route;
         size_t const start;
         size_t const end;
 
     public:
-        inline Proxy(Route const &route, size_t start, size_t end);
+        inline ProxyBetween(Route const &route, size_t start, size_t end);
 
-        // TODO specialise with const & for known data.
         inline operator TimeWindowSegment() const;
         inline operator Load() const;
         inline operator Distance() const;
     };
 
-    friend class Proxy;
+    friend class ProxyAt;
+    friend class ProxyAfter;
+    friend class ProxyBefore;
+    friend class ProxyBetween;
 
     ProblemData const &data;
 
@@ -224,25 +255,25 @@ public:
      * Returns a proxy object that can be queried for data associated with
      * the node at idx.
      */
-    [[nodiscard]] inline Proxy at(size_t idx) const;
+    [[nodiscard]] inline ProxyAt at(size_t idx) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
      * the segment starting at start.
      */
-    [[nodiscard]] inline Proxy after(size_t start) const;
+    [[nodiscard]] inline ProxyAfter after(size_t start) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
      * the segment ending at end.
      */
-    [[nodiscard]] inline Proxy before(size_t end) const;
+    [[nodiscard]] inline ProxyBefore before(size_t end) const;
 
     /**
      * Returns a proxy object that can be queried for data associated with
      * the segment between [start, end].
      */
-    [[nodiscard]] inline Proxy between(size_t start, size_t end) const;
+    [[nodiscard]] inline ProxyBetween between(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -328,19 +359,96 @@ bool Route::Node::isDepot() const
     return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
-Route::Proxy::Proxy(Route const &route, size_t start, size_t end)
+class ProxyAt
+{
+    Route const *route;
+    size_t const idx;
+
+public:
+    inline ProxyAt(Route const &route, size_t idx);
+
+    inline operator TimeWindowSegment const &() const;
+    inline operator Load() const;
+    inline operator Distance() const;
+};
+
+class ProxyAfter
+{
+    Route const *route;
+    size_t const start;
+
+public:
+    inline ProxyAfter(Route const &route, size_t start);
+
+    inline operator TimeWindowSegment const &() const;
+    inline operator Load() const;
+    inline operator Distance() const;
+};
+
+class ProxyBefore
+{
+    Route const *route;
+    size_t const end;
+
+public:
+    inline ProxyBefore(Route const &route, size_t end);
+
+    inline operator TimeWindowSegment const &() const;
+    inline operator Load() const;
+    inline operator Distance() const;
+};
+
+class ProxyBetween
+{
+    Route const *route;
+    size_t const start;
+    size_t const end;
+
+public:
+    inline ProxyBetween(Route const &route, size_t start, size_t end);
+
+    inline operator TimeWindowSegment() const;
+    inline operator Load() const;
+    inline operator Distance() const;
+};
+
+Route::ProxyAt::ProxyAt(Route const &route, size_t idx)
+    : route(&route), idx(idx)
+{
+}
+
+Route::ProxyAfter::ProxyAfter(Route const &route, size_t start)
+    : route(&route), start(start)
+{
+}
+
+Route::ProxyBefore::ProxyBefore(Route const &route, size_t end)
+    : route(&route), end(end)
+{
+}
+
+Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
     : route(&route), start(start), end(end)
 {
 }
 
-Route::Proxy::operator TimeWindowSegment() const
+Route::ProxyAt::operator const pyvrp::TimeWindowSegment &() const
 {
-    if (start == 0)
-        return route->stats[end].twsBefore;
+    return route->stats[idx].tws;
+}
 
-    if (end == route->size() + 1)
-        return route->stats[start].twsAfter;
+Route::ProxyAfter::operator const pyvrp::TimeWindowSegment &() const
+{
+    return route->stats[start].twsAfter;
+}
 
+Route::ProxyBefore::operator const pyvrp::TimeWindowSegment &() const
+{
+    return route->stats[end].twsBefore;
+}
+
+Route::ProxyBetween::operator TimeWindowSegment() const
+{
     auto tws = route->stats[start].tws;
 
     for (size_t step = start; step != end; ++step)
@@ -350,7 +458,7 @@ Route::Proxy::operator TimeWindowSegment() const
     return tws;
 }
 
-Route::Proxy::operator Load() const
+Route::ProxyBetween::operator Load() const
 {
     auto const client = route->nodes[start]->client();
     auto const atStart = route->data.location(client).demand;
@@ -361,7 +469,7 @@ Route::Proxy::operator Load() const
     return endLoad - startLoad + atStart;
 }
 
-Route::Proxy::operator Distance() const
+Route::ProxyBetween::operator Distance() const
 {
     auto const startDist = route->stats[start].cumDist;
     auto const endDist = route->stats[end].cumDist;
@@ -434,32 +542,32 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-Route::Proxy Route::at(size_t idx) const
+Route::ProxyAt Route::at(size_t idx) const
 {
     assert(!dirty);
     assert(idx < nodes.size());
-    return Proxy(*this, idx, idx);
+    return ProxyAt(*this, idx);
 }
 
-Route::Proxy Route::after(size_t start) const
+Route::ProxyAfter Route::after(size_t start) const
 {
     assert(!dirty);
     assert(start < nodes.size());
-    return Proxy(*this, start, size() + 1);
+    return ProxyAfter(*this, start);
 }
 
-Route::Proxy Route::before(size_t end) const
+Route::ProxyBefore Route::before(size_t end) const
 {
     assert(!dirty);
     assert(end < nodes.size());
-    return Proxy(*this, 0, end);
+    return ProxyBefore(*this, end);
 }
 
-Route::Proxy Route::between(size_t start, size_t end) const
+Route::ProxyBetween Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
     assert(start <= end && end < nodes.size());
-    return Proxy(*this, start, end);
+    return ProxyBetween(*this, start, end);
 }
 }  // namespace pyvrp::search
 
