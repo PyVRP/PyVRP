@@ -243,8 +243,14 @@ Cost SwapStar::evaluate(Route *routeU,
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
 
+            if (deltaCost >= 0)  // an early filter on many moves, before doing
+                continue;        // costly work determining insertion points
+
             auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;
+
+            if (deltaCost >= 0)  // continuing here avoids evaluating another
+                continue;        // potentially costly insertion point below
 
             auto [extraU, VAfter] = getBestInsertPoint(V, U, costEvaluator);
             deltaCost += extraU;
