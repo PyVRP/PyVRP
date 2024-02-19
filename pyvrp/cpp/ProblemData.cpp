@@ -43,8 +43,8 @@ ProblemData::Client::Client(Coordinate x,
       twLate(twLate),
       releaseTime(releaseTime),
       prize(prize),
-      name(duplicate(name)),
-      required(required)
+      required(required),
+      name(duplicate(name))
 {
     if (demand < 0)
         throw std::invalid_argument("demand must be >= 0.");
@@ -81,8 +81,8 @@ ProblemData::Client::Client(Client const &client)
       twLate(client.twLate),
       releaseTime(client.releaseTime),
       prize(client.prize),
-      name(duplicate(client.name)),
-      required(client.required)
+      required(client.required),
+      name(duplicate(client.name))
 {
 }
 
@@ -96,8 +96,8 @@ ProblemData::Client::Client(Client &&client)
       twLate(client.twLate),
       releaseTime(client.releaseTime),
       prize(client.prize),
-      name(client.name),  // we can steal
-      required(client.required)
+      required(client.required),
+      name(client.name)  // we can steal
 {
     client.name = nullptr;  // stolen
 }

@@ -131,8 +131,8 @@ public:
         Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
-        char const *name;            // Location name (for reference)
         bool const required;         // Must client be in solution?
+        char const *name;            // Location name (for reference)
 
         Client(Coordinate x,
                Coordinate y,
