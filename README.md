@@ -1,8 +1,8 @@
 ![PyVRP logo](docs/source/assets/images/logo.svg)
 
 [![PyPI version](https://img.shields.io/pypi/v/PyVRP?style=flat-square)](https://pypi.org/project/pyvrp/)
-[![CI](https://img.shields.io/github/actions/workflow/status/PyVRP/PyVRP/.github%2Fworkflows%2FCI.yml?branch=main&style=flat-square&label=CI)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
-[![DOC](https://img.shields.io/github/actions/workflow/status/PyVRP/PyVRP/.github%2Fworkflows%2FDOC.yml?branch=main&style=flat-square&label=DOC)](https://pyvrp.org/)
+[![CI](https://img.shields.io/github/actions/workflow/status/PyVRP/PyVRP/.github%2Fworkflows%2FCI.yml?branch=main&style=flat-square&logo=github&label=CI)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
+[![DOC](https://img.shields.io/github/actions/workflow/status/PyVRP/PyVRP/.github%2Fworkflows%2FDOC.yml?branch=main&style=flat-square&logo=github&label=DOC)](https://pyvrp.org/)
 [![codecov](https://img.shields.io/codecov/c/github/PyVRP/PyVRP?style=flat-square&logo=codecov)](https://codecov.io/gh/PyVRP/PyVRP)
 [![DOI:10.1287/ijoc.2023.0055](https://img.shields.io/badge/DOI-ijoc.2023.0055-green?style=flat-square&color=blue)](https://doi.org/10.1287/ijoc.2023.0055)
 
