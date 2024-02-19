@@ -1,6 +1,6 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
-from pytest import mark
 
 from pyvrp import (
     Client,
@@ -55,7 +55,9 @@ def test_single_route_OkSmall(ok_small):
         assert_(improved_cost <= other_cost)
 
 
-@mark.parametrize("seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434])
+@pytest.mark.parametrize(
+    "seed", [2643, 2742, 2941, 3457, 4299, 4497, 6178, 6434]
+)
 def test_RC208_instance(rc208, seed: int):
     """
     Test a larger instance over several seeds.
@@ -107,3 +109,39 @@ def test_relocate_fixed_vehicle_cost():
     op = MoveTwoClientsReversed(data)
     cost_eval = CostEvaluator(0, 0)
     assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), 6)
+
+
+def test_within_route_mixed_backhaul():
+    """
+    Tests that the Exchange operators correctly evaluate load violations within
+    the same route.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=1, y=0, supply=5),
+            Client(x=2, y=0),
+            Client(x=2, y=0, demand=5),
+        ],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(capacity=5)],
+        distance_matrix=np.where(np.eye(4), 0, 1),
+        duration_matrix=np.zeros((4, 4), dtype=int),
+    )
+
+    op = MoveTwoClientsReversed(data)
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2, 3]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # Route is 1 -> 2 -> 3, and picks up 1's supply (5) before dropping off
+    # 3's demand (5). So total load is 10, and the excess load is 5.
+    assert_(not route.is_feasible())
+    assert_allclose(route.load(), 10)
+    assert_allclose(route.excess_load(), 5)
+
+    # Evaluates 3 -> 2 -> 1, in which 3 is visited before 1. That would resolve
+    # any excess load.
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), -5)

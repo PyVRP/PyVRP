@@ -1,6 +1,6 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
-from pytest import mark
 
 from pyvrp import (
     Client,
@@ -28,7 +28,7 @@ from pyvrp.search import (
 from pyvrp.search._search import Node, Route
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "operator",
     [
         Exchange11,
@@ -63,7 +63,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
     assert_(improved_cost < current_cost)
 
 
-@mark.parametrize("operator", [Exchange10, Exchange20, Exchange30])
+@pytest.mark.parametrize("operator", [Exchange10, Exchange20, Exchange30])
 def test_relocate_uses_empty_routes(rc208, operator):
     """
     Unlike the swapping exchange operators, relocate should be able to relocate
@@ -88,7 +88,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
     assert_(improved_cost < current_cost)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "operator",
     [
         Exchange22,
@@ -118,7 +118,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
     assert_equal(new_sol, sol)
 
 
-@mark.parametrize("operator", [Exchange32, Exchange33])
+@pytest.mark.parametrize("operator", [Exchange32, Exchange33])
 def test_cannot_exchange_when_segments_overlap(ok_small, operator):
     """
     (3, 2)- and (3, 3)-exchange cannot exchange anything on a length-four
@@ -221,15 +221,13 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     Tests that (1, 0)-exchange checks the duration matrix for time-window
     feasibility before applying a move that improves the travelled distance.
     """
-    clients = [
-        Client(x=1, y=0, tw_early=0, tw_late=5),
-        Client(x=2, y=0, tw_early=0, tw_late=5),
-    ]
-
     # Distance-wise, the best route is 0 -> 1 -> 2 -> 0. Duration-wise,
     # however, the best route is 0 -> 2 -> 1 -> 0.
     data = ProblemData(
-        clients=clients,
+        clients=[
+            Client(x=1, y=0, tw_early=0, tw_late=5),
+            Client(x=2, y=0, tw_early=0, tw_late=5),
+        ],
         depots=[Client(x=0, y=0, tw_early=0, tw_late=10)],
         vehicle_types=[VehicleType(1)],
         distance_matrix=np.asarray(
@@ -308,7 +306,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     assert_equal(ls.search(sol, cost_evaluator), expected)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("op", "base_cost", "fixed_cost"),
     [
         (Exchange10, 2_346, 0),
@@ -348,7 +346,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     )
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("op", "max_dur", "cost"),
     [
         (Exchange20, 0, -841),
@@ -386,3 +384,42 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
 
     cost_eval = CostEvaluator(1, 1)
     assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), cost)
+
+
+@pytest.mark.parametrize("operator", [Exchange10, Exchange11])
+def test_within_route_mixed_backhaul(operator):
+    """
+    Tests that the Exchange operators correctly evaluate load violations within
+    the same route.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=1, y=0, supply=5),
+            Client(x=2, y=0),
+            Client(x=2, y=0, demand=5),
+        ],
+        depots=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType(capacity=5)],
+        distance_matrix=np.where(np.eye(4), 0, 1),
+        duration_matrix=np.zeros((4, 4), dtype=int),
+    )
+
+    op = operator(data)
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2, 3]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # Route is 1 -> 2 -> 3, and picks up 1's supply (5) before dropping off
+    # 3's demand (5). So total load is 10, and the excess load is 5.
+    assert_(not route.is_feasible())
+    assert_allclose(route.load(), 10)
+    assert_allclose(route.excess_load(), 5)
+
+    # For (1, 0)-exchange, we evaluate inserting 1 after 3. That'd resolve the
+    # excess load. For (1, 1)-exchange, we evaluate swapping 1 and 3, which
+    # would also resolve the excess load: the important bit is that we visit 3
+    # before 1.
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), -5)
