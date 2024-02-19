@@ -36,21 +36,3 @@ def test_merge_two():
     # Maximum load on the concatenated segment is a bit more involved, as
     # that is computed as max(max_load1 + demand2, max_load2 + supply1).
     assert_allclose(merged.load(), max(8 + 3, 11 + 8))
-
-
-@pytest.mark.parametrize(
-    ("max_load", "capacity", "expected"),
-    [
-        (0, 0, 0),
-        (10, 10, 0),
-        (12, 10, 2),
-        (25, 0, 25),
-        (0, _INT_MAX, 0),
-    ],
-)
-def test_excess_load(max_load: int, capacity: int, expected: int):
-    """
-    Tests the excess load calculations
-    """
-    load_segment = LoadSegment(0, 0, max_load)
-    assert_allclose(load_segment.excess_load(capacity), expected)

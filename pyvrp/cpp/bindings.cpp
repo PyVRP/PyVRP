@@ -589,10 +589,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("demand", &LoadSegment::demand, DOC(pyvrp, LoadSegment, demand))
         .def("supply", &LoadSegment::supply, DOC(pyvrp, LoadSegment, supply))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
-        .def("excess_load",
-             &LoadSegment::excessLoad,
-             py::arg("capacity"),
-             DOC(pyvrp, LoadSegment, excessLoad))
         .def_static(
             "merge", &LoadSegment::merge<>, py::arg("first"), py::arg("second"))
         .def_static("merge",

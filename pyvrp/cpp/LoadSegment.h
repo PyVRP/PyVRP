@@ -36,17 +36,6 @@ public:
     merge(LoadSegment const &first, LoadSegment const &second, Args &&...args);
 
     /**
-     * Returns the excess load encountered on this segment, for a given
-     * vehicle capacity.
-     *
-     * Parameters
-     * ----------
-     * capacity
-     *     The given vehicle capacity.
-     */
-    [[nodiscard]] inline Load excessLoad(Load capacity) const;
-
-    /**
      * Returns the demand, that is, the total amount of load delivered to
      * clients on this segment.
      */
@@ -90,11 +79,6 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
         return res;
     else
         return merge(res, args...);
-}
-
-Load LoadSegment::excessLoad(Load capacity) const
-{
-    return std::max<Load>(load_ - capacity, 0);
 }
 
 Load LoadSegment::load() const { return load_; }

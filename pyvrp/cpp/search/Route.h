@@ -507,7 +507,7 @@ Load Route::load() const
 Load Route::excessLoad() const
 {
     assert(!dirty);
-    return stats.back().lsBefore.excessLoad(vehicleType_.capacity);
+    return std::max<Load>(load() - capacity(), 0);
 }
 
 Load Route::capacity() const { return vehicleType_.capacity; }
