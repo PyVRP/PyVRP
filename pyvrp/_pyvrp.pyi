@@ -219,7 +219,7 @@ class LoadSegment:
         self,
         demand: int,
         supply: int,
-        max_load: int,
+        load: int,
     ) -> None: ...
     @overload
     @staticmethod

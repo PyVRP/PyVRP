@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 from pytest import mark
 
 from pyvrp import (
@@ -189,3 +189,48 @@ def test_wrong_load_calculation_bug():
 
     assert_equal([node.client for node in route1], [3, 1])
     assert_equal([node.client for node in route2], [4, 2])
+
+
+def test_mixed_backhaul():
+    """
+    This test checks that SWAP* calculates loads correctly for an instance
+    with mixed backhaul.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=1, y=1, demand=15),
+            Client(x=2, y=2, supply=15),
+            Client(x=3, y=3, demand=15),
+        ],
+        depots=[Client(x=0, y=0, demand=0)],
+        vehicle_types=[VehicleType(num_available=2, capacity=15)],
+        distance_matrix=np.where(np.eye(4), 0, 10),
+        duration_matrix=np.zeros((4, 4), dtype=int),
+    )
+
+    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
+
+    # First route is 0 -> 3 -> 1 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(nodes[3])
+    route1.append(nodes[1])
+    route1.update()
+
+    # Second route is 0 -> 2 -> 0.
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.append(nodes[2])
+    route2.update()
+
+    assert_allclose(route1.excess_load(), 15)  # demand = 30, supply = 0
+    assert_(not route2.has_excess_load())
+
+    cost_eval = CostEvaluator(1, 1)
+    swap_star = SwapStar(data)
+
+    # The excess load can be removed by swapping client #3 (from route1) with
+    # client #2 (from route2). This results in a delta cost of -15.
+    assert_equal(swap_star.evaluate(route1, route2, cost_eval), -15)
+    swap_star.apply(route1, route2)
+
+    assert_equal([node.client for node in route1], [1, 2])
+    assert_equal([node.client for node in route2], [3])
