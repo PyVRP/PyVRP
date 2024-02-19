@@ -578,15 +578,15 @@ def test_model_solves_instance_with_mixed_backhaul():
     # the total supply sums to 11, and the vehicle capacity is 10).
     route = res.best.get_routes()[0]
     assert_(route.has_excess_load())
-    assert_equal(route.excess_load(), 1)
-    assert_equal(route.supply(), 11)
+    assert_allclose(route.excess_load(), 1)
+    assert_allclose(route.supply(), 11)
 
-    # Let's add another vehicle with capacity 1. Then the first client is
-    # served by this second vehicle, and any other clients by the first.
+    # Let's add another vehicle with capacity 1. Then the first client should
+    # be served by this second vehicle, and the other clients by the first.
     m.add_vehicle_type(capacity=1)
     res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
 
     routes = res.best.get_routes()
-    assert_equal(routes[0].supply(), 10)
-    assert_equal(routes[1].supply(), 1)
+    assert_allclose(routes[0].supply(), 10)
+    assert_allclose(routes[1].supply(), 1)

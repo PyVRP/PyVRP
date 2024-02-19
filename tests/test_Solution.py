@@ -427,10 +427,13 @@ def test_route_access_methods(ok_small):
     assert_allclose(routes[0].excess_load(), 0)
     assert_allclose(routes[1].excess_load(), 0)
 
-    # Total route demand.
+    # Total route demand (and supply, which is all zero for this instance).
     demands = [ok_small.location(idx).demand for idx in range(5)]
     assert_allclose(routes[0].demand(), demands[1] + demands[3])
     assert_allclose(routes[1].demand(), demands[2] + demands[4])
+
+    assert_allclose(routes[0].supply(), 0)
+    assert_allclose(routes[1].supply(), 0)
 
     # The first route is not feasible due to time warp, but the second one is.
     # See also the tests below.
