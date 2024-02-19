@@ -67,7 +67,7 @@ public:
     LoadSegment(ProblemData::Client const &client);
 
     // Construct from raw data.
-    LoadSegment(Load demand, Load supply, Load load);
+    inline LoadSegment(Load demand, Load supply, Load load);
 };
 
 LoadSegment LoadSegment::merge(LoadSegment const &other) const
@@ -99,6 +99,10 @@ Load LoadSegment::excessLoad(Load capacity) const
 
 Load LoadSegment::load() const { return load_; }
 
+LoadSegment::LoadSegment(Load demand, Load supply, Load load)
+    : demand_(demand), supply_(supply), load_(load)
+{
+}
 }  // namespace pyvrp
 
 #endif  // PYVRP_LOADSEGMENT_H

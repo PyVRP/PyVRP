@@ -13,8 +13,3 @@ LoadSegment::LoadSegment(ProblemData::Client const &client)
       load_(std::max(client.demand, client.supply))
 {
 }
-
-LoadSegment::LoadSegment(Load demand, Load supply, Load load)
-    : demand_(demand), supply_(supply), load_(load)
-{
-}
