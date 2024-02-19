@@ -32,7 +32,7 @@ class LoadSegment
 
 public:
     template <typename... Args>
-    [[nodiscard]] inline static LoadSegment
+    [[nodiscard]] static LoadSegment
     merge(LoadSegment const &first, LoadSegment const &second, Args &&...args);
 
     /**

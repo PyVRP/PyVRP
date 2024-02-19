@@ -9,25 +9,20 @@ using TWS = pyvrp::TimeWindowSegment;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (auto *U : *R)
+    for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
+        auto *U = (*R)[idx];
         auto const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                - data.dist(p(U)->client(), U->client())
                                - data.dist(U->client(), n(U)->client());
 
-        auto const tws = TWS::merge(data.durationMatrix(),
-                                    R->before(U->idx() - 1),
-                                    R->after(U->idx() + 1));
-
-        auto const ls = LoadSegment::merge(R->before(U->idx() - 1),
-                                           R->after(U->idx() + 1));
+        auto const tws = TWS::merge(
+            data.durationMatrix(), R->before(idx - 1), R->after(idx + 1));
 
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
               + costEvaluator.twPenalty(tws.timeWarp(R->maxDuration()))
-              - costEvaluator.twPenalty(R->timeWarp())
-              + costEvaluator.loadPenalty(ls.load(), R->capacity())
-              - costEvaluator.loadPenalty(R->load(), R->capacity());
+              - costEvaluator.twPenalty(R->timeWarp());
     }
 }
 
@@ -53,15 +48,10 @@ void SwapStar::updateInsertionCost(Route *R,
                                     U->route()->at(U->idx()),
                                     R->after(idx + 1));
 
-        auto const ls = LoadSegment::merge(
-            R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
-
         auto const deltaCost
             = static_cast<Cost>(deltaDist)
               + costEvaluator.twPenalty(tws.timeWarp(R->maxDuration()))
-              - costEvaluator.twPenalty(R->timeWarp())
-              + costEvaluator.loadPenalty(ls.load(), R->capacity())
-              - costEvaluator.loadPenalty(R->load(), R->capacity());
+              - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
     }
@@ -217,28 +207,38 @@ Cost SwapStar::evaluate(Route *routeU,
 {
     best = {};
 
-    if (updated[routeV->idx()])
-    {
-        updateRemovalCosts(routeV, costEvaluator);
-        updated[routeV->idx()] = false;
+    for (auto *route : {routeU, routeV})
+        if (updated[route->idx()])
+        {
+            updateRemovalCosts(route, costEvaluator);
+            updated[route->idx()] = false;
 
-        for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-            cache(routeV->idx(), idx).shouldUpdate = true;
-    }
-
-    if (updated[routeU->idx()])
-    {
-        updateRemovalCosts(routeU, costEvaluator);
-        updated[routeV->idx()] = false;
-
-        for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-            cache(routeU->idx(), idx).shouldUpdate = true;
-    }
+            for (size_t idx = 0; idx != data.numLocations(); ++idx)
+                cache(route->idx(), idx).shouldUpdate = true;
+        }
 
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
             Cost deltaCost = 0;
+
+            // Approximates the actual load changes. It's pretty rough, but
+            // fast and seems to work really well.
+            auto const &uClient = data.location(U->client());
+            auto const &vClient = data.location(V->client());
+            auto const uLoad = std::max(uClient.demand, uClient.supply);
+            auto const vLoad = std::max(vClient.demand, vClient.supply);
+            auto const loadDiff = uLoad - vLoad;
+
+            deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
+                                                   routeU->capacity());
+            deltaCost -= costEvaluator.loadPenalty(routeU->load(),
+                                                   routeU->capacity());
+
+            deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
+                                                   routeV->capacity());
+            deltaCost -= costEvaluator.loadPenalty(routeV->load(),
+                                                   routeV->capacity());
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
@@ -273,7 +273,7 @@ Cost SwapStar::evaluate(Route *routeU,
     if (best.cost >= 0)
         return best.cost;
 
-    // Now do a full evaluation of the proposed swap move. This includes
+    // Now do an exact evaluation of the proposed swap move. This includes
     // possible time warp penalties.
     return evaluateMove(best.V, best.VAfter, best.U, costEvaluator)
            + evaluateMove(best.U, best.UAfter, best.V, costEvaluator);

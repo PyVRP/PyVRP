@@ -1,8 +1,8 @@
 #include "Solution.h"
+#include "LoadSegment.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
-#include "LoadSegment.h"
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
