@@ -80,16 +80,10 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
                                 U->route()->at(U->idx()),
                                 route->after(V->idx() + 1));
 
-    auto const ls = LoadSegment::merge(route->before(V->idx() - 1),
-                                       U->route()->at(U->idx()),
-                                       route->after(V->idx() + 1));
-
     auto const deltaCost
         = static_cast<Cost>(deltaDist)
           + costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()))
-          - costEvaluator.twPenalty(route->timeWarp())
-          + costEvaluator.loadPenalty(ls.load(), route->capacity())
-          - costEvaluator.loadPenalty(route->load(), route->capacity());
+          - costEvaluator.twPenalty(route->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
 }
