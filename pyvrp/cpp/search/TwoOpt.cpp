@@ -1,5 +1,6 @@
 #include "TwoOpt.h"
 
+#include "LoadSegment.h"
 #include "Route.h"
 #include "TimeWindowSegment.h"
 
@@ -30,12 +31,20 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
                            - data.dist(V->client(), n(V)->client())
                            - Distance(route->between(U->idx() + 1, V->idx()));
 
-    Cost deltaCost = static_cast<Cost>(deltaDist);
-
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+    Cost deltaCost
+        = static_cast<Cost>(deltaDist)
+          - costEvaluator.loadPenalty(route->load(), route->capacity())
+          - costEvaluator.twPenalty(route->timeWarp());
 
     if (deltaCost >= 0)
         return deltaCost;
+
+    LoadSegment ls = route->before(U->idx());
+    for (size_t idx = V->idx(); idx != U->idx(); --idx)
+        ls = LoadSegment::merge(ls, route->at(idx));
+    ls = LoadSegment::merge(ls, route->after(V->idx() + 1));
+
+    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
 
     TimeWindowSegment tws = route->before(U->idx());
     for (size_t idx = V->idx(); idx != U->idx(); --idx)
