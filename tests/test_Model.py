@@ -493,7 +493,7 @@ def test_model_solves_line_instance_with_multiple_depots():
     """
     High-level test that creates and solves a small instance on a line, where
     there are two depots. This test checks that the model and underlying
-    algorithm correctly handles multiple depots.
+    algorithm correctly handle multiple depots.
     """
     m = Model()
 
@@ -546,3 +546,42 @@ def test_client_depot_and_vehicle_type_name_fields():
     client = m.add_client(1, 2, name="client1")
     assert_equal(client.name, "client1")
     assert_equal(str(client), "client1")
+
+
+def test_model_solves_instance_with_mixed_backhaul():
+    """
+    High-level test that creates and solves a small instance where clients have
+    both demand and supply. This test checks that the model and underlying
+    algorithm correctly handle mixed backhaul.
+    """
+    m = Model()
+    m.add_depot(0, 0)
+    m.add_vehicle_type(capacity=10)
+
+    # These clients cannot be visited on a single route, because the total
+    # supply exceeds the vehicle's capacity.
+    m.add_client(x=1, y=1, supply=1)
+    m.add_client(x=2, y=2, supply=2)
+    m.add_client(x=3, y=3, supply=3)
+    m.add_client(x=4, y=4, supply=5)
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    # So the resulting solution must be infeasible.
+    res = m.solve(stop=MaxIterations(100))
+    assert_(not res.is_feasible())
+
+    # There is a single route, and that route should have 1 excess load (since
+    # the total supply sums to 11, and the vehicle capacity is 10).
+    route = res.best.get_routes()[0]
+    assert_(route.has_excess_load())
+    assert_equal(route.excess_load(), 1)
+
+    # Let's add another vehicle with capacity 1. Then the first client is
+    # served by this second vehicle, and any other clients by the first.
+    m.add_vehicle_type(capacity=1)
+    res = m.solve(stop=MaxIterations(100))
+    assert_(res.is_feasible())

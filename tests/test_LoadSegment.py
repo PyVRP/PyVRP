@@ -9,7 +9,7 @@ _INT_MAX = np.iinfo(np.int32).max
 
 @pytest.mark.parametrize(
     ("demand", "supply", "max_load"),
-    [(0, 0, 0), (_INT_MAX, _INT_MAX, _INT_MAX)],
+    [(1, 2, 3), (0, 0, 0), (_INT_MAX, _INT_MAX, _INT_MAX)],
 )
 def test_attribute_getters(demand: int, supply: int, max_load: int):
     """

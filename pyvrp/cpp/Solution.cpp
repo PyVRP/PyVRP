@@ -2,6 +2,7 @@
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
+#include "LoadSegment.h"
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
@@ -259,6 +260,7 @@ Solution::Route::Route(ProblemData const &data,
                                0);
 
     auto tws = depotTws;
+    auto ls = LoadSegment(depotLocation);
     size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
@@ -268,7 +270,6 @@ Solution::Route::Route(ProblemData const &data,
 
         distance_ += data.dist(prevClient, client);
         travel_ += data.duration(prevClient, client);
-        demand_ += clientData.demand;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
@@ -278,6 +279,9 @@ Solution::Route::Route(ProblemData const &data,
         auto const clientTws = TimeWindowSegment(client, clientData);
         tws = TimeWindowSegment::merge(data.durationMatrix(), tws, clientTws);
 
+        auto const clientLs = LoadSegment(clientData);
+        ls = LoadSegment::merge(ls, clientLs);
+
         prevClient = client;
     }
 
@@ -285,7 +289,9 @@ Solution::Route::Route(ProblemData const &data,
     distance_ += data.dist(last, vehType.depot);
     travel_ += data.duration(last, vehType.depot);
 
-    excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
+    demand_ = ls.demand();
+    supply_ = ls.supply();
+    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
     tws = TimeWindowSegment::merge(data.durationMatrix(), tws, depotTws);
     duration_ = tws.duration();
@@ -298,6 +304,7 @@ Solution::Route::Route(ProblemData const &data,
 Solution::Route::Route(Visits visits,
                        Distance distance,
                        Load demand,
+                       Load supply,
                        Load excessLoad,
                        Duration duration,
                        Duration timeWarp,
@@ -314,6 +321,7 @@ Solution::Route::Route(Visits visits,
     : visits_(std::move(visits)),
       distance_(distance),
       demand_(demand),
+      supply_(supply),
       excessLoad_(excessLoad),
       duration_(duration),
       timeWarp_(timeWarp),
@@ -348,6 +356,8 @@ Visits const &Solution::Route::visits() const { return visits_; }
 Distance Solution::Route::distance() const { return distance_; }
 
 Load Solution::Route::demand() const { return demand_; }
+
+Load Solution::Route::supply() const { return supply_; }
 
 Load Solution::Route::excessLoad() const { return excessLoad_; }
 
@@ -399,7 +409,6 @@ bool Solution::Route::operator==(Solution::Route const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the visits are all equal.
-
     // clang-format off
     return distance_ == other.distance_
         && demand_ == other.demand_
