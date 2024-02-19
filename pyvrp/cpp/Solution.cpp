@@ -412,6 +412,7 @@ bool Solution::Route::operator==(Solution::Route const &other) const
     // clang-format off
     return distance_ == other.distance_
         && demand_ == other.demand_
+        && supply_ == other.supply_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;
