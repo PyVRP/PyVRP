@@ -1,6 +1,4 @@
 #include "SwapStar.h"
-#include "LoadSegment.h"
-#include "TimeWindowSegment.h"
 
 #include <cassert>
 
@@ -13,23 +11,18 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
     for (auto *U : *R)
     {
-        auto const deltaDist = data.dist(p(U)->client(), n(U)->client())
-                               - data.dist(p(U)->client(), U->client())
-                               - data.dist(U->client(), n(U)->client());
-
         auto const tws = TWS::merge(data.durationMatrix(),
                                     R->before(U->idx() - 1),
                                     R->after(U->idx() + 1));
 
-        auto const ls = LoadSegment::merge(R->before(U->idx() - 1),
-                                           R->after(U->idx() + 1));
+        auto const deltaDist = data.dist(p(U)->client(), n(U)->client())
+                               - data.dist(p(U)->client(), U->client())
+                               - data.dist(U->client(), n(U)->client());
 
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
               + costEvaluator.twPenalty(tws.timeWarp(R->maxDuration()))
-              - costEvaluator.twPenalty(R->timeWarp())
-              + costEvaluator.loadPenalty(ls.load(), R->capacity())
-              - costEvaluator.loadPenalty(R->load(), R->capacity());
+              - costEvaluator.twPenalty(R->timeWarp());
     }
 }
 
@@ -45,25 +38,20 @@ void SwapStar::updateInsertionCost(Route *R,
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
         // Insert cost of U just after V (V -> U -> ...).
-        auto *V = (*R)[idx];
-        auto const deltaDist = data.dist(V->client(), U->client())
-                               + data.dist(U->client(), n(V)->client())
-                               - data.dist(V->client(), n(V)->client());
-
         auto const tws = TWS::merge(data.durationMatrix(),
                                     R->before(idx),
                                     U->route()->at(U->idx()),
                                     R->after(idx + 1));
 
-        auto const ls = LoadSegment::merge(
-            R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
+        auto *V = (*R)[idx];
+        auto const deltaDist = data.dist(V->client(), U->client())
+                               + data.dist(U->client(), n(V)->client())
+                               - data.dist(V->client(), n(V)->client());
 
         auto const deltaCost
             = static_cast<Cost>(deltaDist)
               + costEvaluator.twPenalty(tws.timeWarp(R->maxDuration()))
-              - costEvaluator.twPenalty(R->timeWarp())
-              + costEvaluator.loadPenalty(ls.load(), R->capacity())
-              - costEvaluator.loadPenalty(R->load(), R->capacity());
+              - costEvaluator.twPenalty(R->timeWarp());
 
         insertPositions.maybeAdd(deltaCost, V);
     }
@@ -83,25 +71,19 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
             return std::make_pair(best_.costs[idx], best_.locs[idx]);
 
     // As a fallback option, we consider inserting in the place of V.
-    auto const deltaDist = data.dist(p(V)->client(), U->client())
-                           + data.dist(U->client(), n(V)->client())
-                           - data.dist(p(V)->client(), n(V)->client());
-
     auto const tws = TWS::merge(data.durationMatrix(),
                                 route->before(V->idx() - 1),
                                 U->route()->at(U->idx()),
                                 route->after(V->idx() + 1));
 
-    auto const ls = LoadSegment::merge(route->before(V->idx() - 1),
-                                       U->route()->at(U->idx()),
-                                       route->after(V->idx() + 1));
+    auto const deltaDist = data.dist(p(V)->client(), U->client())
+                           + data.dist(U->client(), n(V)->client())
+                           - data.dist(p(V)->client(), n(V)->client());
 
     auto const deltaCost
         = static_cast<Cost>(deltaDist)
           + costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()))
-          - costEvaluator.twPenalty(route->timeWarp())
-          + costEvaluator.loadPenalty(ls.load(), route->capacity())
-          - costEvaluator.loadPenalty(route->load(), route->capacity());
+          - costEvaluator.twPenalty(route->timeWarp());
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -137,12 +119,6 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
         deltaCost
             += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
-
-        auto const ls = LoadSegment::merge(route->before(V->idx()),
-                                           U->route()->at(U->idx()),
-                                           route->after(V->idx() + 2));
-
-        deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     }
     else  // in non-adjacent parts of the route.
     {
@@ -168,15 +144,6 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
-
-            auto const ls = LoadSegment::merge(
-                route->before(V->idx()),
-                U->route()->at(U->idx()),
-                route->between(V->idx() + 1, remove->idx() - 1),
-                route->after(remove->idx() + 1));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), route->capacity());
         }
         else
         {
@@ -189,19 +156,16 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
-
-            auto const ls = LoadSegment::merge(
-                route->before(remove->idx() - 1),
-                route->between(remove->idx() + 1, V->idx()),
-                U->route()->at(U->idx()),
-                route->after(V->idx() + 1));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), route->capacity());
         }
     }
 
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+
+    auto const loadDiff = data.location(U->client()).demand
+                          - data.location(remove->client()).demand;
+
+    deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
+                                           route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     return deltaCost;
@@ -240,8 +204,28 @@ Cost SwapStar::evaluate(Route *routeU,
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
-            Cost deltaCost = removalCosts(routeU->idx(), U->client())
-                             + removalCosts(routeV->idx(), V->client());
+            Cost deltaCost = 0;
+
+            auto const uLS = LoadSegment::merge(routeU->before(U->idx() - 1),
+                                                routeV->at(V->idx()),
+                                                routeU->after(U->idx() + 1));
+
+            deltaCost
+                += costEvaluator.loadPenalty(uLS.load(), routeU->capacity());
+            deltaCost -= costEvaluator.loadPenalty(routeU->load(),
+                                                   routeU->capacity());
+
+            auto const vLS = LoadSegment::merge(routeV->before(V->idx() - 1),
+                                                routeU->at(U->idx()),
+                                                routeV->after(V->idx() + 1));
+
+            deltaCost
+                += costEvaluator.loadPenalty(vLS.load(), routeV->capacity());
+            deltaCost -= costEvaluator.loadPenalty(routeV->load(),
+                                                   routeV->capacity());
+
+            deltaCost += removalCosts(routeU->idx(), U->client());
+            deltaCost += removalCosts(routeV->idx(), V->client());
 
             if (deltaCost >= 0)  // an early filter on many moves, before doing
                 continue;        // costly work determining insertion points
