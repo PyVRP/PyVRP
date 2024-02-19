@@ -119,6 +119,12 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
         deltaCost
             += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
+
+        auto const ls = LoadSegment::merge(route->before(V->idx()),
+                                           U->route()->at(U->idx()),
+                                           route->after(V->idx() + 2));
+
+        deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     }
     else  // in non-adjacent parts of the route.
     {
@@ -144,6 +150,15 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
+
+            auto const ls = LoadSegment::merge(
+                route->before(V->idx()),
+                U->route()->at(U->idx()),
+                route->between(V->idx() + 1, remove->idx() - 1),
+                route->after(remove->idx() + 1));
+
+            deltaCost
+                += costEvaluator.loadPenalty(ls.load(), route->capacity());
         }
         else
         {
@@ -156,16 +171,19 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
+
+            auto const ls = LoadSegment::merge(
+                route->before(remove->idx() - 1),
+                route->between(remove->idx() + 1, V->idx()),
+                U->route()->at(U->idx()),
+                route->after(V->idx() + 1));
+
+            deltaCost
+                += costEvaluator.loadPenalty(ls.load(), route->capacity());
         }
     }
 
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
-
-    auto const loadDiff = data.location(U->client()).demand
-                          - data.location(remove->client()).demand;
-
-    deltaCost += costEvaluator.loadPenalty(route->load() + loadDiff,
-                                           route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     return deltaCost;
