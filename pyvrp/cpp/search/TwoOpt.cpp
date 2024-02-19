@@ -23,12 +23,12 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     for (auto *node = V; node != n(U); node = p(node))
         segmentReversalDistance += data.dist(node->client(), p(node)->client());
 
-    Distance const deltaDist = data.dist(U->client(), V->client())
-                               + data.dist(n(U)->client(), n(V)->client())
-                               + segmentReversalDistance
-                               - data.dist(U->client(), n(U)->client())
-                               - data.dist(V->client(), n(V)->client())
-                               - route->distBetween(U->idx() + 1, V->idx());
+    auto const deltaDist = data.dist(U->client(), V->client())
+                           + data.dist(n(U)->client(), n(V)->client())
+                           + segmentReversalDistance
+                           - data.dist(U->client(), n(U)->client())
+                           - data.dist(V->client(), n(V)->client())
+                           - Distance(route->between(U->idx() + 1, V->idx()));
 
     Cost deltaCost = static_cast<Cost>(deltaDist);
 
@@ -37,10 +37,10 @@ Cost TwoOpt::evalWithinRoute(Route::Node *U,
     if (deltaCost >= 0)
         return deltaCost;
 
-    auto tws = route->twsBefore(U->idx());
+    TimeWindowSegment tws = route->before(U->idx());
     for (size_t idx = V->idx(); idx != U->idx(); --idx)
-        tws = TWS::merge(data.durationMatrix(), tws, route->tws(idx));
-    tws = TWS::merge(data.durationMatrix(), tws, route->twsAfter(V->idx() + 1));
+        tws = TWS::merge(data.durationMatrix(), tws, route->at(idx));
+    tws = TWS::merge(data.durationMatrix(), tws, route->after(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
 
@@ -107,9 +107,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     {
         auto const uTWS
             = TWS::merge(data.durationMatrix(),
-                         uRoute->twsBefore(U->idx()),
-                         vRoute->twsBetween(V->idx() + 1, vRoute->size()),
-                         uRoute->tws(uRoute->size() + 1));
+                         uRoute->before(U->idx()),
+                         vRoute->between(V->idx() + 1, vRoute->size()),
+                         uRoute->at(uRoute->size() + 1));
 
         deltaCost
             += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
@@ -117,8 +117,8 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     else
     {
         auto const uTWS = TWS::merge(data.durationMatrix(),
-                                     uRoute->twsBefore(U->idx()),
-                                     uRoute->tws(uRoute->size() + 1));
+                                     uRoute->before(U->idx()),
+                                     uRoute->at(uRoute->size() + 1));
 
         deltaCost
             += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
@@ -128,9 +128,9 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     {
         auto const vTWS
             = TWS::merge(data.durationMatrix(),
-                         vRoute->twsBefore(V->idx()),
-                         uRoute->twsBetween(U->idx() + 1, uRoute->size()),
-                         vRoute->tws(vRoute->size() + 1));
+                         vRoute->before(V->idx()),
+                         uRoute->between(U->idx() + 1, uRoute->size()),
+                         vRoute->at(vRoute->size() + 1));
 
         deltaCost
             += costEvaluator.twPenalty(vTWS.timeWarp(vRoute->maxDuration()));
@@ -138,8 +138,8 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     else
     {
         auto const vTWS = TWS::merge(data.durationMatrix(),
-                                     vRoute->twsBefore(V->idx()),
-                                     vRoute->tws(vRoute->size() + 1));
+                                     vRoute->before(V->idx()),
+                                     vRoute->at(vRoute->size() + 1));
 
         deltaCost
             += costEvaluator.twPenalty(vTWS.timeWarp(vRoute->maxDuration()));
@@ -148,14 +148,14 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
-    auto const uLS = LoadSegment::merge(uRoute->lsBefore(U->idx()),
-                                        vRoute->lsAfter(V->idx() + 1));
+    auto const uLS = LoadSegment::merge(uRoute->before(U->idx()),
+                                        vRoute->after(V->idx() + 1));
 
     deltaCost += costEvaluator.loadPenalty(uLS.load(), uRoute->capacity());
     deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
 
-    auto const vLS = LoadSegment::merge(vRoute->lsBefore(V->idx()),
-                                        uRoute->lsAfter(U->idx() + 1));
+    auto const vLS = LoadSegment::merge(vRoute->before(V->idx()),
+                                        uRoute->after(U->idx() + 1));
 
     deltaCost += costEvaluator.loadPenalty(vLS.load(), vRoute->capacity());
     deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());

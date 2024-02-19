@@ -18,11 +18,11 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
                                - data.dist(U->client(), n(U)->client());
 
         auto const tws = TWS::merge(data.durationMatrix(),
-                                    R->twsBefore(U->idx() - 1),
-                                    R->twsAfter(U->idx() + 1));
+                                    R->before(U->idx() - 1),
+                                    R->after(U->idx() + 1));
 
-        auto const ls = LoadSegment::merge(R->lsBefore(U->idx() - 1),
-                                           R->lsAfter(U->idx() + 1));
+        auto const ls = LoadSegment::merge(R->before(U->idx() - 1),
+                                           R->after(U->idx() + 1));
 
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(deltaDist)
@@ -51,12 +51,12 @@ void SwapStar::updateInsertionCost(Route *R,
                                - data.dist(V->client(), n(V)->client());
 
         auto const tws = TWS::merge(data.durationMatrix(),
-                                    R->twsBefore(idx),
-                                    U->route()->tws(U->idx()),
-                                    R->twsAfter(idx + 1));
+                                    R->before(idx),
+                                    U->route()->at(U->idx()),
+                                    R->after(idx + 1));
 
         auto const ls = LoadSegment::merge(
-            R->lsBefore(idx), U->route()->ls(U->idx()), R->lsAfter(idx + 1));
+            R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
 
         auto const deltaCost
             = static_cast<Cost>(deltaDist)
@@ -88,13 +88,13 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
                            - data.dist(p(V)->client(), n(V)->client());
 
     auto const tws = TWS::merge(data.durationMatrix(),
-                                route->twsBefore(V->idx() - 1),
-                                U->route()->tws(U->idx()),
-                                route->twsAfter(V->idx() + 1));
+                                route->before(V->idx() - 1),
+                                U->route()->at(U->idx()),
+                                route->after(V->idx() + 1));
 
-    auto const ls = LoadSegment::merge(route->lsBefore(V->idx() - 1),
-                                       U->route()->ls(U->idx()),
-                                       route->lsAfter(V->idx() + 1));
+    auto const ls = LoadSegment::merge(route->before(V->idx() - 1),
+                                       U->route()->at(U->idx()),
+                                       route->after(V->idx() + 1));
 
     auto const deltaCost
         = static_cast<Cost>(deltaDist)
@@ -131,16 +131,16 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         deltaCost += static_cast<Cost>(deltaDist);
 
         auto const tws = TWS::merge(data.durationMatrix(),
-                                    route->twsBefore(V->idx()),
-                                    U->route()->tws(U->idx()),
-                                    route->twsAfter(V->idx() + 2));
+                                    route->before(V->idx()),
+                                    U->route()->at(U->idx()),
+                                    route->after(V->idx() + 2));
 
         deltaCost
             += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
 
-        auto const ls = LoadSegment::merge(route->lsBefore(V->idx()),
-                                           U->route()->ls(U->idx()),
-                                           route->lsAfter(V->idx() + 2));
+        auto const ls = LoadSegment::merge(route->before(V->idx()),
+                                           U->route()->at(U->idx()),
+                                           route->after(V->idx() + 2));
 
         deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     }
@@ -161,19 +161,19 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         {
             auto const tws
                 = TWS::merge(data.durationMatrix(),
-                             route->twsBefore(V->idx()),
-                             U->route()->tws(U->idx()),
-                             route->twsBetween(V->idx() + 1, remove->idx() - 1),
-                             route->twsAfter(remove->idx() + 1));
+                             route->before(V->idx()),
+                             U->route()->at(U->idx()),
+                             route->between(V->idx() + 1, remove->idx() - 1),
+                             route->after(remove->idx() + 1));
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
 
             auto const ls = LoadSegment::merge(
-                route->lsBefore(V->idx()),
-                U->route()->ls(U->idx()),
-                route->lsBetween(V->idx() + 1, remove->idx() - 1),
-                route->lsAfter(remove->idx() + 1));
+                route->before(V->idx()),
+                U->route()->at(U->idx()),
+                route->between(V->idx() + 1, remove->idx() - 1),
+                route->after(remove->idx() + 1));
 
             deltaCost
                 += costEvaluator.loadPenalty(ls.load(), route->capacity());
@@ -182,19 +182,19 @@ Cost SwapStar::evaluateMove(Route::Node *U,
         {
             auto const tws
                 = TWS::merge(data.durationMatrix(),
-                             route->twsBefore(remove->idx() - 1),
-                             route->twsBetween(remove->idx() + 1, V->idx()),
-                             U->route()->tws(U->idx()),
-                             route->twsAfter(V->idx() + 1));
+                             route->before(remove->idx() - 1),
+                             route->between(remove->idx() + 1, V->idx()),
+                             U->route()->at(U->idx()),
+                             route->after(V->idx() + 1));
 
             deltaCost
                 += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
 
             auto const ls = LoadSegment::merge(
-                route->lsBefore(remove->idx() - 1),
-                route->lsBetween(remove->idx() + 1, V->idx()),
-                U->route()->ls(U->idx()),
-                route->lsAfter(V->idx() + 1));
+                route->before(remove->idx() - 1),
+                route->between(remove->idx() + 1, V->idx()),
+                U->route()->at(U->idx()),
+                route->after(V->idx() + 1));
 
             deltaCost
                 += costEvaluator.loadPenalty(ls.load(), route->capacity());

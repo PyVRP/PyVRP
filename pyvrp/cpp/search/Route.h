@@ -24,11 +24,18 @@ namespace pyvrp::search
  * .. note::
  *
  *    Modifications to the ``Route`` object do not immediately propagate to its
- *    statitics like time window data, or load and distance attributes. To make
- *    that happen, ``Route::update()`` must be called!
+ *    statistics like time window, load and distance data. To make that happen,
+ *    ``Route::update()`` must be called!
  */
 class Route
 {
+    // These proxy classes (defined further below) handle transparent access
+    // to the route's segment-specific statistics.
+    friend class ProxyAt;
+    friend class ProxyAfter;
+    friend class ProxyBefore;
+    friend class ProxyBetween;
+
 public:
     /**
      * Light wrapper class around a client or depot location. This class tracks
@@ -86,6 +93,68 @@ private:
         NodeStats(LoadSegment const &ls, TimeWindowSegment const &tws);
     };
 
+    /**
+     * Proxy class for querying data related to a single location in the route,
+     * identified by ``idx``.
+     */
+    class ProxyAt
+    {
+        Route const *route;
+        size_t const idx;
+
+    public:
+        inline ProxyAt(Route const &route, size_t idx);
+        inline operator LoadSegment const &() const;
+        inline operator TimeWindowSegment const &() const;
+    };
+
+    /**
+     * Proxy class for querying data related to the route segment starting at
+     * ``start``, and ending at the depot (inclusive).
+     */
+    class ProxyAfter
+    {
+        Route const *route;
+        size_t const start;
+
+    public:
+        inline ProxyAfter(Route const &route, size_t start);
+        inline operator LoadSegment const &() const;
+        inline operator TimeWindowSegment const &() const;
+    };
+
+    /**
+     * Proxy class for querying data related to the route segment starting at
+     * the depot, and ending at ``end`` (inclusive).
+     */
+    class ProxyBefore
+    {
+        Route const *route;
+        size_t const end;
+
+    public:
+        inline ProxyBefore(Route const &route, size_t end);
+        inline operator LoadSegment const &() const;
+        inline operator TimeWindowSegment const &() const;
+    };
+
+    /**
+     * Proxy class for querying data related to the route segment starting at
+     * ``start``, and ending at ``end`` (inclusive).
+     */
+    class ProxyBetween
+    {
+        Route const *route;
+        size_t const start;
+        size_t const end;
+
+    public:
+        inline ProxyBetween(Route const &route, size_t start, size_t end);
+        inline operator Distance() const;
+        inline operator LoadSegment() const;
+        inline operator TimeWindowSegment() const;
+    };
+
     ProblemData const &data;
 
     // Cache the vehicle type object here. Since the vehicle type's properties
@@ -124,12 +193,12 @@ public:
 
     // First client in the route if the route is non-empty. Else it is the
     // end depot. In either case the iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator begin();
+    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] std::vector<Node *>::iterator begin();
 
     // End depot. The iterator is valid!
-    [[nodiscard]] inline std::vector<Node *>::const_iterator end() const;
-    [[nodiscard]] inline std::vector<Node *>::iterator end();
+    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
+    [[nodiscard]] std::vector<Node *>::iterator end();
 
     /**
      * Tests if this route is feasible.
@@ -180,12 +249,12 @@ public:
     /**
      * @return Total distance travelled on this route.
      */
-    [[nodiscard]] inline Distance distance() const;
+    [[nodiscard]] Distance distance() const;
 
     /**
      * @return The duration of this route.
      */
-    [[nodiscard]] inline Duration duration() const;
+    [[nodiscard]] Duration duration() const;
 
     /**
      * @return The maximum duration of the vehicle servicing this route.
@@ -208,50 +277,28 @@ public:
     [[nodiscard]] inline size_t size() const;
 
     /**
-     * Returns the time window data of the node at ``idx``.
+     * Returns a proxy object that can be queried for data associated with
+     * the node at idx.
      */
-    [[nodiscard]] inline TimeWindowSegment tws(size_t idx) const;
+    [[nodiscard]] inline ProxyAt at(size_t idx) const;
 
     /**
-     * Calculates time window data for segment [start, end].
+     * Returns a proxy object that can be queried for data associated with
+     * the segment starting at start.
      */
-    [[nodiscard]] inline TimeWindowSegment twsBetween(size_t start,
-                                                      size_t end) const;
+    [[nodiscard]] inline ProxyAfter after(size_t start) const;
 
     /**
-     * Returns time window data for segment [start, 0].
+     * Returns a proxy object that can be queried for data associated with
+     * the segment ending at end.
      */
-    [[nodiscard]] inline TimeWindowSegment twsAfter(size_t start) const;
+    [[nodiscard]] inline ProxyBefore before(size_t end) const;
 
     /**
-     * Returns time window data for segment [0, end].
+     * Returns a proxy object that can be queried for data associated with
+     * the segment between [start, end].
      */
-    [[nodiscard]] inline TimeWindowSegment twsBefore(size_t end) const;
-
-    /**
-     * Calculates the distance for segment [start, end].
-     */
-    [[nodiscard]] inline Distance distBetween(size_t start, size_t end) const;
-
-    /**
-     * TODO
-     */
-    [[nodiscard]] inline LoadSegment ls(size_t idx) const;
-
-    /**
-     * Returns load data for segment [start, end].
-     */
-    [[nodiscard]] inline LoadSegment lsBetween(size_t start, size_t end) const;
-
-    /**
-     * TODO
-     */
-    [[nodiscard]] inline LoadSegment lsAfter(size_t start) const;
-
-    /**
-     * TODO
-     */
-    [[nodiscard]] inline LoadSegment lsBefore(size_t end) const;
+    [[nodiscard]] inline ProxyBetween between(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -337,6 +384,90 @@ bool Route::Node::isDepot() const
     return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
 }
 
+Route::ProxyAt::ProxyAt(Route const &route, size_t idx)
+    : route(&route), idx(idx)
+{
+    assert(idx < route.nodes.size());
+}
+
+Route::ProxyAfter::ProxyAfter(Route const &route, size_t start)
+    : route(&route), start(start)
+{
+    assert(start < route.nodes.size());
+}
+
+Route::ProxyBefore::ProxyBefore(Route const &route, size_t end)
+    : route(&route), end(end)
+{
+    assert(end < route.nodes.size());
+}
+
+Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
+    : route(&route), start(start), end(end)
+{
+    assert(start <= end && end < route.nodes.size());
+}
+
+Route::ProxyAt::operator pyvrp::LoadSegment const &() const
+{
+    return route->stats[idx].ls;
+}
+
+Route::ProxyAt::operator pyvrp::TimeWindowSegment const &() const
+{
+    return route->stats[idx].tws;
+}
+
+Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
+{
+    return route->stats[start].lsAfter;
+}
+
+Route::ProxyAfter::operator pyvrp::TimeWindowSegment const &() const
+{
+    return route->stats[start].twsAfter;
+}
+
+Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
+{
+    return route->stats[end].lsBefore;
+}
+
+Route::ProxyBefore::operator pyvrp::TimeWindowSegment const &() const
+{
+    return route->stats[end].twsBefore;
+}
+
+Route::ProxyBetween::operator Distance() const
+{
+    auto const startDist = route->stats[start].cumDist;
+    auto const endDist = route->stats[end].cumDist;
+
+    assert(startDist <= endDist);
+    return endDist - startDist;
+}
+
+Route::ProxyBetween::operator LoadSegment() const
+{
+    auto ls = route->stats[start].ls;
+
+    for (size_t step = start; step != end; ++step)
+        ls = LoadSegment::merge(ls, route->stats[step + 1].ls);
+
+    return ls;
+}
+
+Route::ProxyBetween::operator TimeWindowSegment() const
+{
+    auto tws = route->stats[start].tws;
+
+    for (size_t step = start; step != end; ++step)
+        tws = TimeWindowSegment::merge(
+            route->data.durationMatrix(), tws, route->stats[step + 1].tws);
+
+    return tws;
+}
+
 bool Route::isFeasible() const
 {
     assert(!dirty);
@@ -367,21 +498,6 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
-std::vector<Route::Node *>::const_iterator Route::begin() const
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;
-}
-
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
-
 Load Route::load() const
 {
     assert(!dirty);
@@ -400,18 +516,6 @@ size_t Route::depot() const { return vehicleType_.depot; }
 
 Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 
-Distance Route::distance() const
-{
-    assert(!dirty);
-    return stats.back().cumDist;
-}
-
-Duration Route::duration() const
-{
-    assert(!dirty);
-    return stats.back().twsBefore.duration();
-}
-
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
 Duration Route::timeWarp() const
@@ -428,87 +532,28 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-TimeWindowSegment Route::tws(size_t idx) const
+Route::ProxyAt Route::at(size_t idx) const
 {
     assert(!dirty);
-    assert(idx < nodes.size());
-
-    return stats[idx].tws;
+    return ProxyAt(*this, idx);
 }
 
-TimeWindowSegment Route::twsBetween(size_t start, size_t end) const
+Route::ProxyAfter Route::after(size_t start) const
 {
-    using TWS = TimeWindowSegment;
     assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto tws = stats[start].tws;
-
-    for (size_t step = start; step != end; ++step)
-        tws = TWS::merge(data.durationMatrix(), tws, stats[step + 1].tws);
-
-    return tws;
+    return ProxyAfter(*this, start);
 }
 
-TimeWindowSegment Route::twsAfter(size_t start) const
+Route::ProxyBefore Route::before(size_t end) const
 {
     assert(!dirty);
-    assert(start < nodes.size());
-    return stats[start].twsAfter;
+    return ProxyBefore(*this, end);
 }
 
-TimeWindowSegment Route::twsBefore(size_t end) const
+Route::ProxyBetween Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
-    assert(end < nodes.size());
-    return stats[end].twsBefore;
-}
-
-Distance Route::distBetween(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto const startDist = stats[start].cumDist;
-    auto const endDist = stats[end].cumDist;
-
-    assert(startDist <= endDist);
-    return endDist - startDist;
-}
-
-LoadSegment Route::lsBetween(size_t start, size_t end) const
-{
-    assert(!dirty);
-    assert(start <= end && end < nodes.size());
-
-    auto ls = stats[start].ls;
-
-    for (size_t step = start; step != end; ++step)
-        ls = LoadSegment::merge(ls, stats[step + 1].ls);
-
-    return ls;
-}
-
-LoadSegment Route::ls(size_t idx) const
-{
-    assert(!dirty);
-    assert(idx < nodes.size());
-
-    return stats[idx].ls;
-}
-
-LoadSegment Route::lsAfter(size_t start) const
-{
-    assert(!dirty);
-    assert(start < nodes.size());
-    return stats[start].lsAfter;
-}
-
-LoadSegment Route::lsBefore(size_t end) const
-{
-    assert(!dirty);
-    assert(end < nodes.size());
-    return stats[end].lsBefore;
+    return ProxyBetween(*this, start, end);
 }
 }  // namespace pyvrp::search
 

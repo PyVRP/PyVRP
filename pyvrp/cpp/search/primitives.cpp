@@ -26,17 +26,17 @@ Cost pyvrp::search::insertCost(Route::Node *U,
 
     deltaCost += Cost(route->empty()) * route->fixedVehicleCost();
 
-    auto const ls = LoadSegment::merge(route->lsBefore(V->idx()),
+    auto const ls = LoadSegment::merge(route->before(V->idx()),
                                        LoadSegment(client),
-                                       route->lsAfter(V->idx() + 1));
+                                       route->after(V->idx() + 1));
 
     deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     auto const tws = TWS::merge(data.durationMatrix(),
-                                route->twsBefore(V->idx()),
+                                route->before(V->idx()),
                                 TWS(U->client(), client),
-                                route->twsAfter(V->idx() + 1));
+                                route->after(V->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
@@ -62,15 +62,15 @@ Cost pyvrp::search::removeCost(Route::Node *U,
 
     deltaCost -= Cost(route->size() == 1) * route->fixedVehicleCost();
 
-    auto const ls = LoadSegment::merge(route->lsBefore(U->idx() - 1),
-                                       route->lsAfter(U->idx() + 1));
+    auto const ls = LoadSegment::merge(route->before(U->idx() - 1),
+                                       route->after(U->idx() + 1));
 
     deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     auto const tws = TWS::merge(data.durationMatrix(),
-                                route->twsBefore(U->idx() - 1),
-                                route->twsAfter(U->idx() + 1));
+                                route->before(U->idx() - 1),
+                                route->after(U->idx() + 1));
 
     deltaCost += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());

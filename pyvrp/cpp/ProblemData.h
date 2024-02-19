@@ -4,7 +4,6 @@
 #include "Matrix.h"
 #include "Measure.h"
 
-#include <cassert>
 #include <iosfwd>
 #include <limits>
 #include <optional>
@@ -323,8 +322,7 @@ public:
      * VehicleType
      *     A simple data object containing the vehicle type information.
      */
-    [[nodiscard]] inline VehicleType const &
-    vehicleType(size_t vehicleType) const;
+    [[nodiscard]] VehicleType const &vehicleType(size_t vehicleType) const;
 
     /**
      * Returns the travel distance between the first and second argument,
@@ -371,7 +369,7 @@ public:
      *    matrix is copied, but the resulting data cannot be modified in any
      *    way!
      */
-    [[nodiscard]] inline Matrix<Distance> const &distanceMatrix() const;
+    [[nodiscard]] Matrix<Distance> const &distanceMatrix() const;
 
     /**
      * The full travel duration matrix.
@@ -382,7 +380,7 @@ public:
      *    matrix is copied, but the resulting data cannot be modified in any
      *    way!
      */
-    [[nodiscard]] inline Matrix<Duration> const &durationMatrix() const;
+    [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
 
     /**
      * Number of clients in this problem instance.
@@ -487,12 +485,6 @@ ProblemData::Client const &ProblemData::location(size_t idx) const
     return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
 }
 
-ProblemData::VehicleType const &
-ProblemData::vehicleType(size_t vehicleType) const
-{
-    return vehicleTypes_[vehicleType];
-}
-
 Distance ProblemData::dist(size_t first, size_t second) const
 {
     return dist_(first, second);
@@ -502,10 +494,6 @@ Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }
-
-Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
-
-Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

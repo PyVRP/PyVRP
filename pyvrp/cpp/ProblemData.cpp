@@ -1,5 +1,6 @@
 #include "ProblemData.h"
 
+#include <cassert>
 #include <cstring>
 #include <numeric>
 
@@ -176,10 +177,20 @@ std::vector<ProblemData::Client> const &ProblemData::depots() const
     return depots_;
 }
 
+ProblemData::VehicleType const &
+ProblemData::vehicleType(size_t vehicleType) const
+{
+    return vehicleTypes_[vehicleType];
+}
+
 std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
 {
     return vehicleTypes_;
 }
+
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 std::pair<double, double> const &ProblemData::centroid() const
 {
