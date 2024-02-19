@@ -43,8 +43,6 @@ namespace pyvrp
  */
 class TimeWindowSegment
 {
-    using TWS = TimeWindowSegment;
-
     size_t idxFirst_;       // Index of the first client in the segment
     size_t idxLast_;        // Index of the last client in the segment
     Duration duration_;     // Total duration, incl. waiting and servicing
@@ -53,15 +51,17 @@ class TimeWindowSegment
     Duration twLate_;       // Latest visit moment of first client
     Duration releaseTime_;  // Earliest allowed moment to leave the depot
 
-    [[nodiscard]] inline TWS merge(Matrix<Duration> const &durationMatrix,
-                                   TWS const &other) const;
+    [[nodiscard]] inline TimeWindowSegment
+    merge(Matrix<Duration> const &durationMatrix,
+          TimeWindowSegment const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] static TWS merge(Matrix<Duration> const &durationMatrix,
-                                   TWS const &first,
-                                   TWS const &second,
-                                   Args &&...args);
+    [[nodiscard]] static TimeWindowSegment
+    merge(Matrix<Duration> const &durationMatrix,
+          TimeWindowSegment const &first,
+          TimeWindowSegment const &second,
+          Args &&...args);
 
     /**
      * The total duration of this route segment.
@@ -116,6 +116,14 @@ public:
                              Duration twEarly,
                              Duration twLate,
                              Duration releaseTime);
+
+    // Move or copy construct from the other time window segment.
+    inline TimeWindowSegment(TimeWindowSegment const &) = default;
+    inline TimeWindowSegment(TimeWindowSegment &&) = default;
+
+    // Move or copy assign form the other time window segment.
+    inline TimeWindowSegment &operator=(TimeWindowSegment const &) = default;
+    inline TimeWindowSegment &operator=(TimeWindowSegment &&) = default;
 };
 
 TimeWindowSegment
