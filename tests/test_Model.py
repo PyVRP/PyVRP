@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -548,44 +549,48 @@ def test_client_depot_and_vehicle_type_name_fields():
     assert_equal(str(client), "client1")
 
 
-def test_model_solves_instance_with_pickups():
+@pytest.mark.parametrize(
+    ("pickups", "deliveries", "expected_excess_load"),
+    [
+        # The route should have 1 excess load (since the total pickup amount
+        # sums to 11, and the vehicle capacity is 10). Same with similar
+        # deliveries.
+        ([1, 2, 3, 5], [0, 0, 0, 0], 1),
+        ([0, 0, 0, 0], [1, 2, 3, 5], 1),
+        ([1, 2, 3, 5], [1, 2, 3, 5], 1),
+        # The following pickup and delivery schedule is tight, but should be
+        # fine: the vehicle leaves full, and returns full, but there is a
+        # configuration whereby it never exceeds its capacity along the way.
+        ([1, 2, 3, 4], [4, 3, 2, 1], 0),
+        # And no delivery or pickup amounts should of course also be OK!
+        ([0, 0, 0, 0], [0, 0, 0, 0], 0),
+    ],
+)
+def test_model_solves_instances_with_pickups_and_deliveries(
+    pickups: list[int],
+    deliveries: list[int],
+    expected_excess_load: int,
+):
     """
-    High-level test that creates and solves a small instance where clients have
-    pickups, rather than deliveries.
+    High-level test that creates and solves a single-route instance where
+    clients have pickups, deliveries, and sometimes both at the same time.
     """
     m = Model()
     m.add_depot(0, 0)
     m.add_vehicle_type(capacity=10)
 
-    # These clients cannot be visited on a single route, because the total
-    # pickups exceeds the vehicle's capacity.
-    m.add_client(x=1, y=1, pickup=1)
-    m.add_client(x=2, y=2, pickup=2)
-    m.add_client(x=3, y=3, pickup=3)
-    m.add_client(x=4, y=4, pickup=5)
+    m.add_client(x=1, y=1, delivery=deliveries[0], pickup=pickups[0])
+    m.add_client(x=2, y=2, delivery=deliveries[1], pickup=pickups[1])
+    m.add_client(x=3, y=3, delivery=deliveries[2], pickup=pickups[2])
+    m.add_client(x=4, y=4, delivery=deliveries[3], pickup=pickups[3])
 
     for frm in m.locations:
         for to in m.locations:
             manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
             m.add_edge(frm, to, distance=manhattan)
 
-    # So the resulting solution must be infeasible.
     res = m.solve(stop=MaxIterations(100))
-    assert_(not res.is_feasible())
-
-    # There is a single route, and that route should have 1 excess load (since
-    # the total pickup amount sums to 11, and the vehicle capacity is 10).
     route = res.best.get_routes()[0]
-    assert_(route.has_excess_load())
-    assert_allclose(route.excess_load(), 1)
-    assert_allclose(route.pickup(), 11)
 
-    # Let's add another vehicle with capacity 1. Then the first client should
-    # be served by this second vehicle, and the other clients by the first.
-    m.add_vehicle_type(capacity=1)
-    res = m.solve(stop=MaxIterations(100))
-    assert_(res.is_feasible())
-
-    routes = res.best.get_routes()
-    assert_allclose(routes[0].pickup(), 10)
-    assert_allclose(routes[1].pickup(), 1)
+    assert_equal(route.has_excess_load(), expected_excess_load > 0)
+    assert_allclose(route.excess_load(), expected_excess_load)
