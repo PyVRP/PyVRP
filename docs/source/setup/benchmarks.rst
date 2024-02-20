@@ -25,7 +25,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - Version
      - CVRP
      - VRPTW
-     - PC-VRPTW
+     - PCVRPTW
      - MDVRPTW
    * - 29 January 2024
      - `0.7.0 <https://github.com/PyVRP/PyVRP/tree/c3e685a7bd5e028322c19f5c83ed9c935ccdae8e>`_
@@ -84,7 +84,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - Name
      - CVRP
      - VRPTW
-     - PC-VRPTW
+     - PCVRPTW
      - MDVRPTW
    * - 11 February 2024
      - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note3]_
