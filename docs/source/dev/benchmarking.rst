@@ -22,7 +22,7 @@ We use the following instances and configurations to benchmark PyVRP:
   For this benchmark, the ``dimacs`` rounding function should be used.
   Additionally, the configuration specified in ``configs/vrptw.toml`` should be used.
 
-* For the PC-VRPTW, we use `the modified Gehring and Homberger instances <https://github.com/PyVRP/Instances/tree/main/PC-VRPTW#pc-vrptw>`_ with 1000 customers.
+* For the PCVRPTW, we use `the modified Gehring and Homberger instances <https://github.com/PyVRP/Instances/tree/main/PCVRPTW#pcvrptw>`_ with 1000 customers.
   These instances are each run for two hours on a reference CPU with PassMark score 2000.
   For this benchmark, the ``dimacs`` rounding function should be used.
   Additionally, the configuration specified in ``configs/vrptw.toml`` should be used.
