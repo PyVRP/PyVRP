@@ -50,6 +50,7 @@ libcommon = static_library(
         SRC_DIR / 'RandomNumberGenerator.cpp',
         SRC_DIR / 'Solution.cpp',
         SRC_DIR / 'SubPopulation.cpp',
+        SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'TimeWindowSegment.cpp',
         SRC_DIR / 'crossover' / 'ordered_crossover.cpp',
         SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',

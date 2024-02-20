@@ -12,7 +12,8 @@ from pyvrp import Client, ProblemData, VehicleType
     (
         "x",
         "y",
-        "demand",
+        "delivery",
+        "pickup",
         "service_duration",
         "tw_early",
         "tw_late",
@@ -22,20 +23,21 @@ from pyvrp import Client, ProblemData, VehicleType
         "name",
     ),
     [
-        (1, 1, 1, 1, 0, 1, 0, 0, True, "test name"),  # normal
-        (1, 1, 1, 0, 0, 1, 0, 0, True, "1234"),  # zero duration
-        (1, 1, 0, 1, 0, 1, 0, 0, True, "1,2,3,4"),  # zero demand
-        (1, 1, 1, 1, 0, 0, 0, 0, True, ""),  # zero length time interval
-        (-1, -1, 1, 1, 0, 1, 0, 0, True, ""),  # negative coordinates
-        (1, 1, 1, 1, 0, 1, 1, 0, True, ""),  # positive release time
-        (0, 0, 1, 1, 0, 1, 0, 1, True, ""),  # positive prize
-        (0, 0, 1, 1, 0, 1, 0, 1, False, ""),  # not required
+        (1, 1, 1, 1, 1, 0, 1, 0, 0, True, "test name"),  # normal
+        (1, 1, 1, 0, 0, 0, 1, 0, 0, True, "1234"),  # zero duration
+        (1, 1, 0, 0, 1, 0, 1, 0, 0, True, "1,2,3,4"),  # zero delivery
+        (1, 1, 1, 0, 1, 0, 0, 0, 0, True, ""),  # zero length time interval
+        (-1, -1, 1, 0, 1, 0, 1, 0, 0, True, ""),  # negative coordinates
+        (1, 1, 1, 0, 1, 0, 1, 1, 0, True, ""),  # positive release time
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, True, ""),  # positive prize
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, ""),  # not required
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
     x: int,
     y: int,
-    demand: int,
+    delivery: int,
+    pickup: int,
     service_duration: int,
     tw_early: int,
     tw_late: int,
@@ -51,7 +53,8 @@ def test_client_constructor_initialises_data_fields_correctly(
     client = Client(
         x,
         y,
-        demand,
+        delivery,
+        pickup,
         service_duration,
         tw_early,
         tw_late,
@@ -63,7 +66,8 @@ def test_client_constructor_initialises_data_fields_correctly(
 
     assert_allclose(client.x, x)
     assert_allclose(client.y, y)
-    assert_allclose(client.demand, demand)
+    assert_allclose(client.delivery, delivery)
+    assert_allclose(client.pickup, pickup)
     assert_allclose(client.service_duration, service_duration)
     assert_allclose(client.tw_early, tw_early)
     assert_allclose(client.tw_late, tw_late)
@@ -78,7 +82,8 @@ def test_client_constructor_initialises_data_fields_correctly(
     (
         "x",
         "y",
-        "demand",
+        "delivery",
+        "pickup",
         "service",
         "tw_early",
         "tw_late",
@@ -86,19 +91,21 @@ def test_client_constructor_initialises_data_fields_correctly(
         "prize",
     ),
     [
-        (1, 1, 1, 0, 1, 0, 0, 0),  # late < early
-        (1, 1, 1, 0, -1, 0, 0, 0),  # negative early
-        (1, 1, 0, -1, 0, 1, 0, 1),  # negative service duration
-        (1, 1, -1, 1, 0, 1, 0, 0),  # negative demand
-        (1, 1, 0, 0, 0, 1, -1, 0),  # negative release time
-        (1, 1, 0, 0, 0, 1, 2, 0),  # release time > late
-        (1, 1, 1, 1, 0, 1, 0, -1),  # negative prize
+        (1, 1, 1, 0, 0, 1, 0, 0, 0),  # late < early
+        (1, 1, 1, 0, 0, -1, 0, 0, 0),  # negative early
+        (1, 1, 0, 0, -1, 0, 1, 0, 1),  # negative service duration
+        (1, 1, -1, 0, 1, 0, 1, 0, 0),  # negative delivery
+        (1, 1, 0, -1, 1, 0, 1, 0, 0),  # negative pickup
+        (1, 1, 0, 0, 0, 0, 1, -1, 0),  # negative release time
+        (1, 1, 0, 0, 0, 0, 1, 2, 0),  # release time > late
+        (1, 1, 1, 0, 1, 0, 1, 0, -1),  # negative prize
     ],
 )
 def test_raises_for_invalid_client_data(
     x: int,
     y: int,
-    demand: int,
+    delivery: int,
+    pickup: int,
     service: int,
     tw_early: int,
     tw_late: int,
@@ -109,21 +116,33 @@ def test_raises_for_invalid_client_data(
     Tests that invalid configurations are not accepted.
     """
     with assert_raises(ValueError):
-        Client(x, y, demand, service, tw_early, tw_late, release_time, prize)
+        Client(
+            x,
+            y,
+            delivery,
+            pickup,
+            service,
+            tw_early,
+            tw_late,
+            release_time,
+            prize,
+        )
 
 
 @pytest.mark.parametrize(
-    "x,y,demand,service,tw_early,tw_late,release_time,prize",
+    "x,y,delivery,pickup,service,tw_early,tw_late,release_time,prize",
     [
-        (0, 0, 1, 0, 0, 0, 0, 0),  # demand != 0
-        (0, 0, 0, 1, 0, 0, 0, 0),  # service duration != 0
-        (0, 0, 0, 0, 0, 1, 1, 0),  # release time != 0
+        (0, 0, 1, 0, 0, 0, 0, 0, 0),  # delivery != 0
+        (0, 0, 0, 1, 0, 0, 0, 0, 0),  # pickup != 0
+        (0, 0, 0, 0, 1, 0, 0, 0, 0),  # service duration != 0
+        (0, 0, 0, 0, 0, 0, 1, 1, 0),  # release time != 0
     ],
 )
 def test_raises_for_invalid_depot_data(
     x: int,
     y: int,
-    demand: int,
+    delivery: int,
+    pickup: int,
     service: int,
     tw_early: int,
     tw_late: int,
@@ -134,7 +153,7 @@ def test_raises_for_invalid_depot_data(
     Tests that an invalid depot configuration is not accepted.
     """
     depot = Client(
-        x, y, demand, service, tw_early, tw_late, release_time, prize
+        x, y, delivery, pickup, service, tw_early, tw_late, release_time, prize
     )
 
     with assert_raises(ValueError):
@@ -354,11 +373,7 @@ def test_matrix_access():
     np.fill_diagonal(dist_mat, 0)
     np.fill_diagonal(dur_mat, 0)
 
-    clients = [
-        Client(x=0, y=0, demand=0, service_duration=0, tw_early=0, tw_late=10)
-        for _ in range(size)
-    ]
-
+    clients = [Client(x=0, y=0, tw_early=0, tw_late=10) for _ in range(size)]
     data = ProblemData(
         clients=clients[1:],
         depots=clients[:1],

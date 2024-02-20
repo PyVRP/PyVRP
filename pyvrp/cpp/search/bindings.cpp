@@ -291,11 +291,30 @@ PYBIND11_MODULE(_search, m)
             py::arg("start"),
             py::arg("end"))
         .def(
-            "load_between",
+            "ls",
+            [](Route const &route, size_t idx) {
+                return static_cast<pyvrp::LoadSegment>(route.at(idx));
+            },
+            py::arg("idx"))
+        .def(
+            "ls_between",
             [](Route const &route, size_t start, size_t end) {
-                return static_cast<pyvrp::Load>(route.between(start, end));
+                return static_cast<pyvrp::LoadSegment>(
+                    route.between(start, end));
             },
             py::arg("start"),
+            py::arg("end"))
+        .def(
+            "ls_after",
+            [](Route const &route, size_t start) {
+                return static_cast<pyvrp::LoadSegment>(route.after(start));
+            },
+            py::arg("start"))
+        .def(
+            "ls_before",
+            [](Route const &route, size_t end) {
+                return static_cast<pyvrp::LoadSegment>(route.before(end));
+            },
             py::arg("end"))
         .def(
             "tws",

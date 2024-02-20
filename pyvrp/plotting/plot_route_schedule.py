@@ -51,7 +51,7 @@ def plot_route_schedule(
     drive_time = 0
     serv_time = 0
     dist = 0
-    load = sum([data.location(idx).demand for idx in route])
+    load = sum([data.location(idx).delivery for idx in route])
     slack = horizon
 
     # Traces and objects used for plotting
@@ -94,7 +94,8 @@ def plot_route_schedule(
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
 
-        load -= stop.demand
+        load -= stop.delivery
+        load += stop.pickup
 
         add_traces(dist, t, drive_time, serv_time, load)
 

@@ -9,13 +9,13 @@ namespace pyvrp
 {
 /**
  * TimeWindowSegment(
- *     idx_first: int = 0,
- *     idx_last: int = 0,
- *     duration: int = 0,
- *     time_warp: int = 0,
- *     tw_early: int = 0,
- *     tw_late: int = 0,
- *     release_time: int = 0,
+ *     idx_first: int,
+ *     idx_last: int,
+ *     duration: int,
+ *     time_warp: int,
+ *     tw_early: int,
+ *     tw_late: int,
+ *     release_time: int,
  * )
  *
  * Creates a time window segment (TWS).

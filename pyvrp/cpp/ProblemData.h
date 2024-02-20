@@ -28,7 +28,8 @@ namespace pyvrp
  * clients
  *     List of clients to visit.
  * depots
- *     List of depots. Depots should have no demand or service duration.
+ *     List of depots. Depots should have no delivery and pickup demand, or
+ *     service duration.
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrix
@@ -45,7 +46,8 @@ public:
      * Client(
      *    x: int,
      *    y: int,
-     *    demand: int = 0,
+     *    delivery: int = 0,
+     *    pickup: int = 0,
      *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int32).max,
@@ -65,8 +67,10 @@ public:
      * y
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple.
-     * demand
-     *     The amount this client's demanding. Default 0.
+     * delivery
+     *     The amount this client demands from the depot. Default 0.
+     * pickup
+     *     The amount this client ships back to the depot. Default 0.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route. Service should start (but not necessarily end)
@@ -96,8 +100,10 @@ public:
      *     Horizontal coordinate of this client.
      * y
      *     Vertical coordinate of this client.
-     * demand
-     *     Client demand.
+     * delivery
+     *     Client delivery amount, shipped from depot.
+     * pickup
+     *     Client pickup amount, returned back to depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route.
@@ -119,18 +125,20 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        Load const demand;
+        Load const delivery;
+        Load const pickup;
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
-        char const *name;            // Location name (for reference)
         bool const required;         // Must client be in solution?
+        char const *name;            // Location name (for reference)
 
         Client(Coordinate x,
                Coordinate y,
-               Load demand = 0,
+               Load delivery = 0,
+               Load pickup = 0,
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = std::numeric_limits<Duration>::max(),
@@ -168,7 +176,8 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      *     Default 1.
      * capacity
-     *     Capacity (maximum total demand) of this vehicle type. Must be
+     *     Capacity of this vehicle type. This is the maximum total delivery or
+     *     pickup amount the vehicle can store along the route. Must be
      *     non-negative. Default 0.
      * depot
      *     Depot (location index) that vehicles of this type dispatch from, and

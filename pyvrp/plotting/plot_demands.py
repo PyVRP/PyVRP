@@ -26,7 +26,7 @@ def plot_demands(
     if not ax:
         _, ax = plt.subplots()
 
-    demand = np.array([client.demand for client in data.clients()])
+    demand = np.array([client.delivery for client in data.clients()])
     demand = np.sort(demand)
 
     ax.bar(np.arange(data.num_depots, data.num_locations), demand)

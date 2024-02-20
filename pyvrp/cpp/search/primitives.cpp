@@ -1,4 +1,5 @@
 #include "primitives.h"
+#include "LoadSegment.h"
 #include "TimeWindowSegment.h"
 
 #include <cassert>
@@ -25,8 +26,11 @@ Cost pyvrp::search::insertCost(Route::Node *U,
 
     deltaCost += Cost(route->empty()) * route->fixedVehicleCost();
 
-    deltaCost += costEvaluator.loadPenalty(route->load() + client.demand,
-                                           route->capacity());
+    auto const ls = LoadSegment::merge(route->before(V->idx()),
+                                       LoadSegment(client),
+                                       route->after(V->idx() + 1));
+
+    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     auto const tws = TWS::merge(data.durationMatrix(),
@@ -58,8 +62,10 @@ Cost pyvrp::search::removeCost(Route::Node *U,
 
     deltaCost -= Cost(route->size() == 1) * route->fixedVehicleCost();
 
-    deltaCost += costEvaluator.loadPenalty(route->load() - client.demand,
-                                           route->capacity());
+    auto const ls = LoadSegment::merge(route->before(U->idx() - 1),
+                                       route->after(U->idx() + 1));
+
+    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
     auto const tws = TWS::merge(data.durationMatrix(),

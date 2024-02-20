@@ -423,7 +423,7 @@ def test_local_search_does_not_remove_required_clients():
         clients=[
             # This client cannot be removed, even though it causes significant
             # load violations.
-            Client(x=1, y=1, demand=100, required=True),
+            Client(x=1, y=1, delivery=100, required=True),
             # This client can be removed, and should be , because the prize is
             # not worth the detour.
             Client(x=2, y=2, prize=0, required=False),

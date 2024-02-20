@@ -142,12 +142,12 @@ def test_wrong_load_calculation_bug():
     """
     data = ProblemData(
         clients=[
-            Client(x=1, y=1, demand=0),
-            Client(x=2, y=2, demand=0),
-            Client(x=3, y=3, demand=15),
-            Client(x=4, y=4, demand=0),
+            Client(x=1, y=1, delivery=0),
+            Client(x=2, y=2, delivery=0),
+            Client(x=3, y=3, delivery=15),
+            Client(x=4, y=4, delivery=0),
         ],
-        depots=[Client(x=0, y=0, demand=0)],
+        depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(num_available=2, capacity=12)],
         distance_matrix=np.asarray(
             [
@@ -180,10 +180,10 @@ def test_wrong_load_calculation_bug():
 
     # Optimal is 0 -> 3 -> 1 -> 0 and 0 -> 4 -> 2 -> 0. This exchanges four
     # costly arcs of distance 10 for four arcs of distance 1, so the diff is
-    # 4 - 40 = -36. We shift the positive demand client, but that does not
-    # change the solution's cost. Before the bug was fixed, it did: the demand
-    # was removed from one route but not added to the other, which resulted in
-    # a large (wrong!) negative delta cost.
+    # 4 - 40 = -36. We shift the positive delivery demand client, but that does
+    # not change the solution's cost. Before the bug was fixed, it did: the
+    # delivery demand was removed from one route but not added to the other,
+    # which resulted in a large (wrong!) negative delta cost.
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -36)
     swap_star.apply(route1, route2)
 

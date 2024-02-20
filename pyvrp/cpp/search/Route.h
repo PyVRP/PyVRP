@@ -1,6 +1,7 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "LoadSegment.h"
 #include "ProblemData.h"
 #include "TimeWindowSegment.h"
 
@@ -79,13 +80,17 @@ public:
 private:
     struct NodeStats
     {
-        Distance cumDist;             // Cumulative dist to this node (incl.)
-        Load cumLoad;                 // Cumulative load to this node (incl.)
+        Distance cumDist;  // Cumulative dist to this node (incl.)
+
+        LoadSegment ls;        // Node's load data
+        LoadSegment lsAfter;   // LS of client -> depot (incl)
+        LoadSegment lsBefore;  // LS of depot -> client (incl)
+
         TimeWindowSegment tws;        // Node's time window data
         TimeWindowSegment twsAfter;   // TWS of client -> depot (incl.)
         TimeWindowSegment twsBefore;  // TWS of depot -> client (incl.)
 
-        NodeStats(TimeWindowSegment const &tws);
+        NodeStats(LoadSegment const &ls, TimeWindowSegment const &tws);
     };
 
     /**
@@ -99,6 +104,7 @@ private:
 
     public:
         inline ProxyAt(Route const &route, size_t idx);
+        inline operator LoadSegment const &() const;
         inline operator TimeWindowSegment const &() const;
     };
 
@@ -113,6 +119,7 @@ private:
 
     public:
         inline ProxyAfter(Route const &route, size_t start);
+        inline operator LoadSegment const &() const;
         inline operator TimeWindowSegment const &() const;
     };
 
@@ -127,6 +134,7 @@ private:
 
     public:
         inline ProxyBefore(Route const &route, size_t end);
+        inline operator LoadSegment const &() const;
         inline operator TimeWindowSegment const &() const;
     };
 
@@ -142,9 +150,9 @@ private:
 
     public:
         inline ProxyBetween(Route const &route, size_t start, size_t end);
-        inline operator TimeWindowSegment() const;
-        inline operator Load() const;
         inline operator Distance() const;
+        inline operator LoadSegment() const;
+        inline operator TimeWindowSegment() const;
     };
 
     ProblemData const &data;
@@ -219,7 +227,8 @@ public:
     [[nodiscard]] inline Load load() const;
 
     /**
-     * Demand in excess of the vehicle's capacity.
+     * Load (as a consequence of pickup and deliveries) in excess of the
+     * vehicle's capacity.
      */
     [[nodiscard]] inline Load excessLoad() const;
 
@@ -400,9 +409,19 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
     assert(start <= end && end < route.nodes.size());
 }
 
+Route::ProxyAt::operator pyvrp::LoadSegment const &() const
+{
+    return route->stats[idx].ls;
+}
+
 Route::ProxyAt::operator pyvrp::TimeWindowSegment const &() const
 {
     return route->stats[idx].tws;
+}
+
+Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
+{
+    return route->stats[start].lsAfter;
 }
 
 Route::ProxyAfter::operator pyvrp::TimeWindowSegment const &() const
@@ -410,9 +429,33 @@ Route::ProxyAfter::operator pyvrp::TimeWindowSegment const &() const
     return route->stats[start].twsAfter;
 }
 
+Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
+{
+    return route->stats[end].lsBefore;
+}
+
 Route::ProxyBefore::operator pyvrp::TimeWindowSegment const &() const
 {
     return route->stats[end].twsBefore;
+}
+
+Route::ProxyBetween::operator Distance() const
+{
+    auto const startDist = route->stats[start].cumDist;
+    auto const endDist = route->stats[end].cumDist;
+
+    assert(startDist <= endDist);
+    return endDist - startDist;
+}
+
+Route::ProxyBetween::operator LoadSegment() const
+{
+    auto ls = route->stats[start].ls;
+
+    for (size_t step = start; step != end; ++step)
+        ls = LoadSegment::merge(ls, route->stats[step + 1].ls);
+
+    return ls;
 }
 
 Route::ProxyBetween::operator TimeWindowSegment() const
@@ -424,27 +467,6 @@ Route::ProxyBetween::operator TimeWindowSegment() const
             route->data.durationMatrix(), tws, route->stats[step + 1].tws);
 
     return tws;
-}
-
-Route::ProxyBetween::operator Load() const
-{
-    // We need to include the load at start, so we subtract one from start if
-    // we do not already count from the starting depot.
-    auto const start_ = start > 0 ? start - 1 : start;
-    auto const startLoad = route->stats[start_].cumLoad;
-    auto const endLoad = route->stats[end].cumLoad;
-
-    assert(startLoad <= endLoad);
-    return endLoad - startLoad;
-}
-
-Route::ProxyBetween::operator Distance() const
-{
-    auto const startDist = route->stats[start].cumDist;
-    auto const endDist = route->stats[end].cumDist;
-
-    assert(startDist <= endDist);
-    return endDist - startDist;
 }
 
 bool Route::isFeasible() const
@@ -480,7 +502,7 @@ Route::Node *Route::operator[](size_t idx)
 Load Route::load() const
 {
     assert(!dirty);
-    return stats.back().cumLoad;
+    return stats.back().lsBefore.load();
 }
 
 Load Route::excessLoad() const

@@ -23,8 +23,14 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
-    : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
+Route::NodeStats::NodeStats(LoadSegment const &ls, TimeWindowSegment const &tws)
+    : cumDist(0),
+      ls(ls),
+      lsAfter(ls),
+      lsBefore(ls),
+      tws(tws),
+      twsAfter(tws),
+      twsBefore(tws)
 {
 }
 
@@ -112,8 +118,8 @@ void Route::clear()
                  0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(depotTws);
-    stats.emplace_back(depotTws);
+    stats.emplace_back(LoadSegment(depot), depotTws);
+    stats.emplace_back(LoadSegment(depot), depotTws);
 
 #ifndef NDEBUG
     dirty = false;
@@ -131,8 +137,9 @@ void Route::insert(size_t idx, Node *node)
 
     // We do not need to update the statistics; Route::update() will handle
     // that later.
-    stats.insert(stats.begin() + idx,
-                 TWS(node->client(), data.location(node->client())));
+    stats.emplace(stats.begin() + idx,
+                  LoadSegment(data.location(node->client())),
+                  TWS(node->client(), data.location(node->client())));
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
@@ -206,20 +213,31 @@ void Route::update()
 
         auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
         stats[idx].cumDist = stats[idx - 1].cumDist + dist;
-        stats[idx].cumLoad = stats[idx - 1].cumLoad + clientData.demand;
     }
 
-#ifndef PYVRP_NO_TIME_WINDOWS
-    // Backward time window segments (depot -> client).
+    // Backward segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
+    {
+        stats[idx].lsBefore
+            = LoadSegment::merge(stats[idx - 1].lsBefore, stats[idx].ls);
+
+#ifndef PYVRP_NO_TIME_WINDOWS
         stats[idx].twsBefore = TWS::merge(
             data.durationMatrix(), stats[idx - 1].twsBefore, stats[idx].tws);
+#endif
+    }
 
-    // Forward time window segments (client -> depot).
+    // Forward segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
+    {
+        stats[idx - 1].lsAfter
+            = LoadSegment::merge(stats[idx - 1].ls, stats[idx].lsAfter);
+
+#ifndef PYVRP_NO_TIME_WINDOWS
         stats[idx - 1].twsAfter = TWS::merge(
             data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
 #endif
+    }
 
 #ifndef NDEBUG
     dirty = false;

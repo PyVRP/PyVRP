@@ -1,6 +1,7 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
+#include "LoadSegment.h"
 #include "Matrix.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -21,6 +22,7 @@ namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
 using pyvrp::DynamicBitset;
+using pyvrp::LoadSegment;
 using pyvrp::Matrix;
 using pyvrp::PopulationParams;
 using pyvrp::ProblemData;
@@ -57,6 +59,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<pyvrp::Coordinate,
                       pyvrp::Coordinate,
                       pyvrp::Load,
+                      pyvrp::Load,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
@@ -66,7 +69,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       char const *>(),
              py::arg("x"),
              py::arg("y"),
-             py::arg("demand") = 0,
+             py::arg("delivery") = 0,
+             py::arg("pickup") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
@@ -76,7 +80,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
-        .def_readonly("demand", &ProblemData::Client::demand)
+        .def_readonly("delivery", &ProblemData::Client::delivery)
+        .def_readonly("pickup", &ProblemData::Client::pickup)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
@@ -223,9 +228,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("distance",
              &Solution::Route::distance,
              DOC(pyvrp, Solution, Route, distance))
-        .def("demand",
-             &Solution::Route::demand,
-             DOC(pyvrp, Solution, Route, demand))
+        .def("delivery",
+             &Solution::Route::delivery,
+             DOC(pyvrp, Solution, Route, delivery))
+        .def("pickup",
+             &Solution::Route::pickup,
+             DOC(pyvrp, Solution, Route, pickup))
         .def("excess_load",
              &Solution::Route::excessLoad,
              DOC(pyvrp, Solution, Route, excessLoad))
@@ -294,7 +302,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 // Returns a tuple that completely encodes the route's state.
                 return py::make_tuple(route.visits(),
                                       route.distance(),
-                                      route.demand(),
+                                      route.delivery(),
+                                      route.pickup(),
                                       route.excessLoad(),
                                       route.duration(),
                                       route.timeWarp(),
@@ -313,20 +322,21 @@ PYBIND11_MODULE(_pyvrp, m)
                 Solution::Route route = Solution::Route(
                     t[0].cast<std::vector<size_t>>(),         // visits
                     t[1].cast<pyvrp::Distance>(),             // distance
-                    t[2].cast<pyvrp::Load>(),                 // demand
-                    t[3].cast<pyvrp::Load>(),                 // excess load
-                    t[4].cast<pyvrp::Duration>(),             // duration
-                    t[5].cast<pyvrp::Duration>(),             // time warp
-                    t[6].cast<pyvrp::Duration>(),             // travel
-                    t[7].cast<pyvrp::Duration>(),             // service
-                    t[8].cast<pyvrp::Duration>(),             // wait
-                    t[9].cast<pyvrp::Duration>(),             // release
-                    t[10].cast<pyvrp::Duration>(),            // start time
-                    t[11].cast<pyvrp::Duration>(),            // slack
-                    t[12].cast<pyvrp::Cost>(),                // prizes
-                    t[13].cast<std::pair<double, double>>(),  // centroid
-                    t[14].cast<size_t>(),                     // vehicle type
-                    t[15].cast<size_t>());                    // depot
+                    t[2].cast<pyvrp::Load>(),                 // delivery
+                    t[3].cast<pyvrp::Load>(),                 // pickup
+                    t[4].cast<pyvrp::Load>(),                 // excess load
+                    t[5].cast<pyvrp::Duration>(),             // duration
+                    t[6].cast<pyvrp::Duration>(),             // time warp
+                    t[7].cast<pyvrp::Duration>(),             // travel
+                    t[8].cast<pyvrp::Duration>(),             // service
+                    t[9].cast<pyvrp::Duration>(),             // wait
+                    t[10].cast<pyvrp::Duration>(),            // release
+                    t[11].cast<pyvrp::Duration>(),            // start time
+                    t[12].cast<pyvrp::Duration>(),            // slack
+                    t[13].cast<pyvrp::Cost>(),                // prizes
+                    t[14].cast<std::pair<double, double>>(),  // centroid
+                    t[15].cast<size_t>(),                     // vehicle type
+                    t[16].cast<size_t>());                    // depot
 
                 return route;
             }))
@@ -575,6 +585,24 @@ PYBIND11_MODULE(_pyvrp, m)
              &SubPopulation::updateFitness,
              py::arg("cost_evaluator"),
              DOC(pyvrp, SubPopulation, updateFitness));
+
+    py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
+        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
+             py::arg("delivery"),
+             py::arg("pickup"),
+             py::arg("load"))
+        .def("delivery",
+             &LoadSegment::delivery,
+             DOC(pyvrp, LoadSegment, delivery))
+        .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
+        .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
+        .def_static(
+            "merge", &LoadSegment::merge<>, py::arg("first"), py::arg("second"))
+        .def_static("merge",
+                    &LoadSegment::merge<LoadSegment const &>,
+                    py::arg("first"),
+                    py::arg("second"),
+                    py::arg("third"));
 
     py::class_<TWS>(m, "TimeWindowSegment", DOC(pyvrp, TimeWindowSegment))
         .def(py::init<size_t,

@@ -26,7 +26,8 @@ class DynamicBitset:
 class Client:
     x: int
     y: int
-    demand: int
+    delivery: int
+    pickup: int
     service_duration: int
     tw_early: int
     tw_late: int
@@ -38,7 +39,8 @@ class Client:
         self,
         x: int,
         y: int,
-        demand: int = 0,
+        delivery: int = 0,
+        pickup: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
@@ -118,7 +120,8 @@ class Route:
     def is_feasible(self) -> bool: ...
     def has_excess_load(self) -> bool: ...
     def has_time_warp(self) -> bool: ...
-    def demand(self) -> int: ...
+    def delivery(self) -> int: ...
+    def pickup(self) -> int: ...
     def excess_load(self) -> int: ...
     def distance(self) -> int: ...
     def duration(self) -> int: ...
@@ -210,6 +213,30 @@ class SubPopulationItem:
     @property
     def solution(self) -> Solution: ...
     def avg_distance_closest(self) -> float: ...
+
+class LoadSegment:
+    def __init__(
+        self,
+        delivery: int,
+        pickup: int,
+        load: int,
+    ) -> None: ...
+    @overload
+    @staticmethod
+    def merge(
+        first: LoadSegment,
+        second: LoadSegment,
+    ) -> LoadSegment: ...
+    @overload
+    @staticmethod
+    def merge(
+        first: LoadSegment,
+        second: LoadSegment,
+        third: LoadSegment,
+    ) -> LoadSegment: ...
+    def delivery(self) -> int: ...
+    def pickup(self) -> int: ...
+    def load(self) -> int: ...
 
 class TimeWindowSegment:
     def __init__(

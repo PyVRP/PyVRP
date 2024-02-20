@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -21,7 +22,7 @@ def test_model_data():
 
     # Let's add some data: a single client, and edges from/to the depot.
     depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1, demand=1)
+    client = model.add_client(0, 1, delivery=1)
     model.add_edge(depot, client, 1, 1)
     model.add_edge(client, depot, 1, 1)
     model.add_vehicle_type(capacity=1, num_available=1)
@@ -84,7 +85,8 @@ def test_add_client_attributes():
     client = model.add_client(
         x=1,
         y=2,
-        demand=3,
+        delivery=3,
+        pickup=9,
         service_duration=4,
         tw_early=5,
         tw_late=6,
@@ -95,7 +97,8 @@ def test_add_client_attributes():
 
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
-    assert_equal(client.demand, 3)
+    assert_equal(client.delivery, 3)
+    assert_equal(client.pickup, 9)
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
@@ -272,10 +275,10 @@ def test_model_and_solve(ok_small):
     model.add_vehicle_type(num_available=3, capacity=10)
     depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
     clients = [
-        model.add_client(226, 1297, 5, 360, 15600, 22500),
-        model.add_client(590, 530, 5, 360, 12000, 19500),
-        model.add_client(435, 718, 3, 420, 8400, 15300),
-        model.add_client(1191, 639, 5, 360, 12000, 19500),
+        model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
+        model.add_client(590, 530, 5, 0, 360, 12000, 19500),
+        model.add_client(435, 718, 3, 0, 420, 8400, 15300),
+        model.add_client(1191, 639, 5, 0, 360, 12000, 19500),
     ]
 
     edge_weights = [
@@ -315,12 +318,12 @@ def test_model_solve_display_argument(ok_small, capsys):
 
     # First solve with display turned off. We should not see any output in this
     # case.
-    model.solve(stop=MaxIterations(1000), seed=0, display=False)
+    model.solve(stop=MaxIterations(10), seed=0, display=False)
     printed = capsys.readouterr().out
     assert_equal(printed, "")
 
     # Now solve with display turned on. We should see output now.
-    res = model.solve(stop=MaxIterations(1000), seed=0, display=True)
+    res = model.solve(stop=MaxIterations(10), seed=0, display=True)
     printed = capsys.readouterr().out
 
     # Check that some of the header data is in the output.
@@ -408,7 +411,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     assert_equal(solution, [])
 
     # Solve an instance with one client.
-    clients = [m.add_client(x=0, y=0, demand=0)]
+    clients = [m.add_client(x=0, y=0)]
     m.add_edge(depot, clients[0], distance=0)
     m.add_edge(clients[0], depot, distance=0)
 
@@ -491,7 +494,7 @@ def test_model_solves_line_instance_with_multiple_depots():
     """
     High-level test that creates and solves a small instance on a line, where
     there are two depots. This test checks that the model and underlying
-    algorithm correctly handles multiple depots.
+    algorithm correctly handle multiple depots.
     """
     m = Model()
 
@@ -544,3 +547,50 @@ def test_client_depot_and_vehicle_type_name_fields():
     client = m.add_client(1, 2, name="client1")
     assert_equal(client.name, "client1")
     assert_equal(str(client), "client1")
+
+
+@pytest.mark.parametrize(
+    ("pickups", "deliveries", "expected_excess_load"),
+    [
+        # The route should have 1 excess load (since the total pickup amount
+        # sums to 11, and the vehicle capacity is 10). Same with similar
+        # deliveries.
+        ([1, 2, 3, 5], [0, 0, 0, 0], 1),
+        ([0, 0, 0, 0], [1, 2, 3, 5], 1),
+        ([1, 2, 3, 5], [1, 2, 3, 5], 1),
+        # The following pickup and delivery schedule is tight, but should be
+        # fine: the vehicle leaves full, and returns full, but there is a
+        # configuration whereby it never exceeds its capacity along the way.
+        ([1, 2, 3, 4], [4, 3, 2, 1], 0),
+        # And no delivery or pickup amounts should of course also be OK!
+        ([0, 0, 0, 0], [0, 0, 0, 0], 0),
+    ],
+)
+def test_model_solves_instances_with_pickups_and_deliveries(
+    pickups: list[int],
+    deliveries: list[int],
+    expected_excess_load: int,
+):
+    """
+    High-level test that creates and solves a single-route instance where
+    clients have pickups, deliveries, and sometimes both at the same time.
+    """
+    m = Model()
+    m.add_depot(0, 0)
+    m.add_vehicle_type(capacity=10)
+
+    m.add_client(x=1, y=1, delivery=deliveries[0], pickup=pickups[0])
+    m.add_client(x=2, y=2, delivery=deliveries[1], pickup=pickups[1])
+    m.add_client(x=3, y=3, delivery=deliveries[2], pickup=pickups[2])
+    m.add_client(x=4, y=4, delivery=deliveries[3], pickup=pickups[3])
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    res = m.solve(stop=MaxIterations(100))
+    route = res.best.get_routes()[0]
+
+    assert_equal(route.has_excess_load(), expected_excess_load > 0)
+    assert_allclose(route.excess_load(), expected_excess_load)

@@ -44,18 +44,22 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
             += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        Load const loadDiff = uRoute->between(U->idx(), U->idx() + 1);
+        auto const uLS = LoadSegment::merge(uRoute->before(U->idx() - 1),
+                                            uRoute->after(U->idx() + 2));
 
-        deltaCost += costEvaluator.loadPenalty(uRoute->load() - loadDiff,
-                                               uRoute->capacity());
+        deltaCost += costEvaluator.loadPenalty(uLS.load(), uRoute->capacity());
         deltaCost
             -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
 
         if (deltaCost >= 0)    // if delta cost of just U's route is not enough
             return deltaCost;  // even without V, the move will never be good
 
-        deltaCost += costEvaluator.loadPenalty(vRoute->load() + loadDiff,
-                                               vRoute->capacity());
+        auto const vLS = LoadSegment::merge(vRoute->before(V->idx()),
+                                            uRoute->at(U->idx() + 1),
+                                            uRoute->at(U->idx()),
+                                            vRoute->after(V->idx() + 1));
+
+        deltaCost += costEvaluator.loadPenalty(vLS.load(), vRoute->capacity());
         deltaCost
             -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
@@ -71,6 +75,8 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
     }
     else  // within same route
     {
+        deltaCost
+            -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         if (deltaCost >= 0)
@@ -78,6 +84,16 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
 
         if (U->idx() < V->idx())
         {
+            auto const ls
+                = LoadSegment::merge(uRoute->before(U->idx() - 1),
+                                     uRoute->between(U->idx() + 2, V->idx()),
+                                     uRoute->at(U->idx() + 1),
+                                     uRoute->at(U->idx()),
+                                     uRoute->after(V->idx() + 1));
+
+            deltaCost
+                += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
+
             auto const tws = TWS::merge(data.durationMatrix(),
                                         uRoute->before(U->idx() - 1),
                                         uRoute->between(U->idx() + 2, V->idx()),
@@ -90,6 +106,16 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
         }
         else
         {
+            auto const ls = LoadSegment::merge(
+                uRoute->before(V->idx()),
+                uRoute->at(U->idx() + 1),
+                uRoute->at(U->idx()),
+                uRoute->between(V->idx() + 1, U->idx() - 1),
+                uRoute->after(U->idx() + 2));
+
+            deltaCost
+                += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
+
             auto const tws
                 = TWS::merge(data.durationMatrix(),
                              uRoute->before(V->idx()),

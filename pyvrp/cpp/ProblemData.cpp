@@ -25,7 +25,8 @@ static char *duplicate(char const *src)
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
-                            Load demand,
+                            Load delivery,
+                            Load pickup,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -35,17 +36,21 @@ ProblemData::Client::Client(Coordinate x,
                             char const *name)
     : x(x),
       y(y),
-      demand(demand),
+      delivery(delivery),
+      pickup(pickup),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
       releaseTime(releaseTime),
       prize(prize),
-      name(duplicate(name)),
-      required(required)
+      required(required),
+      name(duplicate(name))
 {
-    if (demand < 0)
-        throw std::invalid_argument("demand must be >= 0.");
+    if (delivery < 0)
+        throw std::invalid_argument("delivery amount must be >= 0.");
+
+    if (pickup < 0)
+        throw std::invalid_argument("pickup amount must be >= 0.");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0.");
@@ -69,28 +74,30 @@ ProblemData::Client::Client(Coordinate x,
 ProblemData::Client::Client(Client const &client)
     : x(client.x),
       y(client.y),
-      demand(client.demand),
+      delivery(client.delivery),
+      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
       releaseTime(client.releaseTime),
       prize(client.prize),
-      name(duplicate(client.name)),
-      required(client.required)
+      required(client.required),
+      name(duplicate(client.name))
 {
 }
 
 ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
-      demand(client.demand),
+      delivery(client.delivery),
+      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
       releaseTime(client.releaseTime),
       prize(client.prize),
-      name(client.name),  // we can steal
-      required(client.required)
+      required(client.required),
+      name(client.name)  // we can steal
 {
     client.name = nullptr;  // stolen
 }
@@ -254,8 +261,11 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
 
     for (auto const &depot : depots_)
     {
-        if (depot.demand != 0)
-            throw std::invalid_argument("Depot demand must be 0.");
+        if (depot.delivery != 0)
+            throw std::invalid_argument("Depot delivery amount must be 0.");
+
+        if (depot.pickup != 0)
+            throw std::invalid_argument("Depot pickup amount must be 0.");
 
         if (depot.serviceDuration != 0)
             throw std::invalid_argument("Depot service duration must be 0.");
