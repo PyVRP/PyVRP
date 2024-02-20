@@ -207,7 +207,8 @@ Cost SwapStar::evaluate(Route *routeU,
             updateRemovalCosts(route, costEvaluator);
             updated[route->idx()] = false;
 
-            for (size_t idx = 0; idx != data.numLocations(); ++idx)
+            for (size_t idx = data.numDepots(); idx != data.numLocations();
+                 ++idx)
                 cache(route->idx(), idx).shouldUpdate = true;
         }
 
@@ -216,7 +217,7 @@ Cost SwapStar::evaluate(Route *routeU,
         {
             Cost deltaCost = 0;
 
-            // Approximates the actual load changes - this very far from exact
+            // Approximates the actual load changes - this is far from exact
             // when there are also pickups. So it's pretty rough, but fast and
             // seems to work well enough for most instances.
             auto const &uClient = data.location(U->client());
