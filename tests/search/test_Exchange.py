@@ -387,16 +387,16 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
 
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange11])
-def test_within_route_mixed_backhaul(operator):
+def test_within_route_simultaneous_pickup_and_delivery(operator):
     """
     Tests that the Exchange operators correctly evaluate load violations within
     the same route.
     """
     data = ProblemData(
         clients=[
-            Client(x=1, y=0, supply=5),
+            Client(x=1, y=0, pickup=5),
             Client(x=2, y=0),
-            Client(x=2, y=0, demand=5),
+            Client(x=2, y=0, delivery=5),
         ],
         depots=[Client(x=0, y=0)],
         vehicle_types=[VehicleType(capacity=5)],
@@ -411,8 +411,8 @@ def test_within_route_mixed_backhaul(operator):
         route.append(Node(loc=loc))
     route.update()
 
-    # Route is 1 -> 2 -> 3, and picks up 1's supply (5) before dropping off
-    # 3's demand (5). So total load is 10, and the excess load is 5.
+    # Route is 1 -> 2 -> 3, and stores 1's pickup amount (5) before dropping
+    # off 3's delivery amount (5). So total load is 10, and the excess load 5.
     assert_(not route.is_feasible())
     assert_allclose(route.load(), 10)
     assert_allclose(route.excess_load(), 5)

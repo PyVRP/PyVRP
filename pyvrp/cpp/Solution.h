@@ -57,9 +57,9 @@ public:
 
         Visits visits_ = {};      // Client visits on this route
         Distance distance_ = 0;   // Total travel distance on this route
-        Load demand_ = 0;         // Total demand served on this route
-        Load supply_ = 0;         // Total supply gathered on this route
-        Load excessLoad_ = 0;     // Excess demand (w.r.t. vehicle capacity)
+        Load delivery_ = 0;       // Total delivery amount served on this route
+        Load pickup_ = 0;         // Total pickup amount gathered on this route
+        Load excessLoad_ = 0;     // Excess pickup or delivery demand
         Duration duration_ = 0;   // Total duration of this route
         Duration timeWarp_ = 0;   // Total time warp on this route
         Duration travel_ = 0;     // Total *travel* duration on this route
@@ -93,17 +93,17 @@ public:
         [[nodiscard]] Distance distance() const;
 
         /**
-         * Total client demand on this route.
+         * Total client delivery amount on this route.
          */
-        [[nodiscard]] Load demand() const;
+        [[nodiscard]] Load delivery() const;
 
         /**
-         * Total client supply on this route.
+         * Total client pickup amount on this route.
          */
-        [[nodiscard]] Load supply() const;
+        [[nodiscard]] Load pickup() const;
 
         /**
-         * Demand in excess of the vehicle's capacity.
+         * Pick or delivery demand in excess of the vehicle's capacity.
          */
         [[nodiscard]] Load excessLoad() const;
 
@@ -208,8 +208,8 @@ public:
         // objects.
         Route(Visits visits,
               Distance distance,
-              Load demand,
-              Load supply,
+              Load delivery,
+              Load pickup,
               Load excessLoad,
               Duration duration,
               Duration timeWarp,

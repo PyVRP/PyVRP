@@ -289,8 +289,8 @@ Solution::Route::Route(ProblemData const &data,
     distance_ += data.dist(last, vehType.depot);
     travel_ += data.duration(last, vehType.depot);
 
-    demand_ = ls.demand();
-    supply_ = ls.supply();
+    delivery_ = ls.delivery();
+    pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
     tws = TimeWindowSegment::merge(data.durationMatrix(), tws, depotTws);
@@ -303,8 +303,8 @@ Solution::Route::Route(ProblemData const &data,
 
 Solution::Route::Route(Visits visits,
                        Distance distance,
-                       Load demand,
-                       Load supply,
+                       Load delivery,
+                       Load pickup,
                        Load excessLoad,
                        Duration duration,
                        Duration timeWarp,
@@ -320,8 +320,8 @@ Solution::Route::Route(Visits visits,
                        size_t depot)
     : visits_(std::move(visits)),
       distance_(distance),
-      demand_(demand),
-      supply_(supply),
+      delivery_(delivery),
+      pickup_(pickup),
       excessLoad_(excessLoad),
       duration_(duration),
       timeWarp_(timeWarp),
@@ -355,9 +355,9 @@ Visits const &Solution::Route::visits() const { return visits_; }
 
 Distance Solution::Route::distance() const { return distance_; }
 
-Load Solution::Route::demand() const { return demand_; }
+Load Solution::Route::delivery() const { return delivery_; }
 
-Load Solution::Route::supply() const { return supply_; }
+Load Solution::Route::pickup() const { return pickup_; }
 
 Load Solution::Route::excessLoad() const { return excessLoad_; }
 
@@ -411,8 +411,8 @@ bool Solution::Route::operator==(Solution::Route const &other) const
     // Only when these are the same we test if the visits are all equal.
     // clang-format off
     return distance_ == other.distance_
-        && demand_ == other.demand_
-        && supply_ == other.supply_
+        && delivery_ == other.delivery_
+        && pickup_ == other.pickup_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;

@@ -196,9 +196,9 @@ def test_excess_load(ok_small):
         route.append(Node(loc=loc))
     route.update()
 
-    # The instance has four clients, which have a total demand of 18. The only
-    # vehicle type in the instance has a capacity of 10, so this route has
-    # excess load.
+    # The instance has four clients, which have a total delivery demand of 18.
+    # The only vehicle type in the instance has a capacity of 10, so this route
+    # has excess load.
     assert_(route.has_excess_load())
     assert_allclose(route.excess_load(), 8)
     assert_allclose(route.load(), 18)
@@ -228,17 +228,17 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     route.append(Node(loc=client))
     route.update()
 
-    # Only the client has any demand, so the total route load should be equal
-    # to it.
-    assert_equal(route.load(), ok_small.location(client).demand)
+    # Only the client has any delivery demand, so the total route load should
+    # be equal to it.
+    assert_equal(route.load(), ok_small.location(client).delivery)
     assert_equal(
-        route.ls_between(0, 2).load(), ok_small.location(client).demand
+        route.ls_between(0, 2).load(), ok_small.location(client).delivery
     )
 
     # The ls_between() function is inclusive.
     assert_equal(route.ls_between(0, 0).load(), 0)
     assert_equal(
-        route.ls_between(1, 1).load(), ok_small.location(client).demand
+        route.ls_between(1, 1).load(), ok_small.location(client).delivery
     )
 
     # Distances on various segments of the route.

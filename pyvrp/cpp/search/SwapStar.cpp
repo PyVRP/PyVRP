@@ -222,8 +222,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // seems to work well enough for most instances.
             auto const &uClient = data.location(U->client());
             auto const &vClient = data.location(V->client());
-            auto const uLoad = std::max(uClient.demand, uClient.supply);
-            auto const vLoad = std::max(vClient.demand, vClient.supply);
+            auto const uLoad = std::max(uClient.delivery, uClient.pickup);
+            auto const vLoad = std::max(vClient.delivery, vClient.pickup);
             auto const loadDiff = uLoad - vLoad;
 
             deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,

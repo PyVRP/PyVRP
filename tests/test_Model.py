@@ -21,7 +21,7 @@ def test_model_data():
 
     # Let's add some data: a single client, and edges from/to the depot.
     depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1, demand=1)
+    client = model.add_client(0, 1, delivery=1)
     model.add_edge(depot, client, 1, 1)
     model.add_edge(client, depot, 1, 1)
     model.add_vehicle_type(capacity=1, num_available=1)
@@ -84,8 +84,8 @@ def test_add_client_attributes():
     client = model.add_client(
         x=1,
         y=2,
-        demand=3,
-        supply=9,
+        delivery=3,
+        pickup=9,
         service_duration=4,
         tw_early=5,
         tw_late=6,
@@ -96,8 +96,8 @@ def test_add_client_attributes():
 
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
-    assert_equal(client.demand, 3)
-    assert_equal(client.supply, 9)
+    assert_equal(client.delivery, 3)
+    assert_equal(client.pickup, 9)
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
@@ -410,7 +410,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     assert_equal(solution, [])
 
     # Solve an instance with one client.
-    clients = [m.add_client(x=0, y=0, demand=0)]
+    clients = [m.add_client(x=0, y=0)]
     m.add_edge(depot, clients[0], distance=0)
     m.add_edge(clients[0], depot, distance=0)
 
@@ -548,22 +548,21 @@ def test_client_depot_and_vehicle_type_name_fields():
     assert_equal(str(client), "client1")
 
 
-def test_model_solves_instance_with_mixed_backhaul():
+def test_model_solves_instance_with_pickups():
     """
     High-level test that creates and solves a small instance where clients have
-    both demand and supply. This test checks that the model and underlying
-    algorithm correctly handle mixed backhaul.
+    pickups, rather than deliveries.
     """
     m = Model()
     m.add_depot(0, 0)
     m.add_vehicle_type(capacity=10)
 
     # These clients cannot be visited on a single route, because the total
-    # supply exceeds the vehicle's capacity.
-    m.add_client(x=1, y=1, supply=1)
-    m.add_client(x=2, y=2, supply=2)
-    m.add_client(x=3, y=3, supply=3)
-    m.add_client(x=4, y=4, supply=5)
+    # pickups exceeds the vehicle's capacity.
+    m.add_client(x=1, y=1, pickup=1)
+    m.add_client(x=2, y=2, pickup=2)
+    m.add_client(x=3, y=3, pickup=3)
+    m.add_client(x=4, y=4, pickup=5)
 
     for frm in m.locations:
         for to in m.locations:
@@ -575,11 +574,11 @@ def test_model_solves_instance_with_mixed_backhaul():
     assert_(not res.is_feasible())
 
     # There is a single route, and that route should have 1 excess load (since
-    # the total supply sums to 11, and the vehicle capacity is 10).
+    # the total pickup amount sums to 11, and the vehicle capacity is 10).
     route = res.best.get_routes()[0]
     assert_(route.has_excess_load())
     assert_allclose(route.excess_load(), 1)
-    assert_allclose(route.supply(), 11)
+    assert_allclose(route.pickup(), 11)
 
     # Let's add another vehicle with capacity 1. Then the first client should
     # be served by this second vehicle, and the other clients by the first.
@@ -588,5 +587,5 @@ def test_model_solves_instance_with_mixed_backhaul():
     assert_(res.is_feasible())
 
     routes = res.best.get_routes()
-    assert_allclose(routes[0].supply(), 10)
-    assert_allclose(routes[1].supply(), 1)
+    assert_allclose(routes[0].pickup(), 10)
+    assert_allclose(routes[1].pickup(), 1)

@@ -3,13 +3,13 @@
 using pyvrp::Load;
 using pyvrp::LoadSegment;
 
-Load LoadSegment::demand() const { return demand_; }
+Load LoadSegment::delivery() const { return delivery_; }
 
-Load LoadSegment::supply() const { return supply_; }
+Load LoadSegment::pickup() const { return pickup_; }
 
 LoadSegment::LoadSegment(ProblemData::Client const &client)
-    : demand_(client.demand),
-      supply_(client.supply),
-      load_(std::max(client.demand, client.supply))
+    : delivery_(client.delivery),
+      pickup_(client.pickup),
+      load_(std::max(client.delivery, client.pickup))
 {
 }

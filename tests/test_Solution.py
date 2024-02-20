@@ -384,7 +384,7 @@ def test_excess_load_calculation(ok_small):
     assert_(not sol.has_time_warp())
 
     # All clients are visited on the same route/by the same vehicle. The total
-    # demand is 18, but the vehicle capacity is only 10.
+    # delivery demand is 18, but the vehicle capacity is only 10.
     assert_allclose(sol.excess_load(), 18 - ok_small.vehicle_type(0).capacity)
 
 
@@ -398,7 +398,7 @@ def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):
     )
 
     # This instance has capacities 10 and 20 for vehicle type 0 and 1. The
-    # total demand is 18 so if all demand is put in vehicle type 0 the
+    # total delivery demand is 18 so if all demand is put in vehicle type 0 the
     # excess_load is 18 - 10 = 8.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
     assert_(sol.has_excess_load())
@@ -427,13 +427,14 @@ def test_route_access_methods(ok_small):
     assert_allclose(routes[0].excess_load(), 0)
     assert_allclose(routes[1].excess_load(), 0)
 
-    # Total route demand (and supply, which is all zero for this instance).
-    demands = [ok_small.location(idx).demand for idx in range(5)]
-    assert_allclose(routes[0].demand(), demands[1] + demands[3])
-    assert_allclose(routes[1].demand(), demands[2] + demands[4])
+    # Total route delivery demand (and pickups, which are all zero for this
+    # instance).
+    deliveries = [ok_small.location(idx).delivery for idx in range(5)]
+    assert_allclose(routes[0].delivery(), deliveries[1] + deliveries[3])
+    assert_allclose(routes[1].delivery(), deliveries[2] + deliveries[4])
 
-    assert_allclose(routes[0].supply(), 0)
-    assert_allclose(routes[1].supply(), 0)
+    assert_allclose(routes[0].pickup(), 0)
+    assert_allclose(routes[1].pickup(), 0)
 
     # The first route is not feasible due to time warp, but the second one is.
     # See also the tests below.

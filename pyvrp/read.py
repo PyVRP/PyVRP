@@ -188,7 +188,7 @@ def read(
         Client(
             x=coords[idx][0],
             y=coords[idx][1],
-            demand=demands[idx],
+            delivery=demands[idx],
             service_duration=service_times[idx],
             tw_early=time_windows[idx][0],
             tw_late=time_windows[idx][1],

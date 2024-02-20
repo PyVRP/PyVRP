@@ -38,8 +38,8 @@ def test_insert_cost(ok_small):
 
     # This adds arcs 1 -> 4 -> 2, and removes arcs 1 -> 2. The added distances
     # is 1593 + 1090, the removed distance 1992. This also adds 5 additional
-    # demand, which exceeds the vehicle capacity by 5, so we get an additional
-    # load penalty of 5. There is no time warp. Total delta cost:
+    # delivery demand, which exceeds the vehicle capacity by 5, so we get an
+    # additional load penalty of 5. There is no time warp. Total delta cost:
     #     1593 + 1090 - 1992 + 5 = 696.
     assert_allclose(
         insert_cost(Node(loc=4), route[1], ok_small, cost_eval), 696

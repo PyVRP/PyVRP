@@ -93,7 +93,7 @@ def test_reading_OkSmall_instance():
     expected = [0, 5, 5, 3, 5]
 
     for loc in range(data.num_locations):
-        assert_equal(data.location(loc).demand, expected[loc])
+        assert_equal(data.location(loc).delivery, expected[loc])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
@@ -186,10 +186,10 @@ def test_reading_RC208_instance():  # Solomon style instance
     assert_equal(data.location(0).tw_early, 0)
     assert_equal(data.location(0).tw_late, 9600)
 
-    # Note: everything except demand is scaled by 10
+    # Note: everything except delivery amount is scaled by 10
     assert_equal(data.location(1).x, 250)  # first customer [x, y] location
     assert_equal(data.location(1).y, 850)
-    assert_equal(data.location(1).demand, 20)
+    assert_equal(data.location(1).delivery, 20)
     assert_equal(data.location(1).tw_early, 3880)
     assert_equal(data.location(1).tw_late, 9110)
     assert_equal(data.location(1).service_duration, 100)

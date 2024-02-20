@@ -227,7 +227,8 @@ public:
     [[nodiscard]] inline Load load() const;
 
     /**
-     * Demand in excess of the vehicle's capacity.
+     * Load (as a consequence of pickup and deliveries) in excess of the
+     * vehicle's capacity.
      */
     [[nodiscard]] inline Load excessLoad() const;
 

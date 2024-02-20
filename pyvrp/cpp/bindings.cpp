@@ -69,8 +69,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       char const *>(),
              py::arg("x"),
              py::arg("y"),
-             py::arg("demand") = 0,
-             py::arg("supply") = 0,
+             py::arg("delivery") = 0,
+             py::arg("pickup") = 0,
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
@@ -80,8 +80,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
-        .def_readonly("demand", &ProblemData::Client::demand)
-        .def_readonly("supply", &ProblemData::Client::supply)
+        .def_readonly("delivery", &ProblemData::Client::delivery)
+        .def_readonly("pickup", &ProblemData::Client::pickup)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
@@ -228,12 +228,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("distance",
              &Solution::Route::distance,
              DOC(pyvrp, Solution, Route, distance))
-        .def("demand",
-             &Solution::Route::demand,
-             DOC(pyvrp, Solution, Route, demand))
-        .def("supply",
-             &Solution::Route::supply,
-             DOC(pyvrp, Solution, Route, supply))
+        .def("delivery",
+             &Solution::Route::delivery,
+             DOC(pyvrp, Solution, Route, delivery))
+        .def("pickup",
+             &Solution::Route::pickup,
+             DOC(pyvrp, Solution, Route, pickup))
         .def("excess_load",
              &Solution::Route::excessLoad,
              DOC(pyvrp, Solution, Route, excessLoad))
@@ -302,8 +302,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 // Returns a tuple that completely encodes the route's state.
                 return py::make_tuple(route.visits(),
                                       route.distance(),
-                                      route.demand(),
-                                      route.supply(),
+                                      route.delivery(),
+                                      route.pickup(),
                                       route.excessLoad(),
                                       route.duration(),
                                       route.timeWarp(),
@@ -322,8 +322,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 Solution::Route route = Solution::Route(
                     t[0].cast<std::vector<size_t>>(),         // visits
                     t[1].cast<pyvrp::Distance>(),             // distance
-                    t[2].cast<pyvrp::Load>(),                 // demand
-                    t[3].cast<pyvrp::Load>(),                 // supply
+                    t[2].cast<pyvrp::Load>(),                 // delivery
+                    t[3].cast<pyvrp::Load>(),                 // pickup
                     t[4].cast<pyvrp::Load>(),                 // excess load
                     t[5].cast<pyvrp::Duration>(),             // duration
                     t[6].cast<pyvrp::Duration>(),             // time warp
@@ -588,11 +588,13 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
         .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
-             py::arg("demand"),
-             py::arg("supply"),
+             py::arg("delivery"),
+             py::arg("pickup"),
              py::arg("load"))
-        .def("demand", &LoadSegment::demand, DOC(pyvrp, LoadSegment, demand))
-        .def("supply", &LoadSegment::supply, DOC(pyvrp, LoadSegment, supply))
+        .def("delivery",
+             &LoadSegment::delivery,
+             DOC(pyvrp, LoadSegment, delivery))
+        .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
         .def_static(
             "merge", &LoadSegment::merge<>, py::arg("first"), py::arg("second"))

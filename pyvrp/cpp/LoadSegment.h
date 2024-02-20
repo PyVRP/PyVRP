@@ -7,7 +7,7 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(demand: int = 0, supply: int = 0, load: int = 0)
+ * LoadSegment(delivery: int = 0, pickup: int = 0, load: int = 0)
  *
  * Creates a new load segment. Load segments can be efficiently concatenated,
  * and track statistics about capacity violations resulting from visiting
@@ -15,17 +15,17 @@ namespace pyvrp
  *
  * Parameters
  * ----------
- * demand
- *     Total demand on this segment.
- * supply
- *     Total supply on this segment.
+ * delivery
+ *     Total delivery amount on this segment.
+ * pickup
+ *     Total pickup amount on this segment.
  * load
  *     Maximum load on this segment.
  */
 class LoadSegment
 {
-    Load demand_;
-    Load supply_;
+    Load delivery_;
+    Load pickup_;
     Load load_;
 
     [[nodiscard]] inline LoadSegment merge(LoadSegment const &other) const;
@@ -36,16 +36,15 @@ public:
     merge(LoadSegment const &first, LoadSegment const &second, Args &&...args);
 
     /**
-     * Returns the demand, that is, the total amount of load delivered to
-     * clients on this segment.
+     * Returns the delivery amount, that is, the total amount of load delivered
+     * to clients on this segment.
      */
-    [[nodiscard]] Load demand() const;
+    [[nodiscard]] Load delivery() const;
 
     /**
-     * Returns the supply, that is, the total amount of load picked up from
-     * clients on this segment.
+     * Returns the amount picked up from clients on this segment.
      */
-    [[nodiscard]] Load supply() const;
+    [[nodiscard]] Load pickup() const;
 
     /**
      * Returns the maximum load encountered on this segment.
@@ -56,16 +55,16 @@ public:
     LoadSegment(ProblemData::Client const &client);
 
     // Construct from raw data.
-    inline LoadSegment(Load demand, Load supply, Load load);
+    inline LoadSegment(Load delivery, Load pickup, Load load);
 };
 
 LoadSegment LoadSegment::merge(LoadSegment const &other) const
 {
     // See Vidal et al. (2014) for details. This function implements equations
     // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
-    return {demand_ + other.demand_,
-            supply_ + other.supply_,
-            std::max(load_ + other.demand_, other.load_ + supply_)};
+    return {delivery_ + other.delivery_,
+            pickup_ + other.pickup_,
+            std::max(load_ + other.delivery_, other.load_ + pickup_)};
 }
 
 template <typename... Args>
@@ -83,8 +82,8 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
 
 Load LoadSegment::load() const { return load_; }
 
-LoadSegment::LoadSegment(Load demand, Load supply, Load load)
-    : demand_(demand), supply_(supply), load_(load)
+LoadSegment::LoadSegment(Load delivery, Load pickup, Load load)
+    : delivery_(delivery), pickup_(pickup), load_(load)
 {
 }
 }  // namespace pyvrp

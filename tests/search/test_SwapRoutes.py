@@ -120,7 +120,7 @@ def test_evaluate_capacity_differences(ok_small):
     route2.update()
 
     # route1 has vehicle type 0, which has capacity 10. So there is excess load
-    # since its client demand sums to 15.
+    # since its client delivery demand sums to 15.
     assert_(route1.has_excess_load())
     assert_allclose(route1.load(), 15)
 
