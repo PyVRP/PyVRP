@@ -14,7 +14,7 @@ namespace pyvrp
 /**
  * ProblemData(
  *     clients: List[Client],
- *     depots: List[Client],
+ *     depots: List[Depot],
  *     vehicle_types: List[VehicleType],
  *     distance_matrix: List[List[int]],
  *     duration_matrix: List[List[int]],

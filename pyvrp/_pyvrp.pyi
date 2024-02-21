@@ -102,7 +102,7 @@ class ProblemData:
     def replace(
         self,
         clients: Optional[list[Client]] = None,
-        depots: Optional[list[Client]] = None,
+        depots: Optional[list[Depot]] = None,
         vehicle_types: Optional[list[VehicleType]] = None,
         distance_matrix: Optional[np.ndarray[int]] = None,
         duration_matrix: Optional[np.ndarray[int]] = None,
