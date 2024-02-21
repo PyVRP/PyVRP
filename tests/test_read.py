@@ -272,7 +272,7 @@ def test_service_time_specification():
     """
     data = read("data/ServiceTimeSpecification.txt")
 
-    # Clients should all have the same service time
+    # Clients should all have the same service time.
     services = [client.service_duration for client in data.clients()]
     assert_allclose(services, 360)
 
