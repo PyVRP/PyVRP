@@ -55,6 +55,10 @@ PyVRP supports the following data sections:
 .. glossary::
    :sorted:
 
+   ``BACKHAUL_SECTION``
+      Array of backhaul quantities, one for each location.
+      The depot locations *must* have zero demand.
+
    ``DEMAND_SECTION``
       Array of demands, one for each location.
       The depot locations *must* have zero demand.

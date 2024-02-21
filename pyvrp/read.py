@@ -128,6 +128,11 @@ def read(
     else:
         demands = np.zeros(dimension, dtype=int)
 
+    if "backhaul" in instance:
+        pickups: np.ndarray = instance["backhaul"]
+    else:
+        pickups = np.zeros(dimension, dtype=int)
+
     if "node_coord" in instance:
         coords: np.ndarray = round_func(instance["node_coord"])
     else:
@@ -189,6 +194,7 @@ def read(
             x=coords[idx][0],
             y=coords[idx][1],
             delivery=demands[idx],
+            pickup=pickups[idx],
             service_duration=service_times[idx],
             tw_early=time_windows[idx][0],
             tw_late=time_windows[idx][1],
