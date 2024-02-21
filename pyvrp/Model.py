@@ -155,7 +155,7 @@ class Model:
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
-        created :class:`~pyvrp._pyvrp.Client` instance.
+        created :class:`~pyvrp._pyvrp.Depot` instance.
         """
         depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
