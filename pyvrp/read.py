@@ -123,6 +123,16 @@ def read(
     # assume duration == distance if the instance has time windows.
     durations = distances = round_func(instance["edge_weight"])
 
+    if instance.get("type", None) == "VRPB":
+        # In VRPB, linehauls must be served before backhauls. This can be
+        # enforced by setting a high value for the distance/duration from depot
+        # to backhaul (forcing linehaul to be served first) and a large value
+        # from backhaul to linehaul (avoiding linehaul after backhaul clients).
+        linehaul = np.flatnonzero(instance["demand"] > 0)
+        backhaul = np.flatnonzero(instance["backhaul"] > 0)
+        distances[0, backhaul] = MAX_USER_VALUE
+        distances[np.ix_(backhaul, linehaul)] = MAX_USER_VALUE
+
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
     else:
