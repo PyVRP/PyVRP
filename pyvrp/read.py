@@ -101,7 +101,7 @@ def read(
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
     # VRPLIB instances typically do not have a duration data field, so we
-    # assume duration == distance if the instance has time windows.
+    # assume duration == distance.
     durations = distances = round_func(instance["edge_weight"])
 
     dimension: int = instance.get("dimension", durations.shape[0])
