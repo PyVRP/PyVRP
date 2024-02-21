@@ -32,8 +32,8 @@ class Edge:
 
     def __init__(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Union[Client, Depot],
+        to: Union[Client, Depot],
         distance: int,
         duration: int,
     ):
@@ -55,7 +55,7 @@ class Model:
         self._vehicle_types: list[VehicleType] = []
 
     @property
-    def locations(self) -> list[Client | Depot]:
+    def locations(self) -> list[Union[Client, Depot]]:
         """
         Returns all locations (depots and clients) in the current model. The
         clients in the routes of the solution returned by :meth:`~solve` can be

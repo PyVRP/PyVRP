@@ -344,7 +344,7 @@ public:
      *
      * Returns
      * -------
-     * Client | Depot
+     * Union[Client, Depot]
      *     A simple data object containing the requested location's
      *     information.
      */
