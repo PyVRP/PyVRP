@@ -9,6 +9,7 @@ from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
+    Depot,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -21,8 +22,6 @@ from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import StoppingCriterion
 
-Depot = Client
-
 
 class Edge:
     """
@@ -31,7 +30,13 @@ class Edge:
 
     __slots__ = ["frm", "to", "distance", "duration"]
 
-    def __init__(self, frm: Client, to: Client, distance: int, duration: int):
+    def __init__(
+        self,
+        frm: Client | Depot,
+        to: Client | Depot,
+        distance: int,
+        duration: int,
+    ):
         self.frm = frm
         self.to = to
         self.distance = distance
@@ -50,7 +55,7 @@ class Model:
         self._vehicle_types: list[VehicleType] = []
 
     @property
-    def locations(self) -> list[Client]:
+    def locations(self) -> list[Client | Depot]:
         """
         Returns all locations (depots and clients) in the current model. The
         clients in the routes of the solution returned by :meth:`~solve` can be
@@ -83,7 +88,9 @@ class Model:
         Model
             A model instance representing the given data.
         """
-        locs = [data.location(idx) for idx in range(data.num_locations)]
+        depots = data.depots()
+        clients = data.clients()
+        locs = depots + clients
         edges = [
             Edge(
                 locs[frm],
@@ -96,13 +103,10 @@ class Model:
         ]
 
         self = Model()
-        self._clients = locs[data.num_depots :]
-        self._depots = locs[: data.num_depots]
+        self._clients = clients
+        self._depots = depots
         self._edges = edges
-        vehicle_types = [
-            data.vehicle_type(i) for i in range(data.num_vehicle_types)
-        ]
-        self._vehicle_types = vehicle_types
+        self._vehicle_types = data.vehicle_types()
 
         return self
 

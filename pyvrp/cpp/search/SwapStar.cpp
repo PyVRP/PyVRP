@@ -220,8 +220,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // Approximates the actual load changes - this is far from exact
             // when there are also pickups. So it's pretty rough, but fast and
             // seems to work well enough for most instances.
-            auto const &uClient = data.location(U->client());
-            auto const &vClient = data.location(V->client());
+            ProblemData::Client const &uClient = data.location(U->client());
+            ProblemData::Client const &vClient = data.location(V->client());
             auto const uLoad = std::max(uClient.delivery, uClient.pickup);
             auto const vLoad = std::max(vClient.delivery, vClient.pickup);
             auto const loadDiff = uLoad - vLoad;

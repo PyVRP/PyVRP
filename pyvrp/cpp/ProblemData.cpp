@@ -104,6 +104,41 @@ ProblemData::Client::Client(Client &&client)
 
 ProblemData::Client::~Client() { delete[] name; }
 
+ProblemData::Depot::Depot(Coordinate x,
+                          Coordinate y,
+                          Duration twEarly,
+                          Duration twLate,
+                          char const *name)
+    : x(x), y(y), twEarly(twEarly), twLate(twLate), name(duplicate(name))
+{
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
+}
+
+ProblemData::Depot::Depot(Depot const &depot)
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(duplicate(depot.name))
+{
+}
+
+ProblemData::Depot::Depot(Depot &&depot)
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(depot.name)  // we can steal
+{
+    depot.name = nullptr;  // stolen
+}
+
+ProblemData::Depot::~Depot() { delete[] name; }
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
@@ -172,7 +207,7 @@ std::vector<ProblemData::Client> const &ProblemData::clients() const
     return clients_;
 }
 
-std::vector<ProblemData::Client> const &ProblemData::depots() const
+std::vector<ProblemData::Depot> const &ProblemData::depots() const
 {
     return depots_;
 }
@@ -209,7 +244,7 @@ size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 ProblemData
 ProblemData::replace(std::optional<std::vector<Client>> &clients,
-                     std::optional<std::vector<Client>> &depots,
+                     std::optional<std::vector<Depot>> &depots,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<Matrix<Distance>> &distMat,
                      std::optional<Matrix<Duration>> &durMat)
@@ -222,7 +257,7 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
 }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
-                         std::vector<Client> const &depots,
+                         std::vector<Depot> const &depots,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> distMat,
                          Matrix<Duration> durMat)
@@ -257,21 +292,6 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
 
         if (dur_(idx, idx) != 0)
             throw std::invalid_argument("Duration matrix diagonal must be 0.");
-    }
-
-    for (auto const &depot : depots_)
-    {
-        if (depot.delivery != 0)
-            throw std::invalid_argument("Depot delivery amount must be 0.");
-
-        if (depot.pickup != 0)
-            throw std::invalid_argument("Depot pickup amount must be 0.");
-
-        if (depot.serviceDuration != 0)
-            throw std::invalid_argument("Depot service duration must be 0.");
-
-        if (depot.releaseTime != 0)
-            throw std::invalid_argument("Depot release time must be 0.");
     }
 
     for (auto const &client : clients_)

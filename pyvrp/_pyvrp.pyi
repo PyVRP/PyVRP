@@ -50,6 +50,21 @@ class Client:
         name: str = "",
     ) -> None: ...
 
+class Depot:
+    x: int
+    y: int
+    tw_early: int
+    tw_late: int
+    name: str
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        tw_early: int = 0,
+        tw_late: int = ...,
+        name: str = "",
+    ) -> None: ...
+
 class VehicleType:
     num_available: int
     depot: int
@@ -75,14 +90,14 @@ class ProblemData:
     def __init__(
         self,
         clients: list[Client],
-        depots: list[Client],
+        depots: list[Depot],
         vehicle_types: list[VehicleType],
         distance_matrix: np.ndarray[int],
         duration_matrix: np.ndarray[int],
     ) -> None: ...
     def location(self, idx: int) -> Client: ...
     def clients(self) -> list[Client]: ...
-    def depots(self) -> list[Client]: ...
+    def depots(self) -> list[Depot]: ...
     def vehicle_types(self) -> list[VehicleType]: ...
     def replace(
         self,

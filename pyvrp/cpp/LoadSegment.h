@@ -56,6 +56,14 @@ public:
 
     // Construct from raw data.
     inline LoadSegment(Load delivery, Load pickup, Load load);
+
+    // Move or copy construct from the other load segment.
+    inline LoadSegment(LoadSegment const &) = default;
+    inline LoadSegment(LoadSegment &&) = default;
+
+    // Move or copy assign form the other load segment.
+    inline LoadSegment &operator=(LoadSegment const &) = default;
+    inline LoadSegment &operator=(LoadSegment &&) = default;
 };
 
 LoadSegment LoadSegment::merge(LoadSegment const &other) const

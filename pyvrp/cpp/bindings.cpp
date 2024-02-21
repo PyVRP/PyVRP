@@ -96,6 +96,29 @@ PYBIND11_MODULE(_pyvrp, m)
             [](ProblemData::Client const &client) { return client.name; },
             py::return_value_policy::reference_internal);
 
+    py::class_<ProblemData::Depot>(m, "Depot", DOC(pyvrp, ProblemData, Depot))
+        .def(py::init<pyvrp::Coordinate,
+                      pyvrp::Coordinate,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      char const *>(),
+             py::arg("x"),
+             py::arg("y"),
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("name") = "")
+        .def_readonly("x", &ProblemData::Depot::x)
+        .def_readonly("y", &ProblemData::Depot::y)
+        .def_readonly("tw_early", &ProblemData::Depot::twEarly)
+        .def_readonly("tw_late", &ProblemData::Depot::twLate)
+        .def_readonly("name",
+                      &ProblemData::Depot::name,
+                      py::return_value_policy::reference_internal)
+        .def(
+            "__str__",
+            [](ProblemData::Depot const &depot) { return depot.name; },
+            py::return_value_policy::reference_internal);
+
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<size_t,
@@ -134,7 +157,7 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client> const &,
-                      std::vector<ProblemData::Client> const &,
+                      std::vector<ProblemData::Depot> const &,
                       std::vector<ProblemData::VehicleType> const &,
                       Matrix<pyvrp::Distance>,
                       Matrix<pyvrp::Duration>>(),
@@ -171,7 +194,15 @@ PYBIND11_MODULE(_pyvrp, m)
             [](ProblemData const &data, size_t idx) {
                 if (idx >= data.numLocations())
                     throw py::index_error();
-                return data.location(idx);
+
+                auto const proxy = data.location(idx);
+
+                if (idx >= data.numDepots())
+                    return py::cast(
+                        static_cast<ProblemData::Depot const &>(proxy));
+                else
+                    return py::cast(
+                        static_cast<ProblemData::Client const &>(proxy));
             },
             py::arg("idx"),
             py::return_value_policy::reference_internal,

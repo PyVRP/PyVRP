@@ -7,7 +7,7 @@ from warnings import warn
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, ProblemData, VehicleType
+from pyvrp._pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
@@ -184,6 +184,16 @@ def read(
         """
         warn(msg, ScalingWarning)
 
+    depots = [
+        Depot(
+            x=coords[idx][0],
+            y=coords[idx][1],
+            tw_early=time_windows[idx][0],
+            tw_late=time_windows[idx][1],
+        )
+        for idx in range(len(depots))
+    ]
+
     clients = [
         Client(
             x=coords[idx][0],
@@ -196,7 +206,7 @@ def read(
             prize=prizes[idx],
             required=np.isclose(prizes[idx], 0),  # only when prize is zero
         )
-        for idx in range(dimension)
+        for idx in range(len(depots), dimension)
     ]
 
     vehicle_types = [
@@ -212,13 +222,7 @@ def read(
         for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
     ]
 
-    return ProblemData(
-        clients[len(depots) :],
-        clients[: len(depots)],
-        vehicle_types,
-        distances,
-        durations,
-    )
+    return ProblemData(clients, depots, vehicle_types, distances, durations)
 
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:

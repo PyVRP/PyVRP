@@ -108,7 +108,7 @@ void Route::clear()
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter.
-    auto const &depot = data.location(vehicleType_.depot);
+    ProblemData::Depot const &depot = data.location(vehicleType_.depot);
     TWS depotTws(vehicleType_.depot,
                  vehicleType_.depot,
                  0,
@@ -118,8 +118,8 @@ void Route::clear()
                  0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(LoadSegment(depot), depotTws);
-    stats.emplace_back(LoadSegment(depot), depotTws);
+    stats.emplace_back(LoadSegment(0, 0, 0), depotTws);
+    stats.emplace_back(LoadSegment(0, 0, 0), depotTws);
 
 #ifndef NDEBUG
     dirty = false;
@@ -202,16 +202,17 @@ void Route::update()
 
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
-        auto *node = nodes[idx];
-        auto const &clientData = data.location(node->client());
+        auto const *node = nodes[idx];
+        size_t const client = node->client();
 
         if (!node->isDepot())
         {
+            ProblemData::Client const &clientData = data.location(client);
             centroid_.first += static_cast<double>(clientData.x) / size();
             centroid_.second += static_cast<double>(clientData.y) / size();
         }
 
-        auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
+        auto const dist = data.dist(nodes[idx - 1]->client(), client);
         stats[idx].cumDist = stats[idx - 1].cumDist + dist;
     }
 
