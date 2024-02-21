@@ -7,6 +7,7 @@ from pytest import mark
 
 from pyvrp import (
     Client,
+    Depot,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -248,7 +249,7 @@ def test_get_neighbours_multi_depot(ok_small):
     # Make a two-depot instance by changing the first client in ok_small into
     # a depot, and adding a vehicle type that operates out of that depot.
     locations = ok_small.depots() + ok_small.clients()
-    locations[1] = Client(locations[1].x, locations[1].y)
+    locations[1] = Depot(locations[1].x, locations[1].y)
 
     data = ok_small.replace(
         depots=locations[:2],
@@ -429,7 +430,7 @@ def test_route_access_methods(ok_small):
 
     # Total route delivery demand (and pickups, which are all zero for this
     # instance).
-    deliveries = [ok_small.location(idx).delivery for idx in range(5)]
+    deliveries = [0] + [client.delivery for client in ok_small.clients()]
     assert_allclose(routes[0].delivery(), deliveries[1] + deliveries[3])
     assert_allclose(routes[1].delivery(), deliveries[2] + deliveries[4])
 
@@ -442,7 +443,7 @@ def test_route_access_methods(ok_small):
     assert_(routes[1].is_feasible())
 
     # Total service duration.
-    services = [ok_small.location(idx).service_duration for idx in range(5)]
+    services = [0] + [client.service_duration for client in ok_small.clients()]
     assert_allclose(routes[0].service_duration(), services[1] + services[3])
     assert_allclose(routes[1].service_duration(), services[2] + services[4])
 
@@ -609,7 +610,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
-        depots=[Client(x=0, y=0, tw_late=10)],
+        depots=[Depot(x=0, y=0, tw_late=10)],
         vehicle_types=[VehicleType(2)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
@@ -641,7 +642,7 @@ def test_time_warp_return_to_depot():
     """
     data = ProblemData(
         clients=[Client(x=1, y=0)],
-        depots=[Client(x=0, y=0, tw_late=1)],
+        depots=[Depot(x=0, y=0, tw_late=1)],
         vehicle_types=[VehicleType()],
         distance_matrix=np.asarray([[0, 0], [0, 0]]),
         duration_matrix=np.asarray([[0, 1], [1, 0]]),
@@ -783,7 +784,7 @@ def test_eq_unassigned():
             Client(x=0, y=1, required=False),
             Client(x=1, y=0, required=False),
         ],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=dist,
         duration_matrix=dist,

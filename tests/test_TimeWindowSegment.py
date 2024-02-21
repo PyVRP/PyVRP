@@ -126,11 +126,11 @@ def test_OkSmall_with_time_warp(ok_small):
         TimeWindowSegment(
             idx_first=idx,
             idx_last=idx,
-            duration=loc.service_duration,
+            duration=loc.service_duration if idx != 0 else 0,
             time_warp=0,
             tw_early=loc.tw_early,
             tw_late=loc.tw_late,
-            release_time=loc.release_time,
+            release_time=loc.release_time if idx != 0 else 0,
         )
         for idx, loc in enumerate(ok_small.depots() + ok_small.clients())
     ]

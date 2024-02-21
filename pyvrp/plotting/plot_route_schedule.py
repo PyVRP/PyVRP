@@ -69,10 +69,6 @@ def plot_route_schedule(
         trace_load.append((dist, load))
 
     add_traces(dist, t, drive_time, serv_time, load)
-
-    t += depot.service_duration
-    serv_time += depot.service_duration
-
     add_traces(dist, t, drive_time, serv_time, load)
 
     prev_idx = vehicle_type.depot
@@ -94,8 +90,9 @@ def plot_route_schedule(
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
 
-        load -= stop.delivery
-        load += stop.pickup
+        if idx != vehicle_type.depot:  # depot has no delivery/pickup amount
+            load -= stop.delivery
+            load += stop.pickup
 
         add_traces(dist, t, drive_time, serv_time, load)
 

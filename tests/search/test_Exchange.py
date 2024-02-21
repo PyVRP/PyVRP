@@ -5,6 +5,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 from pyvrp import (
     Client,
     CostEvaluator,
+    Depot,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -228,7 +229,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
             Client(x=1, y=0, tw_early=0, tw_late=5),
             Client(x=2, y=0, tw_early=0, tw_late=5),
         ],
-        depots=[Client(x=0, y=0, tw_early=0, tw_late=10)],
+        depots=[Depot(x=0, y=0, tw_early=0, tw_late=10)],
         vehicle_types=[VehicleType(1)],
         distance_matrix=np.asarray(
             [
@@ -398,7 +399,7 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
             Client(x=2, y=0),
             Client(x=2, y=0, delivery=5),
         ],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(capacity=5)],
         distance_matrix=np.where(np.eye(4), 0, 1),
         duration_matrix=np.zeros((4, 4), dtype=int),

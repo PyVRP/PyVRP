@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import Client, ProblemData, VehicleType
+from pyvrp import Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 
 
@@ -316,12 +316,13 @@ def test_route_tws_access(ok_small):
     route.update()
 
     for idx in range(len(route) + 2):
-        client = ok_small.location(idx % (len(route) + 1))
+        is_depot = idx % (len(route) + 1) == 0
+        loc = ok_small.location(idx % (len(route) + 1))
         tws = route.tws(idx)
 
-        assert_equal(tws.tw_early(), client.tw_early)
-        assert_equal(tws.tw_late(), client.tw_late)
-        assert_equal(tws.duration(), client.service_duration)
+        assert_equal(tws.tw_early(), loc.tw_early)
+        assert_equal(tws.tw_late(), loc.tw_late)
+        assert_equal(tws.duration(), 0 if is_depot else loc.service_duration)
         assert_equal(tws.time_warp(), 0)
 
 
@@ -432,7 +433,7 @@ def test_shift_duration_depot_time_window_interaction(
     """
     data = ProblemData(
         clients=[],
-        depots=[Client(x=0, y=0, tw_early=0, tw_late=1_000)],
+        depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
         vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
         distance_matrix=np.zeros((1, 1), dtype=int),
         duration_matrix=np.zeros((1, 1), dtype=int),

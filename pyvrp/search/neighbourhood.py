@@ -132,10 +132,15 @@ def _compute_proximity(
     """
     clients = [data.location(loc) for loc in range(data.num_locations)]
 
-    early = np.asarray([client.tw_early for client in clients])
-    late = np.asarray([client.tw_late for client in clients])
-    service = np.asarray([client.service_duration for client in clients])
-    prize = np.asarray([client.prize for client in clients])
+    early = np.asarray([c.tw_early for c in clients])
+    late = np.asarray([c.tw_late for c in clients])
+
+    service = np.zeros_like(early)
+    service[data.num_depots :] = [c.service_duration for c in data.clients()]
+
+    prize = np.zeros_like(early)
+    prize[data.num_depots :] = [client.prize for client in data.clients()]
+
     duration = data.duration_matrix()
 
     # Minimum wait time and time warp of visiting j directly after i.

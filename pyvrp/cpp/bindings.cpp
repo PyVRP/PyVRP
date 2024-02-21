@@ -199,10 +199,10 @@ PYBIND11_MODULE(_pyvrp, m)
 
                 if (idx >= data.numDepots())
                     return py::cast(
-                        static_cast<ProblemData::Depot const &>(proxy));
+                        static_cast<ProblemData::Client const &>(proxy));
                 else
                     return py::cast(
-                        static_cast<ProblemData::Client const &>(proxy));
+                        static_cast<ProblemData::Depot const &>(proxy));
             },
             py::arg("idx"),
             py::return_value_policy::reference_internal,

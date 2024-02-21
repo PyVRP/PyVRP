@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from pyvrp import Client, CostEvaluator, ProblemData, VehicleType
+from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route, insert_cost, remove_cost
 
 
@@ -122,7 +122,7 @@ def test_insert_fixed_vehicle_cost():
     cost_eval = CostEvaluator(0, 0)
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),
@@ -149,7 +149,7 @@ def test_remove_fixed_vehicle_cost():
     cost_eval = CostEvaluator(0, 0)
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrix=np.zeros((3, 3), dtype=int),
         duration_matrix=np.zeros((3, 3), dtype=int),
