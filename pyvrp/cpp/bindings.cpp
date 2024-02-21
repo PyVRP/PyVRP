@@ -196,13 +196,10 @@ PYBIND11_MODULE(_pyvrp, m)
                     throw py::index_error();
 
                 auto const proxy = data.location(idx);
-
-                if (idx >= data.numDepots())
-                    return py::cast(
-                        static_cast<ProblemData::Client const &>(proxy));
+                if (idx < data.numDepots())
+                    return py::cast(proxy.depot);
                 else
-                    return py::cast(
-                        static_cast<ProblemData::Depot const &>(proxy));
+                    return py::cast(proxy.client);
             },
             py::arg("idx"),
             py::return_value_policy::reference_internal,

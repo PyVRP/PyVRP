@@ -41,8 +41,6 @@ namespace pyvrp
  */
 class ProblemData
 {
-    friend class LocationProxy;
-
 public:
     /**
      * Client(
@@ -308,16 +306,13 @@ public:
 
 private:
     /**
-     * Simple proxy type that can distinguish between client and depot
-     * locations, and return the correct type for each.
+     * Simple union type that distinguishes between client and depot locations.
      */
-    class LocationProxy
+    union Location
     {
-        ProblemData const *data;
-        size_t const idx;
+        Client const *client;
+        Depot const *depot;
 
-    public:
-        inline LocationProxy(ProblemData const &data, size_t idx);
         inline operator Client const &() const;
         inline operator Depot const &() const;
     };
@@ -350,7 +345,7 @@ public:
      */
     // Above docstring is for Python: we do not have the LocationProxy there;
     // see the bindings for details.
-    [[nodiscard]] inline LocationProxy location(size_t idx) const;
+    [[nodiscard]] inline Location location(size_t idx) const;
 
     /**
      * Returns a list of all clients in the problem instance.
@@ -562,27 +557,16 @@ public:
                 Matrix<Duration> durMat);
 };
 
-ProblemData::LocationProxy::LocationProxy(ProblemData const &data, size_t idx)
-    : data(&data), idx(idx)
-{
-    assert(idx < data.numLocations());
-}
+ProblemData::Location::operator Client const &() const { return *client; }
 
-ProblemData::LocationProxy::operator Client const &() const
-{
-    assert(idx >= data->numDepots());
-    return data->clients_[idx - data->numDepots()];
-}
+ProblemData::Location::operator Depot const &() const { return *depot; }
 
-ProblemData::LocationProxy::operator Depot const &() const
+ProblemData::Location ProblemData::location(size_t idx) const
 {
-    assert(idx < data->numDepots());
-    return data->depots_[idx];
-}
-
-ProblemData::LocationProxy ProblemData::location(size_t idx) const
-{
-    return LocationProxy(*this, idx);
+    assert(idx < numLocations());
+    return idx < depots_.size()
+               ? Location{.depot = &depots_[idx]}
+               : Location{.client = &clients_[idx - depots_.size()]};
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const
