@@ -100,14 +100,11 @@ def read(
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
-    # A priori checks
-    if "dimension" in instance:
-        dimension: int = instance["dimension"]
-    else:
-        if "demand" not in instance:
-            raise ValueError("File should either contain dimension or demands")
-        dimension = len(instance["demand"])
+    # VRPLIB instances typically do not have a duration data field, so we
+    # assume duration == distance if the instance has time windows.
+    durations = distances = round_func(instance["edge_weight"])
 
+    dimension: int = instance.get("dimension", durations.shape[0])
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
@@ -118,10 +115,6 @@ def read(
     max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
     if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
-
-    # VRPLIB instances typically do not have a duration data field, so we
-    # assume duration == distance if the instance has time windows.
-    durations = distances = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
