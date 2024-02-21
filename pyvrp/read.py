@@ -108,7 +108,7 @@ def read(
             raise ValueError("File should either contain dimension or demands")
         dimension = len(instance["demand"])
 
-    depots: np.ndarray = instance.get("depot", np.array([0]))
+    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
 
@@ -154,7 +154,7 @@ def read(
         time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
-        items: list[list[int]] = [[] for _ in depots]
+        items: list[list[int]] = [[] for _ in depot_idcs]
         for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
             items[depot - 1].append(vehicle)
 
@@ -170,7 +170,8 @@ def read(
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
-    if len(depots) == 0 or (depots != np.arange(len(depots))).any():
+    contiguous_lower_idcs = np.arange(len(depot_idcs))
+    if len(depot_idcs) == 0 or (depot_idcs != contiguous_lower_idcs).any():
         msg = """
         Source file should contain at least one depot in the contiguous lower
         indices, starting from 1.
@@ -191,7 +192,7 @@ def read(
             tw_early=time_windows[idx][0],
             tw_late=time_windows[idx][1],
         )
-        for idx in range(len(depots))
+        for idx in range(len(depot_idcs))
     ]
 
     clients = [
@@ -206,7 +207,7 @@ def read(
             prize=prizes[idx],
             required=np.isclose(prizes[idx], 0),  # only when prize is zero
         )
-        for idx in range(len(depots), dimension)
+        for idx in range(len(depot_idcs), dimension)
     ]
 
     vehicle_types = [
