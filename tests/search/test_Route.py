@@ -74,7 +74,7 @@ def test_route_depots_are_depots(ok_small):
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
 
-    for loc in range(2):
+    for loc in range(1, 3):
         # The depots flank the clients at indices {1, ..., len(route)}. Thus,
         # depots are at indices 0 and len(route) + 1.
         route.append(Node(loc=loc))
@@ -179,9 +179,10 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
 
-    for loc in range(num_nodes):
+    for loc in range(1, num_nodes + 1):
         route.append(Node(loc=loc))
-        assert_equal(len(route), loc + 1)
+
+    assert_equal(len(route), num_nodes)
 
     route.clear()
     assert_equal(len(route), 0)
