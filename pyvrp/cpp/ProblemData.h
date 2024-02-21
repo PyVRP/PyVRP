@@ -343,8 +343,6 @@ public:
      *     A simple data object containing the requested location's
      *     information.
      */
-    // Above docstring is for Python: we do not have the LocationProxy there;
-    // see the bindings for details.
     [[nodiscard]] inline Location location(size_t idx) const;
 
     /**
