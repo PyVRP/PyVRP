@@ -141,12 +141,12 @@ void Route::insert(size_t idx, Node *node)
     ProblemData::Client const &client = data.location(node->client());
 
     ls.emplace(ls.begin() + idx, client);
-    lsAfter.emplace_back(client);   // no need for correct index
-    lsBefore.emplace_back(client);  // no need for correct index
+    lsAfter.emplace(lsAfter.begin() + idx, client);
+    lsBefore.emplace(lsBefore.begin() + idx, client);
 
     ds.emplace(ds.begin() + idx, node->client(), client);
-    dsAfter.emplace_back(node->client(), client);   // no need for correct index
-    dsBefore.emplace_back(node->client(), client);  // no need for correct index
+    dsAfter.emplace(dsAfter.begin() + idx, node->client(), client);
+    dsBefore.emplace(dsBefore.begin() + idx, node->client(), client);
 
 #ifndef NDEBUG
     dirty = true;
@@ -177,12 +177,12 @@ void Route::remove(size_t idx)
     cumDist.pop_back();  // no need for correct index
 
     ls.erase(ls.begin() + idx);
-    lsBefore.pop_back();  // no need for correct index
-    lsAfter.pop_back();   // no need for correct index
+    lsBefore.erase(lsBefore.begin() + idx);
+    lsAfter.erase(lsAfter.begin() + idx);
 
     ds.erase(ds.begin() + idx);
-    dsBefore.pop_back();  // no need for correct index
-    dsAfter.pop_back();   // no need for correct index
+    dsBefore.erase(dsBefore.begin() + idx);
+    dsAfter.erase(dsAfter.begin() + idx);
 
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
