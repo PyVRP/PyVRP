@@ -189,7 +189,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
     {
-        if (data.location(client).required && visits[client] == 0)
+        ProblemData::Client const &clientData = data.location(client);
+        if (clientData.required && visits[client] == 0)
             numMissingClients_ += 1;
 
         if (visits[client] > 1)
@@ -250,7 +251,7 @@ Solution::Route::Route(ProblemData const &data,
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter.
-    auto const &depotLocation = data.location(depot_);
+    ProblemData::Depot const &depotLocation = data.location(depot_);
     TimeWindowSegment depotTws(depot_,
                                depot_,
                                0,
@@ -260,13 +261,13 @@ Solution::Route::Route(ProblemData const &data,
                                0);
 
     auto tws = depotTws;
-    auto ls = LoadSegment(depotLocation);
+    auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
-        auto const &clientData = data.location(client);
+        ProblemData::Client const &clientData = data.location(client);
 
         distance_ += data.dist(prevClient, client);
         travel_ += data.duration(prevClient, client);

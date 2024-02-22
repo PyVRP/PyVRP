@@ -7,7 +7,7 @@ from warnings import warn
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, ProblemData, VehicleType
+from pyvrp._pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
@@ -100,15 +100,12 @@ def read(
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
-    # A priori checks
-    if "dimension" in instance:
-        dimension: int = instance["dimension"]
-    else:
-        if "demand" not in instance:
-            raise ValueError("File should either contain dimension or demands")
-        dimension = len(instance["demand"])
+    # VRPLIB instances typically do not have a duration data field, so we
+    # assume duration == distance.
+    durations = distances = round_func(instance["edge_weight"])
 
-    depots: np.ndarray = instance.get("depot", np.array([0]))
+    dimension: int = instance.get("dimension", durations.shape[0])
+    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
 
@@ -118,10 +115,6 @@ def read(
     max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
     if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
-
-    # VRPLIB instances typically do not have a duration data field, so we
-    # assume duration == distance if the instance has time windows.
-    durations = distances = round_func(instance["edge_weight"])
 
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
@@ -154,7 +147,7 @@ def read(
         time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
-        items: list[list[int]] = [[] for _ in depots]
+        items: list[list[int]] = [[] for _ in depot_idcs]
         for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
             items[depot - 1].append(vehicle)
 
@@ -170,7 +163,8 @@ def read(
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
     # Checks
-    if len(depots) == 0 or (depots != np.arange(len(depots))).any():
+    contiguous_lower_idcs = np.arange(len(depot_idcs))
+    if len(depot_idcs) == 0 or (depot_idcs != contiguous_lower_idcs).any():
         msg = """
         Source file should contain at least one depot in the contiguous lower
         indices, starting from 1.
@@ -184,6 +178,16 @@ def read(
         """
         warn(msg, ScalingWarning)
 
+    depots = [
+        Depot(
+            x=coords[idx][0],
+            y=coords[idx][1],
+            tw_early=time_windows[idx][0],
+            tw_late=time_windows[idx][1],
+        )
+        for idx in range(len(depot_idcs))
+    ]
+
     clients = [
         Client(
             x=coords[idx][0],
@@ -196,7 +200,7 @@ def read(
             prize=prizes[idx],
             required=np.isclose(prizes[idx], 0),  # only when prize is zero
         )
-        for idx in range(dimension)
+        for idx in range(len(depot_idcs), dimension)
     ]
 
     vehicle_types = [
@@ -212,13 +216,7 @@ def read(
         for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
     ]
 
-    return ProblemData(
-        clients[len(depots) :],
-        clients[: len(depots)],
-        vehicle_types,
-        distances,
-        durations,
-    )
+    return ProblemData(clients, depots, vehicle_types, distances, durations)
 
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:

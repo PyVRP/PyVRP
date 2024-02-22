@@ -5,7 +5,7 @@ import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Client, ProblemData, VehicleType
+from pyvrp import Client, Depot, ProblemData, VehicleType
 
 
 @pytest.mark.parametrize(
@@ -130,40 +130,24 @@ def test_raises_for_invalid_client_data(
 
 
 @pytest.mark.parametrize(
-    "x,y,delivery,pickup,service,tw_early,tw_late,release_time,prize",
+    ("x", "y", "tw_early", "tw_late"),
     [
-        (0, 0, 1, 0, 0, 0, 0, 0, 0),  # delivery != 0
-        (0, 0, 0, 1, 0, 0, 0, 0, 0),  # pickup != 0
-        (0, 0, 0, 0, 1, 0, 0, 0, 0),  # service duration != 0
-        (0, 0, 0, 0, 0, 0, 1, 1, 0),  # release time != 0
+        (0, 0, 1, 0),  # tw_early > tw_late
+        (0, 0, -1, 0),  # tw_early < 0
+        (0, 0, 0, -1),  # tw_late < 0
     ],
 )
 def test_raises_for_invalid_depot_data(
     x: int,
     y: int,
-    delivery: int,
-    pickup: int,
-    service: int,
     tw_early: int,
     tw_late: int,
-    release_time: int,
-    prize: int,
 ):
     """
     Tests that an invalid depot configuration is not accepted.
     """
-    depot = Client(
-        x, y, delivery, pickup, service, tw_early, tw_late, release_time, prize
-    )
-
     with assert_raises(ValueError):
-        ProblemData(
-            clients=[],
-            depots=[depot],
-            vehicle_types=[VehicleType(2, capacity=1)],
-            distance_matrix=np.asarray([[0]], dtype=int),
-            duration_matrix=np.asarray([[0]], dtype=int),
-        )
+        Depot(x, y, tw_early, tw_late)
 
 
 def test_problem_data_raises_when_no_depot_is_provided():
@@ -183,7 +167,7 @@ def test_problem_data_raises_when_no_depot_is_provided():
     # One (or more) depots should not raise.
     ProblemData(
         clients=[],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=np.asarray([[0]]),
         duration_matrix=np.asarray([[0]]),
@@ -206,7 +190,7 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     dimension size.
     """
     clients = [Client(x=0, y=0)]
-    depots = [Client(x=0, y=0)]
+    depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
@@ -231,7 +215,7 @@ def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
     the distance or duration matrix has a non-zero value on the diagonal.
     """
     clients = [Client(x=0, y=0)]
-    depots = [Client(x=0, y=0)]
+    depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
 
     with assert_raises(ValueError):
@@ -244,7 +228,7 @@ def test_problem_data_replace_no_changes():
     returns a new instance with different objects, but with the same values.
     """
     clients = [Client(x=0, y=0)]
-    depots = [Client(x=0, y=0)]
+    depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, depots, vehicle_types, mat, mat)
@@ -282,7 +266,7 @@ def test_problem_data_replace_with_changes():
     data values with those passed to the method.
     """
     clients = [Client(x=0, y=0)]
-    depots = [Client(x=0, y=0)]
+    depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, depots, vehicle_types, mat, mat)
@@ -326,7 +310,7 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     mismatched shape between the clients and the distance/duration matrices.
     """
     clients = [Client(x=0, y=0)]
-    depots = [Client(x=0, y=0)]
+    depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
     data = ProblemData(clients, depots, vehicle_types, mat, mat)
@@ -373,10 +357,11 @@ def test_matrix_access():
     np.fill_diagonal(dist_mat, 0)
     np.fill_diagonal(dur_mat, 0)
 
-    clients = [Client(x=0, y=0, tw_early=0, tw_late=10) for _ in range(size)]
+    depot = Depot(x=0, y=0, tw_late=10)
+    clients = [Client(x=0, y=0, tw_late=10) for _ in range(size - 1)]
     data = ProblemData(
-        clients=clients[1:],
-        depots=clients[:1],
+        clients=clients,
+        depots=[depot],
         vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=dist_mat,
         duration_matrix=dur_mat,
@@ -402,7 +387,7 @@ def test_matrices_are_not_writeable():
     """
     data = ProblemData(
         clients=[],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=np.array([[0]]),
         duration_matrix=np.array([[0]]),
@@ -427,7 +412,7 @@ def test_matrices_are_not_copies():
     mat = np.array([[0, 0], [0, 0]])
     data = ProblemData(
         clients=[Client(x=0, y=1)],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrix=mat,
         duration_matrix=mat,

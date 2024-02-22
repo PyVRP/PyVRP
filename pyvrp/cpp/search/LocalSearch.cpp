@@ -256,7 +256,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
     auto const uClient = U->client();
-    auto const &uData = data.location(uClient);
+    ProblemData::Client const &uData = data.location(uClient);
 
     // First test removing U. This is allowed when U is not required.
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)

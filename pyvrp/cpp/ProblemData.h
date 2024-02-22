@@ -14,7 +14,7 @@ namespace pyvrp
 /**
  * ProblemData(
  *     clients: List[Client],
- *     depots: List[Client],
+ *     depots: List[Depot],
  *     vehicle_types: List[VehicleType],
  *     distance_matrix: List[List[int]],
  *     duration_matrix: List[List[int]],
@@ -133,7 +133,7 @@ public:
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
         bool const required;         // Must client be in solution?
-        char const *name;            // Location name (for reference)
+        char const *name;            // Client name (for reference)
 
         Client(Coordinate x,
                Coordinate y,
@@ -154,6 +154,68 @@ public:
         Client &operator=(Client &&client) = delete;
 
         ~Client();
+    };
+
+    /**
+     * Depot(
+     *    x: int,
+     *    y: int,
+     *    tw_early: int = 0,
+     *    tw_late: int = np.iinfo(np.int32).max,
+     *    name: str = "",
+     * )
+     *
+     * Simple data object storing all depot data as (read-only) properties.
+     *
+     * Parameters
+     * ----------
+     * x
+     *     Horizontal coordinate of this depot, that is, the 'x' part of the
+     *     depot's (x, y) location tuple.
+     * y
+     *     Vertical coordinate of this depot, that is, the 'y' part of the
+     *     depot's (x, y) location tuple.
+     * tw_early
+     *     Opening time of this depot. Default 0.
+     * tw_late
+     *     Closing time of this depot. Default unconstrained.
+     * name
+     *     Free-form name field for this depot. Default empty.
+     *
+     * Attributes
+     * ----------
+     * x
+     *     Horizontal coordinate of this depot.
+     * y
+     *     Vertical coordinate of this depot.
+     * tw_early
+     *     Opening time of this depot.
+     * tw_late
+     *     Closing time of this depot.
+     * name
+     *     Free-form name field for this depot.
+     */
+    struct Depot
+    {
+        Coordinate const x;
+        Coordinate const y;
+        Duration const twEarly;  // Depot opening time
+        Duration const twLate;   // Depot closing time
+        char const *name;        // Depot name (for reference)
+
+        Depot(Coordinate x,
+              Coordinate y,
+              Duration twEarly = 0,
+              Duration twLate = std::numeric_limits<Duration>::max(),
+              char const *name = "");
+
+        Depot(Depot const &depot);
+        Depot(Depot &&depot);
+
+        Depot &operator=(Depot const &depot) = delete;
+        Depot &operator=(Depot &&depot) = delete;
+
+        ~Depot();
     };
 
     /**
@@ -243,11 +305,23 @@ public:
     };
 
 private:
+    /**
+     * Simple union type that distinguishes between client and depot locations.
+     */
+    union Location
+    {
+        Client const *client;
+        Depot const *depot;
+
+        inline operator Client const &() const;
+        inline operator Depot const &() const;
+    };
+
     std::pair<double, double> centroid_;           // Center of client locations
     Matrix<Distance> const dist_;                  // Distance matrix
     Matrix<Duration> const dur_;                   // Duration matrix
     std::vector<Client> const clients_;            // Client information
-    std::vector<Client> const depots_;             // Depot information
+    std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
 
     size_t const numVehicles_;
@@ -265,18 +339,18 @@ public:
      *
      * Returns
      * -------
-     * Client
+     * Union[Client, Depot]
      *     A simple data object containing the requested location's
      *     information.
      */
-    [[nodiscard]] inline Client const &location(size_t idx) const;
+    [[nodiscard]] inline Location location(size_t idx) const;
 
     /**
      * Returns a list of all clients in the problem instance.
      *
      * Returns
      * -------
-     * List[Client]
+     * list[Client]
      *     List of all clients in the problem instance.
      */
     [[nodiscard]] std::vector<Client> const &clients() const;
@@ -286,10 +360,10 @@ public:
      *
      * Returns
      * -------
-     * List[Client]
+     * list[Depot]
      *     List of all depots in the problem instance.
      */
-    [[nodiscard]] std::vector<Client> const &depots() const;
+    [[nodiscard]] std::vector<Depot> const &depots() const;
 
     /**
      * Returns a list of all vehicle types in the problem instance.
@@ -458,7 +532,7 @@ public:
      *    A new ProblemData instance with possibly replaced data.
      * */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
-                        std::optional<std::vector<Client>> &depots,
+                        std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<Matrix<Distance>> &distMat,
                         std::optional<Matrix<Duration>> &durMat);
@@ -475,16 +549,22 @@ public:
      * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
-                std::vector<Client> const &depots,
+                std::vector<Depot> const &depots,
                 std::vector<VehicleType> const &vehicleTypes,
                 Matrix<Distance> distMat,
                 Matrix<Duration> durMat);
 };
 
-ProblemData::Client const &ProblemData::location(size_t idx) const
+ProblemData::Location::operator Client const &() const { return *client; }
+
+ProblemData::Location::operator Depot const &() const { return *depot; }
+
+ProblemData::Location ProblemData::location(size_t idx) const
 {
     assert(idx < numLocations());
-    return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
+    return idx < depots_.size()
+               ? Location{.depot = &depots_[idx]}
+               : Location{.client = &clients_[idx - depots_.size()]};
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const

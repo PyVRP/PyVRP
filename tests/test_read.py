@@ -92,7 +92,7 @@ def test_reading_OkSmall_instance():
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
 
-    for loc in range(data.num_locations):
+    for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
         assert_equal(data.location(loc).delivery, expected[loc])
 
     # From the TIME_WINDOW_SECTION in the file
@@ -111,7 +111,7 @@ def test_reading_OkSmall_instance():
     # From the SERVICE_TIME_SECTION in the file
     expected = [0, 360, 360, 420, 360]
 
-    for loc in range(data.num_locations):
+    for loc in range(1, data.num_locations):  # excl. depot (has no service)
         assert_equal(data.location(loc).service_duration, expected[loc])
 
 
@@ -149,7 +149,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     assert_equal(data.dist(1, 0), 493)
 
     # This is a CVRP instance, so all other fields should have default values.
-    for loc in range(data.num_locations):
+    for loc in range(1, data.num_locations):
         assert_equal(data.location(loc).service_duration, 0)
         assert_equal(data.location(loc).tw_early, 0)
         assert_equal(data.location(loc).tw_late, np.iinfo(np.int32).max)
@@ -272,11 +272,9 @@ def test_service_time_specification():
     """
     data = read("data/ServiceTimeSpecification.txt")
 
-    # Clients should all have the same service time; the depot should have no
-    # service time.
+    # Clients should all have the same service time.
     services = [client.service_duration for client in data.clients()]
     assert_allclose(services, 360)
-    assert_allclose(data.location(0).service_duration, 0)
 
 
 def test_multiple_depots():
