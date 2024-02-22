@@ -155,15 +155,15 @@ private:
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
 
-    std::vector<Distance> cumDist;  // Cumulative dist to each node (incl.)
+    std::vector<Distance> distBefore;  // Distance of depot -> client (incl.)
 
-    std::vector<LoadSegment> lsAt;      // Load data at each node
-    std::vector<LoadSegment> lsAfter;   // LS of client -> depot (incl)
-    std::vector<LoadSegment> lsBefore;  // LS of depot -> client (incl)
+    std::vector<LoadSegment> loadAt;      // Load data at each node
+    std::vector<LoadSegment> loadAfter;   // Load of client -> depot (incl)
+    std::vector<LoadSegment> loadBefore;  // Load of depot -> client (incl)
 
-    std::vector<DurationSegment> dsAt;      // Duration data at each node
-    std::vector<DurationSegment> dsAfter;   // DS of client -> depot (incl.)
-    std::vector<DurationSegment> dsBefore;  // DS of depot -> client (incl.)
+    std::vector<DurationSegment> durAt;      // Duration data at each node
+    std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
+    std::vector<DurationSegment> durBefore;  // Dur of depot -> client (incl.)
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -405,38 +405,38 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
 
 Route::ProxyAt::operator pyvrp::LoadSegment const &() const
 {
-    return route->lsAt[idx];
+    return route->loadAt[idx];
 }
 
 Route::ProxyAt::operator pyvrp::DurationSegment const &() const
 {
-    return route->dsAt[idx];
+    return route->durAt[idx];
 }
 
 Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
 {
-    return route->lsAfter[start];
+    return route->loadAfter[start];
 }
 
 Route::ProxyAfter::operator pyvrp::DurationSegment const &() const
 {
-    return route->dsAfter[start];
+    return route->durAfter[start];
 }
 
 Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
 {
-    return route->lsBefore[end];
+    return route->loadBefore[end];
 }
 
 Route::ProxyBefore::operator pyvrp::DurationSegment const &() const
 {
-    return route->dsBefore[end];
+    return route->durBefore[end];
 }
 
 Route::ProxyBetween::operator Distance() const
 {
-    auto const startDist = route->cumDist[start];
-    auto const endDist = route->cumDist[end];
+    auto const startDist = route->distBefore[start];
+    auto const endDist = route->distBefore[end];
 
     assert(startDist <= endDist);
     return endDist - startDist;
@@ -444,23 +444,23 @@ Route::ProxyBetween::operator Distance() const
 
 Route::ProxyBetween::operator LoadSegment() const
 {
-    auto ls = route->lsAt[start];
+    auto loadSegment = route->loadAt[start];
 
     for (size_t step = start; step != end; ++step)
-        ls = LoadSegment::merge(ls, route->lsAt[step + 1]);
+        loadSegment = LoadSegment::merge(loadSegment, route->loadAt[step + 1]);
 
-    return ls;
+    return loadSegment;
 }
 
 Route::ProxyBetween::operator DurationSegment() const
 {
-    auto ds = route->dsAt[start];
+    auto durSegment = route->durAt[start];
 
     for (size_t step = start; step != end; ++step)
-        ds = DurationSegment::merge(
-            route->data.durationMatrix(), ds, route->dsAt[step + 1]);
+        durSegment = DurationSegment::merge(
+            route->data.durationMatrix(), durSegment, route->durAt[step + 1]);
 
-    return ds;
+    return durSegment;
 }
 
 bool Route::isFeasible() const
@@ -496,7 +496,7 @@ Route::Node *Route::operator[](size_t idx)
 Load Route::load() const
 {
     assert(!dirty);
-    return lsBefore.back().load();
+    return loadBefore.back().load();
 }
 
 Load Route::excessLoad() const
@@ -516,7 +516,7 @@ Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return dsBefore.back().timeWarp(maxDuration());
+    return durBefore.back().timeWarp(maxDuration());
 }
 
 bool Route::empty() const { return size() == 0; }
