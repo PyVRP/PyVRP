@@ -305,9 +305,9 @@ def test_str_contains_route(ok_small, locs: list[int]):
         assert_(str(loc) in str(route))
 
 
-def test_route_tws_access(ok_small):
+def test_route_ds_access(ok_small):
     """
-    Tests access to a client's or depot's time window segment, as tracked by
+    Tests access to a client's or depot's duration segment, as tracked by
     the route.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
@@ -319,19 +319,19 @@ def test_route_tws_access(ok_small):
     for idx in range(len(route) + 2):
         is_depot = idx % (len(route) + 1) == 0
         loc = ok_small.location(idx % (len(route) + 1))
-        tws = route.tws(idx)
+        ds = route.ds(idx)
 
-        assert_equal(tws.tw_early(), loc.tw_early)
-        assert_equal(tws.tw_late(), loc.tw_late)
-        assert_equal(tws.duration(), 0 if is_depot else loc.service_duration)
-        assert_equal(tws.time_warp(), 0)
+        assert_equal(ds.tw_early(), loc.tw_early)
+        assert_equal(ds.tw_late(), loc.tw_late)
+        assert_equal(ds.duration(), 0 if is_depot else loc.service_duration)
+        assert_equal(ds.time_warp(), 0)
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
-def test_tws_between_same_client_returns_node_tws(ok_small, loc: int):
+def test_ds_between_same_client_returns_node_ds(ok_small, loc: int):
     """
-    Tests that calling the ``tws_between()`` with the same start and end
-    arguments returns a node's time window segment data.
+    Tests that calling the ``ds_between()`` with the same start and end
+    arguments returns a node's duration segment data.
     """
     client = ok_small.location(loc)
 
@@ -339,20 +339,20 @@ def test_tws_between_same_client_returns_node_tws(ok_small, loc: int):
     route.append(Node(loc=loc))
     route.update()
 
-    # Duration of the depot node TWS's is zero, and for the client it is equal
+    # Duration of the depot node DS's is zero, and for the client it is equal
     # to the service duration.
-    assert_equal(route.tws_between(0, 0).duration(), 0)
-    assert_equal(route.tws_between(1, 1).duration(), client.service_duration)
-    assert_equal(route.tws_between(2, 2).duration(), 0)
+    assert_equal(route.ds_between(0, 0).duration(), 0)
+    assert_equal(route.ds_between(1, 1).duration(), client.service_duration)
+    assert_equal(route.ds_between(2, 2).duration(), 0)
 
     # Single route solutions are all feasible for this instance.
     assert_equal(route.time_warp(), 0)
 
 
-def test_tws_between_same_as_tws_before_after_when_one_side_is_depot(ok_small):
+def test_ds_between_same_as_ds_before_after_when_one_side_is_depot(ok_small):
     """
-    Tests that ``tws_between()`` returns the same value as ``tws_before()`` or
-    ``tws_after()`` when one side is the depot.
+    Tests that ``ds_between()`` returns the same value as ``ds_before()`` or
+    ``ds_after()`` when one side is the depot.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
     for client in range(ok_small.num_depots, ok_small.num_locations):
@@ -361,20 +361,20 @@ def test_tws_between_same_as_tws_before_after_when_one_side_is_depot(ok_small):
     route.update()
 
     for idx in [1, 2, 3, 4]:
-        before = route.tws_before(idx)
-        between_before = route.tws_between(0, idx)
+        before = route.ds_before(idx)
+        between_before = route.ds_between(0, idx)
         assert_equal(before.duration(), between_before.duration())
         assert_equal(before.time_warp(), between_before.time_warp())
 
-        after = route.tws_after(idx)
-        between_after = route.tws_between(idx, len(route) + 1)
+        after = route.ds_after(idx)
+        between_after = route.ds_between(idx, len(route) + 1)
         assert_equal(after.duration(), between_after.duration())
         assert_equal(after.time_warp(), between_after.time_warp())
 
 
-def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
+def test_ds_between_single_route_solution_has_correct_time_warp(ok_small):
     """
-    Tests time window segment access on a single-route solution where we know
+    Tests duration segment access on a single-route solution where we know
     exactly where in the route time warp occurs.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
@@ -385,19 +385,19 @@ def test_tws_between_single_route_solution_has_correct_time_warp(ok_small):
 
     route.update()
     assert_(route.has_time_warp())
-    assert_equal(route.tws_between(0, 5).time_warp(), route.time_warp())
+    assert_equal(route.ds_between(0, 5).time_warp(), route.time_warp())
 
     # Client #1 (at idx 1) causes the time warp in combination with client #3:
     # #1 can only be visited after #3's window has already closed.
     assert_equal(route.time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 4).time_warp(), 3_633)
-    assert_equal(route.tws_between(0, 4).time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 5).time_warp(), 3_633)
-    assert_equal(route.tws_between(1, 3).time_warp(), 3_633)
+    assert_equal(route.ds_between(1, 4).time_warp(), 3_633)
+    assert_equal(route.ds_between(0, 4).time_warp(), 3_633)
+    assert_equal(route.ds_between(1, 5).time_warp(), 3_633)
+    assert_equal(route.ds_between(1, 3).time_warp(), 3_633)
 
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
-        assert_equal(route.tws_between(start, end).time_warp(), 0)
+        assert_equal(route.ds_between(start, end).time_warp(), 0)
 
 
 def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
@@ -444,9 +444,9 @@ def test_shift_duration_depot_time_window_interaction(
     assert_equal(len(route), 0)
 
     for idx in [0, 1]:
-        tws = route.tws(idx)
-        assert_allclose(tws.tw_early(), expected_tw[0])
-        assert_allclose(tws.tw_late(), expected_tw[1])
+        ds = route.ds(idx)
+        assert_allclose(ds.tw_early(), expected_tw[0])
+        assert_allclose(ds.tw_late(), expected_tw[1])
 
 
 @pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])

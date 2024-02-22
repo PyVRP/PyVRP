@@ -253,7 +253,7 @@ class LoadSegment:
     def pickup(self) -> int: ...
     def load(self) -> int: ...
 
-class TimeWindowSegment:
+class DurationSegment:
     def __init__(
         self,
         idx_first: int,
@@ -268,17 +268,17 @@ class TimeWindowSegment:
     @staticmethod
     def merge(
         duration_matrix: np.ndarray[int],
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-    ) -> TimeWindowSegment: ...
+        first: DurationSegment,
+        second: DurationSegment,
+    ) -> DurationSegment: ...
     @overload
     @staticmethod
     def merge(
         duration_matrix: np.ndarray[int],
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-        third: TimeWindowSegment,
-    ) -> TimeWindowSegment: ...
+        first: DurationSegment,
+        second: DurationSegment,
+        third: DurationSegment,
+    ) -> DurationSegment: ...
     def duration(self) -> int: ...
     def tw_early(self) -> int: ...
     def tw_late(self) -> int: ...

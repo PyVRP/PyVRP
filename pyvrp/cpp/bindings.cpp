@@ -1,5 +1,6 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
+#include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
 #include "Matrix.h"
@@ -7,7 +8,6 @@
 #include "RandomNumberGenerator.h"
 #include "Solution.h"
 #include "SubPopulation.h"
-#include "TimeWindowSegment.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -21,6 +21,7 @@
 namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
+using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
 using pyvrp::Matrix;
@@ -29,7 +30,6 @@ using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Solution;
 using pyvrp::SubPopulation;
-using TWS = pyvrp::TimeWindowSegment;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -632,7 +632,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     py::arg("second"),
                     py::arg("third"));
 
-    py::class_<TWS>(m, "TimeWindowSegment", DOC(pyvrp, TimeWindowSegment))
+    py::class_<DurationSegment>(
+        m, "DurationSegment", DOC(pyvrp, DurationSegment))
         .def(py::init<size_t,
                       size_t,
                       pyvrp::Duration,
@@ -647,22 +648,27 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_early"),
              py::arg("tw_late"),
              py::arg("release_time"))
-        .def(
-            "duration", &TWS::duration, DOC(pyvrp, TimeWindowSegment, duration))
-        .def("tw_early", &TWS::twEarly, DOC(pyvrp, TimeWindowSegment, twEarly))
-        .def("tw_late", &TWS::twLate, DOC(pyvrp, TimeWindowSegment, twLate))
+        .def("duration",
+             &DurationSegment::duration,
+             DOC(pyvrp, DurationSegment, duration))
+        .def("tw_early",
+             &DurationSegment::twEarly,
+             DOC(pyvrp, DurationSegment, twEarly))
+        .def("tw_late",
+             &DurationSegment::twLate,
+             DOC(pyvrp, DurationSegment, twLate))
         .def("time_warp",
-             &TWS::timeWarp,
+             &DurationSegment::timeWarp,
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
-             DOC(pyvrp, TimeWindowSegment, timeWarp))
+             DOC(pyvrp, DurationSegment, timeWarp))
         .def_static("merge",
-                    &TWS::merge<>,
+                    &DurationSegment::merge<>,
                     py::arg("duration_matrix"),
                     py::arg("first"),
                     py::arg("second"))
         .def_static("merge",
-                    &TWS::merge<TWS const &>,
+                    &DurationSegment::merge<DurationSegment const &>,
                     py::arg("duration_matrix"),
                     py::arg("first"),
                     py::arg("second"),

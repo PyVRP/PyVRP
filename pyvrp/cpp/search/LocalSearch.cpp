@@ -1,17 +1,13 @@
 #include "LocalSearch.h"
 #include "Measure.h"
-#include "TimeWindowSegment.h"
 #include "primitives.h"
 
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-#include <stdexcept>
-#include <vector>
 
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
-using TWS = pyvrp::TimeWindowSegment;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
