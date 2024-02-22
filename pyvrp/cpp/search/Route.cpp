@@ -125,7 +125,6 @@ void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
     assert(!node->route());  // must previously have been unassigned
-    assert(!node->isDepot());
 
     node->idx_ = idx;
     node->route_ = this;
@@ -174,6 +173,9 @@ void Route::remove(size_t idx)
 
     nodes.erase(nodes.begin() + idx);
 
+    for (auto after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx_ = after;
+
     cumDist.pop_back();  // no need for correct index
 
     lsAt.erase(lsAt.begin() + idx);
@@ -183,9 +185,6 @@ void Route::remove(size_t idx)
     dsAt.erase(dsAt.begin() + idx);
     dsBefore.erase(dsBefore.begin() + idx);
     dsAfter.erase(dsAfter.begin() + idx);
-
-    for (auto after = idx; after != nodes.size(); ++after)
-        nodes[after]->idx_ = after;
 
 #ifndef NDEBUG
     dirty = true;
@@ -199,8 +198,8 @@ void Route::swap(Node *first, Node *second)
               second->route_->nodes[second->idx_]);
 
     // Only need to swap the segments *at* the client's index. Other cached
-    // values are recomputed based on these values, and that'll overwrite the
-    // outdated (cached) segments.
+    // values are recomputed based on these values, and that recompute will
+    // overwrite the other outdated (cached) segments.
     std::swap(first->route_->lsAt[first->idx_],
               second->route_->lsAt[second->idx_]);
     std::swap(first->route_->dsAt[first->idx_],
