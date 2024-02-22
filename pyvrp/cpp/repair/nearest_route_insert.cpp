@@ -1,7 +1,7 @@
 #include "nearest_route_insert.h"
 #include "repair.h"
 
-#include "TimeWindowSegment.h"
+#include "DurationSegment.h"
 #include "search/primitives.h"
 
 #include <algorithm>
