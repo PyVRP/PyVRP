@@ -108,13 +108,13 @@ void Route::clear()
     // Clear all existing statistics and reinsert depot statistics.
     cumDist = {0, 0};
 
-    ls = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
-    lsAfter = ls;
-    lsBefore = ls;
+    lsAt = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
+    lsAfter = lsAt;
+    lsBefore = lsAt;
 
-    ds = {depotDS, depotDS};
-    dsAfter = ds;
-    dsBefore = ds;
+    dsAt = {depotDS, depotDS};
+    dsAfter = dsAt;
+    dsBefore = dsAt;
 
 #ifndef NDEBUG
     dirty = false;
@@ -140,11 +140,11 @@ void Route::insert(size_t idx, Node *node)
 
     ProblemData::Client const &client = data.location(node->client());
 
-    ls.emplace(ls.begin() + idx, client);
+    lsAt.emplace(lsAt.begin() + idx, client);
     lsAfter.emplace(lsAfter.begin() + idx, client);
     lsBefore.emplace(lsBefore.begin() + idx, client);
 
-    ds.emplace(ds.begin() + idx, node->client(), client);
+    dsAt.emplace(dsAt.begin() + idx, node->client(), client);
     dsAfter.emplace(dsAfter.begin() + idx, node->client(), client);
     dsBefore.emplace(dsBefore.begin() + idx, node->client(), client);
 
@@ -176,11 +176,11 @@ void Route::remove(size_t idx)
 
     cumDist.pop_back();  // no need for correct index
 
-    ls.erase(ls.begin() + idx);
+    lsAt.erase(lsAt.begin() + idx);
     lsBefore.erase(lsBefore.begin() + idx);
     lsAfter.erase(lsAfter.begin() + idx);
 
-    ds.erase(ds.begin() + idx);
+    dsAt.erase(dsAt.begin() + idx);
     dsBefore.erase(dsBefore.begin() + idx);
     dsAfter.erase(dsAfter.begin() + idx);
 
@@ -198,8 +198,13 @@ void Route::swap(Node *first, Node *second)
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
 
-    std::swap(first->route_->ls[first->idx_], second->route_->ls[second->idx_]);
-    std::swap(first->route_->ds[first->idx_], second->route_->ds[second->idx_]);
+    // Only need to swap the segments *at* the client's index. Other cached
+    // values are recomputed based on these values, and that'll overwrite the
+    // outdated (cached) segments.
+    std::swap(first->route_->lsAt[first->idx_],
+              second->route_->lsAt[second->idx_]);
+    std::swap(first->route_->dsAt[first->idx_],
+              second->route_->dsAt[second->idx_]);
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
@@ -233,22 +238,22 @@ void Route::update()
     // Backward segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
-        lsBefore[idx] = LoadSegment::merge(lsBefore[idx - 1], ls[idx]);
+        lsBefore[idx] = LoadSegment::merge(lsBefore[idx - 1], lsAt[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
         dsBefore[idx] = DurationSegment::merge(
-            data.durationMatrix(), dsBefore[idx - 1], ds[idx]);
+            data.durationMatrix(), dsBefore[idx - 1], dsAt[idx]);
 #endif
     }
 
     // Forward segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
     {
-        lsAfter[idx - 1] = LoadSegment::merge(ls[idx - 1], lsAfter[idx]);
+        lsAfter[idx - 1] = LoadSegment::merge(lsAt[idx - 1], lsAfter[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
         dsAfter[idx - 1] = DurationSegment::merge(
-            data.durationMatrix(), ds[idx - 1], dsAfter[idx]);
+            data.durationMatrix(), dsAt[idx - 1], dsAfter[idx]);
 #endif
     }
 

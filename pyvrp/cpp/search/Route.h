@@ -157,11 +157,11 @@ private:
 
     std::vector<Distance> cumDist;  // Cumulative dist to each node (incl.)
 
-    std::vector<LoadSegment> ls;        // Load data at each node
+    std::vector<LoadSegment> lsAt;      // Load data at each node
     std::vector<LoadSegment> lsAfter;   // LS of client -> depot (incl)
     std::vector<LoadSegment> lsBefore;  // LS of depot -> client (incl)
 
-    std::vector<DurationSegment> ds;        // Duration data at each node
+    std::vector<DurationSegment> dsAt;      // Duration data at each node
     std::vector<DurationSegment> dsAfter;   // DS of client -> depot (incl.)
     std::vector<DurationSegment> dsBefore;  // DS of depot -> client (incl.)
 
@@ -405,12 +405,12 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
 
 Route::ProxyAt::operator pyvrp::LoadSegment const &() const
 {
-    return route->ls[idx];
+    return route->lsAt[idx];
 }
 
 Route::ProxyAt::operator pyvrp::DurationSegment const &() const
 {
-    return route->ds[idx];
+    return route->dsAt[idx];
 }
 
 Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
@@ -444,21 +444,21 @@ Route::ProxyBetween::operator Distance() const
 
 Route::ProxyBetween::operator LoadSegment() const
 {
-    auto ls = route->ls[start];
+    auto ls = route->lsAt[start];
 
     for (size_t step = start; step != end; ++step)
-        ls = LoadSegment::merge(ls, route->ls[step + 1]);
+        ls = LoadSegment::merge(ls, route->lsAt[step + 1]);
 
     return ls;
 }
 
 Route::ProxyBetween::operator DurationSegment() const
 {
-    auto ds = route->ds[start];
+    auto ds = route->dsAt[start];
 
     for (size_t step = start; step != end; ++step)
         ds = DurationSegment::merge(
-            route->data.durationMatrix(), ds, route->ds[step + 1]);
+            route->data.durationMatrix(), ds, route->dsAt[step + 1]);
 
     return ds;
 }
