@@ -116,6 +116,11 @@ def read(
     if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
 
+    if "backhaul" in instance:
+        backhauls: np.ndarray = instance["backhaul"]
+    else:
+        backhauls = np.zeros(dimension, dtype=int)
+
     if "demand" in instance:
         demands: np.ndarray = instance["demand"]
     else:
@@ -203,6 +208,7 @@ def read(
             x=coords[idx][0],
             y=coords[idx][1],
             delivery=demands[idx],
+            pickup=backhauls[idx],
             service_duration=service_times[idx],
             tw_early=time_windows[idx][0],
             tw_late=time_windows[idx][1],
