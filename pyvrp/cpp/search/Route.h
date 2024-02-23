@@ -78,21 +78,6 @@ public:
     };
 
 private:
-    struct NodeStats
-    {
-        Distance cumDist;  // Cumulative dist to this node (incl.)
-
-        LoadSegment ls;        // Node's load data
-        LoadSegment lsAfter;   // LS of client -> depot (incl)
-        LoadSegment lsBefore;  // LS of depot -> client (incl)
-
-        DurationSegment ds;        // Node's durations data
-        DurationSegment dsAfter;   // DS of client -> depot (incl.)
-        DurationSegment dsBefore;  // DS of depot -> client (incl.)
-
-        NodeStats(LoadSegment const &ls, DurationSegment const &ds);
-    };
-
     /**
      * Proxy class for querying data related to a single location in the route,
      * identified by ``idx``.
@@ -164,12 +149,21 @@ private:
     size_t const vehTypeIdx_;
     size_t const idx_;
 
-    std::vector<Node *> nodes;     // Nodes in this route, including depots
-    std::vector<NodeStats> stats;  // (Cumulative) statistics along the route
+    std::vector<Node *> nodes;  // Nodes in this route, including depots
     std::pair<double, double> centroid_;  // Center point of route's clients
 
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
+
+    std::vector<Distance> distBefore;  // Distance of depot -> client (incl.)
+
+    std::vector<LoadSegment> loadAt;      // Load data at each node
+    std::vector<LoadSegment> loadAfter;   // Load of client -> depot (incl)
+    std::vector<LoadSegment> loadBefore;  // Load of depot -> client (incl)
+
+    std::vector<DurationSegment> durAt;      // Duration data at each node
+    std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
+    std::vector<DurationSegment> durBefore;  // Dur of depot -> client (incl.)
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -411,38 +405,38 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
 
 Route::ProxyAt::operator pyvrp::LoadSegment const &() const
 {
-    return route->stats[idx].ls;
+    return route->loadAt[idx];
 }
 
 Route::ProxyAt::operator pyvrp::DurationSegment const &() const
 {
-    return route->stats[idx].ds;
+    return route->durAt[idx];
 }
 
 Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
 {
-    return route->stats[start].lsAfter;
+    return route->loadAfter[start];
 }
 
 Route::ProxyAfter::operator pyvrp::DurationSegment const &() const
 {
-    return route->stats[start].dsAfter;
+    return route->durAfter[start];
 }
 
 Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
 {
-    return route->stats[end].lsBefore;
+    return route->loadBefore[end];
 }
 
 Route::ProxyBefore::operator pyvrp::DurationSegment const &() const
 {
-    return route->stats[end].dsBefore;
+    return route->durBefore[end];
 }
 
 Route::ProxyBetween::operator Distance() const
 {
-    auto const startDist = route->stats[start].cumDist;
-    auto const endDist = route->stats[end].cumDist;
+    auto const startDist = route->distBefore[start];
+    auto const endDist = route->distBefore[end];
 
     assert(startDist <= endDist);
     return endDist - startDist;
@@ -450,23 +444,23 @@ Route::ProxyBetween::operator Distance() const
 
 Route::ProxyBetween::operator LoadSegment() const
 {
-    auto ls = route->stats[start].ls;
+    auto loadSegment = route->loadAt[start];
 
     for (size_t step = start; step != end; ++step)
-        ls = LoadSegment::merge(ls, route->stats[step + 1].ls);
+        loadSegment = LoadSegment::merge(loadSegment, route->loadAt[step + 1]);
 
-    return ls;
+    return loadSegment;
 }
 
 Route::ProxyBetween::operator DurationSegment() const
 {
-    auto ds = route->stats[start].ds;
+    auto durSegment = route->durAt[start];
 
     for (size_t step = start; step != end; ++step)
-        ds = DurationSegment::merge(
-            route->data.durationMatrix(), ds, route->stats[step + 1].ds);
+        durSegment = DurationSegment::merge(
+            route->data.durationMatrix(), durSegment, route->durAt[step + 1]);
 
-    return ds;
+    return durSegment;
 }
 
 bool Route::isFeasible() const
@@ -502,7 +496,7 @@ Route::Node *Route::operator[](size_t idx)
 Load Route::load() const
 {
     assert(!dirty);
-    return stats.back().lsBefore.load();
+    return loadBefore.back().load();
 }
 
 Load Route::excessLoad() const
@@ -522,7 +516,7 @@ Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return stats.back().dsBefore.timeWarp(maxDuration());
+    return durBefore.back().timeWarp(maxDuration());
 }
 
 bool Route::empty() const { return size() == 0; }
