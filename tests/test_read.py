@@ -361,7 +361,7 @@ def test_vrpspd_instance():
     Tests that reading an VRPSPD instance happens correctly, particularly the
     linehaul and backhaul data.
     """
-    data = read("data/SmallVRPSPD.vrp")
+    data = read("data/SmallVRPSPD.vrp", round_func="round")
 
     assert_equal(data.num_locations, 5)
     assert_equal(data.num_depots, 1)
