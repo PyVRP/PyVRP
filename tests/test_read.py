@@ -358,9 +358,36 @@ def test_mdvrptw_instance():
 def test_vrpsdp_instance():
     """
     Tests that reading an VRPSDP instance happens correctly, particularly the
-    backhaul and linehaul data.
+    backhaul data.
     """
-    pass
+    data = read("data/RC101.vrp")
+
+    assert_equal(data.num_locations, 101)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_clients, 100)
+
+    assert_equal(data.num_vehicles, 100)
+    assert_equal(data.num_vehicle_types, 1)
+
+    vehicle_type = data.vehicle_type(0)
+    assert_equal(vehicle_type.num_available, 100)
+    assert_equal(vehicle_type.capacity, 200)
+
+    # The first client is a linehaul client (only delivery, no pickup), and
+    # the second client is a backhaul client (only pickup, no delivery). All
+    # other clients have both delivery and pickup.
+    linehaul = data.clients()[0]
+    assert_(linehaul.delivery > 0 and linehaul.pickup == 0)
+
+    backhaul = data.clients()[1]
+    assert_(backhaul.delivery == 0 and backhaul.pickup > 0)
+
+    for client in data.clients()[2:]:
+        assert_(client.pickup > 0 and client.delivery > 0)
+
+    # Test that distance/duration are not set to a large value, as in VRPB.
+    assert_(np.all(data.distance_matrix() <= 142))  # max distance in instance
+    assert_(np.all(data.duration_matrix() <= 142))  # max distance in instance
 
 
 def test_vrpb_instance():
@@ -369,4 +396,36 @@ def test_vrpb_instance():
     backhaul data and modified distances to ensure linehaul is served before
     backhaul.
     """
-    pass
+    data = read("data/X-n101-50-k13.vrp", round_func="round")
+
+    assert_equal(data.num_locations, 101)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_clients, 100)
+
+    assert_equal(data.num_vehicles, 100)
+    assert_equal(data.num_vehicle_types, 1)
+
+    vehicle_type = data.vehicle_type(0)
+    assert_equal(vehicle_type.num_available, 100)
+    assert_equal(vehicle_type.capacity, 206)
+
+    # The first 50 clients are linehaul, the rest are backhaul.
+    for client in data.clients()[:50]:
+        assert_(client.pickup == 0)
+        assert_(client.delivery > 0)
+
+    for client in data.clients()[50:]:
+        assert_(client.pickup > 0)
+        assert_(client.delivery == 0)
+
+    # Tests that distance/duration from depot to backhaul clients is set to
+    # a large value, as well as for backhaul to linehaul clients.
+    linehauls = list(range(1, 51))
+    backhauls = list(range(51, 101))
+
+    assert_(np.all(data.distance_matrix()[0, backhauls] > 1_000_000))
+    assert_(np.all(data.duration_matrix()[0, backhauls] > 1_000_000))
+
+    back2line = np.ix_(backhauls, linehauls)
+    assert_(np.all(data.distance_matrix()[back2line] > 1_000_000))
+    assert_(np.all(data.duration_matrix()[back2line] > 1_000_000))
