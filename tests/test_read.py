@@ -427,10 +427,10 @@ def test_vrpb_instance():
 
     for frm in range(data.num_locations):
         for to in range(data.num_locations):
-            if frm == 0 and to in backhauls:  # depot -> backhaul
-                assert_(data.dist(frm, to) > max_value)
-                assert_(data.duration(frm, to) > max_value)
-            elif frm in backhauls and to in linehauls:  # backhaul -> linehaul
+            depot2back = frm == 0 and to in backhauls
+            back2line = frm in backhauls and to in linehauls
+
+            if depot2back or back2line:
                 assert_(data.dist(frm, to) > max_value)
                 assert_(data.duration(frm, to) > max_value)
             else:
