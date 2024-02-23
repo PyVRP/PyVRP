@@ -162,6 +162,16 @@ def read(
 
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
+    if instance.get("type", None) == "VRPB":
+        # In VRPB, linehauls must be served before backhauls. This can be
+        # enforced by setting a high value for the distance/duration from depot
+        # to backhaul (forcing linehaul to be served first) and a large value
+        # from backhaul to linehaul (avoiding linehaul after backhaul clients).
+        linehaul = np.flatnonzero(instance["demand"] > 0)
+        backhaul = np.flatnonzero(instance["backhaul"] > 0)
+        distances[0, backhaul] = MAX_USER_VALUE
+        distances[np.ix_(backhaul, linehaul)] = MAX_USER_VALUE
+
     # Checks
     contiguous_lower_idcs = np.arange(len(depot_idcs))
     if len(depot_idcs) == 0 or (depot_idcs != contiguous_lower_idcs).any():
