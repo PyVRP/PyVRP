@@ -1,11 +1,10 @@
 #include "primitives.h"
+#include "DurationSegment.h"
 #include "LoadSegment.h"
-#include "TimeWindowSegment.h"
 
 #include <cassert>
 
 using pyvrp::Cost;
-using TWS = pyvrp::TimeWindowSegment;
 
 Cost pyvrp::search::insertCost(Route::Node *U,
                                Route::Node *V,
@@ -16,7 +15,7 @@ Cost pyvrp::search::insertCost(Route::Node *U,
         return 0;
 
     auto *route = V->route();
-    auto const &client = data.location(U->client());
+    ProblemData::Client const &client = data.location(U->client());
 
     Distance const deltaDist = data.dist(V->client(), U->client())
                                + data.dist(U->client(), n(V)->client())
@@ -33,12 +32,12 @@ Cost pyvrp::search::insertCost(Route::Node *U,
     deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
-    auto const tws = TWS::merge(data.durationMatrix(),
-                                route->before(V->idx()),
-                                TWS(U->client(), client),
-                                route->after(V->idx() + 1));
+    auto const ds = DurationSegment::merge(data.durationMatrix(),
+                                           route->before(V->idx()),
+                                           DurationSegment(U->client(), client),
+                                           route->after(V->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
+    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;
@@ -52,7 +51,7 @@ Cost pyvrp::search::removeCost(Route::Node *U,
         return 0;
 
     auto *route = U->route();
-    auto const &client = data.location(U->client());
+    ProblemData::Client const &client = data.location(U->client());
 
     Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
                                - data.dist(p(U)->client(), U->client())
@@ -68,11 +67,11 @@ Cost pyvrp::search::removeCost(Route::Node *U,
     deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 
-    auto const tws = TWS::merge(data.durationMatrix(),
-                                route->before(U->idx() - 1),
-                                route->after(U->idx() + 1));
+    auto const ds = DurationSegment::merge(data.durationMatrix(),
+                                           route->before(U->idx() - 1),
+                                           route->after(U->idx() + 1));
 
-    deltaCost += costEvaluator.twPenalty(tws.timeWarp(route->maxDuration()));
+    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
 
     return deltaCost;

@@ -317,30 +317,29 @@ PYBIND11_MODULE(_search, m)
             },
             py::arg("end"))
         .def(
-            "tws",
+            "ds",
             [](Route const &route, size_t idx) {
-                return static_cast<pyvrp::TimeWindowSegment>(route.at(idx));
+                return static_cast<pyvrp::DurationSegment>(route.at(idx));
             },
             py::arg("idx"))
         .def(
-            "tws_between",
+            "ds_between",
             [](Route const &route, size_t start, size_t end) {
-                return static_cast<pyvrp::TimeWindowSegment>(
+                return static_cast<pyvrp::DurationSegment>(
                     route.between(start, end));
             },
             py::arg("start"),
             py::arg("end"))
         .def(
-            "tws_after",
+            "ds_after",
             [](Route const &route, size_t start) {
-                return static_cast<pyvrp::TimeWindowSegment>(
-                    route.after(start));
+                return static_cast<pyvrp::DurationSegment>(route.after(start));
             },
             py::arg("start"))
         .def(
-            "tws_before",
+            "ds_before",
             [](Route const &route, size_t end) {
-                return static_cast<pyvrp::TimeWindowSegment>(route.before(end));
+                return static_cast<pyvrp::DurationSegment>(route.before(end));
             },
             py::arg("end"))
         .def("centroid", &Route::centroid)

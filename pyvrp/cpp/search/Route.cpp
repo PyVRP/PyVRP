@@ -6,7 +6,6 @@
 #include <utility>
 
 using pyvrp::search::Route;
-using TWS = pyvrp::TimeWindowSegment;
 
 Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
@@ -23,14 +22,14 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(LoadSegment const &ls, TimeWindowSegment const &tws)
+Route::NodeStats::NodeStats(LoadSegment const &ls, DurationSegment const &ds)
     : cumDist(0),
       ls(ls),
       lsAfter(ls),
       lsBefore(ls),
-      tws(tws),
-      twsAfter(tws),
-      twsBefore(tws)
+      ds(ds),
+      dsAfter(ds),
+      dsBefore(ds)
 {
 }
 
@@ -58,7 +57,7 @@ pyvrp::Distance Route::distance() const
 pyvrp::Duration Route::duration() const
 {
     assert(!dirty);
-    return stats.back().twsBefore.duration();
+    return stats.back().dsBefore.duration();
 }
 
 std::pair<double, double> const &Route::centroid() const
@@ -108,18 +107,18 @@ void Route::clear()
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter.
-    auto const &depot = data.location(vehicleType_.depot);
-    TWS depotTws(vehicleType_.depot,
-                 vehicleType_.depot,
-                 0,
-                 0,
-                 std::max(depot.twEarly, vehicleType_.twEarly),
-                 std::min(depot.twLate, vehicleType_.twLate),
-                 0);
+    ProblemData::Depot const &depot = data.location(vehicleType_.depot);
+    DurationSegment depotDS(vehicleType_.depot,
+                            vehicleType_.depot,
+                            0,
+                            0,
+                            std::max(depot.twEarly, vehicleType_.twEarly),
+                            std::min(depot.twLate, vehicleType_.twLate),
+                            0);
 
     stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(LoadSegment(depot), depotTws);
-    stats.emplace_back(LoadSegment(depot), depotTws);
+    stats.emplace_back(LoadSegment(0, 0, 0), depotDS);
+    stats.emplace_back(LoadSegment(0, 0, 0), depotDS);
 
 #ifndef NDEBUG
     dirty = false;
@@ -137,9 +136,10 @@ void Route::insert(size_t idx, Node *node)
 
     // We do not need to update the statistics; Route::update() will handle
     // that later.
-    stats.emplace(stats.begin() + idx,
-                  LoadSegment(data.location(node->client())),
-                  TWS(node->client(), data.location(node->client())));
+    stats.emplace(
+        stats.begin() + idx,
+        LoadSegment(data.location(node->client())),
+        DurationSegment(node->client(), data.location(node->client())));
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
@@ -202,16 +202,17 @@ void Route::update()
 
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
-        auto *node = nodes[idx];
-        auto const &clientData = data.location(node->client());
+        auto const *node = nodes[idx];
+        size_t const client = node->client();
 
         if (!node->isDepot())
         {
+            ProblemData::Client const &clientData = data.location(client);
             centroid_.first += static_cast<double>(clientData.x) / size();
             centroid_.second += static_cast<double>(clientData.y) / size();
         }
 
-        auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
+        auto const dist = data.dist(nodes[idx - 1]->client(), client);
         stats[idx].cumDist = stats[idx - 1].cumDist + dist;
     }
 
@@ -222,8 +223,8 @@ void Route::update()
             = LoadSegment::merge(stats[idx - 1].lsBefore, stats[idx].ls);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
-        stats[idx].twsBefore = TWS::merge(
-            data.durationMatrix(), stats[idx - 1].twsBefore, stats[idx].tws);
+        stats[idx].dsBefore = DurationSegment::merge(
+            data.durationMatrix(), stats[idx - 1].dsBefore, stats[idx].ds);
 #endif
     }
 
@@ -234,8 +235,8 @@ void Route::update()
             = LoadSegment::merge(stats[idx - 1].ls, stats[idx].lsAfter);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
-        stats[idx - 1].twsAfter = TWS::merge(
-            data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
+        stats[idx - 1].dsAfter = DurationSegment::merge(
+            data.durationMatrix(), stats[idx - 1].ds, stats[idx].dsAfter);
 #endif
     }
 

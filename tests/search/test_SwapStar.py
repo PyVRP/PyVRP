@@ -5,6 +5,7 @@ from pytest import mark
 from pyvrp import (
     Client,
     CostEvaluator,
+    Depot,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -94,7 +95,7 @@ def test_swap_star_can_swap_in_place():
             Client(x=2, y=2),
             Client(x=3, y=3),
         ],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(num_available=2)],
         distance_matrix=np.asarray(
             [
@@ -147,7 +148,7 @@ def test_wrong_load_calculation_bug():
             Client(x=3, y=3, delivery=15),
             Client(x=4, y=4, delivery=0),
         ],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(num_available=2, capacity=12)],
         distance_matrix=np.asarray(
             [

@@ -5,6 +5,7 @@ from pytest import mark
 from pyvrp import (
     Client,
     CostEvaluator,
+    Depot,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -165,7 +166,7 @@ def test_move_involving_empty_routes():
     """
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
-        depots=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[
             VehicleType(fixed_cost=10),
             VehicleType(fixed_cost=100),
@@ -229,7 +230,7 @@ def test_move_involving_multiple_depots():
     # Locations with indices 0 and 1 are depots, with 2 and 3 are clients.
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=4, y=4)],
-        depots=[Client(x=0, y=0), Client(x=5, y=5)],
+        depots=[Depot(x=0, y=0), Depot(x=5, y=5)],
         vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
         distance_matrix=[
             [0, 10, 2, 8],

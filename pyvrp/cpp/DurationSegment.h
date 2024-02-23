@@ -1,5 +1,5 @@
-#ifndef PYVRP_TIMEWINDOWSEGMENT_H
-#define PYVRP_TIMEWINDOWSEGMENT_H
+#ifndef PYVRP_DURATIONSEGMENT_H
+#define PYVRP_DURATIONSEGMENT_H
 
 #include "Matrix.h"
 #include "Measure.h"
@@ -8,7 +8,7 @@
 namespace pyvrp
 {
 /**
- * TimeWindowSegment(
+ * DurationSegment(
  *     idx_first: int,
  *     idx_last: int,
  *     duration: int,
@@ -18,11 +18,11 @@ namespace pyvrp
  *     release_time: int,
  * )
  *
- * Creates a time window segment (TWS).
+ * Creates a duration segment.
  *
- * TWSs can be efficiently concatenated, and track statistics about route
- * duration and time warp resulting from visiting clients in the concatenated
- * order.
+ * Duration segments can be efficiently concatenated, and track statistics
+ * about route duration and time warp resulting from visiting clients in the
+ * concatenated order.
  *
  * Parameters
  * ----------
@@ -41,7 +41,7 @@ namespace pyvrp
  * release_time
  *     Earliest moment to start the route segment.
  */
-class TimeWindowSegment
+class DurationSegment
 {
     size_t idxFirst_;       // Index of the first client in the segment
     size_t idxLast_;        // Index of the last client in the segment
@@ -51,16 +51,16 @@ class TimeWindowSegment
     Duration twLate_;       // Latest visit moment of first client
     Duration releaseTime_;  // Earliest allowed moment to leave the depot
 
-    [[nodiscard]] inline TimeWindowSegment
+    [[nodiscard]] inline DurationSegment
     merge(Matrix<Duration> const &durationMatrix,
-          TimeWindowSegment const &other) const;
+          DurationSegment const &other) const;
 
 public:
     template <typename... Args>
-    [[nodiscard]] static TimeWindowSegment
+    [[nodiscard]] static DurationSegment
     merge(Matrix<Duration> const &durationMatrix,
-          TimeWindowSegment const &first,
-          TimeWindowSegment const &second,
+          DurationSegment const &first,
+          DurationSegment const &second,
           Args &&...args);
 
     /**
@@ -106,29 +106,28 @@ public:
     [[nodiscard]] Duration releaseTime() const;
 
     // Construct from attributes of the given client.
-    TimeWindowSegment(size_t idx, ProblemData::Client const &client);
+    DurationSegment(size_t idx, ProblemData::Client const &client);
 
     // Construct from raw data.
-    inline TimeWindowSegment(size_t idxFirst,
-                             size_t idxLast,
-                             Duration duration,
-                             Duration timeWarp,
-                             Duration twEarly,
-                             Duration twLate,
-                             Duration releaseTime);
+    inline DurationSegment(size_t idxFirst,
+                           size_t idxLast,
+                           Duration duration,
+                           Duration timeWarp,
+                           Duration twEarly,
+                           Duration twLate,
+                           Duration releaseTime);
 
-    // Move or copy construct from the other time window segment.
-    inline TimeWindowSegment(TimeWindowSegment const &) = default;
-    inline TimeWindowSegment(TimeWindowSegment &&) = default;
+    // Move or copy construct from the other duration segment.
+    inline DurationSegment(DurationSegment const &) = default;
+    inline DurationSegment(DurationSegment &&) = default;
 
-    // Move or copy assign form the other time window segment.
-    inline TimeWindowSegment &operator=(TimeWindowSegment const &) = default;
-    inline TimeWindowSegment &operator=(TimeWindowSegment &&) = default;
+    // Move or copy assign form the other duration segment.
+    inline DurationSegment &operator=(DurationSegment const &) = default;
+    inline DurationSegment &operator=(DurationSegment &&) = default;
 };
 
-TimeWindowSegment
-TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
-                         TimeWindowSegment const &other) const
+DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
+                                       DurationSegment const &other) const
 {
     using Dur = pyvrp::Duration;
 
@@ -156,11 +155,11 @@ TimeWindowSegment::merge(Matrix<Duration> const &durationMatrix,
 }
 
 template <typename... Args>
-TimeWindowSegment TimeWindowSegment::merge(
-    [[maybe_unused]] Matrix<Duration> const &durationMatrix,
-    [[maybe_unused]] TimeWindowSegment const &first,
-    [[maybe_unused]] TimeWindowSegment const &second,
-    [[maybe_unused]] Args &&...args)
+DurationSegment
+DurationSegment::merge([[maybe_unused]] Matrix<Duration> const &durationMatrix,
+                       [[maybe_unused]] DurationSegment const &first,
+                       [[maybe_unused]] DurationSegment const &second,
+                       [[maybe_unused]] Args &&...args)
 {
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {0, 0, 0, 0, 0, 0, 0};
@@ -174,7 +173,7 @@ TimeWindowSegment TimeWindowSegment::merge(
 #endif
 }
 
-Duration TimeWindowSegment::timeWarp(Duration const maxDuration) const
+Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
     // clang-format off
     return timeWarp_
@@ -183,13 +182,13 @@ Duration TimeWindowSegment::timeWarp(Duration const maxDuration) const
     // clang-format on
 }
 
-TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
-                                     size_t idxLast,
-                                     Duration duration,
-                                     Duration timeWarp,
-                                     Duration twEarly,
-                                     Duration twLate,
-                                     Duration releaseTime)
+DurationSegment::DurationSegment(size_t idxFirst,
+                                 size_t idxLast,
+                                 Duration duration,
+                                 Duration timeWarp,
+                                 Duration twEarly,
+                                 Duration twLate,
+                                 Duration releaseTime)
     : idxFirst_(idxFirst),
       idxLast_(idxLast),
       duration_(duration),
@@ -201,4 +200,4 @@ TimeWindowSegment::TimeWindowSegment(size_t idxFirst,
 }
 }  // namespace pyvrp
 
-#endif  // PYVRP_TIMEWINDOWSEGMENT_H
+#endif  // PYVRP_DURATIONSEGMENT_H

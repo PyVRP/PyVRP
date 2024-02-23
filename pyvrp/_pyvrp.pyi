@@ -50,6 +50,21 @@ class Client:
         name: str = "",
     ) -> None: ...
 
+class Depot:
+    x: int
+    y: int
+    tw_early: int
+    tw_late: int
+    name: str
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        tw_early: int = 0,
+        tw_late: int = ...,
+        name: str = "",
+    ) -> None: ...
+
 class VehicleType:
     num_available: int
     depot: int
@@ -75,19 +90,19 @@ class ProblemData:
     def __init__(
         self,
         clients: list[Client],
-        depots: list[Client],
+        depots: list[Depot],
         vehicle_types: list[VehicleType],
         distance_matrix: np.ndarray[int],
         duration_matrix: np.ndarray[int],
     ) -> None: ...
-    def location(self, idx: int) -> Client: ...
+    def location(self, idx: int) -> Union[Client, Depot]: ...
     def clients(self) -> list[Client]: ...
-    def depots(self) -> list[Client]: ...
+    def depots(self) -> list[Depot]: ...
     def vehicle_types(self) -> list[VehicleType]: ...
     def replace(
         self,
         clients: Optional[list[Client]] = None,
-        depots: Optional[list[Client]] = None,
+        depots: Optional[list[Depot]] = None,
         vehicle_types: Optional[list[VehicleType]] = None,
         distance_matrix: Optional[np.ndarray[int]] = None,
         duration_matrix: Optional[np.ndarray[int]] = None,
@@ -238,7 +253,7 @@ class LoadSegment:
     def pickup(self) -> int: ...
     def load(self) -> int: ...
 
-class TimeWindowSegment:
+class DurationSegment:
     def __init__(
         self,
         idx_first: int,
@@ -253,17 +268,17 @@ class TimeWindowSegment:
     @staticmethod
     def merge(
         duration_matrix: np.ndarray[int],
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-    ) -> TimeWindowSegment: ...
+        first: DurationSegment,
+        second: DurationSegment,
+    ) -> DurationSegment: ...
     @overload
     @staticmethod
     def merge(
         duration_matrix: np.ndarray[int],
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-        third: TimeWindowSegment,
-    ) -> TimeWindowSegment: ...
+        first: DurationSegment,
+        second: DurationSegment,
+        third: DurationSegment,
+    ) -> DurationSegment: ...
     def duration(self) -> int: ...
     def tw_early(self) -> int: ...
     def tw_late(self) -> int: ...

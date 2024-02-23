@@ -1,9 +1,9 @@
 #ifndef PYVRP_EXCHANGE_H
 #define PYVRP_EXCHANGE_H
 
+#include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "LocalSearchOperator.h"
-#include "TimeWindowSegment.h"
 
 #include <cassert>
 
@@ -113,12 +113,12 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         if (uRoute->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto uTWS = TimeWindowSegment::merge(data.durationMatrix(),
-                                             uRoute->before(U->idx() - 1),
-                                             uRoute->after(U->idx() + N));
+        auto uDS = DurationSegment::merge(data.durationMatrix(),
+                                          uRoute->before(U->idx() - 1),
+                                          uRoute->after(U->idx() + N));
 
         deltaCost
-            += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
+            += costEvaluator.twPenalty(uDS.timeWarp(uRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         auto const uLS = LoadSegment::merge(uRoute->before(U->idx() - 1),
@@ -140,14 +140,14 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         deltaCost
             -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
-        auto const vTWS = TimeWindowSegment::merge(
+        auto const vDS = DurationSegment::merge(
             data.durationMatrix(),
             vRoute->before(V->idx()),
             uRoute->between(U->idx(), U->idx() + N - 1),
             vRoute->after(V->idx() + 1));
 
         deltaCost
-            += costEvaluator.twPenalty(vTWS.timeWarp(vRoute->maxDuration()));
+            += costEvaluator.twPenalty(vDS.timeWarp(vRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
     }
     else  // within same route
@@ -170,7 +170,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             deltaCost
                 += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
 
-            auto const tws = TimeWindowSegment::merge(
+            auto const ds = DurationSegment::merge(
                 data.durationMatrix(),
                 uRoute->before(U->idx() - 1),
                 uRoute->between(U->idx() + N, V->idx()),
@@ -178,7 +178,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->after(V->idx() + 1));
 
             deltaCost
-                += costEvaluator.twPenalty(tws.timeWarp(uRoute->maxDuration()));
+                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
         }
         else
         {
@@ -191,7 +191,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             deltaCost
                 += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
 
-            auto const tws = TimeWindowSegment::merge(
+            auto const ds = DurationSegment::merge(
                 data.durationMatrix(),
                 uRoute->before(V->idx()),
                 uRoute->between(U->idx(), U->idx() + N - 1),
@@ -199,7 +199,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->after(U->idx() + N));
 
             deltaCost
-                += costEvaluator.twPenalty(tws.timeWarp(uRoute->maxDuration()));
+                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
         }
     }
 
@@ -240,14 +240,14 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
-        auto const uTWS = TimeWindowSegment::merge(
+        auto const uDS = DurationSegment::merge(
             data.durationMatrix(),
             uRoute->before(U->idx() - 1),
             vRoute->between(V->idx(), V->idx() + M - 1),
             uRoute->after(U->idx() + N));
 
         deltaCost
-            += costEvaluator.twPenalty(uTWS.timeWarp(uRoute->maxDuration()));
+            += costEvaluator.twPenalty(uDS.timeWarp(uRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
         auto const uLS
@@ -259,14 +259,14 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         deltaCost
             -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
 
-        auto const vTWS = TimeWindowSegment::merge(
+        auto const vDS = DurationSegment::merge(
             data.durationMatrix(),
             vRoute->before(V->idx() - 1),
             uRoute->between(U->idx(), U->idx() + N - 1),
             vRoute->after(V->idx() + M));
 
         deltaCost
-            += costEvaluator.twPenalty(vTWS.timeWarp(vRoute->maxDuration()));
+            += costEvaluator.twPenalty(vDS.timeWarp(vRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
 
         auto const vLS
@@ -299,7 +299,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
             deltaCost
                 += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
 
-            auto const tws = TimeWindowSegment::merge(
+            auto const ds = DurationSegment::merge(
                 data.durationMatrix(),
                 uRoute->before(U->idx() - 1),
                 uRoute->between(V->idx(), V->idx() + M - 1),
@@ -308,7 +308,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->after(V->idx() + M));
 
             deltaCost
-                += costEvaluator.twPenalty(tws.timeWarp(uRoute->maxDuration()));
+                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
         }
         else
         {
@@ -322,7 +322,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
             deltaCost
                 += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
 
-            auto const tws = TimeWindowSegment::merge(
+            auto const ds = DurationSegment::merge(
                 data.durationMatrix(),
                 uRoute->before(V->idx() - 1),
                 uRoute->between(U->idx(), U->idx() + N - 1),
@@ -331,7 +331,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->after(U->idx() + N));
 
             deltaCost
-                += costEvaluator.twPenalty(tws.timeWarp(uRoute->maxDuration()));
+                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
         }
     }
 

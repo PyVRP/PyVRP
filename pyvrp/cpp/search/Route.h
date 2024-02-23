@@ -1,9 +1,9 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
-#include "TimeWindowSegment.h"
 
 #include <cassert>
 #include <iosfwd>
@@ -86,11 +86,11 @@ private:
         LoadSegment lsAfter;   // LS of client -> depot (incl)
         LoadSegment lsBefore;  // LS of depot -> client (incl)
 
-        TimeWindowSegment tws;        // Node's time window data
-        TimeWindowSegment twsAfter;   // TWS of client -> depot (incl.)
-        TimeWindowSegment twsBefore;  // TWS of depot -> client (incl.)
+        DurationSegment ds;        // Node's durations data
+        DurationSegment dsAfter;   // DS of client -> depot (incl.)
+        DurationSegment dsBefore;  // DS of depot -> client (incl.)
 
-        NodeStats(LoadSegment const &ls, TimeWindowSegment const &tws);
+        NodeStats(LoadSegment const &ls, DurationSegment const &ds);
     };
 
     /**
@@ -105,7 +105,7 @@ private:
     public:
         inline ProxyAt(Route const &route, size_t idx);
         inline operator LoadSegment const &() const;
-        inline operator TimeWindowSegment const &() const;
+        inline operator DurationSegment const &() const;
     };
 
     /**
@@ -120,7 +120,7 @@ private:
     public:
         inline ProxyAfter(Route const &route, size_t start);
         inline operator LoadSegment const &() const;
-        inline operator TimeWindowSegment const &() const;
+        inline operator DurationSegment const &() const;
     };
 
     /**
@@ -135,7 +135,7 @@ private:
     public:
         inline ProxyBefore(Route const &route, size_t end);
         inline operator LoadSegment const &() const;
-        inline operator TimeWindowSegment const &() const;
+        inline operator DurationSegment const &() const;
     };
 
     /**
@@ -152,7 +152,7 @@ private:
         inline ProxyBetween(Route const &route, size_t start, size_t end);
         inline operator Distance() const;
         inline operator LoadSegment() const;
-        inline operator TimeWindowSegment() const;
+        inline operator DurationSegment() const;
     };
 
     ProblemData const &data;
@@ -414,9 +414,9 @@ Route::ProxyAt::operator pyvrp::LoadSegment const &() const
     return route->stats[idx].ls;
 }
 
-Route::ProxyAt::operator pyvrp::TimeWindowSegment const &() const
+Route::ProxyAt::operator pyvrp::DurationSegment const &() const
 {
-    return route->stats[idx].tws;
+    return route->stats[idx].ds;
 }
 
 Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
@@ -424,9 +424,9 @@ Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
     return route->stats[start].lsAfter;
 }
 
-Route::ProxyAfter::operator pyvrp::TimeWindowSegment const &() const
+Route::ProxyAfter::operator pyvrp::DurationSegment const &() const
 {
-    return route->stats[start].twsAfter;
+    return route->stats[start].dsAfter;
 }
 
 Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
@@ -434,9 +434,9 @@ Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
     return route->stats[end].lsBefore;
 }
 
-Route::ProxyBefore::operator pyvrp::TimeWindowSegment const &() const
+Route::ProxyBefore::operator pyvrp::DurationSegment const &() const
 {
-    return route->stats[end].twsBefore;
+    return route->stats[end].dsBefore;
 }
 
 Route::ProxyBetween::operator Distance() const
@@ -458,15 +458,15 @@ Route::ProxyBetween::operator LoadSegment() const
     return ls;
 }
 
-Route::ProxyBetween::operator TimeWindowSegment() const
+Route::ProxyBetween::operator DurationSegment() const
 {
-    auto tws = route->stats[start].tws;
+    auto ds = route->stats[start].ds;
 
     for (size_t step = start; step != end; ++step)
-        tws = TimeWindowSegment::merge(
-            route->data.durationMatrix(), tws, route->stats[step + 1].tws);
+        ds = DurationSegment::merge(
+            route->data.durationMatrix(), ds, route->stats[step + 1].ds);
 
-    return tws;
+    return ds;
 }
 
 bool Route::isFeasible() const
@@ -522,7 +522,7 @@ Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return stats.back().twsBefore.timeWarp(maxDuration());
+    return stats.back().dsBefore.timeWarp(maxDuration());
 }
 
 bool Route::empty() const { return size() == 0; }

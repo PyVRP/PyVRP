@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import Client, CostEvaluator, ProblemData, VehicleType
+from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import SwapRoutes
 from pyvrp.search._search import Node, Route
 
@@ -231,7 +231,7 @@ def test_evaluate_with_different_depots():
     """
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=4, y=4)],
-        depots=[Client(x=0, y=0), Client(x=5, y=5)],
+        depots=[Depot(x=0, y=0), Depot(x=5, y=5)],
         vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
         distance_matrix=[
             [0, 10, 2, 8],

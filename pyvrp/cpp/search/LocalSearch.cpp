@@ -1,17 +1,13 @@
 #include "LocalSearch.h"
 #include "Measure.h"
-#include "TimeWindowSegment.h"
 #include "primitives.h"
 
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-#include <stdexcept>
-#include <vector>
 
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
-using TWS = pyvrp::TimeWindowSegment;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
@@ -256,7 +252,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
     auto const uClient = U->client();
-    auto const &uData = data.location(uClient);
+    ProblemData::Client const &uData = data.location(uClient);
 
     // First test removing U. This is allowed when U is not required.
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)

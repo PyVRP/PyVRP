@@ -1,7 +1,7 @@
 #include "Solution.h"
+#include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
-#include "TimeWindowSegment.h"
 
 #include <fstream>
 #include <numeric>
@@ -189,7 +189,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
     {
-        if (data.location(client).required && visits[client] == 0)
+        ProblemData::Client const &clientData = data.location(client);
+        if (clientData.required && visits[client] == 0)
             numMissingClients_ += 1;
 
         if (visits[client] > 1)
@@ -250,23 +251,23 @@ Solution::Route::Route(ProblemData const &data,
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter.
-    auto const &depotLocation = data.location(depot_);
-    TimeWindowSegment depotTws(depot_,
-                               depot_,
-                               0,
-                               0,
-                               std::max(depotLocation.twEarly, vehType.twEarly),
-                               std::min(depotLocation.twLate, vehType.twLate),
-                               0);
+    ProblemData::Depot const &depotLocation = data.location(depot_);
+    DurationSegment depotDS(depot_,
+                            depot_,
+                            0,
+                            0,
+                            std::max(depotLocation.twEarly, vehType.twEarly),
+                            std::min(depotLocation.twLate, vehType.twLate),
+                            0);
 
-    auto tws = depotTws;
-    auto ls = LoadSegment(depotLocation);
+    auto ds = depotDS;
+    auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
-        auto const &clientData = data.location(client);
+        ProblemData::Client const &clientData = data.location(client);
 
         distance_ += data.dist(prevClient, client);
         travel_ += data.duration(prevClient, client);
@@ -276,8 +277,8 @@ Solution::Route::Route(ProblemData const &data,
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
 
-        auto const clientTws = TimeWindowSegment(client, clientData);
-        tws = TimeWindowSegment::merge(data.durationMatrix(), tws, clientTws);
+        auto const clientDS = DurationSegment(client, clientData);
+        ds = DurationSegment::merge(data.durationMatrix(), ds, clientDS);
 
         auto const clientLs = LoadSegment(clientData);
         ls = LoadSegment::merge(ls, clientLs);
@@ -293,12 +294,12 @@ Solution::Route::Route(ProblemData const &data,
     pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    tws = TimeWindowSegment::merge(data.durationMatrix(), tws, depotTws);
-    duration_ = tws.duration();
-    startTime_ = tws.twEarly();
-    slack_ = tws.twLate() - tws.twEarly();
-    timeWarp_ = tws.timeWarp(vehType.maxDuration);
-    release_ = tws.releaseTime();
+    ds = DurationSegment::merge(data.durationMatrix(), ds, depotDS);
+    duration_ = ds.duration();
+    startTime_ = ds.twEarly();
+    slack_ = ds.twLate() - ds.twEarly();
+    timeWarp_ = ds.timeWarp(vehType.maxDuration);
+    release_ = ds.releaseTime();
 }
 
 Solution::Route::Route(Visits visits,
