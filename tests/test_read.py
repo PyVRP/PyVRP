@@ -10,6 +10,7 @@ from numpy.testing import (
 )
 from pytest import mark
 
+from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read
 
@@ -353,3 +354,84 @@ def test_mdvrptw_instance():
     assert_(any(depot.y < 0) for depot in data.depots())
     assert_(any(client.x < 0) for client in data.clients())
     assert_(any(client.y < 0) for client in data.clients())
+
+
+def test_vrpspd_instance():
+    """
+    Tests that reading an VRPSPD instance happens correctly, particularly the
+    linehaul and backhaul data.
+    """
+    data = read("data/SmallVRPSPD.vrp", round_func="round")
+
+    assert_equal(data.num_locations, 5)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_clients, 4)
+
+    assert_equal(data.num_vehicles, 4)
+    assert_equal(data.num_vehicle_types, 1)
+
+    vehicle_type = data.vehicle_type(0)
+    assert_equal(vehicle_type.num_available, 4)
+    assert_equal(vehicle_type.capacity, 200)
+
+    # The first client is a linehaul client (only delivery, no pickup), and
+    # the second client is a backhaul client (only pickup, no delivery). All
+    # other clients have both delivery and pickup.
+    deliveries = [1, 0, 16, 18]
+    pickups = [0, 3, 10, 40]
+
+    for idx, client in enumerate(data.clients()):
+        assert_allclose(client.delivery, deliveries[idx])
+        assert_allclose(client.pickup, pickups[idx])
+
+    # Test that distance/duration are not set to a large value, as in VRPB.
+    assert_equal(np.max(data.distance_matrix()), 39)
+    assert_equal(np.max(data.duration_matrix()), 39)
+
+
+def test_vrpb_instance():
+    """
+    Tests that reading an VRPB instance happens correctly, particularly the
+    backhaul data and modified distances to ensure linehaul is served before
+    backhaul.
+    """
+    data = read("data/X-n101-50-k13.vrp", round_func="round")
+
+    assert_equal(data.num_locations, 101)
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_clients, 100)
+
+    assert_equal(data.num_vehicles, 100)
+    assert_equal(data.num_vehicle_types, 1)
+
+    vehicle_type = data.vehicle_type(0)
+    assert_equal(vehicle_type.num_available, 100)
+    assert_equal(vehicle_type.capacity, 206)
+
+    # The first 50 clients are linehaul, the rest are backhaul.
+    clients = data.clients()
+
+    for client in clients[:50]:
+        assert_(client.pickup == 0)
+        assert_(client.delivery > 0)
+
+    for client in clients[50:]:
+        assert_(client.pickup > 0)
+        assert_(client.delivery == 0)
+
+    # Tests that distance/duration from depot to backhaul clients is set to
+    # ``MAX_USER_VALUE``, as well as for backhaul to linehaul clients.
+    linehauls = set(range(1, 51))
+    backhauls = set(range(51, 101))
+
+    for frm in range(data.num_locations):
+        for to in range(data.num_locations):
+            depot2back = frm == 0 and to in backhauls
+            back2line = frm in backhauls and to in linehauls
+
+            if depot2back or back2line:
+                assert_(data.dist(frm, to) == MAX_USER_VALUE)
+                assert_(data.duration(frm, to) == MAX_USER_VALUE)
+            else:
+                assert_(data.dist(frm, to) < MAX_USER_VALUE)
+                assert_(data.duration(frm, to) < MAX_USER_VALUE)

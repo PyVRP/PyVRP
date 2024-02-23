@@ -116,8 +116,13 @@ def read(
     if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
 
-    if "demand" in instance:
-        demands: np.ndarray = instance["demand"]
+    if "backhaul" in instance:
+        backhauls: np.ndarray = instance["backhaul"]
+    else:
+        backhauls = np.zeros(dimension, dtype=int)
+
+    if "demand" in instance or "linehaul" in instance:
+        demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
     else:
         demands = np.zeros(dimension, dtype=int)
 
@@ -162,6 +167,16 @@ def read(
 
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
+    if instance.get("type") == "VRPB":
+        # In VRPB, linehauls must be served before backhauls. This can be
+        # enforced by setting a high value for the distance/duration from depot
+        # to backhaul (forcing linehaul to be served first) and a large value
+        # from backhaul to linehaul (avoiding linehaul after backhaul clients).
+        linehaul = np.flatnonzero(instance["demand"] > 0)
+        backhaul = np.flatnonzero(instance["backhaul"] > 0)
+        distances[0, backhaul] = MAX_USER_VALUE
+        distances[np.ix_(backhaul, linehaul)] = MAX_USER_VALUE
+
     # Checks
     contiguous_lower_idcs = np.arange(len(depot_idcs))
     if len(depot_idcs) == 0 or (depot_idcs != contiguous_lower_idcs).any():
@@ -193,6 +208,7 @@ def read(
             x=coords[idx][0],
             y=coords[idx][1],
             delivery=demands[idx],
+            pickup=backhauls[idx],
             service_duration=service_times[idx],
             tw_early=time_windows[idx][0],
             tw_late=time_windows[idx][1],
