@@ -376,18 +376,17 @@ def test_vrpsdp_instance():
     # The first client is a linehaul client (only delivery, no pickup), and
     # the second client is a backhaul client (only pickup, no delivery). All
     # other clients have both delivery and pickup.
-    linehaul = data.clients()[0]
-    assert_(linehaul.delivery > 0 and linehaul.pickup == 0)
+    clients = data.clients()
 
-    backhaul = data.clients()[1]
-    assert_(backhaul.delivery == 0 and backhaul.pickup > 0)
+    assert_(clients[0].delivery > 0 and clients[0].pickup == 0)
+    assert_(clients[1].delivery == 0 and clients[1].pickup > 0)
 
     for client in data.clients()[2:]:
         assert_(client.pickup > 0 and client.delivery > 0)
 
     # Test that distance/duration are not set to a large value, as in VRPB.
     assert_(np.all(data.distance_matrix() <= 142))  # max distance in instance
-    assert_(np.all(data.duration_matrix() <= 142))  # max distance in instance
+    assert_(np.all(data.duration_matrix() <= 142))  # max duration in instance
 
 
 def test_vrpb_instance():
@@ -410,11 +409,13 @@ def test_vrpb_instance():
     assert_equal(vehicle_type.capacity, 206)
 
     # The first 50 clients are linehaul, the rest are backhaul.
-    for client in data.clients()[:50]:
+    clients = data.clients()
+
+    for client in clients[:50]:
         assert_(client.pickup == 0)
         assert_(client.delivery > 0)
 
-    for client in data.clients()[50:]:
+    for client in clients[50:]:
         assert_(client.pickup > 0)
         assert_(client.delivery == 0)
 
