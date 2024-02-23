@@ -355,9 +355,9 @@ def test_mdvrptw_instance():
     assert_(any(client.y < 0) for client in data.clients())
 
 
-def test_vrpsdp_instance():
+def test_vrpspd_instance():
     """
-    Tests that reading an VRPSDP instance happens correctly, particularly the
+    Tests that reading an VRPSPD instance happens correctly, particularly the
     backhaul data.
     """
     data = read("data/RC101.vrp")
