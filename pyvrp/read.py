@@ -121,8 +121,8 @@ def read(
     else:
         backhauls = np.zeros(dimension, dtype=int)
 
-    if "demand" in instance:
-        demands: np.ndarray = instance["demand"]
+    if "demand" in instance or "linehaul" in instance:
+        demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
     else:
         demands = np.zeros(dimension, dtype=int)
 
@@ -167,7 +167,7 @@ def read(
 
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
-    if instance.get("type", None) == "VRPB":
+    if instance.get("type") == "VRPB":
         # In VRPB, linehauls must be served before backhauls. This can be
         # enforced by setting a high value for the distance/duration from depot
         # to backhaul (forcing linehaul to be served first) and a large value

@@ -10,6 +10,7 @@ from numpy.testing import (
 )
 from pytest import mark
 
+from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read
 
@@ -358,9 +359,9 @@ def test_mdvrptw_instance():
 def test_vrpspd_instance():
     """
     Tests that reading an VRPSPD instance happens correctly, particularly the
-    backhaul data.
+    linehaul and backhaul data.
     """
-    data = read("data/RC101.vrp")
+    data = read("data/SmallVRPSPD.vrp")
 
     assert_equal(data.num_locations, 5)
     assert_equal(data.num_depots, 1)
@@ -376,17 +377,16 @@ def test_vrpspd_instance():
     # The first client is a linehaul client (only delivery, no pickup), and
     # the second client is a backhaul client (only pickup, no delivery). All
     # other clients have both delivery and pickup.
-    clients = data.clients()
+    deliveries = [1, 0, 16, 18]
+    pickups = [0, 3, 10, 40]
 
-    assert_(clients[0].delivery > 0 and clients[0].pickup == 0)
-    assert_(clients[1].delivery == 0 and clients[1].pickup > 0)
-
-    for client in data.clients()[2:]:
-        assert_(client.pickup > 0 and client.delivery > 0)
+    for idx, client in enumerate(data.clients()):
+        assert_allclose(client.delivery, deliveries[idx])
+        assert_allclose(client.pickup, pickups[idx])
 
     # Test that distance/duration are not set to a large value, as in VRPB.
-    assert_(np.all(data.distance_matrix() <= 142))  # max distance in instance
-    assert_(np.all(data.duration_matrix() <= 142))  # max duration in instance
+    assert_equal(np.max(data.distance_matrix()), 39)
+    assert_equal(np.max(data.duration_matrix()), 39)
 
 
 def test_vrpb_instance():
@@ -420,10 +420,9 @@ def test_vrpb_instance():
         assert_(client.delivery == 0)
 
     # Tests that distance/duration from depot to backhaul clients is set to
-    # a large value, as well as for backhaul to linehaul clients.
+    # ``MAX_USER_VALUE``, as well as for backhaul to linehaul clients.
     linehauls = set(range(1, 51))
     backhauls = set(range(51, 101))
-    max_value = 1_000_000
 
     for frm in range(data.num_locations):
         for to in range(data.num_locations):
@@ -431,8 +430,8 @@ def test_vrpb_instance():
             back2line = frm in backhauls and to in linehauls
 
             if depot2back or back2line:
-                assert_(data.dist(frm, to) > max_value)
-                assert_(data.duration(frm, to) > max_value)
+                assert_(data.dist(frm, to) == MAX_USER_VALUE)
+                assert_(data.duration(frm, to) == MAX_USER_VALUE)
             else:
-                assert_(data.dist(frm, to) < max_value)
-                assert_(data.duration(frm, to) < max_value)
+                assert_(data.dist(frm, to) < MAX_USER_VALUE)
+                assert_(data.duration(frm, to) < MAX_USER_VALUE)

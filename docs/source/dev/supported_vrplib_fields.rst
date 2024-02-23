@@ -57,11 +57,11 @@ PyVRP supports the following data sections:
 
    ``BACKHAUL_SECTION``
       Array of backhaul quantities, one for each location.
-      The depot locations *must* have a backhaul quantity of zero.
+      This is the amount picked up at the client and transported back to the depot.
 
    ``DEMAND_SECTION``
       Array of demands, one for each location.
-      The depot locations *must* have zero demand.
+      This is the delivery amount from the depot to the client.
 
    ``DEPOT_SECTION``
       Array of location indices that are depots.
@@ -70,6 +70,11 @@ PyVRP supports the following data sections:
    ``EDGE_WEIGHT_SECTION``
       When provided, this section explicitly describes the distance and duration matrices.
       If not provided, such matrices are computed based on what's specified for :term:`EDGE_WEIGHT_FORMAT` and :term:`EDGE_WEIGHT_TYPE`.
+
+   ``LINEHAUL_SECTION``
+      Array of linehaul quantities, one for each location.
+      This is the delivery amount from the depot to the client.
+      Alias for ``DEMAND_SECTION``.
 
    ``NODE_COORD_SECTION``
       Array of :math:`(x, y)` coordinates for each location.

@@ -1,5 +1,5 @@
 NAME: RC101
-COMMENT: Converted to TSPLIB by Accorsi & Cavaliere. Then converted to PyVRP's VRPLIB dialect.
+COMMENT: Small VRPSPD instance based on the RC101 instance from Montane and Galvao (2006).
 TYPE: VRPSPD
 DIMENSION: 5
 CAPACITY: 200
@@ -11,7 +11,7 @@ EDGE_WEIGHT_SECTION
 30.8058	10.4403	0.0	10.0	5.3852
 39.3573	3.0	10.0	0.0	5.3852
 36.0555	7.0711	5.3852	5.3852	0.0
-DEMAND_SECTION
+LINEHAUL_SECTION
 # The first client is a linehaul client (only delivery, no pickup), and
 # the second client is a backhaul client (only pickup, no delivery). All
 # other clients have both delivery and pickup.
