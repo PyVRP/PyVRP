@@ -353,3 +353,20 @@ def test_mdvrptw_instance():
     assert_(any(depot.y < 0) for depot in data.depots())
     assert_(any(client.x < 0) for client in data.clients())
     assert_(any(client.y < 0) for client in data.clients())
+
+
+def test_vrpsdp_instance():
+    """
+    Tests that reading an VRPSDP instance happens correctly, particularly the
+    backhaul and linehaul data.
+    """
+    pass
+
+
+def test_vrpb_instance():
+    """
+    Tests that reading an VRPB instance happens correctly, particularly the
+    backhaul data and modified distances to ensure linehaul is served before
+    backhaul.
+    """
+    pass
