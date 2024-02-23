@@ -420,12 +420,18 @@ def test_vrpb_instance():
 
     # Tests that distance/duration from depot to backhaul clients is set to
     # a large value, as well as for backhaul to linehaul clients.
-    linehauls = list(range(1, 51))
-    backhauls = list(range(51, 101))
+    linehauls = set(range(1, 51))
+    backhauls = set(range(51, 101))
+    max_value = 1_000_000
 
-    assert_(np.all(data.distance_matrix()[0, backhauls] > 1_000_000))
-    assert_(np.all(data.duration_matrix()[0, backhauls] > 1_000_000))
-
-    back2line = np.ix_(backhauls, linehauls)
-    assert_(np.all(data.distance_matrix()[back2line] > 1_000_000))
-    assert_(np.all(data.duration_matrix()[back2line] > 1_000_000))
+    for frm in range(data.num_locations):
+        for to in range(data.num_locations):
+            if frm == 0 and to in backhauls:  # depot -> backhaul
+                assert_(data.dist(frm, to) > max_value)
+                assert_(data.duration(frm, to) > max_value)
+            elif frm in backhauls and to in linehauls:  # backhaul -> linehaul
+                assert_(data.dist(frm, to) > max_value)
+                assert_(data.duration(frm, to) > max_value)
+            else:
+                assert_(data.dist(frm, to) < max_value)
+                assert_(data.duration(frm, to) < max_value)
