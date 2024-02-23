@@ -362,15 +362,15 @@ def test_vrpspd_instance():
     """
     data = read("data/RC101.vrp")
 
-    assert_equal(data.num_locations, 101)
+    assert_equal(data.num_locations, 5)
     assert_equal(data.num_depots, 1)
-    assert_equal(data.num_clients, 100)
+    assert_equal(data.num_clients, 4)
 
-    assert_equal(data.num_vehicles, 100)
+    assert_equal(data.num_vehicles, 4)
     assert_equal(data.num_vehicle_types, 1)
 
     vehicle_type = data.vehicle_type(0)
-    assert_equal(vehicle_type.num_available, 100)
+    assert_equal(vehicle_type.num_available, 4)
     assert_equal(vehicle_type.capacity, 200)
 
     # The first client is a linehaul client (only delivery, no pickup), and
