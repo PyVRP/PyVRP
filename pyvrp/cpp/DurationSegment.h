@@ -168,8 +168,8 @@ DurationSegment::merge([[maybe_unused]] Matrix<Duration> const &durationMatrix,
 
     if constexpr (sizeof...(args) == 0)
         return res;
-    else
-        return merge(durationMatrix, res, args...);
+
+    return merge(durationMatrix, res, args...);
 #endif
 }
 
