@@ -37,11 +37,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
       - name: Build sdist
-        run: poetry build --format sdist
+        run: |
+          # Builds the source distribution package in the dist/ folder. That's
+          # the one we will upload to PyPI. We make a copy to the build/ 
+          # directory that does not have version information attached, so we
+          # can use that to also build the binary wheels.
+          poetry build --format sdist
+          cp dist/pyvrp*.tar.gz build/pyvrp.tar.gz
       - name: Build wheels from sdist
         uses: pypa/cibuildwheel@v2.16.3
         with:
-          package-dir: dist/pyvrp*.tar.gz
+          package-dir: build/pyvrp.tar.gz
           output-dir: dist
       - uses: actions/upload-artifact@v4  # upload all wheels
         with:
