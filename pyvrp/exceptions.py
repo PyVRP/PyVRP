@@ -8,7 +8,7 @@ class EmptySolutionWarning(UserWarning):
 class ScalingWarning(UserWarning):
     """
     Raised when the distance or duration values in the problem are very large,
-    which could cause the algorithm to start using forbidden edges as well.
+    which could cause the algorithm to suffer from numerical issues.
     """
 
 

@@ -8,7 +8,7 @@ from numpy.testing import (
 )
 
 from pyvrp import Client, Model
-from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
+from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
 
@@ -341,8 +341,7 @@ def test_model_solve_display_argument(ok_small, capsys):
 def test_partial_distance_duration_matrix():
     """
     Tests that adding a full distance or duration matrix is not required. Any
-    "missing" arcs are given large default values, ensuring they are never
-    used.
+    "missing" arcs are given large default values, ensuring they are unused.
     """
     model = Model()
     depot = model.add_depot(0, 0)
@@ -371,9 +370,8 @@ def test_partial_distance_duration_matrix():
 def test_data_warns_about_scaling_issues(recwarn):
     """
     Tests that the modelling interface warns when an edge is added whose
-    distance or duration values are too large: in that case, PyVRP might not be
-    able to detect missing edges. This situation is likely caused by scaling
-    issues, so a warning is appropriate.
+    distance or duration values are too large. This situation is likely caused
+    by scaling issues, so a warning is appropriate.
     """
     model = Model()
     model.add_vehicle_type(capacity=0, num_available=1)
@@ -381,17 +379,17 @@ def test_data_warns_about_scaling_issues(recwarn):
     client = model.add_client(1, 1)
 
     # Normal distance sizes; should all be OK.
-    for distance in [1, 10, 100, 1_000, 10_000, 100_000, MAX_USER_VALUE]:
+    for distance in [1, 10, 100, 1_000, 10_000, 100_000, MAX_VALUE]:
         model.add_edge(client, depot, distance=distance)
         assert_equal(len(recwarn), 0)
 
-    # But a value exceeding the maximum user value is not OK. This should warn
-    # (both for distance and/or duration).
+    # But a value exceeding the maximum value is not OK. This should warn (both
+    # for distance and/or duration).
     with assert_warns(ScalingWarning):
-        model.add_edge(depot, client, distance=MAX_USER_VALUE + 1)
+        model.add_edge(depot, client, distance=MAX_VALUE + 1)
 
     with assert_warns(ScalingWarning):
-        model.add_edge(depot, client, distance=0, duration=MAX_USER_VALUE + 1)
+        model.add_edge(depot, client, distance=0, duration=MAX_VALUE + 1)
 
 
 def test_model_solves_instance_with_zero_or_one_clients():

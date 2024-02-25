@@ -15,7 +15,7 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_USER_VALUE, MAX_VALUE
+from pyvrp.constants import MAX_VALUE
 from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
@@ -186,7 +186,7 @@ class Model:
         if frm == to and (distance != 0 or duration != 0):
             raise ValueError("A self loop must have 0 distance and duration.")
 
-        if max(distance, duration) > MAX_USER_VALUE:
+        if max(distance, duration) > MAX_VALUE:
             msg = """
             The given distance or duration value is very large. This may impact
             numerical stability. Consider rescaling your input data.

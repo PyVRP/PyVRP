@@ -10,7 +10,7 @@ from numpy.testing import (
 )
 from pytest import mark
 
-from pyvrp.constants import MAX_USER_VALUE
+from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read
 
@@ -422,7 +422,7 @@ def test_vrpb_instance():
         assert_allclose(client.delivery, 0)
 
     # Tests that distance/duration from depot to backhaul clients is set to
-    # ``MAX_USER_VALUE``, as well as for backhaul to linehaul clients.
+    # ``MAX_VALUE``, as well as for backhaul to linehaul clients.
     linehauls = set(range(1, 51))
     backhauls = set(range(51, 101))
 
@@ -432,8 +432,8 @@ def test_vrpb_instance():
             back2line = frm in backhauls and to in linehauls
 
             if depot2back or back2line:
-                assert_allclose(data.dist(frm, to), MAX_USER_VALUE)
-                assert_allclose(data.duration(frm, to), MAX_USER_VALUE)
+                assert_allclose(data.dist(frm, to), MAX_VALUE)
+                assert_allclose(data.duration(frm, to), MAX_VALUE)
             else:
-                assert_(data.dist(frm, to) < MAX_USER_VALUE)
-                assert_(data.duration(frm, to) < MAX_USER_VALUE)
+                assert_(data.dist(frm, to) < MAX_VALUE)
+                assert_(data.duration(frm, to) < MAX_VALUE)
