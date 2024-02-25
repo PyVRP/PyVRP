@@ -14,7 +14,7 @@ from pyvrp.exceptions import ScalingWarning
 _Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
-_INT_MAX = np.iinfo(np.int32).max
+_INT_MAX = np.iinfo(np.int64).max
 
 
 def round_nearest(vals: np.ndarray):

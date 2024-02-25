@@ -118,7 +118,7 @@ class Model:
         pickup: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int32).max,
+        tw_late: int = np.iinfo(np.int64).max,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
@@ -150,7 +150,7 @@ class Model:
         x: int,
         y: int,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int32).max,
+        tw_late: int = np.iinfo(np.int64).max,
         name: str = "",
     ) -> Depot:
         """
@@ -204,8 +204,8 @@ class Model:
         depot: Optional[Depot] = None,
         fixed_cost: int = 0,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int32).max,
-        max_duration: int = np.iinfo(np.int32).max,
+        tw_late: int = np.iinfo(np.int64).max,
+        max_duration: int = np.iinfo(np.int64).max,
         name: str = "",
     ) -> VehicleType:
         """
