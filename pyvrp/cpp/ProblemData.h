@@ -4,8 +4,8 @@
 #include "Matrix.h"
 #include "Measure.h"
 
-#include <cassert>
 #include <iosfwd>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -14,7 +14,7 @@ namespace pyvrp
 /**
  * ProblemData(
  *     clients: List[Client],
- *     depots: List[Client],
+ *     depots: List[Depot],
  *     vehicle_types: List[VehicleType],
  *     distance_matrix: List[List[int]],
  *     duration_matrix: List[List[int]],
@@ -28,7 +28,8 @@ namespace pyvrp
  * clients
  *     List of clients to visit.
  * depots
- *     List of depots. Depots should have no demand or service duration.
+ *     List of depots. Depots should have no delivery and pickup demand, or
+ *     service duration.
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrix
@@ -45,10 +46,11 @@ public:
      * Client(
      *    x: int,
      *    y: int,
-     *    demand: int = 0,
+     *    delivery: int = 0,
+     *    pickup: int = 0,
      *    service_duration: int = 0,
      *    tw_early: int = 0,
-     *    tw_late: int = 0,
+     *    tw_late: int = np.iinfo(np.int32).max,
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
@@ -65,17 +67,21 @@ public:
      * y
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple.
-     * demand
-     *     The amount this client's demanding. Default 0.
+     * delivery
+     *     The amount this client demands from the depot. Default 0.
+     * pickup
+     *     The amount this client ships back to the depot. Default 0.
      * service_duration
-     *     This client's service duration, that is, the amount of time we need
-     *     to visit the client for. Service should start (but not necessarily
-     *     end) within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
+     *     Amount of time a vehicle needs to spend at this client before
+     *     resuming its route. Service should start (but not necessarily end)
+     *     within the [:py:attr:`~tw_early`, :py:attr:`~tw_late`] interval.
      *     Default 0.
      * tw_early
-     *     Earliest time at which we can visit this client. Default 0.
+     *     Earliest time at which this client may be visited to start service.
+     *     Default 0.
      * tw_late
-     *     Latest time at which we can visit this client. Default 0.
+     *     Latest time at which this client may be visited to start service.
+     *     Unconstrained if not provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
      *     time at which a vehicle may leave the depot to visit this client.
@@ -87,26 +93,55 @@ public:
      *     True.
      * name
      *     Free-form name field for this client. Default empty.
+     *
+     * Attributes
+     * ----------
+     * x
+     *     Horizontal coordinate of this client.
+     * y
+     *     Vertical coordinate of this client.
+     * delivery
+     *     Client delivery amount, shipped from depot.
+     * pickup
+     *     Client pickup amount, returned back to depot.
+     * service_duration
+     *     Amount of time a vehicle needs to spend at this client before
+     *     resuming its route.
+     * tw_early
+     *     Earliest time at which this client may be visited to start service.
+     * tw_late
+     *     Latest time at which this client may be visited to start service.
+     * release_time
+     *     Earliest time at which a vehicle may leave the depot to visit this
+     *     client.
+     * prize
+     *     Prize collected by visiting this client.
+     * required
+     *     Whether visiting this client is required.
+     * name
+     *     Free-form name field for this client.
      */
     struct Client
     {
         Coordinate const x;
         Coordinate const y;
-        Load const demand;
+        Load const delivery;
+        Load const pickup;
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
-        char const *name;            // Location name (for reference)
         bool const required;         // Must client be in solution?
+        char const *name;            // Client name (for reference)
 
         Client(Coordinate x,
                Coordinate y,
-               Load demand = 0,
+               Load delivery = 0,
+               Load pickup = 0,
                Duration serviceDuration = 0,
                Duration twEarly = 0,
-               Duration twLate = 0,
+               Duration twLate = std::numeric_limits<Duration>::max(),
                Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true,
@@ -122,24 +157,80 @@ public:
     };
 
     /**
+     * Depot(
+     *    x: int,
+     *    y: int,
+     *    tw_early: int = 0,
+     *    tw_late: int = np.iinfo(np.int32).max,
+     *    name: str = "",
+     * )
+     *
+     * Simple data object storing all depot data as (read-only) properties.
+     *
+     * Parameters
+     * ----------
+     * x
+     *     Horizontal coordinate of this depot, that is, the 'x' part of the
+     *     depot's (x, y) location tuple.
+     * y
+     *     Vertical coordinate of this depot, that is, the 'y' part of the
+     *     depot's (x, y) location tuple.
+     * tw_early
+     *     Opening time of this depot. Default 0.
+     * tw_late
+     *     Closing time of this depot. Default unconstrained.
+     * name
+     *     Free-form name field for this depot. Default empty.
+     *
+     * Attributes
+     * ----------
+     * x
+     *     Horizontal coordinate of this depot.
+     * y
+     *     Vertical coordinate of this depot.
+     * tw_early
+     *     Opening time of this depot.
+     * tw_late
+     *     Closing time of this depot.
+     * name
+     *     Free-form name field for this depot.
+     */
+    struct Depot
+    {
+        Coordinate const x;
+        Coordinate const y;
+        Duration const twEarly;  // Depot opening time
+        Duration const twLate;   // Depot closing time
+        char const *name;        // Depot name (for reference)
+
+        Depot(Coordinate x,
+              Coordinate y,
+              Duration twEarly = 0,
+              Duration twLate = std::numeric_limits<Duration>::max(),
+              char const *name = "");
+
+        Depot(Depot const &depot);
+        Depot(Depot &&depot);
+
+        Depot &operator=(Depot const &depot) = delete;
+        Depot &operator=(Depot &&depot) = delete;
+
+        ~Depot();
+    };
+
+    /**
      * VehicleType(
      *     num_available: int = 1,
      *     capacity: int = 0,
      *     depot: int = 0,
      *     fixed_cost: int = 0,
-     *     tw_early: Optional[int] = None,
-     *     tw_late: Optional[int] = None,
-     *     max_duration: Optional[int] = None,
+     *     tw_early: int = 0,
+     *     tw_late: int = np.iinfo(np.int32).max,
+     *     max_duration: int = np.iinfo(np.int32).max,
      *     name: str = "",
      * )
      *
      * Simple data object storing all vehicle type data as properties.
-     *
-     * .. note::
-     *
-     *    If ``tw_early`` is set, then also ``tw_late`` must be provided to
-     *    completely specify the shift duration (and vice versa). If neither
-     *    are given, the shift duration defaults to the depot's time window.
      *
      * Parameters
      * ----------
@@ -147,7 +238,8 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      *     Default 1.
      * capacity
-     *     Capacity (maximum total demand) of this vehicle type. Must be
+     *     Capacity of this vehicle type. This is the maximum total delivery or
+     *     pickup amount the vehicle can store along the route. Must be
      *     non-negative. Default 0.
      * depot
      *     Depot (location index) that vehicles of this type dispatch from, and
@@ -155,13 +247,11 @@ public:
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
-     *     Start of the vehicle type's shift. Defaults to the depot's opening
-     *     time if not given.
+     *     Start of the vehicle type's shift. Default 0.
      * tw_late
-     *     End of the vehicle type's shift. Defaults to the depot's closing
-     *     time if not given.
+     *     End of the vehicle type's shift. Unconstrained if not provided.
      * max_duration
-     *     Maximum route duration. Unconstrained if not explicitly set.
+     *     Maximum route duration. Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -169,10 +259,10 @@ public:
      * ----------
      * num_available
      *     Number of vehicles of this type that are available.
-     * depot
-     *     Depot associated with these vehicles.
      * capacity
      *     Capacity (maximum total demand) of this vehicle type.
+     * depot
+     *     Depot associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early
@@ -187,22 +277,22 @@ public:
      */
     struct VehicleType
     {
-        size_t const numAvailable;  // Available vehicles of this type
-        size_t const depot;         // Departure and return depot location
-        Load const capacity;        // This type's vehicle capacity
-        Cost const fixedCost;       // Fixed cost of using this vehicle type
-        std::optional<Duration> const twEarly;  // Start of shift
-        std::optional<Duration> const twLate;   // End of shift
-        char const *name;                       // Type name (for reference)
-        Duration const maxDuration;             // Maximum route duration
+        size_t const numAvailable;   // Available vehicles of this type
+        size_t const depot;          // Departure and return depot location
+        Load const capacity;         // This type's vehicle capacity
+        Cost const fixedCost;        // Fixed cost of using this vehicle type
+        Duration const twEarly;      // Start of shift
+        Duration const twLate;       // End of shift
+        char const *name;            // Type name (for reference)
+        Duration const maxDuration;  // Maximum route duration
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
                     size_t depot = 0,
                     Cost fixedCost = 0,
-                    std::optional<Duration> twEarly = std::nullopt,
-                    std::optional<Duration> twLate = std::nullopt,
-                    std::optional<Duration> maxDuration = std::nullopt,
+                    Duration twEarly = 0,
+                    Duration twLate = std::numeric_limits<Duration>::max(),
+                    Duration maxDuration = std::numeric_limits<Duration>::max(),
                     char const *name = "");
 
         VehicleType(VehicleType const &vehicleType);
@@ -215,11 +305,23 @@ public:
     };
 
 private:
+    /**
+     * Simple union type that distinguishes between client and depot locations.
+     */
+    union Location
+    {
+        Client const *client;
+        Depot const *depot;
+
+        inline operator Client const &() const;
+        inline operator Depot const &() const;
+    };
+
     std::pair<double, double> centroid_;           // Center of client locations
     Matrix<Distance> const dist_;                  // Distance matrix
     Matrix<Duration> const dur_;                   // Duration matrix
     std::vector<Client> const clients_;            // Client information
-    std::vector<Client> const depots_;             // Depot information
+    std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
 
     size_t const numVehicles_;
@@ -237,18 +339,18 @@ public:
      *
      * Returns
      * -------
-     * Client
+     * Union[Client, Depot]
      *     A simple data object containing the requested location's
      *     information.
      */
-    [[nodiscard]] inline Client const &location(size_t idx) const;
+    [[nodiscard]] inline Location location(size_t idx) const;
 
     /**
      * Returns a list of all clients in the problem instance.
      *
      * Returns
      * -------
-     * List[Client]
+     * list[Client]
      *     List of all clients in the problem instance.
      */
     [[nodiscard]] std::vector<Client> const &clients() const;
@@ -258,10 +360,10 @@ public:
      *
      * Returns
      * -------
-     * List[Client]
+     * list[Depot]
      *     List of all depots in the problem instance.
      */
-    [[nodiscard]] std::vector<Client> const &depots() const;
+    [[nodiscard]] std::vector<Depot> const &depots() const;
 
     /**
      * Returns a list of all vehicle types in the problem instance.
@@ -296,8 +398,7 @@ public:
      * VehicleType
      *     A simple data object containing the vehicle type information.
      */
-    [[nodiscard]] inline VehicleType const &
-    vehicleType(size_t vehicleType) const;
+    [[nodiscard]] VehicleType const &vehicleType(size_t vehicleType) const;
 
     /**
      * Returns the travel distance between the first and second argument,
@@ -336,14 +437,26 @@ public:
     [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
 
     /**
-     * @return The full travel distance matrix.
+     * The full travel distance matrix.
+     *
+     * .. note::
+     *
+     *    This method returns a read-only view of the underlying data. No
+     *    matrix is copied, but the resulting data cannot be modified in any
+     *    way!
      */
-    [[nodiscard]] inline Matrix<Distance> const &distanceMatrix() const;
+    [[nodiscard]] Matrix<Distance> const &distanceMatrix() const;
 
     /**
-     * @return The full travel duration matrix.
+     * The full travel duration matrix.
+     *
+     * .. note::
+     *
+     *    This method returns a read-only view of the underlying data. No
+     *    matrix is copied, but the resulting data cannot be modified in any
+     *    way!
      */
-    [[nodiscard]] inline Matrix<Duration> const &durationMatrix() const;
+    [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
 
     /**
      * Number of clients in this problem instance.
@@ -419,7 +532,7 @@ public:
      *    A new ProblemData instance with possibly replaced data.
      * */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
-                        std::optional<std::vector<Client>> &depots,
+                        std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<Matrix<Distance>> &distMat,
                         std::optional<Matrix<Duration>> &durMat);
@@ -436,22 +549,22 @@ public:
      * @param durMat       Duration matrix.
      */
     ProblemData(std::vector<Client> const &clients,
-                std::vector<Client> const &depots,
+                std::vector<Depot> const &depots,
                 std::vector<VehicleType> const &vehicleTypes,
                 Matrix<Distance> distMat,
                 Matrix<Duration> durMat);
 };
 
-ProblemData::Client const &ProblemData::location(size_t idx) const
+ProblemData::Location::operator Client const &() const { return *client; }
+
+ProblemData::Location::operator Depot const &() const { return *depot; }
+
+ProblemData::Location ProblemData::location(size_t idx) const
 {
     assert(idx < numLocations());
-    return idx < depots_.size() ? depots_[idx] : clients_[idx - depots_.size()];
-}
-
-ProblemData::VehicleType const &
-ProblemData::vehicleType(size_t vehicleType) const
-{
-    return vehicleTypes_[vehicleType];
+    return idx < depots_.size()
+               ? Location{.depot = &depots_[idx]}
+               : Location{.client = &clients_[idx - depots_.size()]};
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const
@@ -463,10 +576,6 @@ Duration ProblemData::duration(size_t first, size_t second) const
 {
     return dur_(first, second);
 }
-
-Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
-
-Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

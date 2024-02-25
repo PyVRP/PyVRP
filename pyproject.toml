@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.6.3"
+version = "0.8.0a0"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -11,13 +11,21 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://pyvrp.org/"
 repository = "https://github.com/PyVRP/PyVRP"
+keywords = [
+    "vehicle routing problem",
+    "hybrid genetic search",
+    "metaheuristic",
+]
 include = [
-    { path = "LICENSE.md" },
+    { path = "docs/", format = "sdist" },
+    { path = "tests/", format = "sdist" },
+
     { path = "meson.build", format = "sdist" },
     { path = "meson_options.txt", format = "sdist" },
     { path = "build_extensions.py", format = "sdist" },
     { path = "extract_docstrings.py", format = "sdist" },
     { path = "subprojects/*.wrap", format = "sdist" },
+
     { path = "pyvrp/**/*.so", format = "wheel" },
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
@@ -26,7 +34,6 @@ exclude = [
 ]
 packages = [
     { include = "pyvrp" },
-    { include = "docs" },
 ]
 classifiers = [
     "Intended Audience :: Developers",
@@ -85,7 +92,7 @@ codecov = "*"
 meson = "^1.0.0"
 ninja = "^1.11.1"
 mypy = "^0.991"
-docblock = "^0.1.1"
+docblock = "^0.1.5"
 
 
 [tool.poetry.scripts]
@@ -106,7 +113,7 @@ select = [
 
 [tool.ruff.isort]
 case-sensitive = true
-known-first-party = ["pyvrp"]
+known-first-party = ["pyvrp", "tests"]
 
 
 [tool.mypy]
@@ -115,7 +122,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report=xml --cov-report=term"
-testpaths = "pyvrp"
+testpaths = "tests"
 
 
 [tool.coverage.run]

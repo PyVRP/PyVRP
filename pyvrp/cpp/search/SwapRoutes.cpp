@@ -1,11 +1,7 @@
 #include "SwapRoutes.h"
 
-#include <vector>
-
 using pyvrp::Cost;
-using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
-using TWS = pyvrp::TimeWindowSegment;
 
 Cost SwapRoutes::evaluate(Route *U,
                           Route *V,

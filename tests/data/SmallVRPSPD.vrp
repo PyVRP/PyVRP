@@ -1,0 +1,29 @@
+NAME: RC101
+COMMENT: Small VRPSPD instance based on the RC101 instance from Montane and Galvao (2006).
+TYPE: VRPSPD
+DIMENSION: 5
+CAPACITY: 200
+EDGE_WEIGHT_TYPE: EXPLICIT
+EDGE_WEIGHT_FORMAT: FULL_MATRIX
+EDGE_WEIGHT_SECTION
+0.0	38.0789	30.8058	39.3573	36.0555
+38.0789	0.0	10.4403	3.0	7.0711
+30.8058	10.4403	0.0	10.0	5.3852
+39.3573	3.0	10.0	0.0	5.3852
+36.0555	7.0711	5.3852	5.3852	0.0
+LINEHAUL_SECTION
+# The first client is a linehaul client (only delivery, no pickup), and
+# the second client is a backhaul client (only pickup, no delivery). All
+# other clients have both delivery and pickup.
+1	0
+2	1
+3	0
+4	16
+5	18
+BACKHAUL_SECTION
+1	0
+2	0
+3	3
+4	10
+5	40
+EOF

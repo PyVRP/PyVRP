@@ -276,25 +276,72 @@ PYBIND11_MODULE(_search, m)
         .def("has_time_warp", &Route::hasTimeWarp)
         .def("capacity", &Route::capacity)
         .def("depot", &Route::depot)
-        .def("fixed_cost", &Route::fixedCost)
+        .def("fixed_vehicle_cost", &Route::fixedVehicleCost)
         .def("load", &Route::load)
+        .def("excess_load", &Route::excessLoad)
         .def("distance", &Route::distance)
         .def("duration", &Route::duration)
         .def("max_duration", &Route::maxDuration)
         .def("time_warp", &Route::timeWarp)
-        .def("dist_between",
-             &Route::distBetween,
-             py::arg("start"),
-             py::arg("end"))
-        .def("load_between",
-             &Route::loadBetween,
-             py::arg("start"),
-             py::arg("end"))
-        .def("tws", &Route::tws, py::arg("idx"))
         .def(
-            "tws_between", &Route::twsBetween, py::arg("start"), py::arg("end"))
-        .def("tws_after", &Route::twsAfter, py::arg("start"))
-        .def("tws_before", &Route::twsBefore, py::arg("end"))
+            "dist_between",
+            [](Route const &route, size_t start, size_t end) {
+                return static_cast<pyvrp::Distance>(route.between(start, end));
+            },
+            py::arg("start"),
+            py::arg("end"))
+        .def(
+            "ls",
+            [](Route const &route, size_t idx) {
+                return static_cast<pyvrp::LoadSegment>(route.at(idx));
+            },
+            py::arg("idx"))
+        .def(
+            "ls_between",
+            [](Route const &route, size_t start, size_t end) {
+                return static_cast<pyvrp::LoadSegment>(
+                    route.between(start, end));
+            },
+            py::arg("start"),
+            py::arg("end"))
+        .def(
+            "ls_after",
+            [](Route const &route, size_t start) {
+                return static_cast<pyvrp::LoadSegment>(route.after(start));
+            },
+            py::arg("start"))
+        .def(
+            "ls_before",
+            [](Route const &route, size_t end) {
+                return static_cast<pyvrp::LoadSegment>(route.before(end));
+            },
+            py::arg("end"))
+        .def(
+            "ds",
+            [](Route const &route, size_t idx) {
+                return static_cast<pyvrp::DurationSegment>(route.at(idx));
+            },
+            py::arg("idx"))
+        .def(
+            "ds_between",
+            [](Route const &route, size_t start, size_t end) {
+                return static_cast<pyvrp::DurationSegment>(
+                    route.between(start, end));
+            },
+            py::arg("start"),
+            py::arg("end"))
+        .def(
+            "ds_after",
+            [](Route const &route, size_t start) {
+                return static_cast<pyvrp::DurationSegment>(route.after(start));
+            },
+            py::arg("start"))
+        .def(
+            "ds_before",
+            [](Route const &route, size_t end) {
+                return static_cast<pyvrp::DurationSegment>(route.before(end));
+            },
+            py::arg("end"))
         .def("centroid", &Route::centroid)
         .def("overlaps_with",
              &Route::overlapsWith,

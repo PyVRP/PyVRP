@@ -34,8 +34,8 @@ public:
 
     [[nodiscard]] bool operator==(DynamicBitset const &other) const;
 
-    [[nodiscard]] inline bool operator[](size_t idx) const;
-    [[nodiscard]] inline Block::reference operator[](size_t idx);
+    [[nodiscard]] bool operator[](size_t idx) const;
+    [[nodiscard]] Block::reference operator[](size_t idx);
 
     [[nodiscard]] size_t count() const;
     [[nodiscard]] size_t size() const;
@@ -49,20 +49,6 @@ public:
     [[nodiscard]] DynamicBitset operator^(DynamicBitset const &other) const;
     [[nodiscard]] DynamicBitset operator~() const;
 };
-
-bool DynamicBitset::operator[](size_t idx) const
-{
-    auto const q = idx / BLOCK_SIZE;
-    auto const r = idx % BLOCK_SIZE;
-    return data_[q][r];
-}
-
-DynamicBitset::Block::reference DynamicBitset::operator[](size_t idx)
-{
-    auto const q = idx / BLOCK_SIZE;
-    auto const r = idx % BLOCK_SIZE;
-    return data_[q][r];
-}
 }  // namespace pyvrp
 
 #endif  // PYVRP_DYNAMICBITSET_H

@@ -5,18 +5,12 @@
 Repair operators
 ================
 
-The :mod:`pyvrp.repair` module provides operators that are responsible for repairing a :class:`~pyvrp._pyvrp.Solution` after destruction in a large neighbourhood search (LNS) setting.
+The :mod:`pyvrp.repair` module provides operators that are responsible for repairing a solution after destruction in a large neighbourhood search (LNS) setting.
+These operators take a given list of routes and insert any unplanned clients into these routes.
+To allow fine-grained control over the number of routes and vehicles used, no new routes are created: clients are only inserted into the given routes.
 
 .. automodule:: pyvrp.repair._repair
 
-   .. function:: greedy_repair(solution: Solution, unplanned: List[int], data: ProblemData, cost_evaluator: CostEvaluator) -> Solution
-                 greedy_repair(routes: List[Route], unplanned: List[int], data: ProblemData, cost_evaluator: CostEvaluator) -> Solution
-
-      Greedy repair operator. This operator inserts each client in the list of
-      unplanned clients into the solution. It does so by evaluating all possible
-      moves and applying the best one for each client, resulting in a quadratic
-      runtime.
-
-      :raises: ValueError: When the solution is empty but the list of unplanned clients is not.
+   .. autofunction:: greedy_repair
 
    .. autofunction:: nearest_route_insert

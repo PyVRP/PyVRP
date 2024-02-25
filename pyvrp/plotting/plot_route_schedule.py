@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 
-from pyvrp import ProblemData, Route
+from pyvrp import Client, ProblemData, Route
 
 
 def plot_route_schedule(
@@ -43,7 +43,7 @@ def plot_route_schedule(
         _, ax = plt.subplots()
 
     vehicle_type = data.vehicle_type(route.vehicle_type())
-    depot = data.location(vehicle_type.depot)
+    depot = data.location(route.depot())
     horizon = depot.tw_late - depot.tw_early
 
     # Initialise tracking variables
@@ -51,7 +51,7 @@ def plot_route_schedule(
     drive_time = 0
     serv_time = 0
     dist = 0
-    load = sum([data.location(idx).demand for idx in route])
+    load = route.delivery()
     slack = horizon
 
     # Traces and objects used for plotting
@@ -69,10 +69,6 @@ def plot_route_schedule(
         trace_load.append((dist, load))
 
     add_traces(dist, t, drive_time, serv_time, load)
-
-    t += depot.service_duration
-    serv_time += depot.service_duration
-
     add_traces(dist, t, drive_time, serv_time, load)
 
     prev_idx = vehicle_type.depot
@@ -94,11 +90,13 @@ def plot_route_schedule(
             timewarp_lines.append(((dist, t), (dist, stop.tw_late)))
             t = stop.tw_late
 
-        load -= stop.demand
+        if isinstance(stop, Client):
+            load -= stop.delivery
+            load += stop.pickup
 
         add_traces(dist, t, drive_time, serv_time, load)
 
-        if idx != vehicle_type.depot:  # exclude return to depot
+        if isinstance(stop, Client):
             t += stop.service_duration
             serv_time += stop.service_duration
 

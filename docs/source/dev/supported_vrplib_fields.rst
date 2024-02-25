@@ -55,9 +55,14 @@ PyVRP supports the following data sections:
 .. glossary::
    :sorted:
 
+   ``BACKHAUL_SECTION``
+      Array of backhaul quantities, one for each location.
+      This is the amount picked up at the client and transported back to the depot.
+
    ``DEMAND_SECTION``
+   ``LINEHAUL_SECTION``
       Array of demands, one for each location.
-      The depot locations *must* have zero demand.
+      This is the delivery amount from the depot to the client.
 
    ``DEPOT_SECTION``
       Array of location indices that are depots.
@@ -72,16 +77,13 @@ PyVRP supports the following data sections:
 
    ``PRIZE_SECTION``
       Array of prizes for visiting each location.
-      Must be zero for depots.
       A value of zero for non-depots implies visiting that location is required.
 
    ``RELEASE_TIME_SECTION``
       Array of release times for each location.
-      Must be zero for depots.
 
    ``SERVICE_TIME_SECTION``
       Array of service durations for each location.
-      Must be zero for depots.
 
    ``TIME_WINDOW_SECTION``
       Array of :math:`[e, l]` time window data, for each location.

@@ -24,9 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install Pandoc, pip, and poetry
@@ -35,7 +35,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
       - name: Cache Python dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-python
         with:
           path: ~/.cache/pypoetry
@@ -52,9 +52,9 @@ jobs:
       - name: Build documentation
         run: poetry run make html --directory=docs
       - name: Upload documentation
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: 'docs/build/html'
       - name: Deploy documentation
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4

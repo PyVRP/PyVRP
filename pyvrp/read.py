@@ -1,13 +1,13 @@
 import functools
 import pathlib
 from numbers import Number
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 from warnings import warn
 
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, ProblemData, VehicleType
+from pyvrp._pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.constants import MAX_USER_VALUE
 from pyvrp.exceptions import ScalingWarning
 
@@ -100,29 +100,29 @@ def read(
 
     instance = vrplib.read_instance(where, instance_format=instance_format)
 
-    # A priori checks
-    if "dimension" in instance:
-        dimension: int = instance["dimension"]
-    else:
-        if "demand" not in instance:
-            raise ValueError("File should either contain dimension or demands")
-        dimension = len(instance["demand"])
+    # VRPLIB instances typically do not have a duration data field, so we
+    # assume duration == distance.
+    durations = distances = round_func(instance["edge_weight"])
 
-    depots: np.ndarray = instance.get("depot", np.array([0]))
+    dimension: int = instance.get("dimension", durations.shape[0])
+    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
     capacity: int = instance.get("capacity", _INT_MAX)
 
     # If this value is supplied, we should pass it through the round func and
     # then unwrap the result. If it's not given, the default value is None,
     # which PyVRP understands.
-    max_duration: Optional[int] = instance.get("vehicles_max_duration")
-    if max_duration is not None:
+    max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
+    if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
 
-    distances: np.ndarray = round_func(instance["edge_weight"])
+    if "backhaul" in instance:
+        backhauls: np.ndarray = instance["backhaul"]
+    else:
+        backhauls = np.zeros(dimension, dtype=int)
 
-    if "demand" in instance:
-        demands: np.ndarray = instance["demand"]
+    if "demand" in instance or "linehaul" in instance:
+        demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
     else:
         demands = np.zeros(dimension, dtype=int)
 
@@ -144,19 +144,15 @@ def read(
         service_times = np.zeros(dimension, dtype=int)
 
     if "time_window" in instance:
-        # VRPLIB instances typically do not have a duration data field, so we
-        # assume duration == distance if the instance has time windows.
-        durations = distances
         time_windows: np.ndarray = round_func(instance["time_window"])
     else:
-        # No time window data. So the time window component is not relevant,
-        # and we set all time-related fields to zero.
-        durations = np.zeros_like(distances)
-        service_times = np.zeros(dimension, dtype=int)
-        time_windows = np.zeros((dimension, 2), dtype=int)
+        # No time window data. So the time window component is not relevant.
+        time_windows = np.empty((dimension, 2), dtype=int)
+        time_windows[:, 0] = 0
+        time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
-        items: list[list[int]] = [[] for _ in depots]
+        items: list[list[int]] = [[] for _ in depot_idcs]
         for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
             items[depot - 1].append(vehicle)
 
@@ -171,8 +167,19 @@ def read(
 
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
+    if instance.get("type") == "VRPB":
+        # In VRPB, linehauls must be served before backhauls. This can be
+        # enforced by setting a high value for the distance/duration from depot
+        # to backhaul (forcing linehaul to be served first) and a large value
+        # from backhaul to linehaul (avoiding linehaul after backhaul clients).
+        linehaul = np.flatnonzero(instance["demand"] > 0)
+        backhaul = np.flatnonzero(instance["backhaul"] > 0)
+        distances[0, backhaul] = MAX_USER_VALUE
+        distances[np.ix_(backhaul, linehaul)] = MAX_USER_VALUE
+
     # Checks
-    if len(depots) == 0 or (depots != np.arange(len(depots))).any():
+    contiguous_lower_idcs = np.arange(len(depot_idcs))
+    if len(depot_idcs) == 0 or (depot_idcs != contiguous_lower_idcs).any():
         msg = """
         Source file should contain at least one depot in the contiguous lower
         indices, starting from 1.
@@ -186,26 +193,37 @@ def read(
         """
         warn(msg, ScalingWarning)
 
+    depots = [
+        Depot(
+            x=coords[idx][0],
+            y=coords[idx][1],
+            tw_early=time_windows[idx][0],
+            tw_late=time_windows[idx][1],
+        )
+        for idx in range(len(depot_idcs))
+    ]
+
     clients = [
         Client(
-            coords[idx][0],  # x
-            coords[idx][1],  # y
-            demands[idx],
-            service_times[idx],
-            time_windows[idx][0],  # TW early
-            time_windows[idx][1],  # TW late
-            release_times[idx],
-            prizes[idx],
-            np.isclose(prizes[idx], 0),  # required only when prize is zero
+            x=coords[idx][0],
+            y=coords[idx][1],
+            delivery=demands[idx],
+            pickup=backhauls[idx],
+            service_duration=service_times[idx],
+            tw_early=time_windows[idx][0],
+            tw_late=time_windows[idx][1],
+            release_time=release_times[idx],
+            prize=prizes[idx],
+            required=np.isclose(prizes[idx], 0),  # only when prize is zero
         )
-        for idx in range(dimension)
+        for idx in range(len(depot_idcs), dimension)
     ]
 
     vehicle_types = [
         VehicleType(
-            len(vehicles),
-            capacity,
-            depot_idx,
+            num_available=len(vehicles),
+            capacity=capacity,
+            depot=depot_idx,
             max_duration=max_duration,
             # A bit hacky, but this csv-like name is really useful to track the
             # actual vehicles that make up this vehicle type.
@@ -214,13 +232,7 @@ def read(
         for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
     ]
 
-    return ProblemData(
-        clients[len(depots) :],
-        clients[: len(depots)],
-        vehicle_types,
-        distances,
-        durations,
-    )
+    return ProblemData(clients, depots, vehicle_types, distances, durations)
 
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:

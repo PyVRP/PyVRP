@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Update pip and poetry
@@ -54,7 +54,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
       - name: Cache Python dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-python
         with:
           path: ~/.cache/pypoetry
@@ -63,7 +63,7 @@ jobs:
         if: steps.cache-python.outputs.cache-hit != 'true'
         run: poetry install --no-root --with examples
       - name: Cache pre-commit
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-pre-commit
         with:
           path: ~/.cache/pre-commit/
@@ -96,10 +96,10 @@ jobs:
       - if: matrix.compiler == 'gcc'
         # Clang does not generate accurate coverage reports, so there is no
         # point in uploading those.
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          gcov: true
+          plugins: gcov, pycoverage
       - if: matrix.compiler == 'gcc'
         name: Install Valgrind
         run: sudo apt install valgrind
@@ -112,5 +112,5 @@ jobs:
         # malloc.
         # TODO also run with --leak-check=full?
         run: |
-          VALGRIND_CMD="pyvrp pyvrp/tests/data/RC208.txt --instance_format solomon --round_func dimacs --max_runtime 0.5 --seed 1"
+          VALGRIND_CMD="pyvrp tests/data/RC208.txt --instance_format solomon --round_func dimacs --max_runtime 0.5 --seed 1"
           poetry run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD

@@ -9,6 +9,7 @@ from pyvrp.Population import Population, PopulationParams
 from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
+    Depot,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -21,8 +22,6 @@ from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import StoppingCriterion
 
-Depot = Client
-
 
 class Edge:
     """
@@ -31,7 +30,13 @@ class Edge:
 
     __slots__ = ["frm", "to", "distance", "duration"]
 
-    def __init__(self, frm: Client, to: Client, distance: int, duration: int):
+    def __init__(
+        self,
+        frm: Union[Client, Depot],
+        to: Union[Client, Depot],
+        distance: int,
+        duration: int,
+    ):
         self.frm = frm
         self.to = to
         self.distance = distance
@@ -50,7 +55,7 @@ class Model:
         self._vehicle_types: list[VehicleType] = []
 
     @property
-    def locations(self) -> list[Client]:
+    def locations(self) -> list[Union[Client, Depot]]:
         """
         Returns all locations (depots and clients) in the current model. The
         clients in the routes of the solution returned by :meth:`~solve` can be
@@ -83,7 +88,9 @@ class Model:
         Model
             A model instance representing the given data.
         """
-        locs = [data.location(idx) for idx in range(data.num_locations)]
+        depots = data.depots()
+        clients = data.clients()
+        locs = depots + clients
         edges = [
             Edge(
                 locs[frm],
@@ -96,13 +103,10 @@ class Model:
         ]
 
         self = Model()
-        self._clients = locs[data.num_depots :]
-        self._depots = locs[: data.num_depots]
+        self._clients = clients
+        self._depots = depots
         self._edges = edges
-        vehicle_types = [
-            data.vehicle_type(i) for i in range(data.num_vehicle_types)
-        ]
-        self._vehicle_types = vehicle_types
+        self._vehicle_types = data.vehicle_types()
 
         return self
 
@@ -110,10 +114,11 @@ class Model:
         self,
         x: int,
         y: int,
-        demand: int = 0,
+        delivery: int = 0,
+        pickup: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
-        tw_late: int = 0,
+        tw_late: int = np.iinfo(np.int32).max,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
@@ -126,7 +131,8 @@ class Model:
         client = Client(
             x,
             y,
-            demand,
+            delivery,
+            pickup,
             service_duration,
             tw_early,
             tw_late,
@@ -144,12 +150,12 @@ class Model:
         x: int,
         y: int,
         tw_early: int = 0,
-        tw_late: int = 0,
+        tw_late: int = np.iinfo(np.int32).max,
         name: str = "",
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
-        created :class:`~pyvrp._pyvrp.Client` instance.
+        created :class:`~pyvrp._pyvrp.Depot` instance.
         """
         depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
@@ -171,10 +177,14 @@ class Model:
         Raises
         ------
         ValueError
-            When either distance or duration is a negative value.
+            When either distance or duration is a negative value, or when self
+            loops have nonzero distance or duration values.
         """
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
+
+        if frm == to and (distance != 0 or duration != 0):
+            raise ValueError("A self loop must have 0 distance and duration.")
 
         if max(distance, duration) > MAX_USER_VALUE:
             msg = """
@@ -193,9 +203,9 @@ class Model:
         capacity: int = 0,
         depot: Optional[Depot] = None,
         fixed_cost: int = 0,
-        tw_early: Optional[int] = None,
-        tw_late: Optional[int] = None,
-        max_duration: Optional[int] = None,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int32).max,
+        max_duration: int = np.iinfo(np.int32).max,
         name: str = "",
     ) -> VehicleType:
         """
@@ -246,6 +256,8 @@ class Model:
         # not set below are never traversed.
         distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
         durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
+        np.fill_diagonal(distances, 0)
+        np.fill_diagonal(durations, 0)
 
         for edge in self._edges:
             frm = loc2idx[id(edge.frm)]
@@ -261,7 +273,12 @@ class Model:
             durations,
         )
 
-    def solve(self, stop: StoppingCriterion, seed: int = 0) -> Result:
+    def solve(
+        self,
+        stop: StoppingCriterion,
+        seed: int = 0,
+        display: bool = True,
+    ) -> Result:
         """
         Solve this model.
 
@@ -270,7 +287,10 @@ class Model:
         stop
             Stopping criterion to use.
         seed
-            Seed value to use for the PRNG, by default 0.
+            Seed value to use for the random number stream. Default 0.
+        display
+            Whether to display information about the solver progress. Default
+            ``True``.
 
         Returns
         -------
@@ -309,4 +329,4 @@ class Model:
 
         gen_args = (data, pm, rng, pop, ls, crossover, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop)
+        return algo.run(stop, display)

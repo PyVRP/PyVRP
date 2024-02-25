@@ -38,6 +38,7 @@ namespace pyvrp
 class Solution
 {
     using Client = size_t;
+    using Depot = size_t;
     using VehicleType = size_t;
 
 public:
@@ -56,8 +57,9 @@ public:
 
         Visits visits_ = {};      // Client visits on this route
         Distance distance_ = 0;   // Total travel distance on this route
-        Load demand_ = 0;         // Total demand served on this route
-        Load excessLoad_ = 0;     // Excess demand (w.r.t. vehicle capacity)
+        Load delivery_ = 0;       // Total delivery amount served on this route
+        Load pickup_ = 0;         // Total pickup amount gathered on this route
+        Load excessLoad_ = 0;     // Excess pickup or delivery demand
         Duration duration_ = 0;   // Total duration of this route
         Duration timeWarp_ = 0;   // Total time warp on this route
         Duration travel_ = 0;     // Total *travel* duration on this route
@@ -68,8 +70,9 @@ public:
         Duration slack_ = 0;      // Total time slack on this route
         Cost prizes_ = 0;         // Total value of prizes on this route
 
-        std::pair<double, double> centroid_;  // center of the route
-        VehicleType vehicleType_ = 0;         // Type of vehicle of this route
+        std::pair<double, double> centroid_;  // Route center
+        VehicleType vehicleType_;             // Type of vehicle
+        Depot depot_;                         // Assigned depot
 
     public:
         [[nodiscard]] bool empty() const;
@@ -90,12 +93,17 @@ public:
         [[nodiscard]] Distance distance() const;
 
         /**
-         * Total client demand on this route.
+         * Total client delivery amount on this route.
          */
-        [[nodiscard]] Load demand() const;
+        [[nodiscard]] Load delivery() const;
 
         /**
-         * Demand in excess of the vehicle's capacity.
+         * Total client pickup amount on this route.
+         */
+        [[nodiscard]] Load pickup() const;
+
+        /**
+         * Pick or delivery demand in excess of the vehicle's capacity.
          */
         [[nodiscard]] Load excessLoad() const;
 
@@ -179,13 +187,19 @@ public:
          */
         [[nodiscard]] VehicleType vehicleType() const;
 
+        /**
+         * Location index of the route's depot.
+         */
+        [[nodiscard]] Depot depot() const;
+
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
         bool operator==(Route const &other) const;
 
-        Route() = default;  // default is empty
+        Route() = delete;
+
         Route(ProblemData const &data,
               Visits visits,
               VehicleType const vehicleType);
@@ -194,7 +208,8 @@ public:
         // objects.
         Route(Visits visits,
               Distance distance,
-              Load demand,
+              Load delivery,
+              Load pickup,
               Load excessLoad,
               Duration duration,
               Duration timeWarp,
@@ -206,7 +221,8 @@ public:
               Duration slack,
               Cost prizes,
               std::pair<double, double> centroid,
-              VehicleType vehicleType);
+              VehicleType vehicleType,
+              Depot depot);
     };
 
 private:
@@ -237,6 +253,9 @@ private:
     Solution &operator=(Solution &&other) = default;
 
 public:
+    // Solution is empty when it has no routes and no clients.
+    [[nodiscard]] bool empty() const;
+
     /**
      * Number of routes in this solution.
      *

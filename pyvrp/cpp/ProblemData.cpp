@@ -1,5 +1,6 @@
 #include "ProblemData.h"
 
+#include <cassert>
 #include <cstring>
 #include <numeric>
 
@@ -24,7 +25,8 @@ static char *duplicate(char const *src)
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
-                            Load demand,
+                            Load delivery,
+                            Load pickup,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -34,17 +36,21 @@ ProblemData::Client::Client(Coordinate x,
                             char const *name)
     : x(x),
       y(y),
-      demand(demand),
+      delivery(delivery),
+      pickup(pickup),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
       releaseTime(releaseTime),
       prize(prize),
-      name(duplicate(name)),
-      required(required)
+      required(required),
+      name(duplicate(name))
 {
-    if (demand < 0)
-        throw std::invalid_argument("demand must be >= 0.");
+    if (delivery < 0)
+        throw std::invalid_argument("delivery amount must be >= 0.");
+
+    if (pickup < 0)
+        throw std::invalid_argument("pickup amount must be >= 0.");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0.");
@@ -55,6 +61,12 @@ ProblemData::Client::Client(Coordinate x,
     if (twEarly < 0)
         throw std::invalid_argument("tw_early must be >= 0.");
 
+    if (releaseTime > twLate)
+        throw std::invalid_argument("release_time must be <= tw_late");
+
+    if (releaseTime < 0)
+        throw std::invalid_argument("release_time must be >= 0.");
+
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
 }
@@ -62,41 +74,78 @@ ProblemData::Client::Client(Coordinate x,
 ProblemData::Client::Client(Client const &client)
     : x(client.x),
       y(client.y),
-      demand(client.demand),
+      delivery(client.delivery),
+      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
       releaseTime(client.releaseTime),
       prize(client.prize),
-      name(duplicate(client.name)),
-      required(client.required)
+      required(client.required),
+      name(duplicate(client.name))
 {
 }
 
 ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
-      demand(client.demand),
+      delivery(client.delivery),
+      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
       releaseTime(client.releaseTime),
       prize(client.prize),
-      name(client.name),  // we can steal
-      required(client.required)
+      required(client.required),
+      name(client.name)  // we can steal
 {
     client.name = nullptr;  // stolen
 }
 
 ProblemData::Client::~Client() { delete[] name; }
 
+ProblemData::Depot::Depot(Coordinate x,
+                          Coordinate y,
+                          Duration twEarly,
+                          Duration twLate,
+                          char const *name)
+    : x(x), y(y), twEarly(twEarly), twLate(twLate), name(duplicate(name))
+{
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
+}
+
+ProblemData::Depot::Depot(Depot const &depot)
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(duplicate(depot.name))
+{
+}
+
+ProblemData::Depot::Depot(Depot &&depot)
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(depot.name)  // we can steal
+{
+    depot.name = nullptr;  // stolen
+}
+
+ProblemData::Depot::~Depot() { delete[] name; }
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
                                       Cost fixedCost,
-                                      std::optional<Duration> twEarly,
-                                      std::optional<Duration> twLate,
-                                      std::optional<Duration> maxDuration,
+                                      Duration twEarly,
+                                      Duration twLate,
+                                      Duration maxDuration,
                                       char const *name)
     : numAvailable(numAvailable),
       depot(depot),
@@ -105,7 +154,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       twEarly(twEarly),
       twLate(twLate),
       name(duplicate(name)),
-      maxDuration(maxDuration.value_or(std::numeric_limits<Duration>::max()))
+      maxDuration(maxDuration)
 {
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
@@ -116,20 +165,13 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
 
-    if ((twEarly && !twLate) || (!twEarly && twLate))
-        throw std::invalid_argument("Must pass either no shift time window,"
-                                    " or both a start and end.");
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
 
-    if (twEarly && twLate)
-    {
-        if (twEarly > twLate)
-            throw std::invalid_argument("tw_early must be <= tw_late.");
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
 
-        if (twEarly < 0)
-            throw std::invalid_argument("tw_early must be >= 0.");
-    }
-
-    if (this->maxDuration < 0)
+    if (maxDuration < 0)
         throw std::invalid_argument("max_duration must be >= 0.");
 }
 
@@ -165,15 +207,25 @@ std::vector<ProblemData::Client> const &ProblemData::clients() const
     return clients_;
 }
 
-std::vector<ProblemData::Client> const &ProblemData::depots() const
+std::vector<ProblemData::Depot> const &ProblemData::depots() const
 {
     return depots_;
+}
+
+ProblemData::VehicleType const &
+ProblemData::vehicleType(size_t vehicleType) const
+{
+    return vehicleTypes_[vehicleType];
 }
 
 std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
 {
     return vehicleTypes_;
 }
+
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 
 std::pair<double, double> const &ProblemData::centroid() const
 {
@@ -192,7 +244,7 @@ size_t ProblemData::numVehicles() const { return numVehicles_; }
 
 ProblemData
 ProblemData::replace(std::optional<std::vector<Client>> &clients,
-                     std::optional<std::vector<Client>> &depots,
+                     std::optional<std::vector<Depot>> &depots,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<Matrix<Distance>> &distMat,
                      std::optional<Matrix<Duration>> &durMat)
@@ -205,7 +257,7 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
 }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
-                         std::vector<Client> const &depots,
+                         std::vector<Depot> const &depots,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> distMat,
                          Matrix<Duration> durMat)
@@ -233,16 +285,13 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
         throw std::invalid_argument("Duration matrix shape does not match the "
                                     "problem size.");
 
-    for (auto const &depot : depots_)
+    for (size_t idx = 0; idx != numLocations(); ++idx)
     {
-        if (depot.demand != 0)
-            throw std::invalid_argument("Depot demand must be 0.");
+        if (dist_(idx, idx) != 0)
+            throw std::invalid_argument("Distance matrix diagonal must be 0.");
 
-        if (depot.serviceDuration != 0)
-            throw std::invalid_argument("Depot service duration must be 0.");
-
-        if (depot.releaseTime != 0)
-            throw std::invalid_argument("Depot release time must be 0.");
+        if (dur_(idx, idx) != 0)
+            throw std::invalid_argument("Duration matrix diagonal must be 0.");
     }
 
     for (auto const &client : clients_)

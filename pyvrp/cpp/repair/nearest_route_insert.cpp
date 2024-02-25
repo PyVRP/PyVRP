@@ -1,7 +1,7 @@
 #include "nearest_route_insert.h"
 #include "repair.h"
 
-#include "TimeWindowSegment.h"
+#include "DurationSegment.h"
 #include "search/primitives.h"
 
 #include <algorithm>
@@ -16,10 +16,11 @@ using Locations = std::vector<Route::Node>;
 using Routes = std::vector<Route>;
 using SolRoutes = std::vector<Solution::Route>;
 
-Solution pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
-                                           std::vector<size_t> const &unplanned,
-                                           ProblemData const &data,
-                                           CostEvaluator const &costEvaluator)
+std::vector<Solution::Route>
+pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
+                                  std::vector<size_t> const &unplanned,
+                                  ProblemData const &data,
+                                  CostEvaluator const &costEvaluator)
 {
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
@@ -31,6 +32,7 @@ Solution pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
     for (size_t client : unplanned)
     {
         Route::Node *U = &locs[client];
+        ProblemData::Client const &clientData = data.location(client);
         assert(!U->route());
 
         // Determine route with centroid nearest to this client.
@@ -41,8 +43,8 @@ Solution pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
             if (b.empty() && !a.empty())
                 return true;
 
-            auto const x = static_cast<double>(data.location(client).x);
-            auto const y = static_cast<double>(data.location(client).y);
+            auto const x = static_cast<double>(clientData.x);
+            auto const y = static_cast<double>(clientData.y);
 
             auto const [aX, aY] = a.centroid();
             auto const [bX, bY] = b.centroid();

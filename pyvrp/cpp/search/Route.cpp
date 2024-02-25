@@ -6,7 +6,6 @@
 #include <utility>
 
 using pyvrp::search::Route;
-using TWS = pyvrp::TimeWindowSegment;
 
 Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
@@ -23,9 +22,31 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::NodeStats::NodeStats(TimeWindowSegment const &tws)
-    : cumDist(0), cumLoad(0), tws(tws), twsAfter(tws), twsBefore(tws)
+std::vector<Route::Node *>::const_iterator Route::begin() const
 {
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::const_iterator Route::end() const
+{
+    return nodes.end() - 1;
+}
+
+std::vector<Route::Node *>::iterator Route::begin()
+{
+    return nodes.begin() + 1;
+}
+std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
+
+pyvrp::Distance Route::distance() const
+{
+    assert(!dirty);
+    return distBefore.back();
+}
+
+pyvrp::Duration Route::duration() const
+{
+    assert(!dirty);
+    return durBefore.back().duration();
 }
 
 std::pair<double, double> const &Route::centroid() const
@@ -73,26 +94,27 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    auto const &depot = data.location(vehicleType_.depot);
-
     // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter. If the
-    // vehicle does not have a shift time window, we default to the depot's
-    // open and close times.
-    auto const shiftStart = vehicleType_.twEarly.value_or(depot.twEarly);
-    auto const shiftEnd = vehicleType_.twLate.value_or(depot.twLate);
+    // the vehicle's start and end of shift, whichever is tighter.
+    ProblemData::Depot const &depot = data.location(vehicleType_.depot);
+    DurationSegment depotDS(vehicleType_.depot,
+                            vehicleType_.depot,
+                            0,
+                            0,
+                            std::max(depot.twEarly, vehicleType_.twEarly),
+                            std::min(depot.twLate, vehicleType_.twLate),
+                            0);
 
-    TWS depotTws(vehicleType_.depot,
-                 vehicleType_.depot,
-                 0,
-                 0,
-                 std::max(depot.twEarly, shiftStart),
-                 std::min(depot.twLate, shiftEnd),
-                 0);
+    // Clear all existing statistics and reinsert depot statistics.
+    distBefore = {0, 0};
 
-    stats.clear();  // clear stats and reinsert depot statistics.
-    stats.emplace_back(depotTws);
-    stats.emplace_back(depotTws);
+    loadAt = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
+    loadAfter = loadAt;
+    loadBefore = loadAt;
+
+    durAt = {depotDS, depotDS};
+    durAfter = durAt;
+    durBefore = durAt;
 
 #ifndef NDEBUG
     dirty = false;
@@ -108,13 +130,22 @@ void Route::insert(size_t idx, Node *node)
     node->route_ = this;
     nodes.insert(nodes.begin() + idx, node);
 
-    // We do not need to update the statistics; Route::update() will handle
-    // that later.
-    stats.insert(stats.begin() + idx,
-                 TWS(node->client(), data.location(node->client())));
-
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
+
+    // We do not need to update the statistics; Route::update() will handle
+    // that later. We just need to ensure the right client data is inserted.
+    distBefore.push_back(0);  // no need for correct index
+
+    ProblemData::Client const &client = data.location(node->client());
+
+    loadAt.emplace(loadAt.begin() + idx, client);
+    loadAfter.emplace(loadAfter.begin() + idx, client);
+    loadBefore.emplace(loadBefore.begin() + idx, client);
+
+    durAt.emplace(durAt.begin() + idx, node->client(), client);
+    durAfter.emplace(durAfter.begin() + idx, node->client(), client);
+    durBefore.emplace(durBefore.begin() + idx, node->client(), client);
 
 #ifndef NDEBUG
     dirty = true;
@@ -141,10 +172,19 @@ void Route::remove(size_t idx)
     node->route_ = nullptr;
 
     nodes.erase(nodes.begin() + idx);
-    stats.erase(stats.begin() + idx);
 
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
+
+    distBefore.pop_back();  // no need for correct index
+
+    loadAt.erase(loadAt.begin() + idx);
+    loadBefore.erase(loadBefore.begin() + idx);
+    loadAfter.erase(loadAfter.begin() + idx);
+
+    durAt.erase(durAt.begin() + idx);
+    durBefore.erase(durBefore.begin() + idx);
+    durAfter.erase(durAfter.begin() + idx);
 
 #ifndef NDEBUG
     dirty = true;
@@ -156,8 +196,14 @@ void Route::swap(Node *first, Node *second)
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
-    std::swap(first->route_->stats[first->idx_],
-              second->route_->stats[second->idx_]);
+
+    // Only need to swap the segments *at* the client's index. Other cached
+    // values are recomputed based on these values, and that recompute will
+    // overwrite the other outdated (cached) segments.
+    std::swap(first->route_->loadAt[first->idx_],
+              second->route_->loadAt[second->idx_]);
+    std::swap(first->route_->durAt[first->idx_],
+              second->route_->durAt[second->idx_]);
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
@@ -174,31 +220,42 @@ void Route::update()
 
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
-        auto *node = nodes[idx];
-        auto const &clientData = data.location(node->client());
+        auto const *node = nodes[idx];
+        size_t const client = node->client();
 
         if (!node->isDepot())
         {
+            ProblemData::Client const &clientData = data.location(client);
             centroid_.first += static_cast<double>(clientData.x) / size();
             centroid_.second += static_cast<double>(clientData.y) / size();
         }
 
-        auto const dist = data.dist(nodes[idx - 1]->client(), node->client());
-        stats[idx].cumDist = stats[idx - 1].cumDist + dist;
-        stats[idx].cumLoad = stats[idx - 1].cumLoad + clientData.demand;
+        auto const dist = data.dist(nodes[idx - 1]->client(), client);
+        distBefore[idx] = distBefore[idx - 1] + dist;
     }
 
-#ifndef PYVRP_NO_TIME_WINDOWS
-    // Backward time window segments (depot -> client).
+    // Backward segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        stats[idx].twsBefore = TWS::merge(
-            data.durationMatrix(), stats[idx - 1].twsBefore, stats[idx].tws);
+    {
+        loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
 
-    // Forward time window segments (client -> depot).
-    for (auto idx = nodes.size() - 1; idx != 0; --idx)
-        stats[idx - 1].twsAfter = TWS::merge(
-            data.durationMatrix(), stats[idx - 1].tws, stats[idx].twsAfter);
+#ifndef PYVRP_NO_TIME_WINDOWS
+        durBefore[idx] = DurationSegment::merge(
+            data.durationMatrix(), durBefore[idx - 1], durAt[idx]);
 #endif
+    }
+
+    // Forward segments (client -> depot).
+    for (auto idx = nodes.size() - 1; idx != 0; --idx)
+    {
+        loadAfter[idx - 1]
+            = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
+
+#ifndef PYVRP_NO_TIME_WINDOWS
+        durAfter[idx - 1] = DurationSegment::merge(
+            data.durationMatrix(), durAt[idx - 1], durAfter[idx]);
+#endif
+    }
 
 #ifndef NDEBUG
     dirty = false;

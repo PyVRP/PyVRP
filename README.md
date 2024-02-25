@@ -1,13 +1,14 @@
 ![PyVRP logo](docs/source/assets/images/logo.svg)
 
-[![PyPI version](https://badge.fury.io/py/pyvrp.svg)](https://badge.fury.io/py/pyvrp)
-[![CI](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
-[![DOC](https://github.com/PyVRP/PyVRP/actions/workflows/DOC.yml/badge.svg?branch=main)](https://pyvrp.org/)
-[![codecov](https://codecov.io/gh/PyVRP/PyVRP/branch/main/graph/badge.svg?token=G9JKIVZOHB)](https://codecov.io/gh/PyVRP/PyVRP)
+[![PyPI version](https://img.shields.io/pypi/v/PyVRP?style=flat-square&label=PyPI)](https://pypi.org/project/pyvrp/)
+[![CI](https://img.shields.io/github/actions/workflow/status/PyVRP/PyVRP/.github%2Fworkflows%2FCI.yml?branch=main&style=flat-square&logo=github&label=CI)](https://github.com/PyVRP/PyVRP/actions/workflows/CI.yml)
+[![DOC](https://img.shields.io/github/actions/workflow/status/PyVRP/PyVRP/.github%2Fworkflows%2FDOC.yml?branch=main&style=flat-square&logo=github&label=DOC)](https://pyvrp.org/)
+[![codecov](https://img.shields.io/codecov/c/github/PyVRP/PyVRP?style=flat-square&logo=codecov&label=Codecov)](https://codecov.io/gh/PyVRP/PyVRP)
+[![DOI:10.1287/ijoc.2023.0055](https://img.shields.io/badge/DOI-ijoc.2023.0055-green?style=flat-square&color=blue)](https://doi.org/10.1287/ijoc.2023.0055)
 
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
 It currently supports VRPs with:
-- Client demands (capacitated VRP);
+- Pickups and/or deliveries (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
 - Vehicles of different capacities, costs, and shift durations (heterogeneous fleet VRP);
 - Time windows, client service durations, and release times (VRP with time windows and release times);
 - Multiple depots (multi-depot VRP);
@@ -53,7 +54,26 @@ If you are looking for help, please follow the instructions [here][3].
 
 ### How to cite PyVRP
 
-TODO
+If you use PyVRP in your research, please consider citing the following paper:
+
+> Wouda, N.A., L. Lan, and W. Kool (2024).
+> PyVRP: a high-performance VRP solver package.
+> _INFORMS Journal on Computing_, forthcoming.
+> https://doi.org/10.1287/ijoc.2023.0055
+
+Or, using the following BibTeX entry:
+
+```bibtex
+@article{Wouda_Lan_Kool_PyVRP_2024,
+  doi = {10.1287/ijoc.2023.0055},
+  url = {https://doi.org/10.1287/ijoc.2023.0055},
+  year = {2024},
+  publisher = {INFORMS},
+  author = {Niels A. Wouda and Leon Lan and Wouter Kool},
+  title = {{PyVRP}: a high-performance {VRP} solver package},
+  journal = {INFORMS Journal on Computing},
+}
+```
 
 
 [1]: https://pyvrp.org/

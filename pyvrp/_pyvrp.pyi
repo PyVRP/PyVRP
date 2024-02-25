@@ -26,7 +26,8 @@ class DynamicBitset:
 class Client:
     x: int
     y: int
-    demand: int
+    delivery: int
+    pickup: int
     service_duration: int
     tw_early: int
     tw_late: int
@@ -38,13 +39,29 @@ class Client:
         self,
         x: int,
         y: int,
-        demand: int = 0,
+        delivery: int = 0,
+        pickup: int = 0,
         service_duration: int = 0,
         tw_early: int = 0,
-        tw_late: int = 0,
+        tw_late: int = ...,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        name: str = "",
+    ) -> None: ...
+
+class Depot:
+    x: int
+    y: int
+    tw_early: int
+    tw_late: int
+    name: str
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        tw_early: int = 0,
+        tw_late: int = ...,
         name: str = "",
     ) -> None: ...
 
@@ -53,9 +70,9 @@ class VehicleType:
     depot: int
     capacity: int
     fixed_cost: int
-    tw_early: Optional[int]
-    tw_late: Optional[int]
-    max_duration: Optional[int]
+    tw_early: int
+    tw_late: int
+    max_duration: int
     name: str
     def __init__(
         self,
@@ -63,9 +80,9 @@ class VehicleType:
         capacity: int = 0,
         depot: int = 0,
         fixed_cost: int = 0,
-        tw_early: Optional[int] = None,
-        tw_late: Optional[int] = None,
-        max_duration: Optional[int] = None,
+        tw_early: int = 0,
+        tw_late: int = ...,
+        max_duration: int = ...,
         name: str = "",
     ) -> None: ...
 
@@ -73,29 +90,29 @@ class ProblemData:
     def __init__(
         self,
         clients: list[Client],
-        depots: list[Client],
+        depots: list[Depot],
         vehicle_types: list[VehicleType],
-        distance_matrix: np.ndarray,
-        duration_matrix: np.ndarray,
+        distance_matrix: np.ndarray[int],
+        duration_matrix: np.ndarray[int],
     ) -> None: ...
-    def location(self, idx: int) -> Client: ...
+    def location(self, idx: int) -> Union[Client, Depot]: ...
     def clients(self) -> list[Client]: ...
-    def depots(self) -> list[Client]: ...
+    def depots(self) -> list[Depot]: ...
     def vehicle_types(self) -> list[VehicleType]: ...
     def replace(
         self,
         clients: Optional[list[Client]] = None,
-        depots: Optional[list[Client]] = None,
+        depots: Optional[list[Depot]] = None,
         vehicle_types: Optional[list[VehicleType]] = None,
-        distance_matrix: Optional[np.ndarray] = None,
-        duration_matrix: Optional[np.ndarray] = None,
+        distance_matrix: Optional[np.ndarray[int]] = None,
+        duration_matrix: Optional[np.ndarray[int]] = None,
     ) -> ProblemData: ...
     def centroid(self) -> tuple[float, float]: ...
     def vehicle_type(self, vehicle_type: int) -> VehicleType: ...
     def dist(self, first: int, second: int) -> int: ...
     def duration(self, first: int, second: int) -> int: ...
-    def distance_matrix(self) -> np.ndarray: ...
-    def duration_matrix(self) -> np.ndarray: ...
+    def distance_matrix(self) -> np.ndarray[int]: ...
+    def duration_matrix(self) -> np.ndarray[int]: ...
     @property
     def num_clients(self) -> int: ...
     @property
@@ -118,7 +135,8 @@ class Route:
     def is_feasible(self) -> bool: ...
     def has_excess_load(self) -> bool: ...
     def has_time_warp(self) -> bool: ...
-    def demand(self) -> int: ...
+    def delivery(self) -> int: ...
+    def pickup(self) -> int: ...
     def excess_load(self) -> int: ...
     def distance(self) -> int: ...
     def duration(self) -> int: ...
@@ -134,8 +152,9 @@ class Route:
     def prizes(self) -> int: ...
     def centroid(self) -> tuple[float, float]: ...
     def vehicle_type(self) -> int: ...
+    def depot(self) -> int: ...
     def __getstate__(self) -> tuple: ...
-    def __setstate__(self) -> None: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
 
 class Solution:
     def __init__(
@@ -167,7 +186,7 @@ class Solution:
     def __hash__(self) -> int: ...
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> tuple: ...
-    def __setstate__(self) -> None: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
 
 class PopulationParams:
     generation_size: int
@@ -210,7 +229,31 @@ class SubPopulationItem:
     def solution(self) -> Solution: ...
     def avg_distance_closest(self) -> float: ...
 
-class TimeWindowSegment:
+class LoadSegment:
+    def __init__(
+        self,
+        delivery: int,
+        pickup: int,
+        load: int,
+    ) -> None: ...
+    @overload
+    @staticmethod
+    def merge(
+        first: LoadSegment,
+        second: LoadSegment,
+    ) -> LoadSegment: ...
+    @overload
+    @staticmethod
+    def merge(
+        first: LoadSegment,
+        second: LoadSegment,
+        third: LoadSegment,
+    ) -> LoadSegment: ...
+    def delivery(self) -> int: ...
+    def pickup(self) -> int: ...
+    def load(self) -> int: ...
+
+class DurationSegment:
     def __init__(
         self,
         idx_first: int,
@@ -224,22 +267,22 @@ class TimeWindowSegment:
     @overload
     @staticmethod
     def merge(
-        duration_matrix: np.ndarray,
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-    ) -> TimeWindowSegment: ...
+        duration_matrix: np.ndarray[int],
+        first: DurationSegment,
+        second: DurationSegment,
+    ) -> DurationSegment: ...
     @overload
     @staticmethod
     def merge(
-        duration_matrix: np.ndarray,
-        first: TimeWindowSegment,
-        second: TimeWindowSegment,
-        third: TimeWindowSegment,
-    ) -> TimeWindowSegment: ...
+        duration_matrix: np.ndarray[int],
+        first: DurationSegment,
+        second: DurationSegment,
+        third: DurationSegment,
+    ) -> DurationSegment: ...
     def duration(self) -> int: ...
     def tw_early(self) -> int: ...
     def tw_late(self) -> int: ...
-    def time_warp(self, max_duration: Optional[int]) -> int: ...
+    def time_warp(self, max_duration: int = ...) -> int: ...
 
 class RandomNumberGenerator:
     @overload

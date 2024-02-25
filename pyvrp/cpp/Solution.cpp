@@ -1,6 +1,7 @@
 #include "Solution.h"
+#include "DurationSegment.h"
+#include "LoadSegment.h"
 #include "ProblemData.h"
-#include "TimeWindowSegment.h"
 
 #include <fstream>
 #include <numeric>
@@ -36,6 +37,8 @@ void Solution::evaluate(ProblemData const &data)
 
     uncollectedPrizes_ = allPrizes - prizes_;
 }
+
+bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
 
 size_t Solution::numRoutes() const { return routes_.size(); }
 
@@ -186,7 +189,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
     {
-        if (data.location(client).required && visits[client] == 0)
+        ProblemData::Client const &clientData = data.location(client);
+        if (clientData.required && visits[client] == 0)
             numMissingClients_ += 1;
 
         if (visits[client] > 1)
@@ -239,46 +243,45 @@ Solution::Route::Route(ProblemData const &data,
                        size_t const vehicleType)
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
+    auto const &vehType = data.vehicleType(vehicleType);
+    depot_ = vehType.depot;
+
     if (visits_.empty())
         return;
 
-    auto const &vehType = data.vehicleType(vehicleType);
-    auto const &depot = data.location(vehType.depot);
-
     // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter. If the
-    // vehicle does not have a shift time window, we default to the depot's
-    // open and close times.
-    auto const shiftStart = vehType.twEarly.value_or(depot.twEarly);
-    auto const shiftEnd = vehType.twLate.value_or(depot.twLate);
+    // the vehicle's start and end of shift, whichever is tighter.
+    ProblemData::Depot const &depotLocation = data.location(depot_);
+    DurationSegment depotDS(depot_,
+                            depot_,
+                            0,
+                            0,
+                            std::max(depotLocation.twEarly, vehType.twEarly),
+                            std::min(depotLocation.twLate, vehType.twLate),
+                            0);
 
-    TimeWindowSegment depotTws(vehType.depot,
-                               vehType.depot,
-                               0,
-                               0,
-                               std::max(depot.twEarly, shiftStart),
-                               std::min(depot.twLate, shiftEnd),
-                               0);
-
-    auto tws = depotTws;
+    auto ds = depotDS;
+    auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.depot;
 
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
-        auto const &clientData = data.location(client);
+        ProblemData::Client const &clientData = data.location(client);
 
         distance_ += data.dist(prevClient, client);
         travel_ += data.duration(prevClient, client);
-        demand_ += clientData.demand;
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
 
-        auto const clientTws = TimeWindowSegment(client, clientData);
-        tws = TimeWindowSegment::merge(data.durationMatrix(), tws, clientTws);
+        auto const clientDS = DurationSegment(client, clientData);
+        ds = DurationSegment::merge(data.durationMatrix(), ds, clientDS);
+
+        auto const clientLs = LoadSegment(clientData);
+        ls = LoadSegment::merge(ls, clientLs);
 
         prevClient = client;
     }
@@ -287,19 +290,22 @@ Solution::Route::Route(ProblemData const &data,
     distance_ += data.dist(last, vehType.depot);
     travel_ += data.duration(last, vehType.depot);
 
-    excessLoad_ = std::max<Load>(demand_ - vehType.capacity, 0);
+    delivery_ = ls.delivery();
+    pickup_ = ls.pickup();
+    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    tws = TimeWindowSegment::merge(data.durationMatrix(), tws, depotTws);
-    duration_ = tws.duration();
-    startTime_ = tws.twEarly();
-    slack_ = tws.twLate() - tws.twEarly();
-    timeWarp_ = tws.timeWarp(vehType.maxDuration);
-    release_ = tws.releaseTime();
+    ds = DurationSegment::merge(data.durationMatrix(), ds, depotDS);
+    duration_ = ds.duration();
+    startTime_ = ds.twEarly();
+    slack_ = ds.twLate() - ds.twEarly();
+    timeWarp_ = ds.timeWarp(vehType.maxDuration);
+    release_ = ds.releaseTime();
 }
 
 Solution::Route::Route(Visits visits,
                        Distance distance,
-                       Load demand,
+                       Load delivery,
+                       Load pickup,
                        Load excessLoad,
                        Duration duration,
                        Duration timeWarp,
@@ -311,10 +317,12 @@ Solution::Route::Route(Visits visits,
                        Duration slack,
                        Cost prizes,
                        std::pair<double, double> centroid,
-                       size_t vehicleType)
+                       size_t vehicleType,
+                       size_t depot)
     : visits_(std::move(visits)),
       distance_(distance),
-      demand_(demand),
+      delivery_(delivery),
+      pickup_(pickup),
       excessLoad_(excessLoad),
       duration_(duration),
       timeWarp_(timeWarp),
@@ -326,7 +334,8 @@ Solution::Route::Route(Visits visits,
       slack_(slack),
       prizes_(prizes),
       centroid_(centroid),
-      vehicleType_(vehicleType)
+      vehicleType_(vehicleType),
+      depot_(depot)
 {
 }
 
@@ -347,7 +356,9 @@ Visits const &Solution::Route::visits() const { return visits_; }
 
 Distance Solution::Route::distance() const { return distance_; }
 
-Load Solution::Route::demand() const { return demand_; }
+Load Solution::Route::delivery() const { return delivery_; }
+
+Load Solution::Route::pickup() const { return pickup_; }
 
 Load Solution::Route::excessLoad() const { return excessLoad_; }
 
@@ -384,6 +395,8 @@ std::pair<double, double> const &Solution::Route::centroid() const
 
 size_t Solution::Route::vehicleType() const { return vehicleType_; }
 
+size_t Solution::Route::depot() const { return depot_; }
+
 bool Solution::Route::isFeasible() const
 {
     return !hasExcessLoad() && !hasTimeWarp();
@@ -397,10 +410,10 @@ bool Solution::Route::operator==(Solution::Route const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
     // Only when these are the same we test if the visits are all equal.
-
     // clang-format off
     return distance_ == other.distance_
-        && demand_ == other.demand_
+        && delivery_ == other.delivery_
+        && pickup_ == other.pickup_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;

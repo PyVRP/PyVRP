@@ -62,7 +62,7 @@ In the :mod:`pyvrp.search` module, either changes need to be made to the operato
 In the case of prize-collecting, it was the latter: we added support for evaluating (and applying) moves that inserted a client into the solution, or removed a client from it.
 The required evaluation logic was easy to write by looking at the implementation of :class:`~pyvrp.search._search.Exchange10`.
 
-With those changes in place, an basic implementation supporting the new VRP variant is typically already functional.
+With those changes in place, a basic implementation supporting the new VRP variant is typically already functional.
 This is more than sufficient for an initial patch, so please open a pull request around this time.
 To get that pull request merged, two more things are required:
 
@@ -96,4 +96,8 @@ We hope that the guidelines on this page will prove helpful when adding support 
 
 .. note::
 
-   For further inspiration, you may want to look at the pull requests that added `release time support <https://github.com/PyVRP/PyVRP/pull/254>`_ and support for `multiple vehicle types <https://github.com/PyVRP/PyVRP/pull/245>`_.
+   For further inspiration, you may want to look at the pull requests that added:
+
+   * Support for `client release times <https://github.com/PyVRP/PyVRP/pull/254>`_.
+   * Support for `multiple vehicle types <https://github.com/PyVRP/PyVRP/pull/245>`_.
+   * Support for `multiple depots <https://github.com/PyVRP/PyVRP/pull/411>`_.
