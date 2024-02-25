@@ -10,8 +10,6 @@ build:
       - poetry config virtualenvs.create false
     post_install:
       - poetry install --with docs,examples
-      - pip list
-      - poetry show
 
 sphinx:
   configuration: docs/source/conf.py
