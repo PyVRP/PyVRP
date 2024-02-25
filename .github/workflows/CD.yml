@@ -37,13 +37,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
       - name: Build sdist
-        run: |
-          poetry build --format sdist
-          echo PYVRP_VERSION=`poetry version --short` >> $GITHUB_ENV
+        run: poetry build --format sdist
       - name: Build wheels from sdist
         uses: pypa/cibuildwheel@v2.16.3
         with:
-          package-dir: dist/pyvrp-${{ env.PYVRP_VERSION }}.tar.gz
+          package-dir: dist/pyvrp*.tar.gz
           output-dir: dist
       - uses: actions/upload-artifact@v4  # upload all wheels
         with:
