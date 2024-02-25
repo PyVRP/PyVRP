@@ -8,13 +8,13 @@ import numpy as np
 import vrplib
 
 from pyvrp._pyvrp import Client, Depot, ProblemData, VehicleType
-from pyvrp.constants import MAX_USER_VALUE
+from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
 _Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
-_INT_MAX = np.iinfo(np.int32).max
+_INT_MAX = np.iinfo(np.int64).max
 
 
 def round_nearest(vals: np.ndarray):
@@ -178,8 +178,8 @@ def read(
         # from backhaul to linehaul (avoiding linehaul after backhaul clients).
         linehaul = np.flatnonzero(demands > 0)
         backhaul = np.flatnonzero(backhauls > 0)
-        distances[0, backhaul] = MAX_USER_VALUE
-        distances[np.ix_(backhaul, linehaul)] = MAX_USER_VALUE
+        distances[0, backhaul] = MAX_VALUE
+        distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
     # Checks
     contiguous_lower_idcs = np.arange(len(depot_idcs))
@@ -190,7 +190,7 @@ def read(
         """
         raise ValueError(msg)
 
-    if max(distances.max(), durations.max()) > MAX_USER_VALUE:
+    if max(distances.max(), durations.max()) > MAX_VALUE:
         msg = """
         The maximum distance or duration value is very large. This might
         impact numerical stability. Consider rescaling your input data.

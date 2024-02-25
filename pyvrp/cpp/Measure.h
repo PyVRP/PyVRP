@@ -15,7 +15,7 @@ namespace pyvrp
 #ifdef PYVRP_DOUBLE_PRECISION
 using Value = double;
 #else
-using Value = int32_t;
+using Value = int64_t;
 #endif
 
 enum class MeasureType
