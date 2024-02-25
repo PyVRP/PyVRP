@@ -192,7 +192,7 @@ def test_reading_RC208_instance():  # Solomon style instance
 
     assert_allclose(data.location(1).x, 250)  # first customer [x, y] location
     assert_allclose(data.location(1).y, 850)
-    assert_equal(data.location(1).delivery, 200)
+    assert_allclose(data.location(1).delivery, 200)
     assert_allclose(data.location(1).tw_early, 3880)
     assert_allclose(data.location(1).tw_late, 9110)
     assert_allclose(data.location(1).service_duration, 100)
