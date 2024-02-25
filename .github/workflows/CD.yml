@@ -1,12 +1,8 @@
 name: CD
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  # release:
-  #   types: [ created ]
+  release:
+    types: [ created ]
 
 concurrency:
   group: ${{ github.ref }}
@@ -28,26 +24,10 @@ jobs:
           # on Windows systems; also works fine for us.
           choco install rtools -y --no-progress --force --version=4.0.0.20220206
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.12
-      - name: Update pip and poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-      - name: Build sdist
-        run: |
-          # Builds the source distribution package in the dist/ folder. That's
-          # the one we will upload to PyPI. We make a copy to the build/ 
-          # directory that does not have version information attached, so we
-          # can use that to also build the binary wheels.
-          poetry build --format sdist
-          cp dist/pyvrp*.tar.gz build/pyvrp.tar.gz
-      - name: Build wheels from sdist
+      - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.3
         with:
-          package-dir: build/pyvrp.tar.gz
+          package-dir: .
           output-dir: dist
       - uses: actions/upload-artifact@v4  # upload all wheels
         with:
@@ -68,13 +48,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install poetry
-      - uses: actions/download-artifact@v4  # download built artifacts
+      - uses: actions/download-artifact@v4  # download previously built wheels
         with:
           name: dist
           path: dist/
+      - name: Build sdist
+        run: poetry build --format sdist
       - name: List packaged distributions
         run: ls -la dist/
-      # - name: Deploy to PyPI
-      #   run: |
-      #     poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-      #     poetry publish
+      - name: Deploy to PyPI
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish
