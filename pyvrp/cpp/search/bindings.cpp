@@ -284,6 +284,12 @@ PYBIND11_MODULE(_search, m)
         .def("max_duration", &Route::maxDuration)
         .def("time_warp", &Route::timeWarp)
         .def(
+            "dist_at",
+            [](Route const &route, size_t idx) {
+                return static_cast<pyvrp::DistanceSegment>(route.at(idx));
+            },
+            py::arg("idx"))
+        .def(
             "dist_between",
             [](Route const &route, size_t start, size_t end) {
                 return static_cast<pyvrp::DistanceSegment>(

@@ -250,6 +250,11 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
         ok_small.dist(0, client) + ok_small.dist(client, 0),
     )
 
+    # This should always be zero because distance is a property of the edges,
+    # not the nodes.
+    assert_allclose(route.dist_at(0).distance(), 0)
+    assert_allclose(route.dist_at(1).distance(), 0)
+
 
 def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
     """

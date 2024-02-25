@@ -90,6 +90,7 @@ private:
 
     public:
         inline ProxyAt(Route const &route, size_t idx);
+        inline operator DistanceSegment() const;
         inline operator DurationSegment const &() const;
         inline operator LoadSegment const &() const;
     };
@@ -406,6 +407,11 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
     : route(&route), start(start), end(end)
 {
     assert(start <= end && end < route.nodes.size());
+}
+
+Route::ProxyAt::operator DistanceSegment() const
+{
+    return DistanceSegment(route->nodes[idx]->client());
 }
 
 Route::ProxyAt::operator pyvrp::DurationSegment const &() const
