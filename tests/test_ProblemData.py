@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 import pytest
 from numpy.random import default_rng
@@ -514,11 +512,11 @@ def test_vehicle_type_default_values():
     # double precision. In each case, the default value for the following
     # fields is the largest representable value.
     if isinstance(vehicle_type.max_duration, int):
-        assert_allclose(vehicle_type.tw_late, np.iinfo(np.int32).max)
-        assert_equal(vehicle_type.max_duration, np.iinfo(np.int32).max)
+        assert_allclose(vehicle_type.tw_late, np.iinfo(np.int64).max)
+        assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
     else:
-        assert_allclose(vehicle_type.tw_late, sys.float_info.max)
-        assert_allclose(vehicle_type.max_duration, sys.float_info.max)
+        assert_allclose(vehicle_type.tw_late, np.finfo(np.float64).max)
+        assert_allclose(vehicle_type.max_duration, np.finfo(np.float64).max)
 
 
 def test_vehicle_type_attribute_access():

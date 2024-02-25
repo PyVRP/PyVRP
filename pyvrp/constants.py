@@ -1,11 +1,7 @@
-MAX_USER_VALUE = 2 << 22
-"""
-Maximum input value the user may provide. Any bigger value issues a warning
-about possible scaling issues.
-"""
-
-MAX_VALUE = 2 << 25
+MAX_VALUE = 1 << 52
 """
 The default maximum value that is used internally when an edge is missing in
-the input data. 
+the input data. This is the largest value that can be passed for any element of
+the input distance or duration matrices. Passing larger values warns about 
+possible overflow due to scaling issues.
 """

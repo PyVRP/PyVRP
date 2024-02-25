@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 
 from pyvrp._pyvrp import LoadSegment
 
-_INT_MAX = np.iinfo(np.int32).max
+_INT_MAX = np.iinfo(np.int64).max
 
 
 @pytest.mark.parametrize(

@@ -416,7 +416,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
 @pytest.mark.parametrize(
     ("shift_tw", "expected_tw"),
     [
-        ((0, np.iinfo(np.int32).max), (0, 1000)),  # should default to depot
+        ((0, np.iinfo(np.int64).max), (0, 1000)),  # should default to depot
         ((0, 1000), (0, 1000)),  # same as depot
         ((0, 500), (0, 500)),  # earlier tw_late, should lower tw_late
         ((250, 1000), (250, 1000)),  # later tw_early, should increase tw_early

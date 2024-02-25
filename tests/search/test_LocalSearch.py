@@ -250,8 +250,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     # Now make the instance heterogeneous and update the local search.
     data = rc208.replace(
         vehicle_types=[
-            VehicleType(25, capacity=1000),
-            VehicleType(25, capacity=1000),
+            VehicleType(25, capacity=10_000),
+            VehicleType(25, capacity=10_000),
         ]
     )
 

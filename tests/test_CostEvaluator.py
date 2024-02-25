@@ -92,7 +92,7 @@ def test_cost(ok_small):
     # The C++ code represents infinity using a relevant maximal value, which
     # depends on the precision type (double or integer).
     if isinstance(distance, int):
-        INFEAS_COST = np.iinfo(np.int32).max
+        INFEAS_COST = np.iinfo(np.int64).max
     else:
         INFEAS_COST = np.finfo(np.float64).max
 
