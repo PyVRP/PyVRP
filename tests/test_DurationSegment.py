@@ -61,7 +61,7 @@ def test_merge_three():
     assert_equal(merged3.time_warp(), 12)
 
 
-def test_merging_two_previously_merged_ds():
+def test_merging_two_previously_merged_duration_segments():
     """
     This test evaluates what happens when we merge two previously merged
     segments, when both have time warp.
