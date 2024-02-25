@@ -184,7 +184,6 @@ def test_reading_RC208_instance():  # Solomon style instance
     # truncated to integers (for 1 decimal integer precision).
     assert_allclose(vehicle_type.capacity, 10_000)
 
-    # Coordinates and times are scaled by 10 for 1 decimal distance precision
     assert_allclose(data.location(0).x, 400)  # depot [x, y] location
     assert_allclose(data.location(0).y, 500)
     assert_allclose(data.location(0).tw_early, 0)
