@@ -3,7 +3,6 @@
 
 #include "Matrix.h"
 #include "Measure.h"
-#include "ProblemData.h"
 
 namespace pyvrp
 {
@@ -46,6 +45,9 @@ public:
      * The total distance of this route segment.
      */
     [[nodiscard]] inline Distance distance() const;
+
+    // Construct an empty distance segment for the given client index.
+    DistanceSegment(size_t idx);
 
     // Construct from raw data.
     inline DistanceSegment(size_t idxFirst, size_t idxLast, Distance distance);
