@@ -107,7 +107,10 @@ def read(
     dimension: int = instance.get("dimension", durations.shape[0])
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
+
     capacity: int = instance.get("capacity", _INT_MAX)
+    if capacity != _INT_MAX:
+        capacity = round_func(np.array([capacity])).item()
 
     # If this value is supplied, we should pass it through the round func and
     # then unwrap the result. If it's not given, the default value is None,
@@ -117,12 +120,13 @@ def read(
         max_duration = round_func(np.array([max_duration])).item()
 
     if "backhaul" in instance:
-        backhauls: np.ndarray = instance["backhaul"]
+        backhauls: np.ndarray = round_func(instance["backhaul"])
     else:
         backhauls = np.zeros(dimension, dtype=int)
 
     if "demand" in instance or "linehaul" in instance:
         demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
+        demands = round_func(demands)
     else:
         demands = np.zeros(dimension, dtype=int)
 
@@ -172,8 +176,8 @@ def read(
         # enforced by setting a high value for the distance/duration from depot
         # to backhaul (forcing linehaul to be served first) and a large value
         # from backhaul to linehaul (avoiding linehaul after backhaul clients).
-        linehaul = np.flatnonzero(instance["demand"] > 0)
-        backhaul = np.flatnonzero(instance["backhaul"] > 0)
+        linehaul = np.flatnonzero(demands > 0)
+        backhaul = np.flatnonzero(backhauls > 0)
         distances[0, backhaul] = MAX_USER_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_USER_VALUE
 
