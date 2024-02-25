@@ -37,18 +37,6 @@ std::vector<Route::Node *>::iterator Route::begin()
 }
 std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
-pyvrp::Distance Route::distance() const
-{
-    assert(!dirty);
-    return distBefore.back();
-}
-
-pyvrp::Duration Route::duration() const
-{
-    assert(!dirty);
-    return durBefore.back().duration();
-}
-
 std::pair<double, double> const &Route::centroid() const
 {
     assert(!dirty);
@@ -106,7 +94,9 @@ void Route::clear()
                             0);
 
     // Clear all existing statistics and reinsert depot statistics.
-    distBefore = {0, 0};
+    distBefore = {DistanceSegment(vehicleType_.depot),
+                  DistanceSegment(vehicleType_.depot)};
+    distAfter = distBefore;
 
     loadAt = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
     loadAfter = loadAt;
@@ -135,7 +125,8 @@ void Route::insert(size_t idx, Node *node)
 
     // We do not need to update the statistics; Route::update() will handle
     // that later. We just need to ensure the right client data is inserted.
-    distBefore.push_back(0);  // no need for correct index
+    distBefore.emplace(distBefore.begin() + idx, node->client());
+    distAfter.emplace(distAfter.begin() + idx, node->client());
 
     ProblemData::Client const &client = data.location(node->client());
 
@@ -229,14 +220,16 @@ void Route::update()
             centroid_.first += static_cast<double>(clientData.x) / size();
             centroid_.second += static_cast<double>(clientData.y) / size();
         }
-
-        auto const dist = data.dist(nodes[idx - 1]->client(), client);
-        distBefore[idx] = distBefore[idx - 1] + dist;
     }
 
     // Backward segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
+        distBefore[idx]
+            = DistanceSegment::merge(data.distanceMatrix(),
+                                     distBefore[idx - 1],
+                                     DistanceSegment(nodes[idx]->client()));
+
         loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
@@ -248,6 +241,11 @@ void Route::update()
     // Forward segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
     {
+        distAfter[idx - 1]
+            = DistanceSegment::merge(data.distanceMatrix(),
+                                     DistanceSegment(nodes[idx - 1]->client()),
+                                     distAfter[idx]);
+
         loadAfter[idx - 1]
             = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
 

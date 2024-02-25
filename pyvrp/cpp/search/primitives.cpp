@@ -1,4 +1,6 @@
 #include "primitives.h"
+
+#include "DistanceSegment.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 
@@ -17,13 +19,17 @@ Cost pyvrp::search::insertCost(Route::Node *U,
     auto *route = V->route();
     ProblemData::Client const &client = data.location(U->client());
 
-    Distance const deltaDist = data.dist(V->client(), U->client())
-                               + data.dist(U->client(), n(V)->client())
-                               - data.dist(V->client(), n(V)->client());
+    Cost deltaCost
+        = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
-    Cost deltaCost = static_cast<Cost>(deltaDist) - client.prize;
+    auto const distSegment
+        = DistanceSegment::merge(data.distanceMatrix(),
+                                 route->before(V->idx()),
+                                 DistanceSegment(U->client()),
+                                 route->after(V->idx() + 1));
 
-    deltaCost += Cost(route->empty()) * route->fixedVehicleCost();
+    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost -= static_cast<Cost>(route->distance());
 
     auto const ls = LoadSegment::merge(route->before(V->idx()),
                                        LoadSegment(client),
@@ -53,13 +59,15 @@ Cost pyvrp::search::removeCost(Route::Node *U,
     auto *route = U->route();
     ProblemData::Client const &client = data.location(U->client());
 
-    Distance const deltaDist = data.dist(p(U)->client(), n(U)->client())
-                               - data.dist(p(U)->client(), U->client())
-                               - data.dist(U->client(), n(U)->client());
+    Cost deltaCost
+        = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
 
-    Cost deltaCost = static_cast<Cost>(deltaDist) + client.prize;
+    auto const distSegment = DistanceSegment::merge(data.distanceMatrix(),
+                                                    route->before(U->idx() - 1),
+                                                    route->after(U->idx() + 1));
 
-    deltaCost -= Cost(route->size() == 1) * route->fixedVehicleCost();
+    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost -= static_cast<Cost>(route->distance());
 
     auto const ls = LoadSegment::merge(route->before(U->idx() - 1),
                                        route->after(U->idx() + 1));
