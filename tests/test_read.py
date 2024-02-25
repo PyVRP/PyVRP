@@ -125,7 +125,7 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_locations, 22)
-    assert_equal(data.vehicle_type(0).capacity, 6_000)
+    assert_equal(data.vehicle_type(0).capacity, 60_000)
 
     assert_equal(len(data.depots()), data.num_depots)
     assert_equal(len(data.clients()), data.num_clients)
@@ -178,19 +178,20 @@ def test_reading_RC208_instance():  # Solomon style instance
     expected_name = ",".join(str(idx + 1) for idx in range(data.num_vehicles))
 
     assert_equal(vehicle_type.num_available, 25)
-    assert_equal(vehicle_type.capacity, 1_000)
     assert_equal(vehicle_type.name, expected_name)
 
-    # Coordinates and times are scaled by 10 for 1 decimal distance precision
+    # The trunc1 rounding function ensures everything is scaled by 10 and
+    # truncated to integers (for 1 decimal integer precision).
+    assert_equal(vehicle_type.capacity, 10_000)
+
     assert_equal(data.location(0).x, 400)  # depot [x, y] location
     assert_equal(data.location(0).y, 500)
     assert_equal(data.location(0).tw_early, 0)
     assert_equal(data.location(0).tw_late, 9600)
 
-    # Note: everything except delivery amount is scaled by 10
     assert_equal(data.location(1).x, 250)  # first customer [x, y] location
     assert_equal(data.location(1).y, 850)
-    assert_equal(data.location(1).delivery, 20)
+    assert_equal(data.location(1).delivery, 200)
     assert_equal(data.location(1).tw_early, 3880)
     assert_equal(data.location(1).tw_late, 9110)
     assert_equal(data.location(1).service_duration, 100)
