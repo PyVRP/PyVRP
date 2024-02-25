@@ -73,8 +73,8 @@ DistanceSegment DistanceSegment::merge(Matrix<Distance> const &distanceMatrix,
 
     if constexpr (sizeof...(args) == 0)
         return res;
-
-    return merge(distanceMatrix, res, args...);
+    else
+        return merge(distanceMatrix, res, args...);
 }
 
 Distance DistanceSegment::distance() const { return distance_; }
