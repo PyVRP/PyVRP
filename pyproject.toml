@@ -160,10 +160,5 @@ script = "build_extensions.py"
 [build-system]
 # We need meson and ninja to build the C++ extensions, and docblock to extract
 # documentation for the extensions.
-requires = [
-    "poetry >= 1.5.0",
-    "meson >= 1.0.0",
-    "ninja >= 1.11.1",
-    "docblock >= 0.1.1",
-]
+requires = ["poetry", "meson", "ninja", "docblock"]
 build-backend = "poetry.core.masonry.api"
