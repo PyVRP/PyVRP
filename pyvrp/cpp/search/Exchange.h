@@ -163,9 +163,6 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        if (deltaCost >= 0)
-            return deltaCost;
-
         if (U->idx() < V->idx())
         {
             auto const dist = DistanceSegment::merge(
@@ -176,6 +173,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->after(V->idx() + 1));
 
             deltaCost += static_cast<Cost>(dist.distance());
+
+            if (deltaCost >= 0)
+                return deltaCost;
 
             auto const ls = LoadSegment::merge(
                 uRoute->before(U->idx() - 1),
@@ -206,6 +206,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->after(U->idx() + N));
 
             deltaCost += static_cast<Cost>(dist.distance());
+
+            if (deltaCost >= 0)
+                return deltaCost;
 
             auto const ls = LoadSegment::merge(
                 uRoute->before(V->idx()),

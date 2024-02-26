@@ -96,6 +96,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
 
             deltaCost += static_cast<Cost>(dist.distance());
 
+            if (deltaCost >= 0)
+                return deltaCost;
+
             auto const ls
                 = LoadSegment::merge(uRoute->before(U->idx() - 1),
                                      uRoute->between(U->idx() + 2, V->idx()),
@@ -128,6 +131,9 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
                 uRoute->after(U->idx() + 2));
 
             deltaCost += static_cast<Cost>(dist.distance());
+
+            if (deltaCost >= 0)
+                return deltaCost;
 
             auto const ls = LoadSegment::merge(
                 uRoute->before(V->idx()),

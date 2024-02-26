@@ -85,15 +85,6 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
             uRoute->at(uRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(uDist.distance());
-
-        auto const uDS = DurationSegment::merge(
-            data.durationMatrix(),
-            uRoute->before(U->idx()),
-            vRoute->between(V->idx() + 1, vRoute->size()),
-            uRoute->at(uRoute->size() + 1));
-
-        deltaCost
-            += costEvaluator.twPenalty(uDS.timeWarp(uRoute->maxDuration()));
     }
     else
     {
@@ -103,13 +94,6 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
                                      uRoute->at(uRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(uDist.distance());
-
-        auto const uDS = DurationSegment::merge(data.durationMatrix(),
-                                                uRoute->before(U->idx()),
-                                                uRoute->at(uRoute->size() + 1));
-
-        deltaCost
-            += costEvaluator.twPenalty(uDS.timeWarp(uRoute->maxDuration()));
     }
 
     if (U->idx() < uRoute->size())
@@ -121,7 +105,46 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
             vRoute->at(vRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(vDist.distance());
+    }
+    else
+    {
+        auto const vDist
+            = DistanceSegment::merge(data.distanceMatrix(),
+                                     vRoute->before(V->idx()),
+                                     vRoute->at(vRoute->size() + 1));
 
+        deltaCost += static_cast<Cost>(vDist.distance());
+    }
+
+    deltaCost -= static_cast<Cost>(uRoute->distance());
+    deltaCost -= static_cast<Cost>(vRoute->distance());
+
+    if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
+        return deltaCost;
+
+    if (V->idx() < vRoute->size())
+    {
+        auto const uDS = DurationSegment::merge(
+            data.durationMatrix(),
+            uRoute->before(U->idx()),
+            vRoute->between(V->idx() + 1, vRoute->size()),
+            uRoute->at(uRoute->size() + 1));
+
+        deltaCost
+            += costEvaluator.twPenalty(uDS.timeWarp(uRoute->maxDuration()));
+    }
+    else
+    {
+        auto const uDS = DurationSegment::merge(data.durationMatrix(),
+                                                uRoute->before(U->idx()),
+                                                uRoute->at(uRoute->size() + 1));
+
+        deltaCost
+            += costEvaluator.twPenalty(uDS.timeWarp(uRoute->maxDuration()));
+    }
+
+    if (U->idx() < uRoute->size())
+    {
         auto const vDS = DurationSegment::merge(
             data.durationMatrix(),
             vRoute->before(V->idx()),
@@ -133,13 +156,6 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     }
     else
     {
-        auto const vDist
-            = DistanceSegment::merge(data.distanceMatrix(),
-                                     vRoute->before(V->idx()),
-                                     vRoute->at(vRoute->size() + 1));
-
-        deltaCost += static_cast<Cost>(vDist.distance());
-
         auto const vDS = DurationSegment::merge(data.durationMatrix(),
                                                 vRoute->before(V->idx()),
                                                 vRoute->at(vRoute->size() + 1));
@@ -147,9 +163,6 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
         deltaCost
             += costEvaluator.twPenalty(vDS.timeWarp(vRoute->maxDuration()));
     }
-
-    deltaCost -= static_cast<Cost>(uRoute->distance());
-    deltaCost -= static_cast<Cost>(vRoute->distance());
 
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
