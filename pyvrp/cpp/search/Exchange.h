@@ -1,9 +1,8 @@
 #ifndef PYVRP_EXCHANGE_H
 #define PYVRP_EXCHANGE_H
 
-#include "DurationSegment.h"
-#include "LoadSegment.h"
 #include "LocalSearchOperator.h"
+#include "Route.h"
 
 #include <cassert>
 

@@ -1,17 +1,9 @@
 #include "primitives.h"
 
-#include "DistanceSegment.h"
-#include "DurationSegment.h"
-#include "LoadSegment.h"
-
-#include <cassert>
-
-using pyvrp::Cost;
-
-Cost pyvrp::search::insertCost(Route::Node *U,
-                               Route::Node *V,
-                               ProblemData const &data,
-                               CostEvaluator const &costEvaluator)
+pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
+                                      Route::Node *V,
+                                      ProblemData const &data,
+                                      CostEvaluator const &costEvaluator)
 {
     if (!V->route() || U->isDepot())
         return 0;
@@ -49,9 +41,9 @@ Cost pyvrp::search::insertCost(Route::Node *U,
     return deltaCost;
 }
 
-Cost pyvrp::search::removeCost(Route::Node *U,
-                               ProblemData const &data,
-                               CostEvaluator const &costEvaluator)
+pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
+                                      ProblemData const &data,
+                                      CostEvaluator const &costEvaluator)
 {
     if (!U->route() || U->isDepot())
         return 0;
