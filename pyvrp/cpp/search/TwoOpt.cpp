@@ -119,7 +119,13 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     deltaCost -= static_cast<Cost>(uRoute->distance());
     deltaCost -= static_cast<Cost>(vRoute->distance());
 
-    if (uRoute->isFeasible() && vRoute->isFeasible() && deltaCost >= 0)
+    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
+
+    deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
+    deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
+
+    if (deltaCost >= 0)
         return deltaCost;
 
     if (V->idx() < vRoute->size())
@@ -164,20 +170,15 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
             += costEvaluator.twPenalty(vDS.timeWarp(vRoute->maxDuration()));
     }
 
-    deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
-    deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
-
     auto const uLS = LoadSegment::merge(uRoute->before(U->idx()),
                                         vRoute->after(V->idx() + 1));
 
     deltaCost += costEvaluator.loadPenalty(uLS.load(), uRoute->capacity());
-    deltaCost -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
 
     auto const vLS = LoadSegment::merge(vRoute->before(V->idx()),
                                         uRoute->after(U->idx() + 1));
 
     deltaCost += costEvaluator.loadPenalty(vLS.load(), vRoute->capacity());
-    deltaCost -= costEvaluator.loadPenalty(vRoute->load(), vRoute->capacity());
 
     return deltaCost;
 }
