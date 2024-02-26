@@ -90,7 +90,7 @@ private:
 
     public:
         inline ProxyAt(Route const &route, size_t idx);
-        inline operator DistanceSegment() const;
+        inline operator DistanceSegment const &() const;
         inline operator DurationSegment const &() const;
         inline operator LoadSegment const &() const;
     };
@@ -159,6 +159,7 @@ private:
     Node startDepot;  // Departure depot for this route
     Node endDepot;    // Return depot for this route
 
+    std::vector<DistanceSegment> distAt;      // Dist data at each node
     std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
     std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
 
@@ -408,9 +409,9 @@ Route::ProxyBetween::ProxyBetween(Route const &route, size_t start, size_t end)
     assert(start <= end && end < route.nodes.size());
 }
 
-Route::ProxyAt::operator DistanceSegment() const
+Route::ProxyAt::operator DistanceSegment const &() const
 {
-    return DistanceSegment(route->nodes[idx]->client());
+    return route->distAt[idx];
 }
 
 Route::ProxyAt::operator pyvrp::DurationSegment const &() const
