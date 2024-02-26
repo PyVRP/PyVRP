@@ -139,7 +139,6 @@ private:
 
     public:
         inline ProxyBetween(Route const &route, size_t start, size_t end);
-        inline operator Distance() const;
         inline operator DistanceSegment() const;
         inline operator DurationSegment() const;
         inline operator LoadSegment() const;
@@ -452,14 +451,6 @@ Route::ProxyBefore::operator pyvrp::DurationSegment const &() const
 Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
 {
     return route->loadBefore[end];
-}
-
-Route::ProxyBetween::operator Distance() const
-{
-    auto const &startDist = route->distBefore[start];
-    auto const &endDist = route->distBefore[end];
-
-    return endDist.distance() - startDist.distance();
 }
 
 Route::ProxyBetween::operator DistanceSegment() const
