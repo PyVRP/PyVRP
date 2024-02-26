@@ -324,6 +324,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
 
             deltaCost += static_cast<Cost>(dist.distance());
 
+            if (deltaCost >= 0)
+                return deltaCost;
+
             auto const ls = LoadSegment::merge(
                 uRoute->before(U->idx() - 1),
                 uRoute->between(V->idx(), V->idx() + M - 1),
@@ -356,6 +359,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->after(U->idx() + N));
 
             deltaCost += static_cast<Cost>(dist.distance());
+
+            if (deltaCost >= 0)
+                return deltaCost;
 
             auto const ls = LoadSegment::merge(
                 uRoute->before(V->idx() - 1),
