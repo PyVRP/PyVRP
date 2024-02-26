@@ -1,8 +1,5 @@
 #include "MoveTwoClientsReversed.h"
-#include "DurationSegment.h"
 #include "Route.h"
-
-#include <cassert>
 
 using pyvrp::search::MoveTwoClientsReversed;
 
@@ -12,26 +9,34 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
     if (U == n(V) || n(U) == V || n(U)->isDepot())
         return 0;
 
-    assert(U->route() && V->route());
     auto *uRoute = U->route();
     auto *vRoute = V->route();
 
-    auto const current = Distance(uRoute->between(U->idx() - 1, U->idx() + 2))
-                         + data.dist(V->client(), n(V)->client());
-    auto const proposed = data.dist(p(U)->client(), n(n(U))->client())
-                          + data.dist(V->client(), n(U)->client())
-                          + data.dist(n(U)->client(), U->client())
-                          + data.dist(U->client(), n(V)->client());
-
-    Cost deltaCost = static_cast<Cost>(proposed - current);
-
-    // We're going to incur V's fixed cost if V is currently empty. We lose U's
-    // fixed cost if we're moving all of U's clients with this operator.
-    deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
-    deltaCost -= Cost(uRoute->size() == 2) * uRoute->fixedVehicleCost();
+    Cost deltaCost = 0;
 
     if (uRoute != vRoute)
     {
+        auto const uDist = DistanceSegment::merge(data.distanceMatrix(),
+                                                  uRoute->before(U->idx() - 1),
+                                                  uRoute->after(U->idx() + 2));
+
+        deltaCost += static_cast<Cost>(uDist.distance());
+        deltaCost -= static_cast<Cost>(uRoute->distance());
+
+        auto vDist = DistanceSegment::merge(data.distanceMatrix(),
+                                            vRoute->before(V->idx()),
+                                            uRoute->at(U->idx() + 1),
+                                            uRoute->at(U->idx()),
+                                            vRoute->after(V->idx() + 1));
+
+        deltaCost += static_cast<Cost>(vDist.distance());
+        deltaCost -= static_cast<Cost>(vRoute->distance());
+
+        // We're going to incur V's fixed cost if V is currently empty. We lose
+        // U's fixed cost if we're moving all of U's clients with this operator.
+        deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
+        deltaCost -= Cost(uRoute->size() == 2) * uRoute->fixedVehicleCost();
+
         if (uRoute->isFeasible() && deltaCost >= 0)
             return deltaCost;
 
@@ -74,15 +79,23 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
     }
     else  // within same route
     {
+        deltaCost -= static_cast<Cost>(uRoute->distance());
         deltaCost
             -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
 
-        if (deltaCost >= 0)
-            return deltaCost;
-
         if (U->idx() < V->idx())
         {
+            auto const dist = DistanceSegment::merge(
+                data.distanceMatrix(),
+                uRoute->before(U->idx() - 1),
+                uRoute->between(U->idx() + 2, V->idx()),
+                uRoute->at(U->idx() + 1),
+                uRoute->at(U->idx()),
+                uRoute->after(V->idx() + 1));
+
+            deltaCost += static_cast<Cost>(dist.distance());
+
             auto const ls
                 = LoadSegment::merge(uRoute->before(U->idx() - 1),
                                      uRoute->between(U->idx() + 2, V->idx()),
@@ -106,6 +119,16 @@ pyvrp::Cost MoveTwoClientsReversed::evaluate(
         }
         else
         {
+            auto const dist = DistanceSegment::merge(
+                data.distanceMatrix(),
+                uRoute->before(V->idx()),
+                uRoute->at(U->idx() + 1),
+                uRoute->at(U->idx()),
+                uRoute->between(V->idx() + 1, U->idx() - 1),
+                uRoute->after(U->idx() + 2));
+
+            deltaCost += static_cast<Cost>(dist.distance());
+
             auto const ls = LoadSegment::merge(
                 uRoute->before(V->idx()),
                 uRoute->at(U->idx() + 1),

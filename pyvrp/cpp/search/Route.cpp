@@ -167,7 +167,8 @@ void Route::remove(size_t idx)
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 
-    distBefore.pop_back();  // no need for correct index
+    distBefore.erase(distBefore.begin() + idx);
+    distAfter.erase(distAfter.begin() + idx);
 
     loadAt.erase(loadAt.begin() + idx);
     loadBefore.erase(loadBefore.begin() + idx);
