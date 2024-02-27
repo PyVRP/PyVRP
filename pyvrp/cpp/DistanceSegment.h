@@ -56,7 +56,7 @@ public:
     inline DistanceSegment(DistanceSegment const &) = default;
     inline DistanceSegment(DistanceSegment &&) = default;
 
-    // Move or copy assign form the other distance segment.
+    // Move or copy assign from the other distance segment.
     inline DistanceSegment &operator=(DistanceSegment const &) = default;
     inline DistanceSegment &operator=(DistanceSegment &&) = default;
 };
