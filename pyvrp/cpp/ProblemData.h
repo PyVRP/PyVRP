@@ -416,7 +416,7 @@ public:
      * int
      *     Travel distance between the given clients.
      */
-    [[nodiscard]] inline Distance dist(size_t first, size_t second) const;
+    [[nodiscard]] Distance dist(size_t first, size_t second) const;
 
     /**
      * Returns the travel duration between the first and second argument,
@@ -434,7 +434,7 @@ public:
      * int
      *     Travel duration between the given clients.
      */
-    [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
+    [[nodiscard]] Duration duration(size_t first, size_t second) const;
 
     /**
      * The full travel distance matrix.
@@ -565,16 +565,6 @@ ProblemData::Location ProblemData::location(size_t idx) const
     return idx < depots_.size()
                ? Location{.depot = &depots_[idx]}
                : Location{.client = &clients_[idx - depots_.size()]};
-}
-
-Distance ProblemData::dist(size_t first, size_t second) const
-{
-    return dist_(first, second);
-}
-
-Duration ProblemData::duration(size_t first, size_t second) const
-{
-    return dur_(first, second);
 }
 
 Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
