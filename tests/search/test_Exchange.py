@@ -310,8 +310,8 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
 @pytest.mark.parametrize(
     ("op", "base_cost", "fixed_cost"),
     [
-        (Exchange10, 2_346, 0),
-        (Exchange10, 2_346, 100),
+        (Exchange10, 256, 0),  # inexact; this move shortcuts
+        (Exchange10, 256, 100),  # inexact; this move shortcuts
         (Exchange20, 1_417, 0),
         (Exchange20, 1_417, 9),
         (Exchange30, 135, 53),

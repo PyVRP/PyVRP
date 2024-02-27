@@ -416,7 +416,7 @@ public:
      * int
      *     Travel distance between the given clients.
      */
-    [[nodiscard]] inline Distance dist(size_t first, size_t second) const;
+    [[nodiscard]] Distance dist(size_t first, size_t second) const;
 
     /**
      * Returns the travel duration between the first and second argument,
@@ -434,7 +434,7 @@ public:
      * int
      *     Travel duration between the given clients.
      */
-    [[nodiscard]] inline Duration duration(size_t first, size_t second) const;
+    [[nodiscard]] Duration duration(size_t first, size_t second) const;
 
     /**
      * The full travel distance matrix.
@@ -445,7 +445,7 @@ public:
      *    matrix is copied, but the resulting data cannot be modified in any
      *    way!
      */
-    [[nodiscard]] Matrix<Distance> const &distanceMatrix() const;
+    [[nodiscard]] inline Matrix<Distance> const &distanceMatrix() const;
 
     /**
      * The full travel duration matrix.
@@ -456,7 +456,7 @@ public:
      *    matrix is copied, but the resulting data cannot be modified in any
      *    way!
      */
-    [[nodiscard]] Matrix<Duration> const &durationMatrix() const;
+    [[nodiscard]] inline Matrix<Duration> const &durationMatrix() const;
 
     /**
      * Number of clients in this problem instance.
@@ -567,15 +567,9 @@ ProblemData::Location ProblemData::location(size_t idx) const
                : Location{.client = &clients_[idx - depots_.size()]};
 }
 
-Distance ProblemData::dist(size_t first, size_t second) const
-{
-    return dist_(first, second);
-}
+Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
 
-Duration ProblemData::duration(size_t first, size_t second) const
-{
-    return dur_(first, second);
-}
+Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H
