@@ -73,6 +73,7 @@ def test_route_depots_are_depots(ok_small):
     fact, depots.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
+    assert_equal(route.depot(), ok_small.vehicle_type(0).depot)
 
     for loc in range(1, 3):
         # The depots flank the clients at indices {1, ..., len(route)}. Thus,
