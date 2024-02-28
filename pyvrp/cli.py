@@ -186,9 +186,9 @@ def solve(
 
     stop = MultipleCriteria(
         [
+            MaxRuntime(max_runtime),
             MaxIterations(max_iterations),
             NoImprovement(no_improvement),
-            MaxRuntime(max_runtime),
         ]
     )
 
