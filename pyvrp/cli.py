@@ -97,9 +97,10 @@ def solve(
     instance_format: str,
     round_func: str,
     seed: int,
-    max_runtime: Optional[float],
-    max_iterations: Optional[int],
-    no_improvement: Optional[int],
+    max_runtime: float,
+    max_iterations: int,
+    no_improvement: int,
+    per_client: bool,
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     **kwargs,
@@ -125,6 +126,8 @@ def solve(
         Maximum number of iterations for solving.
     no_improvement
         Maximum number of iterations without improvement.
+    per_client
+        Whether to scale stopping criteria values by the number of clients.
     stats_dir
         The directory to write runtime statistics to.
     sol_dir
@@ -176,12 +179,18 @@ def solve(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
     )
 
-    criteria = [
-        MaxIterations(max_iterations) if max_iterations is not None else None,
-        NoImprovement(no_improvement) if no_improvement is not None else None,
-        MaxRuntime(max_runtime) if max_runtime is not None else None,
-    ]
-    stop = MultipleCriteria([crit for crit in criteria if crit is not None])
+    if per_client:
+        max_runtime *= data.num_clients
+        max_iterations *= data.num_clients
+        no_improvement *= data.num_clients
+
+    stop = MultipleCriteria(
+        [
+            MaxRuntime(max_runtime),
+            MaxIterations(max_iterations),
+            NoImprovement(no_improvement),
+        ]
+    )
 
     result = algo.run(stop)
     instance_name = data_loc.stem
@@ -295,13 +304,22 @@ def main():
     stop = parser.add_argument_group("Stopping criteria")
 
     msg = "Maximum runtime for each instance, in seconds."
-    stop.add_argument("--max_runtime", type=float, help=msg)
+    stop.add_argument(
+        "--max_runtime", type=float, default=float("inf"), help=msg
+    )
 
     msg = "Maximum number of iterations for solving each instance."
-    stop.add_argument("--max_iterations", type=int, help=msg)
+    stop.add_argument(
+        "--max_iterations", type=int, default=float("inf"), help=msg
+    )
 
     msg = "Maximum number of iterations without improvement."
-    stop.add_argument("--no_improvement", type=int, help=msg)
+    stop.add_argument(
+        "--no_improvement", type=int, default=float("inf"), help=msg
+    )
+
+    msg = "Whether to scale stopping criteria values by the number of clients."
+    stop.add_argument("--per_client", action="store_true")
 
     benchmark(**vars(parser.parse_args()))
 
