@@ -179,12 +179,16 @@ def solve(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
     )
 
-    scale = data.num_clients if per_client else 1
+    if per_client:
+        max_runtime *= data.num_clients
+        max_iterations *= data.num_clients
+        no_improvement *= data.num_clients
+
     stop = MultipleCriteria(
         [
-            MaxIterations(max_iterations * scale),
-            NoImprovement(no_improvement * scale),
-            MaxRuntime(max_runtime * scale),
+            MaxIterations(max_iterations),
+            NoImprovement(no_improvement),
+            MaxRuntime(max_runtime),
         ]
     )
 
