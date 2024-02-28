@@ -127,7 +127,7 @@ def solve(
     no_improvement
         Maximum number of iterations without improvement.
     per_client
-        Multiply stopping criteria values by the number of clients.
+        Whether to scale stopping criteria values by the number of clients.
     stats_dir
         The directory to write runtime statistics to.
     sol_dir
@@ -312,7 +312,7 @@ def main():
     msg = "Maximum number of iterations without improvement."
     stop.add_argument("--no_improvement", type=int, help=msg)
 
-    msg = "Multiply stopping criteria values by the number of clients."
+    msg = "Whether to scale stopping criteria values by the number of clients."
     stop.add_argument("--per_client", action="store_true")
 
     benchmark(**vars(parser.parse_args()))
