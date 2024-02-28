@@ -98,6 +98,7 @@ def solve(
     round_func: str,
     seed: int,
     max_runtime: Optional[float],
+    max_runtime_per_client: Optional[float],
     max_iterations: Optional[int],
     no_improvement: Optional[int],
     stats_dir: Optional[Path],
@@ -121,6 +122,8 @@ def solve(
         Seed to use for the RNG.
     max_runtime
         Maximum runtime (in seconds) for solving.
+    max_runtime_per_client
+        Maximum runtime per client in the instance (in seconds) for solving.
     max_iterations
         Maximum number of iterations for solving.
     no_improvement
@@ -175,6 +178,9 @@ def solve(
     algo = GeneticAlgorithm(
         data, pen_manager, rng, pop, ls, srex, init, gen_params
     )
+
+    if max_runtime_per_client is not None:
+        max_runtime = max_runtime_per_client * data.num_clients
 
     criteria = [
         MaxIterations(max_iterations) if max_iterations is not None else None,
@@ -294,8 +300,13 @@ def main():
 
     stop = parser.add_argument_group("Stopping criteria")
 
+    runtime = stop.add_mutually_exclusive_group()
+
     msg = "Maximum runtime for each instance, in seconds."
-    stop.add_argument("--max_runtime", type=float, help=msg)
+    runtime.add_argument("--max_runtime", type=float, help=msg)
+
+    msg = "Maximum runtime for each client in the instance, in seconds."
+    runtime.add_argument("--max_runtime_per_client", type=float, help=msg)
 
     msg = "Maximum number of iterations for solving each instance."
     stop.add_argument("--max_iterations", type=int, help=msg)
