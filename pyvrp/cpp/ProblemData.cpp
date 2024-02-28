@@ -223,9 +223,15 @@ std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
     return vehicleTypes_;
 }
 
-Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+Distance ProblemData::dist(size_t first, size_t second) const
+{
+    return dist_(first, second);
+}
 
-Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
+Duration ProblemData::duration(size_t first, size_t second) const
+{
+    return dur_(first, second);
+}
 
 std::pair<double, double> const &ProblemData::centroid() const
 {

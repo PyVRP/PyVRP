@@ -66,3 +66,11 @@ def ok_small_multi_depot():
     been turned into a second depot.
     """
     return read("data/OkSmallMultipleDepots.txt", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
+def small_spd():
+    """
+    Fixture that returns a small simultaneous pickup and delivery instance.
+    """
+    return read("data/SmallVRPSPD.vrp", round_func="round")

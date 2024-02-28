@@ -229,6 +229,30 @@ class SubPopulationItem:
     def solution(self) -> Solution: ...
     def avg_distance_closest(self) -> float: ...
 
+class DistanceSegment:
+    def __init__(
+        self,
+        idx_first: int,
+        idx_last: int,
+        distance: int,
+    ) -> None: ...
+    @overload
+    @staticmethod
+    def merge(
+        distance_matrix: np.ndarray[int],
+        first: DistanceSegment,
+        second: DistanceSegment,
+    ) -> DistanceSegment: ...
+    @overload
+    @staticmethod
+    def merge(
+        distance_matrix: np.ndarray[int],
+        first: DistanceSegment,
+        second: DistanceSegment,
+        third: DistanceSegment,
+    ) -> DistanceSegment: ...
+    def distance(self) -> int: ...
+
 class LoadSegment:
     def __init__(
         self,

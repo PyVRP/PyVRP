@@ -37,18 +37,6 @@ std::vector<Route::Node *>::iterator Route::begin()
 }
 std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
 
-pyvrp::Distance Route::distance() const
-{
-    assert(!dirty);
-    return distBefore.back();
-}
-
-pyvrp::Duration Route::duration() const
-{
-    assert(!dirty);
-    return durBefore.back().duration();
-}
-
 std::pair<double, double> const &Route::centroid() const
 {
     assert(!dirty);
@@ -106,7 +94,10 @@ void Route::clear()
                             0);
 
     // Clear all existing statistics and reinsert depot statistics.
-    distBefore = {0, 0};
+    distAt = {DistanceSegment(vehicleType_.depot),
+              DistanceSegment(vehicleType_.depot)};
+    distAfter = distAt;
+    distBefore = distAt;
 
     loadAt = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
     loadAfter = loadAt;
@@ -135,7 +126,9 @@ void Route::insert(size_t idx, Node *node)
 
     // We do not need to update the statistics; Route::update() will handle
     // that later. We just need to ensure the right client data is inserted.
-    distBefore.push_back(0);  // no need for correct index
+    distAt.emplace(distAt.begin() + idx, node->client());
+    distBefore.emplace(distBefore.begin() + idx, node->client());
+    distAfter.emplace(distAfter.begin() + idx, node->client());
 
     ProblemData::Client const &client = data.location(node->client());
 
@@ -176,7 +169,9 @@ void Route::remove(size_t idx)
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 
-    distBefore.pop_back();  // no need for correct index
+    distAt.erase(distAt.begin() + idx);
+    distBefore.erase(distBefore.begin() + idx);
+    distAfter.erase(distAfter.begin() + idx);
 
     loadAt.erase(loadAt.begin() + idx);
     loadBefore.erase(loadBefore.begin() + idx);
@@ -200,6 +195,8 @@ void Route::swap(Node *first, Node *second)
     // Only need to swap the segments *at* the client's index. Other cached
     // values are recomputed based on these values, and that recompute will
     // overwrite the other outdated (cached) segments.
+    std::swap(first->route_->distAt[first->idx_],
+              second->route_->distAt[second->idx_]);
     std::swap(first->route_->loadAt[first->idx_],
               second->route_->loadAt[second->idx_]);
     std::swap(first->route_->durAt[first->idx_],
@@ -229,14 +226,14 @@ void Route::update()
             centroid_.first += static_cast<double>(clientData.x) / size();
             centroid_.second += static_cast<double>(clientData.y) / size();
         }
-
-        auto const dist = data.dist(nodes[idx - 1]->client(), client);
-        distBefore[idx] = distBefore[idx - 1] + dist;
     }
 
     // Backward segments (depot -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
+        distBefore[idx] = DistanceSegment::merge(
+            data.distanceMatrix(), distBefore[idx - 1], distAt[idx]);
+
         loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
@@ -248,6 +245,9 @@ void Route::update()
     // Forward segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
     {
+        distAfter[idx - 1] = DistanceSegment::merge(
+            data.distanceMatrix(), distAt[idx - 1], distAfter[idx]);
+
         loadAfter[idx - 1]
             = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
 

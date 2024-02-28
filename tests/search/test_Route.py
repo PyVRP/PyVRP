@@ -73,6 +73,7 @@ def test_route_depots_are_depots(ok_small):
     fact, depots.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
+    assert_equal(route.depot(), ok_small.vehicle_type(0).depot)
 
     for loc in range(1, 3):
         # The depots flank the clients at indices {1, ..., len(route)}. Thus,
@@ -233,22 +234,27 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     # be equal to it.
     assert_equal(route.load(), ok_small.location(client).delivery)
     assert_equal(
-        route.ls_between(0, 2).load(), ok_small.location(client).delivery
+        route.load_between(0, 2).load(), ok_small.location(client).delivery
     )
 
-    # The ls_between() function is inclusive.
-    assert_equal(route.ls_between(0, 0).load(), 0)
+    # The load_between() function is inclusive.
+    assert_equal(route.load_between(0, 0).load(), 0)
     assert_equal(
-        route.ls_between(1, 1).load(), ok_small.location(client).delivery
+        route.load_between(1, 1).load(), ok_small.location(client).delivery
     )
 
     # Distances on various segments of the route.
-    assert_equal(route.dist_between(0, 1), ok_small.dist(0, client))
-    assert_equal(route.dist_between(1, 2), ok_small.dist(client, 0))
+    assert_equal(route.dist_between(0, 1).distance(), ok_small.dist(0, client))
+    assert_equal(route.dist_between(1, 2).distance(), ok_small.dist(client, 0))
     assert_equal(
-        route.dist_between(0, 2),
+        route.dist_between(0, 2).distance(),
         ok_small.dist(0, client) + ok_small.dist(client, 0),
     )
+
+    # This should always be zero because distance is a property of the edges,
+    # not the nodes.
+    assert_allclose(route.dist_at(0).distance(), 0)
+    assert_allclose(route.dist_at(1).distance(), 0)
 
 
 def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
@@ -305,7 +311,7 @@ def test_str_contains_route(ok_small, locs: list[int]):
         assert_(str(loc) in str(route))
 
 
-def test_route_ds_access(ok_small):
+def test_route_duration_access(ok_small):
     """
     Tests access to a client's or depot's duration segment, as tracked by
     the route.
@@ -319,7 +325,7 @@ def test_route_ds_access(ok_small):
     for idx in range(len(route) + 2):
         is_depot = idx % (len(route) + 1) == 0
         loc = ok_small.location(idx % (len(route) + 1))
-        ds = route.ds(idx)
+        ds = route.duration_at(idx)
 
         assert_equal(ds.tw_early(), loc.tw_early)
         assert_equal(ds.tw_late(), loc.tw_late)
@@ -328,9 +334,9 @@ def test_route_ds_access(ok_small):
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
-def test_ds_between_same_client_returns_node_ds(ok_small, loc: int):
+def test_duration_between_client_returns_node_duration(ok_small, loc: int):
     """
-    Tests that calling the ``ds_between()`` with the same start and end
+    Tests that calling the ``duration_between()`` with the same start and end
     arguments returns a node's duration segment data.
     """
     client = ok_small.location(loc)
@@ -341,18 +347,20 @@ def test_ds_between_same_client_returns_node_ds(ok_small, loc: int):
 
     # Duration of the depot node DS's is zero, and for the client it is equal
     # to the service duration.
-    assert_equal(route.ds_between(0, 0).duration(), 0)
-    assert_equal(route.ds_between(1, 1).duration(), client.service_duration)
-    assert_equal(route.ds_between(2, 2).duration(), 0)
+    assert_allclose(route.duration_between(0, 0).duration(), 0)
+    assert_allclose(
+        route.duration_between(1, 1).duration(), client.service_duration
+    )
+    assert_allclose(route.duration_between(2, 2).duration(), 0)
 
     # Single route solutions are all feasible for this instance.
-    assert_equal(route.time_warp(), 0)
+    assert_allclose(route.time_warp(), 0)
 
 
-def test_ds_between_same_as_ds_before_after_when_one_side_is_depot(ok_small):
+def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
     """
-    Tests that ``ds_between()`` returns the same value as ``ds_before()`` or
-    ``ds_after()`` when one side is the depot.
+    Tests that ``duration_between()`` returns the same value as
+    ``duration_before()`` or ``duration_after()`` when one side is the depot.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
     for client in range(ok_small.num_depots, ok_small.num_locations):
@@ -361,18 +369,18 @@ def test_ds_between_same_as_ds_before_after_when_one_side_is_depot(ok_small):
     route.update()
 
     for idx in [1, 2, 3, 4]:
-        before = route.ds_before(idx)
-        between_before = route.ds_between(0, idx)
+        before = route.duration_before(idx)
+        between_before = route.duration_between(0, idx)
         assert_equal(before.duration(), between_before.duration())
         assert_equal(before.time_warp(), between_before.time_warp())
 
-        after = route.ds_after(idx)
-        between_after = route.ds_between(idx, len(route) + 1)
+        after = route.duration_after(idx)
+        between_after = route.duration_between(idx, len(route) + 1)
         assert_equal(after.duration(), between_after.duration())
         assert_equal(after.time_warp(), between_after.time_warp())
 
 
-def test_ds_between_single_route_solution_has_correct_time_warp(ok_small):
+def test_duration_between_single_route_has_correct_time_warp(ok_small):
     """
     Tests duration segment access on a single-route solution where we know
     exactly where in the route time warp occurs.
@@ -385,19 +393,19 @@ def test_ds_between_single_route_solution_has_correct_time_warp(ok_small):
 
     route.update()
     assert_(route.has_time_warp())
-    assert_equal(route.ds_between(0, 5).time_warp(), route.time_warp())
+    assert_equal(route.duration_between(0, 5).time_warp(), route.time_warp())
 
     # Client #1 (at idx 1) causes the time warp in combination with client #3:
     # #1 can only be visited after #3's window has already closed.
     assert_equal(route.time_warp(), 3_633)
-    assert_equal(route.ds_between(1, 4).time_warp(), 3_633)
-    assert_equal(route.ds_between(0, 4).time_warp(), 3_633)
-    assert_equal(route.ds_between(1, 5).time_warp(), 3_633)
-    assert_equal(route.ds_between(1, 3).time_warp(), 3_633)
+    assert_equal(route.duration_between(1, 4).time_warp(), 3_633)
+    assert_equal(route.duration_between(0, 4).time_warp(), 3_633)
+    assert_equal(route.duration_between(1, 5).time_warp(), 3_633)
+    assert_equal(route.duration_between(1, 3).time_warp(), 3_633)
 
     # But excluding client #1, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
-        assert_equal(route.ds_between(start, end).time_warp(), 0)
+        assert_equal(route.duration_between(start, end).time_warp(), 0)
 
 
 def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
@@ -410,7 +418,9 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
         route.append(Node(loc=client))
     route.update()
 
-    assert_equal(route.distance(), route.dist_between(0, len(route) + 1))
+    assert_allclose(
+        route.distance(), route.dist_between(0, len(route) + 1).distance()
+    )
 
 
 @pytest.mark.parametrize(
@@ -444,7 +454,7 @@ def test_shift_duration_depot_time_window_interaction(
     assert_equal(len(route), 0)
 
     for idx in [0, 1]:
-        ds = route.ds(idx)
+        ds = route.duration_at(idx)
         assert_allclose(ds.tw_early(), expected_tw[0])
         assert_allclose(ds.tw_late(), expected_tw[1])
 
@@ -488,3 +498,49 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
     route.update()
     assert_(route.has_time_warp())
     assert_allclose(route.time_warp(), expected)
+
+
+def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
+    """
+    Tests that ``dist_between()`` returns the same value as
+    ``dist_before()`` or ``distance_after()`` when one side is the depot.
+    """
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    for client in range(ok_small.num_depots, ok_small.num_locations):
+        route.append(Node(loc=client))
+
+    route.update()
+
+    for idx in [1, 2, 3, 4]:
+        before = route.dist_before(idx)
+        between_before = route.dist_between(0, idx)
+        assert_equal(before.distance(), between_before.distance())
+
+        after = route.dist_after(idx)
+        between_after = route.dist_between(idx, len(route) + 1)
+        assert_equal(after.distance(), between_after.distance())
+
+
+def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
+    """
+    Tests that ``load_between()`` returns the same value as
+    ``load_before()`` or ``load_after()`` when one side is the depot.
+    """
+    route = Route(small_spd, idx=0, vehicle_type=0)
+    for client in range(small_spd.num_depots, small_spd.num_locations):
+        route.append(Node(loc=client))
+
+    route.update()
+
+    for idx in [1, 2, 3, 4]:
+        before = route.load_before(idx)
+        between_before = route.load_between(0, idx)
+        assert_equal(before.load(), between_before.load())
+        assert_equal(before.pickup(), between_before.pickup())
+        assert_equal(before.delivery(), between_before.delivery())
+
+        after = route.load_after(idx)
+        between_after = route.load_between(idx, len(route) + 1)
+        assert_equal(after.load(), between_after.load())
+        assert_equal(after.pickup(), between_after.pickup())
+        assert_equal(after.delivery(), between_after.delivery())

@@ -2,7 +2,6 @@
 #define PYVRP_SEARCH_SWAPROUTES_H
 
 #include "LocalSearchOperator.h"
-#include "Measure.h"
 #include "TwoOpt.h"
 
 namespace pyvrp::search
