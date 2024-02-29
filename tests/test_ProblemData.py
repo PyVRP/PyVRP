@@ -483,6 +483,32 @@ def test_vehicle_type_raises_invalid_data(
         )
 
 
+def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
+    """
+    The vehicle type constructor should allow the following edge case where all
+    data has been zeroed out.
+    """
+    vehicle_type = VehicleType(
+        num_available=1,
+        depot=0,
+        capacity=0,
+        fixed_cost=0,
+        tw_early=0,
+        tw_late=0,
+        max_duration=0,
+        max_distance=0,
+    )
+
+    assert_equal(vehicle_type.num_available, 1)
+    assert_equal(vehicle_type.depot, 0)
+    assert_allclose(vehicle_type.capacity, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.tw_early, 0)
+    assert_allclose(vehicle_type.tw_late, 0)
+    assert_allclose(vehicle_type.max_duration, 0)
+    assert_allclose(vehicle_type.max_distance, 0)
+
+
 def test_vehicle_type_default_values():
     """
     Tests that the default values for costs and shift time windows are set
