@@ -292,9 +292,8 @@ public:
      * Returns
      * -------
      * list
-     *     A list of routes. Each :class:`~Route` starts and ends at the depot
-     *     (0), but that is implicit: the depot is not part of the returned
-     *     routes.
+     *     A list of routes. Each :class:`~Route` starts and ends at a depot,
+     *     but that is implicit: the depot is not part of the returned routes.
      */
     [[nodiscard]] Routes const &routes() const;
 
