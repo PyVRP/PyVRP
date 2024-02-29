@@ -1,5 +1,6 @@
 from types import MethodType
 
+import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
@@ -159,7 +160,7 @@ def test_best_solution_improves_with_more_iterations(rc208):
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
 
-    cost_evaluator = pm.get_cost_evaluator()
+    cost_evaluator = pm.cost_evaluator()
     new_best_cost = cost_evaluator.penalised_cost(new_best)
     initial_best_cost = cost_evaluator.penalised_cost(initial_best)
     assert_(new_best_cost < initial_best_cost)
@@ -204,10 +205,15 @@ def test_infeasible_offspring_is_repaired(rc208):
     params = GeneticAlgorithmParams(repair_probability=1.0)
 
     def search(sol, cost_eval):
-        # When a solution is being repaired, a special booster evaluator is
-        # used. In that case we return the BKS, which should become the new
-        # best solution. Else we return the given solution.
-        return bks if cost_eval == pm.get_booster_cost_evaluator() else sol
+        booster_cost = pm.booster_cost_evaluator().penalised_cost(sol)
+        if np.isclose(cost_eval.penalised_cost(sol), booster_cost):
+            # When a solution is being repaired, a special booster evaluator is
+            # used. In that case we return the BKS, which should become the new
+            # best solution.
+            return bks
+
+        # But we return the given solution when the booster is not used.
+        return sol
 
     # We should have repaired at least once, since we start with a large
     # solution of random (mostly infeasible) solutions. Since we return the
@@ -243,7 +249,7 @@ def test_never_repairs_when_zero_repair_probability(rc208):
     def raise_when_called(self):
         raise RuntimeError
 
-    pm.get_booster_cost_evaluator = MethodType(raise_when_called, pm)
+    pm.booster_cost_evaluator = MethodType(raise_when_called, pm)
     with assert_raises(RuntimeError):
         algo.run(MaxIterations(50))
 

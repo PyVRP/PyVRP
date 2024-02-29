@@ -46,9 +46,9 @@ size_t Solution::numClients() const { return numClients_; }
 
 size_t Solution::numMissingClients() const { return numMissingClients_; }
 
-Routes const &Solution::getRoutes() const { return routes_; }
+Routes const &Solution::routes() const { return routes_; }
 
-Neighbours const &Solution::getNeighbours() const { return neighbours_; }
+Neighbours const &Solution::neighbours() const { return neighbours_; }
 
 bool Solution::isFeasible() const
 {
@@ -422,7 +422,7 @@ bool Solution::Route::operator==(Solution::Route const &other) const
 
 std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {
-    auto const &routes = sol.getRoutes();
+    auto const &routes = sol.routes();
 
     for (size_t idx = 0; idx != routes.size(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';

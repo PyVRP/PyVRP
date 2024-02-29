@@ -161,8 +161,8 @@ class Population:
         """
         self._update_fitness(cost_evaluator)
 
-        first = self._get_tournament(rng, k)
-        second = self._get_tournament(rng, k)
+        first = self._tournament(rng, k)
+        second = self._tournament(rng, k)
 
         diversity = self._op(first, second)
         lb = self._params.lb_diversity
@@ -171,12 +171,12 @@ class Population:
         tries = 1
         while not (lb <= diversity <= ub) and tries <= 10:
             tries += 1
-            second = self._get_tournament(rng, k)
+            second = self._tournament(rng, k)
             diversity = self._op(first, second)
 
         return first, second
 
-    def get_tournament(
+    def tournament(
         self,
         rng: RandomNumberGenerator,
         cost_evaluator: CostEvaluator,
@@ -202,9 +202,9 @@ class Population:
             The selected solution.
         """
         self._update_fitness(cost_evaluator)
-        return self._get_tournament(rng, k)
+        return self._tournament(rng, k)
 
-    def _get_tournament(self, rng: RandomNumberGenerator, k: int) -> Solution:
+    def _tournament(self, rng: RandomNumberGenerator, k: int) -> Solution:
         if k <= 0:
             raise ValueError(f"Expected k > 0; got k = {k}.")
 

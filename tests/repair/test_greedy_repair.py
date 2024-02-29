@@ -46,16 +46,16 @@ def test_empty_routes_or_unplanned_is_a_no_op(ok_small):
     # When unplanned is empty, there is nothing for greedy repair to do, so it
     # should return the exact same routes it received.
     sol = Solution(ok_small, [[3, 2], [1, 4]])
-    repaired = greedy_repair(sol.get_routes(), [], ok_small, cost_eval)
-    assert_equal(repaired, sol.get_routes())
+    repaired = greedy_repair(sol.routes(), [], ok_small, cost_eval)
+    assert_equal(repaired, sol.routes())
 
     # This is also true when the solution is not complete: greedy repair only
     # reinserts what's in unplanned.
     sol = Solution(ok_small, [[2, 3, 4]])
     assert_(not sol.is_complete())
 
-    repaired = greedy_repair(sol.get_routes(), [], ok_small, cost_eval)
-    assert_equal(repaired, sol.get_routes())
+    repaired = greedy_repair(sol.routes(), [], ok_small, cost_eval)
+    assert_equal(repaired, sol.routes())
 
     # Finally, when both the set of routes and the list of unplanned clients
     # is empty, we get an empty set of routes back.
@@ -90,7 +90,7 @@ def test_OkSmall(ok_small):
 
     # We want to insert 1 and 4 into these routes. Both 1 and 4 are close to
     # 3, so it would be cheapest to insert these into the second route.
-    routes = Solution(ok_small, [[2], [3]]).get_routes()
+    routes = Solution(ok_small, [[2], [3]]).routes()
     unplanned = [1, 4]
 
     repaired = greedy_repair(routes, unplanned, ok_small, cost_eval)
@@ -114,7 +114,7 @@ def test_RC208(rc208, seed: int):
     # Let's next create the routes we want to repair. To ensure we use the
     # same number of vehicles, we initialise dummy routes.
     routes = [[idx + 1] for idx in range(rc208.num_vehicles)]
-    to_repair = Solution(rc208, routes).get_routes()
+    to_repair = Solution(rc208, routes).routes()
 
     cost_eval = CostEvaluator(1, 1)
     unplanned = list(range(rc208.num_vehicles + 1, rc208.num_locations))

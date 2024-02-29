@@ -34,7 +34,7 @@ pyvrp::Solution pyvrp::crossover::orderedCrossover(
     // Insert the clients from the first route into the new route, from start
     // to end (possibly wrapping around the end of the route).
     size_t insertIdx = start;
-    auto const &route1 = parents.first->getRoutes()[0];
+    auto const &route1 = parents.first->routes()[0];
     for (; insertIdx % route1.size() != end % route1.size(); ++insertIdx)
     {
         newRoute[insertIdx % numClients] = route1[insertIdx % route1.size()];
@@ -43,7 +43,7 @@ pyvrp::Solution pyvrp::crossover::orderedCrossover(
 
     // Fill the route with clients from the second parent, in the order of
     // their visits in the second route.
-    auto const &route2 = parents.second->getRoutes()[0];
+    auto const &route2 = parents.second->routes()[0];
     for (size_t idx = 0; idx != route2.size(); ++idx)
     {
         Client const client = route2[(end + idx) % route2.size()];

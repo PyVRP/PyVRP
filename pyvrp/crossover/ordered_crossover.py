@@ -68,7 +68,7 @@ def ordered_crossover(
     # Generate [start, end) indices in the route of the first parent solution.
     # If end < start, the index segment wraps around. Clients in this index
     # segment are copied verbatim into the offspring solution.
-    first_route = first.get_routes()[0]
+    first_route = first.routes()[0]
     start = rng.randint(len(first_route))
     end = rng.randint(len(first_route))
 

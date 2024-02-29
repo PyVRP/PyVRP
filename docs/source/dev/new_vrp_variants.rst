@@ -83,7 +83,7 @@ In the case of prize-collecting, after the initial implementation, we also:
 
 * Modified the computation of the granular neighbourhood in :func:`~pyvrp.search.neighbourhood.compute_neighbours` to take prizes into account.
 * Updated various statistics to display the number of clients in a solution.
-* Changed :meth:`~pyvrp._pyvrp.Solution.get_neighbours` to return ``None`` in case a client is *not* in the solution.
+* Changed :meth:`~pyvrp._pyvrp.Solution.neighbours` to return ``None`` in case a client is *not* in the solution.
 
 Such changes may come about later, as we further improve support for a new VRP variant: the pull request adding initial support should ideally be kept as simple as possible.
 

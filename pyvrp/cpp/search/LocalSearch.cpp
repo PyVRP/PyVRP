@@ -78,7 +78,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             // We next apply the regular node operators. These work on pairs
             // of nodes (U, V), where both U and V are in the solution.
-            for (auto const vClient : neighbours[uClient])
+            for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
 
@@ -271,7 +271,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         Route::Node *UAfter = routes[0][0];
         Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
 
-        for (auto const vClient : neighbours[uClient])
+        for (auto const vClient : neighbours_[uClient])
         {
             auto *V = &nodes[vClient];
 
@@ -330,7 +330,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     }
 
     // Load routes from solution.
-    for (auto const &solRoute : solution.getRoutes())
+    for (auto const &solRoute : solution.routes())
     {
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
@@ -398,17 +398,17 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
         }
     }
 
-    this->neighbours = neighbours;
+    neighbours_ = neighbours;
 }
 
-LocalSearch::Neighbours const &LocalSearch::getNeighbours() const
+LocalSearch::Neighbours const &LocalSearch::neighbours() const
 {
-    return neighbours;
+    return neighbours_;
 }
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      neighbours(data.numLocations()),
+      neighbours_(data.numLocations()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)

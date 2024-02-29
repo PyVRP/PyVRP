@@ -24,7 +24,7 @@ class LocalSearch
 
     // Neighborhood restrictions: list of nearby clients for each client (size
     // numClients + 1, but nothing stored for the depot!)
-    Neighbours neighbours;
+    Neighbours neighbours_;
 
     std::vector<size_t> orderNodes;   // node order used by LS::search
     std::vector<size_t> orderRoutes;  // route order used by LS::intensify
@@ -94,7 +94,7 @@ public:
     /**
      * @return The neighbourhood structure currently in use.
      */
-    Neighbours const &getNeighbours() const;
+    Neighbours const &neighbours() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further

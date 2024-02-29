@@ -209,15 +209,15 @@ def test_srex_heterogeneous_changed_start_indices(ok_small):
 
     offspring = cpp_srex((sol1, sol2), data, cost_evaluator, (1, 1), 1)
     expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 0)]
-    assert_equal(offspring.get_routes(), expected)
+    assert_equal(offspring.routes(), expected)
 
     offspring = cpp_srex((sol1, sol2h), data, cost_evaluator, (1, 1), 1)
     expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 0)]
-    assert_equal(offspring.get_routes(), expected)
+    assert_equal(offspring.routes(), expected)
 
     offspring = cpp_srex((sol1h, sol2), data, cost_evaluator, (1, 1), 1)
     expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 1)]
-    assert_equal(offspring.get_routes(), expected)
+    assert_equal(offspring.routes(), expected)
 
     offspring = cpp_srex((sol1h, sol2h), data, cost_evaluator, (1, 1), 1)
     expected = [Route(data, [1, 2, 4], 0), Route(data, [3], 1)]

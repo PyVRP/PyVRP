@@ -127,7 +127,7 @@ class GeneticAlgorithm:
 
     @property
     def _cost_evaluator(self) -> CostEvaluator:
-        return self._pm.get_cost_evaluator()
+        return self._pm.cost_evaluator()
 
     def run(self, stop: StoppingCriterion, display: bool = False):
         """
@@ -218,7 +218,7 @@ class GeneticAlgorithm:
             not sol.is_feasible()
             and self._rng.rand() < self._params.repair_probability
         ):
-            sol = self._search(sol, self._pm.get_booster_cost_evaluator())
+            sol = self._search(sol, self._pm.booster_cost_evaluator())
 
             if sol.is_feasible():
                 add_and_register(sol)

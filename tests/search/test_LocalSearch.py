@@ -125,20 +125,20 @@ def test_local_search_set_get_neighbours(
     neighbours = compute_neighbours(rc208, params)
 
     # Test that before we set neighbours we don't have same
-    assert_(ls.get_neighbours() != neighbours)
+    assert_(ls.neighbours() != neighbours)
 
     # Test after we set we have the same
     ls.set_neighbours(neighbours)
-    ls_neighbours = ls.get_neighbours()
+    ls_neighbours = ls.neighbours()
     assert_equal(ls_neighbours, neighbours)
 
     # Check that the bindings make a copy (in both directions)
     assert_(ls_neighbours is not neighbours)
     ls_neighbours[1] = []
-    assert_(ls.get_neighbours() != ls_neighbours)
-    assert_equal(ls.get_neighbours(), neighbours)
+    assert_(ls.neighbours() != ls_neighbours)
+    assert_equal(ls.neighbours(), neighbours)
     neighbours[1] = []
-    assert_(ls.get_neighbours() != neighbours)
+    assert_(ls.neighbours() != neighbours)
 
 
 def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
@@ -260,7 +260,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_node_operator(Exchange11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
-    routes = [Route(data, r.visits(), 1) for r in improved.get_routes()]
+    routes = [Route(data, r.visits(), 1) for r in improved.routes()]
     improved = Solution(data, routes)
 
     # Doing the search should not find any further improvements thus not change

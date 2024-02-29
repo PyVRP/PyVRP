@@ -223,8 +223,8 @@ PYBIND11_MODULE(_search, m)
         .def("set_neighbours",
              &LocalSearch::setNeighbours,
              py::arg("neighbours"))
-        .def("get_neighbours",
-             &LocalSearch::getNeighbours,
+        .def("neighbours",
+             &LocalSearch::neighbours,
              py::return_value_policy::reference_internal)
         .def("__call__",
              &LocalSearch::operator(),

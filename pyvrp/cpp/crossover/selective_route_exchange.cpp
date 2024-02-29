@@ -73,8 +73,8 @@ pyvrp::Solution pyvrp::crossover::selectiveRouteExchange(
     }
 
     // Sort parents' routes by (ascending) polar angle.
-    auto const routesA = sortByAscAngle(data, parents.first->getRoutes());
-    auto const routesB = sortByAscAngle(data, parents.second->getRoutes());
+    auto const routesA = sortByAscAngle(data, parents.first->routes());
+    auto const routesB = sortByAscAngle(data, parents.second->routes());
 
     DynamicBitset selectedA(data.numLocations());
     DynamicBitset selectedB(data.numLocations());

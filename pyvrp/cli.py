@@ -83,7 +83,7 @@ def write_solution(where: Path, data: ProblemData, result: Result):
         ]
 
         routes = [f"Route #{idx + 1}:" for idx in range(data.num_vehicles)]
-        for route in result.best.get_routes():
+        for route in result.best.routes():
             visits = map(str, route.visits())
             vehicle = next(type2vehicle[route.vehicle_type()])
             routes[vehicle] += " " + " ".join(visits)

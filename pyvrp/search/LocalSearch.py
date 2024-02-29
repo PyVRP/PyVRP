@@ -65,7 +65,7 @@ class LocalSearch:
         """
         self._ls.set_neighbours(neighbours)
 
-    def get_neighbours(self) -> list[list[int]]:
+    def neighbours(self) -> list[list[int]]:
         """
         Returns the granular neighbourhood currently used by the local search.
 
@@ -74,7 +74,7 @@ class LocalSearch:
         list
             The current granular neighbourhood.
         """
-        return self._ls.get_neighbours()
+        return self._ls.neighbours()
 
     def __call__(
         self,

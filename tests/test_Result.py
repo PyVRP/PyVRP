@@ -88,7 +88,7 @@ def test_str_contains_essential_information(ok_small, routes):
         assert_("INFEASIBLE" in str_representation)
 
     # And make sure that all routes are printed as well.
-    for route in sol.get_routes():
+    for route in sol.routes():
         assert_(str(route) in str_representation)
 
 
