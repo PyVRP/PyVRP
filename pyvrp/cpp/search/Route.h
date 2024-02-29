@@ -258,9 +258,16 @@ public:
     [[nodiscard]] inline Duration duration() const;
 
     /**
-     * @return The maximum duration of the vehicle servicing this route.
+     * @return The maximum route duration that the vehicle servicing this route
+     *         supports.
      */
     [[nodiscard]] inline Duration maxDuration() const;
+
+    /**
+     * @return The maximum route distance that the vehicle servicing this route
+     *         supports.
+     */
+    [[nodiscard]] inline Distance maxDistance() const;
 
     /**
      * @return Total time warp on this route.
@@ -547,6 +554,8 @@ Duration Route::duration() const
 }
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
+
+Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 
 Duration Route::timeWarp() const
 {
