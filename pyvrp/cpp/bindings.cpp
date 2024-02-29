@@ -130,6 +130,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
+                      pyvrp::Distance,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
@@ -139,6 +140,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("max_distance")
+             = std::numeric_limits<pyvrp::Distance>::max(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
@@ -147,6 +150,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
+        .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)

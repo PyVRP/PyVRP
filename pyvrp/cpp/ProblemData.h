@@ -233,6 +233,7 @@ public:
      *     tw_early: int = 0,
      *     tw_late: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
+     *     max_distance: int = np.iinfo(np.int64).max,
      *     name: str = "",
      * )
      *
@@ -258,6 +259,8 @@ public:
      *     End of the vehicle type's shift. Unconstrained if not provided.
      * max_duration
      *     Maximum route duration. Unconstrained if not explicitly provided.
+     * max_distance
+     *     Maximum route distance. Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -278,6 +281,10 @@ public:
      * max_duration
      *     Maximum duration of the route this vehicle type is assigned to. This
      *     is a very large number when the maximum duration is unconstrained.
+     * max_distance
+     *     Maximum travel distance of the route this vehicle type is assigned
+     *     to. This is a very large number when the maximum distance is
+     *     unconstrained.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -289,8 +296,9 @@ public:
         Cost const fixedCost;        // Fixed cost of using this vehicle type
         Duration const twEarly;      // Start of shift
         Duration const twLate;       // End of shift
-        char const *name;            // Type name (for reference)
         Duration const maxDuration;  // Maximum route duration
+        Distance const maxDistance;  // Maximum route distance
+        char const *name;            // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
@@ -299,6 +307,7 @@ public:
                     Duration twEarly = 0,
                     Duration twLate = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
+                    Distance maxDistance = std::numeric_limits<Distance>::max(),
                     char const *name = "");
 
         VehicleType(VehicleType const &vehicleType);

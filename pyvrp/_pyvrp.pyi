@@ -73,6 +73,7 @@ class VehicleType:
     tw_early: int
     tw_late: int
     max_duration: int
+    max_distance: int
     name: str
     def __init__(
         self,
@@ -83,6 +84,7 @@ class VehicleType:
         tw_early: int = 0,
         tw_late: int = ...,
         max_duration: int = ...,
+        max_distance: int = ...,
         name: str = "",
     ) -> None: ...
 
