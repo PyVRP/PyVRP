@@ -57,14 +57,14 @@ def test_prize_collecting_instance(prize_collecting):
     # Thus, we only get the values [2, 3] from the second route, for a total of
     # four clients in the offspring solution.
     offspring = cpp_ox((sol1, sol2), data, (0, 2))
-    route = offspring.get_routes()[0]
+    route = offspring.routes()[0]
     assert_equal(offspring.num_clients(), 4)
     assert_equal(route.visits(), [4, 5, 2, 3])
 
     # From the first route we take [6, 7], which are not in the second route.
     # From the second route we get [2, 3, 4, 5], for a total of six clients.
     offspring = cpp_ox((sol1, sol2), data, (2, 4))
-    route = offspring.get_routes()[0]
+    route = offspring.routes()[0]
     assert_equal(offspring.num_clients(), 6)
     assert_equal(route.visits(), [6, 7, 2, 3, 4, 5])
 
@@ -103,6 +103,6 @@ def test_wrap_around(ok_small):
     # wrap around. In particular, the offspring inherits the segment [4, 1]
     # from sol1 as [1, *, *, 4], and gets [2, 3] from sol2 as [1, 2, 3, 4].
     offspring = cpp_ox((sol1, sol2), data, (3, 1))
-    route = offspring.get_routes()[0]
+    route = offspring.routes()[0]
     assert_equal(offspring.num_clients(), 4)
     assert_equal(route.visits(), [1, 2, 3, 4])

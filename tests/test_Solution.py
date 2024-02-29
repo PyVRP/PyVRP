@@ -43,7 +43,7 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
 
     # We expect Solution to return routes with the correct vehicle types.
-    routes = sol.get_routes()
+    routes = sol.routes()
     assert_equal(len(routes), 2)
 
     assert_equal(routes[0].visits(), [3, 4])
@@ -104,7 +104,7 @@ def test_random_constructor_cycles_over_routes(ok_small):
     rng = RandomNumberGenerator(seed=42)
 
     sol = Solution.make_random(ok_small, rng)
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     assert_equal(sol.num_routes(), 2)
     assert_equal(len(routes), 2)
@@ -126,7 +126,7 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
 
     rng = RandomNumberGenerator(seed=42)
     sol = Solution.make_random(data, rng)
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     for route in routes:
         assert_equal(len(route), 1)
@@ -144,7 +144,7 @@ def test_route_constructor_raises_too_many_vehicles(ok_small):
 
     # Only two routes should not raise.
     sol = Solution(ok_small, [[1, 2], [4, 3]])
-    assert_equal(len(sol.get_routes()), 2)
+    assert_equal(len(sol.routes()), 2)
 
     # Three routes should not raise.
     Solution(ok_small, [[1, 2], [4], [3]])
@@ -160,18 +160,18 @@ def test_route_constructor_raises_too_many_vehicles(ok_small):
 
     # Only two routes (of type 0) should not raise.
     sol = Solution(data, [[1, 2], [4, 3]])
-    assert_equal(len(sol.get_routes()), 2)
+    assert_equal(len(sol.routes()), 2)
 
     # One route of both vehicle types should not raise.
     sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)])
-    assert_equal(len(sol.get_routes()), 2)
+    assert_equal(len(sol.routes()), 2)
 
     # Two routes of type 1 and one of type 2 should not raise as we have those.
     sol = Solution(
         data,
         [Route(data, [1], 0), Route(data, [2], 0), Route(data, [4, 3], 1)],
     )
-    assert_equal(len(sol.get_routes()), 3)
+    assert_equal(len(sol.routes()), 3)
 
     # Two routes of vehicle type 1 should raise since we have only one.
     with assert_raises(RuntimeError):
@@ -218,7 +218,7 @@ def test_route_constructor_allows_incomplete_solutions(ok_small_prizes):
     assert_(sol.is_complete())
 
 
-def test_get_neighbours(ok_small):
+def test_neighbours(ok_small):
     """
     Tests that the neighbour structure of (pred, succ) pairs for each client in
     the solution works correctly.
@@ -228,7 +228,7 @@ def test_get_neighbours(ok_small):
     sol = Solution(ok_small, [[3], [1, 2]])  # client 4 is not in the solution
     assert_(not sol.is_complete())
 
-    neighbours = sol.get_neighbours()
+    neighbours = sol.neighbours()
     expected = [
         None,  # 0: is depot
         (0, 2),  # 1: between depot (0) and 2
@@ -241,7 +241,7 @@ def test_get_neighbours(ok_small):
         assert_equal(neighbours[loc], expected[loc])
 
 
-def test_get_neighbours_multi_depot(ok_small):
+def test_neighbours_multi_depot(ok_small):
     """
     Tests that the neighbour structure of (pred, succ) pairs for each client in
     the solution works correctly when there are multiple depots.
@@ -260,7 +260,7 @@ def test_get_neighbours_multi_depot(ok_small):
     sol = Solution(data, [Route(data, [4], 0), Route(data, [2, 3], 1)])
     assert_(sol.is_complete())
 
-    neighbours = sol.get_neighbours()
+    neighbours = sol.neighbours()
     expected = [
         None,  # 0: is depot
         None,  # 1: is depot
@@ -336,7 +336,7 @@ def test_feasibility_max_duration(ok_small):
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     sol = Solution(data, [[1, 2], [3, 4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # First route has duration 6'221, and the second route duration 5'004.
     # Since the maximum duration is 3'000, these routes incur time warp of
@@ -356,7 +356,7 @@ def test_distance_calculation(ok_small):
     Solution's distance is the sum of the route distances.
     """
     sol = Solution(ok_small, [[1, 2], [3], [4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # Solution is feasible, so all its routes should also be feasible.
     assert_(sol.is_feasible())
@@ -416,7 +416,7 @@ def test_route_access_methods(ok_small):
     Tests that accessing route statistics returns the correct numbers.
     """
     sol = Solution(ok_small, [[1, 3], [2, 4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # Test route access: getting the route plan should return a simple list, as
     # given to the solution above.
@@ -453,7 +453,7 @@ def test_route_time_warp_calculations(ok_small):
     Tests route time warp calculations.
     """
     sol = Solution(ok_small, [[1, 3], [2, 4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # There is time warp on the first route: duration(0, 1) = 1'544, so we
     # arrive at 1 before its opening window of 15'600. Service (360) thus
@@ -477,7 +477,7 @@ def test_route_wait_time_calculations():
     """
     data = read("data/OkSmallWaitTime.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # In the second route, the time window of client 2 closes at 15'000. After
     # service and travel, we then arrive at client 4 before its time window is
@@ -498,7 +498,7 @@ def test_route_wait_time_calculations():
     # So far we have tested a route that had wait duration, but not time warp.
     # We now test a solution with a route that has both.
     sol = Solution(data, [[1, 2, 4], [3]])
-    route, *_ = sol.get_routes()
+    route, *_ = sol.routes()
 
     # This route has the same wait time as explained above. The time warp is
     # incurred earlier in the route, between 1 -> 2:
@@ -525,7 +525,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     and without time warp or wait duration.
     """
     sol = Solution(ok_small, [[1, 3], [2, 4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
@@ -571,7 +571,7 @@ def test_route_release_time():
     """
     data = read("data/OkSmallReleaseTimes.txt")
     sol = Solution(data, [[1, 3], [2, 4]])
-    routes = sol.get_routes()
+    routes = sol.routes()
 
     # The client release times are 20'000, 5'000, 5'000 and 1'000. So the first
     # route has a release time of max(20'000, 5'000) = 20'000, and the second
@@ -649,7 +649,7 @@ def test_time_warp_return_to_depot():
     )
 
     sol = Solution(data, [[1]])
-    route, *_ = sol.get_routes()
+    route, *_ = sol.routes()
 
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
     # more than the depot time window 1, giving a time warp of 1.
@@ -830,14 +830,14 @@ def test_str_contains_routes(ok_small, vehicle_types):
     for _ in range(5):  # let's do this a few times to really make sure
         sol = Solution.make_random(data, rng)
         str_representation = str(sol).splitlines()
-        routes = sol.get_routes()
+        routes = sol.routes()
 
         # There should be no more than len(routes) lines (each detailing a
         # single route).
         assert_equal(len(str_representation), len(routes))
 
         # Each line should contain a route, where each route should contain
-        # every client that is in the route as returned by get_routes().
+        # every client that is in the route as returned by routes().
         for route, str_route in zip(routes, str_representation):
             for client in route:
                 assert_(str(client) in str_route)
@@ -904,7 +904,7 @@ def test_route_can_be_pickled(rc208):
     rng = RandomNumberGenerator(seed=2)
     sol = Solution.make_random(rc208, rng)
 
-    for before_pickle in sol.get_routes():
+    for before_pickle in sol.routes():
         bytes = pickle.dumps(before_pickle)
         after_pickle = pickle.loads(bytes)
 

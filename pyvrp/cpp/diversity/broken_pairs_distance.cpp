@@ -5,8 +5,8 @@
 double pyvrp::diversity::brokenPairsDistance(pyvrp::Solution const &first,
                                              pyvrp::Solution const &second)
 {
-    auto const &fNeighbours = first.getNeighbours();
-    auto const &sNeighbours = second.getNeighbours();
+    auto const &fNeighbours = first.neighbours();
+    auto const &sNeighbours = second.neighbours();
 
     size_t const numLocations = fNeighbours.size();
     size_t numBrokenPairs = 0;

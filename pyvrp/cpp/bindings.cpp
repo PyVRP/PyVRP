@@ -414,14 +414,14 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("num_missing_clients",
              &Solution::numMissingClients,
              DOC(pyvrp, Solution, numMissingClients))
-        .def("get_routes",
-             &Solution::getRoutes,
+        .def("routes",
+             &Solution::routes,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, Solution, getRoutes))
-        .def("get_neighbours",
-             &Solution::getNeighbours,
+             DOC(pyvrp, Solution, routes))
+        .def("neighbours",
+             &Solution::neighbours,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, Solution, getNeighbours))
+             DOC(pyvrp, Solution, neighbours))
         .def("is_feasible",
              &Solution::isFeasible,
              DOC(pyvrp, Solution, isFeasible))
@@ -465,8 +465,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.prizes(),
                                       sol.uncollectedPrizes(),
                                       sol.timeWarp(),
-                                      sol.getRoutes(),
-                                      sol.getNeighbours());
+                                      sol.routes(),
+                                      sol.neighbours());
             },
             [](py::tuple t) {  // __setstate__
                 using Routes = std::vector<Solution::Route>;

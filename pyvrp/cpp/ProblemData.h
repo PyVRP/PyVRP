@@ -23,6 +23,12 @@ namespace pyvrp
  * Creates a problem data instance. This instance contains all information
  * needed to solve the vehicle routing problem.
  *
+ * .. note::
+ *
+ *    The ``distance_matrix`` and ``duration_matrix`` arguments should have all
+ *    depots in the lower indices, starting from index ``0``. See also the
+ *    :meth:`~pyvrp._pyvrp.ProblemData.location` method for details.
+ *
  * Parameters
  * ----------
  * clients
@@ -33,11 +39,11 @@ namespace pyvrp
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrix
- *     A matrix that gives the distances between clients (and the depot at
- *     index 0).
+ *     A matrix that gives the travel distances between all locations: both
+ *     depots and clients.
  * duration_matrix
- *     A matrix that gives the travel times between clients (and the depot at
- *     index 0).
+ *     A matrix that gives the travel durations between all locations: both
+ *     depots and clients.
  */
 class ProblemData
 {

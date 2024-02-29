@@ -292,11 +292,10 @@ public:
      * Returns
      * -------
      * list
-     *     A list of routes. Each :class:`~Route` starts and ends at the depot
-     *     (0), but that is implicit: the depot is not part of the returned
-     *     routes.
+     *     A list of routes. Each :class:`~Route` starts and ends at a depot,
+     *     but that is implicit: the depot is not part of the returned routes.
      */
-    [[nodiscard]] Routes const &getRoutes() const;
+    [[nodiscard]] Routes const &routes() const;
 
     /**
      * Returns a list of neighbours for each client, by index.
@@ -308,7 +307,7 @@ public:
      *     predecessor and successors in this solutions's routes. ``None`` in
      *     case the client is not in the solution (or is a depot).
      */
-    [[nodiscard]] Neighbours const &getNeighbours() const;
+    [[nodiscard]] Neighbours const &neighbours() const;
 
     /**
      * Whether this solution is feasible. This is a shorthand for checking

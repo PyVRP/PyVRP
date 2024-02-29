@@ -283,7 +283,7 @@ def test_tournament_ranks_by_fitness(rc208, k: int):
     infeas_count = np.zeros(len(infeas_pop))
 
     for _ in range(10_000):
-        sol = pop.get_tournament(rng, cost_evaluator, k=k)
+        sol = pop.tournament(rng, cost_evaluator, k=k)
         infeas_count[sol2idx[sol]] += 1
 
     # Now we compare the observed ranking from the tournament selection with
@@ -317,7 +317,7 @@ def test_tournament_raises_for_invalid_k(rc208, k: int):
         pop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     with assert_raises(ValueError):
-        pop.get_tournament(rng, cost_evaluator, k=k)
+        pop.tournament(rng, cost_evaluator, k=k)
 
 
 def test_purge_removes_duplicates(rc208):

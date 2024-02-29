@@ -43,7 +43,7 @@ def plot_solution(
         **kwargs,
     )
 
-    for idx, route in enumerate(solution.get_routes(), 1):
+    for idx, route in enumerate(solution.routes(), 1):
         x = x_coords[route]
         y = y_coords[route]
         depot = route.depot()

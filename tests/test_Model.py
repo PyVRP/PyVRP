@@ -216,9 +216,10 @@ def test_get_vehicle_types():
     vehicle_type1 = model.add_vehicle_type(1, capacity=2)
     vehicle_type2 = model.add_vehicle_type(1, capacity=3)
 
-    # Test that we can get the vehicle types by index.
+    # Test that we can get the vehicle types by index, or as a list.
     assert_equal(model.vehicle_types[0], vehicle_type1)
     assert_equal(model.vehicle_types[1], vehicle_type2)
+    assert_equal(model.vehicle_types, [vehicle_type1, vehicle_type2])
 
 
 def test_from_data(small_cvrp):
@@ -405,7 +406,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     with assert_warns(EmptySolutionWarning):
         res = m.solve(stop=MaxIterations(1))
 
-    solution = [r.visits() for r in res.best.get_routes()]
+    solution = [r.visits() for r in res.best.routes()]
     assert_equal(solution, [])
 
     # Solve an instance with one client.
@@ -414,7 +415,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     m.add_edge(clients[0], depot, distance=0)
 
     res = m.solve(stop=MaxIterations(1))
-    solution = [r.visits() for r in res.best.get_routes()]
+    solution = [r.visits() for r in res.best.routes()]
     assert_equal(solution, [[1]])
 
 
@@ -522,7 +523,7 @@ def test_model_solves_line_instance_with_multiple_depots():
     # assigned to the first route, and clients closest to depot 1 assigned to
     # the second route. Route membership is compared using sets because the
     # optimal visit order is not unique.
-    routes = res.best.get_routes()
+    routes = res.best.routes()
     assert_equal(set(routes[0].visits()), {2, 3})
     assert_equal(set(routes[1].visits()), {4, 5})
 
@@ -588,7 +589,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
             m.add_edge(frm, to, distance=manhattan)
 
     res = m.solve(stop=MaxIterations(100))
-    route = res.best.get_routes()[0]
+    route = res.best.routes()[0]
 
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
     assert_allclose(route.excess_load(), expected_excess_load)

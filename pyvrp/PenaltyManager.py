@@ -23,7 +23,7 @@ class PenaltyParams:
         A repair booster value :math:`r \\ge 1`. This value is used to
         temporarily multiply the current penalty terms, to force feasibility.
         See also
-        :meth:`~pyvrp.PenaltyManager.PenaltyManager.get_booster_cost_evaluator`.
+        :meth:`~pyvrp.PenaltyManager.PenaltyManager.booster_cost_evaluator`.
     num_registrations_between_penalty_updates
         Number of feasibility registrations between penalty value updates. The
         penalty manager updates the penalty terms every once in a while based
@@ -112,32 +112,14 @@ class PenaltyManager:
         PenaltyManager parameters. If not provided, a default will be used.
     """
 
-    def __init__(
-        self,
-        params: PenaltyParams = PenaltyParams(),
-    ):
+    def __init__(self, params: PenaltyParams = PenaltyParams()):
         self._params = params
+
         self._load_feas: list[bool] = []  # tracks recent load feasibility
         self._time_feas: list[bool] = []  # track recent time feasibility
+
         self._capacity_penalty = params.init_capacity_penalty
         self._tw_penalty = params.init_time_warp_penalty
-        self._cost_evaluator = CostEvaluator(
-            self._capacity_penalty, self._tw_penalty
-        )
-        self._booster_cost_evaluator = CostEvaluator(
-            self._capacity_penalty * self._params.repair_booster,
-            self._tw_penalty * self._params.repair_booster,
-        )
-
-    def _update_cost_evaluators(self):
-        # Updates the cost evaluators given new penalty values
-        self._cost_evaluator = CostEvaluator(
-            self._capacity_penalty, self._tw_penalty
-        )
-        self._booster_cost_evaluator = CostEvaluator(
-            self._capacity_penalty * self._params.repair_booster,
-            self._tw_penalty * self._params.repair_booster,
-        )
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
         # Computes and returns the new penalty value, given the current value
@@ -174,7 +156,6 @@ class PenaltyManager:
         ):
             avg = fmean(self._load_feas)
             self._capacity_penalty = self._compute(self._capacity_penalty, avg)
-            self._update_cost_evaluators()
             self._load_feas.clear()
 
     def register_time_feasible(self, is_time_feasible: bool):
@@ -195,10 +176,9 @@ class PenaltyManager:
         ):
             avg = fmean(self._time_feas)
             self._tw_penalty = self._compute(self._tw_penalty, avg)
-            self._update_cost_evaluators()
             self._time_feas.clear()
 
-    def get_cost_evaluator(self) -> CostEvaluator:
+    def cost_evaluator(self) -> CostEvaluator:
         """
         Get a cost evaluator for the current penalty values.
 
@@ -207,9 +187,9 @@ class PenaltyManager:
         CostEvaluator
             A CostEvaluator instance that uses the current penalty values.
         """
-        return self._cost_evaluator
+        return CostEvaluator(self._capacity_penalty, self._tw_penalty)
 
-    def get_booster_cost_evaluator(self):
+    def booster_cost_evaluator(self):
         """
         Get a cost evaluator for the boosted current penalty values.
 
@@ -218,4 +198,7 @@ class PenaltyManager:
         CostEvaluator
             A CostEvaluator instance that uses the booster penalty values.
         """
-        return self._booster_cost_evaluator
+        return CostEvaluator(
+            self._capacity_penalty * self._params.repair_booster,
+            self._tw_penalty * self._params.repair_booster,
+        )

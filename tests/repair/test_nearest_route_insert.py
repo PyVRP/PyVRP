@@ -47,8 +47,8 @@ def test_empty_routes_or_unplanned_is_a_no_op(ok_small):
     # should return the exact same routes it received.
     sol = Solution(ok_small, [[3, 2], [1, 4]])
     assert_equal(
-        nearest_route_insert(sol.get_routes(), [], ok_small, cost_eval),
-        sol.get_routes(),
+        nearest_route_insert(sol.routes(), [], ok_small, cost_eval),
+        sol.routes(),
     )
 
     # This is also true when the solution is not complete: the operator only
@@ -56,8 +56,8 @@ def test_empty_routes_or_unplanned_is_a_no_op(ok_small):
     sol = Solution(ok_small, [[2, 3, 4]])
     assert_(not sol.is_complete())
     assert_equal(
-        nearest_route_insert(sol.get_routes(), [], ok_small, cost_eval),
-        sol.get_routes(),
+        nearest_route_insert(sol.routes(), [], ok_small, cost_eval),
+        sol.routes(),
     )
 
     # Finally, when both the set of routes and the list of unplanned clients
@@ -71,7 +71,7 @@ def test_OkSmall(ok_small):
     """
     cost_eval = CostEvaluator(1, 1)
 
-    routes = Solution(ok_small, [[2], [3]]).get_routes()
+    routes = Solution(ok_small, [[2], [3]]).routes()
     unplanned = [1, 4]
 
     # We first insert client 1. This client is nearest to client 3, so it
