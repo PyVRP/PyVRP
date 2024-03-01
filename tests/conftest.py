@@ -27,11 +27,7 @@ def rc208():
     Fixture that returns the RC208 VRPTW instance when called, with 100
     clients.
     """
-    return read(
-        "data/RC208.txt",
-        instance_format="solomon",
-        round_func="dimacs",
-    )
+    return read("data/RC208.vrp", round_func="dimacs")
 
 
 @pytest.fixture(scope="session")

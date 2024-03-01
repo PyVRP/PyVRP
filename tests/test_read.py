@@ -116,9 +116,9 @@ def test_reading_OkSmall_instance():
         assert_allclose(data.location(loc).service_duration, expected[loc])
 
 
-def test_reading_En22k4_instance():  # instance from CVRPLIB
+def test_reading_vrplib_instance():
     """
-    Tests that the small E-n22-k4 instance from CVRPLIB is correctly parsed.
+    Tests that a small VRPLIB-style instance is correctly parsed.
     """
     data = read("data/E-n22-k4.txt", round_func="trunc1")
 
@@ -159,65 +159,6 @@ def test_reading_En22k4_instance():  # instance from CVRPLIB
         assert_equal(data.location(loc).required, True)
 
 
-def test_reading_RC208_instance():  # Solomon style instance
-    """
-    Tests that a Solomon-style VRPTW instance is correctly parsed.
-    """
-    data = read(
-        "data/RC208.txt", instance_format="solomon", round_func="trunc1"
-    )
-
-    assert_equal(data.num_clients, 100)
-    assert_equal(data.num_depots, 1)
-    assert_equal(data.num_locations, 101)
-
-    assert_equal(data.num_vehicles, 25)
-    assert_equal(data.num_vehicle_types, 1)
-
-    vehicle_type = data.vehicle_type(0)
-    expected_name = ",".join(str(idx + 1) for idx in range(data.num_vehicles))
-
-    assert_equal(vehicle_type.num_available, 25)
-    assert_equal(vehicle_type.name, expected_name)
-
-    # The trunc1 rounding function ensures everything is scaled by 10 and
-    # truncated to integers (for 1 decimal integer precision).
-    assert_allclose(vehicle_type.capacity, 10_000)
-
-    assert_allclose(data.location(0).x, 400)  # depot [x, y] location
-    assert_allclose(data.location(0).y, 500)
-    assert_allclose(data.location(0).tw_early, 0)
-    assert_allclose(data.location(0).tw_late, 9600)
-
-    assert_allclose(data.location(1).x, 250)  # first customer [x, y] location
-    assert_allclose(data.location(1).y, 850)
-    assert_allclose(data.location(1).delivery, 200)
-    assert_allclose(data.location(1).tw_early, 3880)
-    assert_allclose(data.location(1).tw_late, 9110)
-    assert_allclose(data.location(1).service_duration, 100)
-    assert_equal(vehicle_type.name, expected_name)
-
-    # The data file specifies distances as 2D Euclidean. We take that and
-    # should compute integer equivalents with up to one decimal precision.
-    # For depot -> first customer:
-    # For depot -> first customer:
-    #      dX = 40 - 25 = 15
-    #      dY = 50 - 85 = -35
-    #      dist = sqrt(dX^2 + dY^2) = 38.07
-    #      int(10 * dist) = 380
-    assert_allclose(data.dist(0, 1), 380)
-    assert_allclose(data.dist(1, 0), 380)
-
-    for client in data.clients():
-        assert_allclose(client.service_duration, 100)
-
-        # This is a VRPTW instance, so all other fields should have their
-        # default values.
-        assert_allclose(client.release_time, 0)
-        assert_allclose(client.prize, 0)
-        assert_equal(client.required, True)
-
-
 def test_warns_about_scaling_issues():
     """
     Tests that ``read()`` warns about scaling issues when a distance value is
@@ -234,8 +175,8 @@ def test_round_func_trunc1_and_dimacs_are_same():
     Tests that the DIMACS convention is equivalent to truncating to the first
     decimal.
     """
-    trunc1 = read("data/RC208.txt", "solomon", "trunc1")
-    dimacs = read("data/RC208.txt", "solomon", "dimacs")
+    trunc1 = read("data/RC208.vrp", "trunc1")
+    dimacs = read("data/RC208.vrp", "dimacs")
 
     trunc1_dist = trunc1.distance_matrix()
     dimacs_dist = dimacs.distance_matrix()
@@ -252,7 +193,7 @@ def test_round_func_round_nearest():
     which has Euclidean distances computed from integer coordinates. Since the
     instance is large, we'll test one particular distance.
     """
-    data = read("data/RC208.txt", "solomon", "round")
+    data = read("data/RC208.vrp", "round")
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
