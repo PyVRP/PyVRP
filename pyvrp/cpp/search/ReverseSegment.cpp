@@ -11,14 +11,12 @@ pyvrp::Cost ReverseSegment::evaluate(Route::Node *U,
                                      CostEvaluator const &costEvaluator)
 {
     assert(U->route() && V->route());
-
-    if (U->route() != V->route())  // cannot reverse between routes
-        return 0;
-
-    if (U->idx() + 1 >= V->idx())  // tackled in a later iteration
-        return 0;
-
     auto *route = U->route();
+
+    // Cannot reverse between routes, and U > V will be tackled in a later
+    // iteration.
+    if (U->route() != V->route() || U->idx() + 1 >= V->idx())
+        return 0;
 
     Cost deltaCost
         = -static_cast<Cost>(route->distance())
