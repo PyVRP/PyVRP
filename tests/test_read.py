@@ -116,7 +116,7 @@ def test_reading_OkSmall_instance():
         assert_allclose(data.location(loc).service_duration, expected[loc])
 
 
-def test_reading_En22k4_instance():
+def test_reading_vrplib_instance():
     """
     Tests that a small VRPLIB-style instance is correctly parsed.
     """
