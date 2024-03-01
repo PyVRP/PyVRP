@@ -28,7 +28,7 @@ from pyvrp import (
 )
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.read import INSTANCE_FORMATS, ROUND_FUNCS, read
+from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
@@ -94,7 +94,6 @@ def write_solution(where: Path, data: ProblemData, result: Result):
 
 def solve(
     data_loc: Path,
-    instance_format: str,
     round_func: str,
     seed: int,
     max_runtime: float,
@@ -112,9 +111,6 @@ def solve(
     ----------
     data_loc
         Filesystem location of the VRPLIB instance.
-    instance_format
-        Data format of the filesystem instance. Argument is passed to
-        ``read()``.
     round_func
         Rounding function to use for rounding non-integral data. Argument is
         passed to ``read()``.
@@ -150,7 +146,7 @@ def solve(
     pop_params = PopulationParams(**config.get("population", {}))
     nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
 
-    data = read(data_loc, instance_format, round_func)
+    data = read(data_loc, round_func)
     rng = RandomNumberGenerator(seed=seed)
     pen_manager = PenaltyManager(pen_params)
     pop = Population(bpd, params=pop_params)
@@ -273,13 +269,6 @@ def main():
     per instance).
     """
     parser.add_argument("--sol_dir", type=Path, help=msg)
-
-    parser.add_argument(
-        "--instance_format",
-        default="vrplib",
-        choices=INSTANCE_FORMATS,
-        help="File format. Default 'vrplib'.",
-    )
 
     parser.add_argument(
         "--round_func",
