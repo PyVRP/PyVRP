@@ -70,9 +70,6 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: Exchange33
       :exclude-members: evaluate, apply
 
-   .. autoclass:: MoveTwoClientsReversed
-      :exclude-members: evaluate, apply
-
    .. autoclass:: TwoOpt
       :exclude-members: evaluate, apply
 

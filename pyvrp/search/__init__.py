@@ -9,7 +9,6 @@ from ._search import Exchange30 as Exchange30
 from ._search import Exchange31 as Exchange31
 from ._search import Exchange32 as Exchange32
 from ._search import Exchange33 as Exchange33
-from ._search import MoveTwoClientsReversed as MoveTwoClientsReversed
 from ._search import NodeOperator as NodeOperator
 from ._search import RelocateStar as RelocateStar
 from ._search import RouteOperator as RouteOperator
@@ -29,7 +28,6 @@ NODE_OPERATORS = [
     Exchange22,
     Exchange32,
     Exchange33,
-    MoveTwoClientsReversed,
     TwoOpt,
 ]
 
