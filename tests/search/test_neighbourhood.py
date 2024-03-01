@@ -98,7 +98,6 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
         # fmt: on
     ],
 )
-# TODO
 def test_compute_neighbours(
     rc208,
     weight_wait_time: int,
