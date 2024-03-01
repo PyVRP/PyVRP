@@ -336,6 +336,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 // Returns a tuple that completely encodes the route's state.
                 return py::make_tuple(route.visits(),
                                       route.distance(),
+                                      route.excessDistance(),
                                       route.delivery(),
                                       route.pickup(),
                                       route.excessLoad(),
@@ -356,21 +357,22 @@ PYBIND11_MODULE(_pyvrp, m)
                 Solution::Route route = Solution::Route(
                     t[0].cast<std::vector<size_t>>(),         // visits
                     t[1].cast<pyvrp::Distance>(),             // distance
-                    t[2].cast<pyvrp::Load>(),                 // delivery
-                    t[3].cast<pyvrp::Load>(),                 // pickup
-                    t[4].cast<pyvrp::Load>(),                 // excess load
-                    t[5].cast<pyvrp::Duration>(),             // duration
-                    t[6].cast<pyvrp::Duration>(),             // time warp
-                    t[7].cast<pyvrp::Duration>(),             // travel
-                    t[8].cast<pyvrp::Duration>(),             // service
-                    t[9].cast<pyvrp::Duration>(),             // wait
-                    t[10].cast<pyvrp::Duration>(),            // release
-                    t[11].cast<pyvrp::Duration>(),            // start time
-                    t[12].cast<pyvrp::Duration>(),            // slack
-                    t[13].cast<pyvrp::Cost>(),                // prizes
-                    t[14].cast<std::pair<double, double>>(),  // centroid
-                    t[15].cast<size_t>(),                     // vehicle type
-                    t[16].cast<size_t>());                    // depot
+                    t[2].cast<pyvrp::Distance>(),             // excess distance
+                    t[3].cast<pyvrp::Load>(),                 // delivery
+                    t[4].cast<pyvrp::Load>(),                 // pickup
+                    t[5].cast<pyvrp::Load>(),                 // excess load
+                    t[6].cast<pyvrp::Duration>(),             // duration
+                    t[7].cast<pyvrp::Duration>(),             // time warp
+                    t[8].cast<pyvrp::Duration>(),             // travel
+                    t[9].cast<pyvrp::Duration>(),             // service
+                    t[10].cast<pyvrp::Duration>(),            // wait
+                    t[11].cast<pyvrp::Duration>(),            // release
+                    t[12].cast<pyvrp::Duration>(),            // start time
+                    t[13].cast<pyvrp::Duration>(),            // slack
+                    t[14].cast<pyvrp::Cost>(),                // prizes
+                    t[15].cast<std::pair<double, double>>(),  // centroid
+                    t[16].cast<size_t>(),                     // vehicle type
+                    t[17].cast<size_t>());                    // depot
 
                 return route;
             }))
@@ -498,20 +500,23 @@ PYBIND11_MODULE(_pyvrp, m)
         });
 
     py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
-        .def(py::init([](unsigned int capacityPenalty, unsigned int twPenalty) {
-                 return CostEvaluator(capacityPenalty, twPenalty);
-             }),
-             py::arg("capacity_penalty") = 0,
-             py::arg("tw_penalty") = 0)
+        .def(py::init<pyvrp::Cost, pyvrp::Cost, pyvrp::Cost>(),
+             py::arg("load_penalty"),
+             py::arg("tw_penalty"),
+             py::arg("dist_penalty"))
         .def("load_penalty",
-             py::overload_cast<pyvrp::Load, pyvrp::Load>(
-                 &CostEvaluator::loadPenalty, py::const_),
+             &CostEvaluator::loadPenalty,
              py::arg("load"),
              py::arg("capacity"),
-             DOC(pyvrp, CostEvaluator, loadPenalty, 2))
+             DOC(pyvrp, CostEvaluator, loadPenalty))
         .def("tw_penalty",
              &CostEvaluator::twPenalty,
              py::arg("time_warp"),
+             DOC(pyvrp, CostEvaluator, twPenalty))
+        .def("dist_penalty",
+             &CostEvaluator::distPenalty,
+             py::arg("distance"),
+             py::arg("max_distance"),
              DOC(pyvrp, CostEvaluator, twPenalty))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,

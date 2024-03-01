@@ -56,7 +56,7 @@ def test_plot_result():
 
     data = read("data/RC208.txt", "solomon", round_func="trunc")
     bks = read_solution("data/RC208.sol")
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     params = PopulationParams()

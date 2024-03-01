@@ -55,8 +55,9 @@ public:
     {
         using Visits = std::vector<Client>;
 
-        Visits visits_ = {};      // Client visits on this route
-        Distance distance_ = 0;   // Total travel distance on this route
+        Visits visits_ = {};           // Client visits on this route
+        Distance distance_ = 0;        // Total travel distance on this route
+        Distance excessDistance_ = 0;  // Excess travel distance
         Load delivery_ = 0;       // Total delivery amount served on this route
         Load pickup_ = 0;         // Total pickup amount gathered on this route
         Load excessLoad_ = 0;     // Excess pickup or delivery demand
@@ -93,17 +94,22 @@ public:
         [[nodiscard]] Distance distance() const;
 
         /**
-         * Total client delivery amount on this route.
+         * Distance in excess of the vehicle's maximum distance constraint.
+         */
+        [[nodiscard]] Distance excessDistance() const;
+
+        /**
+         * Total client delivery load on this route.
          */
         [[nodiscard]] Load delivery() const;
 
         /**
-         * Total client pickup amount on this route.
+         * Total client pickup load on this route.
          */
         [[nodiscard]] Load pickup() const;
 
         /**
-         * Pick or delivery demand in excess of the vehicle's capacity.
+         * Pickup or delivery load in excess of the vehicle's capacity.
          */
         [[nodiscard]] Load excessLoad() const;
 
@@ -194,6 +200,7 @@ public:
 
         [[nodiscard]] bool isFeasible() const;
         [[nodiscard]] bool hasExcessLoad() const;
+        [[nodiscard]] bool hasExcessDistance() const;
         [[nodiscard]] bool hasTimeWarp() const;
 
         bool operator==(Route const &other) const;
@@ -208,6 +215,7 @@ public:
         // objects.
         Route(Visits visits,
               Distance distance,
+              Distance excessDistance,
               Load delivery,
               Load pickup,
               Load excessLoad,
@@ -231,7 +239,8 @@ private:
 
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
-    Distance distance_ = 0;         // Total distance
+    Distance distance_ = 0;         // Total travel distance over all routes
+    Distance excessDistance_ = 0;   // Total excess distance over all routes
     Load excessLoad_ = 0;           // Total excess load over all routes
     Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
     Cost prizes_ = 0;               // Total collected prize value
@@ -344,6 +353,18 @@ public:
     [[nodiscard]] bool hasExcessLoad() const;
 
     /**
+     * Returns whether this solution violates maximum distance constraints.
+     *
+     * Returns
+     * -------
+     * bool
+     *     True if the solution is not feasible with respect to the maximum
+     *     distance constraints on vehicles servicing one or more routes in
+     *     this solution, False otherwise.
+     */
+    [[nodiscard]] bool hasExcessDistance() const;
+
+    /**
      * Returns whether this solution violates time window constraints.
      *
      * Returns
@@ -373,6 +394,17 @@ public:
      *     Total excess load over all routes.
      */
     [[nodiscard]] Load excessLoad() const;
+
+    /**
+     * Returns the total distance in excess of maximum duration constraints,
+     * over all routes.
+     *
+     * Returns
+     * -------
+     * int
+     *     Total excess distance over all routes.
+     */
+    [[nodiscard]] Distance excessDistance() const;
 
     /**
      * Returns the fixed vehicle cost of all vehicles used in this solution.

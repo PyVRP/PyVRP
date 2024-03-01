@@ -25,7 +25,7 @@ def test_OkSmall_instance(ok_small):
     """
     Test 2-OPT on the OkSmall instance where we know exactly what's going on.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
@@ -69,7 +69,7 @@ def test_OkSmall_multiple_vehicle_types(
     """
     data = ok_small.replace(vehicle_types=vehicle_types)
 
-    cost_evaluator = CostEvaluator(10_000, 6)  # large capacity penalty
+    cost_evaluator = CostEvaluator(10_000, 6, 0)  # large capacity penalty
     rng = RandomNumberGenerator(seed=42)
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
@@ -100,7 +100,7 @@ def test_RC208_instance(rc208, seed: int):
     """
     Test a larger instance over several seeds.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
@@ -133,7 +133,7 @@ def test_within_route_move(ok_small):
     route.append(nodes[3])
     route.update()
 
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     two_opt = TwoOpt(ok_small)
 
     # Current (relevant) part of the route has distance:
@@ -185,7 +185,7 @@ def test_move_involving_empty_routes():
     route2.update()  # depot -> depot
 
     op = TwoOpt(data)
-    cost_eval = CostEvaluator(0, 0)
+    cost_eval = CostEvaluator(0, 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_allclose(op.evaluate(route1[2], route2[0], cost_eval), 0)
@@ -255,7 +255,7 @@ def test_move_involving_multiple_depots():
     assert_allclose(route2.distance(), 16)
 
     op = TwoOpt(data)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
 
     assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
 

@@ -16,7 +16,7 @@ def test_csv_serialises_correctly(ok_small, tmp_path):
     Tests that writing a CSV of a ``Statistics`` object and then reading that
     CSV again returns the same object.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
 
@@ -45,7 +45,7 @@ def test_collect_a_data_point_per_iteration(ok_small, num_iterations: int):
     Tests that the statistics object collects on feasible and infeasible data
     point every time ``collect_from`` is called.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
 
@@ -63,7 +63,7 @@ def test_eq(ok_small, num_iterations: int):
     """
     Tests the equality operator.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
 
@@ -91,7 +91,7 @@ def test_more_eq():
     """
     Tests the equality operator for the same population trajectory.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     pop = Population(broken_pairs_distance)
     assert_equal(len(pop), 0)
 

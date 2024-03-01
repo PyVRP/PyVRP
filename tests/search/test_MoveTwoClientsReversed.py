@@ -26,7 +26,7 @@ def test_single_route_OkSmall(ok_small):
     This test checks that MoveTwoClientsReversed properly solves the small
     instance where we know what is going on.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
 
     # Only neighbours are 1 -> 4 and 2 -> 1.
     ls = cpp_LocalSearch(ok_small, [[], [4], [1], [], []])
@@ -63,7 +63,7 @@ def test_RC208_instance(rc208, seed: int):
     """
     Test a larger instance over several seeds.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=seed)
 
     nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
@@ -108,7 +108,7 @@ def test_relocate_fixed_vehicle_cost():
     # the two clients on route1 into the empty route2. That leaves route1 empty
     # and has a fixed vehicle cost change of 13 - 7 = 6.
     op = MoveTwoClientsReversed(data)
-    cost_eval = CostEvaluator(0, 0)
+    cost_eval = CostEvaluator(0, 0, 0)
     assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), 6)
 
 
@@ -144,5 +144,5 @@ def test_within_route_simultaneous_pickup_and_delivery():
 
     # Evaluates 3 -> 2 -> 1, in which 3 is visited before 1. That would resolve
     # any excess load.
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     assert_allclose(op.evaluate(route[1], route[3], cost_eval), -5)

@@ -120,6 +120,7 @@ class PenaltyManager:
 
         self._capacity_penalty = params.init_capacity_penalty
         self._tw_penalty = params.init_time_warp_penalty
+        self._dist_penalty = 0  # TODO
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
         # Computes and returns the new penalty value, given the current value
@@ -187,7 +188,11 @@ class PenaltyManager:
         CostEvaluator
             A CostEvaluator instance that uses the current penalty values.
         """
-        return CostEvaluator(self._capacity_penalty, self._tw_penalty)
+        return CostEvaluator(
+            self._capacity_penalty,
+            self._tw_penalty,
+            self._dist_penalty,
+        )
 
     def booster_cost_evaluator(self):
         """
@@ -201,4 +206,5 @@ class PenaltyManager:
         return CostEvaluator(
             self._capacity_penalty * self._params.repair_booster,
             self._tw_penalty * self._params.repair_booster,
+            self._dist_penalty * self._params.repair_booster,
         )

@@ -28,7 +28,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
     Thus, SWAP* should still be able to identify additional improving moves
     after (1, 1)-exchange gets stuck.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     # For a fair comparison we should not hamper the node operator with
@@ -62,7 +62,7 @@ def test_swap_star_on_RC208_instance(rc208, seed: int):
     """
     Evaluate SWAP* on the RC208 instance, over a few seeds.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=seed)
 
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
@@ -121,7 +121,7 @@ def test_swap_star_can_swap_in_place():
     route2.append(nodes[3])
     route2.update()
 
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     swap_star = SwapStar(data)
 
     # Best is to exchange clients 1 and 3. The cost delta is all distance: it
@@ -176,7 +176,7 @@ def test_wrong_load_calculation_bug():
     route2.append(nodes[4])
     route2.update()
 
-    cost_eval = CostEvaluator(1_000, 1)
+    cost_eval = CostEvaluator(1_000, 1, 0)
     swap_star = SwapStar(data)
 
     # Optimal is 0 -> 3 -> 1 -> 0 and 0 -> 4 -> 2 -> 0. This exchanges four

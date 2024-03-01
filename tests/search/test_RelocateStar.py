@@ -17,7 +17,7 @@ def test_exchange10_and_relocate_star_are_same_large_neighbourhoods(rc208):
     RELOCATE* find the exact same solutions. Only when the granular
     neighbourhood is restricted do these solutions start to differ.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
@@ -49,7 +49,7 @@ def test_exchange10_and_relocate_star_differ_small_neighbourhoods(
     This test restricts the sizes of the granular neighbourhoods, so now
     (1, 0)-Exchange and RELOCATE* should start to differ.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     nb_params = NeighbourhoodParams(nb_granular=size)
