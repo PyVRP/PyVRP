@@ -1,7 +1,7 @@
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import PenaltyManager, PenaltyParams, Solution
+from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
 
 
 @mark.parametrize(
@@ -279,12 +279,15 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     Tests that updates only happen every ``num_registrations`` times, not every
     time a new value is registered.
     """
+    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
     num_registrations = 4
-    params = PenaltyParams(4, 4, 1, 1, num_registrations, 1.1, 0.9, 0.5)
+    params = PenaltyParams(4, 4, 4, 1, num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(params)
 
-    feas = Solution(ok_small, [[1, 2], [3, 4]])
-    infeas = Solution(ok_small, [[1, 2, 3, 4]])
+    feas = Solution(data, [[1, 2], [3, 4]])
+    infeas = Solution(data, [[1, 2, 3, 4]])
 
     assert_(feas.is_feasible())
     assert_(not infeas.is_feasible())
@@ -292,6 +295,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     # Both have four initial penalty, and vehicle capacity is one.
     assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
     assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
+    assert_allclose(pm.cost_evaluator().dist_penalty(2, 1), 4)
 
     # Register three times. We need at least four registrations before the
     # penalties are updated, so this should not change anything.
@@ -299,9 +303,11 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
         pm.register(sol)
         assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
         assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
+        assert_allclose(pm.cost_evaluator().dist_penalty(1, 0), 4)
 
     # Register a fourth time. Now the penalties should change. Since there are
     # more feasible registrations than desired, the penalties should decrease.
     pm.register(feas)
     assert_equal(pm.cost_evaluator().load_penalty(2, 1), 2)
     assert_equal(pm.cost_evaluator().tw_penalty(1), 2)
+    assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 2)
