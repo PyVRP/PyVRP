@@ -33,7 +33,6 @@ def no_rounding(vals):
     return vals
 
 
-INSTANCE_FORMATS = ["vrplib", "solomon"]
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
     "trunc": convert_to_int,
@@ -45,7 +44,6 @@ ROUND_FUNCS: dict[str, _RoundingFunc] = {
 
 def read(
     where: Union[str, pathlib.Path],
-    instance_format: str = "vrplib",
     round_func: Union[str, _RoundingFunc] = "none",
 ) -> ProblemData:
     """
@@ -63,9 +61,6 @@ def read(
     where
         File location to read. Assumes the data on the given location is in
         VRPLIB format.
-    instance_format
-        File format of the instance to read, one of ``'vrplib'`` (default) or
-        ``'solomon'``.
     round_func
         Optional rounding function. Will be applied to round data if the data
         is not already integer. This can either be a function or a string:
@@ -98,7 +93,7 @@ def read(
             f" or one of {ROUND_FUNCS.keys()}."
         )
 
-    instance = vrplib.read_instance(where, instance_format=instance_format)
+    instance = vrplib.read_instance(where)
 
     # VRPLIB instances typically do not have a duration data field, so we
     # assume duration == distance.
