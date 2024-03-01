@@ -53,7 +53,12 @@ Neighbours const &Solution::neighbours() const { return neighbours_; }
 
 bool Solution::isFeasible() const
 {
-    return !hasExcessLoad() && !hasTimeWarp() && isComplete();
+    // clang-format off
+    return !hasExcessLoad()
+        && !hasTimeWarp()
+        && !hasExcessDistance()
+        && isComplete();
+    // clang-format on
 }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
@@ -223,6 +228,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
                    Distance distance,
+                   Distance excessDistance,
                    Load excessLoad,
                    Cost fixedVehicleCost,
                    Cost prizes,
@@ -233,6 +239,7 @@ Solution::Solution(size_t numClients,
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
       distance_(distance),
+      excessDistance_(excessDistance),
       excessLoad_(excessLoad),
       fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
@@ -409,7 +416,7 @@ size_t Solution::Route::depot() const { return depot_; }
 
 bool Solution::Route::isFeasible() const
 {
-    return !hasExcessLoad() && !hasTimeWarp();
+    return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 
 bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
