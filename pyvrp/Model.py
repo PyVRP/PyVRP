@@ -300,9 +300,14 @@ class Model:
         # These cause a circular import, so the imports needed to be postponed
         # to here (where they are actually used).
         from pyvrp.search import (
-            NODE_OPERATORS,
-            ROUTE_OPERATORS,
+            Exchange10,
+            Exchange11,
+            Exchange20,
+            Exchange21,
+            Exchange22,
             LocalSearch,
+            SwapStar,
+            TwoOpt,
             compute_neighbours,
         )
 
@@ -310,10 +315,19 @@ class Model:
         rng = RandomNumberGenerator(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))
 
-        for node_op in NODE_OPERATORS:
+        node_ops = [
+            Exchange10,
+            Exchange11,
+            Exchange20,
+            Exchange21,
+            Exchange22,
+            TwoOpt,
+        ]
+        for node_op in node_ops:
             ls.add_node_operator(node_op(data))
 
-        for route_op in ROUTE_OPERATORS:
+        route_ops = [SwapStar]
+        for route_op in route_ops:
             ls.add_route_operator(route_op(data))
 
         pm = PenaltyManager()
