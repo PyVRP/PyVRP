@@ -15,7 +15,7 @@ namespace pyvrp::search
  *
  * .. note::
  *
- *    The above description is equivalent to a 2-OPT move for TSP.
+ *    This operator is equivalent to a 2-OPT move for TSP.
  */
 class ReverseSegment : public LocalSearchOperator<Route::Node>
 {
