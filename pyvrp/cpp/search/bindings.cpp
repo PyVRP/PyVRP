@@ -1,7 +1,6 @@
 #include "bindings.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
-#include "RelocateStar.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -20,7 +19,6 @@ using pyvrp::search::Exchange;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
-using pyvrp::search::RelocateStar;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
@@ -153,18 +151,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &TwoOpt::apply, py::arg("U"), py::arg("V"));
-
-    py::class_<RelocateStar, RouteOp>(
-        m, "RelocateStar", DOC(pyvrp, search, RelocateStar))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("evaluate",
-             &RelocateStar::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &RelocateStar::apply, py::arg("U"), py::arg("V"));
 
     py::class_<SwapRoutes, RouteOp>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
