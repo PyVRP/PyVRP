@@ -147,8 +147,8 @@ SwapTails::evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator)
         {
             auto *nodeU = (*U)[uIdx];
             auto *nodeV = (*V)[vIdx];
-            auto deltaCost = evaluate(nodeU, nodeV, costEvaluator);
 
+            auto const deltaCost = evaluate(nodeU, nodeV, costEvaluator);
             if (deltaCost < move.deltaCost)
             {
                 move.deltaCost = deltaCost;

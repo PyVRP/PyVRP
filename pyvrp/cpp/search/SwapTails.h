@@ -11,8 +11,8 @@ namespace pyvrp::search
  * Given two routes :math:`U` and :math:`V`, tests for each client :math:`C_U`
  * in :math:`U` and :math:`C_V` in :math:`V` whether replacing the arc of
  * :math:`C_U` to its successor :math:`n(C_U)` and :math:`C_V` to :math:`n(C_V)`
- * by :math:`C_U \rightarrow n(C_V)` and :math:`C_V \rightarrow n(C_U)`. The
- * best move is applied.
+ * by :math:`C_U \rightarrow n(C_V)` and :math:`C_V \rightarrow n(C_U)` is an
+ * improving move. The best move is stored and may be applied.
  */
 class SwapTails : public LocalSearchOperator<Route>
 {

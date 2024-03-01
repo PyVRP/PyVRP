@@ -17,9 +17,7 @@ namespace pyvrp::search
  * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood explores
  * free form re-insertions of clients :math:`U` and :math:`V` in the given
  * routes (so the clients are exchanged between routes, but they are not
- * necessarily inserted in the place of the other exchanged client). Our
- * implementation of the SWAP* neighbourhood follows Algorithm 2 of [1]_ fairly
- * closely.
+ * necessarily inserted in the place of the other exchanged client).
  *
  * References
  * ----------
