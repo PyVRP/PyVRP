@@ -262,6 +262,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("distance",
              &Solution::Route::distance,
              DOC(pyvrp, Solution, Route, distance))
+        .def("excess_distance",
+             &Solution::Route::excessDistance,
+             DOC(pyvrp, Solution, Route, excessDistance))
         .def("delivery",
              &Solution::Route::delivery,
              DOC(pyvrp, Solution, Route, delivery))
@@ -312,6 +315,7 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, Solution, Route, depot))
         .def("is_feasible", &Solution::Route::isFeasible)
         .def("has_excess_load", &Solution::Route::hasExcessLoad)
+        .def("has_excess_distance", &Solution::Route::hasExcessDistance)
         .def("has_time_warp", &Solution::Route::hasTimeWarp)
         .def("__len__", &Solution::Route::size)
         .def(
@@ -437,6 +441,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("has_excess_load",
              &Solution::hasExcessLoad,
              DOC(pyvrp, Solution, hasExcessLoad))
+        .def("has_excess_distance",
+             &Solution::hasExcessDistance,
+             DOC(pyvrp, Solution, hasExcessDistance))
         .def("has_time_warp",
              &Solution::hasTimeWarp,
              DOC(pyvrp, Solution, hasTimeWarp))
@@ -444,6 +451,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("excess_load",
              &Solution::excessLoad,
              DOC(pyvrp, Solution, excessLoad))
+        .def("excess_distance",
+             &Solution::excessDistance,
+             DOC(pyvrp, Solution, excessDistance))
         .def("fixed_vehicle_cost",
              &Solution::fixedVehicleCost,
              DOC(pyvrp, Solution, fixedVehicleCost))
