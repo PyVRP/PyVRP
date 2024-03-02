@@ -12,10 +12,7 @@ from pyvrp import (
     VehicleType,
 )
 from pyvrp import Route as SolRoute
-from pyvrp.search import (
-    LocalSearch,
-    SwapTails,
-)
+from pyvrp.search import LocalSearch, SwapTails
 from pyvrp.search._search import Node, Route
 
 
