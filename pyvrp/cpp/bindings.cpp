@@ -38,8 +38,12 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def("all", &DynamicBitset::all)
+        .def("any", &DynamicBitset::any)
+        .def("none", &DynamicBitset::none)
         .def("count", &DynamicBitset::count)
         .def("__len__", &DynamicBitset::size)
+        .def("reset", &DynamicBitset::reset)
         .def(
             "__getitem__",
             [](DynamicBitset const &bitset, size_t idx) { return bitset[idx]; },

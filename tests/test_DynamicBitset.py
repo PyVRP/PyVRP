@@ -66,6 +66,23 @@ def test_get_set_item():
     assert_equal(bitset.count(), 0)  # now no bits should be set
 
 
+def test_all_any_none():
+    """
+    Tests the boolean methods any, all, and none.
+    """
+    bitset = DynamicBitset(128)
+    assert_(not bitset.any())
+    assert_(bitset.none())
+    assert_(not bitset.all())
+    assert_((~bitset).all())
+
+    bitset[0] = True
+    assert_(bitset.any())
+    assert_(not bitset.none())
+    assert_(not bitset.all())
+    assert_(not (~bitset).all())
+
+
 def test_bit_or():
     """
     Tests the union operator.
@@ -136,3 +153,18 @@ def test_bit_not():
     inverted[0] = False
     inverted[127] = False
     assert_equal((~inverted).count(), 2)
+
+
+def test_reset():
+    """
+    Tests that reset returns the bitset to an all-zero state.
+    """
+    bitset = DynamicBitset(128)
+    assert_equal(bitset.count(), 0)
+
+    bitset[0] = True
+    bitset[1] = True
+    assert_equal(bitset.count(), 2)
+
+    bitset.reset()
+    assert_equal(bitset.count(), 0)
