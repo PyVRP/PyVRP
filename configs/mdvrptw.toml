@@ -10,13 +10,14 @@ node_ops = [
     "Exchange33",
     "MoveTwoClientsReversed",
     "ReverseSegment",
+    "SwapTails",
 ]
 
 
 route_ops = [
     "RelocateStar",
     "SwapStar",
-    "SwapTails",
+    "SwapRoutes",
 ]
 
 

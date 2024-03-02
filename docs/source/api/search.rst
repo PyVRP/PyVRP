@@ -76,6 +76,9 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: ReverseSegment
       :exclude-members: evaluate, apply
 
+   .. autoclass:: SwapTails
+      :exclude-members: evaluate, apply
+
 
 Route operators
 ---------------
@@ -97,8 +100,8 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: RelocateStar
       :exclude-members: evaluate, apply
 
-   .. autoclass:: SwapStar
+   .. autoclass:: SwapRoutes
       :exclude-members: evaluate, apply
 
-   .. autoclass:: SwapTails
+   .. autoclass:: SwapStar
       :exclude-members: evaluate, apply

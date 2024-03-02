@@ -5,6 +5,7 @@
 #include "RelocateStar.h"
 #include "ReverseSegment.h"
 #include "Route.h"
+#include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
 #include "primitives.h"
@@ -26,6 +27,7 @@ using pyvrp::search::RelocateStar;
 using pyvrp::search::removeCost;
 using pyvrp::search::ReverseSegment;
 using pyvrp::search::Route;
+using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
 
@@ -184,6 +186,18 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &RelocateStar::apply, py::arg("U"), py::arg("V"));
 
+    py::class_<SwapRoutes, RouteOp>(
+        m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &SwapRoutes::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"));
+
     py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -195,14 +209,12 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<SwapTails, RouteOp>(
-        m, "SwapTails", DOC(pyvrp, search, SwapTails))
+    py::class_<SwapTails, NodeOp>(m, "SwapTails", DOC(pyvrp, search, SwapTails))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def("evaluate",
-             py::overload_cast<Route *, Route *, pyvrp::CostEvaluator const &>(
-                 &SwapTails::evaluate),
+             &SwapTails::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))

@@ -13,6 +13,9 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
+    if (uRoute == vRoute || uRoute->idx() > vRoute->idx())
+        return 0;  // same route, or move will be tackled in a later iteration
+
     Cost deltaCost = 0;
 
     // We're going to incur fixed cost if a route is currently empty but
@@ -137,49 +140,26 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     return deltaCost;
 }
 
-pyvrp::Cost
-SwapTails::evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator)
+void SwapTails::apply(Route::Node *U, Route::Node *V) const
 {
-    move = {};
+    auto *nU = n(U);
+    auto *nV = n(V);
 
-    for (size_t uIdx = 0; uIdx != U->size() + 1; ++uIdx)
-        for (size_t vIdx = 0; vIdx != V->size() + 1; ++vIdx)
-        {
-            auto *nodeU = (*U)[uIdx];
-            auto *nodeV = (*V)[vIdx];
-
-            auto const deltaCost = evaluate(nodeU, nodeV, costEvaluator);
-            if (deltaCost < move.deltaCost)
-            {
-                move.deltaCost = deltaCost;
-                move.U = nodeU;
-                move.V = nodeV;
-            }
-        }
-
-    return move.deltaCost;
-}
-
-void SwapTails::apply(Route *U, Route *V) const
-{
-    auto *nU = n(move.U);
-    auto *nV = n(move.V);
-
-    auto insertIdx = move.U->idx() + 1;
+    auto insertIdx = U->idx() + 1;
     while (!nV->isDepot())
     {
         auto *node = nV;
         nV = n(nV);
-        V->remove(node->idx());
-        U->insert(insertIdx++, node);
+        V->route()->remove(node->idx());
+        U->route()->insert(insertIdx++, node);
     }
 
-    insertIdx = move.V->idx() + 1;
+    insertIdx = V->idx() + 1;
     while (!nU->isDepot())
     {
         auto *node = nU;
         nU = n(nU);
-        U->remove(node->idx());
-        V->insert(insertIdx++, node);
+        U->route()->remove(node->idx());
+        V->route()->insert(insertIdx++, node);
     }
 }

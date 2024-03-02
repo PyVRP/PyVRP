@@ -14,6 +14,7 @@ from ._search import NodeOperator as NodeOperator
 from ._search import RelocateStar as RelocateStar
 from ._search import ReverseSegment as ReverseSegment
 from ._search import RouteOperator as RouteOperator
+from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
 from ._search import SwapTails as SwapTails
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
@@ -31,10 +32,11 @@ NODE_OPERATORS = [
     Exchange33,
     MoveTwoClientsReversed,
     ReverseSegment,
+    SwapTails,
 ]
 
 ROUTE_OPERATORS = [
     RelocateStar,
+    SwapRoutes,
     SwapStar,
-    SwapTails,
 ]

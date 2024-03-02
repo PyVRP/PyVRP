@@ -8,34 +8,21 @@ namespace pyvrp::search
 /**
  * SwapTails(data: ProblemData)
  *
- * Given two routes :math:`U` and :math:`V`, tests for each client :math:`C_U`
- * in :math:`U` and :math:`C_V` in :math:`V` whether replacing the arc of
- * :math:`C_U` to its successor :math:`n(C_U)` and :math:`C_V` to :math:`n(C_V)`
- * by :math:`C_U \rightarrow n(C_V)` and :math:`C_V \rightarrow n(C_U)` is an
- * improving move. The best move is stored and may be applied.
+ * Given two nodes :math:`U` and :math:`V`, tests whether replacing the arc of
+ * :math:`U` to its successor :math:`n(U)` and :math:`V` to :math:`n(V)` by
+ * :math:`U \rightarrow n(V)` and :math:`V \rightarrow n(U)` is an improving
+ * move.
  */
-class SwapTails : public LocalSearchOperator<Route>
+class SwapTails : public LocalSearchOperator<Route::Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
-    struct Move
-    {
-        Cost deltaCost = 0;
-        Route::Node *U = nullptr;
-        Route::Node *V = nullptr;
-    };
-
-    Move move;
-
+public:
     Cost evaluate(Route::Node *U,
                   Route::Node *V,
-                  CostEvaluator const &costEvaluator);
+                  CostEvaluator const &costEvaluator) override;
 
-public:
-    Cost
-    evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;
-
-    void apply(Route *U, Route *V) const override;
+    void apply(Route::Node *U, Route::Node *V) const override;
 };
 }  // namespace pyvrp::search
 
