@@ -83,6 +83,17 @@ def test_all_any_none():
     assert_(not (~bitset).all())
 
 
+def test_all_any_none_empty():
+    """
+    Tests that the appropriate values are returned by any, all, and none when
+    the bitset is completely empty.
+    """
+    bitset = DynamicBitset(0)
+    assert_(bitset.all())
+    assert_(bitset.none())
+    assert_(not bitset.any())
+
+
 def test_bit_or():
     """
     Tests the union operator.
