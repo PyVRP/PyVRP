@@ -37,6 +37,10 @@ public:
     [[nodiscard]] bool operator[](size_t idx) const;
     [[nodiscard]] Block::reference operator[](size_t idx);
 
+    [[nodiscard]] bool all() const;
+    [[nodiscard]] bool any() const;
+    [[nodiscard]] bool none() const;
+
     [[nodiscard]] size_t count() const;
     [[nodiscard]] size_t size() const;
 
@@ -48,6 +52,8 @@ public:
     [[nodiscard]] DynamicBitset operator&(DynamicBitset const &other) const;
     [[nodiscard]] DynamicBitset operator^(DynamicBitset const &other) const;
     [[nodiscard]] DynamicBitset operator~() const;
+
+    DynamicBitset &reset();
 };
 }  // namespace pyvrp
 

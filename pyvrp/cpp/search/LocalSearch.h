@@ -23,7 +23,7 @@ class LocalSearch
     ProblemData const &data;
 
     // Neighborhood restrictions: list of nearby clients for each client (size
-    // numClients + 1, but nothing stored for the depot!)
+    // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
     std::vector<size_t> orderNodes;   // node order used by LS::search
@@ -79,14 +79,13 @@ public:
     void addNodeOperator(NodeOp &op);
 
     /**
-     * Adds a local search operator that works on route pairs U and V. These
-     * operators are executed for route pairs whose circle sectors overlap.
+     * Adds a local search operator that works on route pairs U and V.
      */
     void addRouteOperator(RouteOp &op);
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
-     * the neighbourhood structure is a vector of nearby clients. The depot has
+     * the neighbourhood structure is a vector of nearby clients. Depots have
      * no nearby client.
      */
     void setNeighbours(Neighbours neighbours);
