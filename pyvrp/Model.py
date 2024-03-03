@@ -21,14 +21,9 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.search import (
-    Exchange10,
-    Exchange11,
-    Exchange20,
-    Exchange21,
-    Exchange22,
+    NODE_OPERATORS,
+    ROUTE_OPERATORS,
     LocalSearch,
-    SwapStar,
-    TwoOpt,
     compute_neighbours,
 )
 from pyvrp.stop import StoppingCriterion
@@ -312,19 +307,10 @@ class Model:
         rng = RandomNumberGenerator(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))
 
-        node_ops = [
-            Exchange10,
-            Exchange11,
-            Exchange20,
-            Exchange21,
-            Exchange22,
-            TwoOpt,
-        ]
-        for node_op in node_ops:
+        for node_op in NODE_OPERATORS:
             ls.add_node_operator(node_op(data))
 
-        route_ops = [SwapStar]
-        for route_op in route_ops:
+        for route_op in ROUTE_OPERATORS:
             ls.add_route_operator(route_op(data))
 
         pm = PenaltyManager()
