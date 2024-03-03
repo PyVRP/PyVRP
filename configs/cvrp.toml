@@ -9,7 +9,8 @@ node_ops = [
     "Exchange32",
     "Exchange33",
     "MoveTwoClientsReversed",
-    "TwoOpt",
+    "ReverseSegment",
+    "SwapTails",
 ]
 
 
