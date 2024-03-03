@@ -12,6 +12,10 @@ namespace pyvrp::search
  * :math:`U` to its successor :math:`n(U)` and :math:`V` to :math:`n(V)` by
  * :math:`U \rightarrow n(V)` and :math:`V \rightarrow n(U)` is an improving
  * move.
+ *
+ * .. note::
+ *
+ *    This operator is also known as 2-OPT* in the VRP literature.
  */
 class SwapTails : public LocalSearchOperator<Route::Node>
 {
