@@ -70,7 +70,7 @@ def plot_solution(
             zorder=1,
         )
 
-    if plot_clients and not in_solution.all():
+    if plot_clients and not in_solution[data.num_depots :].all():
         # Then we also plot the unvisited clients as grey dots. This is helpful
         # in understanding solutions for problems with optional clients.
         unvisited = np.flatnonzero(~in_solution[data.num_depots :])
