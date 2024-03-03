@@ -3,10 +3,11 @@
 #include "LocalSearch.h"
 #include "MoveTwoClientsReversed.h"
 #include "RelocateStar.h"
+#include "ReverseSegment.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
-#include "TwoOpt.h"
+#include "SwapTails.h"
 #include "primitives.h"
 #include "search_docs.h"
 
@@ -24,10 +25,11 @@ using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::MoveTwoClientsReversed;
 using pyvrp::search::RelocateStar;
 using pyvrp::search::removeCost;
+using pyvrp::search::ReverseSegment;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
-using pyvrp::search::TwoOpt;
+using pyvrp::search::SwapTails;
 
 PYBIND11_MODULE(_search, m)
 {
@@ -160,16 +162,17 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"));
 
-    py::class_<TwoOpt, NodeOp>(m, "TwoOpt", DOC(pyvrp, search, TwoOpt))
+    py::class_<ReverseSegment, NodeOp>(
+        m, "ReverseSegment", DOC(pyvrp, search, ReverseSegment))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def("evaluate",
-             &TwoOpt::evaluate,
+             &ReverseSegment::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &TwoOpt::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &ReverseSegment::apply, py::arg("U"), py::arg("V"));
 
     py::class_<RelocateStar, RouteOp>(
         m, "RelocateStar", DOC(pyvrp, search, RelocateStar))
@@ -205,6 +208,17 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"));
+
+    py::class_<SwapTails, NodeOp>(m, "SwapTails", DOC(pyvrp, search, SwapTails))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &SwapTails::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"));
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
