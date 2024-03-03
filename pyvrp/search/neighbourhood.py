@@ -70,7 +70,8 @@ def compute_neighbours(
     -------
     list
         A list of list of integers representing the neighbours for each client.
-        The first element represents the depot and is an empty list.
+        The first lists in the lower indices are associated with the depots and
+        are all empty.
     """
     proximity = _compute_proximity(
         data,
