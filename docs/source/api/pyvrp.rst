@@ -23,6 +23,9 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Edge
       :members:
 
+   .. autoclass:: MutuallyExclusiveGroup
+      :members:
+
 .. automodule:: pyvrp.GeneticAlgorithm
 
    .. autoclass:: GeneticAlgorithmParams
