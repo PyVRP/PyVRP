@@ -19,6 +19,7 @@
 namespace py = pybind11;
 
 using pyvrp::search::Exchange;
+using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
