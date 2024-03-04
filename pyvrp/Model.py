@@ -53,9 +53,8 @@ class MutuallyExclusiveGroup:
     this group must be visited, not all.
     """
 
-    def __init__(self, model: Model, idx: int):
+    def __init__(self, model: Model):
         self._model = model
-        self._idx = idx
         self._clients: list[Client] = []
 
     def add_client(
@@ -75,7 +74,7 @@ class MutuallyExclusiveGroup:
         Adds a client with the given attributes to the group. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
         """
-        client = Client(
+        client = self._model.add_client(
             x=x,
             y=y,
             delivery=delivery,
@@ -86,15 +85,10 @@ class MutuallyExclusiveGroup:
             release_time=release_time,
             prize=prize,
             required=False,  # only one is required via the group constraint
-            group=self._idx,
+            group=self,
             name=name,
         )
 
-        # Register the client with both the model and this group. We cannot add
-        # the client via the model's ``add_client`` method because it does not
-        # expose the ``group`` attribute, so instead we directly access the
-        # underlying clients.
-        self._model._clients.append(client)  # noqa: SLF001
         self._clients.append(client)
         return client
 
@@ -179,12 +173,26 @@ class Model:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        group: Optional[MutuallyExclusiveGroup] = None,
         name: str = "",
     ) -> Client:
         """
         Adds a client with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
+
+        Raises
+        ------
+        ValueError
+            When ``group`` is not ``None``, and the given ``group`` is not
+            already added to this model instance.
         """
+        if group is None:
+            group_idx = None
+        elif group in self._groups:
+            group_idx = self._groups.index(group)
+        else:
+            raise ValueError("The given group is not in this model instance.")
+
         client = Client(
             x,
             y,
@@ -196,6 +204,7 @@ class Model:
             release_time=release_time,
             prize=prize,
             required=required,
+            group=group_idx,
             name=name,
         )
 
@@ -259,7 +268,7 @@ class Model:
         Adds a mutually exclusive client group to the model. Exactly one of the
         clients in the group must be visited. Returns the created group.
         """
-        group = MutuallyExclusiveGroup(self, idx=len(self._groups))
+        group = MutuallyExclusiveGroup(self)
         self._groups.append(group)
         return group
 

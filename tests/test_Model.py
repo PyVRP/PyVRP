@@ -7,7 +7,8 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, Model
+from pyvrp import Depot, Model
+from pyvrp.Model import MutuallyExclusiveGroup
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -187,7 +188,7 @@ def test_add_vehicle_type_raises_for_unknown_depot():
     raises a ValueError.
     """
     m = Model()
-    depot = Client(x=0, y=0)
+    depot = Depot(x=0, y=0)
 
     with assert_raises(ValueError):
         m.add_vehicle_type(depot=depot)
@@ -622,3 +623,15 @@ def test_add_mutually_exclusive_group():
     assert_(m.locations[0] is client1)
     assert_(m.locations[1] is client2)
     assert_(m.locations[2] is client3)
+
+
+def test_add_client_raises_unknown_group():
+    """
+    Tests that the model's ``add_client`` method raises when it's given a group
+    argument that is not known to the model.
+    """
+    m = Model()
+    group = MutuallyExclusiveGroup(m)
+
+    with assert_raises(ValueError):
+        m.add_client(1, 1, group=group)
