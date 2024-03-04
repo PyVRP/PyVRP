@@ -593,3 +593,32 @@ def test_model_solves_instances_with_pickups_and_deliveries(
 
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
     assert_allclose(route.excess_load(), expected_excess_load)
+
+
+def test_add_mutually_exclusive_group():
+    """
+    Tests that adding clients to the model via a mutually exclusive group
+    works, and makes the clients aware of their group membership.
+    """
+    m = Model()
+    assert_equal(len(m.locations), 0)
+
+    # Add a mutually exclusive group, and add two clients to that group. These
+    # clients should be aware of their group membership.
+    group = m.add_mutually_exclusive_group()
+    client1 = group.add_client(x=1, y=1)
+    client2 = group.add_client(x=2, y=2)
+    assert_equal(client1.group, 0)
+    assert_equal(client2.group, 0)
+
+    # Now add a regular client that does not belong to a group. This client
+    # should not have group membership set.
+    client3 = m.add_client(x=3, y=3)
+    assert_(client3.group is None)
+
+    # There should be three clients in the model now, and they should be the
+    # exact same clients we just added.
+    assert_equal(len(m.locations), 3)
+    assert_(m.locations[0] is client1)
+    assert_(m.locations[1] is client2)
+    assert_(m.locations[2] is client3)

@@ -60,6 +60,7 @@ public:
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
+     *    group: Optional[int] = None,
      *    name: str = "",
      * )
      *
@@ -97,6 +98,9 @@ public:
      * required
      *     Whether this client must be part of a feasible solution. Default
      *     True.
+     * group
+     *     Indicates membership of the given mutually exclusive client group,
+     *     if any. By default clients are not part of any groups.
      * name
      *     Free-form name field for this client. Default empty.
      *
@@ -124,6 +128,9 @@ public:
      *     Prize collected by visiting this client.
      * required
      *     Whether visiting this client is required.
+     * group
+     *     Indicates membership of the given mutually exclusive client group,
+     *     if any.
      * name
      *     Free-form name field for this client.
      */
@@ -139,7 +146,8 @@ public:
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
         bool const required;         // Must client be in solution?
-        char const *name;            // Client name (for reference)
+        std::optional<size_t> const group;  // Optional client group membership
+        char const *name;                   // Client name (for reference)
 
         Client(Coordinate x,
                Coordinate y,
@@ -151,6 +159,7 @@ public:
                Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true,
+               std::optional<size_t> group = std::nullopt,
                char const *name = "");
 
         Client(Client const &client);

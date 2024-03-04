@@ -38,6 +38,7 @@ class Client:
     release_time: int
     prize: int
     required: bool
+    group: Optional[int]
     name: str
     def __init__(
         self,
@@ -51,6 +52,7 @@ class Client:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        group: Optional[int] = None,
         name: str = "",
     ) -> None: ...
 

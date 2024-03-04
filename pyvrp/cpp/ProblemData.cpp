@@ -33,6 +33,7 @@ ProblemData::Client::Client(Coordinate x,
                             Duration releaseTime,
                             Cost prize,
                             bool required,
+                            std::optional<size_t> group,
                             char const *name)
     : x(x),
       y(y),
@@ -44,6 +45,7 @@ ProblemData::Client::Client(Coordinate x,
       releaseTime(releaseTime),
       prize(prize),
       required(required),
+      group(group),
       name(duplicate(name))
 {
     if (delivery < 0)
@@ -69,6 +71,10 @@ ProblemData::Client::Client(Coordinate x,
 
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
+
+    if (required && group)
+        throw std::invalid_argument("clients cannot be required *and* part of "
+                                    "a mutually exclusive group.");
 }
 
 ProblemData::Client::Client(Client const &client)
@@ -82,6 +88,7 @@ ProblemData::Client::Client(Client const &client)
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
+      group(client.group),
       name(duplicate(client.name))
 {
 }
@@ -97,6 +104,7 @@ ProblemData::Client::Client(Client &&client)
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
+      group(client.group),
       name(client.name)  // we can steal
 {
     client.name = nullptr;  // stolen

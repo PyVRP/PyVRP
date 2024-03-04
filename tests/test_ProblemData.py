@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import pytest
 from numpy.random import default_rng
@@ -18,17 +20,19 @@ from pyvrp import Client, Depot, ProblemData, VehicleType
         "release_time",
         "prize",
         "required",
+        "group",
         "name",
     ),
     [
-        (1, 1, 1, 1, 1, 0, 1, 0, 0, True, "test name"),  # normal
-        (1, 1, 1, 0, 0, 0, 1, 0, 0, True, "1234"),  # zero duration
-        (1, 1, 0, 0, 1, 0, 1, 0, 0, True, "1,2,3,4"),  # zero delivery
-        (1, 1, 1, 0, 1, 0, 0, 0, 0, True, ""),  # zero length time interval
-        (-1, -1, 1, 0, 1, 0, 1, 0, 0, True, ""),  # negative coordinates
-        (1, 1, 1, 0, 1, 0, 1, 1, 0, True, ""),  # positive release time
-        (0, 0, 1, 0, 1, 0, 1, 0, 1, True, ""),  # positive prize
-        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, ""),  # not required
+        (1, 1, 1, 1, 1, 0, 1, 0, 0, True, None, "test name"),  # normal
+        (1, 1, 1, 0, 0, 0, 1, 0, 0, True, None, "1234"),  # zero duration
+        (1, 1, 0, 0, 1, 0, 1, 0, 0, True, None, "1,2,3,4"),  # zero delivery
+        (1, 1, 1, 0, 1, 0, 0, 0, 0, True, None, ""),  # zero time windows
+        (-1, -1, 1, 0, 1, 0, 1, 0, 0, True, None, ""),  # negative coordinates
+        (1, 1, 1, 0, 1, 0, 1, 1, 0, True, None, ""),  # positive release time
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, True, None, ""),  # positive prize
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, None, ""),  # not required
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, 0, ""),  # group membership
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
@@ -42,6 +46,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     release_time: int,
     prize: int,
     required: bool,
+    group: Optional[int],
     name: str,
 ):
     """
@@ -49,16 +54,17 @@ def test_client_constructor_initialises_data_fields_correctly(
     Client's constructor.
     """
     client = Client(
-        x,
-        y,
-        delivery,
-        pickup,
-        service_duration,
-        tw_early,
-        tw_late,
-        release_time,
-        prize,
+        x=x,
+        y=y,
+        delivery=delivery,
+        pickup=pickup,
+        service_duration=service_duration,
+        tw_early=tw_early,
+        tw_late=tw_late,
+        release_time=release_time,
+        prize=prize,
         required=required,
+        group=group,
         name=name,
     )
 
@@ -72,6 +78,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     assert_allclose(client.release_time, release_time)
     assert_allclose(client.prize, prize)
     assert_equal(client.required, required)
+    assert_equal(client.group, group)
     assert_equal(client.name, name)
     assert_equal(str(client), name)
 
@@ -125,6 +132,22 @@ def test_raises_for_invalid_client_data(
             release_time,
             prize,
         )
+
+
+def test_raises_for_required_mutually_exclusive_group_membership():
+    """
+    Tests that required clients cannot be part of mutually exclusive groups.
+    """
+    with assert_raises(ValueError):
+        # A client cannot be part of a mutually exclusive group and also be a
+        # required visit, as that defeats the entire point of a mutually
+        # exclusive group.
+        Client(1, 1, required=True, group=0)
+
+    # But the following cases should be perfectly fine.
+    Client(1, 1, required=False, group=0)
+    Client(1, 1, required=True, group=None)
+    Client(1, 1, required=False, group=None)
 
 
 @pytest.mark.parametrize(

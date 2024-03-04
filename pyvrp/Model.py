@@ -1,4 +1,6 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -6,7 +8,6 @@ import numpy as np
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
-from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
     Depot,
@@ -20,7 +21,10 @@ from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.stop import StoppingCriterion
+
+if TYPE_CHECKING:
+    from pyvrp.Result import Result
+    from pyvrp.stop import StoppingCriterion
 
 
 class Edge:
@@ -43,6 +47,58 @@ class Edge:
         self.duration = duration
 
 
+class MutuallyExclusiveGroup:
+    """
+    Models a mutually exclusive group of clients: only one of the clients in
+    this group must be visited, not all.
+    """
+
+    def __init__(self, model: Model, idx: int):
+        self._model = model
+        self._idx = idx
+        self._clients: list[Client] = []
+
+    def add_client(
+        self,
+        x: int,
+        y: int,
+        delivery: int = 0,
+        pickup: int = 0,
+        service_duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int64).max,
+        release_time: int = 0,
+        prize: int = 0,
+        name: str = "",
+    ):
+        """
+        Adds a client with the given attributes to the group. Returns the
+        created :class:`~pyvrp._pyvrp.Client` instance.
+        """
+        client = Client(
+            x=x,
+            y=y,
+            delivery=delivery,
+            pickup=pickup,
+            service_duration=service_duration,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            release_time=release_time,
+            prize=prize,
+            required=False,  # only one is required via the group constraint
+            group=self._idx,
+            name=name,
+        )
+
+        # Register the client with both the model and this group. We cannot add
+        # the client via the model's ``add_client`` method because it does not
+        # expose the ``group`` attribute, so instead we directly access the
+        # underlying clients.
+        self._model._clients.append(client)  # noqa: SLF001
+        self._clients.append(client)
+        return client
+
+
 class Model:
     """
     A simple interface for modelling vehicle routing problems with PyVRP.
@@ -52,6 +108,7 @@ class Model:
         self._clients: list[Client] = []
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
+        self._groups: list[MutuallyExclusiveGroup] = []
         self._vehicle_types: list[VehicleType] = []
 
     @property
@@ -131,15 +188,15 @@ class Model:
         client = Client(
             x,
             y,
-            delivery,
-            pickup,
-            service_duration,
-            tw_early,
-            tw_late,
-            release_time,
-            prize,
-            required,
-            name,
+            delivery=delivery,
+            pickup=pickup,
+            service_duration=service_duration,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            release_time=release_time,
+            prize=prize,
+            required=required,
+            name=name,
         )
 
         self._clients.append(client)
@@ -157,7 +214,7 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late, name=name)
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
         return depot
 
@@ -197,6 +254,15 @@ class Model:
         self._edges.append(edge)
         return edge
 
+    def add_mutually_exclusive_group(self) -> MutuallyExclusiveGroup:
+        """
+        Adds a mutually exclusive client group to the model. Only one of the
+        clients in the group must be visited. Returns the created group.
+        """
+        group = MutuallyExclusiveGroup(self, idx=len(self._groups))
+        self._groups.append(group)
+        return group
+
     def add_vehicle_type(
         self,
         num_available: int = 1,
@@ -231,14 +297,14 @@ class Model:
             raise ValueError("The given depot is not in this model instance.")
 
         vehicle_type = VehicleType(
-            num_available,
-            capacity,
-            depot_idx,
-            fixed_cost,
-            tw_early,
-            tw_late,
-            max_duration,
-            name,
+            num_available=num_available,
+            capacity=capacity,
+            depot=depot_idx,
+            fixed_cost=fixed_cost,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            max_duration=max_duration,
+            name=name,
         )
 
         self._vehicle_types.append(vehicle_type)

@@ -72,6 +72,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Cost,
                       bool,
+                      std::optional<size_t>,
                       char const *>(),
              py::arg("x"),
              py::arg("y"),
@@ -83,6 +84,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("release_time") = 0,
              py::arg("prize") = 0,
              py::arg("required") = true,
+             py::arg("group") = py::none(),
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
@@ -94,6 +96,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("release_time", &ProblemData::Client::releaseTime)
         .def_readonly("prize", &ProblemData::Client::prize)
         .def_readonly("required", &ProblemData::Client::required)
+        .def_readonly("group", &ProblemData::Client::group)
         .def_readonly("name",
                       &ProblemData::Client::name,
                       py::return_value_policy::reference_internal)
