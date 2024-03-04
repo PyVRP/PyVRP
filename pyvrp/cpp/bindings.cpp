@@ -241,6 +241,7 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, ProblemData, centroid))
         .def("group",
              &ProblemData::group,
+             py::arg("group"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, group))
         .def("vehicle_type",
