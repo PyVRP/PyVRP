@@ -617,9 +617,10 @@ def test_add_mutually_exclusive_group():
     client3 = m.add_client(x=3, y=3)
     assert_(client3.group is None)
 
-    # There should be three clients in the model now, and they should be the
-    # exact same clients we just added.
+    # There should be three clients in the model now, of which two in the
+    # group, and they should be the exact same clients we just added.
     assert_equal(len(m.locations), 3)
+    assert_equal(len(group), 2)
     assert_(m.locations[0] is client1)
     assert_(m.locations[1] is client2)
     assert_(m.locations[2] is client3)

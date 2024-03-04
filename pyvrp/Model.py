@@ -57,6 +57,9 @@ class MutuallyExclusiveGroup:
         self._model = model
         self._clients: list[Client] = []
 
+    def __len__(self) -> int:
+        return len(self._clients)
+
     def add_client(
         self,
         x: int,
