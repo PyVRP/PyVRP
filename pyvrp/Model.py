@@ -58,6 +58,9 @@ class MutuallyExclusiveGroup:
         self._clients: list[Client] = []
 
     def __len__(self) -> int:
+        """
+        Returns the number of clients in the group.
+        """
         return len(self._clients)
 
     def add_client(
@@ -74,8 +77,9 @@ class MutuallyExclusiveGroup:
         name: str = "",
     ):
         """
-        Adds a client with the given attributes to the group. Returns the
-        created :class:`~pyvrp._pyvrp.Client` instance.
+        Adds a client with the given attributes to this group (and to the model
+        to which this group belongs). Returns the created
+        :class:`~pyvrp._pyvrp.Client` instance.
         """
         client = self._model.add_client(
             x=x,
