@@ -49,7 +49,7 @@ class Edge:
 
 class MutuallyExclusiveGroup:
     """
-    Models a mutually exclusive group of clients: only one of the clients in
+    Models a mutually exclusive group of clients: exactly one of the clients in
     this group must be visited, not all.
     """
 
@@ -256,7 +256,7 @@ class Model:
 
     def add_mutually_exclusive_group(self) -> MutuallyExclusiveGroup:
         """
-        Adds a mutually exclusive client group to the model. Only one of the
+        Adds a mutually exclusive client group to the model. Exactly one of the
         clients in the group must be visited. Returns the created group.
         """
         group = MutuallyExclusiveGroup(self, idx=len(self._groups))
