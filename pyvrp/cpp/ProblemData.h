@@ -18,6 +18,7 @@ namespace pyvrp
  *     vehicle_types: List[VehicleType],
  *     distance_matrix: List[List[int]],
  *     duration_matrix: List[List[int]],
+ *     groups: List[List[int]] = [],
  * )
  *
  * Creates a problem data instance. This instance contains all information
@@ -44,10 +45,17 @@ namespace pyvrp
  * duration_matrix
  *     A matrix that gives the travel durations between all locations: both
  *     depots and clients.
+ * groups
+ *     List of mutually exclusive client groups, where each group is a list of
+ *     clients. Of the clients in a group, exactly one must be visited. Default
+ *     empty (no groups).
  */
 class ProblemData
 {
 public:
+    // A mutually exclusive group is just a list of clients, nothing fancy.
+    using MutuallyExclusiveGroup = std::vector<size_t>;
+
     /**
      * Client(
      *    x: int,
@@ -338,6 +346,7 @@ private:
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
+    std::vector<MutuallyExclusiveGroup> const groups_;  // Client groups
 
     size_t const numVehicles_;
 
@@ -381,6 +390,18 @@ public:
     [[nodiscard]] std::vector<Depot> const &depots() const;
 
     /**
+     * Returns a list of all mutually exclusive client groups in the problem
+     * instance.
+     *
+     * Returns
+     * -------
+     * list[list[int]]
+     *     List of all mutually exclusive client groups in the problem
+     *     instance.
+     */
+    [[nodiscard]] std::vector<MutuallyExclusiveGroup> const &groups() const;
+
+    /**
      * Returns a list of all vehicle types in the problem instance.
      *
      * Returns
@@ -399,6 +420,21 @@ public:
      *     Centroid of all client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
+
+    /**
+     * Returns the mutually exclusive client group at the given index.
+     *
+     * Parameters
+     * ----------
+     * group
+     *     Group index whose information to retrieve.
+     *
+     * Returns
+     * -------
+     * list[int]
+     *     Clients in the mutually exclusive client group at the given index.
+     */
+    [[nodiscard]] MutuallyExclusiveGroup const &group(size_t group) const;
 
     /**
      * Returns vehicle type data for the given vehicle type.
@@ -494,6 +530,16 @@ public:
     [[nodiscard]] size_t numDepots() const;
 
     /**
+     * Number of mutually exclusive client groups in this problem instance.
+     *
+     * Returns
+     * -------
+     * int
+     *     Number of mutually exclusive client groups in the instance.
+     */
+    [[nodiscard]] size_t numGroups() const;
+
+    /**
      * Number of locations in this problem instance, that is, the number of
      * depots plus the number of clients in the instance.
      *
@@ -540,34 +586,28 @@ public:
      *    Optional distance matrix.
      * duration_matrix
      *    Optional duration matrix.
+     * groups
+     *    Optional mutually exclusive client groups.
      *
      * Returns
      * -------
      * ProblemData
      *    A new ProblemData instance with possibly replaced data.
      * */
-    ProblemData replace(std::optional<std::vector<Client>> &clients,
-                        std::optional<std::vector<Depot>> &depots,
-                        std::optional<std::vector<VehicleType>> &vehicleTypes,
-                        std::optional<Matrix<Distance>> &distMat,
-                        std::optional<Matrix<Duration>> &durMat);
+    ProblemData
+    replace(std::optional<std::vector<Client>> &clients,
+            std::optional<std::vector<Depot>> &depots,
+            std::optional<std::vector<VehicleType>> &vehicleTypes,
+            std::optional<Matrix<Distance>> &distMat,
+            std::optional<Matrix<Duration>> &durMat,
+            std::optional<std::vector<MutuallyExclusiveGroup>> &groups);
 
-    /**
-     * Constructs a ProblemData object with the given data. Assumes the list
-     * of clients contains the depot, such that each vector is one longer
-     * than the number of clients.
-     *
-     * @param clients      List of clients.
-     * @param depots       List of depots.
-     * @param vehicleTypes List of vehicle types.
-     * @param distMat      Distance matrix.
-     * @param durMat       Duration matrix.
-     */
     ProblemData(std::vector<Client> const &clients,
                 std::vector<Depot> const &depots,
                 std::vector<VehicleType> const &vehicleTypes,
                 Matrix<Distance> distMat,
-                Matrix<Duration> durMat);
+                Matrix<Duration> durMat,
+                std::vector<MutuallyExclusiveGroup> groups = {});
 };
 
 ProblemData::Location::operator Client const &() const { return *client; }

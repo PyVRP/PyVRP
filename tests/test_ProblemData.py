@@ -580,3 +580,85 @@ def test_location_raises_invalid_index(ok_small, idx: int):
 
     with assert_raises(IndexError):
         ok_small.location(idx)
+
+
+def test_raises_invalid_vehicle_depot_indices(ok_small):
+    """
+    Tests that setting the depot index on a VehicleType to a value that's out
+    of range raises when replacing or constructing a ProblemData instance.
+    """
+    assert_equal(ok_small.num_depots, 1)
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[VehicleType(depot=1)])
+
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType(depot=1)],
+            distance_matrix=[[0]],
+            duration_matrix=[[0]],
+        )
+
+
+@pytest.mark.parametrize(
+    ("groups", "index"),
+    [
+        ([], 0),  # index 0, but there are no groups
+        ([[]], 1),  # there is one group, but index is 1
+    ],
+)
+def test_raises_invalid_client_group_indices(
+    groups: list[list[int]], index: int
+):
+    """
+    Tests that setting the clients in a mutually exclusive group to values that
+    are not valid indices raises, and that setting a group index on a client to
+    a value that's out of range likewise raises.
+    """
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[Client(1, 1, required=False, group=index)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((2, 2)),
+            duration_matrix=np.zeros((2, 2)),
+            groups=groups,
+        )
+
+
+@pytest.mark.parametrize("groups", [[[0]], [[2]]])
+def test_raises_invalid_group_client_indices(groups: list[list[int]]):
+    """
+    Tests that groups with client indices that are either depots or outside the
+    range of client locations results in an IndexError.
+    """
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[Client(1, 1, required=False, group=0)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=[[0]],
+            duration_matrix=[[0]],
+            groups=groups,
+        )
+
+
+def test_replacing_client_groups(ok_small):
+    """
+    Tests that replacing mutually exclusive client groups works well.
+    """
+    assert_equal(ok_small.num_groups, 0)
+    assert_equal(ok_small.groups(), [])
+
+    # Let's add the first client to a group, and define a new data instance
+    # that has a mutually exclusive group.
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    data = ok_small.replace(clients=clients, groups=[[1]])
+
+    # There should now be a single client group (at index 0) that has the first
+    # client as its only member.
+    assert_equal(data.num_groups, 1)
+    assert_equal(data.groups(), [[1]])
+    assert_equal(data.group(0), [1])

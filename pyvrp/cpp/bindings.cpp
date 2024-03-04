@@ -169,12 +169,14 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<ProblemData::Depot> const &,
                       std::vector<ProblemData::VehicleType> const &,
                       Matrix<pyvrp::Distance>,
-                      Matrix<pyvrp::Duration>>(),
+                      Matrix<pyvrp::Duration>,
+                      std::vector<ProblemData::MutuallyExclusiveGroup>>(),
              py::arg("clients"),
              py::arg("depots"),
              py::arg("vehicle_types"),
              py::arg("distance_matrix"),
-             py::arg("duration_matrix"))
+             py::arg("duration_matrix"),
+             py::arg("groups") = py::list())
         .def("replace",
              &ProblemData::replace,
              py::arg("clients") = py::none(),
@@ -182,6 +184,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_types") = py::none(),
              py::arg("distance_matrix") = py::none(),
              py::arg("duration_matrix") = py::none(),
+             py::arg("groups") = py::none(),
              DOC(pyvrp, ProblemData, replace))
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
@@ -189,6 +192,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_depots",
                                &ProblemData::numDepots,
                                DOC(pyvrp, ProblemData, numDepots))
+        .def_property_readonly("num_groups",
+                               &ProblemData::numGroups,
+                               DOC(pyvrp, ProblemData, numGroups))
         .def_property_readonly("num_locations",
                                &ProblemData::numLocations,
                                DOC(pyvrp, ProblemData, numLocations))
@@ -221,6 +227,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::depots,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, depots))
+        .def("groups",
+             &ProblemData::groups,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, groups))
         .def("vehicle_types",
              &ProblemData::vehicleTypes,
              py::return_value_policy::reference_internal,
@@ -229,6 +239,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::centroid,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, centroid))
+        .def("group",
+             &ProblemData::group,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, group))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),

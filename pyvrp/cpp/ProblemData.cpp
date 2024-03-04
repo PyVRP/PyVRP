@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <numeric>
+#include <stdexcept>
 
 using pyvrp::Distance;
 using pyvrp::Duration;
@@ -220,9 +221,23 @@ std::vector<ProblemData::Depot> const &ProblemData::depots() const
     return depots_;
 }
 
+std::vector<ProblemData::MutuallyExclusiveGroup> const &
+ProblemData::groups() const
+{
+    return groups_;
+}
+
+ProblemData::MutuallyExclusiveGroup const &
+ProblemData::group(size_t group) const
+{
+    assert(group < groups_.size());
+    return groups_[group];
+}
+
 ProblemData::VehicleType const &
 ProblemData::vehicleType(size_t vehicleType) const
 {
+    assert(vehicleType < vehicleTypes_.size());
     return vehicleTypes_[vehicleType];
 }
 
@@ -250,6 +265,8 @@ size_t ProblemData::numClients() const { return clients_.size(); }
 
 size_t ProblemData::numDepots() const { return depots_.size(); }
 
+size_t ProblemData::numGroups() const { return groups_.size(); }
+
 size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
@@ -261,26 +278,30 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<Depot>> &depots,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<Matrix<Distance>> &distMat,
-                     std::optional<Matrix<Duration>> &durMat)
+                     std::optional<Matrix<Duration>> &durMat,
+                     std::optional<std::vector<MutuallyExclusiveGroup>> &groups)
 {
     return ProblemData(clients.value_or(clients_),
                        depots.value_or(depots_),
                        vehicleTypes.value_or(vehicleTypes_),
                        distMat.value_or(dist_),
-                       durMat.value_or(dur_));
+                       durMat.value_or(dur_),
+                       groups.value_or(groups_));
 }
 
 ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<Depot> const &depots,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> distMat,
-                         Matrix<Duration> durMat)
+                         Matrix<Duration> durMat,
+                         std::vector<MutuallyExclusiveGroup> groups)
     : centroid_({0, 0}),
       dist_(std::move(distMat)),
       dur_(std::move(durMat)),
       clients_(clients),
       depots_(depots),
       vehicleTypes_(vehicleTypes),
+      groups_(groups),
       numVehicles_(std::accumulate(vehicleTypes.begin(),
                                    vehicleTypes.end(),
                                    0,
@@ -290,6 +311,19 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
 {
     if (depots.empty())
         throw std::invalid_argument("Expected at least one depot!");
+
+    for (auto const &vehicleType : vehicleTypes_)
+        if (vehicleType.depot >= numDepots())
+            throw std::out_of_range("Vehicle type has invalid depot.");
+
+    for (auto const &client : clients_)
+        if (client.group && client.group.value() >= numGroups())
+            throw std::out_of_range("Client references invalid group.");
+
+    for (auto const &group : groups_)
+        for (auto const client : group)
+            if (client < numDepots() || client >= numLocations())
+                throw std::out_of_range("Group references invalid client.");
 
     if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
         throw std::invalid_argument("Distance matrix shape does not match the "
