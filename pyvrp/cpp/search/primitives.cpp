@@ -76,3 +76,45 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
 
     return deltaCost;
 }
+
+pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
+                                       Route::Node *V,
+                                       ProblemData const &data,
+                                       CostEvaluator const &costEvaluator)
+{
+    if (U->route() || !V->route())
+        return 0;
+
+    auto const *route = V->route();
+    ProblemData::Client const &uClient = data.location(U->client());
+    ProblemData::Client const &vClient = data.location(V->client());
+
+    Cost deltaCost = vClient.prize - uClient.prize;
+
+    auto const distSegment
+        = DistanceSegment::merge(data.distanceMatrix(),
+                                 route->before(V->idx() - 1),
+                                 DistanceSegment(U->client()),
+                                 route->after(V->idx() + 1));
+
+    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost -= static_cast<Cost>(route->distance());
+
+    auto const ls = LoadSegment::merge(route->before(V->idx() - 1),
+                                       LoadSegment(uClient),
+                                       route->after(V->idx() + 1));
+
+    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
+    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
+
+    auto const ds
+        = DurationSegment::merge(data.durationMatrix(),
+                                 route->before(V->idx() - 1),
+                                 DurationSegment(U->client(), uClient),
+                                 route->after(V->idx() + 1));
+
+    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+
+    return deltaCost;
+}

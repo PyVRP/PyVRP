@@ -62,6 +62,9 @@ class LocalSearch
     void applyOptionalClientMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator);
 
+    // Tests moves involving clients in mutually exclusive groups.
+    void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 

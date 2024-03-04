@@ -73,6 +73,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // all clients are required (e.g., when prize collecting).
             applyOptionalClientMoves(U, costEvaluator);
 
+            // Evaluate moves involving the client's mutually exclusive group,
+            // if it is part of any.
+            applyGroupMoves(U, costEvaluator);
+
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
@@ -266,6 +270,16 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     // improving move. Note that we always insert required clients.
     if (!U->route())
     {
+        // U must be inserted either when it is a required client, or when it is
+        // in a client group that current isn't in the solution at all.
+        auto mustInsert = uData.required;
+        if (uData.group)
+        {
+            auto pred = [&](auto client) { return nodes[client].route(); };
+            auto const &group = data.group(uData.group.value());
+            mustInsert = std::none_of(group.begin(), group.end(), pred);
+        }
+
         // We take this as a default value in case none of the client's
         // neighbours are assigned, yet U is required.
         Route::Node *UAfter = routes[0][0];
@@ -286,11 +300,62 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
             }
         }
 
-        if (uData.required || bestCost < 0)
+        if (mustInsert || bestCost < 0)
         {
             UAfter->route()->insert(UAfter->idx() + 1, U);
             update(UAfter->route(), UAfter->route());
         }
+    }
+}
+
+void LocalSearch::applyGroupMoves(Route::Node *U,
+                                  CostEvaluator const &costEvaluator)
+{
+    auto const uClient = U->client();
+    ProblemData::Client const &uData = data.location(uClient);
+
+    if (!uData.group)
+        return;
+
+    // There should be at least one client that's in the current solution.
+    auto const pred = [&](auto client) { return nodes[client].route(); };
+    auto const &group = data.group(uData.group.value());
+    assert(std::any_of(group.begin(), group.end(), pred));
+
+    // Clients in the group that are also in the current solution. This can be
+    // more than one, depending on the solution that was loaded!
+    std::vector<size_t> inSol;
+    std::copy_if(group.begin(), group.end(), inSol.begin(), pred);
+
+    // We remove clients in order of increasing cost delta (biggest improvement
+    // first), and evaluate swapping the last client with U.
+    std::vector<Cost> costs;
+    for (auto const client : inSol)
+        costs.push_back(removeCost(&nodes[client], data, costEvaluator));
+
+    // Sort clients in order of increasing removal costs.
+    auto cmp = [&](auto idx1, auto idx2) { return costs[idx1] < costs[idx2]; };
+    std::stable_sort(inSol.begin(), inSol.end(), cmp);
+
+    // Remove all but the last client. That one we evaluate swapping with U.
+    for (auto client = inSol.begin(); client != inSol.end() - 1; ++client)
+    {
+        auto &node = nodes[*client];
+        auto *route = node.route();
+
+        route->remove(node.idx());
+        update(route, route);
+    }
+
+    // Test swapping U and V, and do so if U is better to have than V.
+    auto *V = &nodes[inSol.back()];
+    if (!U->route() && inplaceCost(U, V, data, costEvaluator) < 0)
+    {
+        auto *route = V->route();
+        auto const idx = V->idx();
+        route->remove(idx);
+        route->insert(idx, U);
+        update(route, route);
     }
 }
 

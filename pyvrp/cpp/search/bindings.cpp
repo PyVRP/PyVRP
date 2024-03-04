@@ -409,6 +409,14 @@ PYBIND11_MODULE(_search, m)
           py::arg("cost_evaluator"),
           DOC(pyvrp, search, insertCost));
 
+    m.def("inplace_cost",
+          &inplaceCost,
+          py::arg("U"),
+          py::arg("V"),
+          py::arg("data"),
+          py::arg("cost_evaluator"),
+          DOC(pyvrp, search, inplaceCost));
+
     m.def("remove_cost",
           &removeCost,
           py::arg("U"),
