@@ -1,9 +1,6 @@
 #include "bindings.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
-#include "MoveTwoClientsReversed.h"
-#include "RelocateStar.h"
-#include "ReverseSegment.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -23,10 +20,7 @@ using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
-using pyvrp::search::MoveTwoClientsReversed;
-using pyvrp::search::RelocateStar;
 using pyvrp::search::removeCost;
-using pyvrp::search::ReverseSegment;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -147,45 +141,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"));
-
-    py::class_<MoveTwoClientsReversed, NodeOp>(
-        m, "MoveTwoClientsReversed", DOC(pyvrp, search, MoveTwoClientsReversed))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("evaluate",
-             &MoveTwoClientsReversed::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply",
-             &MoveTwoClientsReversed::apply,
-             py::arg("U"),
-             py::arg("V"));
-
-    py::class_<ReverseSegment, NodeOp>(
-        m, "ReverseSegment", DOC(pyvrp, search, ReverseSegment))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("evaluate",
-             &ReverseSegment::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &ReverseSegment::apply, py::arg("U"), py::arg("V"));
-
-    py::class_<RelocateStar, RouteOp>(
-        m, "RelocateStar", DOC(pyvrp, search, RelocateStar))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("evaluate",
-             &RelocateStar::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &RelocateStar::apply, py::arg("U"), py::arg("V"));
 
     py::class_<SwapRoutes, RouteOp>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))

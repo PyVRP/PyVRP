@@ -1,4 +1,9 @@
-from pyvrp import CostEvaluator, ProblemData, RandomNumberGenerator, Solution
+from pyvrp._pyvrp import (
+    CostEvaluator,
+    ProblemData,
+    RandomNumberGenerator,
+    Solution,
+)
 from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import NodeOperator, RouteOperator
 
@@ -68,11 +73,6 @@ class LocalSearch:
     def neighbours(self) -> list[list[int]]:
         """
         Returns the granular neighbourhood currently used by the local search.
-
-        Returns
-        -------
-        list
-            The current granular neighbourhood.
         """
         return self._ls.neighbours()
 

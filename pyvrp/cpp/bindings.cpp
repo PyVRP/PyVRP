@@ -18,6 +18,7 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
+#include <variant>
 
 namespace py = pybind11;
 
@@ -206,15 +207,17 @@ PYBIND11_MODULE(_pyvrp, m)
                                DOC(pyvrp, ProblemData, numVehicles))
         .def(
             "location",
-            [](ProblemData const &data, size_t idx) {
+            [](ProblemData const &data,
+               size_t idx) -> std::variant<ProblemData::Client const *,
+                                           ProblemData::Depot const *> {
                 if (idx >= data.numLocations())
                     throw py::index_error();
 
                 auto const proxy = data.location(idx);
                 if (idx < data.numDepots())
-                    return py::cast(proxy.depot);
+                    return proxy.depot;
                 else
-                    return py::cast(proxy.client);
+                    return proxy.client;
             },
             py::arg("idx"),
             py::return_value_policy::reference_internal,

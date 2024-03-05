@@ -371,32 +371,16 @@ public:
      * ----------
      * idx
      *     Location index whose information to retrieve.
-     *
-     * Returns
-     * -------
-     * Union[Client, Depot]
-     *     A simple data object containing the requested location's
-     *     information.
      */
     [[nodiscard]] inline Location location(size_t idx) const;
 
     /**
      * Returns a list of all clients in the problem instance.
-     *
-     * Returns
-     * -------
-     * list[Client]
-     *     List of all clients in the problem instance.
      */
     [[nodiscard]] std::vector<Client> const &clients() const;
 
     /**
      * Returns a list of all depots in the problem instance.
-     *
-     * Returns
-     * -------
-     * list[Depot]
-     *     List of all depots in the problem instance.
      */
     [[nodiscard]] std::vector<Depot> const &depots() const;
 
@@ -408,21 +392,11 @@ public:
 
     /**
      * Returns a list of all vehicle types in the problem instance.
-     *
-     * Returns
-     * -------
-     * List[VehicleType]
-     *     List of all vehicle types in the problem instance.
      */
     [[nodiscard]] std::vector<VehicleType> const &vehicleTypes() const;
 
     /**
      * Center point of all client locations (excluding depots).
-     *
-     * Returns
-     * -------
-     * tuple
-     *     Centroid of all client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
 
@@ -443,11 +417,6 @@ public:
      * ----------
      * vehicle_type
      *     Vehicle type number whose information to retrieve.
-     *
-     * Returns
-     * -------
-     * VehicleType
-     *     A simple data object containing the vehicle type information.
      */
     [[nodiscard]] VehicleType const &vehicleType(size_t vehicleType) const;
 
@@ -461,11 +430,6 @@ public:
      *     Client or depot number.
      * second
      *     Client or depot number.
-     *
-     * Returns
-     * -------
-     * int
-     *     Travel distance between the given clients.
      */
     [[nodiscard]] Distance dist(size_t first, size_t second) const;
 
@@ -479,11 +443,6 @@ public:
      *     Client or depot number.
      * second
      *     Client or depot number.
-     *
-     * Returns
-     * -------
-     * int
-     *     Travel duration between the given clients.
      */
     [[nodiscard]] Duration duration(size_t first, size_t second) const;
 
@@ -511,21 +470,11 @@ public:
 
     /**
      * Number of clients in this problem instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of clients in the instance.
      */
     [[nodiscard]] size_t numClients() const;
 
     /**
      * Number of depots in this problem instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of depots in the instance.
      */
     [[nodiscard]] size_t numDepots() const;
 
@@ -537,31 +486,16 @@ public:
     /**
      * Number of locations in this problem instance, that is, the number of
      * depots plus the number of clients in the instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of depots plus the number of clients in the instance.
      */
     [[nodiscard]] size_t numLocations() const;
 
     /**
      * Number of vehicle types in this problem instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of vehicle types in this problem instance.
      */
     [[nodiscard]] size_t numVehicleTypes() const;
 
     /**
      * Number of vehicles in this problem instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of vehicles in this problem instance.
      */
     [[nodiscard]] size_t numVehicles() const;
 

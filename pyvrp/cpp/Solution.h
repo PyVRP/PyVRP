@@ -43,11 +43,7 @@ class Solution
 
 public:
     /**
-     * Route(
-     *     data: ProblemData,
-     *     visits: List[int],
-     *     vehicle_type: int,
-     * )
+     * Route(data: ProblemData, visits: List[int], vehicle_type: int)
      *
      * A simple class that stores the route plan and some statistics.
      */
@@ -259,31 +255,16 @@ public:
 
     /**
      * Number of routes in this solution.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of routes.
      */
     [[nodiscard]] size_t numRoutes() const;
 
     /**
      * Number of clients in this solution.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of clients in this solution.
      */
     [[nodiscard]] size_t numClients() const;
 
     /**
      * Number of required clients that are not in this solution.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of required but missing clients.
      */
     [[nodiscard]] size_t numMissingClients() const;
 
@@ -324,92 +305,46 @@ public:
     /**
      * Returns whether this solution is complete, which it is when it has all
      * required clients.
-     *
-     * Returns
-     * -------
-     * bool
-     *     True if the solution visits all required clients, False otherwise.
      */
     [[nodiscard]] bool isComplete() const;
 
     /**
      * Returns whether this solution violates capacity constraints.
-     *
-     * Returns
-     * -------
-     * bool
-     *     True if the solution is not capacity feasible, False otherwise.
      */
     [[nodiscard]] bool hasExcessLoad() const;
 
     /**
      * Returns whether this solution violates time window constraints.
-     *
-     * Returns
-     * -------
-     * bool
-     *     True if the solution is not time window feasible, False
-     *     otherwise.
      */
     [[nodiscard]] bool hasTimeWarp() const;
 
     /**
      * Returns the total distance over all routes.
-     *
-     * Returns
-     * -------
-     * int
-     *     Total distance over all routes.
      */
     [[nodiscard]] Distance distance() const;
 
     /**
      * Returns the total excess load over all routes.
-     *
-     * Returns
-     * -------
-     * int
-     *     Total excess load over all routes.
      */
     [[nodiscard]] Load excessLoad() const;
 
     /**
      * Returns the fixed vehicle cost of all vehicles used in this solution.
-     *
-     * Returns
-     * -------
-     * int
-     *     Total fixed vehicle cost.
      */
     [[nodiscard]] Cost fixedVehicleCost() const;
 
     /**
      * Returns the total collected prize value over all routes.
-     *
-     * Returns
-     * -------
-     * int
-     *     Value of collected prizes.
      */
     [[nodiscard]] Cost prizes() const;
 
     /**
      * Total prize value of all clients not visited in this solution.
-     *
-     * Returns
-     * -------
-     * int
-     *     Value of uncollected prizes.
      */
     [[nodiscard]] Cost uncollectedPrizes() const;
 
     /**
      * Returns the total time warp load over all routes.
-     *
-     * Returns
-     * -------
-     * int
-     *     Total time warp over all routes.
      */
     [[nodiscard]] Duration timeWarp() const;
 
