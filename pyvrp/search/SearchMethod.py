@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from pyvrp import CostEvaluator, Solution
+from pyvrp._pyvrp import CostEvaluator, Solution
 
 
 class SearchMethod(Protocol):  # pragma: no cover

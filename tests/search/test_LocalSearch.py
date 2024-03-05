@@ -17,7 +17,6 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
-    RelocateStar,
     SwapStar,
     compute_neighbours,
 )
@@ -306,7 +305,7 @@ def test_intensify_overlap_tolerance(rc208):
 
     neighbours = compute_neighbours(rc208)
     ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(RelocateStar(rc208))
+    ls.add_route_operator(SwapStar(rc208))
 
     cost_eval = CostEvaluator(1, 1)
     sol = Solution.make_random(rc208, rng)
@@ -333,7 +332,7 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
 
     neighbours = compute_neighbours(rc208)
     ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(RelocateStar(rc208))
+    ls.add_route_operator(SwapStar(rc208))
 
     cost_eval = CostEvaluator(1, 1)
     sol = Solution.make_random(rc208, rng)
