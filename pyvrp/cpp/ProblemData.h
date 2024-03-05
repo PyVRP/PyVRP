@@ -342,12 +342,6 @@ public:
      * ----------
      * idx
      *     Location index whose information to retrieve.
-     *
-     * Returns
-     * -------
-     * Union[Client, Depot]
-     *     A simple data object containing the requested location's
-     *     information.
      */
     [[nodiscard]] inline Location location(size_t idx) const;
 
