@@ -37,11 +37,6 @@ class Population:
     def __iter__(self) -> Generator[Solution, None, None]:
         """
         Iterates over the solutions contained in this population.
-
-        Yields
-        ------
-        Solution
-            Solutions currently in this population.
         """
         for item in self._feas:
             yield item.solution
@@ -52,11 +47,6 @@ class Population:
     def __len__(self) -> int:
         """
         Returns the current population size.
-
-        Returns
-        -------
-        int
-            Population size.
         """
         return len(self._feas) + len(self._infeas)
 
@@ -75,22 +65,12 @@ class Population:
     def num_feasible(self) -> int:
         """
         Returns the number of feasible solutions in the population.
-
-        Returns
-        -------
-        int
-            Number of feasible solutions.
         """
         return len(self._feas)
 
     def num_infeasible(self) -> int:
         """
         Returns the number of infeasible solutions in the population.
-
-        Returns
-        -------
-        int
-            Number of infeasible solutions.
         """
         return len(self._infeas)
 

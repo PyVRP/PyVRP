@@ -73,11 +73,6 @@ class LocalSearch:
     def neighbours(self) -> list[list[int]]:
         """
         Returns the granular neighbourhood currently used by the local search.
-
-        Returns
-        -------
-        list
-            The current granular neighbourhood.
         """
         return self._ls.neighbours()
 
