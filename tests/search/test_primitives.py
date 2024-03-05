@@ -1,8 +1,14 @@
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_, assert_allclose
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
-from pyvrp.search._search import Node, Route, insert_cost, remove_cost
+from pyvrp.search._search import (
+    Node,
+    Route,
+    inplace_cost,
+    insert_cost,
+    remove_cost,
+)
 
 
 def test_insert_cost_zero_when_not_allowed(ok_small):
@@ -170,3 +176,57 @@ def test_remove_fixed_vehicle_cost():
     route.append(Node(loc=1))
     route.update()
     assert_allclose(remove_cost(route[1], data, cost_eval), -13)
+
+
+def test_inplace_cost_zero_when_shortcutting_on_guard_clauses(ok_small):
+    """
+    Tests that inplace_cost() returns zero cost when it hits on of the guard
+    clauses: either when the first node is in a route, or the second node is
+    not.
+    """
+    cost_eval = CostEvaluator(1, 1)
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    node1 = Node(loc=1)
+    node2 = Node(loc=2)
+
+    # node1 is in the route, so it cannot be inserted in place of node2, which
+    # is not in a route. This should shortcut to return 0.
+    route.append(node1)
+    assert_(node1.route and not node2.route)
+    assert_allclose(inplace_cost(node1, node2, ok_small, cost_eval), 0)
+
+    # Remove node1. Now neither node is in a route. That should also shortcut.
+    route.clear()
+    assert_(not node1.route and not node2.route)
+    assert_allclose(inplace_cost(node1, node2, ok_small, cost_eval), 0)
+
+    # Now both nodes are in a route. So node1 cannot be inserted, since it is
+    # already in a route. That should shortcut.
+    route.append(node1)
+    route.append(node2)
+    assert_(node1.route and node2.route)
+    assert_allclose(inplace_cost(node1, node2, ok_small, cost_eval), 0)
+
+
+def test_inplace_cost_delta_distance_computation(ok_small):
+    """
+    Tests that inplace_cost() correctly evaluates the delta distance of an
+    improving move.
+    """
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    node1 = Node(loc=1)
+    node2 = Node(loc=2)
+    node3 = Node(loc=3)
+
+    route.append(node1)
+    route.append(node2)
+    route.update()
+
+    # Evaluate the cost of replacing node1 by node3. This would be the route
+    # 3 -> 2, rather than 1 -> 2. That saves costs dist(0, 1) + dist(1, 2), and
+    # adds cost dist(0, 3) + dist(3, 2), for a total savings of:
+    #   dist(0, 1) + dist(1, 2) = 3536
+    #   dist(0, 3) + dist(3, 2) = 2578
+    #                     delta = -958
+    cost_eval = CostEvaluator(0, 0)
+    assert_allclose(inplace_cost(node3, node1, ok_small, cost_eval), -958)
