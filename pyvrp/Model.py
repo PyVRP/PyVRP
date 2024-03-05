@@ -20,6 +20,12 @@ from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
+from pyvrp.search import (
+    NODE_OPERATORS,
+    ROUTE_OPERATORS,
+    LocalSearch,
+    compute_neighbours,
+)
 from pyvrp.stop import StoppingCriterion
 
 
@@ -299,15 +305,6 @@ class Model:
         Result
             The solution result object, containing the best found solution.
         """
-        # These cause a circular import, so the imports needed to be postponed
-        # to here (where they are actually used).
-        from pyvrp.search import (
-            NODE_OPERATORS,
-            ROUTE_OPERATORS,
-            LocalSearch,
-            compute_neighbours,
-        )
-
         data = self.data()
         rng = RandomNumberGenerator(seed=seed)
         ls = LocalSearch(data, rng, compute_neighbours(data))

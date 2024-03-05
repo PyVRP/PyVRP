@@ -44,11 +44,6 @@ class Result:
         """
         Returns the cost (objective) value of the best solution. Returns inf
         if the best solution is infeasible.
-
-        Returns
-        -------
-        float
-            Objective value.
         """
         if not self.best.is_feasible():
             return math.inf
@@ -58,11 +53,6 @@ class Result:
     def is_feasible(self) -> bool:
         """
         Returns whether the best solution is feasible.
-
-        Returns
-        -------
-        bool
-            True when the solution is feasible, False otherwise.
         """
         return self.best.is_feasible()
 

@@ -186,22 +186,12 @@ class PenaltyManager:
 
     def cost_evaluator(self) -> CostEvaluator:
         """
-        Get a cost evaluator for the current penalty values.
-
-        Returns
-        -------
-        CostEvaluator
-            A CostEvaluator instance that uses the current penalty values.
+        Get a cost evaluator using the current penalty values.
         """
         return CostEvaluator(*self._penalties)
 
-    def booster_cost_evaluator(self):
+    def booster_cost_evaluator(self) -> CostEvaluator:
         """
-        Get a cost evaluator for the boosted current penalty values.
-
-        Returns
-        -------
-        CostEvaluator
-            A CostEvaluator instance that uses the booster penalty values.
+        Get a cost evaluator using the boosted current penalty values.
         """
         return CostEvaluator(*(self._penalties * self._params.repair_booster))
