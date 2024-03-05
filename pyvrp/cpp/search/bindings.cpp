@@ -1,7 +1,6 @@
 #include "bindings.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
-#include "ReverseSegment.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -21,7 +20,6 @@ using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::removeCost;
-using pyvrp::search::ReverseSegment;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -142,17 +140,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"));
-    py::class_<ReverseSegment, NodeOp>(
-        m, "ReverseSegment", DOC(pyvrp, search, ReverseSegment))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("evaluate",
-             &ReverseSegment::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &ReverseSegment::apply, py::arg("U"), py::arg("V"));
 
     py::class_<SwapRoutes, RouteOp>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
@@ -242,13 +229,13 @@ PYBIND11_MODULE(_search, m)
              py::return_value_policy::reference_internal)
         .def(
             "__iter__",
-            [](Route const &route) {
-                return py::make_iterator(route.begin(), route.end());
-            },
+            [](Route const &route)
+            { return py::make_iterator(route.begin(), route.end()); },
             py::return_value_policy::reference_internal)
         .def("__len__", &Route::size)
         .def("__str__",
-             [](Route const &route) {
+             [](Route const &route)
+             {
                  std::stringstream stream;
                  stream << route;
                  return stream.str();
@@ -267,9 +254,8 @@ PYBIND11_MODULE(_search, m)
         .def("time_warp", &Route::timeWarp)
         .def(
             "dist_at",
-            [](Route const &route, size_t idx) {
-                return static_cast<pyvrp::DistanceSegment>(route.at(idx));
-            },
+            [](Route const &route, size_t idx)
+            { return static_cast<pyvrp::DistanceSegment>(route.at(idx)); },
             py::arg("idx"))
         .def(
             "dist_between",
@@ -281,21 +267,18 @@ PYBIND11_MODULE(_search, m)
             py::arg("end"))
         .def(
             "dist_after",
-            [](Route const &route, size_t start) {
-                return static_cast<pyvrp::DistanceSegment>(route.after(start));
-            },
+            [](Route const &route, size_t start)
+            { return static_cast<pyvrp::DistanceSegment>(route.after(start)); },
             py::arg("start"))
         .def(
             "dist_before",
-            [](Route const &route, size_t end) {
-                return static_cast<pyvrp::DistanceSegment>(route.before(end));
-            },
+            [](Route const &route, size_t end)
+            { return static_cast<pyvrp::DistanceSegment>(route.before(end)); },
             py::arg("end"))
         .def(
             "load_at",
-            [](Route const &route, size_t idx) {
-                return static_cast<pyvrp::LoadSegment>(route.at(idx));
-            },
+            [](Route const &route, size_t idx)
+            { return static_cast<pyvrp::LoadSegment>(route.at(idx)); },
             py::arg("idx"))
         .def(
             "load_between",
@@ -307,21 +290,18 @@ PYBIND11_MODULE(_search, m)
             py::arg("end"))
         .def(
             "load_after",
-            [](Route const &route, size_t start) {
-                return static_cast<pyvrp::LoadSegment>(route.after(start));
-            },
+            [](Route const &route, size_t start)
+            { return static_cast<pyvrp::LoadSegment>(route.after(start)); },
             py::arg("start"))
         .def(
             "load_before",
-            [](Route const &route, size_t end) {
-                return static_cast<pyvrp::LoadSegment>(route.before(end));
-            },
+            [](Route const &route, size_t end)
+            { return static_cast<pyvrp::LoadSegment>(route.before(end)); },
             py::arg("end"))
         .def(
             "duration_at",
-            [](Route const &route, size_t idx) {
-                return static_cast<pyvrp::DurationSegment>(route.at(idx));
-            },
+            [](Route const &route, size_t idx)
+            { return static_cast<pyvrp::DurationSegment>(route.at(idx)); },
             py::arg("idx"))
         .def(
             "duration_between",
@@ -333,15 +313,13 @@ PYBIND11_MODULE(_search, m)
             py::arg("end"))
         .def(
             "duration_after",
-            [](Route const &route, size_t start) {
-                return static_cast<pyvrp::DurationSegment>(route.after(start));
-            },
+            [](Route const &route, size_t start)
+            { return static_cast<pyvrp::DurationSegment>(route.after(start)); },
             py::arg("start"))
         .def(
             "duration_before",
-            [](Route const &route, size_t end) {
-                return static_cast<pyvrp::DurationSegment>(route.before(end));
-            },
+            [](Route const &route, size_t end)
+            { return static_cast<pyvrp::DurationSegment>(route.before(end)); },
             py::arg("end"))
         .def("centroid", &Route::centroid)
         .def("overlaps_with",

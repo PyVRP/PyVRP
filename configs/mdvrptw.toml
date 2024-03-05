@@ -4,7 +4,6 @@ node_ops = [
     "Exchange11",
     "Exchange21",
     "Exchange22",
-    "ReverseSegment",
     "SwapTails",
 ]
 
