@@ -1,21 +1,14 @@
 node_ops = [
     "Exchange10",
     "Exchange20",
-    "Exchange30",
     "Exchange11",
     "Exchange21",
-    "Exchange31",
     "Exchange22",
-    "Exchange32",
-    "Exchange33",
-    "MoveTwoClientsReversed",
-    "ReverseSegment",
     "SwapTails",
 ]
 
 
 route_ops = [
-    "RelocateStar",
     "SwapStar",
 ]
 
