@@ -59,9 +59,15 @@ class MutuallyExclusiveGroup:
     this group must be visited, not all.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, clients: Optional[list[Client]] = None):
         self._model = model
-        self._clients: list[Client] = []
+        self._clients = clients if clients is not None else []
+
+    def __contains__(self, client: Client) -> bool:
+        """
+        Returns whether the given client is in the group.
+        """
+        return client in self._clients
 
     def __len__(self) -> int:
         """
@@ -105,6 +111,12 @@ class MutuallyExclusiveGroup:
         self._clients.append(client)
         return client
 
+    def clients(self) -> list[Client]:
+        """
+        Returns the clients in this group.
+        """
+        return self._clients
+
 
 class Model:
     """
@@ -126,6 +138,13 @@ class Model:
         used to index these locations.
         """
         return self._depots + self._clients
+
+    @property
+    def groups(self) -> list[MutuallyExclusiveGroup]:
+        """
+        Returns all the mutually exclusive client groups in the current model.
+        """
+        return self._groups
 
     @property
     def vehicle_types(self) -> list[VehicleType]:
@@ -171,6 +190,11 @@ class Model:
         self._depots = depots
         self._edges = edges
         self._vehicle_types = data.vehicle_types()
+
+        for group in data.groups():
+            in_group = [locs[client] for client in group]
+            new_group = MutuallyExclusiveGroup(self, in_group)  # type: ignore
+            self._groups.append(new_group)
 
         return self
 
@@ -353,12 +377,18 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
+        groups = [
+            [loc2idx[id(client)] for client in group.clients()]
+            for group in self._groups
+        ]
+
         return ProblemData(
             self._clients,
             self._depots,
             self.vehicle_types,
             distances,
             durations,
+            groups,
         )
 
     def solve(

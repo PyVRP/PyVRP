@@ -7,7 +7,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Depot, Model
+from pyvrp import Client, Depot, Model
 from pyvrp.Model import MutuallyExclusiveGroup
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
@@ -636,3 +636,48 @@ def test_add_client_raises_unknown_group():
 
     with assert_raises(ValueError):
         m.add_client(1, 1, group=group)
+
+
+def test_from_data_mutually_exclusive_group(ok_small):
+    """
+    Test that creating a model from a given data instance with mutually
+    exclusive client groups correctly sets up the client groups in the model.
+    """
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    clients[1] = Client(1, 1, required=False, group=0)
+
+    data = ok_small.replace(clients=clients, groups=[[1, 2]])
+    model = Model.from_data(data)
+
+    # Test that the clients have been correctly registered, and that there is
+    # a mutually exclusive group in the model.
+    assert_equal(model.locations[1].group, 0)
+    assert_equal(model.locations[2].group, 0)
+    assert_equal(len(model.groups), 1)
+
+    # Test that that group actually contains the clients.
+    group = model.groups[0]
+    assert_equal(len(group), 2)
+    assert_(model.locations[1] in group)
+    assert_(model.locations[2] in group)
+
+
+def test_to_data_mutually_exclusive_client_group():
+    """
+    Tests that creating a small model with a mutually exclusive client group
+    results in a correct ProblemData instance that has the appropriate group
+    memberships set up.
+    """
+    m = Model()
+    m.add_depot(1, 1)
+
+    group = m.add_mutually_exclusive_group()
+    group.add_client(1, 1)  # client #1
+    group.add_client(1, 1)  # client #2
+
+    # Generate the data instance. There should be a single client group, and
+    # the first two clients should be members of that group.
+    data = m.data()
+    assert_equal(data.num_groups, 1)
+    assert_equal(data.groups(), [[1, 2]])

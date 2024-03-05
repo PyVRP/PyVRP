@@ -25,7 +25,7 @@ This object can be used to obtain the best observed solution, and detailed runti
 
    .. autoclass:: MutuallyExclusiveGroup
       :members:
-      :special-members: __len__
+      :special-members: __contains__, __len__
 
 .. automodule:: pyvrp.GeneticAlgorithm
 
