@@ -47,6 +47,22 @@ def test_plot_solution_multiple_depots():
     plotting.plot_solution(Solution(data, routes), data)
 
 
+@img_comp(["plot_solution_optional_clients"], **IMG_KWARGS)
+def test_plot_solution_optional_clients(ok_small_prizes):
+    """
+    TODO
+    """
+    routes = [
+        Route(ok_small_prizes, [2, 3], vehicle_type=0),
+        Route(ok_small_prizes, [1], vehicle_type=0),
+    ]
+    plotting.plot_solution(
+        Solution(ok_small_prizes, routes),
+        ok_small_prizes,
+        plot_clients=True,
+    )
+
+
 @img_comp(["plot_result"], **IMG_KWARGS)
 def test_plot_result():
     """

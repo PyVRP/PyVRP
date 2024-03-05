@@ -67,6 +67,20 @@ def test_evaluate_same_vehicle_type(ok_small):
     assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
 
 
+def test_same_route(ok_small):
+    """
+    Tests that evaluate() returns 0 in case the same routes are passed in,
+    since then swapping has no effect.
+    """
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    route.append(Node(loc=1))
+    route.update()
+
+    op = SwapRoutes(ok_small)
+    cost_eval = CostEvaluator(1, 1)
+    assert_allclose(op.evaluate(route, route, cost_eval), 0)
+
+
 def test_evaluate_empty_routes(ok_small):
     """
     Tests that evaluate() returns 0 when one or both of the routes are empty.

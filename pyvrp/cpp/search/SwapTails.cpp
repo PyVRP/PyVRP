@@ -1,63 +1,20 @@
-#include "TwoOpt.h"
+#include "SwapTails.h"
 
 #include "Route.h"
 
 #include <cassert>
 
-using pyvrp::Cost;
-using pyvrp::search::TwoOpt;
+using pyvrp::search::SwapTails;
 
-Cost TwoOpt::evalWithinRoute(Route::Node *U,
-                             Route::Node *V,
-                             CostEvaluator const &costEvaluator) const
-{
-    assert(U->route() == V->route());
-    auto *route = U->route();
-
-    Cost deltaCost
-        = -static_cast<Cost>(route->distance())
-          - costEvaluator.loadPenalty(route->load(), route->capacity())
-          - costEvaluator.twPenalty(route->timeWarp());
-
-    // Current situation is U -> n(U) -> ... -> V -> n(V). Proposed move is
-    // U -> V -> p(V) -> ... -> n(U) -> n(V). This reverses the segment from
-    // n(U) to V.
-    DistanceSegment dist = route->before(U->idx());
-    for (size_t idx = V->idx(); idx != U->idx(); --idx)
-        dist = DistanceSegment::merge(
-            data.distanceMatrix(), dist, route->at(idx));
-    dist = DistanceSegment::merge(
-        data.distanceMatrix(), dist, route->after(V->idx() + 1));
-
-    deltaCost += static_cast<Cost>(dist.distance());
-
-    if (deltaCost >= 0)
-        return deltaCost;
-
-    LoadSegment ls = route->before(U->idx());
-    for (size_t idx = V->idx(); idx != U->idx(); --idx)
-        ls = LoadSegment::merge(ls, route->at(idx));
-    ls = LoadSegment::merge(ls, route->after(V->idx() + 1));
-
-    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
-
-    DurationSegment ds = route->before(U->idx());
-    for (size_t idx = V->idx(); idx != U->idx(); --idx)
-        ds = DurationSegment::merge(data.durationMatrix(), ds, route->at(idx));
-    ds = DurationSegment::merge(
-        data.durationMatrix(), ds, route->after(V->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-
-    return deltaCost;
-}
-
-Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
-                               Route::Node *V,
-                               CostEvaluator const &costEvaluator) const
+pyvrp::Cost SwapTails::evaluate(Route::Node *U,
+                                Route::Node *V,
+                                CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
+
+    if (uRoute == vRoute || uRoute->idx() > vRoute->idx())
+        return 0;  // same route, or move will be tackled in a later iteration
 
     Cost deltaCost = 0;
 
@@ -183,20 +140,7 @@ Cost TwoOpt::evalBetweenRoutes(Route::Node *U,
     return deltaCost;
 }
 
-void TwoOpt::applyWithinRoute(Route::Node *U, Route::Node *V) const
-{
-    auto *nU = n(U);
-
-    while (V->idx() > nU->idx())
-    {
-        auto *pV = p(V);
-        Route::swap(nU, V);
-        nU = n(V);  // after swap, V is now nU
-        V = pV;
-    }
-}
-
-void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
+void SwapTails::apply(Route::Node *U, Route::Node *V) const
 {
     auto *nU = n(U);
     auto *nV = n(V);
@@ -218,31 +162,4 @@ void TwoOpt::applyBetweenRoutes(Route::Node *U, Route::Node *V) const
         U->route()->remove(node->idx());
         V->route()->insert(insertIdx++, node);
     }
-}
-
-Cost TwoOpt::evaluate(Route::Node *U,
-                      Route::Node *V,
-                      CostEvaluator const &costEvaluator)
-{
-    assert(U->route());
-    assert(V->route());
-
-    if (U->route()->idx() > V->route()->idx())  // tackled in a later iteration
-        return 0;
-
-    if (U->route() != V->route())
-        return evalBetweenRoutes(U, V, costEvaluator);
-
-    if (U->idx() + 1 >= V->idx())  // tackled in a later iteration
-        return 0;
-
-    return evalWithinRoute(U, V, costEvaluator);
-}
-
-void TwoOpt::apply(Route::Node *U, Route::Node *V) const
-{
-    if (U->route() == V->route())
-        applyWithinRoute(U, V);
-    else
-        applyBetweenRoutes(U, V);
 }

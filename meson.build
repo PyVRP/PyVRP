@@ -62,9 +62,10 @@ libcommon = static_library(
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'primitives.cpp',
-        SRC_DIR / 'search' / 'TwoOpt.cpp',
+        SRC_DIR / 'search' / 'ReverseSegment.cpp',
         SRC_DIR / 'search' / 'SwapRoutes.cpp',
         SRC_DIR / 'search' / 'SwapStar.cpp',
+        SRC_DIR / 'search' / 'SwapTails.cpp',
     ],
     include_directories: INCLUDES,
 )

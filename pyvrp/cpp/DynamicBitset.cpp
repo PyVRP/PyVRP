@@ -34,15 +34,23 @@ DynamicBitset::Block::reference DynamicBitset::operator[](size_t idx)
     return data_[q][r];
 }
 
-DynamicBitset &DynamicBitset::operator&=(DynamicBitset const &other)
+bool DynamicBitset::all() const
 {
-    assert(size() == other.size());  // assumed true during runtime
-
-    for (size_t idx = 0; idx != data_.size(); ++idx)
-        data_[idx] &= other.data_[idx];
-
-    return *this;
+    for (auto const &bitset : data_)
+        if (!bitset.all())
+            return false;
+    return true;
 }
+
+bool DynamicBitset::any() const
+{
+    for (auto const &bitset : data_)
+        if (bitset.any())
+            return true;
+    return false;
+}
+
+bool DynamicBitset::none() const { return !any(); }
 
 size_t DynamicBitset::count() const
 {
@@ -53,6 +61,16 @@ size_t DynamicBitset::count() const
 }
 
 size_t DynamicBitset::size() const { return BLOCK_SIZE * data_.size(); }
+
+DynamicBitset &DynamicBitset::operator&=(DynamicBitset const &other)
+{
+    assert(size() == other.size());  // assumed true during runtime
+
+    for (size_t idx = 0; idx != data_.size(); ++idx)
+        data_[idx] &= other.data_[idx];
+
+    return *this;
+}
 
 DynamicBitset &DynamicBitset::operator|=(DynamicBitset const &other)
 {
@@ -98,4 +116,11 @@ DynamicBitset DynamicBitset::operator^(DynamicBitset const &other) const
 {
     std::vector<Block> copy(data_);
     return DynamicBitset(copy) ^= other;
+}
+
+DynamicBitset &DynamicBitset::reset()
+{
+    for (auto &block : data_)
+        block.reset();
+    return *this;
 }
