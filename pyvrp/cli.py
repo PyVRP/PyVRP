@@ -67,11 +67,16 @@ def tabulate(headers: list[str], rows: np.ndarray) -> str:
     return "\n".join(header + content)
 
 
-def write_solution(where: Path, data: ProblemData, result: Result):
+def write_solution(
+    where: Path, data: ProblemData, result: Result, round_func: str
+):
     with open(where, "w") as fh:
+        scale = ROUND_FUNCS[round_func](1)
+        cost = round(result.cost() / scale, 2)
+
         if data.num_vehicle_types == 1:
             fh.write(str(result.best))
-            fh.write(f"Cost: {round(result.cost(), 2)}\n")
+            fh.write(f"Cost: {cost}\n")
             return
 
         # Since there are multiple vehicle types, we need to take some care
@@ -89,7 +94,7 @@ def write_solution(where: Path, data: ProblemData, result: Result):
             routes[vehicle] += " " + " ".join(visits)
 
         fh.writelines(route + "\n" for route in routes)
-        fh.write(f"Cost: {round(result.cost(), 2)}\n")
+        fh.write(f"Cost: {cost}\n")
 
 
 def solve(
@@ -197,7 +202,8 @@ def solve(
 
     if sol_dir:
         sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
-        write_solution(sol_dir / (instance_name + ".sol"), data, result)
+        loc = sol_dir / (instance_name + ".sol")
+        write_solution(loc, data, result, round_func)
 
     return (
         instance_name,
