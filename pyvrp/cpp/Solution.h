@@ -237,6 +237,7 @@ private:
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
     Duration timeWarp_ = 0;         // Total time warp over all routes
+    bool isGroupFeas_ = true;       // Is feasible w.r.t. client groups?
 
     Routes routes_;
     Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
@@ -310,17 +311,15 @@ public:
     [[nodiscard]] Neighbours const &neighbours() const;
 
     /**
-     * Whether this solution is feasible. This is a shorthand for checking
-     * :meth:`~has_excess_load`, :meth:`~has_time_warp`, and
-     * :meth:`~is_complete`.
-     *
-     * Returns
-     * -------
-     * bool
-     *     Whether the solution of this solution is feasible with respect to
-     *     capacity and time window constraints, and has all required clients.
+     * Whether this solution is feasible.
      */
     [[nodiscard]] bool isFeasible() const;
+
+    /**
+     * Returns whether this solution is feasible w.r.t. the mutually exclusive
+     * client groups: of each group, exactly one client must be in the solution.
+     */
+    [[nodiscard]] bool isGroupFeasible() const;
 
     /**
      * Returns whether this solution is complete, which it is when it has all
@@ -465,6 +464,7 @@ public:
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
+             bool isGroupFeasible,
              Routes const &routes,
              Neighbours neighbours);
 };

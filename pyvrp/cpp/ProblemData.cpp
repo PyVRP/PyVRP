@@ -273,6 +273,77 @@ size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
+void ProblemData::validate() const
+{
+    // Client checks.
+    for (size_t idx = numDepots(); idx != numLocations(); ++idx)
+    {
+        ProblemData::Client const &client = location(idx);
+
+        if (client.group)
+        {
+            if (client.group.value() >= numGroups())
+                throw std::out_of_range("Client references invalid group.");
+
+            auto const &group = groups_[client.group.value()];
+            if (std::find(group.begin(), group.end(), idx) == group.end())
+            {
+                auto const *msg = "Client not in the group it references.";
+                throw std::invalid_argument(msg);
+            }
+        }
+    }
+
+    // Depot checks.
+    if (depots_.empty())
+        throw std::invalid_argument("Expected at least one depot.");
+
+    // Group checks.
+    for (size_t idx = 0; idx != numGroups(); ++idx)
+    {
+        auto const &group = groups_[idx];
+
+        if (group.empty())
+            throw std::invalid_argument("Empty client group not understood.");
+
+        for (auto const client : group)
+        {
+            if (client < numDepots() || client >= numLocations())
+                throw std::out_of_range("Group references invalid client.");
+
+            ProblemData::Client const &clientData = location(client);
+            if (!clientData.group || clientData.group.value() != idx)
+            {
+                auto const *msg = "Group references client not in group.";
+                throw std::invalid_argument(msg);
+            }
+        }
+    }
+
+    // Vehicle type checks.
+    for (auto const &vehicleType : vehicleTypes_)
+        if (vehicleType.depot >= numDepots())
+            throw std::out_of_range("Vehicle type has invalid depot.");
+
+    // Matrix checks.
+    if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
+        throw std::invalid_argument("Distance matrix shape does not match the "
+                                    "problem size.");
+
+    if (dur_.numRows() != numLocations() || dur_.numCols() != numLocations())
+        throw std::invalid_argument("Duration matrix shape does not match the "
+                                    "problem size.");
+
+    for (size_t idx = 0; idx != numLocations(); ++idx)
+    {
+        if (dist_(idx, idx) != 0)
+            throw std::invalid_argument("Distance matrix diagonal must be 0.");
+
+        if (dur_(idx, idx) != 0)
+            throw std::invalid_argument("Duration matrix diagonal must be 0.");
+    }
+}
+
 ProblemData
 ProblemData::replace(std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<Depot>> &depots,
@@ -309,42 +380,11 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                                        return sum + type.numAvailable;
                                    }))
 {
-    if (depots.empty())
-        throw std::invalid_argument("Expected at least one depot!");
-
-    for (auto const &vehicleType : vehicleTypes_)
-        if (vehicleType.depot >= numDepots())
-            throw std::out_of_range("Vehicle type has invalid depot.");
-
-    for (auto const &client : clients_)
-        if (client.group && client.group.value() >= numGroups())
-            throw std::out_of_range("Client references invalid group.");
-
-    for (auto const &group : groups_)
-        for (auto const client : group)
-            if (client < numDepots() || client >= numLocations())
-                throw std::out_of_range("Group references invalid client.");
-
-    if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
-        throw std::invalid_argument("Distance matrix shape does not match the "
-                                    "problem size.");
-
-    if (dur_.numRows() != numLocations() || dur_.numCols() != numLocations())
-        throw std::invalid_argument("Duration matrix shape does not match the "
-                                    "problem size.");
-
-    for (size_t idx = 0; idx != numLocations(); ++idx)
-    {
-        if (dist_(idx, idx) != 0)
-            throw std::invalid_argument("Distance matrix diagonal must be 0.");
-
-        if (dur_(idx, idx) != 0)
-            throw std::invalid_argument("Duration matrix diagonal must be 0.");
-    }
-
     for (auto const &client : clients_)
     {
         centroid_.first += static_cast<double>(client.x) / numClients();
         centroid_.second += static_cast<double>(client.y) / numClients();
     }
+
+    validate();
 }

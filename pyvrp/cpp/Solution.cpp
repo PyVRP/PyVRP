@@ -52,8 +52,15 @@ Neighbours const &Solution::neighbours() const { return neighbours_; }
 
 bool Solution::isFeasible() const
 {
-    return !hasExcessLoad() && !hasTimeWarp() && isComplete();
+    // clang-format off
+    return !hasExcessLoad() 
+        && !hasTimeWarp()
+        && isComplete()
+        && isGroupFeasible();
+    // clang-format on
 }
+
+bool Solution::isGroupFeasible() const { return isGroupFeas_; }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
@@ -201,6 +208,16 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         }
     }
 
+    for (auto const &group : data.groups())
+    {
+        assert(!group.empty());
+
+        // The solution is feasible w.r.t. this client group if exactly one of
+        // the clients in the group is in the solution.
+        auto const inSol = [&](auto client) { return visits[client] != 0; };
+        isGroupFeas_ = std::count_if(group.begin(), group.end(), inSol) == 1;
+    }
+
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
         if (usedVehicles[vehType] > data.vehicleType(vehType).numAvailable)
         {
@@ -223,6 +240,7 @@ Solution::Solution(size_t numClients,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
+                   bool isGroupFeasible,
                    Routes const &routes,
                    Neighbours neighbours)
     : numClients_(numClients),
@@ -233,6 +251,7 @@ Solution::Solution(size_t numClients,
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
+      isGroupFeas_(isGroupFeasible),
       routes_(routes),
       neighbours_(neighbours)
 {

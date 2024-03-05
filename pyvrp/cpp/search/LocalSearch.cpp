@@ -320,6 +320,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     // There should be at least one client that's in the current solution.
     auto const pred = [&](auto client) { return nodes[client].route(); };
     auto const &group = data.group(uData.group.value());
+    assert(!group.empty());
     assert(std::any_of(group.begin(), group.end(), pred));
 
     // Clients in the group that are also in the current solution. This can be

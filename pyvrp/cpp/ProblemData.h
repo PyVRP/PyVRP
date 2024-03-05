@@ -35,8 +35,7 @@ namespace pyvrp
  * clients
  *     List of clients to visit.
  * depots
- *     List of depots. Depots should have no delivery and pickup demand, or
- *     service duration.
+ *     List of depots. At least one depot must be passed.
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrix
@@ -47,11 +46,23 @@ namespace pyvrp
  *     depots and clients.
  * groups
  *     List of mutually exclusive client groups, where each group is a list of
- *     clients. Of the clients in a group, exactly one must be visited. Default
- *     empty (no groups).
+ *     clients. Of the clients in a group, exactly one must be visited. By
+ *     default there are no mutually exclusive client groups. Empty groups must
+ *     not be passed.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When the data is inconsistent.
+ * IndexError
+ *     When the data reference clients, depots, or groups that do not exist
+ *     because the referenced index is out of range.
  */
 class ProblemData
 {
+    // Validates the consistency of the constructed instance.
+    void validate() const;
+
 public:
     // A mutually exclusive group is just a list of clients, nothing fancy.
     using MutuallyExclusiveGroup = std::vector<size_t>;
@@ -392,12 +403,6 @@ public:
     /**
      * Returns a list of all mutually exclusive client groups in the problem
      * instance.
-     *
-     * Returns
-     * -------
-     * list[list[int]]
-     *     List of all mutually exclusive client groups in the problem
-     *     instance.
      */
     [[nodiscard]] std::vector<MutuallyExclusiveGroup> const &groups() const;
 
@@ -428,11 +433,6 @@ public:
      * ----------
      * group
      *     Group index whose information to retrieve.
-     *
-     * Returns
-     * -------
-     * list[int]
-     *     Clients in the mutually exclusive client group at the given index.
      */
     [[nodiscard]] MutuallyExclusiveGroup const &group(size_t group) const;
 
@@ -531,11 +531,6 @@ public:
 
     /**
      * Number of mutually exclusive client groups in this problem instance.
-     *
-     * Returns
-     * -------
-     * int
-     *     Number of mutually exclusive client groups in the instance.
      */
     [[nodiscard]] size_t numGroups() const;
 
@@ -608,6 +603,8 @@ public:
                 Matrix<Distance> distMat,
                 Matrix<Duration> durMat,
                 std::vector<MutuallyExclusiveGroup> groups = {});
+
+    ProblemData() = delete;
 };
 
 ProblemData::Location::operator Client const &() const { return *client; }

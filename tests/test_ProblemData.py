@@ -601,11 +601,26 @@ def test_raises_invalid_vehicle_depot_indices(ok_small):
         )
 
 
+def test_raises_empty_group():
+    """
+    Tests that passing an empty client group raises a ValueError.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=[[0]],
+            duration_matrix=[[0]],
+            groups=[[]],  # empty group - this should raise
+        )
+
+
 @pytest.mark.parametrize(
     ("groups", "index"),
     [
         ([], 0),  # index 0, but there are no groups
-        ([[]], 1),  # there is one group, but index is 1
+        ([[1]], 1),  # there is one group, but index is 1
     ],
 )
 def test_raises_invalid_client_group_indices(
@@ -627,7 +642,7 @@ def test_raises_invalid_client_group_indices(
         )
 
 
-@pytest.mark.parametrize("groups", [[[0]], [[2]]])
+@pytest.mark.parametrize("groups", [[[0, 1]], [[1, 2]]])
 def test_raises_invalid_group_client_indices(groups: list[list[int]]):
     """
     Tests that groups with client indices that are either depots or outside the
@@ -638,9 +653,43 @@ def test_raises_invalid_group_client_indices(groups: list[list[int]]):
             clients=[Client(1, 1, required=False, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=[[0]],
-            duration_matrix=[[0]],
+            distance_matrix=np.zeros((2, 2)),
+            duration_matrix=np.zeros((2, 2)),
             groups=groups,
+        )
+
+
+def test_raises_wrong_mutual_group_referencing():
+    """
+    Groups should reference the clients in the group, and vice versa, the
+    client should reference the group. If this is not done correctly, a
+    ValueError should be thrown.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            # The client references the first group, which does not contain the
+            # client. That should raise.
+            clients=[
+                Client(1, 1, required=False, group=0),
+                Client(2, 2, required=False, group=0),
+            ],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((3, 3)),
+            duration_matrix=np.zeros((3, 3)),
+            groups=[[2]],
+        )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[Client(1, 1), Client(2, 2)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((3, 3)),
+            duration_matrix=np.zeros((3, 3)),
+            # Group references a client that is not in the group. That should
+            # raise as well.
+            groups=[[1]],
         )
 
 
