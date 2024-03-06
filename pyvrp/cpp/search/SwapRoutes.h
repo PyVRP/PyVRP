@@ -2,7 +2,7 @@
 #define PYVRP_SEARCH_SWAPROUTES_H
 
 #include "LocalSearchOperator.h"
-#include "TwoOpt.h"
+#include "SwapTails.h"
 
 namespace pyvrp::search
 {
@@ -14,7 +14,7 @@ namespace pyvrp::search
  */
 class SwapRoutes : public LocalSearchOperator<Route>
 {
-    TwoOpt opt;
+    SwapTails op;
 
 public:
     Cost

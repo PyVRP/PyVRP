@@ -18,6 +18,7 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
+#include <variant>
 
 namespace py = pybind11;
 
@@ -38,8 +39,12 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def("all", &DynamicBitset::all)
+        .def("any", &DynamicBitset::any)
+        .def("none", &DynamicBitset::none)
         .def("count", &DynamicBitset::count)
         .def("__len__", &DynamicBitset::size)
+        .def("reset", &DynamicBitset::reset)
         .def(
             "__getitem__",
             [](DynamicBitset const &bitset, size_t idx) { return bitset[idx]; },
@@ -193,15 +198,17 @@ PYBIND11_MODULE(_pyvrp, m)
                                DOC(pyvrp, ProblemData, numVehicles))
         .def(
             "location",
-            [](ProblemData const &data, size_t idx) {
+            [](ProblemData const &data,
+               size_t idx) -> std::variant<ProblemData::Client const *,
+                                           ProblemData::Depot const *> {
                 if (idx >= data.numLocations())
                     throw py::index_error();
 
                 auto const proxy = data.location(idx);
                 if (idx < data.numDepots())
-                    return py::cast(proxy.depot);
+                    return proxy.depot;
                 else
-                    return py::cast(proxy.client);
+                    return proxy.client;
             },
             py::arg("idx"),
             py::return_value_policy::reference_internal,
