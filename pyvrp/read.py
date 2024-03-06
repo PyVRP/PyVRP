@@ -71,8 +71,7 @@ def read(
             * ``'round'`` rounds the values to the nearest integer;
             * ``'trunc'`` truncates the values to be integral;
             * ``'dimacs'`` scale by 10 and round down to an integer;
-            * ''`exact'`` multiplies all values by 1000 and rounds them to the
-              nearest integer.
+            * ''`exact'`` scale by 1000 and rounds to the nearest integer.
             * ``'none'`` does no rounding. This is the default.
 
     Raises
