@@ -28,7 +28,7 @@ def dimacs(vals: np.ndarray):
     return (vals * 10).astype(int)
 
 
-def double(vals: np.ndarray):
+def exact(vals: np.ndarray):
     return round_nearest(1000 * vals)
 
 
@@ -40,7 +40,7 @@ ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
     "trunc": round_down,
     "dimacs": dimacs,
-    "double": double,
+    "exact": exact,
     "none": no_rounding,
 }
 
@@ -71,8 +71,8 @@ def read(
             * ``'round'`` rounds the values to the nearest integer;
             * ``'trunc'`` truncates the values to be integral;
             * ``'dimacs'`` scale by 10 and round down to an integer;
-            * ''`double'`` multiplies all values by 1000 and rounds them to the
-              nearest integer. Used for instances that need double precision.
+            * ''`exact'`` multiplies all values by 1000 and rounds them to the
+              nearest integer.
             * ``'none'`` does no rounding. This is the default.
 
     Raises
