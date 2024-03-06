@@ -25,11 +25,11 @@ def round_down(vals: np.ndarray):
 
 
 def dimacs(vals: np.ndarray):
-    return round_down(vals * 10)
+    return (10 * vals).astype(int)
 
 
 def exact(vals: np.ndarray):
-    return round_nearest(vals * 1000)
+    return round_nearest(1000 * vals)
 
 
 def no_rounding(vals):
