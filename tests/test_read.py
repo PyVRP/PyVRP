@@ -192,6 +192,28 @@ def test_round_func_round_nearest():
     assert_allclose(data.dist(1, 0), round(dist))
 
 
+def test_round_func_exact():
+    """
+    Tests rounding with the ``exact`` round function also works well for the
+    RC208 instance. This test is similar to the one for ``round``, but all
+    values are now multiplied by 1000 before rounding.
+    """
+    data = read("data/RC208.vrp", "exact")
+
+    # We're going to test dist(0, 1) and dist(1, 0), which should be the same
+    # since the distances are symmetric/Euclidean.
+    assert_allclose(data.location(0).x, 40000)
+    assert_allclose(data.location(0).y, 50000)
+
+    assert_allclose(data.location(1).x, 25000)
+    assert_allclose(data.location(1).y, 85000)
+
+    # Compute the distance, and assert that it is indeed correctly rounded.
+    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1000
+    assert_allclose(data.dist(0, 1), round(dist))
+    assert_allclose(data.dist(1, 0), round(dist))
+
+
 def test_service_time_specification():
     """
     Tests that specifying the service time as a specification (key-value pair)
