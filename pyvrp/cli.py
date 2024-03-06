@@ -71,8 +71,8 @@ def write_solution(
     where: Path, data: ProblemData, result: Result, round_func: str
 ):
     with open(where, "w") as fh:
-        scale = ROUND_FUNCS[round_func](1)
-        cost = round(result.cost() / scale, 2)
+        factor = ROUND_FUNCS[round_func](1)
+        cost = round(result.cost() / factor, 2)
 
         if data.num_vehicle_types == 1:
             fh.write(str(result.best))
@@ -205,10 +205,12 @@ def solve(
         loc = sol_dir / (instance_name + ".sol")
         write_solution(loc, data, result, round_func)
 
+    factor = ROUND_FUNCS[round_func](1)
+
     return (
         instance_name,
         "Y" if result.is_feasible() else "N",
-        round(result.cost(), 2),
+        round(result.cost() / factor, 2),
         result.num_iterations,
         round(result.runtime, 3),
     )
