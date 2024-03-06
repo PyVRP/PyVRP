@@ -1,4 +1,3 @@
-import functools
 import pathlib
 from numbers import Number
 from typing import Callable, Union
@@ -21,12 +20,12 @@ def round_nearest(vals: np.ndarray):
     return np.round(vals).astype(int)
 
 
-def convert_to_int(vals: np.ndarray):
+def round_down(vals: np.ndarray):
     return vals.astype(int)
 
 
-def scale_and_truncate_to_decimals(vals: np.ndarray, decimals: int = 0):
-    return (vals * (10**decimals)).astype(int)
+def dimacs(vals: np.ndarray):
+    return (vals * 10).astype(int)
 
 
 def double(vals: np.ndarray):
@@ -39,9 +38,8 @@ def no_rounding(vals):
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
-    "trunc": convert_to_int,
-    "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
-    "dimacs": functools.partial(scale_and_truncate_to_decimals, decimals=1),
+    "trunc": round_down,
+    "dimacs": dimacs,
     "double": double,
     "none": no_rounding,
 }
@@ -72,8 +70,7 @@ def read(
 
             * ``'round'`` rounds the values to the nearest integer;
             * ``'trunc'`` truncates the values to be integral;
-            * ``'trunc1'`` or ``'dimacs'`` scale and truncate to the nearest
-              decimal;
+            * ``'dimacs'`` scale by 10 and round down to an integer;
             * ''`double'`` multiplies all values by 1000 and rounds them to the
               nearest integer. Used for instances that need double precision.
             * ``'none'`` does no rounding. This is the default.

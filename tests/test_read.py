@@ -120,7 +120,7 @@ def test_reading_vrplib_instance():
     """
     Tests that a small VRPLIB-style instance is correctly parsed.
     """
-    data = read("data/E-n22-k4.txt", round_func="trunc1")
+    data = read("data/E-n22-k4.txt", round_func="dimacs")
 
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
@@ -168,23 +168,6 @@ def test_warns_about_scaling_issues():
         # The arc from the depot to client 4 is really large (one billion), so
         # that should trigger a warning.
         read("data/ReallyLargeDistance.txt")
-
-
-def test_round_func_trunc1_and_dimacs_are_same():
-    """
-    Tests that the DIMACS convention is equivalent to truncating to the first
-    decimal.
-    """
-    trunc1 = read("data/RC208.vrp", "trunc1")
-    dimacs = read("data/RC208.vrp", "dimacs")
-
-    trunc1_dist = trunc1.distance_matrix()
-    dimacs_dist = dimacs.distance_matrix()
-    assert_allclose(trunc1_dist, dimacs_dist)
-
-    trunc1_dur = trunc1.duration_matrix()
-    dimacs_dur = trunc1.duration_matrix()
-    assert_allclose(trunc1_dur, dimacs_dur)
 
 
 def test_round_func_round_nearest():
