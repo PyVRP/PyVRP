@@ -42,6 +42,8 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
             uRoute->at(uRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(uDist.distance());
+        deltaCost += costEvaluator.distPenalty(uDist.distance(),
+                                               uRoute->maxDistance());
     }
     else
     {
@@ -51,6 +53,8 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                      uRoute->at(uRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(uDist.distance());
+        deltaCost += costEvaluator.distPenalty(uDist.distance(),
+                                               uRoute->maxDistance());
     }
 
     if (U->idx() < uRoute->size())
@@ -62,6 +66,8 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
             vRoute->at(vRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(vDist.distance());
+        deltaCost += costEvaluator.distPenalty(vDist.distance(),
+                                               vRoute->maxDistance());
     }
     else
     {
@@ -71,10 +77,17 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                      vRoute->at(vRoute->size() + 1));
 
         deltaCost += static_cast<Cost>(vDist.distance());
+        deltaCost += costEvaluator.distPenalty(vDist.distance(),
+                                               vRoute->maxDistance());
     }
 
     deltaCost -= static_cast<Cost>(uRoute->distance());
+    deltaCost
+        -= costEvaluator.distPenalty(uRoute->distance(), uRoute->maxDistance());
+
     deltaCost -= static_cast<Cost>(vRoute->distance());
+    deltaCost
+        -= costEvaluator.distPenalty(vRoute->distance(), vRoute->maxDistance());
 
     deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
     deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
