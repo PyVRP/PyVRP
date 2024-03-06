@@ -424,3 +424,118 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     # before 1.
     cost_eval = CostEvaluator(1, 1, 0)
     assert_allclose(op.evaluate(route[1], route[3], cost_eval), -5)
+
+
+@pytest.mark.parametrize(
+    ("max_distance", "expected"),
+    [
+        (5_000, -3_332),  # move reduces max_distance violation
+        (2_500, -6_542),  # which becomes more important here
+        (0, 18_458),  # but with only violations the move is not improving
+    ],
+)
+def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
+    """
+    Tests that a relocate move correctly evaluates maximum distance constraint
+    violations, and can identify improving moves that increase overall distance
+    but reduce the maximum distance violation.
+    """
+    vehicle_type = VehicleType(2, capacity=10, max_distance=max_distance)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.update()
+
+    assert_allclose(route1.distance(), 5_501)
+    assert_allclose(route1.excess_distance(), max(5_501 - max_distance, 0))
+
+    cost_eval = CostEvaluator(0, 0, 10)
+    op = Exchange10(data)
+
+    # Moving client #2 from route1 to route2 does not improve the overall
+    # distance, but can be helpful in reducing maximum distance violations.
+    assert_allclose(op.evaluate(route1[2], route2[0], cost_eval), expected)
+    op.apply(route1[2], route2[0])
+
+    route1.update()
+    assert_allclose(route1.distance(), 3_270)
+    assert_allclose(route1.excess_distance(), max(3_270 - max_distance, 0))
+
+    route2.update()
+    assert_allclose(route2.distance(), 3_909)
+    assert_allclose(route2.excess_distance(), max(3_909 - max_distance, 0))
+
+    delta_dist = 3_270 + 3_909 - 5_501  # compare manual delta cost
+    delta_excess = sum(
+        [
+            max(3_270 - max_distance, 0),
+            max(3_909 - max_distance, 0),
+            -max(5_501 - max_distance, 0),
+        ]
+    )
+    assert_allclose(delta_dist + 10 * delta_excess, expected)
+
+
+@pytest.mark.parametrize(
+    ("max_distance", "expected"),
+    [
+        (5_000, -5_222),
+        (2_500, -6_072),  # both routes now violate max dist constraint
+        (0, -6_072),  # so tighter constraints do not improve anything
+    ],
+)
+def test_swap_max_distance(ok_small, max_distance: int, expected: int):
+    """
+    Tests that a swap move correctly evaluates maximum distance constraint
+    violations, and can identify improving moves that increase overall distance
+    but reduce the maximum distance violation.
+    """
+    vehicle_type = VehicleType(2, capacity=10, max_distance=max_distance)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.append(Node(loc=3))
+    route2.update()
+
+    assert_allclose(route1.distance(), 5_501)
+    assert_allclose(route1.excess_distance(), max(5_501 - max_distance, 0))
+
+    assert_allclose(route2.distance(), 3_994)
+    assert_allclose(route2.excess_distance(), max(3_994 - max_distance, 0))
+
+    cost_eval = CostEvaluator(0, 0, 10)
+    op = Exchange11(data)
+
+    # Swapping client #2 in route1 and client #3 in route2 improves the overall
+    # distance and reduces the excess distance violations.
+    assert_allclose(op.evaluate(route1[2], route2[1], cost_eval), expected)
+    op.apply(route1[2], route2[1])
+
+    route1.update()
+    assert_allclose(route1.distance(), 5_034)
+    assert_allclose(route1.excess_distance(), max(5_034 - max_distance, 0))
+
+    route2.update()
+    assert_allclose(route2.distance(), 3_909)
+    assert_allclose(route2.excess_distance(), max(3_909 - max_distance, 0))
+
+    delta_dist = 5_034 + 3_909 - 5_501 - 3_994  # compare manual delta cost
+    delta_excess = sum(
+        [
+            max(5_034 - max_distance, 0),
+            max(3_909 - max_distance, 0),
+            -max(5_501 - max_distance, 0),
+            -max(3_994 - max_distance, 0),
+        ]
+    )
+    assert_allclose(delta_dist + 10 * delta_excess, expected)
