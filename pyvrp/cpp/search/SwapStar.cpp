@@ -20,6 +20,8 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
         removalCosts(R->idx(), U->client())
             = static_cast<Cost>(dist.distance())
               - static_cast<Cost>(R->distance())
+              + costEvaluator.distPenalty(dist.distance(), R->maxDistance())
+              - costEvaluator.distPenalty(R->distance(), R->maxDistance())
               + costEvaluator.twPenalty(ds.timeWarp(R->maxDuration()))
               - costEvaluator.twPenalty(R->timeWarp());
     }
@@ -49,6 +51,8 @@ void SwapStar::updateInsertionCost(Route *R,
         auto const deltaCost
             = static_cast<Cost>(dist.distance())
               - static_cast<Cost>(R->distance())
+              + costEvaluator.distPenalty(dist.distance(), R->maxDistance())
+              - costEvaluator.distPenalty(R->distance(), R->maxDistance())
               + costEvaluator.twPenalty(ds.timeWarp(R->maxDuration()))
               - costEvaluator.twPenalty(R->timeWarp());
 
@@ -83,6 +87,8 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
     auto const deltaCost
         = static_cast<Cost>(dist.distance())
           - static_cast<Cost>(route->distance())
+          + costEvaluator.distPenalty(dist.distance(), route->maxDistance())
+          - costEvaluator.distPenalty(route->distance(), route->maxDistance())
           + costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()))
           - costEvaluator.twPenalty(route->timeWarp());
 
@@ -110,6 +116,8 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                                                  route->after(V->idx() + 2));
 
         deltaCost += static_cast<Cost>(dist.distance());
+        deltaCost
+            += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
 
         auto const ds = DurationSegment::merge(data.durationMatrix(),
                                                route->before(V->idx()),
@@ -136,6 +144,8 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                 route->after(remove->idx() + 1));
 
             deltaCost += static_cast<Cost>(dist.distance());
+            deltaCost += costEvaluator.distPenalty(dist.distance(),
+                                                   route->maxDistance());
 
             auto const ds = DurationSegment::merge(
                 data.durationMatrix(),
@@ -166,6 +176,8 @@ Cost SwapStar::evaluateMove(Route::Node *U,
                 route->after(V->idx() + 1));
 
             deltaCost += static_cast<Cost>(dist.distance());
+            deltaCost += costEvaluator.distPenalty(dist.distance(),
+                                                   route->maxDistance());
 
             auto const ds = DurationSegment::merge(
                 data.durationMatrix(),
@@ -189,6 +201,8 @@ Cost SwapStar::evaluateMove(Route::Node *U,
     }
 
     deltaCost -= static_cast<Cost>(route->distance());
+    deltaCost
+        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
     deltaCost -= costEvaluator.twPenalty(route->timeWarp());
     deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
 

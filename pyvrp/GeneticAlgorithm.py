@@ -201,13 +201,9 @@ class GeneticAlgorithm:
             best_cost = self._cost_evaluator.cost(self._best)
             return cost < best_cost
 
-        def add_and_register(sol):
-            self._pop.add(sol, self._cost_evaluator)
-            self._pm.register_load_feasible(not sol.has_excess_load())
-            self._pm.register_time_feasible(not sol.has_time_warp())
-
         sol = self._search(sol, self._cost_evaluator)
-        add_and_register(sol)
+        self._pop.add(sol, self._cost_evaluator)
+        self._pm.register(sol)
 
         if is_new_best(sol):
             self._best = sol
@@ -221,7 +217,8 @@ class GeneticAlgorithm:
             sol = self._search(sol, self._pm.booster_cost_evaluator())
 
             if sol.is_feasible():
-                add_and_register(sol)
+                self._pop.add(sol, self._cost_evaluator)
+                self._pm.register(sol)
 
             if is_new_best(sol):
                 self._best = sol

@@ -215,6 +215,14 @@ public:
     [[nodiscard]] inline bool hasExcessLoad() const;
 
     /**
+     * Determines whether this route is distance-feasible.
+     *
+     * @return true if the route exceeds the maximum distance constraint, false
+     *         otherwise.
+     */
+    [[nodiscard]] inline bool hasExcessDistance() const;
+
+    /**
      * Determines whether this route is time-feasible.
      *
      * @return true if the route has time warp, false otherwise.
@@ -231,6 +239,12 @@ public:
      * vehicle's capacity.
      */
     [[nodiscard]] inline Load excessLoad() const;
+
+    /**
+     * Travel distance in excess of the assigned vehicle type's maximum
+     * distance constraint.
+     */
+    [[nodiscard]] inline Distance excessDistance() const;
 
     /**
      * @return The load capacity of the vehicle servicing this route.
@@ -258,9 +272,16 @@ public:
     [[nodiscard]] inline Duration duration() const;
 
     /**
-     * @return The maximum duration of the vehicle servicing this route.
+     * @return The maximum route duration that the vehicle servicing this route
+     *         supports.
      */
     [[nodiscard]] inline Duration maxDuration() const;
+
+    /**
+     * @return The maximum route distance that the vehicle servicing this route
+     *         supports.
+     */
+    [[nodiscard]] inline Distance maxDistance() const;
 
     /**
      * @return Total time warp on this route.
@@ -489,13 +510,19 @@ Route::ProxyBetween::operator LoadSegment() const
 bool Route::isFeasible() const
 {
     assert(!dirty);
-    return !hasExcessLoad() && !hasTimeWarp();
+    return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 
 bool Route::hasExcessLoad() const
 {
     assert(!dirty);
-    return load() > capacity();
+    return excessLoad() > 0;
+}
+
+bool Route::hasExcessDistance() const
+{
+    assert(!dirty);
+    return excessDistance() > 0;
 }
 
 bool Route::hasTimeWarp() const
@@ -528,6 +555,12 @@ Load Route::excessLoad() const
     return std::max<Load>(load() - capacity(), 0);
 }
 
+Distance Route::excessDistance() const
+{
+    assert(!dirty);
+    return std::max<Distance>(distance() - maxDistance(), 0);
+}
+
 Load Route::capacity() const { return vehicleType_.capacity; }
 
 size_t Route::depot() const { return vehicleType_.depot; }
@@ -547,6 +580,8 @@ Duration Route::duration() const
 }
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
+
+Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 
 Duration Route::timeWarp() const
 {

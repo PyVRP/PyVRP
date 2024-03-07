@@ -73,7 +73,7 @@ def test_iteration(ok_small, capsys):
     """
     pop = Population(bpd)
     rng = RandomNumberGenerator(seed=42)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
 
     for _ in range(10):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)
@@ -121,7 +121,7 @@ def test_should_print_false_no_output(ok_small, capsys):
     """
     pop = Population(bpd)
     rng = RandomNumberGenerator(seed=42)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
 
     for _ in range(10):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)

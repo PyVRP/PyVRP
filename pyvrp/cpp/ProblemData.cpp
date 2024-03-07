@@ -155,6 +155,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Duration twEarly,
                                       Duration twLate,
                                       Duration maxDuration,
+                                      Distance maxDistance,
                                       char const *name)
     : numAvailable(numAvailable),
       depot(depot),
@@ -162,8 +163,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate),
-      name(duplicate(name)),
-      maxDuration(maxDuration)
+      maxDuration(maxDuration),
+      maxDistance(maxDistance),
+      name(duplicate(name))
 {
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
@@ -182,6 +184,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (maxDuration < 0)
         throw std::invalid_argument("max_duration must be >= 0.");
+
+    if (maxDistance < 0)
+        throw std::invalid_argument("max_distance must be >= 0.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -191,8 +196,9 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       fixedCost(vehicleType.fixedCost),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
-      name(duplicate(vehicleType.name)),
-      maxDuration(vehicleType.maxDuration)
+      maxDuration(vehicleType.maxDuration),
+      maxDistance(vehicleType.maxDistance),
+      name(duplicate(vehicleType.name))
 {
 }
 
@@ -203,8 +209,9 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       fixedCost(vehicleType.fixedCost),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
-      name(vehicleType.name),  // we can steal
-      maxDuration(vehicleType.maxDuration)
+      maxDuration(vehicleType.maxDuration),
+      maxDistance(vehicleType.maxDistance),
+      name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
 }

@@ -14,14 +14,18 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
-    auto const distSegment
-        = DistanceSegment::merge(data.distanceMatrix(),
-                                 route->before(V->idx()),
-                                 DistanceSegment(U->client()),
-                                 route->after(V->idx() + 1));
+    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
+                                             route->before(V->idx()),
+                                             DistanceSegment(U->client()),
+                                             route->after(V->idx() + 1));
 
-    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost += static_cast<Cost>(dist.distance());
     deltaCost -= static_cast<Cost>(route->distance());
+
+    deltaCost
+        += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
+    deltaCost
+        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
 
     auto const ls = LoadSegment::merge(route->before(V->idx()),
                                        LoadSegment(client),
@@ -54,12 +58,17 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
     Cost deltaCost
         = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
 
-    auto const distSegment = DistanceSegment::merge(data.distanceMatrix(),
-                                                    route->before(U->idx() - 1),
-                                                    route->after(U->idx() + 1));
+    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
+                                             route->before(U->idx() - 1),
+                                             route->after(U->idx() + 1));
 
-    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost += static_cast<Cost>(dist.distance());
     deltaCost -= static_cast<Cost>(route->distance());
+
+    deltaCost
+        += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
+    deltaCost
+        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
 
     auto const ls = LoadSegment::merge(route->before(U->idx() - 1),
                                        route->after(U->idx() + 1));

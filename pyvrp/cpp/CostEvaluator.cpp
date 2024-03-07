@@ -1,9 +1,10 @@
 #include "CostEvaluator.h"
 
-using pyvrp::Cost;
 using pyvrp::CostEvaluator;
 
-CostEvaluator::CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty)
-    : capacityPenalty(capacityPenalty), timeWarpPenalty(timeWarpPenalty)
+CostEvaluator::CostEvaluator(Cost loadPenalty, Cost twPenalty, Cost distPenalty)
+    : loadPenalty_(loadPenalty),
+      twPenalty_(twPenalty),
+      distPenalty_(distPenalty)
 {
 }

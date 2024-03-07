@@ -110,12 +110,15 @@ def read(
     if capacity != _INT_MAX:
         capacity = round_func(np.array([capacity])).item()
 
-    # If this value is supplied, we should pass it through the round func and
-    # then unwrap the result. If it's not given, the default value is None,
-    # which PyVRP understands.
+    # If the max_duration or max_distance values are supplied, we should pass
+    # them through the round func and then unwrap the result.
     max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
     if max_duration != _INT_MAX:
         max_duration = round_func(np.array([max_duration])).item()
+
+    max_distance: int = instance.get("vehicles_max_distance", _INT_MAX)
+    if max_distance != _INT_MAX:
+        max_distance = round_func(np.array([max_distance])).item()
 
     if "backhaul" in instance:
         backhauls: np.ndarray = round_func(instance["backhaul"])
@@ -227,6 +230,7 @@ def read(
             capacity=capacity,
             depot=depot_idx,
             max_duration=max_duration,
+            max_distance=max_distance,
             # A bit hacky, but this csv-like name is really useful to track the
             # actual vehicles that make up this vehicle type.
             name=",".join(map(str, vehicles)),

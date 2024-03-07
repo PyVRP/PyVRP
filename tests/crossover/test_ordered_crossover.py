@@ -10,7 +10,7 @@ def test_raises_when_not_tsp(ok_small):
     Tests that the ordered crossover (OX) operator raises when used on a data
     instance that is not a TSP.
     """
-    cost_eval = CostEvaluator(20, 6)
+    cost_eval = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
     sol = Solution(ok_small, [[1, 2], [3, 4]])
 
@@ -77,7 +77,7 @@ def test_empty_solution(prize_collecting):
     """
     data = prize_collecting.replace(vehicle_types=[VehicleType()])
 
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     empty = Solution(data, [])

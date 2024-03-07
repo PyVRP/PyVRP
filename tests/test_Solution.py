@@ -350,6 +350,34 @@ def test_feasibility_max_duration(ok_small):
     assert_(not sol.is_feasible())
 
 
+def test_feasibility_max_distance(ok_small):
+    """
+    Tests that the maximum distance constraint affects solution and route
+    feasibility when it is violated.
+    """
+    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    assert_(sol.is_feasible())
+
+    vehicle_type = VehicleType(4, capacity=10, max_distance=5_000)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    sol = Solution(data, [[1, 2], [3, 4]])
+    routes = sol.routes()
+
+    assert_allclose(routes[0].distance(), 5501)
+    assert_allclose(routes[0].excess_distance(), 501)
+    assert_(not routes[0].has_time_warp())
+    assert_(not routes[0].is_feasible())
+
+    assert_allclose(routes[1].distance(), 4224)
+    assert_allclose(routes[1].excess_distance(), 0)
+    assert_(routes[1].is_feasible())
+
+    assert_allclose(sol.excess_distance(), 501)
+    assert_(sol.has_excess_distance())
+    assert_(not sol.is_feasible())
+
+
 def test_distance_calculation(ok_small):
     """
     Tests that route distance calculations are correct, and that the overall

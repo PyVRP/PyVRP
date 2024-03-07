@@ -48,7 +48,7 @@ class Result:
         if not self.best.is_feasible():
             return math.inf
 
-        return CostEvaluator().cost(self.best)
+        return CostEvaluator(0, 0, 0).cost(self.best)
 
     def is_feasible(self) -> bool:
         """
