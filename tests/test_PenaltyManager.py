@@ -118,15 +118,6 @@ def test_capacity_penalty_update_increase(ok_small):
         pm.register(sol)
     assert_equal(pm.cost_evaluator().load_penalty(2, 1), 111)
 
-    # Test that the penalty cannot increase beyond 1000, its maximum value.
-    params = PenaltyParams(1000, 1, 1, 1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params)
-
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1000)
-    for sol in [infeas] * num_registrations:
-        pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1000)
-
 
 def test_capacity_penalty_update_decrease(ok_small):
     """
@@ -214,15 +205,6 @@ def test_time_warp_penalty_update_increase(ok_small):
     for sol in [infeas] * num_registrations:
         pm.register(sol)
     assert_equal(pm.cost_evaluator().tw_penalty(1), 111)
-
-    # Test that the penalty cannot increase beyond 1000, its maximum value.
-    params = PenaltyParams(1, 1000, 1, 1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params)
-
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 1000)
-    for sol in [infeas] * num_registrations:
-        pm.register(sol)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 1000)
 
 
 def test_time_warp_penalty_update_decrease(ok_small):

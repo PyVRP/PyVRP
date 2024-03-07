@@ -155,9 +155,7 @@ class PenaltyManager:
         else:
             new_penalty = self._params.penalty_decrease * penalty - 1
 
-        # Bounded to [1, 1000] to avoid potential overflows in cost
-        # computations on the C++ side.
-        return np.clip(int(new_penalty), 1, 1000, dtype=int)
+        return max(int(new_penalty), 1)  # penalty cannot drop below 1
 
     def _register(self, feas_list: list[bool], penalty: int, is_feas: bool):
         feas_list.append(is_feas)
