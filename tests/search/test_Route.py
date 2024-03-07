@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
@@ -472,7 +472,7 @@ def test_route_centroid(ok_small, clients):
 
     x = [ok_small.location(client).x for client in clients]
     y = [ok_small.location(client).y for client in clients]
-    assert_equal(route.centroid(), (np.mean(x), np.mean(y)))
+    assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))
 
 
 @pytest.mark.parametrize(
