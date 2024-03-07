@@ -59,7 +59,7 @@ def test_reading_OkSmall_instance():
     assert_equal(data.num_clients, 4)
     assert_equal(data.num_vehicles, 3)
     assert_equal(data.num_vehicle_types, 1)
-    assert_allclose(data.vehicle_type(0).capacity, 10)
+    assert_equal(data.vehicle_type(0).capacity, 10)
 
     # From the NODE_COORD_SECTION in the file
     expected = [
@@ -71,8 +71,8 @@ def test_reading_OkSmall_instance():
     ]
 
     for loc in range(data.num_locations):
-        assert_allclose(data.location(loc).x, expected[loc][0])
-        assert_allclose(data.location(loc).y, expected[loc][1])
+        assert_equal(data.location(loc).x, expected[loc][0])
+        assert_equal(data.location(loc).y, expected[loc][1])
 
     # From the EDGE_WEIGHT_SECTION in the file
     expected = [
@@ -87,14 +87,14 @@ def test_reading_OkSmall_instance():
     # dist/durs should be the same as the expected edge weights above.
     for frm in range(data.num_locations):
         for to in range(data.num_locations):
-            assert_allclose(data.dist(frm, to), expected[frm][to])
-            assert_allclose(data.duration(frm, to), expected[frm][to])
+            assert_equal(data.dist(frm, to), expected[frm][to])
+            assert_equal(data.duration(frm, to), expected[frm][to])
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
 
     for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
-        assert_allclose(data.location(loc).delivery, expected[loc])
+        assert_equal(data.location(loc).delivery, expected[loc])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
@@ -106,14 +106,14 @@ def test_reading_OkSmall_instance():
     ]
 
     for loc in range(data.num_locations):
-        assert_allclose(data.location(loc).tw_early, expected[loc][0])
-        assert_allclose(data.location(loc).tw_late, expected[loc][1])
+        assert_equal(data.location(loc).tw_early, expected[loc][0])
+        assert_equal(data.location(loc).tw_late, expected[loc][1])
 
     # From the SERVICE_TIME_SECTION in the file
     expected = [0, 360, 360, 420, 360]
 
     for loc in range(1, data.num_locations):  # excl. depot (has no service)
-        assert_allclose(data.location(loc).service_duration, expected[loc])
+        assert_equal(data.location(loc).service_duration, expected[loc])
 
 
 def test_reading_vrplib_instance():
@@ -125,18 +125,18 @@ def test_reading_vrplib_instance():
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_locations, 22)
-    assert_allclose(data.vehicle_type(0).capacity, 60_000)
+    assert_equal(data.vehicle_type(0).capacity, 60_000)
 
     assert_equal(len(data.depots()), data.num_depots)
     assert_equal(len(data.clients()), data.num_clients)
     assert_equal(data.num_locations, data.num_depots + data.num_clients)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
-    assert_allclose(data.location(0).x, 1450)  # depot [x, y] location
-    assert_allclose(data.location(0).y, 2150)
+    assert_equal(data.location(0).x, 1450)  # depot [x, y] location
+    assert_equal(data.location(0).y, 2150)
 
-    assert_allclose(data.location(1).x, 1510)  # first customer [x, y] location
-    assert_allclose(data.location(1).y, 2640)
+    assert_equal(data.location(1).x, 1510)  # first customer [x, y] location
+    assert_equal(data.location(1).y, 2640)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -146,16 +146,16 @@ def test_reading_vrplib_instance():
     #      dY = 264 - 215 = 49
     #      dist = sqrt(dX^2 + dY^2) = 49.37
     #      int(10 * dist) = 493
-    assert_allclose(data.dist(0, 1), 493)
-    assert_allclose(data.dist(1, 0), 493)
+    assert_equal(data.dist(0, 1), 493)
+    assert_equal(data.dist(1, 0), 493)
 
     # This is a CVRP instance, so all other fields should have default values.
     for loc in range(1, data.num_locations):
-        assert_allclose(data.location(loc).service_duration, 0)
-        assert_allclose(data.location(loc).tw_early, 0)
-        assert_allclose(data.location(loc).tw_late, np.iinfo(np.int64).max)
-        assert_allclose(data.location(loc).release_time, 0)
-        assert_allclose(data.location(loc).prize, 0)
+        assert_equal(data.location(loc).service_duration, 0)
+        assert_equal(data.location(loc).tw_early, 0)
+        assert_equal(data.location(loc).tw_late, np.iinfo(np.int64).max)
+        assert_equal(data.location(loc).release_time, 0)
+        assert_equal(data.location(loc).prize, 0)
         assert_equal(data.location(loc).required, True)
 
 
@@ -180,16 +180,16 @@ def test_round_func_round_nearest():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_allclose(data.location(0).x, 40)
-    assert_allclose(data.location(0).y, 50)
+    assert_equal(data.location(0).x, 40)
+    assert_equal(data.location(0).y, 50)
 
-    assert_allclose(data.location(1).x, 25)
-    assert_allclose(data.location(1).y, 85)
+    assert_equal(data.location(1).x, 25)
+    assert_equal(data.location(1).y, 85)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
-    assert_allclose(data.dist(0, 1), round(dist))
-    assert_allclose(data.dist(1, 0), round(dist))
+    assert_equal(data.dist(0, 1), round(dist))
+    assert_equal(data.dist(1, 0), round(dist))
 
 
 def test_round_func_exact():
@@ -202,16 +202,16 @@ def test_round_func_exact():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_allclose(data.location(0).x, 40_000)
-    assert_allclose(data.location(0).y, 50_000)
+    assert_equal(data.location(0).x, 40_000)
+    assert_equal(data.location(0).y, 50_000)
 
-    assert_allclose(data.location(1).x, 25_000)
-    assert_allclose(data.location(1).y, 85_000)
+    assert_equal(data.location(1).x, 25_000)
+    assert_equal(data.location(1).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000
-    assert_allclose(data.dist(0, 1), round(dist))
-    assert_allclose(data.dist(1, 0), round(dist))
+    assert_equal(data.dist(0, 1), round(dist))
+    assert_equal(data.dist(1, 0), round(dist))
 
 
 def test_service_time_specification():
@@ -254,17 +254,17 @@ def test_multiple_depots():
 
     # Test that the depot data has been parsed correctly. The first depot has
     # not changed.
-    assert_allclose(depot1.x, 2_334)
-    assert_allclose(depot1.y, 726)
-    assert_allclose(depot1.tw_early, 0)
-    assert_allclose(depot1.tw_late, 45_000)
+    assert_equal(depot1.x, 2_334)
+    assert_equal(depot1.y, 726)
+    assert_equal(depot1.tw_early, 0)
+    assert_equal(depot1.tw_late, 45_000)
 
     # But the second depot has the location data of what used to be the first
     # client, and a tighter time window than the other depot.
-    assert_allclose(depot2.x, 226)
-    assert_allclose(depot2.y, 1_297)
-    assert_allclose(depot2.tw_early, 5_000)
-    assert_allclose(depot2.tw_late, 20_000)
+    assert_equal(depot2.x, 226)
+    assert_equal(depot2.y, 1_297)
+    assert_equal(depot2.tw_early, 5_000)
+    assert_equal(depot2.tw_late, 20_000)
 
 
 def test_mdvrptw_instance():
@@ -286,8 +286,8 @@ def test_mdvrptw_instance():
         # capacities and maximum route durations.
         assert_equal(vehicle_type.num_available, 10)
         assert_equal(vehicle_type.depot, idx)
-        assert_allclose(vehicle_type.capacity, 200)
-        assert_allclose(vehicle_type.max_duration, 450)
+        assert_equal(vehicle_type.capacity, 200)
+        assert_equal(vehicle_type.max_duration, 450)
 
         # Essentially all vehicle indices for each depot, separated by a comma.
         # Each depot has ten vehicles, and they are nicely grouped (so the
@@ -320,7 +320,7 @@ def test_vrpspd_instance():
 
     vehicle_type = data.vehicle_type(0)
     assert_equal(vehicle_type.num_available, 4)
-    assert_allclose(vehicle_type.capacity, 200)
+    assert_equal(vehicle_type.capacity, 200)
 
     # The first client is a linehaul client (only delivery, no pickup), and
     # the second client is a backhaul client (only pickup, no delivery). All
@@ -329,12 +329,12 @@ def test_vrpspd_instance():
     pickups = [0, 3, 10, 40]
 
     for idx, client in enumerate(data.clients()):
-        assert_allclose(client.delivery, deliveries[idx])
-        assert_allclose(client.pickup, pickups[idx])
+        assert_equal(client.delivery, deliveries[idx])
+        assert_equal(client.pickup, pickups[idx])
 
     # Test that distance/duration are not set to a large value, as in VRPB.
-    assert_allclose(np.max(data.distance_matrix()), 39)
-    assert_allclose(np.max(data.duration_matrix()), 39)
+    assert_equal(np.max(data.distance_matrix()), 39)
+    assert_equal(np.max(data.duration_matrix()), 39)
 
 
 def test_vrpb_instance():
@@ -354,18 +354,18 @@ def test_vrpb_instance():
 
     vehicle_type = data.vehicle_type(0)
     assert_equal(vehicle_type.num_available, 100)
-    assert_allclose(vehicle_type.capacity, 206)
+    assert_equal(vehicle_type.capacity, 206)
 
     # The first 50 clients are linehaul, the rest are backhaul.
     clients = data.clients()
 
     for client in clients[:50]:
-        assert_allclose(client.pickup, 0)
+        assert_equal(client.pickup, 0)
         assert_(client.delivery > 0)
 
     for client in clients[50:]:
         assert_(client.pickup > 0)
-        assert_allclose(client.delivery, 0)
+        assert_equal(client.delivery, 0)
 
     # Tests that distance/duration from depot to backhaul clients is set to
     # ``MAX_VALUE``, as well as for backhaul to linehaul clients.
@@ -378,8 +378,8 @@ def test_vrpb_instance():
             back2line = frm in backhauls and to in linehauls
 
             if depot2back or back2line:
-                assert_allclose(data.dist(frm, to), MAX_VALUE)
-                assert_allclose(data.duration(frm, to), MAX_VALUE)
+                assert_equal(data.dist(frm, to), MAX_VALUE)
+                assert_equal(data.duration(frm, to), MAX_VALUE)
             else:
                 assert_(data.dist(frm, to) < MAX_VALUE)
                 assert_(data.duration(frm, to) < MAX_VALUE)
@@ -392,4 +392,4 @@ def test_max_distance_constraint():
     """
     data = read("data/OkSmallMaxDistance.txt")
     for vehicle_type in data.vehicle_types():
-        assert_allclose(vehicle_type.max_distance, 5_000)
+        assert_equal(vehicle_type.max_distance, 5_000)

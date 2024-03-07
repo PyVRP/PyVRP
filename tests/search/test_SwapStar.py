@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 from pytest import mark
 
 from pyvrp import (
@@ -214,11 +214,11 @@ def test_max_distance(ok_small):
     cost_eval = CostEvaluator(0, 0, 10)  # only max distance is penalised
 
     route1, route2 = make_routes(ok_small)
-    assert_allclose(route1.distance(), 6_220)
-    assert_allclose(route2.distance(), 2_951)
+    assert_equal(route1.distance(), 6_220)
+    assert_equal(route2.distance(), 2_951)
 
     swap_star = SwapStar(ok_small)
-    assert_allclose(swap_star.evaluate(route1, route2, cost_eval), -1_043)
+    assert_equal(swap_star.evaluate(route1, route2, cost_eval), -1_043)
     swap_star.apply(route1, route2)
 
     # New route1 is 0 -> 2 -> 3 -> 4 -> 0, and route2 0 -> 1 -> 0. These new
@@ -227,9 +227,9 @@ def test_max_distance(ok_small):
     # reduction.
     route1.update()
     route2.update()
-    assert_allclose(route1.distance(), 4_858)
-    assert_allclose(route2.distance(), 3_270)
-    assert_allclose(6_220 + 2_951 - 1_043, 4_858 + 3_270)
+    assert_equal(route1.distance(), 4_858)
+    assert_equal(route2.distance(), 3_270)
+    assert_equal(6_220 + 2_951 - 1_043, 4_858 + 3_270)
 
     # Now restrict the maximum route distance to 5_000, so that aspect needs
     # to be taken into account as well.
@@ -242,5 +242,5 @@ def test_max_distance(ok_small):
     # distance difference as before.
     swap_star = SwapStar(data)
     route1, route2 = make_routes(data)
-    assert_allclose(swap_star.evaluate(route1, route2, cost_eval), -13_243)
-    assert_allclose(10 * (6_220 - 5_000) + 1_043, 13_243)
+    assert_equal(swap_star.evaluate(route1, route2, cost_eval), -13_243)
+    assert_equal(10 * (6_220 - 5_000) + 1_043, 13_243)

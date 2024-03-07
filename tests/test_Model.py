@@ -1,7 +1,6 @@
 import pytest
 from numpy.testing import (
     assert_,
-    assert_allclose,
     assert_equal,
     assert_raises,
     assert_warns,
@@ -153,12 +152,12 @@ def test_add_vehicle_type():
     )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_allclose(vehicle_type.capacity, 998)
-    assert_allclose(vehicle_type.fixed_cost, 1_001)
-    assert_allclose(vehicle_type.tw_early, 17)
-    assert_allclose(vehicle_type.tw_late, 19)
-    assert_allclose(vehicle_type.max_duration, 93)
-    assert_allclose(vehicle_type.max_distance, 97)
+    assert_equal(vehicle_type.capacity, 998)
+    assert_equal(vehicle_type.fixed_cost, 1_001)
+    assert_equal(vehicle_type.tw_early, 17)
+    assert_equal(vehicle_type.tw_late, 19)
+    assert_equal(vehicle_type.max_duration, 93)
+    assert_equal(vehicle_type.max_distance, 97)
 
 
 def test_add_vehicle_type_default_depot():
@@ -594,4 +593,4 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     route = res.best.routes()[0]
 
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
-    assert_allclose(route.excess_load(), expected_excess_load)
+    assert_equal(route.excess_load(), expected_excess_load)
