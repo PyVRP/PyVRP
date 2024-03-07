@@ -7,6 +7,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
+    ClientGroup,
     Depot,
     ProblemData,
     RandomNumberGenerator,
@@ -1021,7 +1022,9 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     clients[0] = Client(1, 1, required=False, group=0)
     clients[1] = Client(2, 2, required=False, group=0)
 
-    data = ok_small.replace(clients=clients, groups=[[1, 2]])
+    group = ClientGroup([1, 2], required=True)
+
+    data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, routes)
     assert_equal(sol.is_feasible(), feasible)
     assert_equal(sol.is_group_feasible(), feasible)

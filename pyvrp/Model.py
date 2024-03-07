@@ -10,6 +10,7 @@ from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
 from pyvrp._pyvrp import (
     Client,
+    ClientGroup,
     Depot,
     ProblemData,
     RandomNumberGenerator,
@@ -55,13 +56,25 @@ class Edge:
 
 class MutuallyExclusiveGroup:
     """
-    Models a mutually exclusive group of clients: exactly one of the clients in
-    this group must be visited, not all.
+    Models a mutually exclusive group of clients: if ``required``, exactly one
+    of the clients in this group must be visited, not all.
+
+    Parameters
+    ----------
+    model
+        The model this group is associated with.
+    required
+        Whether visiting this client group is required.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, required: bool):
         self._model = model
+        self._required = required
         self._clients: list[Client] = []
+
+    @property
+    def required(self) -> bool:
+        return self._required
 
     def __contains__(self, client: Client) -> bool:
         """
@@ -192,8 +205,10 @@ class Model:
         self._vehicle_types = data.vehicle_types()
 
         for group in data.groups():
-            new_group = MutuallyExclusiveGroup(self)
-            group_clients = [clients[client - len(depots)] for client in group]
+            new_group = MutuallyExclusiveGroup(self, group.required)
+            group_clients = [
+                clients[client - len(depots)] for client in group.clients
+            ]
             new_group._clients = group_clients  # noqa
             self._groups.append(new_group)
 
@@ -301,12 +316,15 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_mutually_exclusive_group(self) -> MutuallyExclusiveGroup:
+    def add_mutually_exclusive_group(
+        self, required: bool = True
+    ) -> MutuallyExclusiveGroup:
         """
         Adds a mutually exclusive client group to the model. Exactly one of the
-        clients in the group must be visited. Returns the created group.
+        clients in the group must be visited if visiting the group is
+        ``required``. Returns the created group.
         """
-        group = MutuallyExclusiveGroup(self)
+        group = MutuallyExclusiveGroup(self, required)
         self._groups.append(group)
         return group
 
@@ -380,9 +398,10 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        groups = [
-            [loc2idx[id(client)] for client in group] for group in self._groups
-        ]
+        groups = []
+        for group in self._groups:
+            clients = [loc2idx[id(client)] for client in group]
+            groups.append(ClientGroup(clients, group.required))
 
         return ProblemData(
             self._clients,

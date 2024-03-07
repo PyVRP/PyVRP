@@ -148,6 +148,26 @@ ProblemData::Depot::Depot(Depot &&depot)
 
 ProblemData::Depot::~Depot() { delete[] name; }
 
+ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
+                                      bool required)
+    : clients(std::move(clients)), required(required)
+{
+}
+
+bool ProblemData::ClientGroup::empty() const { return clients.empty(); }
+
+size_t ProblemData::ClientGroup::size() const { return clients.size(); }
+
+std::vector<size_t>::const_iterator ProblemData::ClientGroup::begin() const
+{
+    return clients.begin();
+}
+
+std::vector<size_t>::const_iterator ProblemData::ClientGroup::end() const
+{
+    return clients.end();
+}
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
@@ -228,14 +248,12 @@ std::vector<ProblemData::Depot> const &ProblemData::depots() const
     return depots_;
 }
 
-std::vector<ProblemData::MutuallyExclusiveGroup> const &
-ProblemData::groups() const
+std::vector<ProblemData::ClientGroup> const &ProblemData::groups() const
 {
     return groups_;
 }
 
-ProblemData::MutuallyExclusiveGroup const &
-ProblemData::group(size_t group) const
+ProblemData::ClientGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());
     return groups_[group];
@@ -357,7 +375,7 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<Matrix<Distance>> &distMat,
                      std::optional<Matrix<Duration>> &durMat,
-                     std::optional<std::vector<MutuallyExclusiveGroup>> &groups)
+                     std::optional<std::vector<ClientGroup>> &groups)
 {
     return ProblemData(clients.value_or(clients_),
                        depots.value_or(depots_),
@@ -372,7 +390,7 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
                          std::vector<VehicleType> const &vehicleTypes,
                          Matrix<Distance> distMat,
                          Matrix<Duration> durMat,
-                         std::vector<MutuallyExclusiveGroup> groups)
+                         std::vector<ClientGroup> groups)
     : centroid_({0, 0}),
       dist_(std::move(distMat)),
       dur_(std::move(durMat)),

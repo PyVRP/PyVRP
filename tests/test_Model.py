@@ -6,7 +6,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, Depot, Model
+from pyvrp import Client, ClientGroup, Depot, Model
 from pyvrp.Model import MutuallyExclusiveGroup
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
@@ -633,7 +633,7 @@ def test_add_client_raises_unknown_group():
     argument that is not known to the model.
     """
     m = Model()
-    group = MutuallyExclusiveGroup(m)
+    group = MutuallyExclusiveGroup(m, required=True)
 
     with assert_raises(ValueError):
         m.add_client(1, 1, group=group)
@@ -648,7 +648,9 @@ def test_from_data_mutually_exclusive_group(ok_small):
     clients[0] = Client(1, 1, required=False, group=0)
     clients[1] = Client(1, 1, required=False, group=0)
 
-    data = ok_small.replace(clients=clients, groups=[[1, 2]])
+    group = ClientGroup([1, 2])
+
+    data = ok_small.replace(clients=clients, groups=[group])
     model = Model.from_data(data)
 
     # Test that the clients have been correctly registered, and that there is
@@ -681,4 +683,6 @@ def test_to_data_mutually_exclusive_client_group():
     # the first two clients should be members of that group.
     data = m.data()
     assert_equal(data.num_groups, 1)
-    assert_equal(data.groups(), [[1, 2]])
+
+    group = data.group(0)
+    assert_equal(group.clients, [1, 2])

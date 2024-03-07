@@ -5,7 +5,7 @@ import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
 
 @pytest.mark.parametrize(
@@ -624,7 +624,7 @@ def test_raises_empty_group():
             vehicle_types=[VehicleType()],
             distance_matrix=[[0]],
             duration_matrix=[[0]],
-            groups=[[]],  # empty group - this should raise
+            groups=[ClientGroup([])],  # empty group - this should raise
         )
 
 
@@ -632,11 +632,11 @@ def test_raises_empty_group():
     ("groups", "index"),
     [
         ([], 0),  # index 0, but there are no groups
-        ([[1]], 1),  # there is one group, but index is 1
+        ([ClientGroup([1])], 1),  # there is one group, but index is 1
     ],
 )
 def test_raises_invalid_client_group_indices(
-    groups: list[list[int]], index: int
+    groups: list[ClientGroup], index: int
 ):
     """
     Tests that setting the clients in a mutually exclusive group to values that
@@ -654,8 +654,10 @@ def test_raises_invalid_client_group_indices(
         )
 
 
-@pytest.mark.parametrize("groups", [[[0, 1]], [[1, 2]]])
-def test_raises_invalid_group_client_indices(groups: list[list[int]]):
+@pytest.mark.parametrize(
+    "groups", [[ClientGroup([0, 1])], [ClientGroup([1, 2])]]
+)
+def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
     """
     Tests that groups with client indices that are either depots or outside the
     range of client locations results in an IndexError.
@@ -689,7 +691,7 @@ def test_raises_wrong_mutual_group_referencing():
             vehicle_types=[VehicleType()],
             distance_matrix=np.zeros((3, 3)),
             duration_matrix=np.zeros((3, 3)),
-            groups=[[2]],
+            groups=[ClientGroup([2])],
         )
 
     with assert_raises(ValueError):
@@ -701,7 +703,7 @@ def test_raises_wrong_mutual_group_referencing():
             duration_matrix=np.zeros((3, 3)),
             # Group references a client that is not in the group. That should
             # raise as well.
-            groups=[[1]],
+            groups=[ClientGroup([1])],
         )
 
 
@@ -716,10 +718,9 @@ def test_replacing_client_groups(ok_small):
     # that has a mutually exclusive group.
     clients = ok_small.clients()
     clients[0] = Client(1, 1, required=False, group=0)
-    data = ok_small.replace(clients=clients, groups=[[1]])
+    data = ok_small.replace(clients=clients, groups=[ClientGroup([1])])
 
     # There should now be a single client group (at index 0) that has the first
     # client as its only member.
     assert_equal(data.num_groups, 1)
-    assert_equal(data.groups(), [[1]])
-    assert_equal(data.group(0), [1])
+    assert_equal(data.group(0).clients, [1])

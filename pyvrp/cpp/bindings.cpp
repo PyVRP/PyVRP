@@ -129,6 +129,16 @@ PYBIND11_MODULE(_pyvrp, m)
             [](ProblemData::Depot const &depot) { return depot.name; },
             py::return_value_policy::reference_internal);
 
+    py::class_<ProblemData::ClientGroup>(
+        m, "ClientGroup", DOC(pyvrp, ProblemData, ClientGroup))
+        .def(py::init<std::vector<size_t>, bool>(),
+             py::arg("clients"),
+             py::arg("required") = true)
+        .def_readonly("clients", &ProblemData::ClientGroup::clients)
+        .def_readonly("required", &ProblemData::ClientGroup::required)
+        .def_readonly("mutually_exclusive",
+                      &ProblemData::ClientGroup::mutuallyExclusive);
+
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<size_t,
@@ -175,7 +185,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<ProblemData::VehicleType> const &,
                       Matrix<pyvrp::Distance>,
                       Matrix<pyvrp::Duration>,
-                      std::vector<ProblemData::MutuallyExclusiveGroup>>(),
+                      std::vector<ProblemData::ClientGroup>>(),
              py::arg("clients"),
              py::arg("depots"),
              py::arg("vehicle_types"),
