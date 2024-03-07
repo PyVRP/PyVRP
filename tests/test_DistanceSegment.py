@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_equal
 
 from pyvrp._pyvrp import DistanceSegment
 
@@ -13,7 +13,7 @@ def test_attribute_getter(distance: int):
     Tests that the distance segment correctly returns the passed-in distance.
     """
     dist_segment = DistanceSegment(0, 1, distance)
-    assert_allclose(dist_segment.distance(), distance)
+    assert_equal(dist_segment.distance(), distance)
 
 
 @pytest.mark.parametrize(
@@ -43,4 +43,4 @@ def test_merge_two(
         ]
     )
     merged = DistanceSegment.merge(dist_mat, first, second)
-    assert_allclose(merged.distance(), exp_distance)
+    assert_equal(merged.distance(), exp_distance)

@@ -30,10 +30,6 @@ if get_option('problem') == 'cvrp'
     add_project_arguments('-DPYVRP_NO_TIME_WINDOWS', language: 'cpp')
 endif
 
-if get_option('precision') == 'double'  # default is integer
-    add_project_arguments('-DPYVRP_DOUBLE_PRECISION', language: 'cpp')
-endif
-
 # We first compile a common library that contains all regular, C++ code. This
 # is then linked against by the extension modules. We also define source and
 # installation directories here, as a shorthand.

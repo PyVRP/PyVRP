@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp._pyvrp import DurationSegment
 
@@ -112,9 +112,9 @@ def test_max_duration_argument():
     """
     ds = DurationSegment(0, 0, 5, 0, 0, 0, 0)  # five duration
 
-    assert_allclose(ds.time_warp(), 0)  # default not duration limited
-    assert_allclose(ds.time_warp(max_duration=2), 3)
-    assert_allclose(ds.time_warp(max_duration=0), 5)
+    assert_equal(ds.time_warp(), 0)  # default not duration limited
+    assert_equal(ds.time_warp(max_duration=2), 3)
+    assert_equal(ds.time_warp(max_duration=0), 5)
 
 
 def test_OkSmall_with_time_warp(ok_small):
@@ -152,10 +152,10 @@ def test_OkSmall_with_time_warp(ok_small):
     #   Service times:
     #       - 1: 360
     #       - 3: 420
-    assert_allclose(ds.duration(), 1544 + 1427 + 2063 + 360 + 420)
+    assert_equal(ds.duration(), 1544 + 1427 + 2063 + 360 + 420)
 
     # But there is time warp as well, because 1's time window opens at 15600,
     # while 3's time window closes at 15300. So we leave 1 at 15600 + 360, then
     # drive 1427 and arrive at 3 at 15600 + 360 + 1427 = 17387. We then warp
     # back in time to 15300, for 17387 - 15300 = 2087 time warp.
-    assert_allclose(ds.time_warp(), 2087)
+    assert_equal(ds.time_warp(), 2087)

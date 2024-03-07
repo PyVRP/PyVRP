@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
@@ -277,7 +277,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     # Both have four initial penalty, and vehicle capacity is one.
     assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
     assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
-    assert_allclose(pm.cost_evaluator().dist_penalty(2, 1), 4)
+    assert_equal(pm.cost_evaluator().dist_penalty(2, 1), 4)
 
     # Register three times. We need at least four registrations before the
     # penalties are updated, so this should not change anything.
@@ -285,7 +285,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
         pm.register(sol)
         assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
         assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
-        assert_allclose(pm.cost_evaluator().dist_penalty(1, 0), 4)
+        assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 4)
 
     # Register a fourth time. Now the penalties should change. Since there are
     # more feasible registrations than desired, the penalties should decrease.

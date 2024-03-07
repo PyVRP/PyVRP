@@ -310,7 +310,7 @@ def test_feasibility_release_times():
     # time warp of 23'896 - 19'500 = 4'396.
     sol = Solution(data, [[1, 2], [3], [4]])
     assert_(not sol.is_feasible())
-    assert_allclose(sol.time_warp(), 4396)
+    assert_equal(sol.time_warp(), 4396)
 
     # Visiting clients 2 and 3 together is feasible: both clients are released
     # at time 5'000. We arrive at client 2 at 5'000 + 1'944 and wait till the
@@ -341,9 +341,9 @@ def test_feasibility_max_duration(ok_small):
     # First route has duration 6'221, and the second route duration 5'004.
     # Since the maximum duration is 3'000, these routes incur time warp of
     # 3'221 + 2'004 = 5'225, and the solution is thus no longer feasible.
-    assert_allclose(routes[0].duration(), 6_221)
-    assert_allclose(routes[1].duration(), 5_004)
-    assert_allclose(sol.time_warp(), 5_225)
+    assert_equal(routes[0].duration(), 6_221)
+    assert_equal(routes[1].duration(), 5_004)
+    assert_equal(sol.time_warp(), 5_225)
 
     assert_(not routes[0].is_feasible())
     assert_(not routes[1].is_feasible())
@@ -364,16 +364,16 @@ def test_feasibility_max_distance(ok_small):
     sol = Solution(data, [[1, 2], [3, 4]])
     routes = sol.routes()
 
-    assert_allclose(routes[0].distance(), 5501)
-    assert_allclose(routes[0].excess_distance(), 501)
+    assert_equal(routes[0].distance(), 5501)
+    assert_equal(routes[0].excess_distance(), 501)
     assert_(not routes[0].has_time_warp())
     assert_(not routes[0].is_feasible())
 
-    assert_allclose(routes[1].distance(), 4224)
-    assert_allclose(routes[1].excess_distance(), 0)
+    assert_equal(routes[1].distance(), 4224)
+    assert_equal(routes[1].excess_distance(), 0)
     assert_(routes[1].is_feasible())
 
-    assert_allclose(sol.excess_distance(), 501)
+    assert_equal(sol.excess_distance(), 501)
     assert_(sol.has_excess_distance())
     assert_(not sol.is_feasible())
 
@@ -392,16 +392,16 @@ def test_distance_calculation(ok_small):
 
     # Solution distance should be equal to all routes' distances. These we
     # check separately.
-    assert_allclose(sol.distance(), sum(route.distance() for route in routes))
+    assert_equal(sol.distance(), sum(route.distance() for route in routes))
 
     expected = ok_small.dist(0, 1) + ok_small.dist(1, 2) + ok_small.dist(2, 0)
-    assert_allclose(routes[0].distance(), expected)
+    assert_equal(routes[0].distance(), expected)
 
     expected = ok_small.dist(0, 3) + ok_small.dist(3, 0)
-    assert_allclose(routes[1].distance(), expected)
+    assert_equal(routes[1].distance(), expected)
 
     expected = ok_small.dist(0, 4) + ok_small.dist(4, 0)
-    assert_allclose(routes[2].distance(), expected)
+    assert_equal(routes[2].distance(), expected)
 
 
 def test_excess_load_calculation(ok_small):
@@ -414,7 +414,7 @@ def test_excess_load_calculation(ok_small):
 
     # All clients are visited on the same route/by the same vehicle. The total
     # delivery demand is 18, but the vehicle capacity is only 10.
-    assert_allclose(sol.excess_load(), 18 - ok_small.vehicle_type(0).capacity)
+    assert_equal(sol.excess_load(), 18 - ok_small.vehicle_type(0).capacity)
 
 
 def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):
@@ -431,12 +431,12 @@ def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):
     # excess_load is 18 - 10 = 8.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
     assert_(sol.has_excess_load())
-    assert_allclose(sol.excess_load(), 8)
+    assert_equal(sol.excess_load(), 8)
 
     # With vehicle type 1, the capacity 20 is larger than 18.
     sol = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
     assert_(not sol.has_excess_load())
-    assert_allclose(sol.excess_load(), 0)
+    assert_equal(sol.excess_load(), 0)
 
 
 def test_route_access_methods(ok_small):
@@ -453,17 +453,17 @@ def test_route_access_methods(ok_small):
 
     # There's no excess load, so all excess load should be zero.
     assert_(not sol.has_excess_load())
-    assert_allclose(routes[0].excess_load(), 0)
-    assert_allclose(routes[1].excess_load(), 0)
+    assert_equal(routes[0].excess_load(), 0)
+    assert_equal(routes[1].excess_load(), 0)
 
     # Total route delivery demand (and pickups, which are all zero for this
     # instance).
     deliveries = [0] + [client.delivery for client in ok_small.clients()]
-    assert_allclose(routes[0].delivery(), deliveries[1] + deliveries[3])
-    assert_allclose(routes[1].delivery(), deliveries[2] + deliveries[4])
+    assert_equal(routes[0].delivery(), deliveries[1] + deliveries[3])
+    assert_equal(routes[1].delivery(), deliveries[2] + deliveries[4])
 
-    assert_allclose(routes[0].pickup(), 0)
-    assert_allclose(routes[1].pickup(), 0)
+    assert_equal(routes[0].pickup(), 0)
+    assert_equal(routes[1].pickup(), 0)
 
     # The first route is not feasible due to time warp, but the second one is.
     # See also the tests below.
@@ -472,8 +472,8 @@ def test_route_access_methods(ok_small):
 
     # Total service duration.
     services = [0] + [client.service_duration for client in ok_small.clients()]
-    assert_allclose(routes[0].service_duration(), services[1] + services[3])
-    assert_allclose(routes[1].service_duration(), services[2] + services[4])
+    assert_equal(routes[0].service_duration(), services[1] + services[3])
+    assert_equal(routes[1].service_duration(), services[2] + services[4])
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -490,13 +490,13 @@ def test_route_time_warp_calculations(ok_small):
     # window). This is where we incur time warp: we need to 'warp' to 15'300.
     assert_(sol.has_time_warp())
     assert_(routes[0].has_time_warp())
-    assert_allclose(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
+    assert_equal(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
 
     # The second route has no time warp, so the overall solution time warp is
     # all incurred on the first route.
     assert_(not routes[1].has_time_warp())
-    assert_allclose(routes[1].time_warp(), 0)
-    assert_allclose(sol.time_warp(), routes[0].time_warp())
+    assert_equal(routes[1].time_warp(), 0)
+    assert_equal(sol.time_warp(), routes[0].time_warp())
 
 
 def test_route_wait_time_calculations():
@@ -513,15 +513,15 @@ def test_route_wait_time_calculations():
     #   twEarly(4) - duration(2, 4) - serv(2) - twLate(2)
     #     = 18'000 - 1'090 - 360 - 15'000
     #     = 1'550.
-    assert_allclose(routes[1].wait_duration(), 1_550)
+    assert_equal(routes[1].wait_duration(), 1_550)
 
     # Since there is waiting time, there is no slack in the schedule. We should
     # thus start as late as possible, at:
     #   twLate(2) - duration(0, 2)
     #     = 15'000 - 1'944
     #     = 13'056.
-    assert_allclose(routes[1].slack(), 0)
-    assert_allclose(routes[1].start_time(), 13_056)
+    assert_equal(routes[1].slack(), 0)
+    assert_equal(routes[1].start_time(), 13_056)
 
     # So far we have tested a route that had wait duration, but not time warp.
     # We now test a solution with a route that has both.
@@ -533,13 +533,13 @@ def test_route_wait_time_calculations():
     #   twEarly(1) + serv(1) + duration(1, 2) - twLate(2)
     #     = 15'600 + 360 + 1'992 - 15'000
     #     = 2'952.
-    assert_allclose(route.time_warp(), 2_952)
-    assert_allclose(route.wait_duration(), 1_550)
-    assert_allclose(route.slack(), 0)
+    assert_equal(route.time_warp(), 2_952)
+    assert_equal(route.wait_duration(), 1_550)
+    assert_equal(route.slack(), 0)
 
     # Finally, the overall route duration should be equal to the sum of the
     # travel, service, and waiting durations.
-    assert_allclose(
+    assert_equal(
         route.duration(),
         route.travel_duration()
         + route.service_duration()
@@ -562,9 +562,9 @@ def test_route_start_and_end_time_calculations(ok_small):
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())
-    assert_allclose(routes[0].slack(), 0)
-    assert_allclose(routes[0].start_time(), start_time)
-    assert_allclose(routes[0].end_time(), end_time)
+    assert_equal(routes[0].slack(), 0)
+    assert_equal(routes[0].start_time(), start_time)
+    assert_equal(routes[0].end_time(), end_time)
 
     # The second route has no time warp. The latest it can start is calculated
     # backwards from the closing of client 4's time window:
@@ -580,16 +580,16 @@ def test_route_start_and_end_time_calculations(ok_small):
     #     = 12'000 - 1'944
     #     = 10'056.
     assert_(not routes[1].has_time_warp())
-    assert_allclose(routes[1].wait_duration(), 0)
-    assert_allclose(routes[1].start_time(), 10_056)
-    assert_allclose(routes[1].slack(), 16_106 - 10_056)
+    assert_equal(routes[1].wait_duration(), 0)
+    assert_equal(routes[1].start_time(), 10_056)
+    assert_equal(routes[1].slack(), 16_106 - 10_056)
 
     # The overall route duration is given by:
     #   duration(0, 2) + serv(2) + duration(2, 4) + serv(4) + duration(4, 0)
     #     = 1'944 + 360 + 1'090 + 360 + 1'475
     #     = 5'229.
-    assert_allclose(routes[1].duration(), 1_944 + 360 + 1_090 + 360 + 1_475)
-    assert_allclose(routes[1].end_time(), 10_056 + 5_229)
+    assert_equal(routes[1].duration(), 1_944 + 360 + 1_090 + 360 + 1_475)
+    assert_equal(routes[1].end_time(), 10_056 + 5_229)
 
 
 def test_route_release_time():
@@ -604,8 +604,8 @@ def test_route_release_time():
     # The client release times are 20'000, 5'000, 5'000 and 1'000. So the first
     # route has a release time of max(20'000, 5'000) = 20'000, and the second
     # has a release time of max(5'000, 1'000) = 5'000.
-    assert_allclose(routes[0].release_time(), 20_000)
-    assert_allclose(routes[1].release_time(), 5_000)
+    assert_equal(routes[0].release_time(), 20_000)
+    assert_equal(routes[1].release_time(), 5_000)
 
     # Second route is feasible, so should have start time not smaller than
     # release time.
@@ -657,7 +657,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
 
-    assert_allclose(
+    assert_equal(
         feasible.distance(),
         dist_mat[0, 1] + dist_mat[1, 2] + dist_mat[2, 0],
     )
@@ -681,9 +681,9 @@ def test_time_warp_return_to_depot():
 
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
     # more than the depot time window 1, giving a time warp of 1.
-    assert_allclose(route.duration(), 2)
-    assert_allclose(data.location(0).tw_late, 1)
-    assert_allclose(sol.time_warp(), 1)
+    assert_equal(route.duration(), 2)
+    assert_equal(data.location(0).tw_late, 1)
+    assert_equal(sol.time_warp(), 1)
 
 
 def tests_that_not_specifying_the_vehicle_type_assumes_a_default(ok_small):
@@ -964,7 +964,7 @@ def test_fixed_vehicle_cost(
     ]
 
     sol = Solution(data, routes)
-    assert_allclose(sol.fixed_vehicle_cost(), expected)
+    assert_equal(sol.fixed_vehicle_cost(), expected)
 
 
 @pytest.mark.parametrize(
@@ -996,7 +996,7 @@ def test_route_shift_duration(
     # 1'544 to get there from the depot, so we leave at 14'056. Thus, the
     # earliest completion time is 14'056 + 6'221 = 20'277.
     route = Route(data, [1, 2], vehicle_type=0)
-    assert_allclose(route.time_warp(), expected)
+    assert_equal(route.time_warp(), expected)
 
 
 @pytest.mark.parametrize(
