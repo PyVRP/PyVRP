@@ -1,4 +1,3 @@
-import functools
 import pathlib
 from numbers import Number
 from typing import Callable, Union
@@ -21,12 +20,16 @@ def round_nearest(vals: np.ndarray):
     return np.round(vals).astype(int)
 
 
-def convert_to_int(vals: np.ndarray):
+def truncate(vals: np.ndarray):
     return vals.astype(int)
 
 
-def scale_and_truncate_to_decimals(vals: np.ndarray, decimals: int = 0):
-    return (vals * (10**decimals)).astype(int)
+def dimacs(vals: np.ndarray):
+    return (10 * vals).astype(int)
+
+
+def exact(vals: np.ndarray):
+    return round_nearest(1_000 * vals)
 
 
 def no_rounding(vals):
@@ -35,9 +38,9 @@ def no_rounding(vals):
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
-    "trunc": convert_to_int,
-    "trunc1": functools.partial(scale_and_truncate_to_decimals, decimals=1),
-    "dimacs": functools.partial(scale_and_truncate_to_decimals, decimals=1),
+    "trunc": truncate,
+    "dimacs": dimacs,
+    "exact": exact,
     "none": no_rounding,
 }
 
@@ -62,13 +65,13 @@ def read(
         File location to read. Assumes the data on the given location is in
         VRPLIB format.
     round_func
-        Optional rounding function. Will be applied to round data if the data
-        is not already integer. This can either be a function or a string:
+        Optional rounding function that is applied to all data values in the
+        instance. This can either be a function or a string:
 
             * ``'round'`` rounds the values to the nearest integer;
-            * ``'trunc'`` truncates the values to be integral;
-            * ``'trunc1'`` or ``'dimacs'`` scale and truncate to the nearest
-              decimal;
+            * ``'trunc'`` truncates the values to an integer;
+            * ``'dimacs'`` scales by 10 and truncates the values to an integer;
+            * ``'exact'`` scales by 1000 and rounds to the nearest integer.
             * ``'none'`` does no rounding. This is the default.
 
     Raises
