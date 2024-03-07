@@ -112,7 +112,7 @@ def test_add_triggers_purge(ok_small):
     survivor selection, that is, a purge that reduces the relevant population
     back to minimum size.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     params = PopulationParams()
@@ -158,7 +158,7 @@ def test_select_returns_same_parents_if_no_other_option(ok_small):
     Tests that the ``select()`` method tries to return two different parents,
     but will return the same solution twice if there is no other option.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=2_147_483_647)
 
     params = PopulationParams(min_pop_size=0)
@@ -199,7 +199,7 @@ def test_pop_is_empty_with_zero_min_pop_size_and_generation_size(ok_small):
     generation size is set to 0: adding a new solution then immediately
     triggers survivor selection.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=12)
 
     params = PopulationParams(min_pop_size=0, generation_size=0)
@@ -222,7 +222,7 @@ def test_elite_solutions_are_not_purged(rc208, nb_elite: int):
     they should be given special treatment - are not purged during survivor
     selection.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     params = PopulationParams(nb_elite=nb_elite)
     rng = RandomNumberGenerator(seed=42)
 
@@ -261,7 +261,7 @@ def test_tournament_ranks_by_fitness(rc208, k: int):
     Tests that the tournament-based parent selection on average returns
     solutions about as often as their relative fitness value would suggest.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
@@ -309,7 +309,7 @@ def test_tournament_raises_for_invalid_k(rc208, k: int):
     """
     Tests that k >= 0 is required for tournament-based selection.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd)
@@ -325,7 +325,7 @@ def test_purge_removes_duplicates(rc208):
     Tests that purging/survivor selection first removes duplicate solutions,
     before purging by (biased) fitness.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     params = PopulationParams(min_pop_size=20, generation_size=5)
     rng = RandomNumberGenerator(seed=42)
 
@@ -366,7 +366,7 @@ def test_clear(rc208):
     """
     Tests that clearing the population reduces its size to zero.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd)
@@ -385,7 +385,7 @@ def test_add_emits_warning_when_solution_is_empty(prize_collecting):
     solutions could be generated when solving a prize-collecting instance, and
     typically indicate a scaling issue in the data.
     """
-    cost_evaluator = CostEvaluator(20, 6)
+    cost_evaluator = CostEvaluator(20, 6, 0)
     pop = Population(bpd)
 
     with assert_warns(EmptySolutionWarning):

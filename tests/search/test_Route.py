@@ -500,6 +500,65 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
     assert_allclose(route.time_warp(), expected)
 
 
+@pytest.mark.parametrize(
+    ("max_distance", "expected"),
+    [
+        (100_000, 0),  # large enough; there is now no excess distance
+        (5_000, 1_450),  # now max_distance constraint applies
+        (0, 6_450),  # max_distance scales linearly: this is the full distance
+    ],
+)
+def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
+    """
+    Tests that the maximum distance attribute of vehicle types is reflected
+    in the route's excess distance calculations.
+    """
+    vehicle_type = VehicleType(3, capacity=10, max_distance=max_distance)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, 0, 0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
+
+    route.update()
+    assert_allclose(route.distance(), 6_450)
+    assert_equal(route.has_excess_distance(), expected > 0)
+    assert_allclose(route.excess_distance(), expected)
+
+
+@pytest.mark.parametrize(
+    ("visits", "load_feas", "time_feas", "dist_feas"),
+    [
+        ([1, 2, 3], False, False, False),
+        ([1, 3], True, False, True),
+        ([1, 2], True, True, True),
+    ],
+)
+def test_is_feasible(
+    ok_small,
+    visits: list[int],
+    load_feas: bool,
+    time_feas: bool,
+    dist_feas: bool,
+):
+    """
+    Tests that various constraint violations are taken into account when
+    determining overall route feasibility.
+    """
+    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, 0, 0)
+    for client in visits:
+        route.append(Node(loc=client))
+    route.update()
+
+    assert_equal(route.is_feasible(), load_feas and time_feas and dist_feas)
+    assert_equal(not route.has_excess_distance(), dist_feas)
+    assert_equal(not route.has_excess_load(), load_feas)
+    assert_equal(not route.has_time_warp(), time_feas)
+
+
 def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
     """
     Tests that ``dist_between()`` returns the same value as

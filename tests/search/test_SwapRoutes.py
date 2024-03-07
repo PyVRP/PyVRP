@@ -63,7 +63,7 @@ def test_evaluate_same_vehicle_type(ok_small):
     route2.update()
 
     op = SwapRoutes(ok_small)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
 
 
@@ -77,7 +77,7 @@ def test_same_route(ok_small):
     route.update()
 
     op = SwapRoutes(ok_small)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     assert_allclose(op.evaluate(route, route, cost_eval), 0)
 
 
@@ -102,7 +102,7 @@ def test_evaluate_empty_routes(ok_small):
     route2.update()
 
     op = SwapRoutes(data)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
 
     # Vehicle types are no longer the same, but one of the routes is empty.
     # That situation is not currently handled.
@@ -143,7 +143,7 @@ def test_evaluate_capacity_differences(ok_small):
     assert_allclose(route2.load(), 3)
 
     op = SwapRoutes(data)
-    cost_eval = CostEvaluator(40, 1)
+    cost_eval = CostEvaluator(40, 1, 0)
 
     # Swapping the route plans should alleviate the excess load, since the load
     # of 15 on route1 is below route2's capacity, and similarly for route2's
@@ -194,7 +194,7 @@ def test_evaluate_shift_time_window_differences(ok_small):
     # route. Thus, we should have that swapping the vehicle types results in
     # a lower cost, due to decreased time warp on the routes.
     op = SwapRoutes(data)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     assert_(op.evaluate(route1, route2, cost_eval) < 0)
 
 
@@ -234,7 +234,7 @@ def test_evaluate_max_duration_constraints(ok_small):
     # Swapping the routes results in a reduction of 5'332 - 5'323 = 9 units of
     # time warp.
     op = SwapRoutes(data)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
     assert_allclose(op.evaluate(route1, route2, cost_eval), -9)
 
 
@@ -267,7 +267,7 @@ def test_evaluate_with_different_depots():
     route2.update()
 
     op = SwapRoutes(data)
-    cost_eval = CostEvaluator(1, 1)
+    cost_eval = CostEvaluator(1, 1, 0)
 
     # The routes each cost 16 distance which is not as efficient as swapping
     # them, as that would reduce each route's cost to 4, for an improvement

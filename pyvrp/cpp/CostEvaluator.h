@@ -16,6 +16,7 @@ template <typename T> concept CostEvaluatable = requires(T arg)
     // clang-format off
     { arg.distance() } -> std::same_as<Distance>;
     { arg.excessLoad() } -> std::same_as<Load>;
+    { arg.excessDistance() } -> std::same_as<Distance>;
     { arg.fixedVehicleCost() }  -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.empty() } -> std::same_as<bool>;
@@ -39,30 +40,27 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg)
  *
  * Creates a CostEvaluator instance.
  *
- * This class contains time warp and load penalties, and can compute penalties
- * for a given time warp and load.
+ * This class stores various penalty terms, and can be used to determine the
+ * costs of certain constraint violations.
  *
  * Parameters
  * ----------
- * capacity_penalty
+ * load_penalty
  *    The penalty for each unit of excess load over the vehicle capacity.
  * tw_penalty
  *    The penalty for each unit of time warp.
+ * dist_penalty
+ *    The penalty for each unit of distance in excess of the vehicle's maximum
+ *    distance constraint.
  */
 class CostEvaluator
 {
-    Cost capacityPenalty;
-    Cost timeWarpPenalty;
-
-    /**
-     * Computes the excess capacity penalty for the given excess load, that is,
-     * the part of the load that exceeds the capacity.
-     */
-    // Internal, used in conjunction with the two-argument loadPenalty method.
-    [[nodiscard]] inline Cost loadPenalty(Load excessLoad) const;
+    Cost loadPenalty_;
+    Cost twPenalty_;
+    Cost distPenalty_;
 
 public:
-    CostEvaluator(Cost capacityPenalty, Cost timeWarpPenalty);
+    CostEvaluator(Cost loadPenalty, Cost twPenalty, Cost distPenalty);
 
     /**
      * Computes the total excess capacity penalty for the given load.
@@ -73,6 +71,12 @@ public:
      * Computes the time warp penalty for the given time warp.
      */
     [[nodiscard]] inline Cost twPenalty(Duration timeWarp) const;
+
+    /**
+     * Computes the total excess distance penalty for the given distance.
+     */
+    [[nodiscard]] inline Cost distPenalty(Distance distance,
+                                          Distance maxDistance) const;
 
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
@@ -112,14 +116,10 @@ public:
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 };
 
-Cost CostEvaluator::loadPenalty(Load excessLoad) const
-{
-    return static_cast<Cost>(excessLoad) * capacityPenalty;
-}
-
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
-    return loadPenalty(std::max<Load>(load - capacity, 0));
+    auto const excessLoad = std::max<Load>(load - capacity, 0);
+    return static_cast<Cost>(excessLoad) * loadPenalty_;
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
@@ -127,21 +127,25 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #ifdef PYVRP_NO_TIME_WINDOWS
     return 0;
 #else
-    return static_cast<Cost>(timeWarp) * timeWarpPenalty;
+    return static_cast<Cost>(timeWarp) * twPenalty_;
 #endif
+}
+
+Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
+{
+    auto const excessDistance = std::max<Distance>(distance - maxDistance, 0);
+    return static_cast<Cost>(excessDistance) * distPenalty_;
 }
 
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
-    // Standard objective plus penalty terms for capacity- and time-related
-    // infeasibilities.
-    // clang-format off
+    // Standard objective plus penalty terms for infeasibilities.
     auto const cost = static_cast<Cost>(arg.distance())
-           + (!arg.empty() ? arg.fixedVehicleCost() : 0)
-           + loadPenalty(arg.excessLoad())
-           + twPenalty(arg.timeWarp());
-    // clang-format on
+                      + (!arg.empty() ? arg.fixedVehicleCost() : 0)
+                      + loadPenalty(arg.excessLoad(), 0)
+                      + twPenalty(arg.timeWarp())
+                      + distPenalty(arg.excessDistance(), 0);
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();

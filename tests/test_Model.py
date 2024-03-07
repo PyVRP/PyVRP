@@ -149,6 +149,7 @@ def test_add_vehicle_type():
         tw_early=17,
         tw_late=19,
         max_duration=93,
+        max_distance=97,
     )
 
     assert_equal(vehicle_type.num_available, 10)
@@ -157,6 +158,7 @@ def test_add_vehicle_type():
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)
     assert_allclose(vehicle_type.max_duration, 93)
+    assert_allclose(vehicle_type.max_distance, 97)
 
 
 def test_add_vehicle_type_default_depot():

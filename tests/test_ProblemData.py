@@ -435,16 +435,26 @@ def test_matrices_are_not_copies():
 
 
 @pytest.mark.parametrize(
-    ("capacity", "num_available", "fixed_cost", "tw_early", "tw_late"),
+    (
+        "capacity",
+        "num_available",
+        "fixed_cost",
+        "tw_early",
+        "tw_late",
+        "max_duration",
+        "max_distance",
+    ),
     [
-        (0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 1, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0),  # this is just wrong
-        (1, 1, -1, 0, 0),  # fixed_cost cannot be negative
-        (0, 1, -100, 0, 0),  # this is just wrong
-        (0, 1, 0, 1, 0),  # early > late
-        (0, 1, 0, -1, 0),  # negative early
-        (0, 1, 0, 0, -1),  # negative late
+        (0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 1, 0, 0, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0),  # this is just wrong
+        (1, 1, -1, 0, 0, 0, 0),  # fixed_cost cannot be negative
+        (0, 1, -100, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 0, 1, 0, 0, 0),  # early > late
+        (0, 1, 0, -1, 0, 0, 0),  # negative early
+        (0, 1, 0, 0, -1, 0, 0),  # negative
+        (0, 1, 0, 0, 0, -1, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, 0, -1),  # negative max_distance
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -453,30 +463,30 @@ def test_vehicle_type_raises_invalid_data(
     fixed_cost: int,
     tw_early: int,
     tw_late: int,
+    max_duration: int,
+    max_distance: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
     arguments.
     """
     with assert_raises(ValueError):
-        VehicleType(num_available, capacity, 0, fixed_cost, tw_early, tw_late)
+        VehicleType(
+            num_available,
+            capacity,
+            0,
+            fixed_cost,
+            tw_early,
+            tw_late,
+            max_duration,
+            max_distance,
+        )
 
 
-def test_vehicle_type_init_max_duration_argument():
+def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     """
-    Tests valid and invalid edge cases of the max_duration argument.
-    """
-    with assert_raises(ValueError):
-        VehicleType(1, 1, max_duration=-1)  # negative max_duration
-
-    veh_type = VehicleType(1, 1, max_duration=0)  # valid edge case
-    assert_allclose(veh_type.max_duration, 0)
-
-
-def test_vehicle_type_does_not_raise_for_edge_cases():
-    """
-    The vehicle type constructor should allow the following edge case, of no
-    capacity, costs, shift time windows, and just a single vehicle.
+    The vehicle type constructor should allow the following edge case where all
+    data has been zeroed out.
     """
     vehicle_type = VehicleType(
         num_available=1,
@@ -485,6 +495,8 @@ def test_vehicle_type_does_not_raise_for_edge_cases():
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
+        max_duration=0,
+        max_distance=0,
     )
 
     assert_equal(vehicle_type.num_available, 1)
@@ -493,6 +505,8 @@ def test_vehicle_type_does_not_raise_for_edge_cases():
     assert_allclose(vehicle_type.fixed_cost, 0)
     assert_allclose(vehicle_type.tw_early, 0)
     assert_allclose(vehicle_type.tw_late, 0)
+    assert_allclose(vehicle_type.max_duration, 0)
+    assert_allclose(vehicle_type.max_distance, 0)
 
 
 def test_vehicle_type_default_values():
@@ -514,9 +528,11 @@ def test_vehicle_type_default_values():
     if isinstance(vehicle_type.max_duration, int):
         assert_allclose(vehicle_type.tw_late, np.iinfo(np.int64).max)
         assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
+        assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
     else:
         assert_allclose(vehicle_type.tw_late, np.finfo(np.float64).max)
         assert_allclose(vehicle_type.max_duration, np.finfo(np.float64).max)
+        assert_allclose(vehicle_type.max_distance, np.finfo(np.float64).max)
 
 
 def test_vehicle_type_attribute_access():
@@ -532,6 +548,7 @@ def test_vehicle_type_attribute_access():
         tw_early=17,
         tw_late=19,
         max_duration=23,
+        max_distance=29,
         name="vehicle_type name",
     )
 
@@ -542,6 +559,7 @@ def test_vehicle_type_attribute_access():
     assert_allclose(vehicle_type.tw_early, 17)
     assert_allclose(vehicle_type.tw_late, 19)
     assert_allclose(vehicle_type.max_duration, 23)
+    assert_allclose(vehicle_type.max_distance, 29)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")

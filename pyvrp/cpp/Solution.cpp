@@ -30,6 +30,7 @@ void Solution::evaluate(ProblemData const &data)
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
+        excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
         excessLoad_ += route.excessLoad();
         fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
@@ -52,18 +53,27 @@ Neighbours const &Solution::neighbours() const { return neighbours_; }
 
 bool Solution::isFeasible() const
 {
-    return !hasExcessLoad() && !hasTimeWarp() && isComplete();
+    // clang-format off
+    return !hasExcessLoad()
+        && !hasTimeWarp()
+        && !hasExcessDistance()
+        && isComplete();
+    // clang-format on
 }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
 bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
 
+bool Solution::hasExcessDistance() const { return excessDistance_ > 0; }
+
 bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
 Distance Solution::distance() const { return distance_; }
 
 Load Solution::excessLoad() const { return excessLoad_; }
+
+Distance Solution::excessDistance() const { return excessDistance_; }
 
 Cost Solution::fixedVehicleCost() const { return fixedVehicleCost_; }
 
@@ -218,6 +228,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
                    Distance distance,
+                   Distance excessDistance,
                    Load excessLoad,
                    Cost fixedVehicleCost,
                    Cost prizes,
@@ -228,6 +239,7 @@ Solution::Solution(size_t numClients,
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
       distance_(distance),
+      excessDistance_(excessDistance),
       excessLoad_(excessLoad),
       fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
@@ -289,6 +301,7 @@ Solution::Route::Route(ProblemData const &data,
     Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, vehType.depot);
     travel_ += data.duration(last, vehType.depot);
+    excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
@@ -304,6 +317,7 @@ Solution::Route::Route(ProblemData const &data,
 
 Solution::Route::Route(Visits visits,
                        Distance distance,
+                       Distance excessDistance,
                        Load delivery,
                        Load pickup,
                        Load excessLoad,
@@ -321,6 +335,7 @@ Solution::Route::Route(Visits visits,
                        size_t depot)
     : visits_(std::move(visits)),
       distance_(distance),
+      excessDistance_(excessDistance),
       delivery_(delivery),
       pickup_(pickup),
       excessLoad_(excessLoad),
@@ -355,6 +370,8 @@ Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
 Visits const &Solution::Route::visits() const { return visits_; }
 
 Distance Solution::Route::distance() const { return distance_; }
+
+Distance Solution::Route::excessDistance() const { return excessDistance_; }
 
 Load Solution::Route::delivery() const { return delivery_; }
 
@@ -399,10 +416,12 @@ size_t Solution::Route::depot() const { return depot_; }
 
 bool Solution::Route::isFeasible() const
 {
-    return !hasExcessLoad() && !hasTimeWarp();
+    return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 
 bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
+
+bool Solution::Route::hasExcessDistance() const { return excessDistance_ > 0; }
 
 bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
 

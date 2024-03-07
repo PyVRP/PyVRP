@@ -101,6 +101,11 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         deltaCost += static_cast<Cost>(uDist.distance());
         deltaCost -= static_cast<Cost>(uRoute->distance());
 
+        deltaCost += costEvaluator.distPenalty(uDist.distance(),
+                                               uRoute->maxDistance());
+        deltaCost -= costEvaluator.distPenalty(uRoute->distance(),
+                                               uRoute->maxDistance());
+
         auto const vDist = DistanceSegment::merge(
             data.distanceMatrix(),
             vRoute->before(V->idx()),
@@ -109,6 +114,11 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
 
         deltaCost += static_cast<Cost>(vDist.distance());
         deltaCost -= static_cast<Cost>(vRoute->distance());
+
+        deltaCost += costEvaluator.distPenalty(vDist.distance(),
+                                               vRoute->maxDistance());
+        deltaCost -= costEvaluator.distPenalty(vRoute->distance(),
+                                               vRoute->maxDistance());
 
         // We're going to incur V's fixed cost if V is currently empty. We lose
         // U's fixed cost if we're moving all of U's clients with this operator.
@@ -156,6 +166,8 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
     else  // within same route
     {
         deltaCost -= static_cast<Cost>(uRoute->distance());
+        deltaCost -= costEvaluator.distPenalty(uRoute->distance(),
+                                               uRoute->maxDistance());
         deltaCost
             -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
@@ -170,6 +182,8 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->after(V->idx() + 1));
 
             deltaCost += static_cast<Cost>(dist.distance());
+            deltaCost += costEvaluator.distPenalty(dist.distance(),
+                                                   uRoute->maxDistance());
 
             if (deltaCost >= 0)
                 return deltaCost;
@@ -203,6 +217,8 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                 uRoute->after(U->idx() + N));
 
             deltaCost += static_cast<Cost>(dist.distance());
+            deltaCost += costEvaluator.distPenalty(dist.distance(),
+                                                   uRoute->maxDistance());
 
             if (deltaCost >= 0)
                 return deltaCost;
@@ -255,6 +271,11 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         deltaCost += static_cast<Cost>(uDist.distance());
         deltaCost -= static_cast<Cost>(uRoute->distance());
 
+        deltaCost += costEvaluator.distPenalty(uDist.distance(),
+                                               uRoute->maxDistance());
+        deltaCost -= costEvaluator.distPenalty(uRoute->distance(),
+                                               uRoute->maxDistance());
+
         auto const vDist = DistanceSegment::merge(
             data.distanceMatrix(),
             vRoute->before(V->idx() - 1),
@@ -263,6 +284,11 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
 
         deltaCost += static_cast<Cost>(vDist.distance());
         deltaCost -= static_cast<Cost>(vRoute->distance());
+
+        deltaCost += costEvaluator.distPenalty(vDist.distance(),
+                                               vRoute->maxDistance());
+        deltaCost -= costEvaluator.distPenalty(vRoute->distance(),
+                                               vRoute->maxDistance());
 
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
         deltaCost
@@ -310,6 +336,8 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
     else  // within same route
     {
         deltaCost -= static_cast<Cost>(uRoute->distance());
+        deltaCost -= costEvaluator.distPenalty(uRoute->distance(),
+                                               uRoute->maxDistance());
         deltaCost
             -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
         deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
@@ -325,6 +353,8 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->after(V->idx() + M));
 
             deltaCost += static_cast<Cost>(dist.distance());
+            deltaCost += costEvaluator.distPenalty(dist.distance(),
+                                                   uRoute->maxDistance());
 
             if (deltaCost >= 0)
                 return deltaCost;
@@ -361,6 +391,8 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                 uRoute->after(U->idx() + N));
 
             deltaCost += static_cast<Cost>(dist.distance());
+            deltaCost += costEvaluator.distPenalty(dist.distance(),
+                                                   uRoute->maxDistance());
 
             if (deltaCost >= 0)
                 return deltaCost;
