@@ -64,7 +64,7 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
 
 // On the C++ side we have strong types for different measure values (for
 // example distance, duration, etc.), but on the Python side those things
-// are just ints or doubles. This type caster converts between the two.
+// are just ints. This type caster converts between the two.
 template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
     PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("int"));
