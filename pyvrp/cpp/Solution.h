@@ -330,8 +330,8 @@ public:
      * -------
      * bool
      *     True if the solution is not feasible with respect to the maximum
-     *     distance constraints on vehicles servicing one or more routes in
-     *     this solution, False otherwise.
+     *     distance constraints of the vehicles servicing routes in this
+     *     solution. False otherwise.
      */
     [[nodiscard]] bool hasExcessDistance() const;
 
@@ -353,11 +353,6 @@ public:
     /**
      * Returns the total distance in excess of maximum duration constraints,
      * over all routes.
-     *
-     * Returns
-     * -------
-     * int
-     *     Total excess distance over all routes.
      */
     [[nodiscard]] Distance excessDistance() const;
 
