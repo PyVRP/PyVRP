@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_equal
 
 from pyvrp._pyvrp import LoadSegment
 
@@ -16,9 +16,9 @@ def test_attribute_getters(delivery: int, pickup: int, load: int):
     Tests that the attribute member functions return the passed in values.
     """
     load_segment = LoadSegment(delivery, pickup, load)
-    assert_allclose(load_segment.delivery(), delivery)
-    assert_allclose(load_segment.pickup(), pickup)
-    assert_allclose(load_segment.load(), load)
+    assert_equal(load_segment.delivery(), delivery)
+    assert_equal(load_segment.pickup(), pickup)
+    assert_equal(load_segment.load(), load)
 
 
 @pytest.mark.parametrize(
@@ -51,6 +51,6 @@ def test_merge_two(
     Tests merging two load segments.
     """
     merged = LoadSegment.merge(first, second)
-    assert_allclose(merged.delivery(), exp_delivery)
-    assert_allclose(merged.pickup(), exp_pickup)
-    assert_allclose(merged.load(), exp_load)
+    assert_equal(merged.delivery(), exp_delivery)
+    assert_equal(merged.pickup(), exp_pickup)
+    assert_equal(merged.load(), exp_load)

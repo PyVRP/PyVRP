@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import SwapRoutes
@@ -64,7 +64,7 @@ def test_evaluate_same_vehicle_type(ok_small):
 
     op = SwapRoutes(ok_small)
     cost_eval = CostEvaluator(1, 1, 0)
-    assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
+    assert_equal(op.evaluate(route1, route2, cost_eval), 0)
 
 
 def test_same_route(ok_small):
@@ -78,7 +78,7 @@ def test_same_route(ok_small):
 
     op = SwapRoutes(ok_small)
     cost_eval = CostEvaluator(1, 1, 0)
-    assert_allclose(op.evaluate(route, route, cost_eval), 0)
+    assert_equal(op.evaluate(route, route, cost_eval), 0)
 
 
 def test_evaluate_empty_routes(ok_small):
@@ -107,12 +107,12 @@ def test_evaluate_empty_routes(ok_small):
     # Vehicle types are no longer the same, but one of the routes is empty.
     # That situation is not currently handled.
     assert_(route1.vehicle_type != route2.vehicle_type)
-    assert_allclose(op.evaluate(route1, route2, cost_eval), 0)
-    assert_allclose(op.evaluate(route2, route1, cost_eval), 0)
+    assert_equal(op.evaluate(route1, route2, cost_eval), 0)
+    assert_equal(op.evaluate(route2, route1, cost_eval), 0)
 
     # Both routes are empty, but of different vehicle type as well.
     assert_equal(len(route2), len(route3))
-    assert_allclose(op.evaluate(route3, route2, cost_eval), 0)
+    assert_equal(op.evaluate(route3, route2, cost_eval), 0)
 
 
 def test_evaluate_capacity_differences(ok_small):
@@ -136,11 +136,11 @@ def test_evaluate_capacity_differences(ok_small):
     # route1 has vehicle type 0, which has capacity 10. So there is excess load
     # since its client delivery demand sums to 15.
     assert_(route1.has_excess_load())
-    assert_allclose(route1.load(), 15)
+    assert_equal(route1.load(), 15)
 
     # route2, on the other hand, has capacity 20 and a load of only 3.
     assert_(not route2.has_excess_load())
-    assert_allclose(route2.load(), 3)
+    assert_equal(route2.load(), 3)
 
     op = SwapRoutes(data)
     cost_eval = CostEvaluator(40, 1, 0)
@@ -149,7 +149,7 @@ def test_evaluate_capacity_differences(ok_small):
     # of 15 on route1 is below route2's capacity, and similarly for route2's
     # load and route1's capacity. Since we price unit load violations at 40,
     # this should result in a delta cost of -200.
-    assert_allclose(op.evaluate(route1, route2, cost_eval), -200)
+    assert_equal(op.evaluate(route1, route2, cost_eval), -200)
 
     # Apply the move, update the routes, and then check if they're now both
     # feasible.
@@ -223,19 +223,19 @@ def test_evaluate_max_duration_constraints(ok_small):
     # First route takes 5'332, which is 2'332 more than its maximum duration
     # allows. There is no other source of time warp, so the total route time
     # warp must be 2'332.
-    assert_allclose(route1.duration(), 5_332)
-    assert_allclose(route1.time_warp(), 2_332)
+    assert_equal(route1.duration(), 5_332)
+    assert_equal(route1.time_warp(), 2_332)
 
     # Second route takes 5'323, and has no maximum duration constraint. There
     # is no other source of time warp, so total route time warp must be zero.
-    assert_allclose(route2.duration(), 5_323)
-    assert_allclose(route2.time_warp(), 0)
+    assert_equal(route2.duration(), 5_323)
+    assert_equal(route2.time_warp(), 0)
 
     # Swapping the routes results in a reduction of 5'332 - 5'323 = 9 units of
     # time warp.
     op = SwapRoutes(data)
     cost_eval = CostEvaluator(1, 1, 0)
-    assert_allclose(op.evaluate(route1, route2, cost_eval), -9)
+    assert_equal(op.evaluate(route1, route2, cost_eval), -9)
 
 
 def test_evaluate_with_different_depots():
@@ -272,6 +272,6 @@ def test_evaluate_with_different_depots():
     # The routes each cost 16 distance which is not as efficient as swapping
     # them, as that would reduce each route's cost to 4, for an improvement
     # of 2 * 12 = 24.
-    assert_allclose(route1.distance(), 16)
-    assert_allclose(route2.distance(), 16)
-    assert_allclose(op.evaluate(route1, route2, cost_eval), -24)
+    assert_equal(route1.distance(), 16)
+    assert_equal(route2.distance(), 16)
+    assert_equal(op.evaluate(route1, route2, cost_eval), -24)

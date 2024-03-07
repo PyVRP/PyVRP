@@ -62,15 +62,15 @@ def test_client_constructor_initialises_data_fields_correctly(
         name=name,
     )
 
-    assert_allclose(client.x, x)
-    assert_allclose(client.y, y)
-    assert_allclose(client.delivery, delivery)
-    assert_allclose(client.pickup, pickup)
-    assert_allclose(client.service_duration, service_duration)
-    assert_allclose(client.tw_early, tw_early)
-    assert_allclose(client.tw_late, tw_late)
-    assert_allclose(client.release_time, release_time)
-    assert_allclose(client.prize, prize)
+    assert_equal(client.x, x)
+    assert_equal(client.y, y)
+    assert_equal(client.delivery, delivery)
+    assert_equal(client.pickup, pickup)
+    assert_equal(client.service_duration, service_duration)
+    assert_equal(client.tw_early, tw_early)
+    assert_equal(client.tw_late, tw_late)
+    assert_equal(client.release_time, release_time)
+    assert_equal(client.prize, prize)
     assert_equal(client.required, required)
     assert_equal(client.name, name)
     assert_equal(str(client), name)
@@ -249,10 +249,10 @@ def test_problem_data_replace_no_changes():
         assert_equal(new_veh_type.num_available, og_veh_type.num_available)
 
     assert_(new.distance_matrix() is not original.distance_matrix())
-    assert_allclose(new.distance_matrix(), original.distance_matrix())
+    assert_equal(new.distance_matrix(), original.distance_matrix())
 
     assert_(new.duration_matrix() is not original.duration_matrix())
-    assert_allclose(new.duration_matrix(), original.duration_matrix())
+    assert_equal(new.duration_matrix(), original.duration_matrix())
 
     assert_equal(new.num_clients, original.num_clients)
     assert_equal(new.num_vehicle_types, original.num_vehicle_types)
@@ -293,10 +293,10 @@ def test_problem_data_replace_with_changes():
 
     assert_(new.distance_matrix() is not original.distance_matrix())
     with assert_raises(AssertionError):
-        assert_allclose(new.distance_matrix(), original.distance_matrix())
+        assert_equal(new.distance_matrix(), original.distance_matrix())
 
     assert_(new.duration_matrix() is not original.duration_matrix())
-    assert_allclose(new.duration_matrix(), original.duration_matrix())
+    assert_equal(new.duration_matrix(), original.duration_matrix())
 
     assert_equal(new.num_clients, original.num_clients)
     assert_(new.num_vehicle_types != original.num_vehicle_types)
@@ -365,13 +365,13 @@ def test_matrix_access():
         duration_matrix=dur_mat,
     )
 
-    assert_allclose(data.distance_matrix(), dist_mat)
-    assert_allclose(data.duration_matrix(), dur_mat)
+    assert_equal(data.distance_matrix(), dist_mat)
+    assert_equal(data.duration_matrix(), dur_mat)
 
     for frm in range(size):
         for to in range(size):
-            assert_allclose(data.dist(frm, to), dist_mat[frm, to])
-            assert_allclose(data.duration(frm, to), dur_mat[frm, to])
+            assert_equal(data.dist(frm, to), dist_mat[frm, to])
+            assert_equal(data.duration(frm, to), dur_mat[frm, to])
 
 
 def test_matrices_are_not_writeable():
@@ -501,12 +501,12 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
 
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.depot, 0)
-    assert_allclose(vehicle_type.capacity, 0)
-    assert_allclose(vehicle_type.fixed_cost, 0)
-    assert_allclose(vehicle_type.tw_early, 0)
-    assert_allclose(vehicle_type.tw_late, 0)
-    assert_allclose(vehicle_type.max_duration, 0)
-    assert_allclose(vehicle_type.max_distance, 0)
+    assert_equal(vehicle_type.capacity, 0)
+    assert_equal(vehicle_type.fixed_cost, 0)
+    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.tw_late, 0)
+    assert_equal(vehicle_type.max_duration, 0)
+    assert_equal(vehicle_type.max_distance, 0)
 
 
 def test_vehicle_type_default_values():
@@ -517,9 +517,9 @@ def test_vehicle_type_default_values():
     vehicle_type = VehicleType()
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.depot, 0)
-    assert_allclose(vehicle_type.capacity, 0)
-    assert_allclose(vehicle_type.fixed_cost, 0)
-    assert_allclose(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.capacity, 0)
+    assert_equal(vehicle_type.fixed_cost, 0)
+    assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
@@ -548,12 +548,12 @@ def test_vehicle_type_attribute_access():
 
     assert_equal(vehicle_type.num_available, 7)
     assert_equal(vehicle_type.depot, 29)
-    assert_allclose(vehicle_type.capacity, 13)
-    assert_allclose(vehicle_type.fixed_cost, 3)
-    assert_allclose(vehicle_type.tw_early, 17)
-    assert_allclose(vehicle_type.tw_late, 19)
-    assert_allclose(vehicle_type.max_duration, 23)
-    assert_allclose(vehicle_type.max_distance, 29)
+    assert_equal(vehicle_type.capacity, 13)
+    assert_equal(vehicle_type.fixed_cost, 3)
+    assert_equal(vehicle_type.tw_early, 17)
+    assert_equal(vehicle_type.tw_late, 19)
+    assert_equal(vehicle_type.max_duration, 23)
+    assert_equal(vehicle_type.max_distance, 29)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")

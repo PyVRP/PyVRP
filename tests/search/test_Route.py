@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
@@ -202,9 +202,9 @@ def test_excess_load(ok_small):
     # The only vehicle type in the instance has a capacity of 10, so this route
     # has excess load.
     assert_(route.has_excess_load())
-    assert_allclose(route.excess_load(), 8)
-    assert_allclose(route.load(), 18)
-    assert_allclose(route.capacity(), 10)
+    assert_equal(route.excess_load(), 8)
+    assert_equal(route.load(), 18)
+    assert_equal(route.capacity(), 10)
 
 
 @pytest.mark.parametrize("fixed_cost", [0, 9])
@@ -217,7 +217,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
         vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
     )
     route = Route(data, idx=0, vehicle_type=0)
-    assert_allclose(route.fixed_vehicle_cost(), fixed_cost)
+    assert_equal(route.fixed_vehicle_cost(), fixed_cost)
 
 
 @pytest.mark.parametrize("client", [1, 2, 3, 4])
@@ -253,8 +253,8 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
 
     # This should always be zero because distance is a property of the edges,
     # not the nodes.
-    assert_allclose(route.dist_at(0).distance(), 0)
-    assert_allclose(route.dist_at(1).distance(), 0)
+    assert_equal(route.dist_at(0).distance(), 0)
+    assert_equal(route.dist_at(1).distance(), 0)
 
 
 def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
@@ -347,14 +347,14 @@ def test_duration_between_client_returns_node_duration(ok_small, loc: int):
 
     # Duration of the depot node DS's is zero, and for the client it is equal
     # to the service duration.
-    assert_allclose(route.duration_between(0, 0).duration(), 0)
-    assert_allclose(
+    assert_equal(route.duration_between(0, 0).duration(), 0)
+    assert_equal(
         route.duration_between(1, 1).duration(), client.service_duration
     )
-    assert_allclose(route.duration_between(2, 2).duration(), 0)
+    assert_equal(route.duration_between(2, 2).duration(), 0)
 
     # Single route solutions are all feasible for this instance.
-    assert_allclose(route.time_warp(), 0)
+    assert_equal(route.time_warp(), 0)
 
 
 def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
@@ -418,7 +418,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
         route.append(Node(loc=client))
     route.update()
 
-    assert_allclose(
+    assert_equal(
         route.distance(), route.dist_between(0, len(route) + 1).distance()
     )
 
@@ -455,8 +455,8 @@ def test_shift_duration_depot_time_window_interaction(
 
     for idx in [0, 1]:
         ds = route.duration_at(idx)
-        assert_allclose(ds.tw_early(), expected_tw[0])
-        assert_allclose(ds.tw_late(), expected_tw[1])
+        assert_equal(ds.tw_early(), expected_tw[0])
+        assert_equal(ds.tw_late(), expected_tw[1])
 
 
 @pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
@@ -472,7 +472,7 @@ def test_route_centroid(ok_small, clients):
 
     x = [ok_small.location(client).x for client in clients]
     y = [ok_small.location(client).y for client in clients]
-    assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))
+    assert_equal(route.centroid(), (np.mean(x), np.mean(y)))
 
 
 @pytest.mark.parametrize(
@@ -497,7 +497,7 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
 
     route.update()
     assert_(route.has_time_warp())
-    assert_allclose(route.time_warp(), expected)
+    assert_equal(route.time_warp(), expected)
 
 
 @pytest.mark.parametrize(
@@ -521,9 +521,9 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
         route.append(Node(loc=client))
 
     route.update()
-    assert_allclose(route.distance(), 6_450)
+    assert_equal(route.distance(), 6_450)
     assert_equal(route.has_excess_distance(), expected > 0)
-    assert_allclose(route.excess_distance(), expected)
+    assert_equal(route.excess_distance(), expected)
 
 
 @pytest.mark.parametrize(
