@@ -120,7 +120,7 @@ def test_reading_vrplib_instance():
     """
     Tests that a small VRPLIB-style instance is correctly parsed.
     """
-    data = read("data/E-n22-k4.txt", round_func="trunc1")
+    data = read("data/E-n22-k4.txt", round_func="dimacs")
 
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
@@ -170,23 +170,6 @@ def test_warns_about_scaling_issues():
         read("data/ReallyLargeDistance.txt")
 
 
-def test_round_func_trunc1_and_dimacs_are_same():
-    """
-    Tests that the DIMACS convention is equivalent to truncating to the first
-    decimal.
-    """
-    trunc1 = read("data/RC208.vrp", "trunc1")
-    dimacs = read("data/RC208.vrp", "dimacs")
-
-    trunc1_dist = trunc1.distance_matrix()
-    dimacs_dist = dimacs.distance_matrix()
-    assert_allclose(trunc1_dist, dimacs_dist)
-
-    trunc1_dur = trunc1.duration_matrix()
-    dimacs_dur = trunc1.duration_matrix()
-    assert_allclose(trunc1_dur, dimacs_dur)
-
-
 def test_round_func_round_nearest():
     """
     Tests rounding to the nearest integer works well for the RC208 instance,
@@ -205,6 +188,28 @@ def test_round_func_round_nearest():
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
+    assert_allclose(data.dist(0, 1), round(dist))
+    assert_allclose(data.dist(1, 0), round(dist))
+
+
+def test_round_func_exact():
+    """
+    Tests rounding with the ``exact`` round function also works well for the
+    RC208 instance. This test is similar to the one for ``round``, but all
+    values are now multiplied by 1_000 before rounding.
+    """
+    data = read("data/RC208.vrp", "exact")
+
+    # We're going to test dist(0, 1) and dist(1, 0), which should be the same
+    # since the distances are symmetric/Euclidean.
+    assert_allclose(data.location(0).x, 40_000)
+    assert_allclose(data.location(0).y, 50_000)
+
+    assert_allclose(data.location(1).x, 25_000)
+    assert_allclose(data.location(1).y, 85_000)
+
+    # Compute the distance, and assert that it is indeed correctly rounded.
+    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000
     assert_allclose(data.dist(0, 1), round(dist))
     assert_allclose(data.dist(1, 0), round(dist))
 
