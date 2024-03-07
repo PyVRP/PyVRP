@@ -196,7 +196,7 @@ def test_round_func_exact():
     """
     Tests rounding with the ``exact`` round function also works well for the
     RC208 instance. This test is similar to the one for ``round``, but all
-    values are now multiplied by 1000 before rounding.
+    values are now multiplied by 1_000 before rounding.
     """
     data = read("data/RC208.vrp", "exact")
 
@@ -209,7 +209,7 @@ def test_round_func_exact():
     assert_allclose(data.location(1).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
-    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1000
+    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000
     assert_allclose(data.dist(0, 1), round(dist))
     assert_allclose(data.dist(1, 0), round(dist))
 

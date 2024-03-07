@@ -29,7 +29,7 @@ def dimacs(vals: np.ndarray):
 
 
 def exact(vals: np.ndarray):
-    return round_nearest(1000 * vals)
+    return round_nearest(1_000 * vals)
 
 
 def no_rounding(vals):
