@@ -16,11 +16,7 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
     static_assert(sizeof(T) == sizeof(pyvrp::Value)
                   && std::is_constructible_v<T, pyvrp::Value>);
 
-#ifdef PYVRP_DOUBLE_PRECISION
-    PYBIND11_TYPE_CASTER(pyvrp::Matrix<T>, _("numpy.ndarray[float]"));
-#else
     PYBIND11_TYPE_CASTER(pyvrp::Matrix<T>, _("numpy.ndarray[int]"));
-#endif
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
@@ -68,23 +64,15 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
 
 // On the C++ side we have strong types for different measure values (for
 // example distance, duration, etc.), but on the Python side those things
-// are just ints or doubles. This type caster converts between the two.
+// are just ints. This type caster converts between the two.
 template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
-#ifdef PYVRP_DOUBLE_PRECISION
-    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("float"));
-#else
     PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("int"));
-#endif
 
     bool load(pybind11::handle src,
               [[maybe_unused]] bool convert)  // Python -> C++
     {
-#ifdef PYVRP_DOUBLE_PRECISION
-        auto const raw = PyFloat_AsDouble(src.ptr());
-#else
         auto const raw = PyLong_AsLong(src.ptr());
-#endif
         value = pyvrp::Measure<T>(raw);
         return !PyErr_Occurred();
     }
@@ -94,11 +82,7 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
          [[maybe_unused]] pybind11::return_value_policy policy,
          [[maybe_unused]] pybind11::handle parent)
     {
-#ifdef PYVRP_DOUBLE_PRECISION
-        return PyFloat_FromDouble(src.get());
-#else
         return PyLong_FromLong(src.get());
-#endif
     }
 };
 }  // namespace pybind11::detail

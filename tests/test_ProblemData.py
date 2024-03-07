@@ -522,17 +522,11 @@ def test_vehicle_type_default_values():
     assert_allclose(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.name, "")
 
-    # The C++ extensions can be compiled with support for either integer or
-    # double precision. In each case, the default value for the following
-    # fields is the largest representable value.
-    if isinstance(vehicle_type.max_duration, int):
-        assert_allclose(vehicle_type.tw_late, np.iinfo(np.int64).max)
-        assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
-        assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
-    else:
-        assert_allclose(vehicle_type.tw_late, np.finfo(np.float64).max)
-        assert_allclose(vehicle_type.max_duration, np.finfo(np.float64).max)
-        assert_allclose(vehicle_type.max_distance, np.finfo(np.float64).max)
+    # The default value for the following fields is the largest representable
+    # integral value.
+    assert_equal(vehicle_type.tw_late, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
 
 
 def test_vehicle_type_attribute_access():
