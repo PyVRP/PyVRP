@@ -67,9 +67,7 @@ def tabulate(headers: list[str], rows: np.ndarray) -> str:
     return "\n".join(header + content)
 
 
-def write_solution(
-    where: Path, data: ProblemData, result: Result, round_func: str
-):
+def write_solution(where: Path, data: ProblemData, result: Result):
     with open(where, "w") as fh:
         if data.num_vehicle_types == 1:
             fh.write(str(result.best))
@@ -199,15 +197,12 @@ def solve(
 
     if sol_dir:
         sol_dir.mkdir(parents=True, exist_ok=True)  # just in case
-        loc = sol_dir / (instance_name + ".sol")
-        write_solution(loc, data, result, round_func)
-
-    factor = ROUND_FUNCS[round_func](1)
+        write_solution(sol_dir / (instance_name + ".sol"), data, result)
 
     return (
         instance_name,
         "Y" if result.is_feasible() else "N",
-        round(result.cost() / factor, 2),
+        round(result.cost(), 2),
         result.num_iterations,
         round(result.runtime, 3),
     )
