@@ -383,3 +383,13 @@ def test_vrpb_instance():
             else:
                 assert_(data.dist(frm, to) < MAX_VALUE)
                 assert_(data.duration(frm, to) < MAX_VALUE)
+
+
+def test_max_distance_constraint():
+    """
+    Tests a small instance with a maximum distance constraint, to confirm those
+    constraints are properly recognised and parsed.
+    """
+    data = read("data/OkSmallMaxDistance.txt")
+    for vehicle_type in data.vehicle_types():
+        assert_allclose(vehicle_type.max_distance, 5_000)
