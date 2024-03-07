@@ -71,12 +71,9 @@ def write_solution(
     where: Path, data: ProblemData, result: Result, round_func: str
 ):
     with open(where, "w") as fh:
-        factor = ROUND_FUNCS[round_func](1)
-        cost = round(result.cost() / factor, 2)
-
         if data.num_vehicle_types == 1:
             fh.write(str(result.best))
-            fh.write(f"Cost: {cost}\n")
+            fh.write(f"Cost: {round(result.cost(), 2)}\n")
             return
 
         # Since there are multiple vehicle types, we need to take some care
@@ -94,7 +91,7 @@ def write_solution(
             routes[vehicle] += " " + " ".join(visits)
 
         fh.writelines(route + "\n" for route in routes)
-        fh.write(f"Cost: {cost}\n")
+        fh.write(f"Cost: {round(result.cost(), 2)}\n")
 
 
 def solve(
