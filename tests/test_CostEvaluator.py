@@ -103,15 +103,9 @@ def test_cost(ok_small):
     infeas_sol = Solution(ok_small, [[1, 2, 3, 4]])  # infeasible solution
     assert_(not infeas_sol.is_feasible())
 
-    # The C++ code represents infinity using a relevant maximal value, which
-    # depends on the precision type (double or integer).
-    if isinstance(distance, int):
-        INFEAS_COST = np.iinfo(np.int64).max
-    else:
-        INFEAS_COST = np.finfo(np.float64).max
-
-    assert_allclose(cost_evaluator.cost(infeas_sol), INFEAS_COST)
-    assert_allclose(default_cost_evaluator.cost(infeas_sol), INFEAS_COST)
+    infeas_cost = np.iinfo(np.int64).max
+    assert_allclose(cost_evaluator.cost(infeas_sol), infeas_cost)
+    assert_allclose(default_cost_evaluator.cost(infeas_sol), infeas_cost)
 
 
 def test_cost_with_prizes(prize_collecting):

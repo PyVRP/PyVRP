@@ -15,7 +15,6 @@ jobs:
     name: >
       Build and test pyvrp using ${{ matrix.compiler }} 
       ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
-      in ${{ matrix.precision }} precision mode
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -23,7 +22,6 @@ jobs:
         compiler: [gcc, clang]
         compiler-version: ['10', '12', 'latest']
         python-version: ['3.9', '3.12']
-        precision: [integer, double]
         exclude:
           - compiler: clang
             compiler-version: '10'  # minimum gcc version
@@ -90,7 +88,7 @@ jobs:
         # for testing. So we also compile a debug build directly afterwards.
         run: |
           poetry install --only-root
-          poetry run python build_extensions.py --build_type debug --clean --precision ${{ matrix.precision }}
+          poetry run python build_extensions.py --build_type debug --clean
       - name: Run tests
         run: poetry run pytest
       - if: matrix.compiler == 'gcc'
