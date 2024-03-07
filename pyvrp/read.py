@@ -20,7 +20,7 @@ def round_nearest(vals: np.ndarray):
     return np.round(vals).astype(int)
 
 
-def round_down(vals: np.ndarray):
+def truncate(vals: np.ndarray):
     return vals.astype(int)
 
 
@@ -38,7 +38,7 @@ def no_rounding(vals):
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": round_nearest,
-    "trunc": round_down,
+    "trunc": truncate,
     "dimacs": dimacs,
     "exact": exact,
     "none": no_rounding,
@@ -65,12 +65,12 @@ def read(
         File location to read. Assumes the data on the given location is in
         VRPLIB format.
     round_func
-        Optional rounding function. Will be applied to round data if the data
-        is not already integer. This can either be a function or a string:
+        Optional rounding function that is applied to all data values in the
+        instance. This can either be a function or a string:
 
             * ``'round'`` rounds the values to the nearest integer;
-            * ``'trunc'`` truncates the values to be integral;
-            * ``'dimacs'`` scales by 10 and rounds down to an integer;
+            * ``'trunc'`` truncates the values to an integer;
+            * ``'dimacs'`` scales by 10 and truncates the values to an integer;
             * ``'exact'`` scales by 1000 and rounds to the nearest integer.
             * ``'none'`` does no rounding. This is the default.
 
