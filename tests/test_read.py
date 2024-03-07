@@ -202,11 +202,11 @@ def test_round_func_exact():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_allclose(data.location(0).x, 40000)
-    assert_allclose(data.location(0).y, 50000)
+    assert_allclose(data.location(0).x, 40_000)
+    assert_allclose(data.location(0).y, 50_000)
 
-    assert_allclose(data.location(1).x, 25000)
-    assert_allclose(data.location(1).y, 85000)
+    assert_allclose(data.location(1).x, 25_000)
+    assert_allclose(data.location(1).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1000
