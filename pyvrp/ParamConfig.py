@@ -62,7 +62,7 @@ class ParamConfig:
         return self._route_ops
 
     @classmethod
-    def from_toml(cls, loc: os.PathLike) -> "ParamConfig":
+    def from_toml(cls, loc: os.PathLike):
         """
         Loads the parameter configuration from a TOML file.
         """
