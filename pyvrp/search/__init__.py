@@ -17,7 +17,7 @@ from ._search import SwapTails as SwapTails
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours
 
-NODE_OPERATORS = [
+NODE_OPERATORS: list[NodeOperator] = [
     Exchange10,
     Exchange20,
     Exchange30,
@@ -30,7 +30,7 @@ NODE_OPERATORS = [
     SwapTails,
 ]
 
-ROUTE_OPERATORS = [
+ROUTE_OPERATORS: list[RouteOperator] = [
     SwapRoutes,
     SwapStar,
 ]

@@ -4,23 +4,14 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
-try:
-    import tomli
-    from tqdm import tqdm
-    from tqdm.contrib.concurrent import process_map
-except ModuleNotFoundError as exc:
-    msg = "Install 'tqdm' and 'tomli' to use the command line program."
-    raise ModuleNotFoundError(msg) from exc
-
-import pyvrp.search
 from pyvrp import (
     GeneticAlgorithm,
-    GeneticAlgorithmParams,
+    ParamConfig,
     PenaltyManager,
-    PenaltyParams,
     Population,
-    PopulationParams,
     ProblemData,
     RandomNumberGenerator,
     Result,
@@ -30,10 +21,7 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
     LocalSearch,
-    NeighbourhoodParams,
     compute_neighbours,
 )
 from pyvrp.stop import (
@@ -136,43 +124,30 @@ def solve(
         the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
-        with open(kwargs["config_loc"], "rb") as fh:
-            config = tomli.load(fh)
+        config = ParamConfig.from_toml(kwargs["config_loc"])
     else:
-        config = {}
-
-    gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
-    pen_params = PenaltyParams(**config.get("penalty", {}))
-    pop_params = PopulationParams(**config.get("population", {}))
-    nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
+        config = ParamConfig()
 
     data = read(data_loc, round_func)
     rng = RandomNumberGenerator(seed=seed)
-    pen_manager = PenaltyManager(pen_params)
-    pop = Population(bpd, params=pop_params)
+    pen_manager = PenaltyManager(config.penalty)
+    pop = Population(bpd, params=config.population)
 
-    neighbours = compute_neighbours(data, nb_params)
+    neighbours = compute_neighbours(data, config.neighbourhood)
     ls = LocalSearch(data, rng, neighbours)
 
-    node_ops = NODE_OPERATORS
-    if "node_ops" in config:
-        node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
-
-    for node_op in node_ops:
+    for node_op in config.node_ops:
         ls.add_node_operator(node_op(data))
 
-    route_ops = ROUTE_OPERATORS
-    if "route_ops" in config:
-        route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
-
-    for route_op in route_ops:
+    for route_op in config.route_ops:
         ls.add_route_operator(route_op(data))
 
     init = [
-        Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
+        Solution.make_random(data, rng)
+        for _ in range(config.population.min_pop_size)
     ]
     algo = GeneticAlgorithm(
-        data, pen_manager, rng, pop, ls, srex, init, gen_params
+        data, pen_manager, rng, pop, ls, srex, init, config.genetic
     )
 
     if per_client:
