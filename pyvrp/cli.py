@@ -7,23 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import (
-    GeneticAlgorithm,
-    ParamConfig,
-    PenaltyManager,
-    Population,
-    ProblemData,
-    RandomNumberGenerator,
-    Result,
-    Solution,
-)
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp import Model, ParamConfig, ProblemData, Result
 from pyvrp.read import ROUND_FUNCS, read
-from pyvrp.search import (
-    LocalSearch,
-    compute_neighbours,
-)
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
@@ -129,26 +114,6 @@ def solve(
         config = ParamConfig()
 
     data = read(data_loc, round_func)
-    rng = RandomNumberGenerator(seed=seed)
-    pen_manager = PenaltyManager(config.penalty)
-    pop = Population(bpd, params=config.population)
-
-    neighbours = compute_neighbours(data, config.neighbourhood)
-    ls = LocalSearch(data, rng, neighbours)
-
-    for node_op in config.node_ops:
-        ls.add_node_operator(node_op(data))
-
-    for route_op in config.route_ops:
-        ls.add_route_operator(route_op(data))
-
-    init = [
-        Solution.make_random(data, rng)
-        for _ in range(config.population.min_pop_size)
-    ]
-    algo = GeneticAlgorithm(
-        data, pen_manager, rng, pop, ls, srex, init, config.genetic
-    )
 
     if per_client:
         max_runtime *= data.num_clients
@@ -163,7 +128,8 @@ def solve(
         ]
     )
 
-    result = algo.run(stop)
+    model = Model.from_data(data)
+    result = model.solve(stop, config, seed)  # TODO display
     instance_name = data_loc.stem
 
     if stats_dir:
