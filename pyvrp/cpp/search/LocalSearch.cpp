@@ -73,8 +73,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // all clients are required (e.g., when prize collecting).
             applyOptionalClientMoves(U, costEvaluator);
 
-            // Evaluate moves involving the client's mutually exclusive group,
-            // if it is part of any.
+            // Evaluate moves involving the client's group, if it is in any.
             applyGroupMoves(U, costEvaluator);
 
             if (!U->route())  // we already evaluated inserting U, so there is
@@ -271,13 +270,14 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     if (!U->route())
     {
         // U must be inserted either when it is a required client, or when it is
-        // in a client group that current isn't in the solution at all.
+        // in a required client group that current isn't in the solution at all.
         auto mustInsert = uData.required;
         if (uData.group)
         {
             auto pred = [&](auto client) { return nodes[client].route(); };
             auto const &group = data.group(uData.group.value());
-            mustInsert = std::none_of(group.begin(), group.end(), pred);
+            mustInsert = group.required
+                         && std::none_of(group.begin(), group.end(), pred);
         }
 
         // We take this as a default value in case none of the client's
@@ -317,16 +317,21 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     if (!uData.group)
         return;
 
-    // There should be at least one client that's in the current solution.
+    // There should be at least one client that's in the current solution if the
+    // group is required.
     auto const pred = [&](auto client) { return nodes[client].route(); };
     auto const &group = data.group(uData.group.value());
-    assert(!group.empty());
-    assert(std::any_of(group.begin(), group.end(), pred));
+    assert(!group.required || std::any_of(group.begin(), group.end(), pred));
 
     // Clients in the group that are also in the current solution. This can be
     // more than one, depending on the solution that was loaded!
     std::vector<size_t> inSol;
     std::copy_if(group.begin(), group.end(), inSol.begin(), pred);
+
+    if (inSol.empty())
+        // Then U was also not inserted by the optional client moves, so there
+        // is no benefit from having U, and we can quit early.
+        return;
 
     // We remove clients in order of increasing cost delta (biggest improvement
     // first), and evaluate swapping the last client with U.

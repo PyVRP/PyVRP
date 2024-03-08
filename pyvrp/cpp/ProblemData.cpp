@@ -72,10 +72,6 @@ ProblemData::Client::Client(Coordinate x,
 
     if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
-
-    if (required && group)
-        throw std::invalid_argument("clients cannot be required *and* part of "
-                                    "a mutually exclusive group.");
 }
 
 ProblemData::Client::Client(Client const &client)
@@ -304,18 +300,23 @@ void ProblemData::validate() const
     for (size_t idx = numDepots(); idx != numLocations(); ++idx)
     {
         ProblemData::Client const &client = location(idx);
+        if (!client.group)
+            continue;
 
-        if (client.group)
+        if (client.group.value() >= numGroups())
+            throw std::out_of_range("Client references invalid group.");
+
+        auto const &group = groups_[client.group.value()];
+        if (std::find(group.begin(), group.end(), idx) == group.end())
         {
-            if (client.group.value() >= numGroups())
-                throw std::out_of_range("Client references invalid group.");
+            auto const *msg = "Client not in the group it references.";
+            throw std::invalid_argument(msg);
+        }
 
-            auto const &group = groups_[client.group.value()];
-            if (std::find(group.begin(), group.end(), idx) == group.end())
-            {
-                auto const *msg = "Client not in the group it references.";
-                throw std::invalid_argument(msg);
-            }
+        if (client.required && group.mutuallyExclusive)
+        {
+            auto const *msg = "Required client in mutually exclusive group.";
+            throw std::invalid_argument(msg);
         }
     }
 

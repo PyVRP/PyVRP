@@ -137,7 +137,14 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("clients", &ProblemData::ClientGroup::clients)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
-                      &ProblemData::ClientGroup::mutuallyExclusive);
+                      &ProblemData::ClientGroup::mutuallyExclusive)
+        .def("__len__", &ProblemData::ClientGroup::size)
+        .def(
+            "__iter__",
+            [](ProblemData::ClientGroup const &group) {
+                return py::make_iterator(group.begin(), group.end());
+            },
+            py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))

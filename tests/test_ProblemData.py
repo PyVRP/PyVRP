@@ -134,22 +134,6 @@ def test_raises_for_invalid_client_data(
         )
 
 
-def test_raises_for_required_mutually_exclusive_group_membership():
-    """
-    Tests that required clients cannot be part of mutually exclusive groups.
-    """
-    with assert_raises(ValueError):
-        # A client cannot be part of a mutually exclusive group and also be a
-        # required visit, as that defeats the entire point of a mutually
-        # exclusive group.
-        Client(1, 1, required=True, group=0)
-
-    # But the following cases should be perfectly fine.
-    Client(1, 1, required=False, group=0)
-    Client(1, 1, required=True, group=None)
-    Client(1, 1, required=False, group=None)
-
-
 @pytest.mark.parametrize(
     ("x", "y", "tw_early", "tw_late"),
     [
@@ -703,6 +687,24 @@ def test_raises_wrong_mutual_group_referencing():
             duration_matrix=np.zeros((3, 3)),
             # Group references a client that is not in the group. That should
             # raise as well.
+            groups=[ClientGroup([1])],
+        )
+
+
+def test_raises_for_required_mutually_exclusive_group_membership():
+    """
+    Tests that required clients cannot be part of mutually exclusive groups.
+    """
+    with assert_raises(ValueError):
+        # A client cannot be part of a mutually exclusive group and also be a
+        # required visit, as that defeats the entire point of a mutually
+        # exclusive group.
+        ProblemData(
+            clients=[Client(1, 1, required=True, group=0)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((2, 2)),
+            duration_matrix=np.zeros((2, 2)),
             groups=[ClientGroup([1])],
         )
 

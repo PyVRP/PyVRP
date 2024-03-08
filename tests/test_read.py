@@ -393,3 +393,21 @@ def test_max_distance_constraint():
     data = read("data/OkSmallMaxDistance.txt")
     for vehicle_type in data.vehicle_types():
         assert_equal(vehicle_type.max_distance, 5_000)
+
+
+def test_reading_mutually_exclusive_group():
+    """
+    Tests that read() correctly parses a small instance with mutually exclusive
+    client groups.
+    """
+    data = read("data/OkSmallMutuallyExclusiveGroups.txt")
+    assert_equal(data.num_groups, 1)
+
+    group = data.group(0)
+    assert_equal(len(group), 3)
+    assert_equal(group.clients, [2, 3, 4])
+
+    for client in data.group(0):
+        client_data = data.location(client)  # type: ignore
+        assert_equal(client_data.required, False)
+        assert_equal(client_data.group, 0)

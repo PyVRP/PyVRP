@@ -306,8 +306,8 @@ public:
     [[nodiscard]] bool isFeasible() const;
 
     /**
-     * Returns whether this solution is feasible w.r.t. the mutually exclusive
-     * client groups: of each group, exactly one client must be in the solution.
+     * Returns whether this solution is feasible w.r.t. the client group
+     * restrictions.
      */
     [[nodiscard]] bool isGroupFeasible() const;
 

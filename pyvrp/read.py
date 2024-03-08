@@ -6,7 +6,7 @@ from warnings import warn
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp._pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
@@ -172,6 +172,21 @@ def read(
 
     prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
 
+    if "mutually_exclusive_group" in instance:
+        group_data = instance["mutually_exclusive_group"]
+
+        # This assumes groups are numeric, and are numbered {1, 2, ...}.
+        raw_groups: list[list[int]] = [[] for _ in range(max(group_data))]
+        for client, group in enumerate(group_data, 1):
+            raw_groups[group - 1].append(client)
+
+        # Only keep groups if they have more than one member. Empty groups or
+        # groups with one member are trivial to decide, so there is no point
+        # in keeping them.
+        groups = [ClientGroup(group) for group in raw_groups if len(group) > 1]
+    else:
+        groups = []
+
     if instance.get("type") == "VRPB":
         # In VRPB, linehauls must be served before backhauls. This can be
         # enforced by setting a high value for the distance/duration from depot
@@ -208,6 +223,11 @@ def read(
         for idx in range(len(depot_idcs))
     ]
 
+    idx2group = [None for _ in range(dimension)]
+    for group, members in enumerate(groups):
+        for client in members:
+            idx2group[client] = group
+
     clients = [
         Client(
             x=coords[idx][0],
@@ -219,7 +239,8 @@ def read(
             tw_late=time_windows[idx][1],
             release_time=release_times[idx],
             prize=prizes[idx],
-            required=np.isclose(prizes[idx], 0),  # only when prize is zero
+            required=np.isclose(prizes[idx], 0) and idx2group[idx] is None,
+            group=idx2group[idx],
         )
         for idx in range(len(depot_idcs), dimension)
     ]
@@ -238,7 +259,14 @@ def read(
         for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
     ]
 
-    return ProblemData(clients, depots, vehicle_types, distances, durations)
+    return ProblemData(
+        clients,
+        depots,
+        vehicle_types,
+        distances,
+        durations,
+        groups,
+    )
 
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
