@@ -188,12 +188,20 @@ public:
     /**
      * ClientGroup(clients: list[int], required: bool = True)
      *
+     * A client group that imposes additional restrictions on visits to clients
+     * in the group.
+     *
+     * .. note::
+     *
+     *    For now, only mutually exclusive client groups are supported. Of the
+     *    clients in such a group, exactly one must be visited.
+     *
      * Parameters
      * ----------
      * clients
-     *     TODO
+     *     The clients in the group.
      * required
-     *     TODO
+     *     Whether visiting this client group is required.
      */
     struct ClientGroup
     {

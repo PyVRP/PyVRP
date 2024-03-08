@@ -326,7 +326,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     // Clients in the group that are also in the current solution. This can be
     // more than one, depending on the solution that was loaded!
     std::vector<size_t> inSol;
-    std::copy_if(group.begin(), group.end(), inSol.begin(), pred);
+    std::copy_if(group.begin(), group.end(), std::back_inserter(inSol), pred);
 
     if (inSol.empty())
         // Then U was also not inserted by the optional client moves, so there
