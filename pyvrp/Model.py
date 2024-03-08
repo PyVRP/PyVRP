@@ -4,8 +4,9 @@ from warnings import warn
 import numpy as np
 
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
+from pyvrp.ParamConfig import ParamConfig
 from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.Population import Population, PopulationParams
+from pyvrp.Population import Population
 from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
@@ -21,8 +22,6 @@ from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
     LocalSearch,
     compute_neighbours,
 )
@@ -284,6 +283,7 @@ class Model:
     def solve(
         self,
         stop: StoppingCriterion,
+        config: ParamConfig = ParamConfig(),
         seed: int = 0,
         display: bool = True,
     ) -> Result:
@@ -294,6 +294,8 @@ class Model:
         ----------
         stop
             Stopping criterion to use.
+        config
+            Parameter configuration settings.
         seed
             Seed value to use for the random number stream. Default 0.
         display
@@ -307,25 +309,26 @@ class Model:
         """
         data = self.data()
         rng = RandomNumberGenerator(seed=seed)
-        ls = LocalSearch(data, rng, compute_neighbours(data))
 
-        for node_op in NODE_OPERATORS:
+        neighbours = compute_neighbours(data, config.neighbourhood)
+        ls = LocalSearch(data, rng, neighbours)
+
+        for node_op in config.node_ops:
             ls.add_node_operator(node_op(data))
 
-        for route_op in ROUTE_OPERATORS:
+        for route_op in config.route_ops:
             ls.add_route_operator(route_op(data))
 
-        pm = PenaltyManager()
-        pop_params = PopulationParams()
-        pop = Population(bpd, pop_params)
+        pm = PenaltyManager(config.penalty)
+        pop = Population(bpd, config.population)
         init = [
             Solution.make_random(data, rng)
-            for _ in range(pop_params.min_pop_size)
+            for _ in range(config.population.min_pop_size)
         ]
 
         # We use SREX when the instance is a proper VRP; else OX for TSP.
         crossover = srex if data.num_vehicles > 1 else ox
 
-        gen_args = (data, pm, rng, pop, ls, crossover, init)
+        gen_args = (data, pm, rng, pop, ls, crossover, init, config.genetic)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
         return algo.run(stop, display)
