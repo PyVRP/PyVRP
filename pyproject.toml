@@ -69,7 +69,7 @@ optional = true
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
-sphinx-immaterial = ">=0.11.9"
+sphinx-immaterial = ">=0.11.11"
 
 
 [tool.poetry.group.examples]
