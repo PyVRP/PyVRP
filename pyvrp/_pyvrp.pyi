@@ -54,6 +54,7 @@ class Client:
         prize: int = 0,
         required: bool = True,
         group: Optional[int] = None,
+        *,
         name: str = "",
     ) -> None: ...
 
@@ -69,6 +70,7 @@ class Depot:
         y: int,
         tw_early: int = 0,
         tw_late: int = ...,
+        *,
         name: str = "",
     ) -> None: ...
 
@@ -104,6 +106,7 @@ class VehicleType:
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
+        *,
         name: str = "",
     ) -> None: ...
 

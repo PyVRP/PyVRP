@@ -86,6 +86,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("prize") = 0,
              py::arg("required") = true,
              py::arg("group") = py::none(),
+             py::kw_only(),
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
@@ -116,6 +117,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("y"),
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
+             py::kw_only(),
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Depot::x)
         .def_readonly("y", &ProblemData::Depot::y)
@@ -167,6 +169,7 @@ PYBIND11_MODULE(_pyvrp, m)
              = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_distance")
              = std::numeric_limits<pyvrp::Distance>::max(),
+             py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)

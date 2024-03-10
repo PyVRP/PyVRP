@@ -189,10 +189,10 @@ class Model:
         locs = depots + clients
         edges = [
             Edge(
-                locs[frm],
-                locs[to],
-                data.dist(frm, to),
-                data.duration(frm, to),
+                frm=locs[frm],
+                to=locs[to],
+                distance=data.dist(frm, to),
+                duration=data.duration(frm, to),
             )
             for frm in range(data.num_locations)
             for to in range(data.num_locations)
@@ -247,8 +247,8 @@ class Model:
             raise ValueError("The given group is not in this model instance.")
 
         client = Client(
-            x,
-            y,
+            x=x,
+            y=y,
             delivery=delivery,
             pickup=pickup,
             service_duration=service_duration,
@@ -312,7 +312,7 @@ class Model:
             """
             warn(msg, ScalingWarning)
 
-        edge = Edge(frm, to, distance, duration)
+        edge = Edge(frm=frm, to=to, distance=distance, duration=duration)
         self._edges.append(edge)
         return edge
 
