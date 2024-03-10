@@ -72,11 +72,16 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
     bool load(pybind11::handle src,
               [[maybe_unused]] bool convert)  // Python -> C++
     {
-        if (!PyLong_Check(src.ptr()))
+        if (!convert && !PyLong_Check(src.ptr()))  // strict int when conversion
+            return false;                          // not allowed.
+
+        PyObject *tmp = PyNumber_Long(src.ptr());
+        if (!tmp)
             return false;
 
-        auto const raw = PyLong_AsLong(src.ptr());
+        auto const raw = PyLong_AsLong(tmp);
         value = pyvrp::Measure<T>(raw);
+        Py_DECREF(tmp);
         return !PyErr_Occurred();
     }
 
