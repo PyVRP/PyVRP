@@ -99,10 +99,10 @@ class Model:
         locs = depots + clients
         edges = [
             Edge(
-                locs[frm],
-                locs[to],
-                data.dist(frm, to),
-                data.duration(frm, to),
+                frm=locs[frm],
+                to=locs[to],
+                distance=data.dist(frm, to),
+                duration=data.duration(frm, to),
             )
             for frm in range(data.num_locations)
             for to in range(data.num_locations)
@@ -135,17 +135,17 @@ class Model:
         created :class:`~pyvrp._pyvrp.Client` instance.
         """
         client = Client(
-            x,
-            y,
-            delivery,
-            pickup,
-            service_duration,
-            tw_early,
-            tw_late,
-            release_time,
-            prize,
-            required,
-            name,
+            x=x,
+            y=y,
+            delivery=delivery,
+            pickup=pickup,
+            service_duration=service_duration,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            release_time=release_time,
+            prize=prize,
+            required=required,
+            name=name,
         )
 
         self._clients.append(client)
@@ -163,7 +163,7 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late, name=name)
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
         return depot
 
@@ -199,7 +199,7 @@ class Model:
             """
             warn(msg, ScalingWarning)
 
-        edge = Edge(frm, to, distance, duration)
+        edge = Edge(frm=frm, to=to, distance=distance, duration=duration)
         self._edges.append(edge)
         return edge
 
@@ -238,15 +238,15 @@ class Model:
             raise ValueError("The given depot is not in this model instance.")
 
         vehicle_type = VehicleType(
-            num_available,
-            capacity,
-            depot_idx,
-            fixed_cost,
-            tw_early,
-            tw_late,
-            max_duration,
-            max_distance,
-            name,
+            num_available=num_available,
+            capacity=capacity,
+            depot=depot_idx,
+            fixed_cost=fixed_cost,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            max_duration=max_duration,
+            max_distance=max_distance,
+            name=name,
         )
 
         self._vehicle_types.append(vehicle_type)
