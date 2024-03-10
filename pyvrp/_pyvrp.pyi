@@ -52,6 +52,7 @@ class Client:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        *,
         name: str = "",
     ) -> None: ...
 
@@ -67,6 +68,7 @@ class Depot:
         y: int,
         tw_early: int = 0,
         tw_late: int = ...,
+        *,
         name: str = "",
     ) -> None: ...
 
@@ -90,6 +92,7 @@ class VehicleType:
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
+        *,
         name: str = "",
     ) -> None: ...
 
