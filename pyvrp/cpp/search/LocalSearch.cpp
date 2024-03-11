@@ -264,6 +264,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     if (uData.group)
     {
         auto const &group = data.group(uData.group.value());
+        assert(group.mutuallyExclusive);
 
         auto const pred = [&](auto client) { return nodes[client].route(); };
         auto const numInSol = std::count_if(group.begin(), group.end(), pred);
@@ -272,8 +273,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         // group that currently is not in the solution at all. Additionally, U
         // may be removed when its group is not required, or there is already
         // more than one client from the group in the solution.
-        mustInsert = group.required && group.mutuallyExclusive && numInSol == 0;
-        mayRemove = !group.required && group.mutuallyExclusive && numInSol > 1;
+        mustInsert = group.required && numInSol == 0;
+        mayRemove = !group.required || numInSol > 1;
     }
 
     if (mayRemove && removeCost(U, data, costEvaluator) < 0)

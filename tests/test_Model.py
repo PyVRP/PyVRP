@@ -686,3 +686,27 @@ def test_to_data_mutually_exclusive_client_group():
 
     group = data.group(0)
     assert_equal(group.clients, [1, 2])
+
+
+def test_optional_mutually_exclusive_group():
+    """
+    Tests a small instance with an optional mutually exclusive group, where not
+    inserting the group at all is optimal.
+    """
+    m = Model()
+    m.add_depot(1, 1)
+    m.add_vehicle_type(1)
+
+    group = m.add_mutually_exclusive_group(required=False)
+    group.add_client(0, 0)  # optional; not worth visiting.
+    group.add_client(2, 2)  # optional; not worth visiting.
+    m.add_client(1, 1)  # must be visited.
+
+    for frm in m.locations:
+        for to in m.locations:
+            dist = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=dist)
+
+    res = m.solve(stop=MaxIterations(10))
+    assert_(res.best.is_group_feasible())
+    assert_equal(res.best.num_clients(), 1)
