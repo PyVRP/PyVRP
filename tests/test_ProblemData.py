@@ -1,9 +1,11 @@
+from typing import Optional
+
 import numpy as np
 import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
 
 @pytest.mark.parametrize(
@@ -18,17 +20,19 @@ from pyvrp import Client, Depot, ProblemData, VehicleType
         "release_time",
         "prize",
         "required",
+        "group",
         "name",
     ),
     [
-        (1, 1, 1, 1, 1, 0, 1, 0, 0, True, "test name"),  # normal
-        (1, 1, 1, 0, 0, 0, 1, 0, 0, True, "1234"),  # zero duration
-        (1, 1, 0, 0, 1, 0, 1, 0, 0, True, "1,2,3,4"),  # zero delivery
-        (1, 1, 1, 0, 1, 0, 0, 0, 0, True, ""),  # zero length time interval
-        (-1, -1, 1, 0, 1, 0, 1, 0, 0, True, ""),  # negative coordinates
-        (1, 1, 1, 0, 1, 0, 1, 1, 0, True, ""),  # positive release time
-        (0, 0, 1, 0, 1, 0, 1, 0, 1, True, ""),  # positive prize
-        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, ""),  # not required
+        (1, 1, 1, 1, 1, 0, 1, 0, 0, True, None, "test name"),  # normal
+        (1, 1, 1, 0, 0, 0, 1, 0, 0, True, None, "1234"),  # zero duration
+        (1, 1, 0, 0, 1, 0, 1, 0, 0, True, None, "1,2,3,4"),  # zero delivery
+        (1, 1, 1, 0, 1, 0, 0, 0, 0, True, None, ""),  # zero time windows
+        (-1, -1, 1, 0, 1, 0, 1, 0, 0, True, None, ""),  # negative coordinates
+        (1, 1, 1, 0, 1, 0, 1, 1, 0, True, None, ""),  # positive release time
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, True, None, ""),  # positive prize
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, None, ""),  # not required
+        (0, 0, 1, 0, 1, 0, 1, 0, 1, False, 0, ""),  # group membership
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
@@ -42,6 +46,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     release_time: int,
     prize: int,
     required: bool,
+    group: Optional[int],
     name: str,
 ):
     """
@@ -49,16 +54,17 @@ def test_client_constructor_initialises_data_fields_correctly(
     Client's constructor.
     """
     client = Client(
-        x,
-        y,
-        delivery,
-        pickup,
-        service_duration,
-        tw_early,
-        tw_late,
-        release_time,
-        prize,
+        x=x,
+        y=y,
+        delivery=delivery,
+        pickup=pickup,
+        service_duration=service_duration,
+        tw_early=tw_early,
+        tw_late=tw_late,
+        release_time=release_time,
+        prize=prize,
         required=required,
+        group=group,
         name=name,
     )
 
@@ -72,6 +78,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     assert_equal(client.release_time, release_time)
     assert_equal(client.prize, prize)
     assert_equal(client.required, required)
+    assert_equal(client.group, group)
     assert_equal(client.name, name)
     assert_equal(str(client), name)
 
@@ -569,3 +576,153 @@ def test_location_raises_invalid_index(ok_small, idx: int):
 
     with assert_raises(IndexError):
         ok_small.location(idx)
+
+
+def test_raises_invalid_vehicle_depot_indices(ok_small):
+    """
+    Tests that setting the depot index on a VehicleType to a value that's out
+    of range raises when replacing or constructing a ProblemData instance.
+    """
+    assert_equal(ok_small.num_depots, 1)
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[VehicleType(depot=1)])
+
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType(depot=1)],
+            distance_matrix=[[0]],
+            duration_matrix=[[0]],
+        )
+
+
+def test_raises_empty_group():
+    """
+    Tests that passing an empty client group raises a ValueError.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=[[0]],
+            duration_matrix=[[0]],
+            groups=[ClientGroup([])],  # empty group - this should raise
+        )
+
+
+@pytest.mark.parametrize(
+    ("groups", "index"),
+    [
+        ([], 0),  # index 0, but there are no groups
+        ([ClientGroup([1])], 1),  # there is one group, but index is 1
+    ],
+)
+def test_raises_invalid_client_group_indices(
+    groups: list[ClientGroup], index: int
+):
+    """
+    Tests that setting the clients in a mutually exclusive group to values that
+    are not valid indices raises, and that setting a group index on a client to
+    a value that's out of range likewise raises.
+    """
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[Client(1, 1, required=False, group=index)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((2, 2)),
+            duration_matrix=np.zeros((2, 2)),
+            groups=groups,
+        )
+
+
+@pytest.mark.parametrize(
+    "groups", [[ClientGroup([0, 1])], [ClientGroup([1, 2])]]
+)
+def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
+    """
+    Tests that groups with client indices that are either depots or outside the
+    range of client locations results in an IndexError.
+    """
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[Client(1, 1, required=False, group=0)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((2, 2)),
+            duration_matrix=np.zeros((2, 2)),
+            groups=groups,
+        )
+
+
+def test_raises_wrong_mutual_group_referencing():
+    """
+    Groups should reference the clients in the group, and vice versa, the
+    client should reference the group. If this is not done correctly, a
+    ValueError should be thrown.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            # The client references the first group, which does not contain the
+            # client. That should raise.
+            clients=[
+                Client(1, 1, required=False, group=0),
+                Client(2, 2, required=False, group=0),
+            ],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((3, 3)),
+            duration_matrix=np.zeros((3, 3)),
+            groups=[ClientGroup([2])],
+        )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[Client(1, 1), Client(2, 2)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((3, 3)),
+            duration_matrix=np.zeros((3, 3)),
+            # Group references a client that is not in the group. That should
+            # raise as well.
+            groups=[ClientGroup([1])],
+        )
+
+
+def test_raises_for_required_mutually_exclusive_group_membership():
+    """
+    Tests that required clients cannot be part of mutually exclusive groups.
+    """
+    with assert_raises(ValueError):
+        # A client cannot be part of a mutually exclusive group and also be a
+        # required visit, as that defeats the entire point of a mutually
+        # exclusive group.
+        ProblemData(
+            clients=[Client(1, 1, required=True, group=0)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType()],
+            distance_matrix=np.zeros((2, 2)),
+            duration_matrix=np.zeros((2, 2)),
+            groups=[ClientGroup([1])],
+        )
+
+
+def test_replacing_client_groups(ok_small):
+    """
+    Tests that replacing mutually exclusive client groups works well.
+    """
+    assert_equal(ok_small.num_groups, 0)
+    assert_equal(ok_small.groups(), [])
+
+    # Let's add the first client to a group, and define a new data instance
+    # that has a mutually exclusive group.
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    data = ok_small.replace(clients=clients, groups=[ClientGroup([1])])
+
+    # There should now be a single client group (at index 0) that has the first
+    # client as its only member.
+    assert_equal(data.num_groups, 1)
+    assert_equal(data.group(0).clients, [1])
