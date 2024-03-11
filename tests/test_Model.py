@@ -710,3 +710,16 @@ def test_optional_mutually_exclusive_group():
     res = m.solve(stop=MaxIterations(10))
     assert_(res.best.is_group_feasible())
     assert_equal(res.best.num_clients(), 1)
+
+
+def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
+    """
+    TODO
+
+    45253 (but for a slightly different instance) is BKS cost
+    """
+    m = Model.from_data(gtsp)
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 55565)
