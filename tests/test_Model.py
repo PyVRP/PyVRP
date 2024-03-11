@@ -668,3 +668,33 @@ def test_raises_mutually_exclusive_client_group_required_client():
 
     with assert_raises(ValueError):
         m.add_client(1, 1, required=True, group=group)
+
+
+def test_client_group_membership_works_with_intermediate_changes():
+    """
+    Tests that repeatedly calling data() does not add clients more than once
+    to each client group they are in, and everything continues to work when
+    the model changes between calls to data().
+    """
+    m = Model()
+    m.add_depot(1, 1)
+    m.add_vehicle_type()
+
+    # Add three clients to the model, with (for now) indices 1, 2, 3.
+    group = m.add_client_group()
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(1, 1, required=False, group=group)
+
+    m.data()
+    assert_equal(len(group), 3)
+    assert_equal(group.clients, [1, 2, 3])
+
+    # Add another depot and another client. The clients now have indices 2, 3,
+    # 4, and 5.
+    m.add_depot(1, 2)
+    m.add_client(1, 1, required=False, group=group)
+
+    m.data()
+    assert_equal(len(group), 4)
+    assert_equal(group.clients, [2, 3, 4, 5])

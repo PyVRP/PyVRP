@@ -238,6 +238,7 @@ public:
         std::vector<size_t> const &clients() const;
 
         void addClient(size_t client);
+        void clear();
     };
 
     /**

@@ -208,6 +208,9 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
+        for group in self._groups:  # new depot invalidates client indices
+            group.clear()
+
         depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
         return depot
