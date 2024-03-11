@@ -1028,3 +1028,16 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     sol = Solution(data, routes)
     assert_equal(sol.is_feasible(), feasible)
     assert_equal(sol.is_group_feasible(), feasible)
+
+
+def test_group_feasibility_bug(ok_small_mutually_exclusive_groups):
+    """
+    This tests a bug where the make_random() classmethod did not set the group
+    feasibility flag correctly, leading it to believe that every solution was
+    feasible w.r.t. the client groups.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
+
+    assert_(not sol.is_feasible())
+    assert_(not sol.is_group_feasible())
