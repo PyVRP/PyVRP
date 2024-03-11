@@ -451,3 +451,32 @@ def test_local_search_does_not_remove_required_clients():
     sol_cost = cost_eval.penalised_cost(sol)
     new_cost = cost_eval.penalised_cost(new_sol)
     assert_(new_cost < sol_cost)
+
+
+def test_mutually_exclusive_group(ok_small_mutually_exclusive_groups):
+    """
+    Smoke test that runs the local search on a small instance with a mutually
+    exclusive client group.
+    """
+    assert_equal(ok_small_mutually_exclusive_groups.num_groups, 1)
+
+    group = ok_small_mutually_exclusive_groups.group(0)
+    assert_(group.required)
+    assert_(group.mutually_exclusive)
+
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
+
+    ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
+    ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
+
+    sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
+    cost_eval = CostEvaluator(20, 6, 0)
+    improved = ls(sol, cost_eval)
+
+    sol_cost = cost_eval.penalised_cost(sol)
+    improved_cost = cost_eval.penalised_cost(improved)
+
+    assert_(improved.is_feasible())
+    assert_(improved.is_group_feasible())
+    assert_(improved_cost < sol_cost)

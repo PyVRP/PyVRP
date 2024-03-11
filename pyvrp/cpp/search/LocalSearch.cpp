@@ -257,81 +257,80 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     auto const uClient = U->client();
     ProblemData::Client const &uData = data.location(uClient);
 
-    // First test removing U. This is allowed when U is not required.
-    if (!uData.required && removeCost(U, data, costEvaluator) < 0)
+    // U must be inserted either when it is a required client, and can only be
+    // removed when it is not.
+    auto mustInsert = uData.required;
+    auto mayRemove = !uData.required;
+    if (uData.group)
+    {
+        auto const &group = data.group(uData.group.value());
+
+        auto const pred = [&](auto client) { return nodes[client].route(); };
+        auto const numInSol = std::count_if(group.begin(), group.end(), pred);
+
+        // U must be inserted when it is in a required mutually exclusive client
+        // group that currently is not in the solution at all. Additionally, U
+        // may be removed when its group is not required, or there is already
+        // more than one client from the group in the solution.
+        mustInsert = group.required && group.mutuallyExclusive && numInSol == 0;
+        mayRemove = !group.required && group.mutuallyExclusive && numInSol > 1;
+    }
+
+    if (mayRemove && removeCost(U, data, costEvaluator) < 0)
     {
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
     }
 
-    // If U is not currently in the solution, we test if inserting it is an
-    // improving move. Note that we always insert required clients.
-    if (!U->route())
+    if (U->route())  // U is still in a route, so no need to test inserting it
+        return;      // anywhere.
+
+    // We take this as a default value in case none of the client's neighbours
+    // are assigned, yet U is required.
+    Route::Node *UAfter = routes[0][0];
+    Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+
+    for (auto const vClient : neighbours_[uClient])
     {
-        // U must be inserted either when it is a required client, or when it is
-        // in a required client group that current isn't in the solution at all.
-        auto mustInsert = uData.required;
-        if (uData.group)
+        auto *V = &nodes[vClient];
+
+        if (!V->route())
+            continue;
+
+        auto cost = insertCost(U, V, data, costEvaluator);
+        if (cost < bestCost)
         {
-            auto pred = [&](auto client) { return nodes[client].route(); };
-            auto const &group = data.group(uData.group.value());
-            mustInsert = group.required
-                         && std::none_of(group.begin(), group.end(), pred);
+            bestCost = cost;
+            UAfter = V;
         }
+    }
 
-        // We take this as a default value in case none of the client's
-        // neighbours are assigned, yet U is required.
-        Route::Node *UAfter = routes[0][0];
-        Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
-
-        for (auto const vClient : neighbours_[uClient])
-        {
-            auto *V = &nodes[vClient];
-
-            if (!V->route())
-                continue;
-
-            auto cost = insertCost(U, V, data, costEvaluator);
-            if (cost < bestCost)
-            {
-                bestCost = cost;
-                UAfter = V;
-            }
-        }
-
-        if (mustInsert || bestCost < 0)
-        {
-            UAfter->route()->insert(UAfter->idx() + 1, U);
-            update(UAfter->route(), UAfter->route());
-        }
+    if (mustInsert || bestCost < 0)
+    {
+        UAfter->route()->insert(UAfter->idx() + 1, U);
+        update(UAfter->route(), UAfter->route());
     }
 }
 
 void LocalSearch::applyGroupMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator)
 {
-    auto const uClient = U->client();
-    ProblemData::Client const &uData = data.location(uClient);
+    ProblemData::Client const &uData = data.location(U->client());
 
     if (!uData.group)
         return;
 
-    // There should be at least one client that's in the current solution if the
-    // group is required.
-    auto const pred = [&](auto client) { return nodes[client].route(); };
     auto const &group = data.group(uData.group.value());
-    assert(!group.required || std::any_of(group.begin(), group.end(), pred));
 
     // Clients in the group that are also in the current solution. This can be
     // more than one, depending on the solution that was loaded!
     std::vector<size_t> inSol;
+    auto const pred = [&](auto client) { return nodes[client].route(); };
     std::copy_if(group.begin(), group.end(), std::back_inserter(inSol), pred);
 
-    if (inSol.empty())
-        // Then U was also not inserted by the optional client moves, so there
-        // is no benefit from having U, and we can quit early.
-        return;
+    if (inSol.empty())  // Then U was not inserted previously, so there is no
+        return;         // benefit from having U, and we can quit early.
 
     // We remove clients in order of increasing cost delta (biggest improvement
     // first), and evaluate swapping the last client with U.
@@ -343,7 +342,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     auto cmp = [&](auto idx1, auto idx2) { return costs[idx1] < costs[idx2]; };
     std::stable_sort(inSol.begin(), inSol.end(), cmp);
 
-    // Remove all but the last client. That one we evaluate swapping with U.
+    // Remove all but the last client, whose removal is the least valuable.
     for (auto client = inSol.begin(); client != inSol.end() - 1; ++client)
     {
         auto &node = nodes[*client];
