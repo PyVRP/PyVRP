@@ -1,4 +1,6 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -6,7 +8,6 @@ import numpy as np
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population, PopulationParams
-from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
@@ -27,7 +28,10 @@ from pyvrp.search import (
     LocalSearch,
     compute_neighbours,
 )
-from pyvrp.stop import StoppingCriterion
+
+if TYPE_CHECKING:
+    from pyvrp.Result import Result
+    from pyvrp.stop import StoppingCriterion
 
 
 class Edge:
