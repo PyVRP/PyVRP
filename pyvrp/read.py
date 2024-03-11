@@ -177,7 +177,7 @@ def read(
 
         # This assumes groups are numeric, and are numbered {1, 2, ...}.
         raw_groups: list[list[int]] = [[] for _ in range(max(group_data))]
-        for client, group in enumerate(group_data, 1):
+        for client, group in enumerate(group_data):
             raw_groups[group - 1].append(client)
 
         # Only keep groups if they have more than one member. Empty groups or

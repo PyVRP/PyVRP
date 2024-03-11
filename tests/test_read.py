@@ -405,7 +405,7 @@ def test_reading_mutually_exclusive_group():
 
     group = data.group(0)
     assert_equal(len(group), 3)
-    assert_equal(group.clients, [2, 3, 4])
+    assert_equal(group.clients, [1, 2, 3])
 
     for client in data.group(0):
         client_data = data.location(client)  # type: ignore

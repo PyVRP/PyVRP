@@ -79,3 +79,11 @@ def small_spd():
     Fixture that returns a small simultaneous pickup and delivery instance.
     """
     return read("data/SmallVRPSPD.vrp", round_func="round")
+
+
+@pytest.fixture(scope="session")
+def gtsp():
+    """
+    Fixture that returns a medium-size generalized TSP instance.
+    """
+    return read("data/50pr439.gtsp", round_func="round")

@@ -100,14 +100,18 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
 
     Cost deltaCost = vClient.prize - uClient.prize;
 
-    auto const distSegment
-        = DistanceSegment::merge(data.distanceMatrix(),
-                                 route->before(V->idx() - 1),
-                                 DistanceSegment(U->client()),
-                                 route->after(V->idx() + 1));
+    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
+                                             route->before(V->idx() - 1),
+                                             DistanceSegment(U->client()),
+                                             route->after(V->idx() + 1));
 
-    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost += static_cast<Cost>(dist.distance());
     deltaCost -= static_cast<Cost>(route->distance());
+
+    deltaCost
+        += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
+    deltaCost
+        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
 
     auto const ls = LoadSegment::merge(route->before(V->idx() - 1),
                                        LoadSegment(uClient),
