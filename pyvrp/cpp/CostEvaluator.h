@@ -36,7 +36,7 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg)
 };
 
 /**
- * CostEvaluator(capacity_penalty: int, tw_penalty: int)
+ * CostEvaluator(load_penalty: int, tw_penalty: int, dist_penalty: int)
  *
  * Creates a CostEvaluator instance.
  *
@@ -63,7 +63,8 @@ public:
     CostEvaluator(Cost loadPenalty, Cost twPenalty, Cost distPenalty);
 
     /**
-     * Computes the total excess capacity penalty for the given load.
+     * Computes the total excess load penalty for the given load and vehicle
+     * capacity.
      */
     [[nodiscard]] inline Cost loadPenalty(Load load, Load capacity) const;
 

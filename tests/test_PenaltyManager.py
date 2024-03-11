@@ -78,7 +78,7 @@ def test_repair_booster():
     assert_equal(cost_evaluator.load_penalty(2, 1), 1)  # 1 unit above capacity
 
 
-def test_capacity_penalty_update_increase(ok_small):
+def test_load_penalty_update_increase(ok_small):
     """
     Tests that the load violation penalty is increased when too many load
     infeasible solutions have been generated since the last update.
@@ -119,7 +119,7 @@ def test_capacity_penalty_update_increase(ok_small):
     assert_equal(pm.cost_evaluator().load_penalty(2, 1), 111)
 
 
-def test_capacity_penalty_update_decrease(ok_small):
+def test_load_penalty_update_decrease(ok_small):
     """
     Tests that the load violation penalty is decreased when sufficiently many
     load feasible solutions have been generated since the last update.
