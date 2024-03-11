@@ -202,6 +202,7 @@ class Model:
         y: int,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
+        *,
         name: str = "",
     ) -> Depot:
         """
@@ -261,6 +262,7 @@ class Model:
         tw_late: int = np.iinfo(np.int64).max,
         max_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,
+        *,
         name: str = "",
     ) -> VehicleType:
         """
