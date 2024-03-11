@@ -1023,6 +1023,8 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     clients[1] = Client(2, 2, required=False, group=0)
 
     group = ClientGroup([1, 2], required=True)
+    assert_(group.required)
+    assert_(group.mutually_exclusive)
 
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, routes)
@@ -1030,7 +1032,9 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     assert_equal(sol.is_group_feasible(), feasible)
 
 
-def test_group_feasibility_bug(ok_small_mutually_exclusive_groups):
+def test_mutually_exclusive_group_feasibility_bug(
+    ok_small_mutually_exclusive_groups,
+):
     """
     This tests a bug where the make_random() classmethod did not set the group
     feasibility flag correctly, leading it to believe that every solution was
@@ -1041,3 +1045,25 @@ def test_group_feasibility_bug(ok_small_mutually_exclusive_groups):
 
     assert_(not sol.is_feasible())
     assert_(not sol.is_group_feasible())
+
+
+def test_optional_mutually_exclusive_group(ok_small):
+    """
+    Tests that mutually exclusive client groups can be skipped if they are
+    not required. In that case at most one client from the group needs to be
+    in the solution, but zero is also OK.
+    """
+    # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
+    # at most one must be part of a feasible solution.
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    clients[1] = Client(2, 2, required=False, group=0)
+
+    group = ClientGroup([1, 2], required=False)
+    assert_(not group.required)
+    assert_(group.mutually_exclusive)
+
+    data = ok_small.replace(clients=clients, groups=[group])
+    sol = Solution(data, [[3, 4]])
+    assert_(sol.is_feasible())
+    assert_(sol.is_group_feasible())

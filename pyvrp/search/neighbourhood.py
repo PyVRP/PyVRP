@@ -89,6 +89,12 @@ def compute_neighbours(
     proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
     proximity[:, : data.num_depots] = np.inf  # clients do not neighbour depots
 
+    for group in data.groups():
+        if group.mutually_exclusive:
+            # Clients in mutually exclusive groups cannot neighbour each other,
+            # since only one of them can be in the solution at any given time.
+            proximity[np.ix_(group.clients, group.clients)] = np.inf
+
     top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
 
     if not params.symmetric_neighbours:
