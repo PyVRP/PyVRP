@@ -37,7 +37,7 @@ def test_OkSmall_multiple_vehicle_types(
     """
     data = ok_small.replace(vehicle_types=vehicle_types)
 
-    cost_evaluator = CostEvaluator(10_000, 6, 0)  # large capacity penalty
+    cost_evaluator = CostEvaluator(10_000, 6, 0)  # large load penalty
     rng = RandomNumberGenerator(seed=42)
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
