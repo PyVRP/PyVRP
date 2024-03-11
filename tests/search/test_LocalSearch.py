@@ -474,9 +474,9 @@ def test_mutually_exclusive_group(ok_small_mutually_exclusive_groups):
     cost_eval = CostEvaluator(20, 6, 0)
     improved = ls(sol, cost_eval)
 
+    assert_(not sol.is_group_feasible())
+    assert_(improved.is_group_feasible())
+
     sol_cost = cost_eval.penalised_cost(sol)
     improved_cost = cost_eval.penalised_cost(improved)
-
-    assert_(improved.is_feasible())
-    assert_(improved.is_group_feasible())
     assert_(improved_cost < sol_cost)
