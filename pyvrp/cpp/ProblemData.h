@@ -45,9 +45,9 @@ namespace pyvrp
  *     A matrix that gives the travel durations between all locations: both
  *     depots and clients.
  * groups
- *     List of client groups, where each group is a list of clients. Client
- *     groups have certain restrictions - see the definition for details. By
- *     default there are no groups, and empty groups must not be passed.
+ *     List of client groups. Client groups have certain restrictions - see the
+ *     definition for details. By default there are no groups, and empty groups
+ *     must not be passed.
  *
  * Raises
  * ------
@@ -193,9 +193,7 @@ public:
      *
      * .. note::
      *
-     *    Only mutually exclusive client groups are supported for now. Of the
-     *    clients in such a group, exactly one must be visited if the group is
-     *    required, and at most one if the group is not required.
+     *    Only mutually exclusive client groups are supported for now.
      *
      * Parameters
      * ----------
@@ -203,6 +201,17 @@ public:
      *     The clients in the group.
      * required
      *     Whether visiting this client group is required.
+     *
+     * Attributes
+     * ----------
+     * clients
+     *     The clients in the group.
+     * required
+     *     Whether visiting this client group is required.
+     * mutually_exclusive
+     *     When ``True``, exactly one of the clients in this group must be
+     *     visited if the group is required, and at most one if the group is
+     *     not required.
      */
     class ClientGroup
     {
