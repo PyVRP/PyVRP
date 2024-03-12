@@ -11,10 +11,6 @@ It currently supports VRPs with:
 * Multiple depots (multi-depot VRP);
 * Optional clients with prizes for visiting (prize collecting, team orienteering problem).
 
-The implementation builds on `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
-This allows users to directly solve VRP instances, or implement variants of the HGS algorithm using Python, inspired by the examples in this documentation. 
-Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
-
 The PyVRP package comes with pre-compiled binaries for Windows, Mac OS and Linux, and can thus be easily installed without requiring local compilation.
 It can be installed through *pip* via
 
