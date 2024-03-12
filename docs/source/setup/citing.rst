@@ -21,4 +21,4 @@ Or, using the following BibTeX entry:
      journal = {INFORMS Journal on Computing},
    }
 
-Since PyVRP extends `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, you should also consider citing `Vidal (2022) <https://doi.org/10.1016/j.cor.2021.105643>`_.
+Since PyVRP extends `HGS-CVRP <https://github.com/vidalt/HGS-CVRP/>`_, please also consider citing `Vidal (2022) <https://doi.org/10.1016/j.cor.2021.105643>`_.

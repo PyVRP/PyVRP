@@ -72,7 +72,7 @@ Or, using the following BibTeX entry:
 }
 ```
 
-Since PyVRP extends [HGS-CVRP][8], you should also consider citing [Vidal (2022)][10].
+Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10].
 
 [1]: https://pyvrp.org/
 
