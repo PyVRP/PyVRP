@@ -260,6 +260,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     // U must be inserted either when it is a required client, and can only be
     // removed when it is not.
     auto mustInsert = uData.required;
+    auto mustNotInsert = false;
     auto mayRemove = !uData.required;
     if (uData.group)
     {
@@ -274,6 +275,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         // may be removed when its group is not required, or there is already
         // more than one client from the group in the solution.
         mustInsert = group.required && numInSol == 0;
+        mustNotInsert = numInSol > 0;
         mayRemove = !group.required || numInSol > 1;
     }
 
@@ -284,8 +286,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         update(route, route);
     }
 
-    if (U->route())  // U is still in a route, so no need to test inserting it
-        return;      // anywhere.
+    if (mustNotInsert || U->route())  // U must not be inserted, or is still in
+        return;                       // a route, so no need to test inserting.
 
     // We take this as a default value in case none of the client's neighbours
     // are assigned, yet U is required.
@@ -340,13 +342,16 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         costs.push_back(removeCost(&nodes[client], data, costEvaluator));
 
     // Sort clients in order of increasing removal costs.
+    std::vector<size_t> range(inSol.size());
+    std::iota(range.begin(), range.end(), 0);
     auto cmp = [&](auto idx1, auto idx2) { return costs[idx1] < costs[idx2]; };
-    std::stable_sort(inSol.begin(), inSol.end(), cmp);
+    std::stable_sort(range.begin(), range.end(), cmp);
 
     // Remove all but the last client, whose removal is the least valuable.
-    for (auto client = inSol.begin(); client != inSol.end() - 1; ++client)
+    for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
     {
-        auto &node = nodes[*client];
+        auto const client = inSol[*idx];
+        auto const &node = nodes[client];
         auto *route = node.route();
 
         route->remove(node.idx());
@@ -354,7 +359,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     }
 
     // Test swapping U and V, and do so if U is better to have than V.
-    auto *V = &nodes[inSol.back()];
+    auto *V = &nodes[inSol[range.back()]];
     if (!U->route() && inplaceCost(U, V, data, costEvaluator) < 0)
     {
         auto *route = V->route();
