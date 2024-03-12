@@ -6,7 +6,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, Model
+from pyvrp import Client, ClientGroup, Depot, Model
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -188,7 +188,7 @@ def test_add_vehicle_type_raises_for_unknown_depot():
     raises a ValueError.
     """
     m = Model()
-    depot = Client(x=0, y=0)
+    depot = Depot(x=0, y=0)
 
     with assert_raises(ValueError):
         m.add_vehicle_type(depot=depot)
@@ -592,5 +592,109 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     res = m.solve(stop=MaxIterations(100))
     route = res.best.routes()[0]
 
-    assert_equal(route.has_excess_load(), expected_excess_load > 0)
     assert_equal(route.excess_load(), expected_excess_load)
+    assert_equal(route.has_excess_load(), expected_excess_load > 0)
+
+
+def test_add_client_raises_unknown_group():
+    """
+    Tests that the model's ``add_client`` method raises when it's given a group
+    argument that is not known to the model.
+    """
+    m = Model()
+    group = ClientGroup()
+
+    with assert_raises(ValueError):
+        m.add_client(1, 1, group=group)
+
+
+def test_from_data_client_group(ok_small):
+    """
+    Test that creating a model from a given data instance with client groups
+    correctly sets up the client groups in the model.
+    """
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    clients[1] = Client(1, 1, required=False, group=0)
+
+    group = ClientGroup([1, 2])
+
+    data = ok_small.replace(clients=clients, groups=[group])
+    model = Model.from_data(data)
+
+    # Test that the clients have been correctly registered, and that there is
+    # a client group in the model.
+    assert_equal(model.locations[1].group, 0)
+    assert_equal(model.locations[2].group, 0)
+    assert_equal(len(model.groups), 1)
+
+    # Test that that group actually contains the clients.
+    group = model.groups[0]
+    assert_(group.required)
+    assert_equal(len(group), 2)
+    assert_equal(group.clients, [1, 2])
+
+
+def test_to_data_client_group():
+    """
+    Tests that creating a small model with a client group results in a correct
+    ProblemData instance that has the appropriate group memberships set up.
+    """
+    m = Model()
+    m.add_depot(1, 1)
+
+    group = m.add_client_group()
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(2, 2, required=False, group=group)
+
+    # Generate the data instance. There should be a single client group, and
+    # the first two clients should be members of that group.
+    data = m.data()
+    assert_equal(data.num_groups, 1)
+
+    group = data.group(0)
+    assert_equal(group.clients, [1, 2])
+
+
+def test_raises_mutually_exclusive_client_group_required_client():
+    """
+    Tests that adding a required client to a mutually exclusive client group
+    raises, because that does not make any sense.
+    """
+    m = Model()
+
+    group = m.add_client_group()
+    assert_(group.mutually_exclusive)
+
+    with assert_raises(ValueError):
+        m.add_client(1, 1, required=True, group=group)
+
+
+def test_client_group_membership_works_with_intermediate_changes():
+    """
+    Tests that repeatedly calling data() does not add clients more than once
+    to each client group they are in, and everything continues to work when
+    the model changes between calls to data().
+    """
+    m = Model()
+    m.add_depot(1, 1)
+    m.add_vehicle_type()
+
+    # Add three clients to the model, with (for now) indices 1, 2, 3.
+    group = m.add_client_group()
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(1, 1, required=False, group=group)
+
+    m.data()
+    assert_equal(len(group), 3)
+    assert_equal(group.clients, [1, 2, 3])
+
+    # Add another depot and another client. The clients now have indices 2, 3,
+    # 4, and 5.
+    m.add_depot(1, 2)
+    m.add_client(1, 1, required=False, group=group)
+
+    m.data()
+    assert_equal(len(group), 4)
+    assert_equal(group.clients, [2, 3, 4, 5])

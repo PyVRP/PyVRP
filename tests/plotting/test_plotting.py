@@ -50,7 +50,8 @@ def test_plot_solution_multiple_depots():
 @img_comp(["plot_solution_optional_clients"], **IMG_KWARGS)
 def test_plot_solution_optional_clients(ok_small_prizes):
     """
-    TODO
+    Tests that plot_solution() correctly displays unvisited locations when the
+    instance contains optional clients and ``plot_clients`` is True.
     """
     routes = [
         Route(ok_small_prizes, [2, 3], vehicle_type=0),

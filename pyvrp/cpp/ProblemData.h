@@ -13,11 +13,12 @@ namespace pyvrp
 {
 /**
  * ProblemData(
- *     clients: List[Client],
- *     depots: List[Depot],
- *     vehicle_types: List[VehicleType],
- *     distance_matrix: List[List[int]],
- *     duration_matrix: List[List[int]],
+ *     clients: list[Client],
+ *     depots: list[Depot],
+ *     vehicle_types: list[VehicleType],
+ *     distance_matrix: numpy.ndarray[int],
+ *     duration_matrix: numpy.ndarray[int],
+ *     groups: list[ClientGroup] = [],
  * )
  *
  * Creates a problem data instance. This instance contains all information
@@ -34,8 +35,7 @@ namespace pyvrp
  * clients
  *     List of clients to visit.
  * depots
- *     List of depots. Depots should have no delivery and pickup demand, or
- *     service duration.
+ *     List of depots. At least one depot must be passed.
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrix
@@ -44,9 +44,24 @@ namespace pyvrp
  * duration_matrix
  *     A matrix that gives the travel durations between all locations: both
  *     depots and clients.
+ * groups
+ *     List of client groups. Client groups have certain restrictions - see the
+ *     definition for details. By default there are no groups, and empty groups
+ *     must not be passed.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When the data is inconsistent.
+ * IndexError
+ *     When the data references clients, depots, or groups that do not exist
+ *     because the referenced index is out of range.
  */
 class ProblemData
 {
+    // Validates the consistency of the constructed instance.
+    void validate() const;
+
 public:
     /**
      * Client(
@@ -60,6 +75,7 @@ public:
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
+     *    group: Optional[int] = None,
      *    name: str = "",
      * )
      *
@@ -97,6 +113,9 @@ public:
      * required
      *     Whether this client must be part of a feasible solution. Default
      *     True.
+     * group
+     *     Indicates membership of the given client group, if any. By default
+     *     clients are not part of any groups.
      * name
      *     Free-form name field for this client. Default empty.
      *
@@ -124,6 +143,8 @@ public:
      *     Prize collected by visiting this client.
      * required
      *     Whether visiting this client is required.
+     * group
+     *     Indicates membership of the given client group, if any.
      * name
      *     Free-form name field for this client.
      */
@@ -139,7 +160,8 @@ public:
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
         bool const required;         // Must client be in solution?
-        char const *name;            // Client name (for reference)
+        std::optional<size_t> const group;  // Optional client group membership
+        char const *name;                   // Client name (for reference)
 
         Client(Coordinate x,
                Coordinate y,
@@ -151,6 +173,7 @@ public:
                Duration releaseTime = 0,
                Cost prize = 0,
                bool required = true,
+               std::optional<size_t> group = std::nullopt,
                char const *name = "");
 
         Client(Client const &client);
@@ -160,6 +183,69 @@ public:
         Client &operator=(Client &&client) = delete;
 
         ~Client();
+    };
+
+    /**
+     * ClientGroup(clients: list[int] = [], required: bool = True)
+     *
+     * A client group that imposes additional restrictions on visits to clients
+     * in the group.
+     *
+     * .. note::
+     *
+     *    Only mutually exclusive client groups are supported for now.
+     *
+     * Parameters
+     * ----------
+     * clients
+     *     The clients in the group.
+     * required
+     *     Whether visiting this client group is required.
+     *
+     * Attributes
+     * ----------
+     * clients
+     *     The clients in the group.
+     * required
+     *     Whether visiting this client group is required.
+     * mutually_exclusive
+     *     When ``True``, exactly one of the clients in this group must be
+     *     visited if the group is required, and at most one if the group is
+     *     not required.
+     *
+     * Raises
+     * ------
+     * ValueError
+     *     When the given clients contain duplicates, or when a client is added
+     *     to the group twice.
+     */
+    class ClientGroup
+    {
+        std::vector<size_t> clients_;  // clients in this group
+
+    public:
+        bool const required;                  // is visiting the group required?
+        bool const mutuallyExclusive = true;  // at most one visit in group?
+
+        explicit ClientGroup(std::vector<size_t> clients = {},
+                             bool required = true);
+
+        ClientGroup(ClientGroup const &group) = default;
+        ClientGroup(ClientGroup &&group) = default;
+
+        ClientGroup &operator=(ClientGroup const &group) = delete;
+        ClientGroup &operator=(ClientGroup &&group) = delete;
+
+        bool empty() const;
+        size_t size() const;
+
+        std::vector<size_t>::const_iterator begin() const;
+        std::vector<size_t>::const_iterator end() const;
+
+        std::vector<size_t> const &clients() const;
+
+        void addClient(size_t client);
+        void clear();
     };
 
     /**
@@ -338,6 +424,7 @@ private:
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
+    std::vector<ClientGroup> const groups_;        // Client groups
 
     size_t const numVehicles_;
 
@@ -365,6 +452,11 @@ public:
     [[nodiscard]] std::vector<Depot> const &depots() const;
 
     /**
+     * Returns a list of all client groups in the problem instance.
+     */
+    [[nodiscard]] std::vector<ClientGroup> const &groups() const;
+
+    /**
      * Returns a list of all vehicle types in the problem instance.
      */
     [[nodiscard]] std::vector<VehicleType> const &vehicleTypes() const;
@@ -373,6 +465,16 @@ public:
      * Center point of all client locations (excluding depots).
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
+
+    /**
+     * Returns the client group at the given index.
+     *
+     * Parameters
+     * ----------
+     * group
+     *     Group index whose information to retrieve.
+     */
+    [[nodiscard]] ClientGroup const &group(size_t group) const;
 
     /**
      * Returns vehicle type data for the given vehicle type.
@@ -443,6 +545,11 @@ public:
     [[nodiscard]] size_t numDepots() const;
 
     /**
+     * Number of client groups in this problem instance.
+     */
+    [[nodiscard]] size_t numGroups() const;
+
+    /**
      * Number of locations in this problem instance, that is, the number of
      * depots plus the number of clients in the instance.
      */
@@ -474,6 +581,8 @@ public:
      *    Optional distance matrix.
      * duration_matrix
      *    Optional duration matrix.
+     * groups
+     *    Optional client groups.
      *
      * Returns
      * -------
@@ -484,24 +593,17 @@ public:
                         std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<Matrix<Distance>> &distMat,
-                        std::optional<Matrix<Duration>> &durMat);
+                        std::optional<Matrix<Duration>> &durMat,
+                        std::optional<std::vector<ClientGroup>> &groups);
 
-    /**
-     * Constructs a ProblemData object with the given data. Assumes the list
-     * of clients contains the depot, such that each vector is one longer
-     * than the number of clients.
-     *
-     * @param clients      List of clients.
-     * @param depots       List of depots.
-     * @param vehicleTypes List of vehicle types.
-     * @param distMat      Distance matrix.
-     * @param durMat       Duration matrix.
-     */
-    ProblemData(std::vector<Client> const &clients,
-                std::vector<Depot> const &depots,
-                std::vector<VehicleType> const &vehicleTypes,
+    ProblemData(std::vector<Client> clients,
+                std::vector<Depot> depots,
+                std::vector<VehicleType> vehicleTypes,
                 Matrix<Distance> distMat,
-                Matrix<Duration> durMat);
+                Matrix<Duration> durMat,
+                std::vector<ClientGroup> groups = {});
+
+    ProblemData() = delete;
 };
 
 ProblemData::Location::operator Client const &() const { return *client; }
