@@ -23,10 +23,6 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Edge
       :members:
 
-   .. autoclass:: MutuallyExclusiveGroup
-      :members:
-      :special-members: __contains__, __iter__, __len__
-
 .. automodule:: pyvrp.GeneticAlgorithm
 
    .. autoclass:: GeneticAlgorithmParams
