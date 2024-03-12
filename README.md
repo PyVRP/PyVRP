@@ -14,10 +14,6 @@ It currently supports VRPs with:
 - Multiple depots (multi-depot VRP);
 - Optional clients with prizes for visiting (prize collecting, team orienteering problem).
 
-The implementation builds on Thibaut Vidal's [HGS-CVRP][8], but has been completely redesigned to be easy to use as a highly customisable Python package, while maintaining speed and state-of-the-art performance.
-Users can customise various aspects of the algorithm using Python, including population management, crossover strategies, granular neighbourhoods and operator selection in the local search.
-Additionally, for advanced use cases such as supporting additional VRP variants, users can build and install PyVRP directly from the source code.
-
 PyVRP is available on the Python package index as `pyvrp`.
 It may be installed in the usual way as
 ```
@@ -76,6 +72,7 @@ Or, using the following BibTeX entry:
 }
 ```
 
+Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10].
 
 [1]: https://pyvrp.org/
 
@@ -94,3 +91,5 @@ Or, using the following BibTeX entry:
 [8]: https://github.com/vidalt/HGS-CVRP/
 
 [9]: https://pyvrp.org/examples/using_pyvrp_components.html
+
+[10]: https://doi.org/10.1016/j.cor.2021.105643
