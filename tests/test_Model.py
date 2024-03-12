@@ -698,3 +698,15 @@ def test_client_group_membership_works_with_intermediate_changes():
     m.data()
     assert_equal(len(group), 4)
     assert_equal(group.clients, [2, 3, 4, 5])
+
+
+def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
+    """
+    TODO
+    45253 (but for a slightly different instance) is BKS cost
+    """
+    m = Model.from_data(gtsp)
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 51879)
