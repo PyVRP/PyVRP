@@ -184,6 +184,10 @@ class Model:
             name=name,
         )
 
+        if group_idx is not None:
+            client_idx = len(self._depots) + len(self._clients)
+            self._groups[group_idx].add_client(client_idx)
+
         self._clients.append(client)
         return client
 
@@ -192,7 +196,7 @@ class Model:
         Adds a new, possibly optional, client group to the model. Returns the
         created group.
         """
-        group = ClientGroup([], required)
+        group = ClientGroup(required=required)
         self._groups.append(group)
         return group
 
@@ -209,11 +213,16 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
+        self._depots.append(depot)
+
         for group in self._groups:  # new depot invalidates client indices
             group.clear()
 
-        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
-        self._depots.append(depot)
+        for idx, client in enumerate(self._clients, len(self._depots)):
+            if client.group is not None:
+                self._groups[client.group].add_client(idx)
+
         return depot
 
     def add_edge(
@@ -322,11 +331,6 @@ class Model:
             to = loc2idx[id(edge.to)]
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
-
-        members = [set(group.clients) for group in self._groups]
-        for idx, client in enumerate(self._clients, len(self._depots)):
-            if client.group is not None and idx not in members[client.group]:
-                self._groups[client.group].add_client(idx)
 
         return ProblemData(
             self._clients,

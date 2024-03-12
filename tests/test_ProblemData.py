@@ -615,7 +615,7 @@ def test_raises_empty_group():
             vehicle_types=[VehicleType()],
             distance_matrix=[[0]],
             duration_matrix=[[0]],
-            groups=[ClientGroup([])],  # empty group - this should raise
+            groups=[ClientGroup()],  # empty group - this should raise
         )
 
 
@@ -714,6 +714,20 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             duration_matrix=np.zeros((2, 2)),
             groups=[ClientGroup([1])],
         )
+
+
+def test_client_group_raises_duplicate_clients():
+    """
+    Tests that adding the same client to a group more than once raises.
+    """
+    with assert_raises(ValueError):
+        ClientGroup([1, 1])
+
+    group = ClientGroup()
+    group.add_client(1)  # this should be OK
+
+    with assert_raises(ValueError):
+        group.add_client(1)  # but adding the client a second time is not
 
 
 def test_replacing_client_groups(ok_small):

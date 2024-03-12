@@ -54,7 +54,7 @@ namespace pyvrp
  * ValueError
  *     When the data is inconsistent.
  * IndexError
- *     When the data reference clients, depots, or groups that do not exist
+ *     When the data references clients, depots, or groups that do not exist
  *     because the referenced index is out of range.
  */
 class ProblemData
@@ -186,7 +186,7 @@ public:
     };
 
     /**
-     * ClientGroup(clients: list[int], required: bool = True)
+     * ClientGroup(clients: list[int] = [], required: bool = True)
      *
      * A client group that imposes additional restrictions on visits to clients
      * in the group.
@@ -212,6 +212,12 @@ public:
      *     When ``True``, exactly one of the clients in this group must be
      *     visited if the group is required, and at most one if the group is
      *     not required.
+     *
+     * Raises
+     * ------
+     * ValueError
+     *     When the given clients contain duplicates, or when a client is added
+     *     to the group twice.
      */
     class ClientGroup
     {
@@ -221,7 +227,8 @@ public:
         bool const required;                  // is visiting the group required?
         bool const mutuallyExclusive = true;  // at most one visit in group?
 
-        explicit ClientGroup(std::vector<size_t> clients, bool required = true);
+        explicit ClientGroup(std::vector<size_t> clients = {},
+                             bool required = true);
 
         ClientGroup(ClientGroup const &group) = default;
         ClientGroup(ClientGroup &&group) = default;

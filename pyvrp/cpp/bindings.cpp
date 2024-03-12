@@ -134,7 +134,7 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<ProblemData::ClientGroup>(
         m, "ClientGroup", DOC(pyvrp, ProblemData, ClientGroup))
         .def(py::init<std::vector<size_t>, bool>(),
-             py::arg("clients"),
+             py::arg("clients") = py::list(),
              py::arg("required") = true)
         .def("add_client",
              &ProblemData::ClientGroup::addClient,

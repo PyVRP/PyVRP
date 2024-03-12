@@ -63,7 +63,7 @@ class ClientGroup:
     mutually_exclusive: bool
     def __init__(
         self,
-        clients: list[int],
+        clients: list[int] = [],
         required: bool = True,
     ) -> None: ...
     @property

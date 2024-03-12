@@ -111,8 +111,10 @@ ProblemData::Client::~Client() { delete[] name; }
 
 ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
                                       bool required)
-    : clients_(std::move(clients)), required(required)
+    : required(required)
 {
+    for (auto const client : clients)
+        addClient(client);
 }
 
 bool ProblemData::ClientGroup::empty() const { return clients_.empty(); }
@@ -136,6 +138,9 @@ std::vector<size_t> const &ProblemData::ClientGroup::clients() const
 
 void ProblemData::ClientGroup::addClient(size_t client)
 {
+    if (std::find(clients_.begin(), clients_.end(), client) != clients_.end())
+        throw std::invalid_argument("Client already in group.");
+
     clients_.push_back(client);
 }
 

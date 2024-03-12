@@ -602,7 +602,7 @@ def test_add_client_raises_unknown_group():
     argument that is not known to the model.
     """
     m = Model()
-    group = ClientGroup([], required=True)
+    group = ClientGroup()
 
     with assert_raises(ValueError):
         m.add_client(1, 1, group=group)
