@@ -13,12 +13,12 @@ namespace pyvrp
 {
 /**
  * ProblemData(
- *     clients: List[Client],
- *     depots: List[Depot],
- *     vehicle_types: List[VehicleType],
- *     distance_matrix: List[List[int]],
- *     duration_matrix: List[List[int]],
- *     groups: List[ClientGroup] = [],
+ *     clients: list[Client],
+ *     depots: list[Depot],
+ *     vehicle_types: list[VehicleType],
+ *     distance_matrix: numpy.ndarray[int],
+ *     duration_matrix: numpy.ndarray[int],
+ *     groups: list[ClientGroup] = [],
  * )
  *
  * Creates a problem data instance. This instance contains all information
