@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -54,83 +54,6 @@ class Edge:
         self.duration = duration
 
 
-class MutuallyExclusiveGroup:
-    """
-    Models a mutually exclusive group of clients: if ``required``, exactly one
-    of the clients in this group must be visited, not all.
-
-    Parameters
-    ----------
-    model
-        The model this group is associated with.
-    required
-        Whether visiting this client group is required.
-    """
-
-    def __init__(self, model: Model, required: bool):
-        self._model = model
-        self._required = required
-        self._clients: list[Client] = []
-
-    @property
-    def required(self) -> bool:
-        return self._required
-
-    def __contains__(self, client: Client) -> bool:
-        """
-        Returns whether the given client is in the group.
-        """
-        return client in self._clients
-
-    def __iter__(self) -> Iterator[Client]:
-        """
-        Iterates over the clients in this group.
-        """
-        return iter(self._clients)
-
-    def __len__(self) -> int:
-        """
-        Returns the number of clients in the group.
-        """
-        return len(self._clients)
-
-    def add_client(
-        self,
-        x: int,
-        y: int,
-        delivery: int = 0,
-        pickup: int = 0,
-        service_duration: int = 0,
-        tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
-        release_time: int = 0,
-        prize: int = 0,
-        name: str = "",
-    ):
-        """
-        Adds a client with the given attributes to this group (and to the model
-        to which this group belongs). Returns the created
-        :class:`~pyvrp._pyvrp.Client` instance.
-        """
-        client = self._model.add_client(
-            x=x,
-            y=y,
-            delivery=delivery,
-            pickup=pickup,
-            service_duration=service_duration,
-            tw_early=tw_early,
-            tw_late=tw_late,
-            release_time=release_time,
-            prize=prize,
-            required=False,  # only one is required via the group constraint
-            group=self,
-            name=name,
-        )
-
-        self._clients.append(client)
-        return client
-
-
 class Model:
     """
     A simple interface for modelling vehicle routing problems with PyVRP.
@@ -140,7 +63,7 @@ class Model:
         self._clients: list[Client] = []
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
-        self._groups: list[MutuallyExclusiveGroup] = []
+        self._groups: list[ClientGroup] = []
         self._vehicle_types: list[VehicleType] = []
 
     @property
@@ -153,9 +76,9 @@ class Model:
         return self._depots + self._clients
 
     @property
-    def groups(self) -> list[MutuallyExclusiveGroup]:
+    def groups(self) -> list[ClientGroup]:
         """
-        Returns all the mutually exclusive client groups in the current model.
+        Returns all client groups currently in the model.
         """
         return self._groups
 
@@ -202,15 +125,8 @@ class Model:
         self._clients = clients
         self._depots = depots
         self._edges = edges
+        self._groups = data.groups()
         self._vehicle_types = data.vehicle_types()
-
-        for group in data.groups():
-            new_group = MutuallyExclusiveGroup(self, group.required)
-            group_clients = [
-                clients[client - len(depots)] for client in group.clients
-            ]
-            new_group._clients = group_clients  # noqa
-            self._groups.append(new_group)
 
         return self
 
@@ -226,7 +142,8 @@ class Model:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
-        group: Optional[MutuallyExclusiveGroup] = None,
+        group: Optional[ClientGroup] = None,
+        *,
         name: str = "",
     ) -> Client:
         """
@@ -236,8 +153,9 @@ class Model:
         Raises
         ------
         ValueError
-            When ``group`` is not ``None``, and the given ``group`` is not
-            already added to this model instance.
+            When ``group`` is not ``None``, and the given ``group`` is not part
+            of this model instance, or when a required client is being added to
+            a mutually exclusive client group.
         """
         if group is None:
             group_idx = None
@@ -245,6 +163,11 @@ class Model:
             group_idx = self._groups.index(group)
         else:
             raise ValueError("The given group is not in this model instance.")
+
+        if required and group is not None and group.mutually_exclusive:
+            # Required clients cannot be part of a mutually exclusive client
+            # group, since then there's nothing to decide about.
+            raise ValueError("Required client in mutually exclusive group.")
 
         client = Client(
             x=x,
@@ -261,8 +184,21 @@ class Model:
             name=name,
         )
 
+        if group_idx is not None:
+            client_idx = len(self._depots) + len(self._clients)
+            self._groups[group_idx].add_client(client_idx)
+
         self._clients.append(client)
         return client
+
+    def add_client_group(self, required: bool = True) -> ClientGroup:
+        """
+        Adds a new, possibly optional, client group to the model. Returns the
+        created group.
+        """
+        group = ClientGroup(required=required)
+        self._groups.append(group)
+        return group
 
     def add_depot(
         self,
@@ -270,6 +206,7 @@ class Model:
         y: int,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
+        *,
         name: str = "",
     ) -> Depot:
         """
@@ -278,6 +215,14 @@ class Model:
         """
         depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
+
+        for group in self._groups:  # new depot invalidates client indices
+            group.clear()
+
+        for idx, client in enumerate(self._clients, len(self._depots)):
+            if client.group is not None:
+                self._groups[client.group].add_client(idx)
+
         return depot
 
     def add_edge(
@@ -316,18 +261,6 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_mutually_exclusive_group(
-        self, required: bool = True
-    ) -> MutuallyExclusiveGroup:
-        """
-        Adds a mutually exclusive client group to the model. Exactly one of the
-        clients in the group must be visited if visiting the group is
-        ``required``. Returns the created group.
-        """
-        group = MutuallyExclusiveGroup(self, required)
-        self._groups.append(group)
-        return group
-
     def add_vehicle_type(
         self,
         num_available: int = 1,
@@ -338,6 +271,7 @@ class Model:
         tw_late: int = np.iinfo(np.int64).max,
         max_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,
+        *,
         name: str = "",
     ) -> VehicleType:
         """
@@ -398,18 +332,13 @@ class Model:
             distances[frm, to] = edge.distance
             durations[frm, to] = edge.duration
 
-        groups = []
-        for group in self._groups:
-            clients = [loc2idx[id(client)] for client in group]
-            groups.append(ClientGroup(clients, group.required))
-
         return ProblemData(
             self._clients,
             self._depots,
             self.vehicle_types,
             distances,
             durations,
-            groups,
+            self._groups,
         )
 
     def solve(

@@ -13,12 +13,12 @@ namespace pyvrp
 {
 /**
  * ProblemData(
- *     clients: List[Client],
- *     depots: List[Depot],
- *     vehicle_types: List[VehicleType],
- *     distance_matrix: List[List[int]],
- *     duration_matrix: List[List[int]],
- *     groups: List[ClientGroup] = [],
+ *     clients: list[Client],
+ *     depots: list[Depot],
+ *     vehicle_types: list[VehicleType],
+ *     distance_matrix: numpy.ndarray[int],
+ *     duration_matrix: numpy.ndarray[int],
+ *     groups: list[ClientGroup] = [],
  * )
  *
  * Creates a problem data instance. This instance contains all information
@@ -45,16 +45,16 @@ namespace pyvrp
  *     A matrix that gives the travel durations between all locations: both
  *     depots and clients.
  * groups
- *     List of client groups, where each group is a list of clients. Client
- *     groups have certain restrictions - see the definition for details. By
- *     default there are no groups, and empty groups must not be passed.
+ *     List of client groups. Client groups have certain restrictions - see the
+ *     definition for details. By default there are no groups, and empty groups
+ *     must not be passed.
  *
  * Raises
  * ------
  * ValueError
  *     When the data is inconsistent.
  * IndexError
- *     When the data reference clients, depots, or groups that do not exist
+ *     When the data references clients, depots, or groups that do not exist
  *     because the referenced index is out of range.
  */
 class ProblemData
@@ -186,15 +186,14 @@ public:
     };
 
     /**
-     * ClientGroup(clients: list[int], required: bool = True)
+     * ClientGroup(clients: list[int] = [], required: bool = True)
      *
      * A client group that imposes additional restrictions on visits to clients
      * in the group.
      *
      * .. note::
      *
-     *    For now, only mutually exclusive client groups are supported. Of the
-     *    clients in such a group, exactly one must be visited.
+     *    Only mutually exclusive client groups are supported for now.
      *
      * Parameters
      * ----------
@@ -202,14 +201,34 @@ public:
      *     The clients in the group.
      * required
      *     Whether visiting this client group is required.
+     *
+     * Attributes
+     * ----------
+     * clients
+     *     The clients in the group.
+     * required
+     *     Whether visiting this client group is required.
+     * mutually_exclusive
+     *     When ``True``, exactly one of the clients in this group must be
+     *     visited if the group is required, and at most one if the group is
+     *     not required.
+     *
+     * Raises
+     * ------
+     * ValueError
+     *     When the given clients contain duplicates, or when a client is added
+     *     to the group twice.
      */
-    struct ClientGroup
+    class ClientGroup
     {
-        std::vector<size_t> const clients;    // clients in this group
+        std::vector<size_t> clients_;  // clients in this group
+
+    public:
         bool const required;                  // is visiting the group required?
         bool const mutuallyExclusive = true;  // at most one visit in group?
 
-        explicit ClientGroup(std::vector<size_t> clients, bool required = true);
+        explicit ClientGroup(std::vector<size_t> clients = {},
+                             bool required = true);
 
         ClientGroup(ClientGroup const &group) = default;
         ClientGroup(ClientGroup &&group) = default;
@@ -222,6 +241,11 @@ public:
 
         std::vector<size_t>::const_iterator begin() const;
         std::vector<size_t>::const_iterator end() const;
+
+        std::vector<size_t> const &clients() const;
+
+        void addClient(size_t client);
+        void clear();
     };
 
     /**
@@ -572,9 +596,9 @@ public:
                         std::optional<Matrix<Duration>> &durMat,
                         std::optional<std::vector<ClientGroup>> &groups);
 
-    ProblemData(std::vector<Client> const &clients,
-                std::vector<Depot> const &depots,
-                std::vector<VehicleType> const &vehicleTypes,
+    ProblemData(std::vector<Client> clients,
+                std::vector<Depot> depots,
+                std::vector<VehicleType> vehicleTypes,
                 Matrix<Distance> distMat,
                 Matrix<Duration> durMat,
                 std::vector<ClientGroup> groups = {});

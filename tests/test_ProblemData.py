@@ -578,23 +578,30 @@ def test_location_raises_invalid_index(ok_small, idx: int):
         ok_small.location(idx)
 
 
-def test_raises_invalid_vehicle_depot_indices(ok_small):
+@pytest.mark.parametrize(
+    ("depot", "should_raise"),
+    [
+        (0, False),  # correct index - should not raise
+        (1, True),  # index is the number of depots: too large; should raise
+        (2, True),  # index is too large; should raise
+    ],
+)
+def test_raises_invalid_vehicle_depot_indices(
+    ok_small, depot: int, should_raise: bool
+):
     """
-    Tests that setting the depot index on a VehicleType to a value that's out
-    of range raises when replacing or constructing a ProblemData instance.
+    Tests that setting the depot index on a VehicleType to a value that's not
+    correct raises when replacing vehicles (and, by extension, when
+    constructing a ProblemData instance).
     """
     assert_equal(ok_small.num_depots, 1)
-    with assert_raises(IndexError):
-        ok_small.replace(vehicle_types=[VehicleType(depot=1)])
+
+    if not should_raise:
+        ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
+        return
 
     with assert_raises(IndexError):
-        ProblemData(
-            clients=[],
-            depots=[Depot(1, 1)],
-            vehicle_types=[VehicleType(depot=1)],
-            distance_matrix=[[0]],
-            duration_matrix=[[0]],
-        )
+        ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
 
 
 def test_raises_empty_group():
@@ -608,7 +615,7 @@ def test_raises_empty_group():
             vehicle_types=[VehicleType()],
             distance_matrix=[[0]],
             duration_matrix=[[0]],
-            groups=[ClientGroup([])],  # empty group - this should raise
+            groups=[ClientGroup()],  # empty group - this should raise
         )
 
 
@@ -707,6 +714,20 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             duration_matrix=np.zeros((2, 2)),
             groups=[ClientGroup([1])],
         )
+
+
+def test_client_group_raises_duplicate_clients():
+    """
+    Tests that adding the same client to a group more than once raises.
+    """
+    with assert_raises(ValueError):
+        ClientGroup([1, 1])
+
+    group = ClientGroup()
+    group.add_client(1)  # this should be OK
+
+    with assert_raises(ValueError):
+        group.add_client(1)  # but adding the client a second time is not
 
 
 def test_replacing_client_groups(ok_small):

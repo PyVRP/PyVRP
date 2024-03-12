@@ -134,9 +134,13 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<ProblemData::ClientGroup>(
         m, "ClientGroup", DOC(pyvrp, ProblemData, ClientGroup))
         .def(py::init<std::vector<size_t>, bool>(),
-             py::arg("clients"),
+             py::arg("clients") = py::list(),
              py::arg("required") = true)
-        .def_readonly("clients", &ProblemData::ClientGroup::clients)
+        .def("add_client",
+             &ProblemData::ClientGroup::addClient,
+             py::arg("client"))
+        .def("clear", &ProblemData::ClientGroup::clear)
+        .def_property_readonly("clients", &ProblemData::ClientGroup::clients)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
                       &ProblemData::ClientGroup::mutuallyExclusive)
@@ -190,9 +194,9 @@ PYBIND11_MODULE(_pyvrp, m)
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
-        .def(py::init<std::vector<ProblemData::Client> const &,
-                      std::vector<ProblemData::Depot> const &,
-                      std::vector<ProblemData::VehicleType> const &,
+        .def(py::init<std::vector<ProblemData::Client>,
+                      std::vector<ProblemData::Depot>,
+                      std::vector<ProblemData::VehicleType>,
                       Matrix<pyvrp::Distance>,
                       Matrix<pyvrp::Duration>,
                       std::vector<ProblemData::ClientGroup>>(),

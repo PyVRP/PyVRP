@@ -109,6 +109,43 @@ ProblemData::Client::Client(Client &&client)
 
 ProblemData::Client::~Client() { delete[] name; }
 
+ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
+                                      bool required)
+    : required(required)
+{
+    for (auto const client : clients)
+        addClient(client);
+}
+
+bool ProblemData::ClientGroup::empty() const { return clients_.empty(); }
+
+size_t ProblemData::ClientGroup::size() const { return clients_.size(); }
+
+std::vector<size_t>::const_iterator ProblemData::ClientGroup::begin() const
+{
+    return clients_.begin();
+}
+
+std::vector<size_t>::const_iterator ProblemData::ClientGroup::end() const
+{
+    return clients_.end();
+}
+
+std::vector<size_t> const &ProblemData::ClientGroup::clients() const
+{
+    return clients_;
+}
+
+void ProblemData::ClientGroup::addClient(size_t client)
+{
+    if (std::find(clients_.begin(), clients_.end(), client) != clients_.end())
+        throw std::invalid_argument("Client already in group.");
+
+    clients_.push_back(client);
+}
+
+void ProblemData::ClientGroup::clear() { clients_.clear(); }
+
 ProblemData::Depot::Depot(Coordinate x,
                           Coordinate y,
                           Duration twEarly,
@@ -143,26 +180,6 @@ ProblemData::Depot::Depot(Depot &&depot)
 }
 
 ProblemData::Depot::~Depot() { delete[] name; }
-
-ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
-                                      bool required)
-    : clients(std::move(clients)), required(required)
-{
-}
-
-bool ProblemData::ClientGroup::empty() const { return clients.empty(); }
-
-size_t ProblemData::ClientGroup::size() const { return clients.size(); }
-
-std::vector<size_t>::const_iterator ProblemData::ClientGroup::begin() const
-{
-    return clients.begin();
-}
-
-std::vector<size_t>::const_iterator ProblemData::ClientGroup::end() const
-{
-    return clients.end();
-}
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
@@ -249,6 +266,11 @@ std::vector<ProblemData::ClientGroup> const &ProblemData::groups() const
     return groups_;
 }
 
+std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
+{
+    return vehicleTypes_;
+}
+
 ProblemData::ClientGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());
@@ -260,11 +282,6 @@ ProblemData::vehicleType(size_t vehicleType) const
 {
     assert(vehicleType < vehicleTypes_.size());
     return vehicleTypes_[vehicleType];
-}
-
-std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
-{
-    return vehicleTypes_;
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const
@@ -386,21 +403,21 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
                        groups.value_or(groups_));
 }
 
-ProblemData::ProblemData(std::vector<Client> const &clients,
-                         std::vector<Depot> const &depots,
-                         std::vector<VehicleType> const &vehicleTypes,
+ProblemData::ProblemData(std::vector<Client> clients,
+                         std::vector<Depot> depots,
+                         std::vector<VehicleType> vehicleTypes,
                          Matrix<Distance> distMat,
                          Matrix<Duration> durMat,
                          std::vector<ClientGroup> groups)
     : centroid_({0, 0}),
       dist_(std::move(distMat)),
       dur_(std::move(durMat)),
-      clients_(clients),
-      depots_(depots),
-      vehicleTypes_(vehicleTypes),
-      groups_(groups),
-      numVehicles_(std::accumulate(vehicleTypes.begin(),
-                                   vehicleTypes.end(),
+      clients_(std::move(clients)),
+      depots_(std::move(depots)),
+      vehicleTypes_(std::move(vehicleTypes)),
+      groups_(std::move(groups)),
+      numVehicles_(std::accumulate(vehicleTypes_.begin(),
+                                   vehicleTypes_.end(),
                                    0,
                                    [](auto sum, VehicleType const &type) {
                                        return sum + type.numAvailable;

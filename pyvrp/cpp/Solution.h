@@ -13,7 +13,7 @@
 namespace pyvrp
 {
 /**
- * Solution(data: ProblemData, routes: Union[List[Route], List[List[int]]])
+ * Solution(data: ProblemData, routes: Union[list[Route], list[list[int]]])
  *
  * Encodes VRP solutions.
  *
@@ -43,7 +43,7 @@ class Solution
 
 public:
     /**
-     * Route(data: ProblemData, visits: List[int], vehicle_type: int)
+     * Route(data: ProblemData, visits: list[int], vehicle_type: int)
      *
      * A simple class that stores the route plan and some statistics.
      */

@@ -7,7 +7,6 @@ from numpy.testing import (
 )
 
 from pyvrp import Client, ClientGroup, Depot, Model
-from pyvrp.Model import MutuallyExclusiveGroup
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -597,52 +596,22 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
 
 
-def test_add_mutually_exclusive_group():
-    """
-    Tests that adding clients to the model via a mutually exclusive group
-    works, and makes the clients aware of their group membership.
-    """
-    m = Model()
-    assert_equal(len(m.locations), 0)
-
-    # Add a mutually exclusive group, and add two clients to that group. These
-    # clients should be aware of their group membership.
-    group = m.add_mutually_exclusive_group()
-    client1 = group.add_client(x=1, y=1)
-    client2 = group.add_client(x=2, y=2)
-    assert_equal(client1.group, 0)
-    assert_equal(client2.group, 0)
-
-    # Now add a regular client that does not belong to a group. This client
-    # should not have group membership set.
-    client3 = m.add_client(x=3, y=3)
-    assert_(client3.group is None)
-
-    # There should be three clients in the model now, of which two in the
-    # group, and they should be the exact same clients we just added.
-    assert_equal(len(m.locations), 3)
-    assert_equal(len(group), 2)
-    assert_(m.locations[0] is client1)
-    assert_(m.locations[1] is client2)
-    assert_(m.locations[2] is client3)
-
-
 def test_add_client_raises_unknown_group():
     """
     Tests that the model's ``add_client`` method raises when it's given a group
     argument that is not known to the model.
     """
     m = Model()
-    group = MutuallyExclusiveGroup(m, required=True)
+    group = ClientGroup()
 
     with assert_raises(ValueError):
         m.add_client(1, 1, group=group)
 
 
-def test_from_data_mutually_exclusive_group(ok_small):
+def test_from_data_client_group(ok_small):
     """
-    Test that creating a model from a given data instance with mutually
-    exclusive client groups correctly sets up the client groups in the model.
+    Test that creating a model from a given data instance with client groups
+    correctly sets up the client groups in the model.
     """
     clients = ok_small.clients()
     clients[0] = Client(1, 1, required=False, group=0)
@@ -654,30 +623,29 @@ def test_from_data_mutually_exclusive_group(ok_small):
     model = Model.from_data(data)
 
     # Test that the clients have been correctly registered, and that there is
-    # a mutually exclusive group in the model.
+    # a client group in the model.
     assert_equal(model.locations[1].group, 0)
     assert_equal(model.locations[2].group, 0)
     assert_equal(len(model.groups), 1)
 
     # Test that that group actually contains the clients.
     group = model.groups[0]
+    assert_(group.required)
     assert_equal(len(group), 2)
-    assert_(model.locations[1] in group)
-    assert_(model.locations[2] in group)
+    assert_equal(group.clients, [1, 2])
 
 
-def test_to_data_mutually_exclusive_client_group():
+def test_to_data_client_group():
     """
-    Tests that creating a small model with a mutually exclusive client group
-    results in a correct ProblemData instance that has the appropriate group
-    memberships set up.
+    Tests that creating a small model with a client group results in a correct
+    ProblemData instance that has the appropriate group memberships set up.
     """
     m = Model()
     m.add_depot(1, 1)
 
-    group = m.add_mutually_exclusive_group()
-    group.add_client(1, 1)  # client #1
-    group.add_client(1, 1)  # client #2
+    group = m.add_client_group()
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(2, 2, required=False, group=group)
 
     # Generate the data instance. There should be a single client group, and
     # the first two clients should be members of that group.
@@ -688,38 +656,45 @@ def test_to_data_mutually_exclusive_client_group():
     assert_equal(group.clients, [1, 2])
 
 
-def test_optional_mutually_exclusive_group():
+def test_raises_mutually_exclusive_client_group_required_client():
     """
-    Tests a small instance with an optional mutually exclusive group, where not
-    inserting the group at all is optimal.
+    Tests that adding a required client to a mutually exclusive client group
+    raises, because that does not make any sense.
+    """
+    m = Model()
+
+    group = m.add_client_group()
+    assert_(group.mutually_exclusive)
+
+    with assert_raises(ValueError):
+        m.add_client(1, 1, required=True, group=group)
+
+
+def test_client_group_membership_works_with_intermediate_changes():
+    """
+    Tests that repeatedly calling data() does not add clients more than once
+    to each client group they are in, and everything continues to work when
+    the model changes between calls to data().
     """
     m = Model()
     m.add_depot(1, 1)
-    m.add_vehicle_type(1)
+    m.add_vehicle_type()
 
-    group = m.add_mutually_exclusive_group(required=False)
-    group.add_client(0, 0)  # optional; not worth visiting.
-    group.add_client(2, 2)  # optional; not worth visiting.
-    m.add_client(1, 1)  # must be visited.
+    # Add three clients to the model, with (for now) indices 1, 2, 3.
+    group = m.add_client_group()
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(1, 1, required=False, group=group)
+    m.add_client(1, 1, required=False, group=group)
 
-    for frm in m.locations:
-        for to in m.locations:
-            dist = abs(frm.x - to.x) + abs(frm.y - to.y)
-            m.add_edge(frm, to, distance=dist)
+    m.data()
+    assert_equal(len(group), 3)
+    assert_equal(group.clients, [1, 2, 3])
 
-    res = m.solve(stop=MaxIterations(10))
-    assert_(res.best.is_group_feasible())
-    assert_equal(res.best.num_clients(), 1)
+    # Add another depot and another client. The clients now have indices 2, 3,
+    # 4, and 5.
+    m.add_depot(1, 2)
+    m.add_client(1, 1, required=False, group=group)
 
-
-def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
-    """
-    TODO
-
-    45253 (but for a slightly different instance) is BKS cost
-    """
-    m = Model.from_data(gtsp)
-    res = m.solve(stop=MaxIterations(10))
-
-    assert_(res.is_feasible())
-    assert_equal(res.cost(), 55565)
+    m.data()
+    assert_equal(len(group), 4)
+    assert_equal(group.clients, [2, 3, 4, 5])

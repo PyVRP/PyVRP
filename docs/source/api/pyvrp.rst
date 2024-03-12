@@ -81,6 +81,10 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Client
       :members:
 
+   .. autoclass:: ClientGroup
+      :members:
+      :special-members: __iter__, __len__
+
    .. autoclass:: Depot
       :members:
 
