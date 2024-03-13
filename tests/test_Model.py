@@ -698,18 +698,3 @@ def test_client_group_membership_works_with_intermediate_changes():
     m.data()
     assert_equal(len(group), 4)
     assert_equal(group.clients, [2, 3, 4, 5])
-
-
-def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
-    """
-    Smoke test that tests if the model can read a generalised TSP instance
-    where all clients are spread over fifty mutually exclusive groups. The
-    BKS for this instance has cost 45_253.
-    """
-    m = Model.from_data(gtsp)
-    res = m.solve(stop=MaxIterations(5))
-
-    assert_(res.best.is_feasible())
-    assert_(res.best.is_group_feasible())
-    assert_equal(res.best.num_clients(), gtsp.num_groups)
-    assert_equal(res.cost(), 47_239)

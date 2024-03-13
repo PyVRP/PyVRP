@@ -257,37 +257,31 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     auto const uClient = U->client();
     ProblemData::Client const &uData = data.location(uClient);
 
-    // U must be inserted either when it is a required client, and can only be
-    // removed when it is not.
     auto mustInsert = uData.required;
-    auto mustNotInsert = false;
-    auto mayRemove = !uData.required;
     if (uData.group)
     {
         auto const &group = data.group(uData.group.value());
-        assert(group.mutuallyExclusive);
-
         auto const pred = [&](auto client) { return nodes[client].route(); };
-        auto const numInSol = std::count_if(group.begin(), group.end(), pred);
+        auto const groupInSol = std::any_of(group.begin(), group.end(), pred);
+
+        if (groupInSol)  // then we'll have to wait for the group moves to
+            return;      // determine what to do.
 
         // U must be inserted when it is in a required mutually exclusive client
-        // group that currently is not in the solution at all. Additionally, U
-        // may be removed when its group is not required, or there is already
-        // more than one client from the group in the solution.
-        mustInsert = group.required && numInSol == 0;
-        mustNotInsert = numInSol > 0;
-        mayRemove = !group.required || numInSol > 1;
+        // group that currently is not in the solution at all.
+        assert(group.mutuallyExclusive);
+        mustInsert = group.required && !groupInSol;
     }
 
-    if (mayRemove && removeCost(U, data, costEvaluator) < 0)
+    if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
     }
 
-    if (mustNotInsert || U->route())  // U must not be inserted, or is still in
-        return;                       // a route, so no need to test inserting.
+    if (U->route())  // then we are done, since having U is better than removing
+        return;      // it.
 
     // We take this as a default value in case none of the client's neighbours
     // are assigned, yet U is required.
