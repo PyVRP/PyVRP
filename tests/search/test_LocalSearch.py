@@ -453,24 +453,20 @@ def test_local_search_does_not_remove_required_clients():
     assert_(new_cost < sol_cost)
 
 
-def test_mutually_exclusive_group(ok_small_mutually_exclusive_groups):
+def test_mutually_exclusive_group(gtsp):
     """
-    Smoke test that runs the local search on a small instance with a mutually
-    exclusive client group.
+    Smoke test that runs the local search on a medium-size TSP instance with
+    fifty mutually exclusive client groups.
     """
-    assert_equal(ok_small_mutually_exclusive_groups.num_groups, 1)
-
-    group = ok_small_mutually_exclusive_groups.group(0)
-    assert_(group.required)
-    assert_(group.mutually_exclusive)
+    assert_equal(gtsp.num_groups, 50)
 
     rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
+    neighbours = compute_neighbours(gtsp)
 
-    ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
+    ls = LocalSearch(gtsp, rng, neighbours)
+    ls.add_node_operator(Exchange10(gtsp))
 
-    sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
+    sol = Solution.make_random(gtsp, rng)
     cost_eval = CostEvaluator(20, 6, 0)
     improved = ls(sol, cost_eval)
 
