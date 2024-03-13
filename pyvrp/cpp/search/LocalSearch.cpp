@@ -279,8 +279,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         update(route, route);
     }
 
-    if (U->route())  // then we are done, since having U is better than removing
-        return;      // it.
+    if (U->route())  // then we are done, since having U is better than
+        return;      // removing it.
 
     // We take this as a default value in case none of the client's neighbours
     // are assigned, yet U is required.
@@ -313,20 +313,17 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator)
 {
     ProblemData::Client const &uData = data.location(U->client());
-
     if (!uData.group)
         return;
-
-    auto const &group = data.group(uData.group.value());
 
     // Clients in the group that are also in the current solution. This can be
     // more than one, depending on the solution that was loaded!
     std::vector<size_t> inSol;
+    auto const &group = data.group(uData.group.value());
     auto const pred = [&](auto client) { return nodes[client].route(); };
     std::copy_if(group.begin(), group.end(), std::back_inserter(inSol), pred);
 
-    if (inSol.empty())  // Then U was not inserted previously, so there is no
-        return;         // benefit from having U, and we can quit early.
+    assert(inSol.size() != 0);
 
     // We remove clients in order of increasing cost delta (biggest improvement
     // first), and evaluate swapping the last client with U.

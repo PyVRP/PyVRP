@@ -476,3 +476,23 @@ def test_mutually_exclusive_group(gtsp):
     sol_cost = cost_eval.penalised_cost(sol)
     improved_cost = cost_eval.penalised_cost(improved)
     assert_(improved_cost < sol_cost)
+
+
+def test_mutually_exclusive_group_not_in_solution(
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    Tests that the local search inserts a client from the mutually inclusive
+    group if the entire group is missing from the solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
+
+    ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
+    ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
+
+    sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
+    assert_(not sol.is_group_feasible())
+
+    improved = ls(sol, CostEvaluator(20, 6, 0))
+    assert_(improved.is_group_feasible())
