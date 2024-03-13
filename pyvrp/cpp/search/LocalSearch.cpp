@@ -254,8 +254,7 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
-    auto const uClient = U->client();
-    ProblemData::Client const &uData = data.location(uClient);
+    ProblemData::Client const &uData = data.location(U->client());
 
     auto mustInsert = uData.required;
     if (uData.group)
@@ -288,7 +287,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     Route::Node *UAfter = routes[0][0];
     Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
 
-    for (auto const vClient : neighbours_[uClient])
+    for (auto const vClient : neighbours_[U->client()])
     {
         auto *V = &nodes[vClient];
 
@@ -354,7 +353,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
 
     // Test swapping U and V, and do so if U is better to have than V.
     auto *V = &nodes[inSol[range.back()]];
-    if (!U->route() && inplaceCost(U, V, data, costEvaluator) < 0)
+    if (U != V && inplaceCost(U, V, data, costEvaluator) < 0)
     {
         auto *route = V->route();
         auto const idx = V->idx();
