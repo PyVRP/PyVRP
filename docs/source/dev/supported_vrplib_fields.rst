@@ -78,7 +78,7 @@ PyVRP supports the following data sections:
 
    ``MUTUALLY_EXCLUSIVE_GROUP_SECTION``
       When provided, this section describes client memberships of mutually exclusive groups.
-      Of all clients in such a group, exact one must be visited.    
+      Of all clients in such a group, exactly one must be visited.    
 
    ``NODE_COORD_SECTION``
       Array of :math:`(x, y)` coordinates for each location.

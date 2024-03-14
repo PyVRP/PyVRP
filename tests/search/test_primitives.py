@@ -172,7 +172,7 @@ def test_remove_fixed_vehicle_cost():
 
 def test_inplace_cost_zero_when_shortcutting_on_guard_clauses(ok_small):
     """
-    Tests that inplace_cost() returns zero cost when it hits on of the guard
+    Tests that inplace_cost() returns zero cost when it hits one of the guard
     clauses: either when the first node is in a route, or the second node is
     not.
     """

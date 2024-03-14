@@ -482,7 +482,7 @@ def test_mutually_exclusive_group_not_in_solution(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that the local search inserts a client from the mutually inclusive
+    Tests that the local search inserts a client from the mutually exclusive
     group if the entire group is missing from the solution.
     """
     rng = RandomNumberGenerator(seed=42)
