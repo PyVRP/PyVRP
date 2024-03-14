@@ -256,21 +256,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 {
     ProblemData::Client const &uData = data.location(U->client());
 
-    auto mustInsert = uData.required;
-    if (uData.group)
-    {
-        auto const &group = data.group(uData.group.value());
-        auto const pred = [&](auto client) { return nodes[client].route(); };
-        auto const groupInSol = std::any_of(group.begin(), group.end(), pred);
-
-        if (groupInSol)  // then we'll have to wait for the group moves to
-            return;      // determine what to do.
-
-        // U must be inserted when it is in a required mutually exclusive client
-        // group that currently is not in the solution at all.
-        assert(group.mutuallyExclusive);
-        mustInsert = group.required && !groupInSol;
-    }
+    if (uData.group)  // groups have their own operator - applyGroupMoves()
+        return;
 
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
@@ -294,7 +281,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         if (!V->route())
             continue;
 
-        auto cost = insertCost(U, V, data, costEvaluator);
+        auto const cost = insertCost(U, V, data, costEvaluator);
         if (cost < bestCost)
         {
             bestCost = cost;
@@ -302,7 +289,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         }
     }
 
-    if (mustInsert || bestCost < 0)
+    if (uData.required || bestCost < 0)
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
@@ -313,17 +300,25 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator)
 {
     ProblemData::Client const &uData = data.location(U->client());
+
     if (!uData.group)
         return;
 
-    // Clients in the group that are also in the current solution. This can be
-    // more than one, depending on the solution that was loaded!
-    std::vector<size_t> inSol;
     auto const &group = data.group(uData.group.value());
+    assert(group.mutuallyExclusive);
+
+    std::vector<size_t> inSol;
     auto const pred = [&](auto client) { return nodes[client].route(); };
     std::copy_if(group.begin(), group.end(), std::back_inserter(inSol), pred);
 
-    assert(inSol.size() != 0);
+    // Then we insert U. It does not matter much where we insert since U enters
+    // the main improvement loop directly after this.
+    if (group.required && inSol.empty())
+    {
+        routes[0].insert(1, U);
+        update(&routes[0], &routes[0]);
+        return;
+    }
 
     // We remove clients in order of increasing cost delta (biggest improvement
     // first), and evaluate swapping the last client with U.
