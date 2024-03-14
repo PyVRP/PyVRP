@@ -75,6 +75,11 @@ class LocalSearch
     void intensify(CostEvaluator const &costEvaluator,
                    double overlapTolerance = 0.05);
 
+    // Evaluate and apply inserting U after one of its neighbours if it's an
+    // improving move or required for feasibility.
+    void
+    insert(Route::Node *U, CostEvaluator const &costEvaluator, bool required);
+
 public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
