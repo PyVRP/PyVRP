@@ -12,7 +12,8 @@ It currently supports VRPs with:
 - Vehicles of different capacities, costs, shift durations, and maximum distance and duration constraints (heterogeneous fleet VRP);
 - Time windows, client service durations, and release times (VRP with time windows and release times);
 - Multiple depots (multi-depot VRP);
-- Optional clients with prizes for visiting (prize collecting, team orienteering problem).
+- Optional clients with prizes for visiting (prize collecting, team orienteering problem);
+- Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows).
 
 PyVRP is available on the Python package index as `pyvrp`.
 It may be installed in the usual way as
