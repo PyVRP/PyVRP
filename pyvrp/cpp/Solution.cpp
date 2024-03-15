@@ -102,10 +102,13 @@ void Solution::makeNeighbours(ProblemData const &data)
 bool Solution::operator==(Solution const &other) const
 {
     // First compare simple attributes, since that's quick and cheap.
+    // clang-format off
     bool const simpleChecks = distance_ == other.distance_
                               && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
+                              && isGroupFeas_ == other.isGroupFeas_
                               && routes_.size() == other.routes_.size();
+    // clang-format on
 
     if (!simpleChecks)
         return false;
