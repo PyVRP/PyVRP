@@ -300,8 +300,9 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     // Sort clients in order of increasing removal costs.
     std::vector<size_t> range(inSol.size());
     std::iota(range.begin(), range.end(), 0);
-    auto cmp = [&](auto idx1, auto idx2) { return costs[idx1] < costs[idx2]; };
-    std::stable_sort(range.begin(), range.end(), cmp);
+    std::sort(range.begin(), range.end(), [&costs](auto idx1, auto idx2) {
+        return costs[idx1] < costs[idx2];
+    });
 
     // Remove all but the last client, whose removal is the least valuable.
     for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
