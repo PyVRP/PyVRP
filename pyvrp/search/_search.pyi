@@ -122,6 +122,9 @@ class Node:
 def insert_cost(
     U: Node, V: Node, data: ProblemData, cost_evaluator: CostEvaluator
 ) -> int: ...
+def inplace_cost(
+    U: Node, V: Node, data: ProblemData, cost_evaluator: CostEvaluator
+) -> int: ...
 def remove_cost(
     U: Node, data: ProblemData, cost_evaluator: CostEvaluator
 ) -> int: ...

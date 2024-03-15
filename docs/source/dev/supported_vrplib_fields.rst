@@ -76,6 +76,10 @@ PyVRP supports the following data sections:
       When provided, this section explicitly describes the distance and duration matrices.
       If not provided, such matrices are computed based on what's specified for :term:`EDGE_WEIGHT_FORMAT` and :term:`EDGE_WEIGHT_TYPE`.
 
+   ``MUTUALLY_EXCLUSIVE_GROUP_SECTION``
+      When provided, this section describes client memberships of mutually exclusive groups.
+      Of all clients in such a group, exactly one must be visited.    
+
    ``NODE_COORD_SECTION``
       Array of :math:`(x, y)` coordinates for each location.
 
