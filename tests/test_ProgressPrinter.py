@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
@@ -147,3 +148,48 @@ def test_should_print_false_no_output(ok_small, capsys):
 
     out = capsys.readouterr().out
     assert_equal(out, "")
+
+
+@pytest.mark.parametrize(
+    "routes",
+    [
+        [[1, 2], [3, 4]],  # feasible
+        [[1, 2, 3, 4]],  # infeasible
+    ],
+)
+def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
+    """
+    Tests that a "-" is printed as cost when one of the subpopulations is
+    empty.
+    """
+    pop = Population(bpd)
+    cost_eval = CostEvaluator(1, 1, 0)
+
+    solution = Solution(ok_small, routes)
+    pop.add(solution, cost_eval)
+
+    stats = Statistics()
+    stats.collect_from(pop, cost_eval)
+    stats.num_iterations = 500  # force printing
+
+    printer = ProgressPrinter(should_print=True)
+    printer.iteration(stats)
+
+    # Population contains either one feasible or one infeasible solution, so
+    # the costs of the empty subpopulation should be printed as "-".
+    out = capsys.readouterr().out
+    assert_("-" in out)
+
+    # Add many solutions to make both subpopulations non-empty.
+    rng = RandomNumberGenerator(seed=42)
+    for _ in range(100):
+        pop.add(Solution.make_random(ok_small, rng), cost_eval)
+
+    stats.collect_from(pop, cost_eval)
+    stats.num_iterations = 500  # force printing
+    printer.iteration(stats)
+
+    # The "-" should not be printed anymore, but there should be some output.
+    out = capsys.readouterr().out
+    assert_("-" not in out)
+    assert_(out != "")
