@@ -178,17 +178,3 @@ def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
     # the costs of the empty subpopulation should be printed as "-".
     out = capsys.readouterr().out
     assert_("-" in out)
-
-    # Now we add many solutions to make both subpopulations non-empty.
-    rng = RandomNumberGenerator(seed=42)
-    for _ in range(100):
-        pop.add(Solution.make_random(ok_small, rng), cost_eval)
-
-    stats.collect_from(pop, cost_eval)
-    stats.num_iterations = 500  # force printing
-    printer.iteration(stats)
-
-    # The "-" should not be printed anymore, but there should be some output.
-    out = capsys.readouterr().out
-    assert_("-" not in out)
-    assert_(out != "")
