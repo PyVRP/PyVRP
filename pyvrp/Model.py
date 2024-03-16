@@ -345,6 +345,7 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
+        collect_stats: bool = True,
         display: bool = True,
     ) -> Result:
         """
@@ -356,14 +357,19 @@ class Model:
             Stopping criterion to use.
         seed
             Seed value to use for the random number stream. Default 0.
+        collect_stats
+            Whether to collect statistics about the solver's progress. Default
+            ``True``.
         display
             Whether to display information about the solver progress. Default
-            ``True``.
+            ``True``. Progress information is only available when
+            ``collect_stats`` is also set, which it is by default.
 
         Returns
         -------
         Result
-            The solution result object, containing the best found solution.
+            A Result object, containing statistics (if collected) and the best
+            found solution.
         """
         data = self.data()
         rng = RandomNumberGenerator(seed=seed)
@@ -388,4 +394,4 @@ class Model:
 
         gen_args = (data, pm, rng, pop, ls, crossover, init)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop, display)
+        return algo.run(stop, collect_stats, display)

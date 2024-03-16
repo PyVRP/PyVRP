@@ -188,7 +188,7 @@ def solve(
         ]
     )
 
-    result = algo.run(stop)
+    result = algo.run(stop, collect_stats=bool(stats_dir))
     instance_name = data_loc.stem
 
     if stats_dir:
