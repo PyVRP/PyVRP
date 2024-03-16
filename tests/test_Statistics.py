@@ -114,3 +114,18 @@ def test_more_eq():
     # But once we fix that the two should be the exact same again.
     stats2.runtimes = stats1.runtimes
     assert_equal(stats1, stats2)
+
+
+def test_not_collecting():
+    """
+    Tests that calling collect_from() on a Statistics object that is not
+    collecting is a no-op.
+    """
+    stats = Statistics(collect_stats=False)
+    pop = Population(broken_pairs_distance)
+
+    cost_eval = CostEvaluator(1, 1, 1)
+    stats.collect_from(pop, cost_eval)
+    stats.collect_from(pop, cost_eval)
+
+    assert_equal(stats, Statistics(collect_stats=False))

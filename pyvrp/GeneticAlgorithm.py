@@ -129,7 +129,12 @@ class GeneticAlgorithm:
     def _cost_evaluator(self) -> CostEvaluator:
         return self._pm.cost_evaluator()
 
-    def run(self, stop: StoppingCriterion, display: bool = False):
+    def run(
+        self,
+        stop: StoppingCriterion,
+        collect_stats: bool = True,
+        display: bool = False,
+    ):
         """
         Runs the genetic algorithm with the provided stopping criterion.
 
@@ -138,20 +143,25 @@ class GeneticAlgorithm:
         stop
             Stopping criterion to use. The algorithm runs until the first time
             the stopping criterion returns ``True``.
+        collect_stats
+            Whether to collect statistics about the solver's progress. Default
+            ``True``.
         display
             Whether to display information about the solver progress. Default
-            ``False``.
+            ``False``. Progress information is only available when
+            ``collect_stats`` is also set.
 
         Returns
         -------
         Result
-            A Result object, containing statistics and the best found solution.
+            A Result object, containing statistics (if collected) and the best
+            found solution.
         """
         print_progress = ProgressPrinter(should_print=display)
         print_progress.start(self._data)
 
         start = time.perf_counter()
-        stats = Statistics()
+        stats = Statistics(collect_stats=collect_stats)
         iters = 0
         iters_no_improvement = 1
 

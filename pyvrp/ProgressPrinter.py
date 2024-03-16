@@ -52,7 +52,13 @@ class ProgressPrinter:
         contains information about the feasible and infeasible populations,
         whether a new best solution has been found, and the search duration.
         """
-        if not self._print or stats.num_iterations % 500 != 0:
+        should_print = (
+            self._print
+            and stats.is_collecting()
+            and stats.num_iterations % 500 == 0
+        )
+
+        if not should_print:
             return
 
         feas = stats.feas_stats[-1]
