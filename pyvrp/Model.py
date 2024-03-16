@@ -362,12 +362,14 @@ class Model:
             ``True``.
         display
             Whether to display information about the solver progress. Default
-            ``True``.
+            ``True``. Progress information is only available when
+            ``collect_stats`` is also set, which it is by default.
 
         Returns
         -------
         Result
-            The solution result object, containing the best found solution.
+            A Result object, containing statistics (if collected) and the best
+            found solution.
         """
         data = self.data()
         rng = RandomNumberGenerator(seed=seed)
