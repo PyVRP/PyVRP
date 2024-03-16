@@ -50,6 +50,8 @@ def test_collect_a_data_point_per_iteration(ok_small, num_iterations: int):
     pop = Population(broken_pairs_distance)
 
     stats = Statistics()
+    assert_(stats.is_collecting())
+
     for _ in range(num_iterations):  # populate the statistics object
         pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
         stats.collect_from(pop, cost_evaluator)
@@ -122,9 +124,10 @@ def test_not_collecting():
     collecting is a no-op.
     """
     stats = Statistics(collect_stats=False)
-    pop = Population(broken_pairs_distance)
+    assert_(not stats.is_collecting())
 
     cost_eval = CostEvaluator(1, 1, 1)
+    pop = Population(broken_pairs_distance)
     stats.collect_from(pop, cost_eval)
     stats.collect_from(pop, cost_eval)
 
