@@ -159,8 +159,7 @@ def test_should_print_false_no_output(ok_small, capsys):
 )
 def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
     """
-    Tests that a "-" is printed as cost when one of the subpopulations is
-    empty.
+    Tests that a "-" is printed as cost if one of the subpopulations is empty.
     """
     pop = Population(bpd)
     cost_eval = CostEvaluator(1, 1, 0)
@@ -180,7 +179,7 @@ def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
     out = capsys.readouterr().out
     assert_("-" in out)
 
-    # Add many solutions to make both subpopulations non-empty.
+    # Now we add many solutions to make both subpopulations non-empty.
     rng = RandomNumberGenerator(seed=42)
     for _ in range(100):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)
