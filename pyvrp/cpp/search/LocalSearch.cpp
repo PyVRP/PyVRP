@@ -73,6 +73,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // all clients are required (e.g., when prize collecting).
             applyOptionalClientMoves(U, costEvaluator);
 
+            // Evaluate moves involving the client's group, if it is in any.
+            applyGroupMoves(U, costEvaluator);
+
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
@@ -251,10 +254,11 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
-    auto const uClient = U->client();
-    ProblemData::Client const &uData = data.location(uClient);
+    ProblemData::Client const &uData = data.location(U->client());
 
-    // First test removing U. This is allowed when U is not required.
+    if (uData.group)  // groups have their own operator - applyGroupMoves()
+        return;
+
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
         auto *route = U->route();
@@ -262,35 +266,93 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         update(route, route);
     }
 
-    // If U is not currently in the solution, we test if inserting it is an
-    // improving move. Note that we always insert required clients.
     if (!U->route())
+        insert(U, costEvaluator, uData.required);
+}
+
+void LocalSearch::applyGroupMoves(Route::Node *U,
+                                  CostEvaluator const &costEvaluator)
+{
+    ProblemData::Client const &uData = data.location(U->client());
+
+    if (!uData.group)
+        return;
+
+    auto const &group = data.group(uData.group.value());
+    assert(group.mutuallyExclusive);
+
+    std::vector<size_t> inSol;
+    auto const pred = [&](auto client) { return nodes[client].route(); };
+    std::copy_if(group.begin(), group.end(), std::back_inserter(inSol), pred);
+
+    if (inSol.empty())
     {
-        // We take this as a default value in case none of the client's
-        // neighbours are assigned, yet U is required.
-        Route::Node *UAfter = routes[0][0];
-        Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+        insert(U, costEvaluator, group.required);
+        return;
+    }
 
-        for (auto const vClient : neighbours_[uClient])
+    // We remove clients in order of increasing cost delta (biggest improvement
+    // first), and evaluate swapping the last client with U.
+    std::vector<Cost> costs;
+    for (auto const client : inSol)
+        costs.push_back(removeCost(&nodes[client], data, costEvaluator));
+
+    // Sort clients in order of increasing removal costs.
+    std::vector<size_t> range(inSol.size());
+    std::iota(range.begin(), range.end(), 0);
+    std::sort(range.begin(), range.end(), [&costs](auto idx1, auto idx2) {
+        return costs[idx1] < costs[idx2];
+    });
+
+    // Remove all but the last client, whose removal is the least valuable.
+    for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
+    {
+        auto const client = inSol[*idx];
+        auto const &node = nodes[client];
+        auto *route = node.route();
+
+        route->remove(node.idx());
+        update(route, route);
+    }
+
+    // Test swapping U and V, and do so if U is better to have than V.
+    auto *V = &nodes[inSol[range.back()]];
+    if (U != V && inplaceCost(U, V, data, costEvaluator) < 0)
+    {
+        auto *route = V->route();
+        auto const idx = V->idx();
+        route->remove(idx);
+        route->insert(idx, U);
+        update(route, route);
+    }
+}
+
+void LocalSearch::insert(Route::Node *U,
+                         CostEvaluator const &costEvaluator,
+                         bool required)
+{
+    Route::Node *UAfter = routes[0][0];
+    Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+
+    for (auto const vClient : neighbours_[U->client()])
+    {
+        auto *V = &nodes[vClient];
+
+        if (!V->route())
+            continue;
+
+        auto const cost = insertCost(U, V, data, costEvaluator);
+        if (cost < bestCost)
         {
-            auto *V = &nodes[vClient];
-
-            if (!V->route())
-                continue;
-
-            auto cost = insertCost(U, V, data, costEvaluator);
-            if (cost < bestCost)
-            {
-                bestCost = cost;
-                UAfter = V;
-            }
+            bestCost = cost;
+            UAfter = V;
         }
+    }
 
-        if (uData.required || bestCost < 0)
-        {
-            UAfter->route()->insert(UAfter->idx() + 1, U);
-            update(UAfter->route(), UAfter->route());
-        }
+    if (required || bestCost < 0)
+    {
+        UAfter->route()->insert(UAfter->idx() + 1, U);
+        update(UAfter->route(), UAfter->route());
     }
 }
 

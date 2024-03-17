@@ -57,9 +57,12 @@ bool Solution::isFeasible() const
     return !hasExcessLoad()
         && !hasTimeWarp()
         && !hasExcessDistance()
-        && isComplete();
+        && isComplete()
+        && isGroupFeasible();
     // clang-format on
 }
+
+bool Solution::isGroupFeasible() const { return isGroupFeas_; }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
@@ -99,10 +102,13 @@ void Solution::makeNeighbours(ProblemData const &data)
 bool Solution::operator==(Solution const &other) const
 {
     // First compare simple attributes, since that's quick and cheap.
+    // clang-format off
     bool const simpleChecks = distance_ == other.distance_
                               && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
+                              && isGroupFeas_ == other.isGroupFeas_
                               && routes_.size() == other.routes_.size();
+    // clang-format on
 
     if (!simpleChecks)
         return false;
@@ -130,7 +136,7 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
-    // Shuffle clients (to create random routes)
+    // Shuffle clients to create random routes.
     auto clients = std::vector<size_t>(data.numClients());
     std::iota(clients.begin(), clients.end(), data.numDepots());
     std::shuffle(clients.begin(), clients.end(), rng);
@@ -160,8 +166,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
                 routes_.emplace_back(data, routes[count++], vehType);
     }
 
-    makeNeighbours(data);
-    evaluate(data);
+    *this = Solution(data, routes_);
 }
 
 Solution::Solution(ProblemData const &data,
@@ -211,6 +216,17 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         }
     }
 
+    for (auto const &group : data.groups())
+    {
+        // The solution is feasible w.r.t. this client group if exactly one of
+        // the clients in the group is in the solution. When the group is not
+        // required, we relax this to at most one client.
+        assert(group.mutuallyExclusive);
+        auto const inSol = [&](auto client) { return visits[client] == 1; };
+        auto const numInSol = std::count_if(group.begin(), group.end(), inSol);
+        isGroupFeas_ &= group.required ? numInSol == 1 : numInSol <= 1;
+    }
+
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
         if (usedVehicles[vehType] > data.vehicleType(vehType).numAvailable)
         {
@@ -234,6 +250,7 @@ Solution::Solution(size_t numClients,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
+                   bool isGroupFeasible,
                    Routes const &routes,
                    Neighbours neighbours)
     : numClients_(numClients),
@@ -245,6 +262,7 @@ Solution::Solution(size_t numClients,
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
+      isGroupFeas_(isGroupFeasible),
       routes_(routes),
       neighbours_(neighbours)
 {

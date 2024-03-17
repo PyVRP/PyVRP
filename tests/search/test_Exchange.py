@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
     Client,
@@ -342,7 +342,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     # some nodes to the second route, which would use both of them. That should
     # add to the fixed vehicle cost.
     cost_eval = CostEvaluator(1, 1, 0)
-    assert_allclose(
+    assert_equal(
         op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
     )
 
@@ -380,11 +380,11 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
     # always a max duration violation. Consolidation - either into a single
     # route, or more into the same route - is typically improving, especially
     # when the maximum duration violations are significant.
-    assert_allclose(route1.duration(), 5_229)
-    assert_allclose(route2.duration(), 5_814)
+    assert_equal(route1.duration(), 5_229)
+    assert_equal(route2.duration(), 5_814)
 
     cost_eval = CostEvaluator(1, 1, 0)
-    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), cost)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), cost)
 
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange11])
@@ -415,15 +415,15 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     # Route is 1 -> 2 -> 3, and stores 1's pickup amount (5) before dropping
     # off 3's delivery amount (5). So total load is 10, and the excess load 5.
     assert_(not route.is_feasible())
-    assert_allclose(route.load(), 10)
-    assert_allclose(route.excess_load(), 5)
+    assert_equal(route.load(), 10)
+    assert_equal(route.excess_load(), 5)
 
     # For (1, 0)-exchange, we evaluate inserting 1 after 3. That'd resolve the
     # excess load. For (1, 1)-exchange, we evaluate swapping 1 and 3, which
     # would also resolve the excess load: the important bit is that we visit 3
     # before 1.
     cost_eval = CostEvaluator(1, 1, 0)
-    assert_allclose(op.evaluate(route[1], route[3], cost_eval), -5)
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), -5)
 
 
 @pytest.mark.parametrize(
@@ -451,24 +451,24 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     route2 = Route(data, idx=1, vehicle_type=0)
     route2.update()
 
-    assert_allclose(route1.distance(), 5_501)
-    assert_allclose(route1.excess_distance(), max(5_501 - max_distance, 0))
+    assert_equal(route1.distance(), 5_501)
+    assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
 
     cost_eval = CostEvaluator(0, 0, 10)
     op = Exchange10(data)
 
     # Moving client #2 from route1 to route2 does not improve the overall
     # distance, but can be helpful in reducing maximum distance violations.
-    assert_allclose(op.evaluate(route1[2], route2[0], cost_eval), expected)
+    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), expected)
     op.apply(route1[2], route2[0])
 
     route1.update()
-    assert_allclose(route1.distance(), 3_270)
-    assert_allclose(route1.excess_distance(), max(3_270 - max_distance, 0))
+    assert_equal(route1.distance(), 3_270)
+    assert_equal(route1.excess_distance(), max(3_270 - max_distance, 0))
 
     route2.update()
-    assert_allclose(route2.distance(), 3_909)
-    assert_allclose(route2.excess_distance(), max(3_909 - max_distance, 0))
+    assert_equal(route2.distance(), 3_909)
+    assert_equal(route2.excess_distance(), max(3_909 - max_distance, 0))
 
     delta_dist = 3_270 + 3_909 - 5_501  # compare manual delta cost
     delta_excess = sum(
@@ -478,7 +478,7 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
             -max(5_501 - max_distance, 0),
         ]
     )
-    assert_allclose(delta_dist + 10 * delta_excess, expected)
+    assert_equal(delta_dist + 10 * delta_excess, expected)
 
 
 @pytest.mark.parametrize(
@@ -507,27 +507,27 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     route2.append(Node(loc=3))
     route2.update()
 
-    assert_allclose(route1.distance(), 5_501)
-    assert_allclose(route1.excess_distance(), max(5_501 - max_distance, 0))
+    assert_equal(route1.distance(), 5_501)
+    assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
 
-    assert_allclose(route2.distance(), 3_994)
-    assert_allclose(route2.excess_distance(), max(3_994 - max_distance, 0))
+    assert_equal(route2.distance(), 3_994)
+    assert_equal(route2.excess_distance(), max(3_994 - max_distance, 0))
 
     cost_eval = CostEvaluator(0, 0, 10)
     op = Exchange11(data)
 
     # Swapping client #2 in route1 and client #3 in route2 improves the overall
     # distance and reduces the excess distance violations.
-    assert_allclose(op.evaluate(route1[2], route2[1], cost_eval), expected)
+    assert_equal(op.evaluate(route1[2], route2[1], cost_eval), expected)
     op.apply(route1[2], route2[1])
 
     route1.update()
-    assert_allclose(route1.distance(), 5_034)
-    assert_allclose(route1.excess_distance(), max(5_034 - max_distance, 0))
+    assert_equal(route1.distance(), 5_034)
+    assert_equal(route1.excess_distance(), max(5_034 - max_distance, 0))
 
     route2.update()
-    assert_allclose(route2.distance(), 3_909)
-    assert_allclose(route2.excess_distance(), max(3_909 - max_distance, 0))
+    assert_equal(route2.distance(), 3_909)
+    assert_equal(route2.excess_distance(), max(3_909 - max_distance, 0))
 
     delta_dist = 5_034 + 3_909 - 5_501 - 3_994  # compare manual delta cost
     delta_excess = sum(
@@ -538,4 +538,4 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
             -max(3_994 - max_distance, 0),
         ]
     )
-    assert_allclose(delta_dist + 10 * delta_excess, expected)
+    assert_equal(delta_dist + 10 * delta_excess, expected)

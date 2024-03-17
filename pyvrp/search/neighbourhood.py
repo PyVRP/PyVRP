@@ -82,13 +82,21 @@ def compute_neighbours(
     if params.symmetric_proximity:
         proximity = np.minimum(proximity, proximity.T)
 
-    n = len(proximity)
-    k = min(params.nb_granular, data.num_clients - 1)  # excl. self
+    for group in data.groups():
+        if group.mutually_exclusive:
+            # Clients in mutually exclusive groups cannot neighbour each other,
+            # since only one of them can be in the solution at any given time.
+            # We use max float, not infty, to ensure these clients are ordered
+            # before the depots: we want to avoid same group neighbours, but it
+            # is not problematic if we need to have them.
+            idcs = np.ix_(group.clients, group.clients)
+            proximity[idcs] = np.finfo(np.float64).max
 
     np.fill_diagonal(proximity, np.inf)  # cannot be in own neighbourhood
     proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
     proximity[:, : data.num_depots] = np.inf  # clients do not neighbour depots
 
+    k = min(params.nb_granular, data.num_clients - 1)  # excl. self
     top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
 
     if not params.symmetric_neighbours:
@@ -97,7 +105,7 @@ def compute_neighbours(
     # Construct a symmetric adjacency matrix and return the adjacent clients
     # as the neighbourhood structure.
     adj = np.zeros_like(proximity, dtype=bool)
-    rows = np.expand_dims(np.arange(data.num_depots, n), axis=1)
+    rows = np.expand_dims(np.arange(data.num_depots, len(proximity)), axis=1)
     adj[rows, top_k] = True
     adj = adj | adj.transpose()
 

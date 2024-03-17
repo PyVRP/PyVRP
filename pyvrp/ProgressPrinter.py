@@ -52,7 +52,13 @@ class ProgressPrinter:
         contains information about the feasible and infeasible populations,
         whether a new best solution has been found, and the search duration.
         """
-        if not self._print or stats.num_iterations % 500 != 0:
+        should_print = (
+            self._print
+            and stats.is_collecting()
+            and stats.num_iterations % 500 == 0
+        )
+
+        if not should_print:
             return
 
         feas = stats.feas_stats[-1]
@@ -63,11 +69,11 @@ class ProgressPrinter:
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
             feas_size=feas.size,
-            feas_avg=round(feas.avg_cost),
-            feas_best=round(feas.best_cost),
+            feas_avg=round(feas.avg_cost) if feas.size else "-",
+            feas_best=round(feas.best_cost) if feas.size else "-",
             infeas_size=infeas.size,
-            infeas_avg=round(infeas.avg_cost),
-            infeas_best=round(infeas.best_cost),
+            infeas_avg=round(infeas.avg_cost) if infeas.size else "-",
+            infeas_best=round(infeas.best_cost) if infeas.size else "-",
         )
         print(msg)
 

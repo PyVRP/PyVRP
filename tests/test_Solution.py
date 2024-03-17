@@ -2,11 +2,12 @@ import pickle
 from copy import copy, deepcopy
 
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
-from pytest import mark
 
 from pyvrp import (
     Client,
+    ClientGroup,
     Depot,
     ProblemData,
     RandomNumberGenerator,
@@ -17,7 +18,7 @@ from pyvrp import (
 from tests.helpers import read
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "routes",
     [
         [[3, 4], [1, 2], []],
@@ -113,7 +114,7 @@ def test_random_constructor_cycles_over_routes(ok_small):
         assert_equal(len(routes[idx]), size)
 
 
-@mark.parametrize("num_vehicles", (4, 5, 1_000))
+@pytest.mark.parametrize("num_vehicles", (4, 5, 1_000))
 def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
     """
     Tests that the randomly constructed solution has exactly as many routes as
@@ -613,7 +614,7 @@ def test_route_release_time():
     assert_(routes[1].start_time() > routes[1].release_time())
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "dist_mat",
     [
         np.where(np.eye(3), 0, 100),
@@ -841,7 +842,7 @@ def test_duplicate_vehicle_types(ok_small):
     assert_(sol1 != sol2)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "vehicle_types",
     [
         [VehicleType(3, capacity=10)],
@@ -939,7 +940,7 @@ def test_route_can_be_pickled(rc208):
         assert_equal(after_pickle, before_pickle)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
 )
 def test_fixed_vehicle_cost(
@@ -967,7 +968,7 @@ def test_fixed_vehicle_cost(
     assert_equal(sol.fixed_vehicle_cost(), expected)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("tw_early", "tw_late", "expected"),
     [
         (0, 0, 20_277),  # cannot be back at the depot before 20'277
@@ -994,6 +995,75 @@ def test_route_shift_duration(
     # + dist(2, 0) + serv(1) + serv(2). That's 1'544 + 1'992 + 1'965 + 360
     # + 360 = 6'221. We cannot service client 1 before 15'600, and it takes
     # 1'544 to get there from the depot, so we leave at 14'056. Thus, the
-    # earliest complete time is 14'056 + 6'221 = 20'277.
+    # earliest completion time is 14'056 + 6'221 = 20'277.
     route = Route(data, [1, 2], vehicle_type=0)
     assert_equal(route.time_warp(), expected)
+
+
+@pytest.mark.parametrize(
+    ("routes", "feasible"),
+    [
+        ([[1], [3, 4]], True),  # only one - OK
+        ([[2], [3, 4]], True),  # only one - OK
+        ([[1, 2], [3, 4]], False),  # both are in the solution - not OK
+        ([[3, 4]], False),  # none - not OK
+    ],
+)
+def test_solution_feasibility_with_mutually_exclusive_groups(
+    ok_small, routes: list[list[int]], feasible: bool
+):
+    """
+    Tests that the Solution class correctly accounts for feasibility regarding
+    any mutually exclusive groups in the data.
+    """
+    # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
+    # exactly one must be part of a feasible solution.
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    clients[1] = Client(2, 2, required=False, group=0)
+
+    group = ClientGroup([1, 2], required=True)
+    assert_(group.required)
+    assert_(group.mutually_exclusive)
+
+    data = ok_small.replace(clients=clients, groups=[group])
+    sol = Solution(data, routes)
+    assert_equal(sol.is_feasible(), feasible)
+    assert_equal(sol.is_group_feasible(), feasible)
+
+
+def test_mutually_exclusive_group_feasibility_bug(
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    This tests a bug where the make_random() classmethod did not set the group
+    feasibility flag correctly, leading it to believe that every solution was
+    feasible w.r.t. the client groups.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
+
+    assert_(not sol.is_feasible())
+    assert_(not sol.is_group_feasible())
+
+
+def test_optional_mutually_exclusive_group(ok_small):
+    """
+    Tests that mutually exclusive client groups can be skipped if they are
+    not required. In that case at most one client from the group needs to be
+    in the solution, but zero is also OK.
+    """
+    # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
+    # at most one must be part of a feasible solution.
+    clients = ok_small.clients()
+    clients[0] = Client(1, 1, required=False, group=0)
+    clients[1] = Client(2, 2, required=False, group=0)
+
+    group = ClientGroup([1, 2], required=False)
+    assert_(not group.required)
+    assert_(group.mutually_exclusive)
+
+    data = ok_small.replace(clients=clients, groups=[group])
+    sol = Solution(data, [[3, 4]])
+    assert_(sol.is_feasible())
+    assert_(sol.is_group_feasible())

@@ -62,6 +62,9 @@ class LocalSearch
     void applyOptionalClientMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator);
 
+    // Tests moves involving clients in client groups.
+    void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
@@ -71,6 +74,11 @@ class LocalSearch
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator,
                    double overlapTolerance = 0.05);
+
+    // Evaluate and apply inserting U after one of its neighbours if it's an
+    // improving move or required for feasibility.
+    void
+    insert(Route::Node *U, CostEvaluator const &costEvaluator, bool required);
 
 public:
     /**

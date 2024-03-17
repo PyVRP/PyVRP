@@ -200,3 +200,19 @@ def test_proximity_with_prizes(prize_collecting):
     count_20 = sum(20 in n for n in neighbours)
     count_36 = sum(36 in n for n in neighbours)
     assert_(count_20 > count_36)
+
+
+def test_proximity_with_mutually_exclusive_groups(
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    Tests that clients that are a member of a mutually exclusive client group
+    are not in each other's neighbourhood.
+    """
+    params = NeighbourhoodParams(0, 0, nb_granular=1)
+    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
+
+    group = ok_small_mutually_exclusive_groups.group(0)
+    members = group.clients
+    for client in members:
+        assert_(all(other not in neighbours[client] for other in members))

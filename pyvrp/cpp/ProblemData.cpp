@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <numeric>
+#include <stdexcept>
 
 using pyvrp::Distance;
 using pyvrp::Duration;
@@ -33,6 +34,7 @@ ProblemData::Client::Client(Coordinate x,
                             Duration releaseTime,
                             Cost prize,
                             bool required,
+                            std::optional<size_t> group,
                             char const *name)
     : x(x),
       y(y),
@@ -44,6 +46,7 @@ ProblemData::Client::Client(Coordinate x,
       releaseTime(releaseTime),
       prize(prize),
       required(required),
+      group(group),
       name(duplicate(name))
 {
     if (delivery < 0)
@@ -82,6 +85,7 @@ ProblemData::Client::Client(Client const &client)
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
+      group(client.group),
       name(duplicate(client.name))
 {
 }
@@ -97,12 +101,50 @@ ProblemData::Client::Client(Client &&client)
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
+      group(client.group),
       name(client.name)  // we can steal
 {
     client.name = nullptr;  // stolen
 }
 
 ProblemData::Client::~Client() { delete[] name; }
+
+ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
+                                      bool required)
+    : required(required)
+{
+    for (auto const client : clients)
+        addClient(client);
+}
+
+bool ProblemData::ClientGroup::empty() const { return clients_.empty(); }
+
+size_t ProblemData::ClientGroup::size() const { return clients_.size(); }
+
+std::vector<size_t>::const_iterator ProblemData::ClientGroup::begin() const
+{
+    return clients_.begin();
+}
+
+std::vector<size_t>::const_iterator ProblemData::ClientGroup::end() const
+{
+    return clients_.end();
+}
+
+std::vector<size_t> const &ProblemData::ClientGroup::clients() const
+{
+    return clients_;
+}
+
+void ProblemData::ClientGroup::addClient(size_t client)
+{
+    if (std::find(clients_.begin(), clients_.end(), client) != clients_.end())
+        throw std::invalid_argument("Client already in group.");
+
+    clients_.push_back(client);
+}
+
+void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
 ProblemData::Depot::Depot(Coordinate x,
                           Coordinate y,
@@ -219,15 +261,27 @@ std::vector<ProblemData::Depot> const &ProblemData::depots() const
     return depots_;
 }
 
-ProblemData::VehicleType const &
-ProblemData::vehicleType(size_t vehicleType) const
+std::vector<ProblemData::ClientGroup> const &ProblemData::groups() const
 {
-    return vehicleTypes_[vehicleType];
+    return groups_;
 }
 
 std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
 {
     return vehicleTypes_;
+}
+
+ProblemData::ClientGroup const &ProblemData::group(size_t group) const
+{
+    assert(group < groups_.size());
+    return groups_[group];
+}
+
+ProblemData::VehicleType const &
+ProblemData::vehicleType(size_t vehicleType) const
+{
+    assert(vehicleType < vehicleTypes_.size());
+    return vehicleTypes_[vehicleType];
 }
 
 Distance ProblemData::dist(size_t first, size_t second) const
@@ -249,47 +303,72 @@ size_t ProblemData::numClients() const { return clients_.size(); }
 
 size_t ProblemData::numDepots() const { return depots_.size(); }
 
+size_t ProblemData::numGroups() const { return groups_.size(); }
+
 size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
 size_t ProblemData::numVehicles() const { return numVehicles_; }
 
-ProblemData
-ProblemData::replace(std::optional<std::vector<Client>> &clients,
-                     std::optional<std::vector<Depot>> &depots,
-                     std::optional<std::vector<VehicleType>> &vehicleTypes,
-                     std::optional<Matrix<Distance>> &distMat,
-                     std::optional<Matrix<Duration>> &durMat)
+void ProblemData::validate() const
 {
-    return ProblemData(clients.value_or(clients_),
-                       depots.value_or(depots_),
-                       vehicleTypes.value_or(vehicleTypes_),
-                       distMat.value_or(dist_),
-                       durMat.value_or(dur_));
-}
+    // Client checks.
+    for (size_t idx = numDepots(); idx != numLocations(); ++idx)
+    {
+        ProblemData::Client const &client = location(idx);
+        if (!client.group)
+            continue;
 
-ProblemData::ProblemData(std::vector<Client> const &clients,
-                         std::vector<Depot> const &depots,
-                         std::vector<VehicleType> const &vehicleTypes,
-                         Matrix<Distance> distMat,
-                         Matrix<Duration> durMat)
-    : centroid_({0, 0}),
-      dist_(std::move(distMat)),
-      dur_(std::move(durMat)),
-      clients_(clients),
-      depots_(depots),
-      vehicleTypes_(vehicleTypes),
-      numVehicles_(std::accumulate(vehicleTypes.begin(),
-                                   vehicleTypes.end(),
-                                   0,
-                                   [](auto sum, VehicleType const &type) {
-                                       return sum + type.numAvailable;
-                                   }))
-{
-    if (depots.empty())
-        throw std::invalid_argument("Expected at least one depot!");
+        if (client.group.value() >= numGroups())
+            throw std::out_of_range("Client references invalid group.");
 
+        auto const &group = groups_[client.group.value()];
+        if (std::find(group.begin(), group.end(), idx) == group.end())
+        {
+            auto const *msg = "Client not in the group it references.";
+            throw std::invalid_argument(msg);
+        }
+
+        if (client.required && group.mutuallyExclusive)
+        {
+            auto const *msg = "Required client in mutually exclusive group.";
+            throw std::invalid_argument(msg);
+        }
+    }
+
+    // Depot checks.
+    if (depots_.empty())
+        throw std::invalid_argument("Expected at least one depot.");
+
+    // Group checks.
+    for (size_t idx = 0; idx != numGroups(); ++idx)
+    {
+        auto const &group = groups_[idx];
+
+        if (group.empty())
+            throw std::invalid_argument("Empty client group not understood.");
+
+        for (auto const client : group)
+        {
+            if (client < numDepots() || client >= numLocations())
+                throw std::out_of_range("Group references invalid client.");
+
+            ProblemData::Client const &clientData = location(client);
+            if (!clientData.group || clientData.group.value() != idx)
+            {
+                auto const *msg = "Group references client not in group.";
+                throw std::invalid_argument(msg);
+            }
+        }
+    }
+
+    // Vehicle type checks.
+    for (auto const &vehicleType : vehicleTypes_)
+        if (vehicleType.depot >= numDepots())
+            throw std::out_of_range("Vehicle type has invalid depot.");
+
+    // Matrix checks.
     if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
         throw std::invalid_argument("Distance matrix shape does not match the "
                                     "problem size.");
@@ -306,10 +385,49 @@ ProblemData::ProblemData(std::vector<Client> const &clients,
         if (dur_(idx, idx) != 0)
             throw std::invalid_argument("Duration matrix diagonal must be 0.");
     }
+}
 
+ProblemData
+ProblemData::replace(std::optional<std::vector<Client>> &clients,
+                     std::optional<std::vector<Depot>> &depots,
+                     std::optional<std::vector<VehicleType>> &vehicleTypes,
+                     std::optional<Matrix<Distance>> &distMat,
+                     std::optional<Matrix<Duration>> &durMat,
+                     std::optional<std::vector<ClientGroup>> &groups)
+{
+    return ProblemData(clients.value_or(clients_),
+                       depots.value_or(depots_),
+                       vehicleTypes.value_or(vehicleTypes_),
+                       distMat.value_or(dist_),
+                       durMat.value_or(dur_),
+                       groups.value_or(groups_));
+}
+
+ProblemData::ProblemData(std::vector<Client> clients,
+                         std::vector<Depot> depots,
+                         std::vector<VehicleType> vehicleTypes,
+                         Matrix<Distance> distMat,
+                         Matrix<Duration> durMat,
+                         std::vector<ClientGroup> groups)
+    : centroid_({0, 0}),
+      dist_(std::move(distMat)),
+      dur_(std::move(durMat)),
+      clients_(std::move(clients)),
+      depots_(std::move(depots)),
+      vehicleTypes_(std::move(vehicleTypes)),
+      groups_(std::move(groups)),
+      numVehicles_(std::accumulate(vehicleTypes_.begin(),
+                                   vehicleTypes_.end(),
+                                   0,
+                                   [](auto sum, VehicleType const &type) {
+                                       return sum + type.numAvailable;
+                                   }))
+{
     for (auto const &client : clients_)
     {
         centroid_.first += static_cast<double>(client.x) / numClients();
         centroid_.second += static_cast<double>(client.y) / numClients();
     }
+
+    validate();
 }

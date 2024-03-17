@@ -1,4 +1,6 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -7,9 +9,9 @@ from pyvrp.Config import Config
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population
-from pyvrp.Result import Result
 from pyvrp._pyvrp import (
     Client,
+    ClientGroup,
     Depot,
     ProblemData,
     RandomNumberGenerator,
@@ -25,7 +27,10 @@ from pyvrp.search import (
     LocalSearch,
     compute_neighbours,
 )
-from pyvrp.stop import StoppingCriterion
+
+if TYPE_CHECKING:
+    from pyvrp.Result import Result
+    from pyvrp.stop import StoppingCriterion
 
 
 class Edge:
@@ -57,6 +62,7 @@ class Model:
         self._clients: list[Client] = []
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
+        self._groups: list[ClientGroup] = []
         self._vehicle_types: list[VehicleType] = []
 
     @property
@@ -67,6 +73,13 @@ class Model:
         used to index these locations.
         """
         return self._depots + self._clients
+
+    @property
+    def groups(self) -> list[ClientGroup]:
+        """
+        Returns all client groups currently in the model.
+        """
+        return self._groups
 
     @property
     def vehicle_types(self) -> list[VehicleType]:
@@ -98,10 +111,10 @@ class Model:
         locs = depots + clients
         edges = [
             Edge(
-                locs[frm],
-                locs[to],
-                data.dist(frm, to),
-                data.duration(frm, to),
+                frm=locs[frm],
+                to=locs[to],
+                distance=data.dist(frm, to),
+                duration=data.duration(frm, to),
             )
             for frm in range(data.num_locations)
             for to in range(data.num_locations)
@@ -111,6 +124,7 @@ class Model:
         self._clients = clients
         self._depots = depots
         self._edges = edges
+        self._groups = data.groups()
         self._vehicle_types = data.vehicle_types()
 
         return self
@@ -127,28 +141,63 @@ class Model:
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
+        group: Optional[ClientGroup] = None,
+        *,
         name: str = "",
     ) -> Client:
         """
         Adds a client with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Client` instance.
+
+        Raises
+        ------
+        ValueError
+            When ``group`` is not ``None``, and the given ``group`` is not part
+            of this model instance, or when a required client is being added to
+            a mutually exclusive client group.
         """
+        if group is None:
+            group_idx = None
+        elif group in self._groups:
+            group_idx = self._groups.index(group)
+        else:
+            raise ValueError("The given group is not in this model instance.")
+
+        if required and group is not None and group.mutually_exclusive:
+            # Required clients cannot be part of a mutually exclusive client
+            # group, since then there's nothing to decide about.
+            raise ValueError("Required client in mutually exclusive group.")
+
         client = Client(
-            x,
-            y,
-            delivery,
-            pickup,
-            service_duration,
-            tw_early,
-            tw_late,
-            release_time,
-            prize,
-            required,
-            name,
+            x=x,
+            y=y,
+            delivery=delivery,
+            pickup=pickup,
+            service_duration=service_duration,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            release_time=release_time,
+            prize=prize,
+            required=required,
+            group=group_idx,
+            name=name,
         )
+
+        if group_idx is not None:
+            client_idx = len(self._depots) + len(self._clients)
+            self._groups[group_idx].add_client(client_idx)
 
         self._clients.append(client)
         return client
+
+    def add_client_group(self, required: bool = True) -> ClientGroup:
+        """
+        Adds a new, possibly optional, client group to the model. Returns the
+        created group.
+        """
+        group = ClientGroup(required=required)
+        self._groups.append(group)
+        return group
 
     def add_depot(
         self,
@@ -156,14 +205,23 @@ class Model:
         y: int,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
+        *,
         name: str = "",
     ) -> Depot:
         """
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(x, y, tw_early=tw_early, tw_late=tw_late, name=name)
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
         self._depots.append(depot)
+
+        for group in self._groups:  # new depot invalidates client indices
+            group.clear()
+
+        for idx, client in enumerate(self._clients, len(self._depots)):
+            if client.group is not None:
+                self._groups[client.group].add_client(idx)
+
         return depot
 
     def add_edge(
@@ -198,7 +256,7 @@ class Model:
             """
             warn(msg, ScalingWarning)
 
-        edge = Edge(frm, to, distance, duration)
+        edge = Edge(frm=frm, to=to, distance=distance, duration=duration)
         self._edges.append(edge)
         return edge
 
@@ -212,6 +270,7 @@ class Model:
         tw_late: int = np.iinfo(np.int64).max,
         max_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,
+        *,
         name: str = "",
     ) -> VehicleType:
         """
@@ -237,15 +296,15 @@ class Model:
             raise ValueError("The given depot is not in this model instance.")
 
         vehicle_type = VehicleType(
-            num_available,
-            capacity,
-            depot_idx,
-            fixed_cost,
-            tw_early,
-            tw_late,
-            max_duration,
-            max_distance,
-            name,
+            num_available=num_available,
+            capacity=capacity,
+            depot=depot_idx,
+            fixed_cost=fixed_cost,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            max_duration=max_duration,
+            max_distance=max_distance,
+            name=name,
         )
 
         self._vehicle_types.append(vehicle_type)
@@ -278,6 +337,7 @@ class Model:
             self.vehicle_types,
             distances,
             durations,
+            self._groups,
         )
 
     def solve(
@@ -285,6 +345,7 @@ class Model:
         stop: StoppingCriterion,
         seed: int = 0,
         config: Config = Config(),
+        collect_stats: bool = True,
         display: bool = True,
     ) -> Result:
         """
@@ -298,14 +359,19 @@ class Model:
             Seed value to use for the random number stream. Default 0.
         config
             Configuration to use.
+        collect_stats
+            Whether to collect statistics about the solver's progress. Default
+            ``True``.
         display
             Whether to display information about the solver progress. Default
-            ``True``.
+            ``True``. Progress information is only available when
+            ``collect_stats`` is also set, which it is by default.
 
         Returns
         -------
         Result
-            The solution result object, containing the best found solution.
+            A Result object, containing statistics (if collected) and the best
+            found solution.
         """
         data = self.data()
         rng = RandomNumberGenerator(seed=seed)
@@ -331,4 +397,4 @@ class Model:
 
         gen_args = (data, pm, rng, pop, ls, crossover, init, config.genetic)
         algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop, display)
+        return algo.run(stop, collect_stats, display)

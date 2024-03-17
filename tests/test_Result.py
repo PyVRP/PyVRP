@@ -27,7 +27,7 @@ def test_fields_are_correctly_set(ok_small, routes, num_iterations, runtime):
     assert_allclose(res.runtime, runtime)
 
     if sol.is_feasible():
-        assert_allclose(res.cost(), CostEvaluator(0, 0, 0).cost(sol))
+        assert_equal(res.cost(), CostEvaluator(0, 0, 0).cost(sol))
     else:
         assert_equal(res.cost(), math.inf)
 

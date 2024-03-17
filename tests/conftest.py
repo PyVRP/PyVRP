@@ -65,8 +65,25 @@ def ok_small_multi_depot():
 
 
 @pytest.fixture(scope="session")
+def ok_small_mutually_exclusive_groups():
+    """
+    Fixture that returns the OkSmall instance, but where the first three
+    clients have been added to a mutually exclusive client group.
+    """
+    return read("data/OkSmallMutuallyExclusiveGroups.txt", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
 def small_spd():
     """
     Fixture that returns a small simultaneous pickup and delivery instance.
     """
     return read("data/SmallVRPSPD.vrp", round_func="round")
+
+
+@pytest.fixture(scope="session")
+def gtsp():
+    """
+    Fixture that returns a medium-size generalized TSP instance.
+    """
+    return read("data/50pr439.gtsp", round_func="round")

@@ -112,7 +112,7 @@ def solve(
         the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
-        config = Config.from_toml(kwargs["config_loc"])
+        config = Config.from_file(kwargs["config_loc"])
     else:
         config = Config()
 
@@ -132,7 +132,7 @@ def solve(
     )
 
     model = Model.from_data(data)
-    result = model.solve(stop, config, seed, display)
+    result = model.solve(stop, seed, config, bool(stats_dir), display)
     instance_name = data_loc.stem
 
     if stats_dir:

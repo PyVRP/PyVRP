@@ -46,6 +46,12 @@ class Statistics:
     The Statistics object tracks various (population-level) statistics of
     genetic algorithm runs. This can be helpful in analysing the algorithm's
     performance.
+
+    Parameters
+    ----------
+    collect_stats
+        Whether to collect statistics at all. This can be turned off to avoid
+        excessive memory use on long runs.
     """
 
     runtimes: list[float]
@@ -53,22 +59,27 @@ class Statistics:
     feas_stats: list[_Datum]
     infeas_stats: list[_Datum]
 
-    def __init__(self):
+    def __init__(self, collect_stats: bool = True):
         self.runtimes = []
         self.num_iterations = 0
         self.feas_stats = []
         self.infeas_stats = []
 
         self._clock = perf_counter()
+        self._collect_stats = collect_stats
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, Statistics)
+            and self._collect_stats == other._collect_stats
             and self.runtimes == other.runtimes
             and self.num_iterations == other.num_iterations
             and self.feas_stats == other.feas_stats
             and self.infeas_stats == other.infeas_stats
         )
+
+    def is_collecting(self) -> bool:
+        return self._collect_stats
 
     def collect_from(
         self, population: Population, cost_evaluator: CostEvaluator
@@ -83,6 +94,9 @@ class Statistics:
         cost_evaluator
             CostEvaluator used to compute costs for solutions.
         """
+        if not self._collect_stats:
+            return
+
         start = self._clock
         self._clock = perf_counter()
 
