@@ -18,7 +18,22 @@ from pyvrp.search import (
 
 class Config:
     """
-    Parameter configuration class for PyVRP's hybrid genetic search algorithm.
+    Configuration for PyVRP's hybrid genetic search algorithm.
+
+    Parameters
+    ----------
+    genetic
+        Genetic algorithm parameters.
+    penalty
+        Penalty parameters.
+    population
+        Population parameters.
+    neighbourhood
+        Neighbourhood parameters.
+    node_ops
+        Node operators to use in the search.
+    route_ops
+        Route operators to use in the search.
     """
 
     def __init__(
