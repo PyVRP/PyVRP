@@ -16,7 +16,7 @@ from pyvrp.search import (
 )
 
 
-class ParamConfig:
+class Config:
     """
     Parameter configuration class for PyVRP's hybrid genetic search algorithm.
     """
@@ -64,7 +64,7 @@ class ParamConfig:
     @classmethod
     def from_toml(cls, loc: os.PathLike):
         """
-        Loads the parameter configuration from a TOML file.
+        Loads the configuration from a TOML file.
         """
         with open(loc, "rb") as fh:
             config = tomli.load(fh)

@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import Model, ParamConfig, ProblemData, Result
+from pyvrp import Config, Model, ProblemData, Result
 from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.stop import (
     MaxIterations,
@@ -112,9 +112,9 @@ def solve(
         the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
-        config = ParamConfig.from_toml(kwargs["config_loc"])
+        config = Config.from_toml(kwargs["config_loc"])
     else:
-        config = ParamConfig()
+        config = Config()
 
     data = read(data_loc, round_func)
 

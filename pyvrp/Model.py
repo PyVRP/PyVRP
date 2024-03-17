@@ -3,8 +3,8 @@ from warnings import warn
 
 import numpy as np
 
+from pyvrp.Config import Config
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
-from pyvrp.ParamConfig import ParamConfig
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population
 from pyvrp.Result import Result
@@ -283,7 +283,7 @@ class Model:
     def solve(
         self,
         stop: StoppingCriterion,
-        config: ParamConfig = ParamConfig(),
+        config: Config = Config(),
         seed: int = 0,
         display: bool = True,
     ) -> Result:
@@ -295,7 +295,7 @@ class Model:
         stop
             Stopping criterion to use.
         config
-            Parameter configuration settings.
+            Configuration to use.
         seed
             Seed value to use for the random number stream. Default 0.
         display
