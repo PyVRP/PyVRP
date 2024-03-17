@@ -1,5 +1,5 @@
 import pathlib
-from typing import Iterable, Union
+from typing import Iterable, Type, Union
 
 import tomli
 
@@ -27,8 +27,8 @@ class Config:
         penalty: PenaltyParams = PenaltyParams(),
         population: PopulationParams = PopulationParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        node_ops: Iterable[NodeOperator] = NODE_OPERATORS,
-        route_ops: Iterable[RouteOperator] = ROUTE_OPERATORS,
+        node_ops: Iterable[Type[NodeOperator]] = NODE_OPERATORS,
+        route_ops: Iterable[Type[RouteOperator]] = ROUTE_OPERATORS,
     ):
         self._genetic = genetic
         self._penalty = penalty

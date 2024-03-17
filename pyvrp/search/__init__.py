@@ -1,3 +1,5 @@
+from typing import Type
+
 from .LocalSearch import LocalSearch as LocalSearch
 from .SearchMethod import SearchMethod as SearchMethod
 from ._search import Exchange10 as Exchange10
@@ -17,7 +19,7 @@ from ._search import SwapTails as SwapTails
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours
 
-NODE_OPERATORS: list[NodeOperator] = [
+NODE_OPERATORS: list[Type[NodeOperator]] = [
     Exchange10,
     Exchange20,
     Exchange30,
@@ -30,7 +32,7 @@ NODE_OPERATORS: list[NodeOperator] = [
     SwapTails,
 ]
 
-ROUTE_OPERATORS: list[RouteOperator] = [
+ROUTE_OPERATORS: list[Type[RouteOperator]] = [
     SwapRoutes,
     SwapStar,
 ]
