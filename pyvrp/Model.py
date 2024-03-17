@@ -6,27 +6,16 @@ from warnings import warn
 import numpy as np
 
 from pyvrp.Config import Config
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm
-from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.Population import Population
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
     ProblemData,
-    RandomNumberGenerator,
-    Solution,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
-from pyvrp.crossover import ordered_crossover as ox
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.search import (
-    LocalSearch,
-    compute_neighbours,
-)
+from pyvrp.solve import solve
 
 if TYPE_CHECKING:
     from pyvrp.Result import Result
@@ -373,28 +362,4 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        data = self.data()
-        rng = RandomNumberGenerator(seed=seed)
-
-        neighbours = compute_neighbours(data, config.neighbourhood)
-        ls = LocalSearch(data, rng, neighbours)
-
-        for node_op in config.node_ops:
-            ls.add_node_operator(node_op(data))
-
-        for route_op in config.route_ops:
-            ls.add_route_operator(route_op(data))
-
-        pm = PenaltyManager(config.penalty)
-        pop = Population(bpd, config.population)
-        init = [
-            Solution.make_random(data, rng)
-            for _ in range(config.population.min_pop_size)
-        ]
-
-        # We use SREX when the instance is a proper VRP; else OX for TSP.
-        crossover = srex if data.num_vehicles > 1 else ox
-
-        gen_args = (data, pm, rng, pop, ls, crossover, init, config.genetic)
-        algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop, collect_stats, display)
+        return solve(self.data(), stop, seed, config, collect_stats, display)

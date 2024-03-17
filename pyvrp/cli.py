@@ -7,8 +7,9 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import Config, Model, ProblemData, Result
+from pyvrp import Config, ProblemData, Result
 from pyvrp.read import ROUND_FUNCS, read
+from pyvrp.solve import solve as solve_
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
@@ -131,8 +132,7 @@ def solve(
         ]
     )
 
-    model = Model.from_data(data)
-    result = model.solve(stop, seed, config, bool(stats_dir), display)
+    result = solve_(data, stop, seed, config, bool(stats_dir), display)
     instance_name = data_loc.stem
 
     if stats_dir:
