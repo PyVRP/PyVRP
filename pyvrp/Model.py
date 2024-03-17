@@ -283,8 +283,8 @@ class Model:
     def solve(
         self,
         stop: StoppingCriterion,
-        config: Config = Config(),
         seed: int = 0,
+        config: Config = Config(),
         display: bool = True,
     ) -> Result:
         """
@@ -294,10 +294,10 @@ class Model:
         ----------
         stop
             Stopping criterion to use.
-        config
-            Configuration to use.
         seed
             Seed value to use for the random number stream. Default 0.
+        config
+            Configuration to use.
         display
             Whether to display information about the solver progress. Default
             ``True``.
