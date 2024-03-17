@@ -1,5 +1,5 @@
-import os
-from typing import Iterable
+import pathlib
+from typing import Iterable, Union
 
 import tomli
 
@@ -62,7 +62,7 @@ class Config:
         return self._route_ops
 
     @classmethod
-    def from_toml(cls, loc: os.PathLike):
+    def from_file(cls, loc: Union[str, pathlib.Path]):
         """
         Loads the configuration from a TOML file.
         """
