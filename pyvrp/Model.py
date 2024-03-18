@@ -5,7 +5,6 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.Config import Config
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
@@ -18,6 +17,7 @@ from pyvrp.exceptions import ScalingWarning
 from pyvrp.solve import solve
 
 if TYPE_CHECKING:
+    from pyvrp.Config import Config
     from pyvrp.Result import Result
     from pyvrp.stop import StoppingCriterion
 
@@ -333,7 +333,7 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
-        config: Config = Config(),
+        config: Optional[Config] = None,
         collect_stats: bool = True,
         display: bool = True,
     ) -> Result:
@@ -347,7 +347,7 @@ class Model:
         seed
             Seed value to use for the random number stream. Default 0.
         config
-            Configuration to use.
+            Configuration to use. If not provided, a default will be used.
         collect_stats
             Whether to collect statistics about the solver's progress. Default
             ``True``.
