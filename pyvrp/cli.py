@@ -113,9 +113,9 @@ def _solve(
         the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
-        config = SolveParams.from_file(kwargs["config_loc"])
+        params = SolveParams.from_file(kwargs["config_loc"])
     else:
-        config = SolveParams()
+        params = SolveParams()
 
     data = read(data_loc, round_func)
 
@@ -132,7 +132,7 @@ def _solve(
         ]
     )
 
-    result = solve(data, stop, seed, config, bool(stats_dir), display)
+    result = solve(data, stop, seed, bool(stats_dir), display, params)
     instance_name = data_loc.stem
 
     if stats_dir:

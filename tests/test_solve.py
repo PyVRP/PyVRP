@@ -6,29 +6,29 @@ from pyvrp.solve import solve
 from pyvrp.stop import MaxIterations
 
 
-def test_solve_different_config(ok_small):
+def test_solve_different_params(ok_small):
     """
-    Tests that solving an instance with a custom configuration works as
+    Tests that solving an instance with custom solver parameters works as
     expected by checking that the population size is respected.
     """
-    # First solve using the default configuration.
+    # First solve using the default solver parameters.
     res = solve(ok_small, stop=MaxIterations(200), seed=0)
 
     pop_params = PopulationParams()
     max_pop_size = pop_params.min_pop_size + pop_params.generation_size
 
     # Neither subpopulation should exceed the maximum population size;
-    # we use the statistics as proxy to check this.
+    # we use the statistics to check this.
     max_feas_size = max([datum.size for datum in res.stats.feas_stats])
     max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
 
     assert_(max_feas_size <= max_pop_size)
     assert_(max_infeas_size <= max_pop_size)
 
-    # Let's now use a custom confugration with a maximum population size of 15.
+    # Let's now use custom parameters with a maximum population size of 15.
     pop_params = PopulationParams(min_pop_size=5, generation_size=10)
-    config = SolveParams(population=pop_params)
-    res = solve(ok_small, stop=MaxIterations(200), seed=0, config=config)
+    params = SolveParams(population=pop_params)
+    res = solve(ok_small, stop=MaxIterations(200), seed=0, params=params)
 
     max_pop_size = pop_params.min_pop_size + pop_params.generation_size
     max_feas_size = max([datum.size for datum in res.stats.feas_stats])

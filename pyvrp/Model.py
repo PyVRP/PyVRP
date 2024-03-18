@@ -333,9 +333,9 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
-        params: SolveParams = SolveParams(),
         collect_stats: bool = True,
         display: bool = True,
+        params: SolveParams = SolveParams(),
     ) -> Result:
         """
         Solve this model.
@@ -346,8 +346,6 @@ class Model:
             Stopping criterion to use.
         seed
             Seed value to use for the random number stream. Default 0.
-        params
-            Solver parameters to use. If not provided, a default will be used.
         collect_stats
             Whether to collect statistics about the solver's progress. Default
             ``True``.
@@ -355,6 +353,8 @@ class Model:
             Whether to display information about the solver progress. Default
             ``True``. Progress information is only available when
             ``collect_stats`` is also set, which it is by default.
+        params
+            Solver parameters to use. If not provided, a default will be used.
 
         Returns
         -------
@@ -362,4 +362,4 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        return solve(self.data(), stop, seed, params, collect_stats, display)
+        return solve(self.data(), stop, seed, collect_stats, display, params)
