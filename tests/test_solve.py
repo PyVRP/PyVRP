@@ -6,36 +6,18 @@ from pyvrp.solve import solve
 from pyvrp.stop import MaxIterations
 
 
-def test_solve_different_params(ok_small):
+def test_solve_collect_stats(ok_small):
     """
-    Tests that solving an instance with custom solver parameters works as
-    expected by checking that the population size is respected.
+    Tests that solving an instance with the ``collect_stats`` argument set to
+    ``True`` collects statistics.
     """
-    # First solve using the default solver parameters.
-    res = solve(ok_small, stop=MaxIterations(200), seed=0)
+    # Default is to collect statistics.
+    res = solve(ok_small, stop=MaxIterations(10), seed=0)
+    assert_(res.stats.is_collecting())
 
-    pop_params = PopulationParams()
-    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
-
-    # Neither subpopulation should exceed the maximum population size;
-    # we use the statistics to check this.
-    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
-    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
-
-    assert_(max_feas_size <= max_pop_size)
-    assert_(max_infeas_size <= max_pop_size)
-
-    # Let's now use custom parameters with a maximum population size of 15.
-    pop_params = PopulationParams(min_pop_size=5, generation_size=10)
-    params = SolveParams(population=pop_params)
-    res = solve(ok_small, stop=MaxIterations(200), seed=0, params=params)
-
-    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
-    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
-    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
-
-    assert_(max_feas_size <= max_pop_size)
-    assert_(max_infeas_size <= max_pop_size)
+    # Now solve with statistics collection turned off.
+    res = solve(ok_small, stop=MaxIterations(10), seed=0, collect_stats=False)
+    assert_(not res.stats.is_collecting())
 
 
 def test_solve_display_argument(ok_small, capsys):
@@ -65,15 +47,33 @@ def test_solve_display_argument(ok_small, capsys):
     assert_(str(round(res.runtime)) in printed)
 
 
-def test_solve_collect_stats(ok_small):
+def test_solve_custom_params(ok_small):
     """
-    Tests that solving an instance with the ``collect_stats`` argument set to
-    ``True`` collects statistics.
+    Tests that solving an instance with custom solver parameters works as
+    expected by checking that the population size is respected.
     """
-    # Default is to collect statistics.
-    res = solve(ok_small, stop=MaxIterations(10), seed=0)
-    assert_(res.stats.is_collecting())
+    # First solve using the default solver parameters.
+    res = solve(ok_small, stop=MaxIterations(200), seed=0)
 
-    # Now solve with statistics collection turned off.
-    res = solve(ok_small, stop=MaxIterations(10), seed=0, collect_stats=False)
-    assert_(not res.stats.is_collecting())
+    pop_params = PopulationParams()
+    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
+
+    # Neither subpopulation should exceed the maximum population size;
+    # we use the statistics to check this.
+    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
+    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
+
+    assert_(max_feas_size <= max_pop_size)
+    assert_(max_infeas_size <= max_pop_size)
+
+    # Let's now use custom parameters with a maximum population size of 15.
+    pop_params = PopulationParams(min_pop_size=5, generation_size=10)
+    params = SolveParams(population=pop_params)
+    res = solve(ok_small, stop=MaxIterations(200), seed=0, params=params)
+
+    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
+    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
+    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
+
+    assert_(max_feas_size <= max_pop_size)
+    assert_(max_infeas_size <= max_pop_size)
