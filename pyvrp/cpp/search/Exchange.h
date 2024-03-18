@@ -171,21 +171,23 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto *route = U->route();
 
         if (U->idx() < V->idx())
-            return deltaCost(route,
-                             data,
-                             costEvaluator,
-                             route->before(U->idx() - 1),
-                             route->between(U->idx() + N, V->idx()),
-                             route->between(U->idx(), U->idx() + N - 1),
-                             route->after(V->idx() + 1));
+            return deltaCost(
+                route,
+                RouteProposal(data,
+                              route->before(U->idx() - 1),
+                              route->between(U->idx() + N, V->idx()),
+                              route->between(U->idx(), U->idx() + N - 1),
+                              route->after(V->idx() + 1)),
+                costEvaluator);
         else
-            return deltaCost(route,
-                             data,
-                             costEvaluator,
-                             route->before(V->idx()),
-                             route->between(U->idx(), U->idx() + N - 1),
-                             route->between(V->idx() + 1, U->idx() - 1),
-                             route->after(U->idx() + N));
+            return deltaCost(
+                route,
+                RouteProposal(data,
+                              route->before(V->idx()),
+                              route->between(U->idx(), U->idx() + N - 1),
+                              route->between(V->idx() + 1, U->idx() - 1),
+                              route->after(U->idx() + N)),
+                costEvaluator);
     }
 }
 
@@ -282,23 +284,25 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         auto *route = U->route();
 
         if (U->idx() < V->idx())
-            return deltaCost(route,
-                             data,
-                             costEvaluator,
-                             route->before(U->idx() - 1),
-                             route->between(V->idx(), V->idx() + M - 1),
-                             route->between(U->idx() + N, V->idx() - 1),
-                             route->between(U->idx(), U->idx() + N - 1),
-                             route->after(V->idx() + M));
+            return deltaCost(
+                route,
+                RouteProposal(data,
+                              route->before(U->idx() - 1),
+                              route->between(V->idx(), V->idx() + M - 1),
+                              route->between(U->idx() + N, V->idx() - 1),
+                              route->between(U->idx(), U->idx() + N - 1),
+                              route->after(V->idx() + M)),
+                costEvaluator);
         else
-            return deltaCost(route,
-                             data,
-                             costEvaluator,
-                             route->before(V->idx() - 1),
-                             route->between(U->idx(), U->idx() + N - 1),
-                             route->between(V->idx() + M, U->idx() - 1),
-                             route->between(V->idx(), V->idx() + M - 1),
-                             route->after(U->idx() + N));
+            return deltaCost(
+                route,
+                RouteProposal(data,
+                              route->before(V->idx() - 1),
+                              route->between(U->idx(), U->idx() + N - 1),
+                              route->between(V->idx() + M, U->idx() - 1),
+                              route->between(V->idx(), V->idx() + M - 1),
+                              route->after(U->idx() + N)),
+                costEvaluator);
     }
 }
 
