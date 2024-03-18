@@ -6,18 +6,11 @@ from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population
 from pyvrp.SolveParams import SolveParams
-from pyvrp._pyvrp import (
-    ProblemData,
-    RandomNumberGenerator,
-    Solution,
-)
+from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.search import (
-    LocalSearch,
-    compute_neighbours,
-)
+from pyvrp.search import LocalSearch, compute_neighbours
 
 if TYPE_CHECKING:
     from pyvrp.Result import Result
