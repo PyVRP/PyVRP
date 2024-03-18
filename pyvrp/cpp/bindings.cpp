@@ -602,6 +602,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("nb_close") = 5,
              py::arg("lb_diversity") = 0.1,
              py::arg("ub_diversity") = 0.5)
+        .def(py::self == py::self, py::arg("other"))  // this is __eq__
         .def_readwrite("min_pop_size", &PopulationParams::minPopSize)
         .def_readwrite("generation_size", &PopulationParams::generationSize)
         .def_property_readonly("max_pop_size", &PopulationParams::maxPopSize)

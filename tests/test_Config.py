@@ -23,7 +23,7 @@ def test_default_attributes():
 
     assert_equal(config.genetic, GeneticAlgorithmParams())
     assert_equal(config.penalty, PenaltyParams())
-    # assert_equal(config.population, PopulationParams())
+    assert_equal(config.population, PopulationParams())
     assert_equal(config.neighbourhood, NeighbourhoodParams())
     assert_equal(config.node_ops, NODE_OPERATORS)
     assert_equal(config.route_ops, ROUTE_OPERATORS)
@@ -43,7 +43,7 @@ def test_config_from_file():
 
     assert_equal(config.genetic, genetic_params)
     assert_equal(config.penalty, penalty_params)
-    # assert_equal(config.population, population_params)
+    assert_equal(config.population, population_params)
     assert_equal(config.neighbourhood, neighbourhood_params)
     assert_equal(config.node_ops, [Exchange10])
     assert_equal(config.route_ops, [SwapStar])
