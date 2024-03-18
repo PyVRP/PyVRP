@@ -16,9 +16,9 @@ from pyvrp.search import (
 )
 
 
-def test_default_attributes():
+def test_default_values():
     """
-    Tests that the default attributes are set correctly.
+    Tests that the default values are set correctly.
     """
     params = SolveParams()
 
