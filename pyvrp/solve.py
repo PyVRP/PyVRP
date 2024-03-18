@@ -33,7 +33,7 @@ def solve(
     display: bool = True,
 ) -> Result:
     """
-    Solves a problem instance.
+    Solves the given problem data instance.
 
     Parameters
     ----------
@@ -44,15 +44,19 @@ def solve(
     seed
         Seed value to use for the random number stream. Default 0.
     config
-        Configuration for the algorithm.
+        Configuration to use.
     collect_stats
-        Whether to collect statistics during the run. Default True.
+        Whether to collect statistics about the solver's progress. Default
+        ``True``.
     display
-        Whether to display the best solution found. Default True.
+        Whether to display information about the solver progress. Default
+        ``True``. Progress information is only available when
+        ``collect_stats`` is also set, which it is by default.
 
     Returns
     -------
-    A Result object, containing statistics (if collected) and the best
+    Result
+        A Result object, containing statistics (if collected) and the best
         found solution.
     """
     rng = RandomNumberGenerator(seed=seed)

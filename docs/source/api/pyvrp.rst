@@ -60,6 +60,10 @@ This object can be used to obtain the best observed solution, and detailed runti
 .. automodule:: pyvrp.show_versions
    :members:
 
+.. automodule:: pyvrp.solve
+
+   .. autofunction:: solve
+
 .. automodule:: pyvrp.Statistics
    :members:
 

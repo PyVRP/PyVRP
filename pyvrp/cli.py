@@ -9,7 +9,7 @@ from tqdm.contrib.concurrent import process_map
 
 from pyvrp import Config, ProblemData, Result
 from pyvrp.read import ROUND_FUNCS, read
-from pyvrp.solve import solve as solve_
+from pyvrp.solve import solve as solve
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
@@ -66,7 +66,7 @@ def write_solution(where: Path, data: ProblemData, result: Result):
         fh.write(f"Cost: {round(result.cost(), 2)}\n")
 
 
-def solve(
+def _solve(
     data_loc: Path,
     round_func: str,
     seed: int,
@@ -132,7 +132,7 @@ def solve(
         ]
     )
 
-    result = solve_(data, stop, seed, config, bool(stats_dir), display)
+    result = solve(data, stop, seed, config, bool(stats_dir), display)
     instance_name = data_loc.stem
 
     if stats_dir:
@@ -166,7 +166,7 @@ def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
     kwargs
         Any additional keyword arguments to pass to the solving function.
     """
-    func = partial(solve, **kwargs)
+    func = partial(_solve, **kwargs)
     args = sorted(instances)
 
     if len(instances) == 1 or num_procs == 1:
