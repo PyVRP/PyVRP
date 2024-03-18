@@ -5,7 +5,7 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.Config import Config
+from pyvrp.SolveParams import SolveParams
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
@@ -333,7 +333,7 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
-        config: Config = Config(),
+        params: SolveParams = SolveParams(),
         collect_stats: bool = True,
         display: bool = True,
     ) -> Result:
@@ -346,8 +346,8 @@ class Model:
             Stopping criterion to use.
         seed
             Seed value to use for the random number stream. Default 0.
-        config
-            Configuration to use. If not provided, a default will be used.
+        params
+            Solver parameters to use. If not provided, a default will be used.
         collect_stats
             Whether to collect statistics about the solver's progress. Default
             ``True``.
@@ -362,4 +362,4 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        return solve(self.data(), stop, seed, config, collect_stats, display)
+        return solve(self.data(), stop, seed, params, collect_stats, display)

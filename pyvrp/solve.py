@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyvrp.Config import Config
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
 from pyvrp.PenaltyManager import PenaltyManager
 from pyvrp.Population import Population
+from pyvrp.SolveParams import SolveParams
 from pyvrp._pyvrp import (
     ProblemData,
     RandomNumberGenerator,
@@ -28,7 +28,7 @@ def solve(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
-    config: Config = Config(),
+    params: SolveParams = SolveParams(),
     collect_stats: bool = True,
     display: bool = True,
 ) -> Result:
@@ -43,8 +43,8 @@ def solve(
         Stopping criterion to use.
     seed
         Seed value to use for the random number stream. Default 0.
-    config
-        Configuration to use. If not provided, a default will be used.
+    params
+        Solver parameters to use. If not provided, a default will be used.
     collect_stats
         Whether to collect statistics about the solver's progress. Default
         ``True``.
@@ -60,25 +60,25 @@ def solve(
         found solution.
     """
     rng = RandomNumberGenerator(seed=seed)
-    neighbours = compute_neighbours(data, config.neighbourhood)
+    neighbours = compute_neighbours(data, params.neighbourhood)
     ls = LocalSearch(data, rng, neighbours)
 
-    for node_op in config.node_ops:
+    for node_op in params.node_ops:
         ls.add_node_operator(node_op(data))
 
-    for route_op in config.route_ops:
+    for route_op in params.route_ops:
         ls.add_route_operator(route_op(data))
 
-    pm = PenaltyManager(config.penalty)
-    pop = Population(bpd, config.population)
+    pm = PenaltyManager(params.penalty)
+    pop = Population(bpd, params.population)
     init = [
         Solution.make_random(data, rng)
-        for _ in range(config.population.min_pop_size)
+        for _ in range(params.population.min_pop_size)
     ]
 
     # We use SREX when the instance is a proper VRP; else OX for TSP.
     crossover = srex if data.num_vehicles > 1 else ox
 
-    gen_args = (data, pm, rng, pop, ls, crossover, init, config.genetic)
+    gen_args = (data, pm, rng, pop, ls, crossover, init, params.genetic)
     algo = GeneticAlgorithm(*gen_args)  # type: ignore
     return algo.run(stop, collect_stats, display)

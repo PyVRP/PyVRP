@@ -1,4 +1,3 @@
-from .Config import Config as Config
 from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
 from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
 from .Model import Model as Model
@@ -7,6 +6,7 @@ from .PenaltyManager import PenaltyParams as PenaltyParams
 from .Population import Population as Population
 from .Population import PopulationParams as PopulationParams
 from .Result import Result as Result
+from .SolveParams import SolveParams as SolveParams
 from .Statistics import Statistics as Statistics
 from ._pyvrp import Client as Client
 from ._pyvrp import ClientGroup as ClientGroup

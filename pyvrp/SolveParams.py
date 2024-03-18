@@ -16,9 +16,9 @@ from pyvrp.search import (
 )
 
 
-class Config:
+class SolveParams:
     """
-    Configuration for PyVRP's hybrid genetic search algorithm.
+    Solver parameters for PyVRP's hybrid genetic search algorithm.
 
     Parameters
     ----------
@@ -79,17 +79,17 @@ class Config:
     @classmethod
     def from_file(cls, loc: Union[str, pathlib.Path]):
         """
-        Loads the configuration from a TOML file.
+        Loads the solver parameters from a TOML file.
         """
         with open(loc, "rb") as fh:
-            config = tomli.load(fh)
+            data = tomli.load(fh)
 
-        gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
-        pen_params = PenaltyParams(**config.get("penalty", {}))
-        pop_params = PopulationParams(**config.get("population", {}))
-        nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
-        node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
-        route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
+        gen_params = GeneticAlgorithmParams(**data.get("genetic", {}))
+        pen_params = PenaltyParams(**data.get("penalty", {}))
+        pop_params = PopulationParams(**data.get("population", {}))
+        nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
+        node_ops = [getattr(pyvrp.search, op) for op in data["node_ops"]]
+        route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
         return cls(
             gen_params, pen_params, pop_params, nb_params, node_ops, route_ops

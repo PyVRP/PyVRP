@@ -1,6 +1,6 @@
 from numpy.testing import assert_, assert_equal
 
-from pyvrp.Config import Config
+from pyvrp.SolveParams import SolveParams
 from pyvrp._pyvrp import PopulationParams
 from pyvrp.solve import solve
 from pyvrp.stop import MaxIterations
@@ -27,7 +27,7 @@ def test_solve_different_config(ok_small):
 
     # Let's now use a custom confugration with a maximum population size of 15.
     pop_params = PopulationParams(min_pop_size=5, generation_size=10)
-    config = Config(population=pop_params)
+    config = SolveParams(population=pop_params)
     res = solve(ok_small, stop=MaxIterations(200), seed=0, config=config)
 
     max_pop_size = pop_params.min_pop_size + pop_params.generation_size
