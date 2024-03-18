@@ -18,9 +18,9 @@ namespace pyvrp::search
  */
 template <typename... Args>
 Cost deltaCost(Route *route,
-               Args &&...args,
                ProblemData const &data,
-               CostEvaluator const &costEvaluator);
+               CostEvaluator const &costEvaluator,
+               Args &&...args);
 
 /**
  * Evaluates the delta cost of inserting U after V in V's route. The evaluation
