@@ -5,6 +5,7 @@ from warnings import warn
 
 import numpy as np
 
+from pyvrp.Config import Config
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
@@ -17,7 +18,6 @@ from pyvrp.exceptions import ScalingWarning
 from pyvrp.solve import solve
 
 if TYPE_CHECKING:
-    from pyvrp.Config import Config
     from pyvrp.Result import Result
     from pyvrp.stop import StoppingCriterion
 
@@ -333,7 +333,7 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
-        config: Optional[Config] = None,
+        config: Config = Config(),
         collect_stats: bool = True,
         display: bool = True,
     ) -> Result:

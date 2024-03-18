@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pyvrp.Config import Config
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
@@ -28,7 +28,7 @@ def solve(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
-    config: Optional[Config] = None,
+    config: Config = Config(),
     collect_stats: bool = True,
     display: bool = True,
 ) -> Result:
@@ -59,7 +59,6 @@ def solve(
         A Result object, containing statistics (if collected) and the best
         found solution.
     """
-    config = Config() if config is None else config
     rng = RandomNumberGenerator(seed=seed)
     neighbours = compute_neighbours(data, config.neighbourhood)
     ls = LocalSearch(data, rng, neighbours)
