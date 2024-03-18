@@ -3,6 +3,7 @@
 
 #include "LocalSearchOperator.h"
 #include "Route.h"
+#include "primitives.h"
 
 #include <cassert>
 
@@ -87,13 +88,13 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
 {
     assert(U->idx() > 0);
 
-    auto *uRoute = U->route();
-    auto *vRoute = V->route();
-
-    Cost deltaCost = 0;
-
-    if (uRoute != vRoute)
+    if (U->route() != V->route())
     {
+        auto *uRoute = U->route();
+        auto *vRoute = V->route();
+
+        Cost deltaCost = 0;
+
         auto const uDist = DistanceSegment::merge(data.distanceMatrix(),
                                                   uRoute->before(U->idx() - 1),
                                                   uRoute->after(U->idx() + N));
@@ -162,89 +163,30 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         deltaCost
             += costEvaluator.twPenalty(vDS.timeWarp(vRoute->maxDuration()));
         deltaCost -= costEvaluator.twPenalty(vRoute->timeWarp());
+
+        return deltaCost;
     }
     else  // within same route
     {
-        deltaCost -= static_cast<Cost>(uRoute->distance());
-        deltaCost -= costEvaluator.distPenalty(uRoute->distance(),
-                                               uRoute->maxDistance());
-        deltaCost
-            -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
-        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+        auto *route = U->route();
 
         if (U->idx() < V->idx())
-        {
-            auto const dist = DistanceSegment::merge(
-                data.distanceMatrix(),
-                uRoute->before(U->idx() - 1),
-                uRoute->between(U->idx() + N, V->idx()),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->after(V->idx() + 1));
-
-            deltaCost += static_cast<Cost>(dist.distance());
-            deltaCost += costEvaluator.distPenalty(dist.distance(),
-                                                   uRoute->maxDistance());
-
-            if (deltaCost >= 0)
-                return deltaCost;
-
-            auto const ls = LoadSegment::merge(
-                uRoute->before(U->idx() - 1),
-                uRoute->between(U->idx() + N, V->idx()),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->after(V->idx() + 1));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
-
-            auto const ds = DurationSegment::merge(
-                data.durationMatrix(),
-                uRoute->before(U->idx() - 1),
-                uRoute->between(U->idx() + N, V->idx()),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->after(V->idx() + 1));
-
-            deltaCost
-                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
-        }
+            return deltaCost(route,
+                             data,
+                             costEvaluator,
+                             route->before(U->idx() - 1),
+                             route->between(U->idx() + N, V->idx()),
+                             route->between(U->idx(), U->idx() + N - 1),
+                             route->after(V->idx() + 1));
         else
-        {
-            auto const dist = DistanceSegment::merge(
-                data.distanceMatrix(),
-                uRoute->before(V->idx()),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->between(V->idx() + 1, U->idx() - 1),
-                uRoute->after(U->idx() + N));
-
-            deltaCost += static_cast<Cost>(dist.distance());
-            deltaCost += costEvaluator.distPenalty(dist.distance(),
-                                                   uRoute->maxDistance());
-
-            if (deltaCost >= 0)
-                return deltaCost;
-
-            auto const ls = LoadSegment::merge(
-                uRoute->before(V->idx()),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->between(V->idx() + 1, U->idx() - 1),
-                uRoute->after(U->idx() + N));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
-
-            auto const ds = DurationSegment::merge(
-                data.durationMatrix(),
-                uRoute->before(V->idx()),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->between(V->idx() + 1, U->idx() - 1),
-                uRoute->after(U->idx() + N));
-
-            deltaCost
-                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
-        }
+            return deltaCost(route,
+                             data,
+                             costEvaluator,
+                             route->before(V->idx()),
+                             route->between(U->idx(), U->idx() + N - 1),
+                             route->between(V->idx() + 1, U->idx() - 1),
+                             route->after(U->idx() + N));
     }
-
-    return deltaCost;
 }
 
 template <size_t N, size_t M>
@@ -255,13 +197,13 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
     assert(U->idx() > 0 && V->idx() > 0);
     assert(U->route() && V->route());
 
-    auto *uRoute = U->route();
-    auto *vRoute = V->route();
-
-    Cost deltaCost = 0;
-
-    if (uRoute != vRoute)
+    if (U->route() != V->route())
     {
+        auto *uRoute = U->route();
+        auto *vRoute = V->route();
+
+        Cost deltaCost = 0;
+
         auto const uDist = DistanceSegment::merge(
             data.distanceMatrix(),
             uRoute->before(U->idx() - 1),
@@ -332,95 +274,32 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                                  vRoute->after(V->idx() + M));
 
         deltaCost += costEvaluator.loadPenalty(vLS.load(), vRoute->capacity());
+
+        return deltaCost;
     }
     else  // within same route
     {
-        deltaCost -= static_cast<Cost>(uRoute->distance());
-        deltaCost -= costEvaluator.distPenalty(uRoute->distance(),
-                                               uRoute->maxDistance());
-        deltaCost
-            -= costEvaluator.loadPenalty(uRoute->load(), uRoute->capacity());
-        deltaCost -= costEvaluator.twPenalty(uRoute->timeWarp());
+        auto *route = U->route();
 
         if (U->idx() < V->idx())
-        {
-            auto const dist = DistanceSegment::merge(
-                data.distanceMatrix(),
-                uRoute->before(U->idx() - 1),
-                uRoute->between(V->idx(), V->idx() + M - 1),
-                uRoute->between(U->idx() + N, V->idx() - 1),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->after(V->idx() + M));
-
-            deltaCost += static_cast<Cost>(dist.distance());
-            deltaCost += costEvaluator.distPenalty(dist.distance(),
-                                                   uRoute->maxDistance());
-
-            if (deltaCost >= 0)
-                return deltaCost;
-
-            auto const ls = LoadSegment::merge(
-                uRoute->before(U->idx() - 1),
-                uRoute->between(V->idx(), V->idx() + M - 1),
-                uRoute->between(U->idx() + N, V->idx() - 1),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->after(V->idx() + M));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
-
-            auto const ds = DurationSegment::merge(
-                data.durationMatrix(),
-                uRoute->before(U->idx() - 1),
-                uRoute->between(V->idx(), V->idx() + M - 1),
-                uRoute->between(U->idx() + N, V->idx() - 1),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->after(V->idx() + M));
-
-            deltaCost
-                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
-        }
+            return deltaCost(route,
+                             data,
+                             costEvaluator,
+                             route->before(U->idx() - 1),
+                             route->between(V->idx(), V->idx() + M - 1),
+                             route->between(U->idx() + N, V->idx() - 1),
+                             route->between(U->idx(), U->idx() + N - 1),
+                             route->after(V->idx() + M));
         else
-        {
-            auto const dist = DistanceSegment::merge(
-                data.distanceMatrix(),
-                uRoute->before(V->idx() - 1),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->between(V->idx() + M, U->idx() - 1),
-                uRoute->between(V->idx(), V->idx() + M - 1),
-                uRoute->after(U->idx() + N));
-
-            deltaCost += static_cast<Cost>(dist.distance());
-            deltaCost += costEvaluator.distPenalty(dist.distance(),
-                                                   uRoute->maxDistance());
-
-            if (deltaCost >= 0)
-                return deltaCost;
-
-            auto const ls = LoadSegment::merge(
-                uRoute->before(V->idx() - 1),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->between(V->idx() + M, U->idx() - 1),
-                uRoute->between(V->idx(), V->idx() + M - 1),
-                uRoute->after(U->idx() + N));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), uRoute->capacity());
-
-            auto const ds = DurationSegment::merge(
-                data.durationMatrix(),
-                uRoute->before(V->idx() - 1),
-                uRoute->between(U->idx(), U->idx() + N - 1),
-                uRoute->between(V->idx() + M, U->idx() - 1),
-                uRoute->between(V->idx(), V->idx() + M - 1),
-                uRoute->after(U->idx() + N));
-
-            deltaCost
-                += costEvaluator.twPenalty(ds.timeWarp(uRoute->maxDuration()));
-        }
+            return deltaCost(route,
+                             data,
+                             costEvaluator,
+                             route->before(V->idx() - 1),
+                             route->between(U->idx(), U->idx() + N - 1),
+                             route->between(V->idx() + M, U->idx() - 1),
+                             route->between(V->idx(), V->idx() + M - 1),
+                             route->after(U->idx() + N));
     }
-
-    return deltaCost;
 }
 
 template <size_t N, size_t M>

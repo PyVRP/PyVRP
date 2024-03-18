@@ -2,6 +2,9 @@
 #define PYVRP_SEARCH_PRIMITIVES_H
 
 #include "CostEvaluator.h"
+#include "DistanceSegment.h"
+#include "DurationSegment.h"
+#include "LoadSegment.h"
 #include "Measure.h"
 #include "Route.h"
 
@@ -10,6 +13,15 @@
 // operators.
 namespace pyvrp::search
 {
+/**
+ * TODO
+ */
+template <typename... Args>
+Cost deltaCost(Route *route,
+               Args &&...args,
+               ProblemData const &data,
+               CostEvaluator const &costEvaluator);
+
 /**
  * Evaluates the delta cost of inserting U after V in V's route. The evaluation
  * is exact.
@@ -81,5 +93,44 @@ Cost removeCost(Route::Node *U,
                 ProblemData const &data,
                 CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::search
+
+template <typename... Args>
+pyvrp::Cost pyvrp::search::deltaCost(Route *route,
+                                     ProblemData const &data,
+                                     CostEvaluator const &costEvaluator,
+                                     Args &&...args)
+{
+    Cost deltaCost = 0;
+
+    auto const distSegment
+        = DistanceSegment::merge(data.distanceMatrix(), args...);
+
+    deltaCost += static_cast<Cost>(distSegment.distance());
+    deltaCost -= static_cast<Cost>(route->distance());
+
+    deltaCost += costEvaluator.distPenalty(distSegment.distance(),
+                                           route->maxDistance());
+    deltaCost
+        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
+
+    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
+    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+
+    if (deltaCost >= 0)
+        return deltaCost;
+
+    auto const loadSegment = LoadSegment::merge(args...);
+
+    deltaCost
+        += costEvaluator.loadPenalty(loadSegment.load(), route->capacity());
+
+    auto const durationSegment
+        = DurationSegment::merge(data.durationMatrix(), args...);
+
+    deltaCost += costEvaluator.twPenalty(
+        durationSegment.timeWarp(route->maxDuration()));
+
+    return deltaCost;
+}
 
 #endif  // PYVRP_SEARCH_PRIMITIVES_H
