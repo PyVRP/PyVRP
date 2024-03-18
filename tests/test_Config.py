@@ -12,6 +12,7 @@ from pyvrp.search import (
     Exchange10,
     NeighbourhoodParams,
     SwapStar,
+    SwapTails,
 )
 
 
@@ -40,10 +41,12 @@ def test_config_from_file():
     penalty_params = PenaltyParams(20, 0, 0, 12, 100, 1.25, 0.85, 0.43)
     population_params = PopulationParams(10, 20, 3, 4, 0.0, 1.0)
     neighbourhood_params = NeighbourhoodParams(0, 0, 20, True, True)
+    node_ops = [Exchange10, SwapTails]
+    route_ops = [SwapStar]
 
     assert_equal(config.genetic, genetic_params)
     assert_equal(config.penalty, penalty_params)
     assert_equal(config.population, population_params)
     assert_equal(config.neighbourhood, neighbourhood_params)
-    assert_equal(config.node_ops, [Exchange10])
-    assert_equal(config.route_ops, [SwapStar])
+    assert_equal(config.node_ops, node_ops)
+    assert_equal(config.route_ops, route_ops)
