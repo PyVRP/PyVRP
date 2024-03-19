@@ -69,11 +69,11 @@ class ProgressPrinter:
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
             feas_size=feas.size,
-            feas_avg=round(feas.avg_cost),
-            feas_best=round(feas.best_cost),
+            feas_avg=round(feas.avg_cost) if feas.size else "-",
+            feas_best=round(feas.best_cost) if feas.size else "-",
             infeas_size=infeas.size,
-            infeas_avg=round(infeas.avg_cost),
-            infeas_best=round(infeas.best_cost),
+            infeas_avg=round(infeas.avg_cost) if infeas.size else "-",
+            infeas_best=round(infeas.best_cost) if infeas.size else "-",
         )
         print(msg)
 

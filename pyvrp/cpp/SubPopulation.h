@@ -61,6 +61,7 @@ struct PopulationParams
     }
 
     size_t maxPopSize() const { return minPopSize + generationSize; }
+    bool operator==(PopulationParams const &other) const = default;
 };
 
 /**
