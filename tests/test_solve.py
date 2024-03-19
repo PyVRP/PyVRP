@@ -50,6 +50,15 @@ def test_solve_params_from_file():
     assert_equal(params.route_ops, route_ops)
 
 
+def test_solve_params_from_file_defaults():
+    """
+    Tests that that the solver parameters are the default ones when
+    loaded from a TOML file that does not specificy the parameters.
+    """
+    params = SolveParams.from_file("tests/data/empty_config.toml")
+    assert_equal(params, SolveParams())
+
+
 def test_solve_collect_stats(ok_small):
     """
     Tests that solving an instance with the ``collect_stats`` argument set to

@@ -83,8 +83,16 @@ class SolveParams:
         pen_params = PenaltyParams(**data.get("penalty", {}))
         pop_params = PopulationParams(**data.get("population", {}))
         nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
-        node_ops = [getattr(pyvrp.search, op) for op in data["node_ops"]]
-        route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
+        node_ops = (
+            [getattr(pyvrp.search, op) for op in data["node_ops"]]
+            if data.get("node_ops")
+            else NODE_OPERATORS
+        )
+        route_ops = (
+            [getattr(pyvrp.search, op) for op in data["route_ops"]]
+            if data.get("route_ops")
+            else ROUTE_OPERATORS
+        )
 
         return cls(
             gen_params, pen_params, pop_params, nb_params, node_ops, route_ops
