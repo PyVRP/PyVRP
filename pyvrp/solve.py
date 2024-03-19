@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from pyvrp.Result import Result
     from pyvrp.stop import StoppingCriterion
 
-from typing import Iterable, Type, Union
+from typing import Type, Union
 
 import tomli
 
@@ -33,6 +33,13 @@ from pyvrp.search import (
     NodeOperator,
     RouteOperator,
 )
+
+
+def _field(func):
+    """
+    Small wrapper around the ``dataclasses.field`` function.
+    """
+    return field(default_factory=func)
 
 
 @dataclass
@@ -56,19 +63,13 @@ class SolveParams:
         Route operators to use in the search.
     """
 
-    genetic: GeneticAlgorithmParams = field(
-        default_factory=GeneticAlgorithmParams
-    )
-    penalty: PenaltyParams = field(default_factory=PenaltyParams)
-    population: PopulationParams = field(default_factory=PopulationParams)
-    neighbourhood: NeighbourhoodParams = field(
-        default_factory=NeighbourhoodParams
-    )
-    node_ops: Iterable[Type[NodeOperator]] = field(
-        default_factory=lambda: NODE_OPERATORS
-    )
-    route_ops: Iterable[Type[RouteOperator]] = field(
-        default_factory=lambda: ROUTE_OPERATORS
+    genetic: GeneticAlgorithmParams = _field(GeneticAlgorithmParams)  # noqa
+    penalty: PenaltyParams = _field(PenaltyParams)  # noqa
+    population: PopulationParams = _field(PopulationParams)  # noqa
+    neighbourhood: NeighbourhoodParams = _field(NeighbourhoodParams)  # noqa
+    node_ops: list[Type[NodeOperator]] = _field(lambda: NODE_OPERATORS)  # noqa
+    route_ops: list[Type[RouteOperator]] = _field(  # noqa
+        lambda: ROUTE_OPERATORS
     )
 
     @classmethod
@@ -84,7 +85,7 @@ class SolveParams:
         pop_params = PopulationParams(**data.get("population", {}))
         nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
         node_ops = (
-            [getattr(pyvrp.search, op) for op in data["node_ops"]]
+            [getattr(pyvrp.search, op) for op in data.get("node_ops", [])]
             if data.get("node_ops")
             else NODE_OPERATORS
         )
