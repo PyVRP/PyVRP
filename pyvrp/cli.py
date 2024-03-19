@@ -1,4 +1,5 @@
 import argparse
+import warnings
 from functools import partial
 from pathlib import Path
 from typing import Optional
@@ -130,8 +131,9 @@ def _solve(
             NoImprovement(no_improvement),
         ]
     )
+    collect_stats = bool(stats_dir) or display
 
-    result = solve(data, stop, seed, bool(stats_dir), display, params)
+    result = solve(data, stop, seed, collect_stats, display, params)
     instance_name = data_loc.stem
 
     if stats_dir:
@@ -171,6 +173,12 @@ def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
     if len(instances) == 1 or num_procs == 1:
         res = [func(arg) for arg in tqdm(args, unit="instance")]
     else:
+        if kwargs.get("display"):
+            warnings.warn(
+                "Solving instances in parallel does not go along well with "
+                "the --display option. Consider disabling this option."
+            )
+
         res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [
@@ -233,6 +241,9 @@ def main():
     msg = "Number of processors to use for solving instances. Default 1."
     parser.add_argument("--num_procs", type=int, default=1, help=msg)
 
+    msg = "Whether to display information about the solver progress."
+    parser.add_argument("--display", action="store_true", help=msg)
+
     stop = parser.add_argument_group("Stopping criteria")
 
     msg = "Maximum runtime for each instance, in seconds."
@@ -252,9 +263,6 @@ def main():
 
     msg = "Whether to scale stopping criteria values by the number of clients."
     stop.add_argument("--per_client", action="store_true")
-
-    msg = "Whether to display information about the solver progress."
-    parser.add_argument("--display", action="store_true", help=msg)
 
     benchmark(**vars(parser.parse_args()))
 
