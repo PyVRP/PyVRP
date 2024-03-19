@@ -62,14 +62,12 @@ def test_solve_params_from_file_defaults():
 def test_solve_same_seed(ok_small):
     """
     Smoke test that checks that that solving an instance with the same seed
-    result in the same search trajectories.
+    results in the same search trajectories.
     """
     res1 = solve(ok_small, stop=MaxIterations(10), seed=0)
     res2 = solve(ok_small, stop=MaxIterations(10), seed=0)
 
     assert_equal(res1.best, res2.best)
-
-    # Runtimes are slightly different, so we check each statistics separately.
     assert_equal(res1.stats.feas_stats, res2.stats.feas_stats)
     assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
 

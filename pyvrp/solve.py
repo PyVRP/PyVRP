@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
@@ -35,14 +34,6 @@ from pyvrp.search import (
 )
 
 
-def _field(func):
-    """
-    Small wrapper around the ``dataclasses.field`` function.
-    """
-    return field(default_factory=func)
-
-
-@dataclass
 class SolveParams:
     """
     Solver parameters for PyVRP's hybrid genetic search algorithm.
@@ -63,14 +54,45 @@ class SolveParams:
         Route operators to use in the search.
     """
 
-    genetic: GeneticAlgorithmParams = _field(GeneticAlgorithmParams)  # noqa
-    penalty: PenaltyParams = _field(PenaltyParams)  # noqa
-    population: PopulationParams = _field(PopulationParams)  # noqa
-    neighbourhood: NeighbourhoodParams = _field(NeighbourhoodParams)  # noqa
-    node_ops: list[Type[NodeOperator]] = _field(lambda: NODE_OPERATORS)  # noqa
-    route_ops: list[Type[RouteOperator]] = _field(  # noqa
-        lambda: ROUTE_OPERATORS
-    )
+    def __init__(
+        self,
+        genetic: GeneticAlgorithmParams = GeneticAlgorithmParams(),
+        penalty: PenaltyParams = PenaltyParams(),
+        population: PopulationParams = PopulationParams(),
+        neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
+        node_ops: list[Type[NodeOperator]] = NODE_OPERATORS,
+        route_ops: list[Type[RouteOperator]] = ROUTE_OPERATORS,
+    ):
+        self._genetic = genetic
+        self._penalty = penalty
+        self._population = population
+        self._neighbourhood = neighbourhood
+        self._node_ops = node_ops
+        self._route_ops = route_ops
+
+    @property
+    def genetic(self):
+        return self._genetic
+
+    @property
+    def penalty(self):
+        return self._penalty
+
+    @property
+    def population(self):
+        return self._population
+
+    @property
+    def neighbourhood(self):
+        return self._neighbourhood
+
+    @property
+    def node_ops(self):
+        return self._node_ops
+
+    @property
+    def route_ops(self):
+        return self._route_ops
 
     @classmethod
     def from_file(cls, loc: Union[str, pathlib.Path]):
