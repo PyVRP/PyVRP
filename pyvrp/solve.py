@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm
@@ -34,6 +35,7 @@ from pyvrp.search import (
 )
 
 
+@dataclass
 class SolveParams:
     """
     Solver parameters for PyVRP's hybrid genetic search algorithm.
@@ -54,45 +56,20 @@ class SolveParams:
         Route operators to use in the search.
     """
 
-    def __init__(
-        self,
-        genetic: GeneticAlgorithmParams = GeneticAlgorithmParams(),
-        penalty: PenaltyParams = PenaltyParams(),
-        population: PopulationParams = PopulationParams(),
-        neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        node_ops: Iterable[Type[NodeOperator]] = NODE_OPERATORS,
-        route_ops: Iterable[Type[RouteOperator]] = ROUTE_OPERATORS,
-    ):
-        self._genetic = genetic
-        self._penalty = penalty
-        self._population = population
-        self._neighbourhood = neighbourhood
-        self._node_ops = node_ops
-        self._route_ops = route_ops
-
-    @property
-    def genetic(self):
-        return self._genetic
-
-    @property
-    def penalty(self):
-        return self._penalty
-
-    @property
-    def population(self):
-        return self._population
-
-    @property
-    def neighbourhood(self):
-        return self._neighbourhood
-
-    @property
-    def node_ops(self):
-        return self._node_ops
-
-    @property
-    def route_ops(self):
-        return self._route_ops
+    genetic: GeneticAlgorithmParams = field(
+        default_factory=GeneticAlgorithmParams
+    )
+    penalty: PenaltyParams = field(default_factory=PenaltyParams)
+    population: PopulationParams = field(default_factory=PopulationParams)
+    neighbourhood: NeighbourhoodParams = field(
+        default_factory=NeighbourhoodParams
+    )
+    node_ops: Iterable[Type[NodeOperator]] = field(
+        default_factory=lambda: NODE_OPERATORS
+    )
+    route_ops: Iterable[Type[RouteOperator]] = field(
+        default_factory=lambda: ROUTE_OPERATORS
+    )
 
     @classmethod
     def from_file(cls, loc: Union[str, pathlib.Path]):
