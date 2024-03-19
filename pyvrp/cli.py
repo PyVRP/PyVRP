@@ -1,5 +1,4 @@
 import argparse
-import warnings
 from functools import partial
 from pathlib import Path
 from typing import Optional
@@ -153,7 +152,7 @@ def _solve(
     )
 
 
-def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
+def benchmark(instances: list[Path], num_procs: int, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.
@@ -167,18 +166,13 @@ def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
     kwargs
         Any additional keyword arguments to pass to the solving function.
     """
-    func = partial(_solve, **kwargs)
     args = sorted(instances)
 
-    if len(instances) == 1 or num_procs == 1:
+    if len(instances) == 1:
+        func = partial(_solve, display=True, **kwargs)
         res = [func(arg) for arg in tqdm(args, unit="instance")]
     else:
-        if kwargs.get("display"):
-            warnings.warn(
-                "Solving instances in parallel does not go along well with "
-                "the --display option. Consider disabling this option."
-            )
-
+        func = partial(_solve, display=False, **kwargs)
         res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [
@@ -240,9 +234,6 @@ def main():
 
     msg = "Number of processors to use for solving instances. Default 1."
     parser.add_argument("--num_procs", type=int, default=1, help=msg)
-
-    msg = "Whether to display information about the solver progress."
-    parser.add_argument("--display", action="store_true", help=msg)
 
     stop = parser.add_argument_group("Stopping criteria")
 
