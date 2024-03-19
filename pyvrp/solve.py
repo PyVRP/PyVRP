@@ -70,6 +70,17 @@ class SolveParams:
         self._node_ops = node_ops
         self._route_ops = route_ops
 
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, SolveParams)
+            and self.genetic == other.genetic
+            and self.penalty == other.penalty
+            and self.population == other.population
+            and self.neighbourhood == other.neighbourhood
+            and self.node_ops == other.node_ops
+            and self.route_ops == other.route_ops
+        )
+
     @property
     def genetic(self):
         return self._genetic
