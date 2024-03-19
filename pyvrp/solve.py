@@ -1,37 +1,32 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, Union
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm
-from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.Population import Population
+import tomli
+
+import pyvrp.search
+from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
+from pyvrp.Population import Population, PopulationParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.crossover import ordered_crossover as ox
 from pyvrp.crossover import selective_route_exchange as srex
 from pyvrp.diversity import broken_pairs_distance as bpd
-from pyvrp.search import LocalSearch, compute_neighbours
+from pyvrp.search import (
+    NODE_OPERATORS,
+    ROUTE_OPERATORS,
+    LocalSearch,
+    NeighbourhoodParams,
+    NodeOperator,
+    RouteOperator,
+    compute_neighbours,
+)
 
 if TYPE_CHECKING:
     import pathlib
 
     from pyvrp.Result import Result
     from pyvrp.stop import StoppingCriterion
-
-from typing import Type, Union
-
-import tomli
-
-import pyvrp.search
-from pyvrp.GeneticAlgorithm import GeneticAlgorithmParams
-from pyvrp.PenaltyManager import PenaltyParams
-from pyvrp.Population import PopulationParams
-from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
-    NeighbourhoodParams,
-    NodeOperator,
-    RouteOperator,
-)
 
 
 class SolveParams:
