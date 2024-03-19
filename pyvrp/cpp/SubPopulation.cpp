@@ -1,10 +1,43 @@
 #include "SubPopulation.h"
 
 #include <numeric>
+#include <stdexcept>
 
+using pyvrp::PopulationParams;
 using pyvrp::SubPopulation;
 using const_iter = std::vector<SubPopulation::Item>::const_iterator;
 using iter = std::vector<SubPopulation::Item>::iterator;
+
+PopulationParams::PopulationParams(size_t minPopSize,
+                                   size_t generationSize,
+                                   size_t nbElite,
+                                   size_t nbClose,
+                                   double lbDiversity,
+                                   double ubDiversity)
+    : minPopSize(minPopSize),
+      generationSize(generationSize),
+      nbElite(nbElite),
+      nbClose(nbClose),
+      lbDiversity(lbDiversity),
+      ubDiversity(ubDiversity)
+{
+    if (lbDiversity < 0 || lbDiversity > 1)
+        throw std::invalid_argument("lb_diversity must be in [0, 1].");
+
+    if (ubDiversity < 0 || ubDiversity > 1)
+        throw std::invalid_argument("ub_diversity must be in [0, 1].");
+
+    if (ubDiversity <= lbDiversity)
+    {
+        auto const msg = "ub_diversity <= lb_diversity not understood.";
+        throw std::invalid_argument(msg);
+    }
+}
+
+size_t PopulationParams::maxPopSize() const
+{
+    return minPopSize + generationSize;
+}
 
 SubPopulation::SubPopulation(diversity::DiversityMeasure divOp,
                              PopulationParams const &params)
