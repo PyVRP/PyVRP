@@ -1,5 +1,3 @@
-import pathlib
-
 from numpy.testing import assert_equal
 
 from pyvrp.GeneticAlgorithm import GeneticAlgorithmParams
@@ -34,8 +32,7 @@ def test_solve_params_from_file():
     """
     Tests that the solver parameters are correctly loaded from a TOML file.
     """
-    loc = pathlib.Path(__file__).parent / "data" / "test_config.toml"
-    params = SolveParams.from_file(loc)
+    params = SolveParams.from_file("tests/data/test_config.toml")
 
     genetic = GeneticAlgorithmParams(0.1, 200)
     penalty = PenaltyParams(20, 0, 0, 12, 100, 1.25, 0.85, 0.43)
