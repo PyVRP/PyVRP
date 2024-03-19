@@ -2,13 +2,8 @@
 #define PYVRP_SEARCH_PRIMITIVES_H
 
 #include "CostEvaluator.h"
-#include "DistanceSegment.h"
-#include "DurationSegment.h"
-#include "LoadSegment.h"
 #include "Measure.h"
 #include "Route.h"
-
-#include <tuple>
 
 // This file stores a few basic functions for (precisely) evaluating really
 // common moves. Those primitives may be useful implementing higher order
