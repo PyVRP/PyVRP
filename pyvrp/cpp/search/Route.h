@@ -38,6 +38,52 @@ class Route
     friend class ProxyBetween;
 
 public:
+    template <typename... Segments> class Proposal
+    {
+        Route const *current;
+        ProblemData const &data;
+        std::tuple<Segments...> segments;
+
+    public:
+        Proposal(Route const *current,
+                 ProblemData const &data,
+                 Segments &&...segments)
+            : current(current),
+              data(data),
+              segments(std::forward<Segments>(segments)...)
+        {
+        }
+
+        Route const *route() const { return current; }
+
+        DistanceSegment distanceSegment() const
+        {
+            return std::apply(
+                [&](auto &&...args) {
+                    return DistanceSegment::merge(data.distanceMatrix(),
+                                                  args...);
+                },
+                segments);
+        }
+
+        DurationSegment durationSegment() const
+        {
+            return std::apply(
+                [&](auto &&...args) {
+                    return DurationSegment::merge(data.durationMatrix(),
+                                                  args...);
+                },
+                segments);
+        }
+
+        LoadSegment loadSegment() const
+        {
+            return std::apply(
+                [](auto &&...args) { return LoadSegment::merge(args...); },
+                segments);
+        }
+    };
+
     /**
      * Light wrapper class around a client or depot location. This class tracks
      * the route it is in, and the position and role it currently has in that

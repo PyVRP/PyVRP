@@ -3,6 +3,7 @@
 
 #include "Measure.h"
 #include "Solution.h"
+#include "search/Route.h"
 
 #include <concepts>
 #include <limits>
@@ -115,6 +116,21 @@ public:
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
+
+    /**
+     * TODO
+     */
+    template <typename... Args>
+    bool deltaCost(search::Route::Proposal<Args...> const &proposal,
+                   Cost &deltaCost) const;
+
+    /**
+     * TODO
+     */
+    template <typename... uArgs, typename... vArgs>
+    bool deltaCost(search::Route::Proposal<uArgs...> const &uProposal,
+                   search::Route::Proposal<vArgs...> const &vProposal,
+                   Cost &deltaCost) const;
 };
 
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
@@ -161,6 +177,82 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
     return arg.isFeasible() ? penalisedCost(arg)
                             : std::numeric_limits<Cost>::max();
 }
+
+template <typename... Args>
+bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
+                              Cost &deltaCost) const
+{
+    auto const *route = proposal.route();
+    auto const dist = proposal.distanceSegment();
+
+    deltaCost += static_cast<Cost>(dist.distance());
+    deltaCost += distPenalty(dist.distance(), route->maxDistance());
+
+    deltaCost -= static_cast<Cost>(route->distance());
+    deltaCost -= distPenalty(route->distance(), route->maxDistance());
+
+    deltaCost -= loadPenalty(route->load(), route->capacity());
+    deltaCost -= twPenalty(route->timeWarp());
+
+    if (deltaCost >= 0)
+        return false;
+
+    auto const load = proposal.loadSegment();
+    deltaCost += loadPenalty(load.load(), route->capacity());
+
+    auto const duration = proposal.durationSegment();
+    deltaCost += twPenalty(duration.timeWarp(route->maxDuration()));
+
+    return true;
+}
+
+template <typename... uArgs, typename... vArgs>
+bool CostEvaluator::deltaCost(
+    search::Route::Proposal<uArgs...> const &uProposal,
+    search::Route::Proposal<vArgs...> const &vProposal,
+    Cost &deltaCost) const
+{
+    auto const *uRoute = uProposal.route();
+    auto const *vRoute = vProposal.route();
+
+    auto const uDist = uProposal.distanceSegment();
+    deltaCost += static_cast<Cost>(uDist.distance());
+    deltaCost += distPenalty(uDist.distance(), uRoute->maxDistance());
+
+    deltaCost -= static_cast<Cost>(uRoute->distance());
+    deltaCost -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+
+    deltaCost -= loadPenalty(uRoute->load(), uRoute->capacity());
+    deltaCost -= twPenalty(uRoute->timeWarp());
+
+    auto const vDist = vProposal.distanceSegment();
+    deltaCost += static_cast<Cost>(vDist.distance());
+    deltaCost += distPenalty(vDist.distance(), vRoute->maxDistance());
+
+    deltaCost -= static_cast<Cost>(vRoute->distance());
+    deltaCost -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+
+    deltaCost -= loadPenalty(vRoute->load(), vRoute->capacity());
+    deltaCost -= twPenalty(vRoute->timeWarp());
+
+    if (deltaCost >= 0)
+        return false;
+
+    auto const uLoad = uProposal.loadSegment();
+    deltaCost += loadPenalty(uLoad.load(), uRoute->capacity());
+
+    auto const uDuration = uProposal.durationSegment();
+    deltaCost += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+
+    auto const vLoad = vProposal.loadSegment();
+    deltaCost += loadPenalty(vLoad.load(), vRoute->capacity());
+
+    auto const vDuration = vProposal.durationSegment();
+    deltaCost += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+
+    return true;
+}
+
 }  // namespace pyvrp
 
 #endif  // PYVRP_COSTEVALUATOR_H
