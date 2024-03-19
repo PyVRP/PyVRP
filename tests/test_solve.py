@@ -52,8 +52,8 @@ def test_solve_params_from_file():
 
 def test_solve_params_from_file_defaults():
     """
-    Tests that that the solver parameters are the default ones when
-    loaded from a TOML file that does not specificy the parameters.
+    Tests that if the TOML file does not contain all solver parameters,
+    it defaults to the constructor's default values.
     """
     params = SolveParams.from_file("tests/data/empty_config.toml")
     assert_equal(params, SolveParams())
