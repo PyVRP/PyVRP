@@ -92,11 +92,6 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
 
     if (U->route() != V->route())
     {
-        // We're going to incur V's fixed cost if V is currently empty. We lose
-        // U's fixed cost if we're moving all of U's clients with this operator.
-        deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
-        deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedVehicleCost();
-
         auto const *uRoute = U->route();
         auto const *vRoute = V->route();
 
@@ -107,6 +102,11 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             = vRoute->proposal(vRoute->before(V->idx()),
                                uRoute->between(U->idx(), U->idx() + N - 1),
                                vRoute->after(V->idx() + 1));
+
+        // We're going to incur V's fixed cost if V is currently empty. We lose
+        // U's fixed cost if we're moving all of U's clients with this operator.
+        deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
+        deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedVehicleCost();
 
         costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
         return deltaCost;
