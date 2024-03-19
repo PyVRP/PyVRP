@@ -96,7 +96,7 @@ def solve(
     stop: StoppingCriterion,
     seed: int = 0,
     collect_stats: bool = True,
-    display: bool = True,
+    display: bool = False,
     params: SolveParams = SolveParams(),
 ) -> Result:
     """
@@ -115,7 +115,7 @@ def solve(
         ``True``.
     display
         Whether to display information about the solver progress. Default
-        ``True``. Progress information is only available when
+        ``False``. Progress information is only available when
         ``collect_stats`` is also set, which it is by default.
     params
         Solver parameters to use. If not provided, a default will be used.
