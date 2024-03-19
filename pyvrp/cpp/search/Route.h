@@ -247,6 +247,12 @@ public:
     [[nodiscard]] std::vector<Node *>::iterator end();
 
     /**
+     * TODO
+     */
+    template <typename... Args>
+    [[nodiscard]] Proposal<Args...> proposal(Args &&...args) const;
+
+    /**
      * Tests if this route is feasible.
      *
      * @return true if the route is feasible, false otherwise.
@@ -587,6 +593,12 @@ Route::Node *Route::operator[](size_t idx)
 {
     assert(idx < nodes.size());
     return nodes[idx];
+}
+
+template <typename... Args>
+Route::Proposal<Args...> Route::proposal(Args &&...args) const
+{
+    return {this, data, std::forward<Args>(args)...};
 }
 
 Load Route::load() const
