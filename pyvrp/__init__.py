@@ -6,7 +6,6 @@ from .PenaltyManager import PenaltyParams as PenaltyParams
 from .Population import Population as Population
 from .Population import PopulationParams as PopulationParams
 from .Result import Result as Result
-from .SolveParams import SolveParams as SolveParams
 from .Statistics import Statistics as Statistics
 from ._pyvrp import Client as Client
 from ._pyvrp import ClientGroup as ClientGroup
@@ -21,3 +20,5 @@ from ._pyvrp import VehicleType as VehicleType
 from .read import read as read
 from .read import read_solution as read_solution
 from .show_versions import show_versions as show_versions
+from .solve import SolveParams as SolveParams
+from .solve import solve as solve

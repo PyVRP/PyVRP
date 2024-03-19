@@ -5,7 +5,6 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.SolveParams import SolveParams
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
@@ -15,7 +14,7 @@ from pyvrp._pyvrp import (
 )
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.solve import solve
+from pyvrp.solve import SolveParams, solve
 
 if TYPE_CHECKING:
     from pyvrp.Result import Result

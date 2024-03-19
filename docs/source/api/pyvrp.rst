@@ -23,10 +23,6 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Edge
       :members:
 
-.. automodule:: pyvrp.SolveParams
-
-   .. autoclass:: SolveParams
-      :members:
 
 .. automodule:: pyvrp.GeneticAlgorithm
 
@@ -66,6 +62,9 @@ This object can be used to obtain the best observed solution, and detailed runti
    :members:
 
 .. automodule:: pyvrp.solve
+
+   .. autoclass:: SolveParams
+      :members:
 
    .. autofunction:: solve
 

@@ -7,9 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import ProblemData, Result, SolveParams
+from pyvrp import ProblemData, Result, SolveParams, solve
 from pyvrp.read import ROUND_FUNCS, read
-from pyvrp.solve import solve as solve
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
