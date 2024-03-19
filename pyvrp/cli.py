@@ -4,38 +4,11 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
-try:
-    import tomli
-    from tqdm import tqdm
-    from tqdm.contrib.concurrent import process_map
-except ModuleNotFoundError as exc:
-    msg = "Install 'tqdm' and 'tomli' to use the command line program."
-    raise ModuleNotFoundError(msg) from exc
-
-import pyvrp.search
-from pyvrp import (
-    GeneticAlgorithm,
-    GeneticAlgorithmParams,
-    PenaltyManager,
-    PenaltyParams,
-    Population,
-    PopulationParams,
-    ProblemData,
-    RandomNumberGenerator,
-    Result,
-    Solution,
-)
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp import ProblemData, Result, SolveParams, solve
 from pyvrp.read import ROUND_FUNCS, read
-from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
-    LocalSearch,
-    NeighbourhoodParams,
-    compute_neighbours,
-)
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
@@ -92,7 +65,7 @@ def write_solution(where: Path, data: ProblemData, result: Result):
         fh.write(f"Cost: {round(result.cost(), 2)}\n")
 
 
-def solve(
+def _solve(
     data_loc: Path,
     round_func: str,
     seed: int,
@@ -102,6 +75,7 @@ def solve(
     per_client: bool,
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
+    display: bool,
     **kwargs,
 ) -> tuple[str, str, float, int, float]:
     """
@@ -128,6 +102,8 @@ def solve(
         The directory to write runtime statistics to.
     sol_dir
         The directory to write the best found solutions to.
+    display
+        Whether to display information about the solver progress.
 
     Returns
     -------
@@ -136,44 +112,11 @@ def solve(
         the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
-        with open(kwargs["config_loc"], "rb") as fh:
-            config = tomli.load(fh)
+        params = SolveParams.from_file(kwargs["config_loc"])
     else:
-        config = {}
-
-    gen_params = GeneticAlgorithmParams(**config.get("genetic", {}))
-    pen_params = PenaltyParams(**config.get("penalty", {}))
-    pop_params = PopulationParams(**config.get("population", {}))
-    nb_params = NeighbourhoodParams(**config.get("neighbourhood", {}))
+        params = SolveParams()
 
     data = read(data_loc, round_func)
-    rng = RandomNumberGenerator(seed=seed)
-    pen_manager = PenaltyManager(pen_params)
-    pop = Population(bpd, params=pop_params)
-
-    neighbours = compute_neighbours(data, nb_params)
-    ls = LocalSearch(data, rng, neighbours)
-
-    node_ops = NODE_OPERATORS
-    if "node_ops" in config:
-        node_ops = [getattr(pyvrp.search, op) for op in config["node_ops"]]
-
-    for node_op in node_ops:
-        ls.add_node_operator(node_op(data))
-
-    route_ops = ROUTE_OPERATORS
-    if "route_ops" in config:
-        route_ops = [getattr(pyvrp.search, op) for op in config["route_ops"]]
-
-    for route_op in route_ops:
-        ls.add_route_operator(route_op(data))
-
-    init = [
-        Solution.make_random(data, rng) for _ in range(pop_params.min_pop_size)
-    ]
-    algo = GeneticAlgorithm(
-        data, pen_manager, rng, pop, ls, srex, init, gen_params
-    )
 
     if per_client:
         max_runtime *= data.num_clients
@@ -187,8 +130,9 @@ def solve(
             NoImprovement(no_improvement),
         ]
     )
+    collect_stats = bool(stats_dir) or display
 
-    result = algo.run(stop, collect_stats=bool(stats_dir))
+    result = solve(data, stop, seed, collect_stats, display, params)
     instance_name = data_loc.stem
 
     if stats_dir:
@@ -208,7 +152,7 @@ def solve(
     )
 
 
-def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
+def benchmark(instances: list[Path], num_procs: int, **kwargs):
     """
     Solves a list of instances, and prints a table with the results. Any
     additional keyword arguments are passed to ``solve()``.
@@ -222,12 +166,13 @@ def benchmark(instances: list[Path], num_procs: int = 1, **kwargs):
     kwargs
         Any additional keyword arguments to pass to the solving function.
     """
-    func = partial(solve, **kwargs)
     args = sorted(instances)
 
-    if len(instances) == 1 or num_procs == 1:
+    if len(instances) == 1:
+        func = partial(_solve, display=True, **kwargs)
         res = [func(arg) for arg in tqdm(args, unit="instance")]
     else:
+        func = partial(_solve, display=False, **kwargs)
         res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [

@@ -30,6 +30,7 @@ shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
 autoclass_content = "class"
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
+autodoc_preserve_defaults = True
 
 
 # -- sphinx.ext.linkcode

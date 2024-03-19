@@ -1,0 +1,42 @@
+node_ops = [
+    "Exchange10",
+    "SwapTails",
+]
+
+
+route_ops = [
+    "SwapStar",
+]
+
+
+[genetic]
+repair_probability = 0.1
+nb_iter_no_improvement = 200
+
+
+[population]
+min_pop_size = 10
+generation_size = 20
+nb_elite = 3
+nb_close = 4
+lb_diversity = 0.0
+ub_diversity = 1.0
+
+
+[neighbourhood]
+weight_wait_time = 0
+weight_time_warp = 0
+nb_granular = 20
+symmetric_proximity = true
+symmetric_neighbours = true
+
+
+[penalty]
+init_load_penalty = 20
+init_time_warp_penalty = 0
+init_dist_penalty = 0
+repair_booster = 12
+solutions_between_updates = 100
+penalty_increase = 1.25
+penalty_decrease = 0.85
+target_feasible = 0.43

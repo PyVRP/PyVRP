@@ -5,29 +5,16 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm
-from pyvrp.PenaltyManager import PenaltyManager
-from pyvrp.Population import Population, PopulationParams
 from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
     ProblemData,
-    RandomNumberGenerator,
-    Solution,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
-from pyvrp.crossover import ordered_crossover as ox
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
-    LocalSearch,
-    compute_neighbours,
-)
+from pyvrp.solve import SolveParams, solve
 
 if TYPE_CHECKING:
     from pyvrp.Result import Result
@@ -347,6 +334,7 @@ class Model:
         seed: int = 0,
         collect_stats: bool = True,
         display: bool = True,
+        params: SolveParams = SolveParams(),
     ) -> Result:
         """
         Solve this model.
@@ -364,6 +352,8 @@ class Model:
             Whether to display information about the solver progress. Default
             ``True``. Progress information is only available when
             ``collect_stats`` is also set, which it is by default.
+        params
+            Solver parameters to use. If not provided, a default will be used.
 
         Returns
         -------
@@ -371,27 +361,4 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        data = self.data()
-        rng = RandomNumberGenerator(seed=seed)
-        ls = LocalSearch(data, rng, compute_neighbours(data))
-
-        for node_op in NODE_OPERATORS:
-            ls.add_node_operator(node_op(data))
-
-        for route_op in ROUTE_OPERATORS:
-            ls.add_route_operator(route_op(data))
-
-        pm = PenaltyManager()
-        pop_params = PopulationParams()
-        pop = Population(bpd, pop_params)
-        init = [
-            Solution.make_random(data, rng)
-            for _ in range(pop_params.min_pop_size)
-        ]
-
-        # We use SREX when the instance is a proper VRP; else OX for TSP.
-        crossover = srex if data.num_vehicles > 1 else ox
-
-        gen_args = (data, pm, rng, pop, ls, crossover, init)
-        algo = GeneticAlgorithm(*gen_args)  # type: ignore
-        return algo.run(stop, collect_stats, display)
+        return solve(self.data(), stop, seed, collect_stats, display, params)

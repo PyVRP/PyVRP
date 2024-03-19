@@ -20,3 +20,5 @@ from ._pyvrp import VehicleType as VehicleType
 from .read import read as read
 from .read import read_solution as read_solution
 from .show_versions import show_versions as show_versions
+from .solve import SolveParams as SolveParams
+from .solve import solve as solve
