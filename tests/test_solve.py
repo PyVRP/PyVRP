@@ -59,45 +59,30 @@ def test_solve_params_from_file_defaults():
     assert_equal(params, SolveParams())
 
 
-def test_solve_collect_stats(ok_small):
+def test_solve_same_seed(ok_small):
     """
-    Tests that solving an instance with the ``collect_stats`` argument set to
-    ``True`` collects statistics.
+    Smoke test that checks that that solving an instance with the same seed
+    result in the same search trajectories.
     """
-    # Default is to collect statistics.
-    res = solve(ok_small, stop=MaxIterations(10), seed=0)
-    assert_(res.stats.is_collecting())
+    res1 = solve(ok_small, stop=MaxIterations(10), seed=0)
+    res2 = solve(ok_small, stop=MaxIterations(10), seed=0)
 
-    # Now solve with statistics collection turned off.
-    res = solve(ok_small, stop=MaxIterations(10), seed=0, collect_stats=False)
-    assert_(not res.stats.is_collecting())
+    assert_equal(res1.best, res2.best)
+
+    # Runtimes are slightly different, so we check each statistics separately.
+    assert_equal(res1.stats.feas_stats, res2.stats.feas_stats)
+    assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
 
 
-def test_solve_display_argument(ok_small, capsys):
+def test_solve_more_iterations_is_better(rc208):
     """
-    Tests that solving an instance displays solver progress when the
-    ``display`` argument is ``True``.
+    Smoke test that checks that running more iterations results in an improved
+    solution.
     """
-    # First solve with display turned off. We should not see any output in this
-    # case.
-    res = solve(ok_small, stop=MaxIterations(10), seed=0, display=False)
-    printed = capsys.readouterr().out
-    assert_equal(printed, "")
+    cost10 = solve(rc208, stop=MaxIterations(10)).cost()
+    cost100 = solve(rc208, stop=MaxIterations(100)).cost()
 
-    # Now solve with display turned on. We should see output now.
-    res = solve(ok_small, stop=MaxIterations(10), seed=0, display=True)
-    printed = capsys.readouterr().out
-
-    # Check that some of the header data is in the output.
-    assert_("PyVRP" in printed)
-    assert_("Time" in printed)
-    assert_("Iters" in printed)
-    assert_("Feasible" in printed)
-    assert_("Infeasible" in printed)
-
-    # Check that we include the cost and total runtime in the output somewhere.
-    assert_(str(round(res.cost())) in printed)
-    assert_(str(round(res.runtime)) in printed)
+    assert_(cost100 < cost10)
 
 
 def test_solve_custom_params(ok_small):
