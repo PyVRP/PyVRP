@@ -603,13 +603,13 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("lb_diversity") = 0.1,
              py::arg("ub_diversity") = 0.5)
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
-        .def_readwrite("min_pop_size", &PopulationParams::minPopSize)
-        .def_readwrite("generation_size", &PopulationParams::generationSize)
+        .def_readonly("min_pop_size", &PopulationParams::minPopSize)
+        .def_readonly("generation_size", &PopulationParams::generationSize)
         .def_property_readonly("max_pop_size", &PopulationParams::maxPopSize)
-        .def_readwrite("nb_elite", &PopulationParams::nbElite)
-        .def_readwrite("nb_close", &PopulationParams::nbClose)
-        .def_readwrite("lb_diversity", &PopulationParams::lbDiversity)
-        .def_readwrite("ub_diversity", &PopulationParams::ubDiversity);
+        .def_readonly("nb_elite", &PopulationParams::nbElite)
+        .def_readonly("nb_close", &PopulationParams::nbClose)
+        .def_readonly("lb_diversity", &PopulationParams::lbDiversity)
+        .def_readonly("ub_diversity", &PopulationParams::ubDiversity);
 
     py::class_<SubPopulation::Item>(m, "SubPopulationItem")
         .def_readonly("solution",
