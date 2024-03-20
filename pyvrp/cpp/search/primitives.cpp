@@ -4,15 +4,15 @@ namespace
 {
 /**
  * Simple wrapper class that implements the required evaluation interface for
- * a client that's not currently in the solution.
+ * a single client that might not currently be in the solution.
  */
-class MissingClientSegment
+class ClientSegment
 {
     pyvrp::ProblemData const &data;
     size_t client;
 
 public:
-    MissingClientSegment(pyvrp::ProblemData const &data, size_t client)
+    ClientSegment(pyvrp::ProblemData const &data, size_t client)
         : data(data), client(client)
     {
     }
@@ -52,7 +52,7 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
 
     costEvaluator.deltaCost<true>(
         route->proposal(route->before(V->idx()),
-                        MissingClientSegment(data, U->client()),
+                        ClientSegment(data, U->client()),
                         route->after(V->idx() + 1)),
         deltaCost);
 
@@ -84,7 +84,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
                                        ProblemData const &data,
                                        CostEvaluator const &costEvaluator)
 {
-    if (U->route() || !V->route())
+    if (!V->route() || U->route() == V->route())
         return 0;
 
     auto const *route = V->route();
@@ -95,7 +95,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
 
     costEvaluator.deltaCost<true>(
         route->proposal(route->before(V->idx() - 1),
-                        MissingClientSegment(data, U->client()),
+                        ClientSegment(data, U->client()),
                         route->after(V->idx() + 1)),
         deltaCost);
 

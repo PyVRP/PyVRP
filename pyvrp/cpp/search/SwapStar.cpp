@@ -1,4 +1,5 @@
 #include "SwapStar.h"
+#include "primitives.h"
 
 #include <cassert>
 
@@ -8,23 +9,14 @@ using pyvrp::search::SwapStar;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (size_t idx = 1; idx != R->size() + 1; ++idx)
-    {
-        auto const dist = DistanceSegment::merge(
-            data.distanceMatrix(), R->before(idx - 1), R->after(idx + 1));
+    updated[R->idx()] = false;
 
-        auto const ds = DurationSegment::merge(
-            data.durationMatrix(), R->before(idx - 1), R->after(idx + 1));
-
-        auto *U = (*R)[idx];
+    for (auto *U : *R)
         removalCosts(R->idx(), U->client())
-            = static_cast<Cost>(dist.distance())
-              - static_cast<Cost>(R->distance())
-              + costEvaluator.distPenalty(dist.distance(), R->maxDistance())
-              - costEvaluator.distPenalty(R->distance(), R->maxDistance())
-              + costEvaluator.twPenalty(ds.timeWarp(R->maxDuration()))
-              - costEvaluator.twPenalty(R->timeWarp());
-    }
+            = removeCost(U, data, costEvaluator);
+
+    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+        cache(R->idx(), idx).shouldUpdate = true;
 }
 
 void SwapStar::updateInsertionCost(Route *R,
@@ -38,25 +30,9 @@ void SwapStar::updateInsertionCost(Route *R,
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
-        auto const dist = DistanceSegment::merge(data.distanceMatrix(),
-                                                 R->before(idx),
-                                                 U->route()->at(U->idx()),
-                                                 R->after(idx + 1));
-
-        auto const ds = DurationSegment::merge(data.durationMatrix(),
-                                               R->before(idx),
-                                               U->route()->at(U->idx()),
-                                               R->after(idx + 1));
-
-        auto const deltaCost
-            = static_cast<Cost>(dist.distance())
-              - static_cast<Cost>(R->distance())
-              + costEvaluator.distPenalty(dist.distance(), R->maxDistance())
-              - costEvaluator.distPenalty(R->distance(), R->maxDistance())
-              + costEvaluator.twPenalty(ds.timeWarp(R->maxDuration()))
-              - costEvaluator.twPenalty(R->timeWarp());
-
-        insertPositions.maybeAdd(deltaCost, (*R)[idx]);
+        auto *V = (*R)[idx];
+        auto const deltaCost = insertCost(U, V, data, costEvaluator);
+        insertPositions.maybeAdd(deltaCost, V);
     }
 }
 
@@ -74,24 +50,7 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
             return std::make_pair(best_.costs[idx], best_.locs[idx]);
 
     // As a fallback option, we consider inserting in the place of V.
-    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
-                                             route->before(V->idx() - 1),
-                                             U->route()->at(U->idx()),
-                                             route->after(V->idx() + 1));
-
-    auto const ds = DurationSegment::merge(data.durationMatrix(),
-                                           route->before(V->idx() - 1),
-                                           U->route()->at(U->idx()),
-                                           route->after(V->idx() + 1));
-
-    auto const deltaCost
-        = static_cast<Cost>(dist.distance())
-          - static_cast<Cost>(route->distance())
-          + costEvaluator.distPenalty(dist.distance(), route->maxDistance())
-          - costEvaluator.distPenalty(route->distance(), route->maxDistance())
-          + costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()))
-          - costEvaluator.twPenalty(route->timeWarp());
-
+    auto const deltaCost = inplaceCost(U, V, data, costEvaluator);
     return std::make_pair(deltaCost, p(V));
 }
 
@@ -145,38 +104,12 @@ Cost SwapStar::evaluate(Route *routeU,
 
     for (auto *route : {routeU, routeV})
         if (updated[route->idx()])
-        {
             updateRemovalCosts(route, costEvaluator);
-            updated[route->idx()] = false;
-
-            for (size_t idx = data.numDepots(); idx != data.numLocations();
-                 ++idx)
-                cache(route->idx(), idx).shouldUpdate = true;
-        }
 
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
             Cost deltaCost = 0;
-
-            // Approximates the actual load changes - this is far from exact
-            // when there are also pickups. So it's pretty rough, but fast and
-            // seems to work well enough for most instances.
-            ProblemData::Client const &uClient = data.location(U->client());
-            ProblemData::Client const &vClient = data.location(V->client());
-            auto const uLoad = std::max(uClient.delivery, uClient.pickup);
-            auto const vLoad = std::max(vClient.delivery, vClient.pickup);
-            auto const loadDiff = uLoad - vLoad;
-
-            deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
-                                                   routeU->capacity());
-            deltaCost -= costEvaluator.loadPenalty(routeU->load(),
-                                                   routeU->capacity());
-
-            deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
-                                                   routeV->capacity());
-            deltaCost -= costEvaluator.loadPenalty(routeV->load(),
-                                                   routeV->capacity());
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
