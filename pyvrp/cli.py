@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from pyvrp import ProblemData, Result, SolveParams, solve
@@ -75,7 +74,6 @@ def _solve(
     per_client: bool,
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
-    display: bool,
     **kwargs,
 ) -> tuple[str, str, float, int, float]:
     """
@@ -102,8 +100,6 @@ def _solve(
         The directory to write runtime statistics to.
     sol_dir
         The directory to write the best found solutions to.
-    display
-        Whether to display information about the solver progress.
 
     Returns
     -------
@@ -130,9 +126,8 @@ def _solve(
             NoImprovement(no_improvement),
         ]
     )
-    collect_stats = bool(stats_dir) or display
 
-    result = solve(data, stop, seed, collect_stats, display, params)
+    result = solve(data, stop, seed, bool(stats_dir), params=params)
     instance_name = data_loc.stem
 
     if stats_dir:
@@ -167,12 +162,11 @@ def benchmark(instances: list[Path], num_procs: int, **kwargs):
         Any additional keyword arguments to pass to the solving function.
     """
     args = sorted(instances)
+    func = partial(_solve, **kwargs)
 
     if len(instances) == 1:
-        func = partial(_solve, display=True, **kwargs)
-        res = [func(arg) for arg in tqdm(args, unit="instance")]
+        res = [func(args[0])]
     else:
-        func = partial(_solve, display=False, **kwargs)
         res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [
