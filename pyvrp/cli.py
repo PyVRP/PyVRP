@@ -126,6 +126,7 @@ def _solve(
             NoImprovement(no_improvement),
         ]
     )
+
     result = solve(data, stop, seed, bool(stats_dir), params=params)
     instance_name = data_loc.stem
 
@@ -161,12 +162,11 @@ def benchmark(instances: list[Path], num_procs: int, **kwargs):
         Any additional keyword arguments to pass to the solving function.
     """
     args = sorted(instances)
+    func = partial(_solve, **kwargs)
 
     if len(instances) == 1:
-        func = partial(_solve, **kwargs)
         res = [func(args[0])]
     else:
-        func = partial(_solve, **kwargs)
         res = process_map(func, args, max_workers=num_procs, unit="instance")
 
     dtypes = [
