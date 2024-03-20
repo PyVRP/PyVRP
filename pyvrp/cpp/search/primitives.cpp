@@ -1,5 +1,41 @@
 #include "primitives.h"
 
+namespace
+{
+/**
+ * Simple wrapper class that implements the required evaluation interface for
+ * a client that's not currently in the solution.
+ */
+class MissingClientSegment
+{
+    pyvrp::ProblemData const &data;
+    size_t client;
+
+public:
+    MissingClientSegment(pyvrp::ProblemData const &data, size_t client)
+        : data(data), client(client)
+    {
+    }
+
+    operator pyvrp::DistanceSegment() const
+    {
+        return pyvrp::DistanceSegment(client);
+    }
+
+    operator pyvrp::DurationSegment() const
+    {
+        pyvrp::ProblemData::Client const &clientData = data.location(client);
+        return pyvrp::DurationSegment(client, clientData);
+    }
+
+    operator pyvrp::LoadSegment() const
+    {
+        pyvrp::ProblemData::Client const &clientData = data.location(client);
+        return pyvrp::LoadSegment(clientData);
+    }
+};
+}  // namespace
+
 pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
                                       Route::Node *V,
                                       ProblemData const &data,
@@ -14,33 +50,11 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
-    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
-                                             route->before(V->idx()),
-                                             DistanceSegment(U->client()),
-                                             route->after(V->idx() + 1));
-
-    deltaCost += static_cast<Cost>(dist.distance());
-    deltaCost -= static_cast<Cost>(route->distance());
-
-    deltaCost
-        += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
-    deltaCost
-        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
-
-    auto const ls = LoadSegment::merge(route->before(V->idx()),
-                                       LoadSegment(client),
-                                       route->after(V->idx() + 1));
-
-    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    auto const ds = DurationSegment::merge(data.durationMatrix(),
-                                           route->before(V->idx()),
-                                           DurationSegment(U->client(), client),
-                                           route->after(V->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+    costEvaluator.deltaCost<true>(
+        route->proposal(route->before(V->idx()),
+                        MissingClientSegment(data, U->client()),
+                        route->after(V->idx() + 1)),
+        deltaCost);
 
     return deltaCost;
 }
@@ -58,30 +72,9 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
     Cost deltaCost
         = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
 
-    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
-                                             route->before(U->idx() - 1),
-                                             route->after(U->idx() + 1));
-
-    deltaCost += static_cast<Cost>(dist.distance());
-    deltaCost -= static_cast<Cost>(route->distance());
-
-    deltaCost
-        += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
-    deltaCost
-        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
-
-    auto const ls = LoadSegment::merge(route->before(U->idx() - 1),
-                                       route->after(U->idx() + 1));
-
-    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    auto const ds = DurationSegment::merge(data.durationMatrix(),
-                                           route->before(U->idx() - 1),
-                                           route->after(U->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+    costEvaluator.deltaCost<true>(route->proposal(route->before(U->idx() - 1),
+                                                  route->after(U->idx() + 1)),
+                                  deltaCost);
 
     return deltaCost;
 }
@@ -100,34 +93,11 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
 
     Cost deltaCost = vClient.prize - uClient.prize;
 
-    auto const dist = DistanceSegment::merge(data.distanceMatrix(),
-                                             route->before(V->idx() - 1),
-                                             DistanceSegment(U->client()),
-                                             route->after(V->idx() + 1));
-
-    deltaCost += static_cast<Cost>(dist.distance());
-    deltaCost -= static_cast<Cost>(route->distance());
-
-    deltaCost
-        += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
-    deltaCost
-        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
-
-    auto const ls = LoadSegment::merge(route->before(V->idx() - 1),
-                                       LoadSegment(uClient),
-                                       route->after(V->idx() + 1));
-
-    deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
-
-    auto const ds
-        = DurationSegment::merge(data.durationMatrix(),
-                                 route->before(V->idx() - 1),
-                                 DurationSegment(U->client(), uClient),
-                                 route->after(V->idx() + 1));
-
-    deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
+    costEvaluator.deltaCost<true>(
+        route->proposal(route->before(V->idx() - 1),
+                        MissingClientSegment(data, U->client()),
+                        route->after(V->idx() + 1)),
+        deltaCost);
 
     return deltaCost;
 }
