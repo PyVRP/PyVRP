@@ -26,7 +26,7 @@ concept CostEvaluatable = requires(T arg) {
 // are implemented we can also take that aspect into account. See the
 // CostEvaluator implementation for details.
 template <typename T>
-concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg) {
+concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
 };
 

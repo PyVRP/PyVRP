@@ -173,7 +173,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                                 route->after(V->idx() + M)),
                 deltaCost);
         else
-            return costEvaluator.deltaCost(
+            costEvaluator.deltaCost(
                 route->proposal(route->before(V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + M, U->idx() - 1),
