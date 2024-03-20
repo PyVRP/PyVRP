@@ -3,7 +3,6 @@
 
 #include "Measure.h"
 #include "Solution.h"
-#include "search/Route.h"
 
 #include <concepts>
 #include <limits>
@@ -12,28 +11,33 @@ namespace pyvrp
 {
 // The following methods must be implemented for a type to be evaluatable by
 // the CostEvaluator.
-template <typename T> concept CostEvaluatable = requires(T arg)
-{
-    // clang-format off
+template <typename T>
+concept CostEvaluatable = requires(T arg) {
     { arg.distance() } -> std::same_as<Distance>;
     { arg.excessLoad() } -> std::same_as<Load>;
     { arg.excessDistance() } -> std::same_as<Distance>;
-    { arg.fixedVehicleCost() }  -> std::same_as<Cost>;
+    { arg.fixedVehicleCost() } -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.empty() } -> std::same_as<bool>;
     { arg.isFeasible() } -> std::same_as<bool>;
-    // clang-format on
 };
 
 // If, additionally, methods related to optional clients and prize collecting
 // are implemented we can also take that aspect into account. See the
 // CostEvaluator implementation for details.
 template <typename T>
-concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg)
-{
-    // clang-format off
+concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg) {
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
-    // clang-format on
+};
+
+// The following methods must be available before a type's delta cost can be
+// evaluated by the CostEvaluator.
+template <typename T>
+concept DeltaCostEvaluatable = requires(T arg) {
+    { arg.route() };
+    { arg.distanceSegment() };
+    { arg.durationSegment() };
+    { arg.loadSegment() };
 };
 
 /**
@@ -126,9 +130,12 @@ public:
      *
      * The return value indicates whether the evaluation is exact or not.
      */
-    template <bool exact = false, typename... Args>
-    bool deltaCost(search::Route::Proposal<Args...> const &proposal,
-                   Cost &deltaCost) const;
+    template <bool exact = false,
+              typename... Args,
+              template <typename...>
+              class T>
+        requires(DeltaCostEvaluatable<T<Args...>>)
+    bool deltaCost(T<Args...> const &proposal, Cost &deltaCost) const;
 
     /**
      * Evaluates the cost delta of the given route proposals, and writes the
@@ -139,9 +146,15 @@ public:
      *
      * The return value indicates whether the evaluation is exact or not.
      */
-    template <bool exact = false, typename... uArgs, typename... vArgs>
-    bool deltaCost(search::Route::Proposal<uArgs...> const &uProposal,
-                   search::Route::Proposal<vArgs...> const &vProposal,
+    template <bool exact = false,
+              typename... uArgs,
+              typename... vArgs,
+              template <typename...>
+              class T>
+        requires(DeltaCostEvaluatable<T<uArgs...>>
+                 && DeltaCostEvaluatable<T<vArgs...>>)
+    bool deltaCost(T<uArgs...> const &uProposal,
+                   T<vArgs...> const &vProposal,
                    Cost &deltaCost) const;
 };
 
@@ -190,21 +203,25 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
                             : std::numeric_limits<Cost>::max();
 }
 
-template <bool exact, typename... Args>
-bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
-                              Cost &deltaCost) const
+template <bool exact, typename... Args, template <typename...> class T>
+    requires(DeltaCostEvaluatable<T<Args...>>)
+bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &deltaCost) const
 {
     auto const *route = proposal.route();
 
-    auto const dist = proposal.distanceSegment();
-    deltaCost += static_cast<Cost>(dist.distance());
-    deltaCost += distPenalty(dist.distance(), route->maxDistance());
-
+    // First subtract all current cost components...
     deltaCost -= static_cast<Cost>(route->distance());
     deltaCost -= distPenalty(route->distance(), route->maxDistance());
 
     deltaCost -= loadPenalty(route->load(), route->capacity());
     deltaCost -= twPenalty(route->timeWarp());
+
+    // ...and then we add the new costs on top of that. If the evaluation is
+    // not required to be exact, we can shortcut whenever the resulting
+    // deltaCost turns positive.
+    auto const dist = proposal.distanceSegment();
+    deltaCost += static_cast<Cost>(dist.distance());
+    deltaCost += distPenalty(dist.distance(), route->maxDistance());
 
     if constexpr (!exact)
     {
@@ -221,34 +238,43 @@ bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
     return true;
 }
 
-template <bool exact, typename... uArgs, typename... vArgs>
-bool CostEvaluator::deltaCost(
-    search::Route::Proposal<uArgs...> const &uProposal,
-    search::Route::Proposal<vArgs...> const &vProposal,
-    Cost &deltaCost) const
+template <bool exact,
+          typename... uArgs,
+          typename... vArgs,
+          template <typename...>
+          class T>
+    requires(DeltaCostEvaluatable<T<uArgs...>>
+             && DeltaCostEvaluatable<T<vArgs...>>)
+bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
+                              T<vArgs...> const &vProposal,
+                              Cost &deltaCost) const
 {
     auto const *uRoute = uProposal.route();
     auto const *vRoute = vProposal.route();
 
-    auto const uDist = uProposal.distanceSegment();
-    deltaCost += static_cast<Cost>(uDist.distance());
-    deltaCost += distPenalty(uDist.distance(), uRoute->maxDistance());
-
+    // First subtract all current cost components...
     deltaCost -= static_cast<Cost>(uRoute->distance());
     deltaCost -= distPenalty(uRoute->distance(), uRoute->maxDistance());
-
-    deltaCost -= loadPenalty(uRoute->load(), uRoute->capacity());
-    deltaCost -= twPenalty(uRoute->timeWarp());
-
-    auto const vDist = vProposal.distanceSegment();
-    deltaCost += static_cast<Cost>(vDist.distance());
-    deltaCost += distPenalty(vDist.distance(), vRoute->maxDistance());
 
     deltaCost -= static_cast<Cost>(vRoute->distance());
     deltaCost -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
+    deltaCost -= loadPenalty(uRoute->load(), uRoute->capacity());
+    deltaCost -= twPenalty(uRoute->timeWarp());
+
     deltaCost -= loadPenalty(vRoute->load(), vRoute->capacity());
     deltaCost -= twPenalty(vRoute->timeWarp());
+
+    // ...and then we add the new costs on top of that. If the evaluation is
+    // not required to be exact, we can shortcut whenever the resulting
+    // deltaCost turns positive.
+    auto const uDist = uProposal.distanceSegment();
+    deltaCost += static_cast<Cost>(uDist.distance());
+    deltaCost += distPenalty(uDist.distance(), uRoute->maxDistance());
+
+    auto const vDist = vProposal.distanceSegment();
+    deltaCost += static_cast<Cost>(vDist.distance());
+    deltaCost += distPenalty(vDist.distance(), vRoute->maxDistance());
 
     if constexpr (!exact)
     {
@@ -262,6 +288,12 @@ bool CostEvaluator::deltaCost(
     auto const uDuration = uProposal.durationSegment();
     deltaCost += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
 
+    if constexpr (!exact)
+    {
+        if (deltaCost >= 0)
+            return false;
+    }
+
     auto const vLoad = vProposal.loadSegment();
     deltaCost += loadPenalty(vLoad.load(), vRoute->capacity());
 
@@ -270,7 +302,6 @@ bool CostEvaluator::deltaCost(
 
     return true;
 }
-
 }  // namespace pyvrp
 
 #endif  // PYVRP_COSTEVALUATOR_H

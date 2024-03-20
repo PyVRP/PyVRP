@@ -67,14 +67,14 @@ public:
      * Called once after loading in the solution to improve. This can be used
      * to e.g. update local operator state.
      */
-    virtual void init([[maybe_unused]] Solution const &solution){};
+    virtual void init([[maybe_unused]] Solution const &solution) {};
 
     /**
      * Called when a route has been changed. Can be used to update caches, but
      * the implementation should be fast: this is called every time something
      * changes!
      */
-    virtual void update([[maybe_unused]] Route *U){};
+    virtual void update([[maybe_unused]] Route *U) {};
 };
 }  // namespace pyvrp::search
 

@@ -678,9 +678,8 @@ template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
     return std::apply(
-        [&](auto &&...args) {
-            return DistanceSegment::merge(data.distanceMatrix(), args...);
-        },
+        [&](auto &&...args)
+        { return DistanceSegment::merge(data.distanceMatrix(), args...); },
         segments);
 }
 
@@ -688,9 +687,8 @@ template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     return std::apply(
-        [&](auto &&...args) {
-            return DurationSegment::merge(data.durationMatrix(), args...);
-        },
+        [&](auto &&...args)
+        { return DurationSegment::merge(data.durationMatrix(), args...); },
         segments);
 }
 

@@ -419,9 +419,8 @@ ProblemData::ProblemData(std::vector<Client> clients,
       numVehicles_(std::accumulate(vehicleTypes_.begin(),
                                    vehicleTypes_.end(),
                                    0,
-                                   [](auto sum, VehicleType const &type) {
-                                       return sum + type.numAvailable;
-                                   }))
+                                   [](auto sum, VehicleType const &type)
+                                   { return sum + type.numAvailable; }))
 {
     for (auto const &client : clients_)
     {

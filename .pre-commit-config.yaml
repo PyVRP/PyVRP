@@ -29,6 +29,6 @@ repos:
       - id: mypy
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v11.1.0
+    rev: v18.1.1
     hooks:
       - id: clang-format

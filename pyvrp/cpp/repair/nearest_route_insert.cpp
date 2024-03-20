@@ -36,7 +36,8 @@ pyvrp::repair::nearestRouteInsert(SolRoutes const &solRoutes,
         assert(!U->route());
 
         // Determine route with centroid nearest to this client.
-        auto const cmp = [&](auto const &a, auto const &b) {
+        auto const cmp = [&](auto const &a, auto const &b)
+        {
             if (a.empty() && !b.empty())
                 return false;
 
