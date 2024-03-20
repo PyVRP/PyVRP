@@ -224,10 +224,8 @@ bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &deltaCost) const
     deltaCost += distPenalty(dist.distance(), route->maxDistance());
 
     if constexpr (!exact)
-    {
         if (deltaCost >= 0)
             return false;
-    }
 
     auto const load = proposal.loadSegment();
     deltaCost += loadPenalty(load.load(), route->capacity());
@@ -277,10 +275,8 @@ bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
     deltaCost += distPenalty(vDist.distance(), vRoute->maxDistance());
 
     if constexpr (!exact)
-    {
         if (deltaCost >= 0)
             return false;
-    }
 
     auto const uLoad = uProposal.loadSegment();
     deltaCost += loadPenalty(uLoad.load(), uRoute->capacity());
@@ -289,10 +285,8 @@ bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
     deltaCost += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
 
     if constexpr (!exact)
-    {
         if (deltaCost >= 0)
             return false;
-    }
 
     auto const vLoad = vProposal.loadSegment();
     deltaCost += loadPenalty(vLoad.load(), vRoute->capacity());
