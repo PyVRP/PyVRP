@@ -178,7 +178,7 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
                             : std::numeric_limits<Cost>::max();
 }
 
-template <bool exact = false, typename... Args>
+template <bool exact, typename... Args>
 bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
                               Cost &deltaCost) const
 {
@@ -209,7 +209,7 @@ bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
     return true;
 }
 
-template <bool exact = false, typename... uArgs, typename... vArgs>
+template <bool exact, typename... uArgs, typename... vArgs>
 bool CostEvaluator::deltaCost(
     search::Route::Proposal<uArgs...> const &uProposal,
     search::Route::Proposal<vArgs...> const &vProposal,
