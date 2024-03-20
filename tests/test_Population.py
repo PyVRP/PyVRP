@@ -326,14 +326,14 @@ def test_purge_removes_duplicates(rc208):
     before purging by (biased) fitness.
     """
     cost_evaluator = CostEvaluator(20, 6, 0)
-    params = PopulationParams(min_pop_size=20, generation_size=5)
+    params = PopulationParams(min_pop_size=5, generation_size=20)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd, params=params)
-    for _ in range(params.min_pop_size):
+    for _ in range(params.min_pop_size - 1):
         pop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
-    assert_equal(len(pop), params.min_pop_size)
+    assert_equal(len(pop), params.min_pop_size - 1)
 
     # This is the solution we are going to add a few times. That should make
     # sure the relevant subpopulation definitely contains duplicates.
@@ -343,12 +343,6 @@ def test_purge_removes_duplicates(rc208):
     for _ in range(params.generation_size):
         pop.add(sol, cost_evaluator)
 
-    # Make sure we have not yet purged, and increase the minimum population
-    # size by one to make sure we're definitely not removing *all* of the
-    # duplicate solutions.
-    assert_(pop.num_infeasible() != params.min_pop_size)
-    params.min_pop_size += 1
-
     # Keep adding the solution until we have had a purge, and returned to the
     # minimum population size. Note that the purge is done after adding the
     # solution, so we must add the same solution in order to have at most
@@ -357,7 +351,7 @@ def test_purge_removes_duplicates(rc208):
         pop.add(sol, cost_evaluator)
 
     # Since duplicates are purged first, there should now be only one of them
-    # in the subpopulation. There cannot be zero, because we made sure of that.
+    # in the subpopulation.
     duplicates = sum(other == sol for other in pop)
     assert_equal(duplicates, 1)
 

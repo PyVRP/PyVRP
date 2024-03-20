@@ -6,8 +6,6 @@
 #include "diversity/diversity.h"
 
 #include <functional>
-#include <iosfwd>
-#include <stdexcept>
 #include <vector>
 
 namespace pyvrp
@@ -27,41 +25,23 @@ namespace pyvrp
  */
 struct PopulationParams
 {
-    size_t minPopSize;
-    size_t generationSize;
-    size_t nbElite;
-    size_t nbClose;
-    double lbDiversity;
-    double ubDiversity;
+    size_t const minPopSize;
+    size_t const generationSize;
+    size_t const nbElite;
+    size_t const nbClose;
+    double const lbDiversity;
+    double const ubDiversity;
 
     PopulationParams(size_t minPopSize = 25,
                      size_t generationSize = 40,
                      size_t nbElite = 4,
                      size_t nbClose = 5,
                      double lbDiversity = 0.1,
-                     double ubDiversity = 0.5)
-        : minPopSize(minPopSize),
-          generationSize(generationSize),
-          nbElite(nbElite),
-          nbClose(nbClose),
-          lbDiversity(lbDiversity),
-          ubDiversity(ubDiversity)
-    {
-        if (lbDiversity < 0 || lbDiversity > 1)
-            throw std::invalid_argument("lb_diversity must be in [0, 1].");
+                     double ubDiversity = 0.5);
 
-        if (ubDiversity < 0 || ubDiversity > 1)
-            throw std::invalid_argument("ub_diversity must be in [0, 1].");
-
-        if (ubDiversity <= lbDiversity)
-        {
-            auto const msg = "ub_diversity <= lb_diversity not understood.";
-            throw std::invalid_argument(msg);
-        }
-    }
-
-    size_t maxPopSize() const { return minPopSize + generationSize; }
     bool operator==(PopulationParams const &other) const = default;
+
+    size_t maxPopSize() const;
 };
 
 /**
