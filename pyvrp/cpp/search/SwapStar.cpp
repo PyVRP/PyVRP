@@ -118,9 +118,11 @@ Cost SwapStar::evaluate(Route *routeU,
 {
     best = {};
 
-    for (auto *route : {routeU, routeV})
-        if (updated[route->idx()])
-            updateRemovalCosts(route, costEvaluator);
+    if (updated[routeU->idx()])
+        updateRemovalCosts(routeU, costEvaluator);
+
+    if (updated[routeV->idx()])
+        updateRemovalCosts(routeV, costEvaluator);
 
     for (auto *U : *routeU)
         for (auto *V : *routeV)
