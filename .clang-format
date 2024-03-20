@@ -15,7 +15,7 @@ BreakBeforeTernaryOperators: true
 BinPackArguments: false
 BinPackParameters: false
 AllowShortCompoundRequirementOnASingleLine: true
-AllowShortLambdasOnASingleLine: true
 IndentRequiresClause: true
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
+AllowShortLambdasOnASingleLine: All
