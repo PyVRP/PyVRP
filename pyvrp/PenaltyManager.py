@@ -155,7 +155,7 @@ class PenaltyManager:
         else:
             new_penalty = self._params.penalty_decrease * penalty - 1
 
-        return max(int(new_penalty), 1)  # penalty cannot drop below 1
+        return int(np.clip(new_penalty, 1, 100_000))
 
     def _register(self, feas_list: list[bool], penalty: int, is_feas: bool):
         feas_list.append(is_feas)
