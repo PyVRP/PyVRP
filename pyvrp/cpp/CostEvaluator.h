@@ -118,14 +118,26 @@ public:
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 
     /**
-     * TODO
+     * Evaluates the cost delta of the given route proposal, and writes the
+     * resulting cost delta to the ``deltaCost`` out parameter. The evaluation
+     * can be exact, if the relevant template argument is set. Else it may
+     * shortcut once it determines that the proposal does not constitute an
+     * improving move.
+     *
+     * The return value indicates whether the evaluation is exact or not.
      */
     template <bool exact = false, typename... Args>
     bool deltaCost(search::Route::Proposal<Args...> const &proposal,
                    Cost &deltaCost) const;
 
     /**
-     * TODO
+     * Evaluates the cost delta of the given route proposals, and writes the
+     * resulting cost delta to the ``deltaCost`` out parameter. The evaluation
+     * can be exact, if the relevant template argument is set. Else it may
+     * shortcut once it determines that the proposals do not jointly constitute
+     * an improving move.
+     *
+     * The return value indicates whether the evaluation is exact or not.
      */
     template <bool exact = false, typename... uArgs, typename... vArgs>
     bool deltaCost(search::Route::Proposal<uArgs...> const &uProposal,

@@ -39,7 +39,10 @@ class Route
 
 public:
     /**
-     * TODO
+     * A simple class that tracks a new proposed structure for a given route.
+     * This new structure can be efficiently evaluated by calling appropriate
+     * member functions to return concatenation schemes that detail the
+     * newly proposed route's statistics.
      */
     template <typename... Segments> class Proposal
     {
@@ -222,10 +225,11 @@ public:
     [[nodiscard]] std::vector<Node *>::iterator end();
 
     /**
-     * TODO
+     * Returns a route proposal object that stores the given route segment
+     * arguments.
      */
-    template <typename... Args>
-    [[nodiscard]] Proposal<Args...> proposal(Args &&...args) const;
+    template <typename... Segments>
+    [[nodiscard]] Proposal<Segments...> proposal(Segments &&...segments) const;
 
     /**
      * Tests if this route is feasible.
@@ -570,10 +574,10 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
-template <typename... Args>
-Route::Proposal<Args...> Route::proposal(Args &&...args) const
+template <typename... Segments>
+Route::Proposal<Segments...> Route::proposal(Segments &&...segments) const
 {
-    return {this, data, std::forward<Args>(args)...};
+    return {this, data, std::forward<Segments>(segments)...};
 }
 
 Load Route::load() const
