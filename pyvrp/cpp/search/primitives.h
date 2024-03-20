@@ -41,8 +41,9 @@ Cost insertCost(Route::Node *U,
  *
  * .. warning::
  *
- *    U must not already be in V's route. Not that U's *removal* is not
- *    evaluated if U is already in a route.
+ *    U must not already be in V's route. Note that U's *removal* is not
+ *    evaluated - if U is already in a route, its removal should separately be
+ *    evaluated using ``removeCost``!
  *
  * Parameters
  * ----------
