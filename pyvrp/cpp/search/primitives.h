@@ -42,7 +42,7 @@ Cost insertCost(Route::Node *U,
  * Parameters
  * ----------
  * U
- * Node to insert. Must not be in a route.
+ *     Node to insert. Must not be in a route.
  * V
  *     Node to insert U in place of. Must be in a route.
  * data
