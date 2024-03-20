@@ -109,7 +109,6 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedVehicleCost();
 
         costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
-        return deltaCost;
     }
     else  // within same route
     {
@@ -129,9 +128,9 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                                 route->between(V->idx() + 1, U->idx() - 1),
                                 route->after(U->idx() + N)),
                 deltaCost);
-
-        return deltaCost;
     }
+
+    return deltaCost;
 }
 
 template <size_t N, size_t M>
@@ -160,7 +159,6 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                                vRoute->after(V->idx() + M));
 
         costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
-        return deltaCost;
     }
     else  // within same route
     {
@@ -182,9 +180,9 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                                 route->between(V->idx(), V->idx() + M - 1),
                                 route->after(U->idx() + N)),
                 deltaCost);
-
-        return deltaCost;
     }
+
+    return deltaCost;
 }
 
 template <size_t N, size_t M>

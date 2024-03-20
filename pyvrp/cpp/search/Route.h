@@ -38,6 +38,9 @@ class Route
     friend class ProxyBetween;
 
 public:
+    /**
+     * TODO
+     */
     template <typename... Segments> class Proposal
     {
         Route const *current;
@@ -47,41 +50,13 @@ public:
     public:
         Proposal(Route const *current,
                  ProblemData const &data,
-                 Segments &&...segments)
-            : current(current),
-              data(data),
-              segments(std::forward<Segments>(segments)...)
-        {
-        }
+                 Segments &&...segments);
 
-        Route const *route() const { return current; }
+        Route const *route() const;
 
-        DistanceSegment distanceSegment() const
-        {
-            return std::apply(
-                [&](auto &&...args) {
-                    return DistanceSegment::merge(data.distanceMatrix(),
-                                                  args...);
-                },
-                segments);
-        }
-
-        DurationSegment durationSegment() const
-        {
-            return std::apply(
-                [&](auto &&...args) {
-                    return DurationSegment::merge(data.durationMatrix(),
-                                                  args...);
-                },
-                segments);
-        }
-
-        LoadSegment loadSegment() const
-        {
-            return std::apply(
-                [](auto &&...args) { return LoadSegment::merge(args...); },
-                segments);
-        }
+        DistanceSegment distanceSegment() const;
+        DurationSegment durationSegment() const;
+        LoadSegment loadSegment() const;
     };
 
     /**
@@ -678,6 +653,50 @@ Route::ProxyBetween Route::between(size_t start, size_t end) const
     assert(!dirty);
     return ProxyBetween(*this, start, end);
 }
+
+template <typename... Segments>
+Route::Proposal<Segments...>::Proposal(Route const *current,
+                                       ProblemData const &data,
+                                       Segments &&...segments)
+    : current(current),
+      data(data),
+      segments(std::forward<Segments>(segments)...)
+{
+}
+
+template <typename... Segments>
+Route const *Route::Proposal<Segments...>::route() const
+{
+    return current;
+}
+
+template <typename... Segments>
+DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
+{
+    return std::apply(
+        [&](auto &&...args) {
+            return DistanceSegment::merge(data.distanceMatrix(), args...);
+        },
+        segments);
+}
+
+template <typename... Segments>
+DurationSegment Route::Proposal<Segments...>::durationSegment() const
+{
+    return std::apply(
+        [&](auto &&...args) {
+            return DurationSegment::merge(data.durationMatrix(), args...);
+        },
+        segments);
+}
+
+template <typename... Segments>
+LoadSegment Route::Proposal<Segments...>::loadSegment() const
+{
+    return std::apply(
+        [](auto &&...args) { return LoadSegment::merge(args...); }, segments);
+}
+
 }  // namespace pyvrp::search
 
 // Outputs a route into a given ostream in CVRPLib format
