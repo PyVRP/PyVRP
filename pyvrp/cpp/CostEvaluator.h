@@ -120,14 +120,14 @@ public:
     /**
      * TODO
      */
-    template <typename... Args>
+    template <bool exact = false, typename... Args>
     bool deltaCost(search::Route::Proposal<Args...> const &proposal,
                    Cost &deltaCost) const;
 
     /**
      * TODO
      */
-    template <typename... uArgs, typename... vArgs>
+    template <bool exact = false, typename... uArgs, typename... vArgs>
     bool deltaCost(search::Route::Proposal<uArgs...> const &uProposal,
                    search::Route::Proposal<vArgs...> const &vProposal,
                    Cost &deltaCost) const;
@@ -178,7 +178,7 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
                             : std::numeric_limits<Cost>::max();
 }
 
-template <typename... Args>
+template <bool exact = false, typename... Args>
 bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
                               Cost &deltaCost) const
 {
@@ -194,8 +194,11 @@ bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
     deltaCost -= loadPenalty(route->load(), route->capacity());
     deltaCost -= twPenalty(route->timeWarp());
 
-    if (deltaCost >= 0)
-        return false;
+    if constexpr (!exact)
+    {
+        if (deltaCost >= 0)
+            return false;
+    }
 
     auto const load = proposal.loadSegment();
     deltaCost += loadPenalty(load.load(), route->capacity());
@@ -206,7 +209,7 @@ bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
     return true;
 }
 
-template <typename... uArgs, typename... vArgs>
+template <bool exact = false, typename... uArgs, typename... vArgs>
 bool CostEvaluator::deltaCost(
     search::Route::Proposal<uArgs...> const &uProposal,
     search::Route::Proposal<vArgs...> const &vProposal,
@@ -235,8 +238,11 @@ bool CostEvaluator::deltaCost(
     deltaCost -= loadPenalty(vRoute->load(), vRoute->capacity());
     deltaCost -= twPenalty(vRoute->timeWarp());
 
-    if (deltaCost >= 0)
-        return false;
+    if constexpr (!exact)
+    {
+        if (deltaCost >= 0)
+            return false;
+    }
 
     auto const uLoad = uProposal.loadSegment();
     deltaCost += loadPenalty(uLoad.load(), uRoute->capacity());

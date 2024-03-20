@@ -107,104 +107,26 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
     Cost deltaCost = 0;
 
-    if (V == p(remove))
-    {
-        // Special case: insert U in place of remove.
-        auto const dist = DistanceSegment::merge(data.distanceMatrix(),
-                                                 route->before(V->idx()),
-                                                 U->route()->at(U->idx()),
-                                                 route->after(V->idx() + 2));
-
-        deltaCost += static_cast<Cost>(dist.distance());
-        deltaCost
-            += costEvaluator.distPenalty(dist.distance(), route->maxDistance());
-
-        auto const ds = DurationSegment::merge(data.durationMatrix(),
-                                               route->before(V->idx()),
-                                               U->route()->at(U->idx()),
-                                               route->after(V->idx() + 2));
-
-        deltaCost += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-
-        auto const ls = LoadSegment::merge(route->before(V->idx()),
-                                           U->route()->at(U->idx()),
-                                           route->after(V->idx() + 2));
-
-        deltaCost += costEvaluator.loadPenalty(ls.load(), route->capacity());
-    }
-    else  // in non-adjacent parts of the route.
-    {
-        if (V->idx() < remove->idx())
-        {
-            auto const dist = DistanceSegment::merge(
-                data.distanceMatrix(),
-                route->before(V->idx()),
-                U->route()->at(U->idx()),
-                route->between(V->idx() + 1, remove->idx() - 1),
-                route->after(remove->idx() + 1));
-
-            deltaCost += static_cast<Cost>(dist.distance());
-            deltaCost += costEvaluator.distPenalty(dist.distance(),
-                                                   route->maxDistance());
-
-            auto const ds = DurationSegment::merge(
-                data.durationMatrix(),
-                route->before(V->idx()),
-                U->route()->at(U->idx()),
-                route->between(V->idx() + 1, remove->idx() - 1),
-                route->after(remove->idx() + 1));
-
-            deltaCost
-                += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-
-            auto const ls = LoadSegment::merge(
-                route->before(V->idx()),
-                U->route()->at(U->idx()),
-                route->between(V->idx() + 1, remove->idx() - 1),
-                route->after(remove->idx() + 1));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), route->capacity());
-        }
-        else
-        {
-            auto const dist = DistanceSegment::merge(
-                data.distanceMatrix(),
-                route->before(remove->idx() - 1),
-                route->between(remove->idx() + 1, V->idx()),
-                U->route()->at(U->idx()),
-                route->after(V->idx() + 1));
-
-            deltaCost += static_cast<Cost>(dist.distance());
-            deltaCost += costEvaluator.distPenalty(dist.distance(),
-                                                   route->maxDistance());
-
-            auto const ds = DurationSegment::merge(
-                data.durationMatrix(),
-                route->before(remove->idx() - 1),
-                route->between(remove->idx() + 1, V->idx()),
-                U->route()->at(U->idx()),
-                route->after(V->idx() + 1));
-
-            deltaCost
-                += costEvaluator.twPenalty(ds.timeWarp(route->maxDuration()));
-
-            auto const ls = LoadSegment::merge(
-                route->before(remove->idx() - 1),
-                route->between(remove->idx() + 1, V->idx()),
-                U->route()->at(U->idx()),
-                route->after(V->idx() + 1));
-
-            deltaCost
-                += costEvaluator.loadPenalty(ls.load(), route->capacity());
-        }
-    }
-
-    deltaCost -= static_cast<Cost>(route->distance());
-    deltaCost
-        -= costEvaluator.distPenalty(route->distance(), route->maxDistance());
-    deltaCost -= costEvaluator.twPenalty(route->timeWarp());
-    deltaCost -= costEvaluator.loadPenalty(route->load(), route->capacity());
+    if (V == p(remove))  // special case where we insert U in place of remove
+        costEvaluator.deltaCost<true>(
+            route->proposal(route->before(V->idx()),
+                            U->route()->at(U->idx()),
+                            route->after(V->idx() + 2)),
+            deltaCost);
+    else if (V->idx() < remove->idx())
+        costEvaluator.deltaCost<true>(
+            route->proposal(route->before(V->idx()),
+                            U->route()->at(U->idx()),
+                            route->between(V->idx() + 1, remove->idx() - 1),
+                            route->after(remove->idx() + 1)),
+            deltaCost);
+    else if (V->idx() > remove->idx())
+        costEvaluator.deltaCost<true>(
+            route->proposal(route->before(remove->idx() - 1),
+                            route->between(remove->idx() + 1, V->idx()),
+                            U->route()->at(U->idx()),
+                            route->after(V->idx() + 1)),
+            deltaCost);
 
     return deltaCost;
 }
