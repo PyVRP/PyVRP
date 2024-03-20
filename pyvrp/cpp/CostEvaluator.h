@@ -183,8 +183,8 @@ bool CostEvaluator::deltaCost(search::Route::Proposal<Args...> const &proposal,
                               Cost &deltaCost) const
 {
     auto const *route = proposal.route();
-    auto const dist = proposal.distanceSegment();
 
+    auto const dist = proposal.distanceSegment();
     deltaCost += static_cast<Cost>(dist.distance());
     deltaCost += distPenalty(dist.distance(), route->maxDistance());
 

@@ -1,5 +1,4 @@
 #include "SwapStar.h"
-#include "primitives.h"
 
 #include <cassert>
 
@@ -12,8 +11,14 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
     updated[R->idx()] = false;
 
     for (auto *U : *R)
-        removalCosts(R->idx(), U->client())
-            = removeCost(U, data, costEvaluator);
+    {
+        Cost deltaCost = 0;
+        costEvaluator.deltaCost<true>(
+            R->proposal(R->before(U->idx() - 1), R->after(U->idx() + 1)),
+            deltaCost);
+
+        removalCosts(R->idx(), U->client()) = deltaCost;
+    }
 
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
         cache(R->idx(), idx).shouldUpdate = true;
@@ -31,7 +36,13 @@ void SwapStar::updateInsertionCost(Route *R,
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
         auto *V = (*R)[idx];
-        auto const deltaCost = insertCost(U, V, data, costEvaluator);
+
+        Cost deltaCost = 0;
+        costEvaluator.deltaCost<true>(R->proposal(R->before(V->idx()),
+                                                  U->route()->at(U->idx()),
+                                                  R->after(V->idx() + 1)),
+                                      deltaCost);
+
         insertPositions.maybeAdd(deltaCost, V);
     }
 }
@@ -50,7 +61,12 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
             return std::make_pair(best_.costs[idx], best_.locs[idx]);
 
     // As a fallback option, we consider inserting in the place of V.
-    auto const deltaCost = inplaceCost(U, V, data, costEvaluator);
+    Cost deltaCost = 0;
+    costEvaluator.deltaCost<true>(route->proposal(route->before(V->idx() - 1),
+                                                  U->route()->at(U->idx()),
+                                                  route->after(V->idx() + 1)),
+                                  deltaCost);
+
     return std::make_pair(deltaCost, p(V));
 }
 
@@ -113,9 +129,6 @@ Cost SwapStar::evaluate(Route *routeU,
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
-
-            if (deltaCost >= 0)  // an early filter on many moves, before doing
-                continue;        // costly work determining insertion points
 
             auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;

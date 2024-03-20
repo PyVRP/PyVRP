@@ -37,18 +37,12 @@ Cost insertCost(Route::Node *U,
 
 /**
  * Evaluates the delta cost of inserting U in the place of V. The evaluation is
- * exact for V's route.
- *
- * .. warning::
- *
- *    U must not already be in V's route. Note that U's *removal* is not
- *    evaluated - if U is already in a route, its removal should separately be
- *    evaluated using ``removeCost``!
+ * exact.
  *
  * Parameters
  * ----------
  * U
- *     Node to insert. Must not be in V's route.
+ * Node to insert. Must not be in a route.
  * V
  *     Node to insert U in place of. Must be in a route.
  * data

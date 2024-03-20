@@ -84,7 +84,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
                                        ProblemData const &data,
                                        CostEvaluator const &costEvaluator)
 {
-    if (!V->route() || U->route() == V->route())
+    if (U->route() || !V->route())
         return 0;
 
     auto const *route = V->route();
