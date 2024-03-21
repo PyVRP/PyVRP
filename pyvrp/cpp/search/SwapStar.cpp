@@ -130,16 +130,16 @@ Cost SwapStar::evaluate(Route *routeU,
         for (auto *V : *routeV)
         {
             // The following lines compute a delta cost of removing U and V from
-            // their own routes and inserting them into the other's route. Note
-            // that this is an approximation: the removal and insertions are
-            // evaluated in isolation, not taking into account that while U
+            // their own routes and inserting them into the other's route in the
+            // best place. This is an approximate since removal and insertion
+            // are evaluated separately, not taking into account that while U
             // leaves its route, V will be inserted (and vice versa).
             Cost deltaCost = 0;
 
-            // Separating removal and insertion means particularly that the
-            // effects on load are counted double when inserting: U is still in
-            // the route, and now V is added as well. The following attempts to
-            // address this issue, but it is far from exact when there are both
+            // Separating removal and insertion means that the effects on load
+            // are not counted correctly: during insert, U is still in the
+            // route, and now V is added as well. The following addresses this
+            // issue with an approximation, which is inexact when there are both
             // pickups and deliveries in the data. So it's pretty rough but fast
             // and seems to work well enough for most instances.
             ProblemData::Client const &uClient = data.location(U->client());
