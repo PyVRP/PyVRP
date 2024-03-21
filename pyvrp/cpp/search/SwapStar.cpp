@@ -10,13 +10,13 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
     updated[R->idx()] = false;
 
-    for (auto *U : *R)
+    for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true>(
-            R->proposal(R->before(U->idx() - 1), R->after(U->idx() + 1)),
-            deltaCost);
+            R->proposal(R->before(idx - 1), R->after(idx + 1)), deltaCost);
 
+        auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
@@ -35,14 +35,13 @@ void SwapStar::updateInsertionCost(Route *R,
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
-        auto *V = (*R)[idx];
-
         Cost deltaCost = 0;
-        costEvaluator.deltaCost<true>(R->proposal(R->before(V->idx()),
+        costEvaluator.deltaCost<true>(R->proposal(R->before(idx),
                                                   U->route()->at(U->idx()),
-                                                  R->after(V->idx() + 1)),
+                                                  R->after(idx + 1)),
                                       deltaCost);
 
+        auto *V = (*R)[idx];
         insertPositions.maybeAdd(deltaCost, V);
     }
 }
@@ -70,10 +69,10 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
     return std::make_pair(deltaCost, p(V));
 }
 
-Cost SwapStar::evaluateMove(Route::Node *U,
-                            Route::Node *V,
-                            Route::Node *remove,
-                            CostEvaluator const &costEvaluator)
+Cost SwapStar::evaluateMove(Route::Node const *U,
+                            Route::Node const *V,
+                            Route::Node const *remove,
+                            CostEvaluator const &costEvaluator) const
 {
     assert(V->route() == remove->route());
     assert(V != remove);
@@ -82,7 +81,7 @@ Cost SwapStar::evaluateMove(Route::Node *U,
 
     Cost deltaCost = 0;
 
-    if (V == p(remove))  // special case where we insert U in place of remove
+    if (V->idx() + 1 == remove->idx())  // then we insert U in place of remove
         costEvaluator.deltaCost<true>(
             route->proposal(route->before(V->idx()),
                             U->route()->at(U->idx()),

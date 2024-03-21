@@ -97,10 +97,10 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Evaluates the delta cost for ``V``'s route of inserting ``U`` after
     // ``V``, while removing ``remove`` from ``V``'s route.
-    Cost evaluateMove(Route::Node *U,
-                      Route::Node *V,
-                      Route::Node *remove,
-                      CostEvaluator const &costEvaluator);
+    Cost evaluateMove(Route::Node const *U,
+                      Route::Node const *V,
+                      Route::Node const *remove,
+                      CostEvaluator const &costEvaluator) const;
 
 public:
     void init(Solution const &solution) override;
