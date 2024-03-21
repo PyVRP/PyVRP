@@ -11,28 +11,33 @@ namespace pyvrp
 {
 // The following methods must be implemented for a type to be evaluatable by
 // the CostEvaluator.
-template <typename T> concept CostEvaluatable = requires(T arg)
-{
-    // clang-format off
+template <typename T>
+concept CostEvaluatable = requires(T arg) {
     { arg.distance() } -> std::same_as<Distance>;
     { arg.excessLoad() } -> std::same_as<Load>;
     { arg.excessDistance() } -> std::same_as<Distance>;
-    { arg.fixedVehicleCost() }  -> std::same_as<Cost>;
+    { arg.fixedVehicleCost() } -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.empty() } -> std::same_as<bool>;
     { arg.isFeasible() } -> std::same_as<bool>;
-    // clang-format on
 };
 
 // If, additionally, methods related to optional clients and prize collecting
 // are implemented we can also take that aspect into account. See the
 // CostEvaluator implementation for details.
 template <typename T>
-concept PrizeCostEvaluatable = CostEvaluatable<T> and requires(T arg)
-{
-    // clang-format off
+concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
-    // clang-format on
+};
+
+// The following methods must be available before a type's delta cost can be
+// evaluated by the CostEvaluator.
+template <typename T>
+concept DeltaCostEvaluatable = requires(T arg) {
+    { arg.route() };
+    { arg.distanceSegment() };
+    { arg.durationSegment() };
+    { arg.loadSegment() };
 };
 
 /**
@@ -115,6 +120,46 @@ public:
     // The docstring above is written for Python, where we only expose this
     // method for Solution.
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
+
+    /**
+     * Evaluates the cost delta of the given route proposal, and writes the
+     * resulting cost delta to the ``out`` parameter. The evaluation can be
+     * exact, if the relevant template argument is set. Else it may shortcut
+     * once it determines that the proposal does not constitute an improving
+     * move. Optionally, several aspects of the evaluation may be skipped.
+     *
+     * The return value indicates whether the evaluation was exact or not.
+     */
+    template <bool exact = false,
+              bool skipLoad = false,
+              bool skipDuration = false,
+              typename... Args,
+              template <typename...>
+              class T>
+        requires(DeltaCostEvaluatable<T<Args...>>)
+    bool deltaCost(Cost &out, T<Args...> const &proposal) const;
+
+    /**
+     * Evaluates the cost delta of the given route proposals, and writes the
+     * resulting cost delta to the ``out`` parameter. The evaluation can be
+     * exact, if the relevant template argument is set. Else it may shortcut
+     * once it determines that the proposals do not constitute an improving
+     * move. Optionally, several aspects of the evaluation may be skipped.
+     *
+     * The return value indicates whether the evaluation was exact or not.
+     */
+    template <bool exact = false,
+              bool skipLoad = false,
+              bool skipDuration = false,
+              typename... uArgs,
+              typename... vArgs,
+              template <typename...>
+              class T>
+        requires(DeltaCostEvaluatable<T<uArgs...>>
+                 && DeltaCostEvaluatable<T<vArgs...>>)
+    bool deltaCost(Cost &out,
+                   T<uArgs...> const &uProposal,
+                   T<vArgs...> const &vProposal) const;
 };
 
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
@@ -160,6 +205,120 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
     // penalised cost in that case.
     return arg.isFeasible() ? penalisedCost(arg)
                             : std::numeric_limits<Cost>::max();
+}
+
+template <bool exact,
+          bool skipLoad,
+          bool skipDuration,
+          typename... Args,
+          template <typename...>
+          class T>
+    requires(DeltaCostEvaluatable<T<Args...>>)
+bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
+{
+    auto const *route = proposal.route();
+
+    out -= static_cast<Cost>(route->distance());
+    out -= distPenalty(route->distance(), route->maxDistance());
+
+    if constexpr (!skipLoad)
+        out -= loadPenalty(route->load(), route->capacity());
+
+    if constexpr (!skipDuration)
+        out -= twPenalty(route->timeWarp());
+
+    auto const dist = proposal.distanceSegment();
+    out += static_cast<Cost>(dist.distance());
+    out += distPenalty(dist.distance(), route->maxDistance());
+
+    if constexpr (!exact)
+        if (out >= 0)
+            return false;
+
+    if constexpr (!skipLoad)
+    {
+        auto const load = proposal.loadSegment();
+        out += loadPenalty(load.load(), route->capacity());
+    }
+
+    if constexpr (!skipDuration)
+    {
+        auto const duration = proposal.durationSegment();
+        out += twPenalty(duration.timeWarp(route->maxDuration()));
+    }
+
+    return true;
+}
+
+template <bool exact,
+          bool skipLoad,
+          bool skipDuration,
+          typename... uArgs,
+          typename... vArgs,
+          template <typename...>
+          class T>
+    requires(DeltaCostEvaluatable<T<uArgs...>>
+             && DeltaCostEvaluatable<T<vArgs...>>)
+bool CostEvaluator::deltaCost(Cost &out,
+                              T<uArgs...> const &uProposal,
+                              T<vArgs...> const &vProposal) const
+{
+    auto const *uRoute = uProposal.route();
+    auto const *vRoute = vProposal.route();
+
+    out -= static_cast<Cost>(uRoute->distance());
+    out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+
+    out -= static_cast<Cost>(vRoute->distance());
+    out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+
+    if constexpr (!skipLoad)
+    {
+        out -= loadPenalty(uRoute->load(), uRoute->capacity());
+        out -= loadPenalty(vRoute->load(), vRoute->capacity());
+    }
+
+    if constexpr (!skipDuration)
+    {
+        out -= twPenalty(uRoute->timeWarp());
+        out -= twPenalty(vRoute->timeWarp());
+    }
+
+    auto const uDist = uProposal.distanceSegment();
+    out += static_cast<Cost>(uDist.distance());
+    out += distPenalty(uDist.distance(), uRoute->maxDistance());
+
+    auto const vDist = vProposal.distanceSegment();
+    out += static_cast<Cost>(vDist.distance());
+    out += distPenalty(vDist.distance(), vRoute->maxDistance());
+
+    if constexpr (!exact)
+        if (out >= 0)
+            return false;
+
+    if constexpr (!skipLoad)
+    {
+        auto const uLoad = uProposal.loadSegment();
+        out += loadPenalty(uLoad.load(), uRoute->capacity());
+
+        auto const vLoad = vProposal.loadSegment();
+        out += loadPenalty(vLoad.load(), vRoute->capacity());
+    }
+
+    if constexpr (!exact)
+        if (out >= 0)
+            return false;
+
+    if constexpr (!skipDuration)
+    {
+        auto const uDuration = uProposal.durationSegment();
+        out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+
+        auto const vDuration = vProposal.durationSegment();
+        out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+    }
+
+    return true;
 }
 }  // namespace pyvrp
 

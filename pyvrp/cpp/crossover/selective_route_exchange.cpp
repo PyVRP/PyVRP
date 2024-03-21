@@ -22,9 +22,8 @@ double routeAngle(pyvrp::ProblemData const &data, Route const &route)
 
 Routes sortByAscAngle(pyvrp::ProblemData const &data, Routes routes)
 {
-    auto cmp = [&data](Route const &a, Route const &b) {
-        return routeAngle(data, a) < routeAngle(data, b);
-    };
+    auto cmp = [&data](Route const &a, Route const &b)
+    { return routeAngle(data, a) < routeAngle(data, b); };
 
     std::sort(routes.begin(), routes.end(), cmp);
     return routes;

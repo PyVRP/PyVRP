@@ -111,7 +111,8 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
     while (size() > params.minPopSize)
     {
         // Remove duplicates from the subpopulation (if they exist)
-        auto const pred = [&](auto &iterator) {
+        auto const pred = [&](auto &iterator)
+        {
             return !iterator.proximity.empty()
                    && *iterator.proximity[0].second == *iterator.solution;
         };
@@ -129,9 +130,9 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
         // Before using fitness, we must update fitness
         updateFitness(costEvaluator);
         auto const worstFitness = std::max_element(
-            items.begin(), items.end(), [](auto const &a, auto const &b) {
-                return a.fitness < b.fitness;
-            });
+            items.begin(),
+            items.end(),
+            [](auto const &a, auto const &b) { return a.fitness < b.fitness; });
 
         remove(worstFitness);
     }
@@ -142,13 +143,18 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
     if (items.empty())
         return;
 
+    // clang-format off
     std::vector<size_t> byCost(size());
     std::iota(byCost.begin(), byCost.end(), 0);
-
-    std::stable_sort(byCost.begin(), byCost.end(), [&](size_t a, size_t b) {
-        return costEvaluator.penalisedCost(*items[a].solution)
-               < costEvaluator.penalisedCost(*items[b].solution);
-    });
+    std::stable_sort(
+        byCost.begin(),
+        byCost.end(),
+        [&](size_t a, size_t b)
+        {
+            return costEvaluator.penalisedCost(*items[a].solution)
+                   < costEvaluator.penalisedCost(*items[b].solution);
+        });
+    // clang-format on
 
     std::vector<std::pair<double, size_t>> diversity;
     for (size_t costRank = 0; costRank != size(); costRank++)

@@ -14,3 +14,8 @@ SortIncludes: true
 BreakBeforeTernaryOperators: true
 BinPackArguments: false
 BinPackParameters: false
+AllowShortCompoundRequirementOnASingleLine: true
+IndentRequiresClause: true
+RequiresClausePosition: OwnLine
+RequiresExpressionIndentation: OuterScope
+AllowShortLambdasOnASingleLine: All

@@ -30,38 +30,12 @@ class SwapStar : public LocalSearchOperator<Route>
     struct ThreeBest  // stores three best SWAP* insertion points
     {
         bool shouldUpdate = true;
+        std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
         std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max()};
-        std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
 
-        void maybeAdd(Cost costInsert, Route::Node *placeInsert)
-        {
-            if (costInsert >= costs[2])
-                return;
-
-            if (costInsert >= costs[1])
-            {
-                costs[2] = costInsert;
-                locs[2] = placeInsert;
-            }
-            else if (costInsert >= costs[0])
-            {
-                costs[2] = costs[1];
-                locs[2] = locs[1];
-                costs[1] = costInsert;
-                locs[1] = placeInsert;
-            }
-            else
-            {
-                costs[2] = costs[1];
-                locs[2] = locs[1];
-                costs[1] = costs[0];
-                locs[1] = locs[0];
-                costs[0] = costInsert;
-                locs[0] = placeInsert;
-            }
-        }
+        void maybeAdd(Cost costInsert, Route::Node *placeInsert);
     };
 
     struct BestMove  // tracks the best SWAP* move
@@ -97,10 +71,10 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Evaluates the delta cost for ``V``'s route of inserting ``U`` after
     // ``V``, while removing ``remove`` from ``V``'s route.
-    Cost evaluateMove(Route::Node *U,
-                      Route::Node *V,
-                      Route::Node *remove,
-                      CostEvaluator const &costEvaluator);
+    Cost evaluateMove(Route::Node const *U,
+                      Route::Node const *V,
+                      Route::Node const *remove,
+                      CostEvaluator const &costEvaluator) const;
 
 public:
     void init(Solution const &solution) override;

@@ -72,14 +72,14 @@ def test_solve_same_seed(ok_small):
     assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
 
 
-def test_solve_more_iterations_is_better(rc208):
+def test_solve_more_iterations_is_better(prize_collecting):
     """
     Smoke test that checks that running more iterations results in an improved
     solution.
     """
-    cost1 = solve(rc208, stop=MaxIterations(1)).cost()
-    cost5 = solve(rc208, stop=MaxIterations(5)).cost()
-    assert_(cost5 < cost1)
+    cost10 = solve(prize_collecting, stop=MaxIterations(10)).cost()
+    cost100 = solve(prize_collecting, stop=MaxIterations(100)).cost()
+    assert_(cost100 < cost10)
 
 
 def test_solve_custom_params(ok_small):

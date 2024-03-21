@@ -51,9 +51,8 @@ PYBIND11_MODULE(_pyvrp, m)
             py::arg("idx"))
         .def(
             "__setitem__",
-            [](DynamicBitset &bitset, size_t idx, bool value) {
-                bitset[idx] = value;
-            },
+            [](DynamicBitset &bitset, size_t idx, bool value)
+            { bitset[idx] = value; },
             py::arg("idx"),
             py::arg("value"))
         .def("__or__", &DynamicBitset::operator|, py::arg("other"))
@@ -147,9 +146,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__len__", &ProblemData::ClientGroup::size)
         .def(
             "__iter__",
-            [](ProblemData::ClientGroup const &group) {
-                return py::make_iterator(group.begin(), group.end());
-            },
+            [](ProblemData::ClientGroup const &group)
+            { return py::make_iterator(group.begin(), group.end()); },
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::VehicleType>(
@@ -188,9 +186,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       py::return_value_policy::reference_internal)
         .def(
             "__str__",
-            [](ProblemData::VehicleType const &vehType) {
-                return vehType.name;
-            },
+            [](ProblemData::VehicleType const &vehType)
+            { return vehType.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
@@ -237,7 +234,8 @@ PYBIND11_MODULE(_pyvrp, m)
             "location",
             [](ProblemData const &data,
                size_t idx) -> std::variant<ProblemData::Client const *,
-                                           ProblemData::Depot const *> {
+                                           ProblemData::Depot const *>
+            {
                 if (idx >= data.numLocations())
                     throw py::index_error();
 
@@ -369,13 +367,13 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__len__", &Solution::Route::size)
         .def(
             "__iter__",
-            [](Solution::Route const &route) {
-                return py::make_iterator(route.begin(), route.end());
-            },
+            [](Solution::Route const &route)
+            { return py::make_iterator(route.begin(), route.end()); },
             py::return_value_policy::reference_internal)
         .def(
             "__getitem__",
-            [](Solution::Route const &route, int idx) {
+            [](Solution::Route const &route, int idx)
+            {
                 // int so we also support negative offsets from the end.
                 idx = idx < 0 ? route.size() + idx : idx;
                 if (idx < 0 || static_cast<size_t>(idx) >= route.size())
@@ -429,11 +427,13 @@ PYBIND11_MODULE(_pyvrp, m)
 
                 return route;
             }))
-        .def("__str__", [](Solution::Route const &route) {
-            std::stringstream stream;
-            stream << route;
-            return stream.str();
-        });
+        .def("__str__",
+             [](Solution::Route const &route)
+             {
+                 std::stringstream stream;
+                 stream << route;
+                 return stream.str();
+             });
 
     py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
         // Note, the order of constructors is important! Since Solution::Route
@@ -458,9 +458,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 options.disable_function_signatures();
 
                 return py::cpp_function(
-                    [](ProblemData const &data, RandomNumberGenerator &rng) {
-                        return Solution(data, rng);
-                    },
+                    [](ProblemData const &data, RandomNumberGenerator &rng)
+                    { return Solution(data, rng); },
                     py::arg("data"),
                     py::arg("rng"),
                     DOC(pyvrp, Solution, Solution, 1));
@@ -559,11 +558,13 @@ PYBIND11_MODULE(_pyvrp, m)
 
                 return sol;
             }))
-        .def("__str__", [](Solution const &sol) {
-            std::stringstream stream;
-            stream << sol;
-            return stream.str();
-        });
+        .def("__str__",
+             [](Solution const &sol)
+             {
+                 std::stringstream stream;
+                 stream << sol;
+                 return stream.str();
+             });
 
     py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
         .def(py::init<pyvrp::Cost, pyvrp::Cost, pyvrp::Cost>(),
@@ -668,7 +669,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__len__", &SubPopulation::size)
         .def(
             "__getitem__",
-            [](SubPopulation const &subPop, int idx) {
+            [](SubPopulation const &subPop, int idx)
+            {
                 // int so we also support negative offsets from the end.
                 idx = idx < 0 ? subPop.size() + idx : idx;
                 if (idx < 0 || static_cast<size_t>(idx) >= subPop.size())
@@ -679,9 +681,8 @@ PYBIND11_MODULE(_pyvrp, m)
             py::return_value_policy::reference_internal)
         .def(
             "__iter__",
-            [](SubPopulation const &subPop) {
-                return py::make_iterator(subPop.cbegin(), subPop.cend());
-            },
+            [](SubPopulation const &subPop)
+            { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
             py::return_value_policy::reference_internal)
         .def("purge",
              &SubPopulation::purge,
