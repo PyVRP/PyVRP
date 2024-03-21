@@ -73,7 +73,7 @@ Or, using the following BibTeX entry:
 }
 ```
 
-A preprint of this paper is available [on Arxiv][11]. 
+A preprint of this paper is available on [arXiv][11]. 
 Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10].
 
 [1]: https://pyvrp.org/
