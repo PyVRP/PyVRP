@@ -159,7 +159,7 @@ Cost SwapStar::evaluate(Route *routeU,
         {
             // The following lines compute a delta cost of removing U and V from
             // their own routes and inserting them into the other's route in the
-            // best place. This isapproximate since removal and insertion are
+            // best place. This is approximate since removal and insertion are
             // evaluated separately, not taking into account that while U leaves
             // its route, V will be inserted (and vice versa).
             Cost deltaCost = 0;
@@ -168,8 +168,10 @@ Cost SwapStar::evaluate(Route *routeU,
             // are not counted correctly: during insert, U is still in the
             // route, and now V is added as well. The following addresses this
             // issue with an approximation, which is inexact when there are both
-            // pickups and deliveries in the data. So it's pretty rough but fast
-            // and seems to work well enough for most instances.
+            // pickups and deliveries in the data. We do not evaluate load when
+            // calculating remove and insert costs - that is all handled here.
+            // So it's pretty rough but fast and seems to work well enough for
+            // most instances.
             ProblemData::Client const &uClient = data.location(U->client());
             ProblemData::Client const &vClient = data.location(V->client());
             auto const uLoad = std::max(uClient.delivery, uClient.pickup);
@@ -207,14 +209,12 @@ Cost SwapStar::evaluate(Route *routeU,
             }
         }
 
-    // It is possible for positive delta costs to turn negative when we do a
-    // complete evaluation. But in practice that almost never happens, and is
-    // not worth spending time on.
+    // It is possible for positive delta costs to turn negative when we do an
+    // exact evaluation. But in practice that almost never happens, and is not
+    // worth spending time on.
     if (best.cost >= 0)
         return best.cost;
 
-    // Now do an exact evaluation of the proposed swap move. This includes
-    // possible time warp penalties.
     return evaluateMove(best.V, best.VAfter, best.U, costEvaluator)
            + evaluateMove(best.U, best.UAfter, best.V, costEvaluator);
 }
