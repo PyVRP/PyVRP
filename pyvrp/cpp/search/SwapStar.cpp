@@ -12,9 +12,11 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 
     for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
+        auto const proposal
+            = R->proposal(R->before(idx - 1), R->after(idx + 1));
+
         Cost deltaCost = 0;
-        costEvaluator.deltaCost<true>(
-            R->proposal(R->before(idx - 1), R->after(idx + 1)), deltaCost);
+        costEvaluator.deltaCost<true, true>(proposal, deltaCost);
 
         auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
@@ -35,11 +37,11 @@ void SwapStar::updateInsertionCost(Route *R,
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
+        auto const proposal = R->proposal(
+            R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
+
         Cost deltaCost = 0;
-        costEvaluator.deltaCost<true>(R->proposal(R->before(idx),
-                                                  U->route()->at(U->idx()),
-                                                  R->after(idx + 1)),
-                                      deltaCost);
+        costEvaluator.deltaCost<true, true>(proposal, deltaCost);
 
         auto *V = (*R)[idx];
         insertPositions.maybeAdd(deltaCost, V);
@@ -61,10 +63,11 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
 
     // As a fallback option, we consider inserting in the place of V.
     Cost deltaCost = 0;
-    costEvaluator.deltaCost<true>(route->proposal(route->before(V->idx() - 1),
-                                                  U->route()->at(U->idx()),
-                                                  route->after(V->idx() + 1)),
-                                  deltaCost);
+    costEvaluator.deltaCost<true, true>(
+        route->proposal(route->before(V->idx() - 1),
+                        U->route()->at(U->idx()),
+                        route->after(V->idx() + 1)),
+        deltaCost);
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -126,7 +129,34 @@ Cost SwapStar::evaluate(Route *routeU,
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
+            // The following lines compute a delta cost of removing U and V from
+            // their own routes and inserting them into the other's route. Note
+            // that this is an approximation: the removal and insertions are
+            // evaluated in isolation, not taking into account that while U
+            // leaves its route, V will be inserted (and vice versa).
             Cost deltaCost = 0;
+
+            // Separating removal and insertion means particularly that the
+            // effects on load are counted double when inserting: U is still in
+            // the route, and now V is added as well. The following attempts to
+            // address this issue, but it is far from exact when there are both
+            // pickups and deliveries in the data. So it's pretty rough but fast
+            // and seems to work well enough for most instances.
+            ProblemData::Client const &uClient = data.location(U->client());
+            ProblemData::Client const &vClient = data.location(V->client());
+            auto const uLoad = std::max(uClient.delivery, uClient.pickup);
+            auto const vLoad = std::max(vClient.delivery, vClient.pickup);
+            auto const loadDiff = uLoad - vLoad;
+
+            deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
+                                                   routeU->capacity());
+            deltaCost -= costEvaluator.loadPenalty(routeU->load(),
+                                                   routeU->capacity());
+
+            deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
+                                                   routeV->capacity());
+            deltaCost -= costEvaluator.loadPenalty(routeV->load(),
+                                                   routeV->capacity());
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());

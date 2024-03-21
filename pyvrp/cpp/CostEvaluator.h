@@ -126,11 +126,14 @@ public:
      * resulting cost delta to the ``deltaCost`` out parameter. The evaluation
      * can be exact, if the relevant template argument is set. Else it may
      * shortcut once it determines that the proposal does not constitute an
-     * improving move.
+     * improving move. Optionally, several aspects of the evaluation may be
+     * skipped.
      *
      * The return value indicates whether the evaluation is exact or not.
      */
     template <bool exact = false,
+              bool skipLoad = false,
+              bool skipDuration = false,
               typename... Args,
               template <typename...>
               class T>
@@ -142,11 +145,14 @@ public:
      * resulting cost delta to the ``deltaCost`` out parameter. The evaluation
      * can be exact, if the relevant template argument is set. Else it may
      * shortcut once it determines that the proposals do not jointly constitute
-     * an improving move.
+     * an improving move. Optionally, several aspects of the evaluation may be
+     * skipped.
      *
      * The return value indicates whether the evaluation is exact or not.
      */
     template <bool exact = false,
+              bool skipLoad = false,
+              bool skipDuration = false,
               typename... uArgs,
               typename... vArgs,
               template <typename...>
@@ -203,7 +209,12 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
                             : std::numeric_limits<Cost>::max();
 }
 
-template <bool exact, typename... Args, template <typename...> class T>
+template <bool exact,
+          bool skipLoad,
+          bool skipDuration,
+          typename... Args,
+          template <typename...>
+          class T>
     requires(DeltaCostEvaluatable<T<Args...>>)
 bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &deltaCost) const
 {
@@ -213,8 +224,11 @@ bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &deltaCost) const
     deltaCost -= static_cast<Cost>(route->distance());
     deltaCost -= distPenalty(route->distance(), route->maxDistance());
 
-    deltaCost -= loadPenalty(route->load(), route->capacity());
-    deltaCost -= twPenalty(route->timeWarp());
+    if constexpr (!skipLoad)
+        deltaCost -= loadPenalty(route->load(), route->capacity());
+
+    if constexpr (!skipDuration)
+        deltaCost -= twPenalty(route->timeWarp());
 
     // ...and then we add the new costs on top of that. If the evaluation is
     // not required to be exact, we can shortcut whenever the resulting
@@ -227,16 +241,24 @@ bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &deltaCost) const
         if (deltaCost >= 0)
             return false;
 
-    auto const load = proposal.loadSegment();
-    deltaCost += loadPenalty(load.load(), route->capacity());
+    if constexpr (!skipLoad)
+    {
+        auto const load = proposal.loadSegment();
+        deltaCost += loadPenalty(load.load(), route->capacity());
+    }
 
-    auto const duration = proposal.durationSegment();
-    deltaCost += twPenalty(duration.timeWarp(route->maxDuration()));
+    if constexpr (!skipDuration)
+    {
+        auto const duration = proposal.durationSegment();
+        deltaCost += twPenalty(duration.timeWarp(route->maxDuration()));
+    }
 
     return true;
 }
 
 template <bool exact,
+          bool skipLoad,
+          bool skipDuration,
           typename... uArgs,
           typename... vArgs,
           template <typename...>
@@ -257,11 +279,17 @@ bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
     deltaCost -= static_cast<Cost>(vRoute->distance());
     deltaCost -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
-    deltaCost -= loadPenalty(uRoute->load(), uRoute->capacity());
-    deltaCost -= twPenalty(uRoute->timeWarp());
+    if constexpr (!skipLoad)
+    {
+        deltaCost -= loadPenalty(uRoute->load(), uRoute->capacity());
+        deltaCost -= loadPenalty(vRoute->load(), vRoute->capacity());
+    }
 
-    deltaCost -= loadPenalty(vRoute->load(), vRoute->capacity());
-    deltaCost -= twPenalty(vRoute->timeWarp());
+    if constexpr (!skipDuration)
+    {
+        deltaCost -= twPenalty(uRoute->timeWarp());
+        deltaCost -= twPenalty(vRoute->timeWarp());
+    }
 
     // ...and then we add the new costs on top of that. If the evaluation is
     // not required to be exact, we can shortcut whenever the resulting
@@ -278,21 +306,27 @@ bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
         if (deltaCost >= 0)
             return false;
 
-    auto const uLoad = uProposal.loadSegment();
-    deltaCost += loadPenalty(uLoad.load(), uRoute->capacity());
+    if constexpr (!skipLoad)
+    {
+        auto const uLoad = uProposal.loadSegment();
+        deltaCost += loadPenalty(uLoad.load(), uRoute->capacity());
 
-    auto const uDuration = uProposal.durationSegment();
-    deltaCost += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+        auto const vLoad = vProposal.loadSegment();
+        deltaCost += loadPenalty(vLoad.load(), vRoute->capacity());
+    }
 
     if constexpr (!exact)
         if (deltaCost >= 0)
             return false;
 
-    auto const vLoad = vProposal.loadSegment();
-    deltaCost += loadPenalty(vLoad.load(), vRoute->capacity());
+    if constexpr (!skipDuration)
+    {
+        auto const uDuration = uProposal.durationSegment();
+        deltaCost += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
 
-    auto const vDuration = vProposal.durationSegment();
-    deltaCost += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+        auto const vDuration = vProposal.durationSegment();
+        deltaCost += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+    }
 
     return true;
 }
