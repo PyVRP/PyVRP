@@ -194,6 +194,9 @@ Cost SwapStar::evaluate(Route *routeU,
             auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;
 
+            if (deltaCost >= 0)  // continuing here avoids evaluating another
+                continue;        // costly insertion point below
+
             auto [extraU, VAfter] = getBestInsertPoint(V, U, costEvaluator);
             deltaCost += extraU;
 
