@@ -123,13 +123,12 @@ public:
 
     /**
      * Evaluates the cost delta of the given route proposal, and writes the
-     * resulting cost delta to the ``deltaCost`` out parameter. The evaluation
-     * can be exact, if the relevant template argument is set. Else it may
-     * shortcut once it determines that the proposal does not constitute an
-     * improving move. Optionally, several aspects of the evaluation may be
-     * skipped.
+     * resulting cost delta to the ``out`` parameter. The evaluation can be
+     * exact, if the relevant template argument is set. Else it may shortcut
+     * once it determines that the proposal does not constitute an improving
+     * move. Optionally, several aspects of the evaluation may be skipped.
      *
-     * The return value indicates whether the evaluation is exact or not.
+     * The return value indicates whether the evaluation was exact or not.
      */
     template <bool exact = false,
               bool skipLoad = false,
@@ -138,17 +137,16 @@ public:
               template <typename...>
               class T>
         requires(DeltaCostEvaluatable<T<Args...>>)
-    bool deltaCost(T<Args...> const &proposal, Cost &deltaCost) const;
+    bool deltaCost(T<Args...> const &proposal, Cost &out) const;
 
     /**
      * Evaluates the cost delta of the given route proposals, and writes the
-     * resulting cost delta to the ``deltaCost`` out parameter. The evaluation
-     * can be exact, if the relevant template argument is set. Else it may
-     * shortcut once it determines that the proposals do not jointly constitute
-     * an improving move. Optionally, several aspects of the evaluation may be
-     * skipped.
+     * resulting cost delta to the ``out`` parameter. The evaluation can be
+     * exact, if the relevant template argument is set. Else it may shortcut
+     * once it determines that the proposals do not constitute an improving
+     * move. Optionally, several aspects of the evaluation may be skipped.
      *
-     * The return value indicates whether the evaluation is exact or not.
+     * The return value indicates whether the evaluation was exact or not.
      */
     template <bool exact = false,
               bool skipLoad = false,
@@ -161,7 +159,7 @@ public:
                  && DeltaCostEvaluatable<T<vArgs...>>)
     bool deltaCost(T<uArgs...> const &uProposal,
                    T<vArgs...> const &vProposal,
-                   Cost &deltaCost) const;
+                   Cost &out) const;
 };
 
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
@@ -216,41 +214,37 @@ template <bool exact,
           template <typename...>
           class T>
     requires(DeltaCostEvaluatable<T<Args...>>)
-bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &deltaCost) const
+bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &out) const
 {
     auto const *route = proposal.route();
 
-    // First subtract all current cost components...
-    deltaCost -= static_cast<Cost>(route->distance());
-    deltaCost -= distPenalty(route->distance(), route->maxDistance());
+    out -= static_cast<Cost>(route->distance());
+    out -= distPenalty(route->distance(), route->maxDistance());
 
     if constexpr (!skipLoad)
-        deltaCost -= loadPenalty(route->load(), route->capacity());
+        out -= loadPenalty(route->load(), route->capacity());
 
     if constexpr (!skipDuration)
-        deltaCost -= twPenalty(route->timeWarp());
+        out -= twPenalty(route->timeWarp());
 
-    // ...and then we add the new costs on top of that. If the evaluation is
-    // not required to be exact, we can shortcut whenever the resulting
-    // deltaCost turns positive.
     auto const dist = proposal.distanceSegment();
-    deltaCost += static_cast<Cost>(dist.distance());
-    deltaCost += distPenalty(dist.distance(), route->maxDistance());
+    out += static_cast<Cost>(dist.distance());
+    out += distPenalty(dist.distance(), route->maxDistance());
 
     if constexpr (!exact)
-        if (deltaCost >= 0)
+        if (out >= 0)
             return false;
 
     if constexpr (!skipLoad)
     {
         auto const load = proposal.loadSegment();
-        deltaCost += loadPenalty(load.load(), route->capacity());
+        out += loadPenalty(load.load(), route->capacity());
     }
 
     if constexpr (!skipDuration)
     {
         auto const duration = proposal.durationSegment();
-        deltaCost += twPenalty(duration.timeWarp(route->maxDuration()));
+        out += twPenalty(duration.timeWarp(route->maxDuration()));
     }
 
     return true;
@@ -267,65 +261,61 @@ template <bool exact,
              && DeltaCostEvaluatable<T<vArgs...>>)
 bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
                               T<vArgs...> const &vProposal,
-                              Cost &deltaCost) const
+                              Cost &out) const
 {
     auto const *uRoute = uProposal.route();
     auto const *vRoute = vProposal.route();
 
-    // First subtract all current cost components...
-    deltaCost -= static_cast<Cost>(uRoute->distance());
-    deltaCost -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+    out -= static_cast<Cost>(uRoute->distance());
+    out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
 
-    deltaCost -= static_cast<Cost>(vRoute->distance());
-    deltaCost -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+    out -= static_cast<Cost>(vRoute->distance());
+    out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
     if constexpr (!skipLoad)
     {
-        deltaCost -= loadPenalty(uRoute->load(), uRoute->capacity());
-        deltaCost -= loadPenalty(vRoute->load(), vRoute->capacity());
+        out -= loadPenalty(uRoute->load(), uRoute->capacity());
+        out -= loadPenalty(vRoute->load(), vRoute->capacity());
     }
 
     if constexpr (!skipDuration)
     {
-        deltaCost -= twPenalty(uRoute->timeWarp());
-        deltaCost -= twPenalty(vRoute->timeWarp());
+        out -= twPenalty(uRoute->timeWarp());
+        out -= twPenalty(vRoute->timeWarp());
     }
 
-    // ...and then we add the new costs on top of that. If the evaluation is
-    // not required to be exact, we can shortcut whenever the resulting
-    // deltaCost turns positive.
     auto const uDist = uProposal.distanceSegment();
-    deltaCost += static_cast<Cost>(uDist.distance());
-    deltaCost += distPenalty(uDist.distance(), uRoute->maxDistance());
+    out += static_cast<Cost>(uDist.distance());
+    out += distPenalty(uDist.distance(), uRoute->maxDistance());
 
     auto const vDist = vProposal.distanceSegment();
-    deltaCost += static_cast<Cost>(vDist.distance());
-    deltaCost += distPenalty(vDist.distance(), vRoute->maxDistance());
+    out += static_cast<Cost>(vDist.distance());
+    out += distPenalty(vDist.distance(), vRoute->maxDistance());
 
     if constexpr (!exact)
-        if (deltaCost >= 0)
+        if (out >= 0)
             return false;
 
     if constexpr (!skipLoad)
     {
         auto const uLoad = uProposal.loadSegment();
-        deltaCost += loadPenalty(uLoad.load(), uRoute->capacity());
+        out += loadPenalty(uLoad.load(), uRoute->capacity());
 
         auto const vLoad = vProposal.loadSegment();
-        deltaCost += loadPenalty(vLoad.load(), vRoute->capacity());
+        out += loadPenalty(vLoad.load(), vRoute->capacity());
     }
 
     if constexpr (!exact)
-        if (deltaCost >= 0)
+        if (out >= 0)
             return false;
 
     if constexpr (!skipDuration)
     {
         auto const uDuration = uProposal.durationSegment();
-        deltaCost += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+        out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
 
         auto const vDuration = vProposal.durationSegment();
-        deltaCost += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+        out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
     }
 
     return true;
