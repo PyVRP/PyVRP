@@ -73,6 +73,7 @@ Or, using the following BibTeX entry:
 }
 ```
 
+A preprint of this paper is available [on Arxiv][11]. 
 Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10].
 
 [1]: https://pyvrp.org/
@@ -94,3 +95,5 @@ Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10
 [9]: https://pyvrp.org/examples/using_pyvrp_components.html
 
 [10]: https://doi.org/10.1016/j.cor.2021.105643
+
+[11]: https://arxiv.org/abs/2403.13795
