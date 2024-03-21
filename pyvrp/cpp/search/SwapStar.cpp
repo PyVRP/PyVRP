@@ -44,7 +44,7 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
             = R->proposal(R->before(idx - 1), R->after(idx + 1));
 
         Cost deltaCost = 0;
-        costEvaluator.deltaCost<true, true>(proposal, deltaCost);
+        costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
         auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
@@ -69,7 +69,7 @@ void SwapStar::updateInsertionCost(Route *R,
             R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
 
         Cost deltaCost = 0;
-        costEvaluator.deltaCost<true, true>(proposal, deltaCost);
+        costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
         auto *V = (*R)[idx];
         insertPositions.maybeAdd(deltaCost, V);
@@ -92,10 +92,10 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
     // As a fallback option, we consider inserting in the place of V.
     Cost deltaCost = 0;
     costEvaluator.deltaCost<true, true>(
+        deltaCost,
         route->proposal(route->before(V->idx() - 1),
                         U->route()->at(U->idx()),
-                        route->after(V->idx() + 1)),
-        deltaCost);
+                        route->after(V->idx() + 1)));
 
     return std::make_pair(deltaCost, p(V));
 }
@@ -114,24 +114,24 @@ Cost SwapStar::evaluateMove(Route::Node const *U,
 
     if (V->idx() + 1 == remove->idx())  // then we insert U in place of remove
         costEvaluator.deltaCost<true>(
+            deltaCost,
             route->proposal(route->before(V->idx()),
                             U->route()->at(U->idx()),
-                            route->after(V->idx() + 2)),
-            deltaCost);
+                            route->after(V->idx() + 2)));
     else if (V->idx() < remove->idx())
         costEvaluator.deltaCost<true>(
+            deltaCost,
             route->proposal(route->before(V->idx()),
                             U->route()->at(U->idx()),
                             route->between(V->idx() + 1, remove->idx() - 1),
-                            route->after(remove->idx() + 1)),
-            deltaCost);
+                            route->after(remove->idx() + 1)));
     else if (V->idx() > remove->idx())
         costEvaluator.deltaCost<true>(
+            deltaCost,
             route->proposal(route->before(remove->idx() - 1),
                             route->between(remove->idx() + 1, V->idx()),
                             U->route()->at(U->idx()),
-                            route->after(V->idx() + 1)),
-            deltaCost);
+                            route->after(V->idx() + 1)));
 
     return deltaCost;
 }

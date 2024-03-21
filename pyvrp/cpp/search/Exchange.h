@@ -108,7 +108,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         deltaCost += Cost(vRoute->empty()) * vRoute->fixedVehicleCost();
         deltaCost -= Cost(uRoute->size() == N) * uRoute->fixedVehicleCost();
 
-        costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
     else  // within same route
     {
@@ -116,18 +116,18 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
 
         if (U->idx() < V->idx())
             costEvaluator.deltaCost(
+                deltaCost,
                 route->proposal(route->before(U->idx() - 1),
                                 route->between(U->idx() + N, V->idx()),
                                 route->between(U->idx(), U->idx() + N - 1),
-                                route->after(V->idx() + 1)),
-                deltaCost);
+                                route->after(V->idx() + 1)));
         else
             costEvaluator.deltaCost(
+                deltaCost,
                 route->proposal(route->before(V->idx()),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + 1, U->idx() - 1),
-                                route->after(U->idx() + N)),
-                deltaCost);
+                                route->after(U->idx() + N)));
     }
 
     return deltaCost;
@@ -158,7 +158,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                                uRoute->between(U->idx(), U->idx() + N - 1),
                                vRoute->after(V->idx() + M));
 
-        costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
     else  // within same route
     {
@@ -166,20 +166,20 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
 
         if (U->idx() < V->idx())
             costEvaluator.deltaCost(
+                deltaCost,
                 route->proposal(route->before(U->idx() - 1),
                                 route->between(V->idx(), V->idx() + M - 1),
                                 route->between(U->idx() + N, V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
-                                route->after(V->idx() + M)),
-                deltaCost);
+                                route->after(V->idx() + M)));
         else
             costEvaluator.deltaCost(
+                deltaCost,
                 route->proposal(route->before(V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + M, U->idx() - 1),
                                 route->between(V->idx(), V->idx() + M - 1),
-                                route->after(U->idx() + N)),
-                deltaCost);
+                                route->after(U->idx() + N)));
     }
 
     return deltaCost;

@@ -45,7 +45,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                uRoute->between(U->idx() + 1, uRoute->size()),
                                vRoute->at(vRoute->size() + 1));
 
-        costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
     else if (U->idx() < uRoute->size() && V->idx() >= vRoute->size())
     {
@@ -57,7 +57,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                uRoute->between(U->idx() + 1, uRoute->size()),
                                vRoute->at(vRoute->size() + 1));
 
-        costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
     else if (U->idx() >= uRoute->size() && V->idx() < vRoute->size())
     {
@@ -69,7 +69,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
         auto const vProposal = vRoute->proposal(vRoute->before(V->idx()),
                                                 vRoute->at(vRoute->size() + 1));
 
-        costEvaluator.deltaCost(uProposal, vProposal, deltaCost);
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
 
     return deltaCost;

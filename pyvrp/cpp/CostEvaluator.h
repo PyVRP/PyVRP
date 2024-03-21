@@ -137,7 +137,7 @@ public:
               template <typename...>
               class T>
         requires(DeltaCostEvaluatable<T<Args...>>)
-    bool deltaCost(T<Args...> const &proposal, Cost &out) const;
+    bool deltaCost(Cost &out, T<Args...> const &proposal) const;
 
     /**
      * Evaluates the cost delta of the given route proposals, and writes the
@@ -157,9 +157,9 @@ public:
               class T>
         requires(DeltaCostEvaluatable<T<uArgs...>>
                  && DeltaCostEvaluatable<T<vArgs...>>)
-    bool deltaCost(T<uArgs...> const &uProposal,
-                   T<vArgs...> const &vProposal,
-                   Cost &out) const;
+    bool deltaCost(Cost &out,
+                   T<uArgs...> const &uProposal,
+                   T<vArgs...> const &vProposal) const;
 };
 
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
@@ -214,7 +214,7 @@ template <bool exact,
           template <typename...>
           class T>
     requires(DeltaCostEvaluatable<T<Args...>>)
-bool CostEvaluator::deltaCost(T<Args...> const &proposal, Cost &out) const
+bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
 
@@ -259,9 +259,9 @@ template <bool exact,
           class T>
     requires(DeltaCostEvaluatable<T<uArgs...>>
              && DeltaCostEvaluatable<T<vArgs...>>)
-bool CostEvaluator::deltaCost(T<uArgs...> const &uProposal,
-                              T<vArgs...> const &vProposal,
-                              Cost &out) const
+bool CostEvaluator::deltaCost(Cost &out,
+                              T<uArgs...> const &uProposal,
+                              T<vArgs...> const &vProposal) const
 {
     auto const *uRoute = uProposal.route();
     auto const *vRoute = vProposal.route();
