@@ -6,6 +6,34 @@ using pyvrp::Cost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 
+void SwapStar::ThreeBest::maybeAdd(Cost costInsert, Route::Node *placeInsert)
+{
+    if (costInsert >= costs[2])
+        return;
+
+    if (costInsert >= costs[1])
+    {
+        costs[2] = costInsert;
+        locs[2] = placeInsert;
+    }
+    else if (costInsert >= costs[0])
+    {
+        costs[2] = costs[1];
+        locs[2] = locs[1];
+        costs[1] = costInsert;
+        locs[1] = placeInsert;
+    }
+    else
+    {
+        costs[2] = costs[1];
+        locs[2] = locs[1];
+        costs[1] = costs[0];
+        locs[1] = locs[0];
+        costs[0] = costInsert;
+        locs[0] = placeInsert;
+    }
+}
+
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
     updated[R->idx()] = false;
