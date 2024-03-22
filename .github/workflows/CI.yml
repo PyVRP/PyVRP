@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
     name: >
       Build and test pyvrp using ${{ matrix.compiler }} 
       ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:

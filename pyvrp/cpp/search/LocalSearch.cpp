@@ -278,7 +278,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     if (!uData.group)
         return;
 
-    auto const &group = data.group(uData.group.value());
+    auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
     std::vector<size_t> inSol;

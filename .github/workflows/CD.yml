@@ -3,9 +3,11 @@ name: CD
 on:
   release:
     types: [ created ]
+  push:
+    branches: [ main ]
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -14,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-22.04, windows-2022, macos-14 ]
     steps:
       - uses: actions/checkout@v4
       - name: Install rtools
@@ -25,19 +27,20 @@ jobs:
           choco install rtools -y --no-progress --force --version=4.0.0.20220206
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.3
+        uses: pypa/cibuildwheel@v2.16.5
         with:
           package-dir: .
           output-dir: dist
       - uses: actions/upload-artifact@v4  # upload all wheels
         with:
-          name: dist
+          name: dist-${{ matrix.os }}
           path: ./dist/*
 
   deploy:
     name: Deploy to PyPI
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'release' && github.event.action == 'created'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -50,7 +53,8 @@ jobs:
           pip install poetry
       - uses: actions/download-artifact@v4  # download previously built wheels
         with:
-          name: dist
+          pattern: dist-*
+          merge-multiple: true
           path: dist/
       - name: Build sdist
         run: poetry build --format sdist
