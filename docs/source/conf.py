@@ -154,10 +154,15 @@ html_theme_options = {
         },
     ],
     "version_dropdown": True,
-    "version_info": [
+    "version_info": [  # TODO: move this out of the configuration file
         {
             "version": "",
             "title": "Development",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.8.1",
+            "title": "v0.8.1",
             "aliases": [],
         },
         {
