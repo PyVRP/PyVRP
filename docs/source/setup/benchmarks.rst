@@ -33,13 +33,13 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.23%
      - 0.58%
      - 0.39%
-     - 0.99%
+     - 0.99% [#note1]_
      - 0.35%
    * - 29 January 2024
      - `0.7.0 <https://github.com/PyVRP/PyVRP/tree/c3e685a7bd5e028322c19f5c83ed9c935ccdae8e>`_
      - 0.23%
      - 0.48%
-     - 0.21% [#note1]_
+     - 0.21% [#note2]_
      - 0.44%
      -
    * - 31 August 2023
@@ -102,7 +102,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - PCVRPTW
      - MDVRPTW
    * - 11 February 2024
-     - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note3]_
+     - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note4]_
      - 5.23%
      - 10.86%
      - 13.24%
@@ -124,22 +124,27 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
-     - 0.71% [#note2]_
+     - 0.71% [#note3]_
 
 
 .. rubric:: Notes
 
 .. [#note1]
+   In v0.8.0, we have simplified the local search algorithm to contain less operators, causing the "no improvement" stopping criteria to be reached much more quickly.
+   This means that MVRPTW benchmark has a shorter runtime compared to previous versions.
+   However, this result should not be perceived as a significant change in performance.
+
+.. [#note2]
    PyVRP supports prize-collecting since v0.3.0, but due to a parsing error results from versions before v0.7.0 were incorrect.
    We have corrected the issue in PyVRP, and report gaps on versions from v0.7.0 onwards.
    The best-known solutions have been updated to address this issue.
 
-.. [#note2]
+.. [#note3]
    Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
    This is an average gap over five seeds, rather than the usual ten.
    Note that this paper introduced the MDVRPTW benchmark instances.
 
-.. [#note3]
+.. [#note4]
    Results obtained using Google OR-Tools `v9.8.3296 <https://pypi.org/project/ortools/9.8.3296/>`_.
    The reported average gap is over only one seed, because there is no interface to set the seed.
    The code used to benchmark Google OR-tools can be found in `this issue <https://github.com/PyVRP/PyVRP/issues/453>`_.
