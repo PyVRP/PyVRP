@@ -130,9 +130,9 @@ The reported values represent the average gaps to the best-known solutions (at t
 .. rubric:: Notes
 
 .. [#note1]
-   In v0.8.0, we have simplified the local search algorithm to contain less operators, causing the "no improvement" stopping criteria to be reached much more quickly.
-   This means that MVRPTW benchmark has a shorter runtime compared to previous versions.
-   However, this result should not be perceived as a significant change in performance.
+   In v0.8.0, we have simplified the local search algorithm to contain less operators, causing the "no-improvement" stopping criteria to be reached much more quickly.
+   This means that the current MDVRPTW benchmark runs much shorter compared to the previous versions.
+   This result should therefore not be perceived as a significant change in performance.
 
 .. [#note2]
    PyVRP supports prize-collecting since v0.3.0, but due to a parsing error results from versions before v0.7.0 were incorrect.
