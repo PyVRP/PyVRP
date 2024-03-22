@@ -102,7 +102,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - PCVRPTW
      - MDVRPTW
    * - 11 February 2024
-     - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note4]_
+     - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note3]_
      - 5.23%
      - 10.86%
      - 13.24%
@@ -124,7 +124,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
-     - 0.71% [#note3]_
+     - 0.71% [#note4]_
 
 
 .. rubric:: Notes
@@ -140,11 +140,11 @@ The reported values represent the average gaps to the best-known solutions (at t
    The best-known solutions have been updated to address this issue.
 
 .. [#note3]
-   Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
-   This is an average gap over five seeds, rather than the usual ten.
-   Note that this paper introduced the MDVRPTW benchmark instances.
-
-.. [#note4]
    Results obtained using Google OR-Tools `v9.8.3296 <https://pypi.org/project/ortools/9.8.3296/>`_.
    The reported average gap is over only one seed, because there is no interface to set the seed.
    The code used to benchmark Google OR-tools can be found in `this issue <https://github.com/PyVRP/PyVRP/issues/453>`_.
+
+.. [#note4]
+   Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
+   This is an average gap over five seeds, rather than the usual ten.
+   Note that this paper introduced the MDVRPTW benchmark instances.
