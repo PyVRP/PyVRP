@@ -3,6 +3,10 @@ name: CD
 on:
   release:
     types: [ created ]
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.ref }}
@@ -14,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-22.04, windows-2022, macos-11 ]
     steps:
       - uses: actions/checkout@v4
       - name: Install rtools
@@ -37,7 +41,8 @@ jobs:
   deploy:
     name: Deploy to PyPI
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'release' && github.event.action == 'created'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
