@@ -320,10 +320,10 @@ void ProblemData::validate() const
         if (!client.group)
             continue;
 
-        if (client.group.value() >= numGroups())
+        if (*client.group >= numGroups())
             throw std::out_of_range("Client references invalid group.");
 
-        auto const &group = groups_[client.group.value()];
+        auto const &group = groups_[*client.group];
         if (std::find(group.begin(), group.end(), idx) == group.end())
         {
             auto const *msg = "Client not in the group it references.";
@@ -355,7 +355,7 @@ void ProblemData::validate() const
                 throw std::out_of_range("Group references invalid client.");
 
             ProblemData::Client const &clientData = location(client);
-            if (!clientData.group || clientData.group.value() != idx)
+            if (!clientData.group || *clientData.group != idx)
             {
                 auto const *msg = "Group references client not in group.";
                 throw std::invalid_argument(msg);
