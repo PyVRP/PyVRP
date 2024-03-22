@@ -124,7 +124,8 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
    * - 2020
-     - :math:`ILS_{B}-SP_{B}` `<https://doi.org/10.1007/s11590-020-01564-5>`_
+     - `ILS-SP <https://doi.org/10.1007/s11590-020-01564-5>`_
+     -
      -
      -
      -
@@ -157,7 +158,7 @@ The reported values represent the average gaps to the best-known solutions (at t
 
 .. [#note4]
    Literature result from Appendix B of `Subramanian and Queiroga (2020) <https://doi.org/10.1007/s11590-020-01564-5>`_.
-   This is an average over an unspecified number of seeds.
+   We use the result from the best performing variant of ILS-SP, that is, :math:`ILS_{B}-SP_{B}`.
 
 .. [#note5]
    Literature result from Table 8 of `Vidal et al. (2013) <https://doi.org/10.1016/j.cor.2012.07.018>`_.
