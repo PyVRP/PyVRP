@@ -40,6 +40,13 @@ We use the following instances and configurations to benchmark PyVRP:
   For this benchmark, PyVRP needs to be compiled with the CVRP problem setting, and the ``round`` rounding function should be used.
   Additionally, the configuration specified in ``configs/cvrp.toml`` should be used.
 
+* For the GVRP, we use `instances of Bektaş et al. (2011) and Vidal et al. (2015) <https://github.com/PyVRP/Instances/tree/main/GVRP#gvrp>`_.
+  These instances range in size from 100 to 1200 customers.
+  Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2000.
+  Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2000.
+  For this benchmark, PyVRP needs to be compiled with the CVRP problem setting, and the ``round`` rounding function should be used.
+  Additionally, the configuration specified in ``configs/cvrp.toml`` should be used.
+
 The time limit should be scaled by the PassMark score of your CPU.
 Each instance is run ten times with different seeds.
 Each run is performed on a single core.
