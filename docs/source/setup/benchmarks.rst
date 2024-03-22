@@ -130,7 +130,7 @@ The reported values represent the average gaps to the best-known solutions (at t
 .. rubric:: Notes
 
 .. [#note1]
-   In v0.8.0, we have simplified the local search algorithm to contain less operators, causing the "no-improvement" stopping criteria to be reached much more quickly.
+   In v0.8.0, we have simplified the local search algorithm to contain fewer operators, causing the "no-improvement" stopping criterion to be reached much more quickly.
    This means that the current MDVRPTW benchmark runs much shorter compared to the previous versions.
    This result should therefore not be perceived as a significant change in performance.
 
