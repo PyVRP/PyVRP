@@ -29,7 +29,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - MDVRPTW
      - VRPB
    * - 22 March 2024
-     - `0.8.0 <https://github.com/PyVRP/PyVRP/commit/b8ff71ff7da64bd4eba9f94d90fc2fd5ead803ed>`_
+     - `0.8.0 <https://github.com/PyVRP/PyVRP/commit/75e4fd4f5a449f11d4974164ce84a170a53b8221>`_
      - 0.23%
      - 0.58%
      - 0.39%
