@@ -186,9 +186,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("unit_distance_cost",
-                      &ProblemData::VehicleType::maxDistance)
+                      &ProblemData::VehicleType::unitDistanceCost)
         .def_readonly("unit_duration_cost",
-                      &ProblemData::VehicleType::maxDistance)
+                      &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
