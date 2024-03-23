@@ -112,7 +112,8 @@ public:
      *     Prize collected by visiting this client. Default 0.
      * required
      *     Whether this client must be part of a feasible solution. Default
-     *     True.
+     *     True. Make sure to also update the prize value when setting this
+     *     argument to False.
      * group
      *     Indicates membership of the given client group, if any. By default
      *     clients are not part of any groups.

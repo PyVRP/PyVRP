@@ -1,8 +1,12 @@
 Getting help
 ============
 
-Conversations about development and issues take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
-Feel free to open a new issue if you have something to discuss.
+Conversations about development take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
+
+.. hint::
+
+   If you are looking for help using PyVRP, please browse our `discussions <>`_ overview first for relevant discussions.
+   Feel free to open a new discussion thread if you have something to discuss that is unrelated to existing discussions.
 
 Submitting a bug report
 -----------------------
@@ -25,3 +29,9 @@ To limit the amount of time needed to triage your problem, please do the followi
   .. code-block:: shell
 
      python -c 'import pyvrp; pyvrp.show_versions()'
+
+Submitting a feature request
+----------------------------
+
+Please first browse the existing issues and discussions to see if your feature has already been requested.
+If it has not, please open a new issue in the repository, using the "Feature request" template.
