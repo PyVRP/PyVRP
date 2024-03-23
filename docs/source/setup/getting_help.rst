@@ -5,7 +5,7 @@ Conversations about development take place in the `GitHub repository <https://gi
 
 .. hint::
 
-   If you are looking for help using PyVRP, please browse our `discussions <>`_ overview first for relevant discussions.
+   If you are looking for help using PyVRP, please browse our `discussions <https://github.com/PyVRP/PyVRP/discussions>`_ overview first for relevant discussions.
    Feel free to open a new discussion thread if you have something to discuss that is unrelated to existing discussions.
 
 Submitting a bug report
