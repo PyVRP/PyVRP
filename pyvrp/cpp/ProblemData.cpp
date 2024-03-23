@@ -184,20 +184,24 @@ ProblemData::Depot::~Depot() { delete[] name; }
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
-                                      Cost fixedCost,
                                       Duration twEarly,
                                       Duration twLate,
                                       Duration maxDuration,
                                       Distance maxDistance,
+                                      Cost fixedCost,
+                                      Cost unitDistanceCost,
+                                      Cost unitDurationCost,
                                       char const *name)
     : numAvailable(numAvailable),
       depot(depot),
       capacity(capacity),
-      fixedCost(fixedCost),
       twEarly(twEarly),
       twLate(twLate),
       maxDuration(maxDuration),
       maxDistance(maxDistance),
+      fixedCost(fixedCost),
+      unitDistanceCost(unitDistanceCost),
+      unitDurationCost(unitDurationCost),
       name(duplicate(name))
 {
     if (numAvailable == 0)
@@ -205,9 +209,6 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (capacity < 0)
         throw std::invalid_argument("capacity must be >= 0.");
-
-    if (fixedCost < 0)
-        throw std::invalid_argument("fixed_cost must be >= 0.");
 
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
@@ -220,17 +221,28 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (maxDistance < 0)
         throw std::invalid_argument("max_distance must be >= 0.");
+
+    if (fixedCost < 0)
+        throw std::invalid_argument("fixed_cost must be >= 0.");
+
+    if (unitDistanceCost < 0)
+        throw std::invalid_argument("unit_distance_cost must be >= 0.");
+
+    if (unitDurationCost < 0)
+        throw std::invalid_argument("unit_duration_cost must be >= 0.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
     : numAvailable(vehicleType.numAvailable),
       depot(vehicleType.depot),
       capacity(vehicleType.capacity),
-      fixedCost(vehicleType.fixedCost),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
+      fixedCost(vehicleType.fixedCost),
+      unitDistanceCost(vehicleType.unitDistanceCost),
+      unitDurationCost(vehicleType.unitDurationCost),
       name(duplicate(vehicleType.name))
 {
 }
@@ -239,11 +251,13 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
     : numAvailable(vehicleType.numAvailable),
       depot(vehicleType.depot),
       capacity(vehicleType.capacity),
-      fixedCost(vehicleType.fixedCost),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
+      fixedCost(vehicleType.fixedCost),
+      unitDistanceCost(vehicleType.unitDistanceCost),
+      unitDurationCost(vehicleType.unitDurationCost),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen

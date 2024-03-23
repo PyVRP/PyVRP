@@ -93,22 +93,26 @@ class VehicleType:
     num_available: int
     depot: int
     capacity: int
-    fixed_cost: int
     tw_early: int
     tw_late: int
     max_duration: int
     max_distance: int
+    fixed_cost: int
+    unit_distance_cost: int
+    unit_duration_cost: int
     name: str
     def __init__(
         self,
         num_available: int = 1,
         capacity: int = 0,
         depot: int = 0,
-        fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
+        fixed_cost: int = 0,
+        unit_distance_cost: int = 1,
+        unit_duration_cost: int = 0,
         *,
         name: str = "",
     ) -> None: ...

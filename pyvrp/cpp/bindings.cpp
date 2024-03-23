@@ -155,32 +155,40 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<size_t,
                       pyvrp::Load,
                       size_t,
-                      pyvrp::Cost,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Distance,
+                      pyvrp::Cost,
+                      pyvrp::Cost,
+                      pyvrp::Cost,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
              py::arg("depot") = 0,
-             py::arg("fixed_cost") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_distance")
              = std::numeric_limits<pyvrp::Distance>::max(),
+             py::arg("fixed_cost") = 0,
+             py::arg("unit_distance_cost") = 1,
+             py::arg("unit_duration_cost") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("depot", &ProblemData::VehicleType::depot)
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
-        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
+        .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
+        .def_readonly("unit_distance_cost",
+                      &ProblemData::VehicleType::maxDistance)
+        .def_readonly("unit_duration_cost",
+                      &ProblemData::VehicleType::maxDistance)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
