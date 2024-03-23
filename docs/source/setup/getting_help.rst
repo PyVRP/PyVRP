@@ -5,8 +5,9 @@ All conversations take place in the `GitHub repository <https://github.com/PyVRP
 
 .. hint::
 
-   If you are looking for help using PyVRP, please browse our `discussions <https://github.com/PyVRP/PyVRP/discussions>`_ overview first for relevant discussions, questions and answers, modelling tricks, etc.
-   Feel free to open a discussion thread if you have something new to discuss!
+   If you are looking for help using PyVRP, please browse our `discussions <https://github.com/PyVRP/PyVRP/discussions>`_ overview first for relevant discussions, questions and answers, modelling tricks, and more.
+   Feel free to open your own discussion thread if you have something new to discuss!
+
 
 Submitting a bug report
 -----------------------
@@ -29,6 +30,7 @@ To limit the amount of time needed to triage your problem, please do the followi
   .. code-block:: shell
 
      python -c 'import pyvrp; pyvrp.show_versions()'
+
 
 Submitting a feature request
 ----------------------------
