@@ -220,3 +220,25 @@ def test_cost_with_fixed_vehicle_cost(
     assert_(sol.is_feasible())
     assert_equal(cost_eval.cost(sol), sol.distance() + expected)
     assert_equal(cost_eval.penalised_cost(sol), sol.distance() + expected)
+
+
+def test_unit_distance_duration_cost(ok_small):
+    """
+    Tests that the cost evaluator takes into account that unit distance and
+    duration costs can vary between routes.
+    """
+    vehicle_types = [
+        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
+    ]
+    data = ok_small.replace(vehicle_types=vehicle_types)
+
+    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
+    assert_(sol.is_feasible())
+    assert_equal(sol.distance(), 5_501 + 4_224)
+    assert_equal(sol.duration(), 6_221 + 5_004)
+
+    cost_eval = CostEvaluator(1, 1, 0)
+    assert_equal(sol.distance_cost(), 31_729)
+    assert_equal(sol.duration_cost(), 31_241)
+    assert_equal(cost_eval.penalised_cost(sol), 31_729 + 31_241)

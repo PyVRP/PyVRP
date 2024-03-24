@@ -275,3 +275,41 @@ def test_evaluate_with_different_depots():
     assert_equal(route1.distance(), 16)
     assert_equal(route2.distance(), 16)
     assert_equal(op.evaluate(route1, route2, cost_eval), -24)
+
+
+def test_different_objectives(ok_small_multi_depot):
+    """
+    Tests that swapping between routes with vehicles having different objective
+    coefficients correctly evaluates the resulting cost delta.
+    """
+    vehicle_types = [
+        VehicleType(depot=0, unit_distance_cost=1, unit_duration_cost=0),
+        VehicleType(depot=1, unit_distance_cost=0, unit_duration_cost=1),
+    ]
+
+    data = ok_small_multi_depot.replace(vehicle_types=vehicle_types)
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(1, 1, 0)
+
+    # First route is first depot -> second client -> first depot.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=3))
+    route1.update()
+
+    assert_equal(route1.distance_cost(), 3_994)
+    assert_equal(route1.duration_cost(), 0)
+
+    # Second route is second depot -> first client -> second depot.
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=2))
+    route2.update()
+
+    assert_equal(route2.distance_cost(), 0)
+    assert_equal(route2.duration_cost(), 4_327)
+
+    # The proposed new distance (on route1) is  dist(0, 2) + dist(2, 0) =
+    # 3_909, so its cost contribution is also 3_909. The proposed new duration
+    # (on route2) is duration(1, 3) + service(3) + duration(3, 1) = 3_280, with
+    # again a cost contribution of 3_280.
+    delta_cost = op.evaluate(route1, route2, cost_eval)
+    assert_equal(delta_cost, 3_909 + 3_280 - 3_994 - 4_327)

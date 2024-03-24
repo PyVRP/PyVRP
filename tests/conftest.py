@@ -61,7 +61,7 @@ def ok_small_multi_depot():
     Fixture that returns the OkSmall instance, but where the first client has
     been turned into a second depot.
     """
-    return read("data/OkSmallMultipleDepots.txt", round_func="dimacs")
+    return read("data/OkSmallMultipleDepots.txt")
 
 
 @pytest.fixture(scope="session")
@@ -70,7 +70,7 @@ def ok_small_mutually_exclusive_groups():
     Fixture that returns the OkSmall instance, but where the first three
     clients have been added to a mutually exclusive client group.
     """
-    return read("data/OkSmallMutuallyExclusiveGroups.txt", round_func="dimacs")
+    return read("data/OkSmallMutuallyExclusiveGroups.txt")
 
 
 @pytest.fixture(scope="session")

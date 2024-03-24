@@ -6,7 +6,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model
+from pyvrp import Client, ClientGroup, Depot, Model, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -711,3 +711,31 @@ def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
     assert_(res.best.is_feasible())
     assert_(res.best.is_group_feasible())
     assert_equal(res.best.num_clients(), gtsp.num_groups)
+
+
+def test_minimise_distance_or_duration(ok_small):
+    """
+    Small test that checks the model knows how to solve instances with
+    different objective values.
+    """
+    orig_model = Model.from_data(ok_small)
+
+    vehicle_types = [
+        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=0),
+        VehicleType(capacity=10, unit_distance_cost=0, unit_duration_cost=1),
+    ]
+    data = ok_small.replace(vehicle_types=vehicle_types)
+    new_model = Model.from_data(data)
+
+    orig_res = orig_model.solve(stop=MaxIterations(10))
+    new_res = new_model.solve(stop=MaxIterations(10))
+
+    assert_equal(orig_res.cost(), 9_155)
+    assert_equal(new_res.cost(), 9_875)
+
+    # The given instance has the same distance and duration matrix. There is
+    # thus no difference in actual travel time or distance. But the duration
+    # objective should also count service duration along the route, and that
+    # is something we can check.
+    service = sum(data.location(loc).service_duration for loc in [1, 4])
+    assert_equal(new_res.cost(), orig_res.cost() + service)
