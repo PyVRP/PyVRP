@@ -3,8 +3,6 @@
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
-Duration DurationSegment::duration() const { return duration_; }
-
 Duration DurationSegment::twEarly() const { return twEarly_; }
 
 Duration DurationSegment::twLate() const { return twLate_; }

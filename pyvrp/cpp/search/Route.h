@@ -298,9 +298,30 @@ public:
     [[nodiscard]] inline Distance distance() const;
 
     /**
+     * @return Actual cost of the distance travelled on this route.
+     */
+    [[nodiscard]] inline Cost distanceCost() const;
+
+    /**
+     * @return Cost per unit of distance travelled by the vehicle servicing this
+     *         route.
+     */
+    [[nodiscard]] inline Cost unitDistanceCost() const;
+
+    /**
      * @return The duration of this route.
      */
     [[nodiscard]] inline Duration duration() const;
+
+    /**
+     * @return Actual cost of this route's duration.
+     */
+    [[nodiscard]] inline Cost durationCost() const;
+
+    /**
+     * @return Cost per unit of duration travelled
+     */
+    [[nodiscard]] inline Cost unitDurationCost() const;
 
     /**
      * @return The maximum route duration that the vehicle servicing this route
@@ -610,11 +631,27 @@ Distance Route::distance() const
     return distBefore.back().distance();
 }
 
+Cost Route::distanceCost() const
+{
+    assert(!dirty);
+    return unitDistanceCost() * static_cast<Cost>(distance());
+}
+
+Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
+
 Duration Route::duration() const
 {
     assert(!dirty);
     return durBefore.back().duration();
 }
+
+Cost Route::durationCost() const
+{
+    assert(!dirty);
+    return unitDurationCost() * static_cast<Cost>(duration());
+}
+
+Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
