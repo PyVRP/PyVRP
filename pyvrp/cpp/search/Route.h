@@ -298,13 +298,12 @@ public:
     [[nodiscard]] inline Distance distance() const;
 
     /**
-     * @return Actual cost of the distance travelled on this route.
+     * @return Cost of the distance travelled on this route.
      */
     [[nodiscard]] inline Cost distanceCost() const;
 
     /**
-     * @return Cost per unit of distance travelled by the vehicle servicing this
-     *         route.
+     * @return Cost per unit of distance travelled on this route.
      */
     [[nodiscard]] inline Cost unitDistanceCost() const;
 
@@ -314,12 +313,12 @@ public:
     [[nodiscard]] inline Duration duration() const;
 
     /**
-     * @return Actual cost of this route's duration.
+     * @return Cost of this route's duration.
      */
     [[nodiscard]] inline Cost durationCost() const;
 
     /**
-     * @return Cost per unit of duration travelled
+     * @return Cost per unit of duration travelled on this route.
      */
     [[nodiscard]] inline Cost unitDurationCost() const;
 
