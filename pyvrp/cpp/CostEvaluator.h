@@ -96,12 +96,13 @@ public:
     /**
      * Hand-waving some details, each solution consists of a set of routes
      * :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a sequence
-     * of edges, starting and ending at the depot. Each route :math:`R` has an
+     * of edges, starting and ending at a depot. Each route :math:`R` has an
      * assigned vehicle type, through which the route is equipped with a fixed
      * vehicle cost :math:`f_R`, and unit distance and duration costs
-     * :math:`c^\text{dist}_R` and :math:`c^\text{duration}_R`, respectively.
-     * Let :math:`V_R = \{i : (i, j) \in R \}` be the set of locations visited
-     * by route :math:`R`. The objective value is then given by
+     * :math:`c^\text{distance}_R` and :math:`c^\text{duration}_R`,
+     * respectively. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
+     * locations visited by route :math:`R`. The objective value is then given
+     * by
      *
      * .. math::
      *
@@ -113,8 +114,8 @@ public:
      *      \right]
      *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
-     * where the first part lists the vehicle, distance and duration costs, and
-     * the second part the uncollected prizes of unvisited clients.
+     * where the first part lists each route's fixed, distance and duration
+     * costs, and the second part the uncollected prizes of unvisited clients.
      *
      * .. note::
      *
@@ -124,7 +125,7 @@ public:
      *    instead.
      */
     // The docstring above is written for Python, where we only expose this
-    // method for Solution.
+    // method for the Solution class.
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 
     /**
