@@ -280,9 +280,9 @@ bool CostEvaluator::deltaCost(Cost &out,
     }
 
     out -= uRoute->durationCost();
-    out -= vRoute->durationCost();
-
     out -= twPenalty(uRoute->timeWarp());
+
+    out -= vRoute->durationCost();
     out -= twPenalty(vRoute->timeWarp());
 
     auto const uDist = uProposal.distanceSegment();
