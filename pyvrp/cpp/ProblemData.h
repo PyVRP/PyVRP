@@ -357,8 +357,8 @@ public:
      *     Cost per unit of distance traveled by vehicles of this type. Default
      *     1.
      * unit_duration_cost
-     *     Cost per unit of duration traveled by vehicles of this type. Default
-     *     0.
+     *     Cost per unit of duration on routes serviced by vehicles of this
+     *     type. Default 0.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -386,7 +386,8 @@ public:
      * unit_distance_cost
      *     Cost per unit of distance traveled by vehicles of this type.
      * unit_duration_cost
-     *     Cost per unit of duration traveled by vehicles of this type.
+     *     Cost per unit of duration on routes serviced by vehicles of this
+     *     type.
      * name
      *     Free-form name field for this vehicle type.
      */
