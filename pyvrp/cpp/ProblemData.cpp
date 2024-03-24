@@ -184,11 +184,11 @@ ProblemData::Depot::~Depot() { delete[] name; }
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
+                                      Cost fixedCost,
                                       Duration twEarly,
                                       Duration twLate,
                                       Duration maxDuration,
                                       Distance maxDistance,
-                                      Cost fixedCost,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
                                       char const *name)
