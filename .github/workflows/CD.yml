@@ -3,9 +3,7 @@ name: CD
 on:
   release:
     types: [ created ]
-  # push:
-  #   branches: [ main ]
-  pull_request:
+  push:
     branches: [ main ]
 
 concurrency:
@@ -18,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-2019, macos-14, ubuntu-22.04 ]
+        os: [ ubuntu-22.04, windows-2022, macos-14 ]
     steps:
       - uses: actions/checkout@v4
       - name: Install toolchain
