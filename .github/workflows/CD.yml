@@ -21,11 +21,11 @@ jobs:
         os: [ windows-2019 ] # ubuntu-22.04, , macos-14 ]
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
-        if: runner.os == 'Windows'
-        with:
-          msystem: UCRT64
-          update: true
+      - name: Install toolchain
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          choco install rtools -y --no-progress --force --version=4.0.0.20220206
+          echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.5
         with:
