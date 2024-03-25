@@ -1,7 +1,7 @@
 __doc__ = """
-The tests in this file check that Python objects that can be converted to
-integers are handled appropriately on the C++ side, including potential
-overflows.
+The tests in this file check that Python objects convertible to integers are
+handled appropriately on the C++ side - this includes checking for potential
+overflows and meaningful responses in that case.
 """
 
 import numpy as np
@@ -33,12 +33,13 @@ def test_measure_convertible_to_int(input, expected):
     assert_equal(depot.tw_late, expected)
 
 
-def test_larger_than_max_size():
+@pytest.mark.parametrize(
+    "input", [np.iinfo(np.int64).max + 1, np.finfo(np.float64).max]
+)
+def test_larger_than_max_size(input):
     """
     Tests that arguments larger than the maximum value for measure arguments
     raise an overflow error to warn the user.
     """
-    max_size = np.iinfo(np.int64).max
-
     with assert_raises(OverflowError):
-        Depot(1, 1, tw_late=max_size + 1)
+        Depot(1, 1, tw_late=input)
