@@ -21,12 +21,11 @@ jobs:
         os: [ windows-2019 ] # ubuntu-22.04, , macos-14 ]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up MinGW
+      - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
-        uses: egor-tensin/setup-mingw@v2
         with:
-          platform: x64
-          version: 12.2.0
+          msystem: UCRT64
+          update: true
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.5
         with:
