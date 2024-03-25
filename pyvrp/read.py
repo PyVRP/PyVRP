@@ -123,18 +123,18 @@ def read(
     if "backhaul" in instance:
         backhauls: np.ndarray = round_func(instance["backhaul"])
     else:
-        backhauls = np.zeros(dimension, dtype=int)
+        backhauls = np.zeros(dimension, dtype=np.int64)
 
     if "demand" in instance or "linehaul" in instance:
         demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
         demands = round_func(demands)
     else:
-        demands = np.zeros(dimension, dtype=int)
+        demands = np.zeros(dimension, dtype=np.int64)
 
     if "node_coord" in instance:
         coords: np.ndarray = round_func(instance["node_coord"])
     else:
-        coords = np.zeros((dimension, 2), dtype=int)
+        coords = np.zeros((dimension, 2), dtype=np.int64)
 
     if "service_time" in instance:
         if isinstance(instance["service_time"], Number):
@@ -146,13 +146,13 @@ def read(
         else:
             service_times = round_func(instance["service_time"])
     else:
-        service_times = np.zeros(dimension, dtype=int)
+        service_times = np.zeros(dimension, dtype=np.int64)
 
     if "time_window" in instance:
         time_windows: np.ndarray = round_func(instance["time_window"])
     else:
         # No time window data. So the time window component is not relevant.
-        time_windows = np.empty((dimension, 2), dtype=int)
+        time_windows = np.empty((dimension, 2), dtype=np.int64)
         time_windows[:, 0] = 0
         time_windows[:, 1] = _INT_MAX
 
@@ -168,9 +168,10 @@ def read(
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
     else:
-        release_times = np.zeros(dimension, dtype=int)
+        release_times = np.zeros(dimension, dtype=np.int64)
 
-    prizes = round_func(instance.get("prize", np.zeros(dimension, dtype=int)))
+    default_prizes = np.zeros(dimension, dtype=np.int64)
+    prizes = round_func(instance.get("prize", default_prizes))
 
     if "mutually_exclusive_group" in instance:
         group_data = instance["mutually_exclusive_group"]
