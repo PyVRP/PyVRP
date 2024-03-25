@@ -103,17 +103,14 @@ def read(
     # assume duration == distance.
     durations = distances = round_func(instance["edge_weight"])
 
-    dimension: int = instance.get("dimension", durations.shape[0])
-    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-    num_vehicles: int = instance.get("vehicles", dimension - 1)
+    dimension = instance.get("dimension", durations.shape[0])
+    depot_idcs = instance.get("depot", np.array([0]))
+    num_vehicles = instance.get("vehicles", dimension - 1)
 
-    if "capacity" in instance:
-        if isinstance(instance["capacity"], Number):
-            capacities = round_func(
-                np.full(num_vehicles, instance["capacity"])
-            )
-        else:
-            capacities = round_func(instance["capacity"])
+    if isinstance(instance.get("capacity"), Number):
+        capacities = round_func(np.full(num_vehicles, instance["capacity"]))
+    elif instance.get("capacity") is not None:
+        capacities = round_func(instance["capacity"])
     else:
         capacities = np.full(num_vehicles, _INT_MAX)
 
@@ -128,18 +125,18 @@ def read(
         max_distance = round_func(np.array([max_distance])).item()
 
     if "backhaul" in instance:
-        backhauls: np.ndarray = round_func(instance["backhaul"])
+        backhauls = round_func(instance["backhaul"])
     else:
         backhauls = np.zeros(dimension, dtype=np.int64)
 
     if "demand" in instance or "linehaul" in instance:
-        demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
+        demands = instance.get("demand", instance.get("linehaul"))
         demands = round_func(demands)
     else:
         demands = np.zeros(dimension, dtype=np.int64)
 
     if "node_coord" in instance:
-        coords: np.ndarray = round_func(instance["node_coord"])
+        coords = round_func(instance["node_coord"])
     else:
         coords = np.zeros((dimension, 2), dtype=np.int64)
 
@@ -156,7 +153,7 @@ def read(
         service_times = np.zeros(dimension, dtype=np.int64)
 
     if "time_window" in instance:
-        time_windows: np.ndarray = round_func(instance["time_window"])
+        time_windows = round_func(instance["time_window"])
     else:
         # No time window data. So the time window component is not relevant.
         time_windows = np.empty((dimension, 2), dtype=np.int64)
@@ -164,26 +161,22 @@ def read(
         time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
-        vehicles_depots: np.ndarray = instance["vehicles_depot"] - 1
+        vehicles_depots = instance["vehicles_depot"] - 1
     else:
         vehicles_depots = np.full(num_vehicles, depot_idcs[0])
 
     if "vehicles_fixed_cost" in instance:
-        vehicles_fixed_costs: np.ndarray = round_func(
-            instance["vehicles_fixed_cost"]
-        )
+        fixed_costs = round_func(instance["vehicles_fixed_cost"])
     else:
-        vehicles_fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
+        fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
 
     if "vehicles_variable_cost" in instance:
-        vehicles_variable_costs: np.ndarray = round_func(
-            instance["vehicles_variable_cost"]
-        )
+        variable_costs = round_func(instance["vehicles_variable_cost"])
     else:
-        vehicles_variable_costs = np.ones(num_vehicles, dtype=np.int64)
+        variable_costs = np.ones(num_vehicles, dtype=np.int64)
 
     if "release_time" in instance:
-        release_times: np.ndarray = round_func(instance["release_time"])
+        release_times = round_func(instance["release_time"])
     else:
         release_times = np.zeros(dimension, dtype=np.int64)
 
@@ -266,8 +259,8 @@ def read(
     vehicle_data = zip(
         capacities,
         vehicles_depots,
-        vehicles_fixed_costs,
-        vehicles_variable_costs,
+        fixed_costs,
+        variable_costs,
     )
     veh_type2idcs = defaultdict(list)
     for idx, veh_type in enumerate(vehicle_data, 1):
