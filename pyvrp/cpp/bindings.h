@@ -97,7 +97,7 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
          [[maybe_unused]] pybind11::return_value_policy policy,
          [[maybe_unused]] pybind11::handle parent)
     {
-        return PyLong_FromLong(src.get());
+        return PyLong_FromLongLong(src.get());
     }
 };
 }  // namespace pybind11::detail
