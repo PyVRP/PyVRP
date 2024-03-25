@@ -354,7 +354,7 @@ public:
      * max_distance
      *     Maximum route distance. Unconstrained if not explicitly provided.
      * unit_distance_cost
-     *     Cost per unit of distance traveled by vehicles of this type. Default
+     *     Cost per unit of distance travelled by vehicles of this type. Default
      *     1.
      * unit_duration_cost
      *     Cost per unit of duration on routes serviced by vehicles of this
@@ -384,10 +384,9 @@ public:
      *     to. This is a very large number when the maximum distance is
      *     unconstrained.
      * unit_distance_cost
-     *     Cost per unit of distance traveled by vehicles of this type.
+     *     Cost per unit of distance travelled by vehicles of this type.
      * unit_duration_cost
-     *     Cost per unit of duration on routes serviced by vehicles of this
-     *     type.
+     *     Cost per unit of duration on routes using vehicles of this type.
      * name
      *     Free-form name field for this vehicle type.
      */
