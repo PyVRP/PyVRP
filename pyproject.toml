@@ -150,6 +150,7 @@ exclude_lines = [
 # For musllinux-based builds we assume users can compile the thing themselves.
 skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-frontend = "build"
+test-requires = "pytest >= 6.0.0"
 test-command = "pytest {package}/tests"
 
 
