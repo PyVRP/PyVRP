@@ -1067,3 +1067,26 @@ def test_optional_mutually_exclusive_group(ok_small):
     sol = Solution(data, [[3, 4]])
     assert_(sol.is_feasible())
     assert_(sol.is_group_feasible())
+
+
+def test_distance_duration_cost_calculations(ok_small):
+    """
+    Tests route- and solution-level distance and duration cost calculations.
+    """
+    vehicle_types = [
+        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
+    ]
+    data = ok_small.replace(vehicle_types=vehicle_types)
+
+    routes = [Route(data, [1, 2], 0), Route(data, [3, 4], 1)]
+    assert_equal(routes[0].distance_cost(), 5 * routes[0].distance())
+    assert_equal(routes[0].duration_cost(), 1 * routes[0].duration())
+    assert_equal(routes[1].distance_cost(), 1 * routes[1].distance())
+    assert_equal(routes[1].duration_cost(), 5 * routes[1].duration())
+
+    sol = Solution(data, routes)
+    assert_equal(sol.distance(), sum(r.distance() for r in routes))
+    assert_equal(sol.distance_cost(), sum(r.distance_cost() for r in routes))
+    assert_equal(sol.duration(), sum(r.duration() for r in routes))
+    assert_equal(sol.duration_cost(), sum(r.duration_cost() for r in routes))

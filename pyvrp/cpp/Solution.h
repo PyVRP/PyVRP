@@ -53,11 +53,13 @@ public:
 
         Visits visits_ = {};           // Client visits on this route
         Distance distance_ = 0;        // Total travel distance on this route
+        Cost distanceCost_ = 0;        // Total cost of travel distance
         Distance excessDistance_ = 0;  // Excess travel distance
         Load delivery_ = 0;       // Total delivery amount served on this route
         Load pickup_ = 0;         // Total pickup amount gathered on this route
         Load excessLoad_ = 0;     // Excess pickup or delivery demand
         Duration duration_ = 0;   // Total duration of this route
+        Cost durationCost_ = 0;   // Total cost of route duration
         Duration timeWarp_ = 0;   // Total time warp on this route
         Duration travel_ = 0;     // Total *travel* duration on this route
         Duration service_ = 0;    // Total *service* duration on this route
@@ -90,6 +92,11 @@ public:
         [[nodiscard]] Distance distance() const;
 
         /**
+         * Total cost of the distance travelled on this route.
+         */
+        [[nodiscard]] Cost distanceCost() const;
+
+        /**
          * Distance in excess of the vehicle's maximum distance constraint.
          */
         [[nodiscard]] Distance excessDistance() const;
@@ -113,6 +120,11 @@ public:
          * Total route duration, including travel, service and waiting time.
          */
         [[nodiscard]] Duration duration() const;
+
+        /**
+         * Total cost of the duration of this route.
+         */
+        [[nodiscard]] Cost durationCost() const;
 
         /**
          * Total duration of service on this route.
@@ -211,11 +223,13 @@ public:
         // objects.
         Route(Visits visits,
               Distance distance,
+              Cost distanceCost,
               Distance excessDistance,
               Load delivery,
               Load pickup,
               Load excessLoad,
               Duration duration,
+              Cost durationCost,
               Duration timeWarp,
               Duration travel,
               Duration service,
@@ -236,6 +250,9 @@ private:
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
     Distance distance_ = 0;         // Total travel distance over all routes
+    Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
+    Duration duration_ = 0;         // Total duration over all routes
+    Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
     Load excessLoad_ = 0;           // Total excess load over all routes
     Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
@@ -345,6 +362,21 @@ public:
     [[nodiscard]] Distance distance() const;
 
     /**
+     * Total cost of the distance travelled on routes in this solution.
+     */
+    [[nodiscard]] Cost distanceCost() const;
+
+    /**
+     * Total duration of all routes in this solution.
+     */
+    [[nodiscard]] Duration duration() const;
+
+    /**
+     * Total cost of the duration of all routes in this solution.
+     */
+    [[nodiscard]] Cost durationCost() const;
+
+    /**
      * Returns the total excess load over all routes.
      */
     [[nodiscard]] Load excessLoad() const;
@@ -421,6 +453,9 @@ public:
     Solution(size_t numClients,
              size_t numMissingClients,
              Distance distance,
+             Cost distanceCost,
+             Duration duration,
+             Cost durationCost,
              Distance excessDistance,
              Load excessLoad,
              Cost fixedVehicleCost,

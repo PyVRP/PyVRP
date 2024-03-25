@@ -30,6 +30,9 @@ void Solution::evaluate(ProblemData const &data)
         numClients_ += route.size();
         prizes_ += route.prizes();
         distance_ += route.distance();
+        distanceCost_ += route.distanceCost();
+        duration_ += route.duration();
+        durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
         excessLoad_ += route.excessLoad();
@@ -74,6 +77,12 @@ bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
 
 Distance Solution::distance() const { return distance_; }
 
+Cost Solution::distanceCost() const { return distanceCost_; }
+
+Duration Solution::duration() const { return duration_; }
+
+Cost Solution::durationCost() const { return durationCost_; }
+
 Load Solution::excessLoad() const { return excessLoad_; }
 
 Distance Solution::excessDistance() const { return excessDistance_; }
@@ -104,6 +113,9 @@ bool Solution::operator==(Solution const &other) const
     // First compare simple attributes, since that's quick and cheap.
     // clang-format off
     bool const simpleChecks = distance_ == other.distance_
+                              && duration_ == other.duration_
+                              && distanceCost_ == other.distanceCost_
+                              && durationCost_ == other.durationCost_
                               && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_
@@ -244,6 +256,9 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
                    Distance distance,
+                   Cost distanceCost,
+                   Duration duration,
+                   Cost durationCost,
                    Distance excessDistance,
                    Load excessLoad,
                    Cost fixedVehicleCost,
@@ -256,6 +271,9 @@ Solution::Solution(size_t numClients,
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
       distance_(distance),
+      distanceCost_(distanceCost),
+      duration_(duration),
+      durationCost_(durationCost),
       excessDistance_(excessDistance),
       excessLoad_(excessLoad),
       fixedVehicleCost_(fixedVehicleCost),
@@ -318,8 +336,10 @@ Solution::Route::Route(ProblemData const &data,
 
     Client const last = visits_.back();  // last client has depot as successor
     distance_ += data.dist(last, vehType.depot);
-    travel_ += data.duration(last, vehType.depot);
+    distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
+
+    travel_ += data.duration(last, vehType.depot);
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
@@ -327,6 +347,7 @@ Solution::Route::Route(ProblemData const &data,
 
     ds = DurationSegment::merge(data.durationMatrix(), ds, depotDS);
     duration_ = ds.duration();
+    durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
     startTime_ = ds.twEarly();
     slack_ = ds.twLate() - ds.twEarly();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
@@ -335,11 +356,13 @@ Solution::Route::Route(ProblemData const &data,
 
 Solution::Route::Route(Visits visits,
                        Distance distance,
+                       Cost distanceCost,
                        Distance excessDistance,
                        Load delivery,
                        Load pickup,
                        Load excessLoad,
                        Duration duration,
+                       Cost durationCost,
                        Duration timeWarp,
                        Duration travel,
                        Duration service,
@@ -353,11 +376,13 @@ Solution::Route::Route(Visits visits,
                        size_t depot)
     : visits_(std::move(visits)),
       distance_(distance),
+      distanceCost_(distanceCost),
       excessDistance_(excessDistance),
       delivery_(delivery),
       pickup_(pickup),
       excessLoad_(excessLoad),
       duration_(duration),
+      durationCost_(durationCost),
       timeWarp_(timeWarp),
       travel_(travel),
       service_(service),
@@ -389,6 +414,8 @@ Visits const &Solution::Route::visits() const { return visits_; }
 
 Distance Solution::Route::distance() const { return distance_; }
 
+Cost Solution::Route::distanceCost() const { return distanceCost_; }
+
 Distance Solution::Route::excessDistance() const { return excessDistance_; }
 
 Load Solution::Route::delivery() const { return delivery_; }
@@ -398,6 +425,8 @@ Load Solution::Route::pickup() const { return pickup_; }
 Load Solution::Route::excessLoad() const { return excessLoad_; }
 
 Duration Solution::Route::duration() const { return duration_; }
+
+Cost Solution::Route::durationCost() const { return durationCost_; }
 
 Duration Solution::Route::serviceDuration() const { return service_; }
 

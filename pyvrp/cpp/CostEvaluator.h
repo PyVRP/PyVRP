@@ -13,10 +13,11 @@ namespace pyvrp
 // the CostEvaluator.
 template <typename T>
 concept CostEvaluatable = requires(T arg) {
-    { arg.distance() } -> std::same_as<Distance>;
+    { arg.distanceCost() } -> std::same_as<Cost>;
+    { arg.durationCost() } -> std::same_as<Cost>;
+    { arg.fixedVehicleCost() } -> std::same_as<Cost>;
     { arg.excessLoad() } -> std::same_as<Load>;
     { arg.excessDistance() } -> std::same_as<Distance>;
-    { arg.fixedVehicleCost() } -> std::same_as<Cost>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.empty() } -> std::same_as<bool>;
     { arg.isFeasible() } -> std::same_as<bool>;
@@ -93,22 +94,28 @@ public:
     [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
     /**
-     * Hand-waving some details, each solution consists of a set of routes
-     * :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a sequence
-     * of edges, starting and ending at the depot. A route :math:`R` has an
-     * assigned vehicle type :math:`t_R`, which has a fixed vehicle cost
-     * :math:`f_{t_R}`. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
-     * locations visited by route :math:`R`. The objective value is then given
-     * by
+     * Hand-waving some details, each solution consists of a set of non-empty
+     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a
+     * sequence of edges, starting and ending at a depot. Each route :math:`R`
+     * has an assigned vehicle type, through which the route is equipped with a
+     * fixed vehicle cost :math:`f_R`, and unit distance and duration costs
+     * :math:`c^\text{distance}_R` and :math:`c^\text{duration}_R`,
+     * respectively. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
+     * locations visited by route :math:`R`, and :math:`d_R` and :math:`t_R`
+     * the total route distance and duration, respectively. The objective value
+     * is then given by
      *
      * .. math::
      *
-     *    \sum_{R \in \mathcal{R}} \left[ f_{t_R}
-     *          + \sum_{(i, j) \in R} d_{ij} \right]
+     *    \sum_{R \in \mathcal{R}}
+     *      \left[
+     *          f_R + c^\text{distance}_R d_R + c^\text{duration}_R t_R
+     *      \right]
      *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
-     * where the first part lists the vehicle and distance costs, and the
-     * second part the uncollected prizes of unvisited clients.
+     * where the first part lists each route's fixed, distance and duration
+     * costs, respectively, and the second part the uncollected prizes of
+     * unvisited clients.
      *
      * .. note::
      *
@@ -118,7 +125,7 @@ public:
      *    instead.
      */
     // The docstring above is written for Python, where we only expose this
-    // method for Solution.
+    // method for the Solution class.
     template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
 
     /**
@@ -132,7 +139,6 @@ public:
      */
     template <bool exact = false,
               bool skipLoad = false,
-              bool skipDuration = false,
               typename... Args,
               template <typename...>
               class T>
@@ -150,7 +156,6 @@ public:
      */
     template <bool exact = false,
               bool skipLoad = false,
-              bool skipDuration = false,
               typename... uArgs,
               typename... vArgs,
               template <typename...>
@@ -186,8 +191,8 @@ Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
-    // Standard objective plus penalty terms for infeasibilities.
-    auto const cost = static_cast<Cost>(arg.distance())
+    // Standard objective plus infeasibility-related penalty terms.
+    auto const cost = arg.distanceCost() + arg.durationCost()
                       + (!arg.empty() ? arg.fixedVehicleCost() : 0)
                       + loadPenalty(arg.excessLoad(), 0)
                       + twPenalty(arg.timeWarp())
@@ -209,7 +214,6 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
 
 template <bool exact,
           bool skipLoad,
-          bool skipDuration,
           typename... Args,
           template <typename...>
           class T>
@@ -218,17 +222,17 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
 
-    out -= static_cast<Cost>(route->distance());
+    out -= route->distanceCost();
     out -= distPenalty(route->distance(), route->maxDistance());
 
     if constexpr (!skipLoad)
         out -= loadPenalty(route->load(), route->capacity());
 
-    if constexpr (!skipDuration)
-        out -= twPenalty(route->timeWarp());
+    out -= route->durationCost();
+    out -= twPenalty(route->timeWarp());
 
     auto const dist = proposal.distanceSegment();
-    out += static_cast<Cost>(dist.distance());
+    out += route->unitDistanceCost() * static_cast<Cost>(dist.distance());
     out += distPenalty(dist.distance(), route->maxDistance());
 
     if constexpr (!exact)
@@ -241,18 +245,15 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out += loadPenalty(load.load(), route->capacity());
     }
 
-    if constexpr (!skipDuration)
-    {
-        auto const duration = proposal.durationSegment();
-        out += twPenalty(duration.timeWarp(route->maxDuration()));
-    }
+    auto const duration = proposal.durationSegment();
+    out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
+    out += twPenalty(duration.timeWarp(route->maxDuration()));
 
     return true;
 }
 
 template <bool exact,
           bool skipLoad,
-          bool skipDuration,
           typename... uArgs,
           typename... vArgs,
           template <typename...>
@@ -266,10 +267,10 @@ bool CostEvaluator::deltaCost(Cost &out,
     auto const *uRoute = uProposal.route();
     auto const *vRoute = vProposal.route();
 
-    out -= static_cast<Cost>(uRoute->distance());
+    out -= uRoute->distanceCost();
     out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
 
-    out -= static_cast<Cost>(vRoute->distance());
+    out -= vRoute->distanceCost();
     out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
     if constexpr (!skipLoad)
@@ -278,18 +279,18 @@ bool CostEvaluator::deltaCost(Cost &out,
         out -= loadPenalty(vRoute->load(), vRoute->capacity());
     }
 
-    if constexpr (!skipDuration)
-    {
-        out -= twPenalty(uRoute->timeWarp());
-        out -= twPenalty(vRoute->timeWarp());
-    }
+    out -= uRoute->durationCost();
+    out -= twPenalty(uRoute->timeWarp());
+
+    out -= vRoute->durationCost();
+    out -= twPenalty(vRoute->timeWarp());
 
     auto const uDist = uProposal.distanceSegment();
-    out += static_cast<Cost>(uDist.distance());
+    out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist.distance());
     out += distPenalty(uDist.distance(), uRoute->maxDistance());
 
     auto const vDist = vProposal.distanceSegment();
-    out += static_cast<Cost>(vDist.distance());
+    out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist.distance());
     out += distPenalty(vDist.distance(), vRoute->maxDistance());
 
     if constexpr (!exact)
@@ -309,14 +310,13 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    if constexpr (!skipDuration)
-    {
-        auto const uDuration = uProposal.durationSegment();
-        out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+    auto const uDuration = uProposal.durationSegment();
+    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration.duration());
+    out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
 
-        auto const vDuration = vProposal.durationSegment();
-        out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
-    }
+    auto const vDuration = vProposal.durationSegment();
+    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration.duration());
+    out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
 
     return true;
 }

@@ -66,7 +66,7 @@ public:
     /**
      * The total duration of this route segment.
      */
-    [[nodiscard]] Duration duration() const;
+    [[nodiscard]] inline Duration duration() const;
 
     /**
      * Returns the time warp on this route segment. Additionally, any time warp
@@ -172,6 +172,8 @@ DurationSegment::merge([[maybe_unused]] Matrix<Duration> const &durationMatrix,
         return merge(durationMatrix, res, args...);
 #endif
 }
+
+Duration DurationSegment::duration() const { return duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {

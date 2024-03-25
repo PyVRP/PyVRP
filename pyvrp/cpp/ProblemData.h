@@ -76,6 +76,7 @@ public:
      *    prize: int = 0,
      *    required: bool = True,
      *    group: Optional[int] = None,
+     *    *,
      *    name: str = "",
      * )
      *
@@ -255,6 +256,7 @@ public:
      *    y: int,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
+     *    *,
      *    name: str = "",
      * )
      *
@@ -321,6 +323,9 @@ public:
      *     tw_late: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
+     *     unit_distance_cost: int = 1,
+     *     unit_duration_cost: int = 0,
+     *     *,
      *     name: str = "",
      * )
      *
@@ -348,6 +353,12 @@ public:
      *     Maximum route duration. Unconstrained if not explicitly provided.
      * max_distance
      *     Maximum route distance. Unconstrained if not explicitly provided.
+     * unit_distance_cost
+     *     Cost per unit of distance travelled by vehicles of this type. Default
+     *     1.
+     * unit_duration_cost
+     *     Cost per unit of duration on routes serviced by vehicles of this
+     *     type. Default 0.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -372,20 +383,26 @@ public:
      *     Maximum travel distance of the route this vehicle type is assigned
      *     to. This is a very large number when the maximum distance is
      *     unconstrained.
+     * unit_distance_cost
+     *     Cost per unit of distance travelled by vehicles of this type.
+     * unit_duration_cost
+     *     Cost per unit of duration on routes using vehicles of this type.
      * name
      *     Free-form name field for this vehicle type.
      */
     struct VehicleType
     {
-        size_t const numAvailable;   // Available vehicles of this type
-        size_t const depot;          // Departure and return depot location
-        Load const capacity;         // This type's vehicle capacity
-        Cost const fixedCost;        // Fixed cost of using this vehicle type
-        Duration const twEarly;      // Start of shift
-        Duration const twLate;       // End of shift
-        Duration const maxDuration;  // Maximum route duration
-        Distance const maxDistance;  // Maximum route distance
-        char const *name;            // Type name (for reference)
+        size_t const numAvailable;    // Available vehicles of this type
+        size_t const depot;           // Departure and return depot location
+        Load const capacity;          // This type's vehicle capacity
+        Duration const twEarly;       // Start of shift
+        Duration const twLate;        // End of shift
+        Duration const maxDuration;   // Maximum route duration
+        Distance const maxDistance;   // Maximum route distance
+        Cost const fixedCost;         // Fixed cost of using this vehicle type
+        Cost const unitDistanceCost;  // Variable cost per unit of distance
+        Cost const unitDurationCost;  // Variable cost per unit of duration
+        char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
@@ -395,6 +412,8 @@ public:
                     Duration twLate = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
+                    Cost unitDistanceCost = 1,
+                    Cost unitDurationCost = 0,
                     char const *name = "");
 
         VehicleType(VehicleType const &vehicleType);
