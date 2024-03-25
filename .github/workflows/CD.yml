@@ -19,11 +19,9 @@ jobs:
         os: [ ubuntu-22.04, windows-2022, macos-14 ]
     steps:
       - uses: actions/checkout@v4
-      - name: Install rtools
+      - name: Install toolchain
         if: ${{ runner.os == 'Windows' }}
         run: |
-          # mingw-w64. This is what scipy uses to update the build toolchain
-          # on Windows systems; also works fine for us.
           choco install rtools -y --no-progress --force --version=4.0.0.20220206
           echo "c:\rtools40\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels

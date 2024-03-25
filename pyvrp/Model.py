@@ -308,8 +308,8 @@ class Model:
 
         # Default value is a sufficiently large value to make sure any edges
         # not set below are never traversed.
-        distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
-        durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=int)
+        distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
+        durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
         np.fill_diagonal(distances, 0)
         np.fill_diagonal(durations, 0)
 

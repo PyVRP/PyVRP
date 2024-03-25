@@ -71,6 +71,8 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
+        static_assert(sizeof(long long) >= sizeof(pyvrp::Value));
+
         if (!convert && !PyLong_Check(src.ptr()))  // only int when conversion
             return false;                          // is not allowed.
 
@@ -78,8 +80,13 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
         if (!tmp)                                  // Python's int() succeeds.
             return false;
 
-        auto const raw = PyLong_AsLong(tmp);
+        auto const raw = PyLong_AsLongLong(tmp);
         Py_DECREF(tmp);
+
+        // See https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong:
+        // -1 is returned on overflow, and OverflowError is set.
+        if (raw == -1 && PyErr_Occurred())
+            throw pybind11::error_already_set();
 
         value = pyvrp::Measure<T>(raw);
         return !PyErr_Occurred();
@@ -90,7 +97,7 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
          [[maybe_unused]] pybind11::return_value_policy policy,
          [[maybe_unused]] pybind11::handle parent)
     {
-        return PyLong_FromLong(src.get());
+        return PyLong_FromLongLong(src.get());
     }
 };
 }  // namespace pybind11::detail

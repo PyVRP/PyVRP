@@ -5,6 +5,9 @@ from functools import lru_cache
 from pyvrp.read import read as _read
 from pyvrp.read import read_solution as _read_solution
 
+# Full path to the data directory used in tests.
+DATA_DIR = pathlib.Path(__file__).parent / "data"
+
 
 @lru_cache
 def read(where: str, *args, **kwargs):
