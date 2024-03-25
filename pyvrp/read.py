@@ -17,15 +17,15 @@ _INT_MAX = np.iinfo(np.int64).max
 
 
 def round_nearest(vals: np.ndarray):
-    return np.round(vals).astype(int)
+    return np.round(vals).astype(np.int64)
 
 
 def truncate(vals: np.ndarray):
-    return vals.astype(int)
+    return vals.astype(np.int64)
 
 
 def dimacs(vals: np.ndarray):
-    return (10 * vals).astype(int)
+    return (10 * vals).astype(np.int64)
 
 
 def exact(vals: np.ndarray):
