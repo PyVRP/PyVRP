@@ -151,7 +151,7 @@ exclude_lines = [
 skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-frontend = "build"
 test-requires = "pytest>=6.0.0 pytest-cov>=2.6.1"
-test-command = "pytest {package}/tests"
+test-command = "pytest {project}/tests"
 
 
 [tool.poetry.build]
