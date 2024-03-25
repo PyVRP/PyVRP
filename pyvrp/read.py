@@ -1,4 +1,5 @@
 import pathlib
+from collections import defaultdict
 from numbers import Number
 from typing import Callable, Union
 from warnings import warn
@@ -106,9 +107,15 @@ def read(
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
 
-    capacity: int = instance.get("capacity", _INT_MAX)
-    if capacity != _INT_MAX:
-        capacity = round_func(np.array([capacity])).item()
+    if "capacity" in instance:
+        if isinstance(instance["capacity"], Number):
+            capacities = round_func(
+                np.full(num_vehicles, instance["capacity"])
+            )
+        else:
+            capacities = round_func(instance["capacity"])
+    else:
+        capacities = np.full(num_vehicles, _INT_MAX)
 
     # If the max_duration or max_distance values are supplied, we should pass
     # them through the round func and then unwrap the result.
@@ -157,13 +164,23 @@ def read(
         time_windows[:, 1] = _INT_MAX
 
     if "vehicles_depot" in instance:
-        items: list[list[int]] = [[] for _ in depot_idcs]
-        for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
-            items[depot - 1].append(vehicle)
-
-        depot_vehicle_pairs = items
+        vehicles_depots: np.ndarray = instance["vehicles_depot"] - 1
     else:
-        depot_vehicle_pairs = [[idx + 1 for idx in range(num_vehicles)]]
+        vehicles_depots = np.full(num_vehicles, depot_idcs[0])
+
+    if "vehicles_fixed_cost" in instance:
+        vehicles_fixed_costs: np.ndarray = round_func(
+            instance["vehicles_fixed_cost"]
+        )
+    else:
+        vehicles_fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
+
+    if "vehicles_variable_cost" in instance:
+        vehicles_variable_costs: np.ndarray = round_func(
+            instance["vehicles_variable_cost"]
+        )
+    else:
+        vehicles_variable_costs = np.ones(num_vehicles, dtype=np.int64)
 
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
@@ -246,6 +263,16 @@ def read(
         for idx in range(len(depot_idcs), dimension)
     ]
 
+    vehicle_data = zip(
+        capacities,
+        vehicles_depots,
+        vehicles_fixed_costs,
+        vehicles_variable_costs,
+    )
+    veh_type2idcs = defaultdict(list)
+    for idx, veh_type in enumerate(vehicle_data, 1):
+        veh_type2idcs[veh_type].append(idx)
+
     vehicle_types = [
         VehicleType(
             num_available=len(vehicles),
@@ -253,11 +280,18 @@ def read(
             depot=depot_idx,
             max_duration=max_duration,
             max_distance=max_distance,
+            fixed_cost=fixed_cost,
+            unit_distance_cost=unit_distance_cost,
             # A bit hacky, but this csv-like name is really useful to track the
             # actual vehicles that make up this vehicle type.
             name=",".join(map(str, vehicles)),
         )
-        for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
+        for (
+            capacity,
+            depot_idx,
+            fixed_cost,
+            unit_distance_cost,
+        ), vehicles in veh_type2idcs.items()
     ]
 
     return ProblemData(

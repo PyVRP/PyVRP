@@ -63,6 +63,9 @@ PyVRP supports the following data sections:
       Array of backhaul quantities, one for each location.
       This is the amount picked up at the client and transported back to the depot.
 
+   ``CAPACITY_SECTION``
+      Maximum capacity for each vehicle.
+
    ``DEMAND_SECTION``
    ``LINEHAUL_SECTION``
       Array of demands, one for each location.
@@ -99,3 +102,9 @@ PyVRP supports the following data sections:
    ``VEHICLES_DEPOT_SECTION``
       Depot assignments for each vehicle, typically used in multi-depot instances.
       Vehicles are assigned to the first depot if this section is not provided.
+
+   ``VEHCILES_FIXED_COST``
+      Fixed cost for each vehicle.
+
+   ``VEHICLES_VARIABLE_COST``
+      Variable cost per unit of distance for each vehicle.
