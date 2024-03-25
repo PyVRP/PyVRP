@@ -21,15 +21,11 @@ jobs:
         os: [ ubuntu-22.04, windows-2019, macos-14 ]
     steps:
       - uses: actions/checkout@v4
-      - name: Install rtools
-        if: ${{ runner.os == 'Windows' }}
-        run: |
-          # mingw-w64. This is what scipy uses to update the build toolchain
-          # on Windows systems; also works fine for us.
-          choco install rtools -y --no-progress --force --version=4.3.5958
-          dir "c:\rtools43\ucrt64\bin;"
-          dir "c:\rtools43\ucrt64;"
-          echo "c:\rtools43\ucrt64\bin;" >> $env:GITHUB_PATH
+      - name: Set up MinGW
+        if: runner.os == 'Windows'
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.5
         with:
