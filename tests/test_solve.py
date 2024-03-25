@@ -13,6 +13,7 @@ from pyvrp.search import (
 )
 from pyvrp.solve import SolveParams, solve
 from pyvrp.stop import MaxIterations
+from tests.helpers import DATA_DIR
 
 
 def test_default_values():
@@ -33,7 +34,7 @@ def test_solve_params_from_file():
     """
     Tests that the solver parameters are correctly loaded from a TOML file.
     """
-    params = SolveParams.from_file("tests/data/test_config.toml")
+    params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
     genetic = GeneticAlgorithmParams(0.1, 200)
     penalty = PenaltyParams(20, 0, 0, 12, 100, 1.25, 0.85, 0.43)
@@ -55,7 +56,7 @@ def test_solve_params_from_file_defaults():
     Tests that if the TOML file does not contain all solver parameters,
     it defaults to the constructor's default values.
     """
-    params = SolveParams.from_file("tests/data/empty_config.toml")
+    params = SolveParams.from_file(DATA_DIR / "empty_config.toml")
     assert_equal(params, SolveParams())
 
 
