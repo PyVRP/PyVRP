@@ -103,8 +103,8 @@ PyVRP supports the following data sections:
       Depot assignments for each vehicle, typically used in multi-depot instances.
       Vehicles are assigned to the first depot if this section is not provided.
 
-   ``VEHCILES_FIXED_COST``
+   ``VEHICLES_FIXED_COST``
       Fixed cost for each vehicle.
 
-   ``VEHICLES_VARIABLE_COST``
+   ``VEHICLES_UNIT_DISTANCE_COST``
       Variable cost per unit of distance for each vehicle.

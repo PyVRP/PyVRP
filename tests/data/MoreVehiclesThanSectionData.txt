@@ -44,7 +44,7 @@ VEHICLES_FIXED_COST_SECTION
 2    100
 3    200
 4    300
-# Varible cost section only has three entries, but the instance has four vehicles.
+# Variable cost section only has three entries, but the instance has four vehicles.
 VEHICLES_VARIABLE_COST_SECTION
 1    1
 2    1

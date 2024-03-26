@@ -27,6 +27,7 @@ from tests.helpers import read
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
+        ("data/MoreVehiclesThanSectionData.txt", ValueError),
     ],
 )
 def test_raises_invalid_file(where: str, exception: Exception):
@@ -433,12 +434,3 @@ def test_heterogeneous_fleet():
         assert_equal(vehicle_type.fixed_cost, fixed_cost[idx])
         assert_equal(vehicle_type.unit_distance_cost, variable_cost[idx])
         assert_equal(vehicle_type.name, names[idx])
-
-
-def test_raises_num_vehicles_not_enough_vehicle_data():
-    """
-    Tests that ``read`` raises when vehicle data sections do not have the same
-    number of elements as the number of vehicles in the instance.
-    """
-    with assert_raises(ValueError):
-        read("data/MoreVehiclesThanSectionData.txt")
