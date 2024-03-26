@@ -1,4 +1,5 @@
 import pathlib
+from collections import defaultdict
 from numbers import Number
 from typing import Callable, Union
 from warnings import warn
@@ -102,13 +103,31 @@ def read(
     # assume duration == distance.
     durations = distances = round_func(instance["edge_weight"])
 
-    dimension: int = instance.get("dimension", durations.shape[0])
-    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-    num_vehicles: int = instance.get("vehicles", dimension - 1)
+    dimension = instance.get("dimension", durations.shape[0])
+    depot_idcs = instance.get("depot", np.array([0]))
+    num_vehicles = instance.get("vehicles", dimension - 1)
 
-    capacity: int = instance.get("capacity", _INT_MAX)
-    if capacity != _INT_MAX:
-        capacity = round_func(np.array([capacity])).item()
+    if isinstance(instance.get("capacity"), Number):
+        capacities = round_func(np.full(num_vehicles, instance["capacity"]))
+    elif instance.get("capacity") is not None:
+        capacities = round_func(instance["capacity"])
+    else:
+        capacities = np.full(num_vehicles, _INT_MAX)
+
+    if "vehicles_depot" in instance:
+        vehicles_depots = instance["vehicles_depot"] - 1  # make 0-indexed
+    else:
+        vehicles_depots = np.full(num_vehicles, depot_idcs[0])
+
+    if "vehicles_fixed_cost" in instance:
+        fixed_costs = round_func(instance["vehicles_fixed_cost"])
+    else:
+        fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
+
+    if "vehicles_variable_cost" in instance:
+        variable_costs = round_func(instance["vehicles_variable_cost"])
+    else:
+        variable_costs = np.ones(num_vehicles, dtype=np.int64)
 
     # If the max_duration or max_distance values are supplied, we should pass
     # them through the round func and then unwrap the result.
@@ -121,18 +140,18 @@ def read(
         max_distance = round_func(np.array([max_distance])).item()
 
     if "backhaul" in instance:
-        backhauls: np.ndarray = round_func(instance["backhaul"])
+        backhauls = round_func(instance["backhaul"])
     else:
         backhauls = np.zeros(dimension, dtype=np.int64)
 
     if "demand" in instance or "linehaul" in instance:
-        demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
+        demands = instance.get("demand", instance.get("linehaul"))
         demands = round_func(demands)
     else:
         demands = np.zeros(dimension, dtype=np.int64)
 
     if "node_coord" in instance:
-        coords: np.ndarray = round_func(instance["node_coord"])
+        coords = round_func(instance["node_coord"])
     else:
         coords = np.zeros((dimension, 2), dtype=np.int64)
 
@@ -149,24 +168,15 @@ def read(
         service_times = np.zeros(dimension, dtype=np.int64)
 
     if "time_window" in instance:
-        time_windows: np.ndarray = round_func(instance["time_window"])
+        time_windows = round_func(instance["time_window"])
     else:
         # No time window data. So the time window component is not relevant.
         time_windows = np.empty((dimension, 2), dtype=np.int64)
         time_windows[:, 0] = 0
         time_windows[:, 1] = _INT_MAX
 
-    if "vehicles_depot" in instance:
-        items: list[list[int]] = [[] for _ in depot_idcs]
-        for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
-            items[depot - 1].append(vehicle)
-
-        depot_vehicle_pairs = items
-    else:
-        depot_vehicle_pairs = [[idx + 1 for idx in range(num_vehicles)]]
-
     if "release_time" in instance:
-        release_times: np.ndarray = round_func(instance["release_time"])
+        release_times = round_func(instance["release_time"])
     else:
         release_times = np.zeros(dimension, dtype=np.int64)
 
@@ -204,6 +214,15 @@ def read(
         msg = """
         Source file should contain at least one depot in the contiguous lower
         indices, starting from 1.
+        """
+        raise ValueError(msg)
+
+    vehicle_data = (capacities, vehicles_depots, fixed_costs, variable_costs)
+    if not all(len(arr) == num_vehicles for arr in vehicle_data):
+        msg = """
+        The number of elements in the vehicle capacity, depot, fixed cost, and
+        variable cost sections should be equal to the number of vehicles in the
+        problem.
         """
         raise ValueError(msg)
 
@@ -246,6 +265,10 @@ def read(
         for idx in range(len(depot_idcs), dimension)
     ]
 
+    veh_type2idcs = defaultdict(list)
+    for idx, veh_type in enumerate(zip(*vehicle_data)):
+        veh_type2idcs[veh_type].append(idx)
+
     vehicle_types = [
         VehicleType(
             num_available=len(vehicles),
@@ -253,11 +276,18 @@ def read(
             depot=depot_idx,
             max_duration=max_duration,
             max_distance=max_distance,
+            fixed_cost=fixed_cost,
+            unit_distance_cost=unit_distance_cost,
             # A bit hacky, but this csv-like name is really useful to track the
             # actual vehicles that make up this vehicle type.
             name=",".join(map(str, vehicles)),
         )
-        for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
+        for (
+            capacity,
+            depot_idx,
+            fixed_cost,
+            unit_distance_cost,
+        ), vehicles in veh_type2idcs.items()
     ]
 
     return ProblemData(

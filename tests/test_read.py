@@ -27,6 +27,7 @@ from tests.helpers import read
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
+        ("data/MoreVehiclesThanSectionData.txt", ValueError),
     ],
 )
 def test_raises_invalid_file(where: str, exception: Exception):
@@ -293,7 +294,7 @@ def test_mdvrptw_instance():
         # Each depot has ten vehicles, and they are nicely grouped (so the
         # first ten are assigned to the first depot, the second ten to the
         # second depot, etc.).
-        expected_name = ",".join(str(10 * idx + veh + 1) for veh in range(10))
+        expected_name = ",".join(str(10 * idx + veh) for veh in range(10))
         assert_equal(vehicle_type.name, expected_name)
 
     # We haven't seen many instances with negative coordinates, but this
@@ -411,3 +412,25 @@ def test_reading_mutually_exclusive_group():
         client_data = data.location(client)  # type: ignore
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
+
+
+def test_heterogeneous_fleet():
+    """
+    Tests that reading an instance with heterogeneous fleet works correctly.
+    """
+    data = read("data/OkSmallHeterogeneousFleet.txt")
+    assert_equal(data.num_vehicles, 4)
+    assert_equal(data.num_vehicle_types, 3)
+
+    num_vehicles = [2, 1, 1]
+    capacities = [1, 2, 3]
+    fixed_cost = [100, 200, 300]
+    variable_cost = [1, 2, 2]
+    names = ["0,1", "2", "3"]
+
+    for idx, vehicle_type in enumerate(data.vehicle_types()):
+        assert_equal(vehicle_type.num_available, num_vehicles[idx])
+        assert_equal(vehicle_type.capacity, capacities[idx])
+        assert_equal(vehicle_type.fixed_cost, fixed_cost[idx])
+        assert_equal(vehicle_type.unit_distance_cost, variable_cost[idx])
+        assert_equal(vehicle_type.name, names[idx])
