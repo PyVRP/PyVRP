@@ -435,10 +435,10 @@ def test_heterogeneous_fleet():
         assert_equal(vehicle_type.name, names[idx])
 
 
-def test_raises_invalid_vehicle_data():
+def test_raises_num_vehicles_not_enough_vehicle_data():
     """
-    Tests that ``read`` raises when the vehicle data does not have the same
+    Tests that ``read`` raises when vehicle data sections do not have the same
     number of elements as the number of vehicles in the instance.
     """
     with assert_raises(ValueError):
-        read("data/MoreVehiclesThanValues.txt")
+        read("data/MoreVehiclesThanSectionData.txt")
