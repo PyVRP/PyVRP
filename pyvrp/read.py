@@ -114,6 +114,21 @@ def read(
     else:
         capacities = np.full(num_vehicles, _INT_MAX)
 
+    if "vehicles_depot" in instance:
+        vehicles_depots = instance["vehicles_depot"] - 1  # make 0-indexed
+    else:
+        vehicles_depots = np.full(num_vehicles, depot_idcs[0])
+
+    if "vehicles_fixed_cost" in instance:
+        fixed_costs = round_func(instance["vehicles_fixed_cost"])
+    else:
+        fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
+
+    if "vehicles_variable_cost" in instance:
+        variable_costs = round_func(instance["vehicles_variable_cost"])
+    else:
+        variable_costs = np.ones(num_vehicles, dtype=np.int64)
+
     # If the max_duration or max_distance values are supplied, we should pass
     # them through the round func and then unwrap the result.
     max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
@@ -160,21 +175,6 @@ def read(
         time_windows[:, 0] = 0
         time_windows[:, 1] = _INT_MAX
 
-    if "vehicles_depot" in instance:
-        vehicles_depots = instance["vehicles_depot"] - 1
-    else:
-        vehicles_depots = np.full(num_vehicles, depot_idcs[0])
-
-    if "vehicles_fixed_cost" in instance:
-        fixed_costs = round_func(instance["vehicles_fixed_cost"])
-    else:
-        fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
-
-    if "vehicles_variable_cost" in instance:
-        variable_costs = round_func(instance["vehicles_variable_cost"])
-    else:
-        variable_costs = np.ones(num_vehicles, dtype=np.int64)
-
     if "release_time" in instance:
         release_times = round_func(instance["release_time"])
     else:
@@ -217,6 +217,15 @@ def read(
         """
         raise ValueError(msg)
 
+    vehicle_data = (capacities, vehicles_depots, fixed_costs, variable_costs)
+    if not all(len(arr) == num_vehicles for arr in vehicle_data):
+        msg = """
+        The number of elements in the capacity, depot, fixed cost, and
+        variable cost sections should be equal to the number of vehicles
+        in the problem.
+        """
+        raise ValueError(msg)
+
     if max(distances.max(), durations.max()) > MAX_VALUE:
         msg = """
         The maximum distance or duration value is very large. This might
@@ -256,14 +265,8 @@ def read(
         for idx in range(len(depot_idcs), dimension)
     ]
 
-    vehicle_data = zip(
-        capacities,
-        vehicles_depots,
-        fixed_costs,
-        variable_costs,
-    )
     veh_type2idcs = defaultdict(list)
-    for idx, veh_type in enumerate(vehicle_data, 1):
+    for idx, veh_type in enumerate(zip(*vehicle_data), 1):
         veh_type2idcs[veh_type].append(idx)
 
     vehicle_types = [
