@@ -293,7 +293,7 @@ def test_mdvrptw_instance():
         # Each depot has ten vehicles, and they are nicely grouped (so the
         # first ten are assigned to the first depot, the second ten to the
         # second depot, etc.).
-        expected_name = ",".join(str(10 * idx + veh + 1) for veh in range(10))
+        expected_name = ",".join(str(10 * idx + veh) for veh in range(10))
         assert_equal(vehicle_type.name, expected_name)
 
     # We haven't seen many instances with negative coordinates, but this
@@ -425,7 +425,7 @@ def test_heterogeneous_fleet():
     capacities = [1, 2, 3]
     fixed_cost = [100, 200, 300]
     variable_cost = [1, 2, 2]
-    names = ["1,2", "3", "4"]
+    names = ["0,1", "2", "3"]
 
     for idx, vehicle_type in enumerate(data.vehicle_types()):
         assert_equal(vehicle_type.num_available, num_vehicles[idx])

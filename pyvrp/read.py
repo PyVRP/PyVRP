@@ -220,9 +220,9 @@ def read(
     vehicle_data = (capacities, vehicles_depots, fixed_costs, variable_costs)
     if not all(len(arr) == num_vehicles for arr in vehicle_data):
         msg = """
-        The number of elements in the capacity, depot, fixed cost, and
-        variable cost sections should be equal to the number of vehicles
-        in the problem.
+        The number of elements in the vehicle capacity, depot, fixed cost, and
+        variable cost sections should be equal to the number of vehicles in the
+        problem.
         """
         raise ValueError(msg)
 
@@ -266,7 +266,7 @@ def read(
     ]
 
     veh_type2idcs = defaultdict(list)
-    for idx, veh_type in enumerate(zip(*vehicle_data), 1):
+    for idx, veh_type in enumerate(zip(*vehicle_data)):
         veh_type2idcs[veh_type].append(idx)
 
     vehicle_types = [
