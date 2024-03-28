@@ -150,14 +150,14 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
 {
     std::vector<size_t> clients;
 
-    // First add all required clients and some groupless optional clients...
+    // First we add all required clients and some groupless optional clients...
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         pyvrp::ProblemData::Client const &clientData = data.location(idx);
 
         if (clientData.required)
             clients.push_back(idx);
-        else if (!clientData.group && rng.randint(2))
+        else if (!clientData.group && rng.randint(2))  // select randomly
             clients.push_back(idx);
     }
 
