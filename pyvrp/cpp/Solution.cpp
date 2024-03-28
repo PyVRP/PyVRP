@@ -166,7 +166,6 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
         if (!group.empty())
             clients.push_back(group.clients()[rng.randint(group.size())]);
 
-
     // Shuffle clients to create random routes.
     std::shuffle(clients.begin(), clients.end(), rng);
 
