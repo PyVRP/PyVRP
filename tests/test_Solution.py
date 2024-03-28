@@ -148,8 +148,8 @@ def test_random_constructor_uniformly_selects_groupless_optional_clients(
     sols = [Solution.make_random(ok_small_prizes, rng) for _ in range(100)]
     avg_num_clients = np.mean([sol.num_clients() for sol in sols])
 
-    # There are 4 clients, three which are optional, so the average number of
-    # clients should be close to 2.5.
+    # There are 4 clients, three of which are optional, so the average number
+    # of clients should be close to 2.5.
     assert_allclose(avg_num_clients, 2.5, atol=0.1)
 
 

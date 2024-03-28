@@ -163,8 +163,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
 
     // ...but we select only one client per mutually exclusive group.
     for (auto const &group : data.groups())
-        if (!group.empty())
-            clients.push_back(group.clients()[rng.randint(group.size())]);
+        clients.push_back(group.clients()[rng.randint(group.size())]);
 
     // Shuffle clients to create random routes.
     std::shuffle(clients.begin(), clients.end(), rng);
