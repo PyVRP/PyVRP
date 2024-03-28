@@ -148,16 +148,33 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
+    std::vector<size_t> clients;
+
+    // First add all required clients and some groupless optional clients...
+    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    {
+        pyvrp::ProblemData::Client const &clientData = data.location(idx);
+
+        if (clientData.required)
+            clients.push_back(idx);
+        else if (!clientData.group && rng.randint(2))
+            clients.push_back(idx);
+    }
+
+    // ...but we select only one client per mutually exclusive group.
+    for (auto const &group : data.groups())
+        if (!group.empty())
+            clients.push_back(group.clients()[rng.randint(group.size())]);
+
+
     // Shuffle clients to create random routes.
-    auto clients = std::vector<size_t>(data.numClients());
-    std::iota(clients.begin(), clients.end(), data.numDepots());
     std::shuffle(clients.begin(), clients.end(), rng);
 
     // Distribute clients evenly over the routes: the total number of clients
     // per vehicle, with an adjustment in case the division is not perfect and
     // there are not enough vehicles for single-client routes.
     auto const numVehicles = data.numVehicles();
-    auto const numClients = data.numClients();
+    auto const numClients = clients.size();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
     auto const adjustment
         = numClients > numVehicles && numClients % numVehicles != 0;

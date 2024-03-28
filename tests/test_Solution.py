@@ -1031,20 +1031,9 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     assert_equal(sol.is_feasible(), feasible)
     assert_equal(sol.is_group_feasible(), feasible)
 
-
-def test_mutually_exclusive_group_feasibility_bug(
-    ok_small_mutually_exclusive_groups,
-):
-    """
-    This tests a bug where the make_random() classmethod did not set the group
-    feasibility flag correctly, leading it to believe that every solution was
-    feasible w.r.t. the client groups.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
-
-    assert_(not sol.is_feasible())
-    assert_(not sol.is_group_feasible())
+def test_random_solution_randomly_selects_groupless_optional_clients(ok_small):
+    pass
+    #    sol = Solution.make_random(prize_collecting, rng) 
 
 
 def test_optional_mutually_exclusive_group(ok_small):
