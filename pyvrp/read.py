@@ -200,6 +200,7 @@ def read(
     else:
         groups = []
 
+    # Modifications for specific problem types
     if instance.get("type") == "VRPB":
         # In VRPB, linehauls must be served before backhauls. This can be
         # enforced by setting a high value for the distance/duration from depot
@@ -209,6 +210,15 @@ def read(
         backhaul = np.flatnonzero(backhauls > 0)
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
+
+    if instance.get("type") == "HFVRP":
+        # In HFVRP, there may be unit distance costs, which results in the
+        # ``exact`` round func to scale distances by 1_000_000 (since the
+        # distances and the unit distance costs are both multiplied by 1_000).
+        # This means that the other objective terms, fixed costs and prizes,
+        # should also be scaled by 1_000 to match the same units.
+        fixed_costs *= round_func(1)
+        prizes *= round_func(1)
 
     # Checks
     contiguous_lower_idcs = np.arange(len(depot_idcs))
