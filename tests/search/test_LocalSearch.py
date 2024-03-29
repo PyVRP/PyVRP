@@ -192,6 +192,7 @@ def test_prize_collecting(prize_collecting):
     improved = ls.search(sol, cost_evaluator)
     improved_cost = cost_evaluator.penalised_cost(improved)
 
+    assert_(improved.num_clients() < prize_collecting.num_clients)
     assert_(improved_cost < sol_cost)
 
 
