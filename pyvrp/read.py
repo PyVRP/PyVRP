@@ -211,12 +211,13 @@ def read(
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-    if instance.get("type") == "HFVRP":
-        # In HFVRP, there may be unit distance costs, which results in the
-        # ``exact`` round func to scale distances by 1_000_000 (since the
-        # distances and the unit distance costs are both multiplied by 1_000).
-        # This means that the other objective terms, fixed costs and prizes,
-        # should also be scaled by 1_000 to match the same units.
+    if "unit_distance_cost" in instance:
+        # When there are unit distance costs, distances are effectively
+        # scaled/rounded twice: once in the distance matrix, and once in the
+        # unit distance costs. We also need to account for this in the other
+        # objective terms (fixed costs and prizes), so we scale/round them
+        # again. This only works if the fixed cost and prize data does not
+        # have too many decimal places.
         fixed_costs *= round_func(1)
         prizes *= round_func(1)
 
