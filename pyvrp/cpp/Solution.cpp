@@ -150,20 +150,13 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
 {
     std::vector<size_t> clients;
 
-    // First we add all required clients and some groupless optional clients...
+    // Add all required clients, but randomly select optional clients.
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         pyvrp::ProblemData::Client const &clientData = data.location(idx);
-
-        if (clientData.required)
-            clients.push_back(idx);
-        else if (!clientData.group && rng.randint(2))  // select randomly
+        if (clientData.required || rng.rand() < 0.5)
             clients.push_back(idx);
     }
-
-    // ...but we select only one client per mutually exclusive group.
-    for (auto const &group : data.groups())
-        clients.push_back(group.clients()[rng.randint(group.size())]);
 
     // Shuffle clients to create random routes.
     std::shuffle(clients.begin(), clients.end(), rng);

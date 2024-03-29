@@ -136,12 +136,12 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
     assert_equal(len(routes), data.num_clients)
 
 
-def test_random_constructor_uniformly_selects_groupless_optional_clients(
+def test_random_constructor_randomly_selects_optional_clients(
     ok_small_prizes,
 ):
     """
-    Tests that the randomly constructed solution selects groupless optional
-    clients uniformly at random.
+    Tests that the randomly constructed solution selects optional clients
+    uniformly at random.
     """
     rng = RandomNumberGenerator(seed=42)
 
@@ -151,17 +151,6 @@ def test_random_constructor_uniformly_selects_groupless_optional_clients(
     # There are 4 clients, three of which are optional, so the average number
     # of clients should be close to 2.5.
     assert_allclose(avg_num_clients, 2.5, atol=0.1)
-
-
-def test_random_constructor_creates_group_feasible_solutions(ok_small):
-    """
-    Tests that the randomly constructed solution is always group feasible.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    sol = Solution.make_random(ok_small, rng)
-
-    for _ in range(50):
-        assert_(sol.is_group_feasible())
 
 
 def test_route_constructor_raises_too_many_vehicles(ok_small):

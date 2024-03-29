@@ -55,7 +55,7 @@ public:
      *
      * @return A pseudo-random number in the range [0, 1].
      */
-    template <typename T> T rand();
+    double rand();
 
     /**
      * Generates one pseudo-random integer in the range <code>[0, high)</code>.
@@ -80,12 +80,6 @@ constexpr size_t RandomNumberGenerator::min()
 constexpr size_t RandomNumberGenerator::max()
 {
     return std::numeric_limits<result_type>::max();
-}
-
-template <typename T> T RandomNumberGenerator::rand()
-{
-    static_assert(std::is_floating_point<T>::value);
-    return operator()() / static_cast<T>(max());
 }
 
 template <typename T>

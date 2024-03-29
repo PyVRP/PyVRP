@@ -465,7 +465,7 @@ def test_mutually_exclusive_group(gtsp):
     cost_eval = CostEvaluator(20, 6, 0)
     improved = ls(sol, cost_eval)
 
-    assert_(sol.is_group_feasible())
+    assert_(not sol.is_group_feasible())
     assert_(improved.is_group_feasible())
 
     sol_cost = cost_eval.penalised_cost(sol)
