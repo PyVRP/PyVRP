@@ -424,13 +424,13 @@ def test_heterogeneous_fleet():
 
     num_vehicles = [2, 1, 1]
     capacities = [1, 2, 3]
-    fixed_cost = [100, 200, 300]
-    variable_cost = [1, 2, 2]
+    fixed_costs = [100, 200, 300]
+    unit_distance_costs = [1, 2, 2]
     names = ["0,1", "2", "3"]
 
     for idx, vehicle_type in enumerate(data.vehicle_types()):
         assert_equal(vehicle_type.num_available, num_vehicles[idx])
         assert_equal(vehicle_type.capacity, capacities[idx])
-        assert_equal(vehicle_type.fixed_cost, fixed_cost[idx])
-        assert_equal(vehicle_type.unit_distance_cost, variable_cost[idx])
+        assert_equal(vehicle_type.fixed_cost, fixed_costs[idx])
+        assert_equal(vehicle_type.unit_distance_cost, unit_distance_costs[idx])
         assert_equal(vehicle_type.name, names[idx])

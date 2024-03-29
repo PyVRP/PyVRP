@@ -124,10 +124,12 @@ def read(
     else:
         fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
 
-    if "vehicles_variable_cost" in instance:
-        variable_costs = round_func(instance["vehicles_variable_cost"])
+    if "vehicles_unit_distance_cost" in instance:
+        unit_distance_costs = round_func(
+            instance["vehicles_unit_distance_cost"]
+        )
     else:
-        variable_costs = np.ones(num_vehicles, dtype=np.int64)
+        unit_distance_costs = np.ones(num_vehicles, dtype=np.int64)
 
     # If the max_duration or max_distance values are supplied, we should pass
     # them through the round func and then unwrap the result.
@@ -217,7 +219,12 @@ def read(
         """
         raise ValueError(msg)
 
-    vehicle_data = (capacities, vehicles_depots, fixed_costs, variable_costs)
+    vehicle_data = (
+        capacities,
+        vehicles_depots,
+        fixed_costs,
+        unit_distance_costs,
+    )
     if not all(len(arr) == num_vehicles for arr in vehicle_data):
         msg = """
         The number of elements in the vehicle capacity, depot, fixed cost, and
