@@ -297,20 +297,20 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
 
 def test_max_min_penalty(ok_small):
     """
-    Tests that penalty parameters are clipped to [1, 100_000] when updating
+    Tests that penalty parameters are clipped to [1, 1_000_000] when updating
     their values.
     """
     params = PenaltyParams(
-        init_time_warp_penalty=100_000,
+        init_time_warp_penalty=1_000_000,
         solutions_between_updates=1,
         penalty_decrease=0,
         penalty_increase=2,
     )
     pm = PenaltyManager(params)
 
-    # Initial penalty is 100_000, so one unit of time warp should be penalised
-    # by that value.
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 100_000)
+    # Initial penalty is 1_000_000, so one unit of time warp should be
+    # penalised by that value.
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 1_000_000)
 
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
@@ -319,7 +319,7 @@ def test_max_min_penalty(ok_small):
     # up by two times due to the penalty_increase parameter. But it's already
     # at the upper limit, and can thus not increase further.
     pm.register(infeas)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 100_000)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 1_000_000)
 
     feas = Solution(ok_small, [[1, 2], [3, 4]])
     assert_(not feas.has_time_warp())
