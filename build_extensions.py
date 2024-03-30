@@ -30,14 +30,6 @@ def parse_args():
         help="Clean build and installation directories before building.",
     )
     parser.add_argument(
-        "--regenerate_type_stubs",
-        action="store_true",
-        help="""
-        Whether to regenerate the MyPy type stubs as well. Default False, since
-        this can overwrite manual adjustments to the type stubs.
-        """,
-    )
-    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Whether to print more verbose compilation output.",
@@ -67,28 +59,11 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
         extension.unlink()
 
 
-def regenerate_stubs(install_dir: pathlib.Path):
-    def regen(extension):
-        ext_dir = extension.parent
-        ext_name, _ = extension.name.split(".", maxsplit=1)
-
-        check_call(
-            ["stubgen", "--parse-only", "-o", ".", "-m", ext_name],
-            cwd=ext_dir,
-        )
-
-    for extension in install_dir.rglob("*.so"):
-        regen(extension)
-
-    for extension in install_dir.rglob("*.pyd"):
-        regen(extension)
-
-
 def configure(
     build_dir: pathlib.Path,
     build_type: str,
     problem: str,
-    additional: list[str],
+    *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
     args = [
@@ -116,6 +91,34 @@ def install(build_dir: pathlib.Path):
     check_call(["meson", "install", "-C", build_dir])
 
 
+def build(
+    build_dir: pathlib.Path,
+    build_type: str,
+    problem: str,
+    verbose: bool,
+    *additional: list[str],
+):
+    configure(
+        build_dir,
+        build_type,
+        problem,
+        *additional,
+    )
+    compile(build_dir, verbose)
+    install(build_dir)
+
+
+def workload():
+    cmds = [
+        "pytest",
+        "pyvrp --seed 1 instances/CVRP/X-n101-k25.vrp --max_runtime 5",
+        "pyvrp --seed 2 instances/VRPTW/RC1_10_1.vrp --max_runtime 5",
+    ]
+
+    for cmd in cmds:
+        check_call(cmd.split())
+
+
 def main():
     args = parse_args()
     cwd = pathlib.Path.cwd()
@@ -128,41 +131,31 @@ def main():
         clean(build_dir, install_dir)
 
     if args.use_pgo:
-        configure(
+        build(
             build_dir,
             args.build_type,
             args.problem,
-            [*args.additional, "-Db_pgo=generate"],
+            args.verbose,
+            *args.additional,
+            "-Db_pgo=generate",
         )
-        compile(build_dir, args.verbose)
-        install(build_dir)
-
-        cmd = "pytest"
-        check_call(cmd.split(" "))
-
-        cmd = "pyvrp --seed 1 instances/CVRP/X-n101-k25.vrp --max_runtime 5"
-        check_call(cmd.split(" "))
-
-        configure(
+        workload()
+        build(
             build_dir,
             args.build_type,
             args.problem,
-            [*args.additional, "-Db_pgo=use"],
+            args.verbose,
+            *args.additional,
+            "-Db_pgo=use",
         )
-        compile(build_dir, args.verbose)
-        install(build_dir)
     else:
-        configure(
+        build(
             build_dir,
             args.build_type,
             args.problem,
-            args.additional,
+            args.verbose,
+            *args.additional,
         )
-        compile(build_dir, args.verbose)
-        install(build_dir)
-
-    if args.regenerate_type_stubs:
-        regenerate_stubs(install_dir)
 
 
 if __name__ == "__main__":
