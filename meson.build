@@ -11,16 +11,6 @@ project(
     ]
 )
 
-if get_option('buildtype') == 'debug'
-    compiler = meson.get_compiler('cpp')
-
-    if compiler.has_argument('-fprofile-abs-path')
-        # clang does not have this particular flag, so we only add it when
-        # compiling with gcc. It's helpful in determining code coverage.
-        add_project_arguments('-fprofile-abs-path', language: 'cpp')
-    endif
-endif
-
 if get_option('problem') == 'cvrp'
     # CVRP does not have time windows, so we set a flag that compiles time 
     # window stuff out of the extension modules.
