@@ -89,11 +89,13 @@ jobs:
         run: |
           poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean
-      - name: Run tests and generate reports coverage
-        run: |
-          poetry run pytest
-          poetry run gcovr --filter pyvrp/cpp/ -o coverage.txt
-      - uses: codecov/codecov-action@v4
+      - name: Run tests
+        run: poetry run pytest
+      - if: matrix.compiler == 'gcc'
+        name: Generate coverage reports
+        run: poetry run gcovr --filter pyvrp/cpp/ -o coverage.txt
+      - if: matrix.compiler == 'gcc'
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
