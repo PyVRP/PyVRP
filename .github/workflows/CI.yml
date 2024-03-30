@@ -89,7 +89,7 @@ jobs:
         run: |
           poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean
-      - name: Run tests
+      - name: Run tests and generate coverage reports
         run: |
           poetry run pytest
           poetry run ninja coverage-xml -C build
