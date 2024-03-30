@@ -36,6 +36,7 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg) {
     { arg.route() };
+    { arg.data() };
     { arg.distanceSegment() };
     { arg.durationSegment() };
     { arg.loadSegment() };
@@ -175,11 +176,7 @@ Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return static_cast<Cost>(timeWarp) * twPenalty_;
-#endif
 }
 
 Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
@@ -245,6 +242,10 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out += loadPenalty(load.load(), route->capacity());
     }
 
+    auto const &data = proposal.data();
+    if (!data.characteristics().hasDuration)
+        return true;
+
     auto const duration = proposal.durationSegment();
     out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
     out += twPenalty(duration.timeWarp(route->maxDuration()));
@@ -309,6 +310,10 @@ bool CostEvaluator::deltaCost(Cost &out,
     if constexpr (!exact)
         if (out >= 0)
             return false;
+
+    auto const &data = uProposal.data();
+    if (!data.characteristics().hasDuration)
+        return true;
 
     auto const uDuration = uProposal.durationSegment();
     out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration.duration());

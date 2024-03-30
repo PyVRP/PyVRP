@@ -24,6 +24,13 @@ static char *duplicate(char const *src)
 }
 }  // namespace
 
+ProblemData::Characteristics::Characteristics(
+    [[maybe_unused]] ProblemData const &data)
+    : hasDuration(false)
+{
+    // TODO
+}
+
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
                             Load delivery,
@@ -434,7 +441,8 @@ ProblemData::ProblemData(std::vector<Client> clients,
                                    vehicleTypes_.end(),
                                    0,
                                    [](auto sum, VehicleType const &type)
-                                   { return sum + type.numAvailable; }))
+                                   { return sum + type.numAvailable; })),
+      characteristics_(*this)
 {
     for (auto const &client : clients_)
     {

@@ -236,10 +236,9 @@ void Route::update()
 
         loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
 
-#ifndef PYVRP_NO_TIME_WINDOWS
-        durBefore[idx] = DurationSegment::merge(
-            data.durationMatrix(), durBefore[idx - 1], durAt[idx]);
-#endif
+        if (data.characteristics().hasDuration)
+            durBefore[idx] = DurationSegment::merge(
+                data.durationMatrix(), durBefore[idx - 1], durAt[idx]);
     }
 
     // Forward segments (client -> depot).
@@ -251,10 +250,9 @@ void Route::update()
         loadAfter[idx - 1]
             = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
 
-#ifndef PYVRP_NO_TIME_WINDOWS
-        durAfter[idx - 1] = DurationSegment::merge(
-            data.durationMatrix(), durAt[idx - 1], durAfter[idx]);
-#endif
+        if (data.characteristics().hasDuration)
+            durAfter[idx - 1] = DurationSegment::merge(
+                data.durationMatrix(), durAt[idx - 1], durAfter[idx]);
     }
 
 #ifndef NDEBUG

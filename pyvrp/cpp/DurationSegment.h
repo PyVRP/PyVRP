@@ -161,16 +161,12 @@ DurationSegment::merge([[maybe_unused]] Matrix<Duration> const &durationMatrix,
                        [[maybe_unused]] DurationSegment const &second,
                        [[maybe_unused]] Args &&...args)
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {0, 0, 0, 0, 0, 0, 0};
-#else
     auto const res = first.merge(durationMatrix, second);
 
     if constexpr (sizeof...(args) == 0)
         return res;
     else
         return merge(durationMatrix, res, args...);
-#endif
 }
 
 Duration DurationSegment::duration() const { return duration_; }

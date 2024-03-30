@@ -19,12 +19,6 @@ def parse_args():
         help="The type of build to provide. Defaults to release mode.",
     )
     parser.add_argument(
-        "--problem",
-        default="vrptw",
-        choices=["cvrp", "vrptw"],
-        help="Which type of solver to compile. Defaults to 'vrptw'.",
-    )
-    parser.add_argument(
         "--clean",
         action="store_true",
         help="Clean build and installation directories before building.",
@@ -82,7 +76,6 @@ def regenerate_stubs(install_dir: pathlib.Path):
 def configure(
     build_dir: pathlib.Path,
     build_type: str,
-    problem: str,
     additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
@@ -91,7 +84,6 @@ def configure(
         build_dir,
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
-        f"-Dproblem={problem}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         *additional,
         # fmt: on
@@ -124,7 +116,6 @@ def main():
     configure(
         build_dir,
         args.build_type,
-        args.problem,
         args.additional,
     )
     compile(build_dir, args.verbose)
