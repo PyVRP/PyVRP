@@ -111,8 +111,8 @@ def build(
 def workload():
     cmds = [
         "pytest",
-        "pyvrp --seed 1 instances/CVRP/X-n101-k25.vrp --max_runtime 5",
-        "pyvrp --seed 2 instances/VRPTW/RC1_10_1.vrp --max_runtime 5",
+        "pyvrp --seed 1 tests/data/X-n101-50-k13.vrp --max_runtime 5",
+        "pyvrp --seed 2 tests/data/RC208.vrp --max_runtime 5",
     ]
 
     for cmd in cmds:
