@@ -43,6 +43,11 @@ def parse_args():
         help="Whether to print more verbose compilation output.",
     )
     parser.add_argument(
+        "--use_pgo",
+        action="store_true",
+        help="Whether to enable profile-guided optimisation.",
+    )
+    parser.add_argument(
         "--additional",
         nargs=argparse.REMAINDER,
         default=[],
@@ -122,14 +127,39 @@ def main():
         # the CI. Else only do so when expressly asked.
         clean(build_dir, install_dir)
 
-    configure(
-        build_dir,
-        args.build_type,
-        args.problem,
-        args.additional,
-    )
-    compile(build_dir, args.verbose)
-    install(build_dir)
+    if args.use_pgo:
+        configure(
+            build_dir,
+            args.build_type,
+            args.problem,
+            [*args.additional, "-Db_pgo=generate"],
+        )
+        compile(build_dir, args.verbose)
+        install(build_dir)
+
+        cmd = "pytest"
+        check_call(cmd.split(" "))
+
+        cmd = "pyvrp --seed 1 instances/CVRP/X-n101-k25.vrp --max_runtime 5"
+        check_call(cmd.split(" "))
+
+        configure(
+            build_dir,
+            args.build_type,
+            args.problem,
+            [*args.additional, "-Db_pgo=use"],
+        )
+        compile(build_dir, args.verbose)
+        install(build_dir)
+    else:
+        configure(
+            build_dir,
+            args.build_type,
+            args.problem,
+            args.additional,
+        )
+        compile(build_dir, args.verbose)
+        install(build_dir)
 
     if args.regenerate_type_stubs:
         regenerate_stubs(install_dir)
