@@ -211,7 +211,7 @@ def read(
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-    if "unit_distance_cost" in instance:
+    if "vehicles_unit_distance_cost" in instance:
         # When there are unit distance costs, distances are effectively
         # scaled/rounded twice: once in the distance matrix, and once in the
         # unit distance costs. We also need to account for this in the other
