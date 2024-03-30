@@ -123,39 +123,27 @@ def main():
     args = parse_args()
     cwd = pathlib.Path.cwd()
     build_dir = cwd / args.build_dir
-    install_dir = cwd / "pyvrp"
 
     if args.clean or os.environ.get("CIBUILDWHEEL", "0") == "1":
         # Always start from an entirely clean build when building wheels in
         # the CI. Else only do so when expressly asked.
+        install_dir = cwd / "pyvrp"
         clean(build_dir, install_dir)
 
+    build_args = (
+        build_dir,
+        args.build_type,
+        args.problem,
+        args.verbose,
+        *args.additional,
+    )
+
     if args.use_pgo:
-        build(
-            build_dir,
-            args.build_type,
-            args.problem,
-            args.verbose,
-            *args.additional,
-            "-Db_pgo=generate",
-        )
+        build(*build_args, "-Db_pgo=generate")
         workload()
-        build(
-            build_dir,
-            args.build_type,
-            args.problem,
-            args.verbose,
-            *args.additional,
-            "-Db_pgo=use",
-        )
+        build(*build_args, "-Db_pgo=use")
     else:
-        build(
-            build_dir,
-            args.build_type,
-            args.problem,
-            args.verbose,
-            *args.additional,
-        )
+        build(*build_args)
 
 
 if __name__ == "__main__":
