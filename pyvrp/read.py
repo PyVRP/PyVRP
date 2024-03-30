@@ -288,9 +288,9 @@ def read(
         veh_type2idcs[veh_type].append(idx)
 
     vehicle_types = []
-    for attributes, vehicles in veh_type2idcs:
+    for attributes, vehicles in veh_type2idcs.items():
         capacity, depot_idx, fixed_cost, unit_distance_cost = attributes
-        veh_type = VehicleType(
+        vehicle_type = VehicleType(
             num_available=len(vehicles),
             capacity=capacity,
             depot=depot_idx,
@@ -302,7 +302,7 @@ def read(
             # actual vehicles that make up this vehicle type.
             name=",".join(map(str, vehicles)),
         )
-        vehicle_types.append(veh_type)
+        vehicle_types.append(vehicle_type)
 
     return ProblemData(
         clients,
