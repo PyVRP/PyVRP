@@ -109,7 +109,7 @@ def read(
 
     if isinstance(instance.get("capacity"), Number):
         capacities = round_func(np.full(num_vehicles, instance["capacity"]))
-    elif instance.get("capacity") is not None:
+    elif "capacity" in instance:
         capacities = round_func(instance["capacity"])
     else:
         capacities = np.full(num_vehicles, _INT_MAX)
@@ -236,7 +236,7 @@ def read(
         fixed_costs,
         unit_distance_costs,
     )
-    if not all(len(arr) == num_vehicles for arr in vehicle_data):
+    if any(len(arr) != num_vehicles for arr in vehicle_data):
         msg = """
         The number of elements in the vehicle capacity, depot, fixed cost, and
         unit distance cost sections should be equal to the number of vehicles
@@ -287,8 +287,10 @@ def read(
     for idx, veh_type in enumerate(zip(*vehicle_data)):
         veh_type2idcs[veh_type].append(idx)
 
-    vehicle_types = [
-        VehicleType(
+    vehicle_types = []
+    for attributes, vehicles in veh_type2idcs:
+        capacity, depot_idx, fixed_cost, unit_distance_cost = attributes
+        veh_type = VehicleType(
             num_available=len(vehicles),
             capacity=capacity,
             depot=depot_idx,
@@ -300,13 +302,7 @@ def read(
             # actual vehicles that make up this vehicle type.
             name=",".join(map(str, vehicles)),
         )
-        for (
-            capacity,
-            depot_idx,
-            fixed_cost,
-            unit_distance_cost,
-        ), vehicles in veh_type2idcs.items()
-    ]
+        vehicle_types.append(veh_type)
 
     return ProblemData(
         clients,
