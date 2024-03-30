@@ -92,14 +92,11 @@ jobs:
       - name: Run tests
         run: poetry run pytest
       - if: matrix.compiler == 'gcc'
-        name: Generate coverage reports
-        run: poetry run gcovr --filter pyvrp/cpp/ -o coverage.txt
-      - if: matrix.compiler == 'gcc'
         uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml, coverage.txt
+          plugins: gcov, pycoverage
       - if: matrix.compiler == 'gcc'
         name: Install Valgrind
         run: sudo apt install valgrind
