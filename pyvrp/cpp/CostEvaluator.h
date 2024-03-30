@@ -218,6 +218,7 @@ template <bool exact,
 bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
+    auto const &data = proposal.data();
 
     out -= route->distanceCost();
     out -= distPenalty(route->distance(), route->maxDistance());
@@ -225,8 +226,11 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     if constexpr (!skipLoad)
         out -= loadPenalty(route->load(), route->capacity());
 
-    out -= route->durationCost();
-    out -= twPenalty(route->timeWarp());
+    if (data.characteristics().hasDuration)
+    {
+        out -= route->durationCost();
+        out -= twPenalty(route->timeWarp());
+    }
 
     auto const dist = proposal.distanceSegment();
     out += route->unitDistanceCost() * static_cast<Cost>(dist.distance());
@@ -242,7 +246,6 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out += loadPenalty(load.load(), route->capacity());
     }
 
-    auto const &data = proposal.data();
     if (!data.characteristics().hasDuration)
         return true;
 
@@ -268,6 +271,8 @@ bool CostEvaluator::deltaCost(Cost &out,
     auto const *uRoute = uProposal.route();
     auto const *vRoute = vProposal.route();
 
+    auto const &data = uProposal.data();
+
     out -= uRoute->distanceCost();
     out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
 
@@ -280,11 +285,14 @@ bool CostEvaluator::deltaCost(Cost &out,
         out -= loadPenalty(vRoute->load(), vRoute->capacity());
     }
 
-    out -= uRoute->durationCost();
-    out -= twPenalty(uRoute->timeWarp());
+    if (data.characteristics().hasDuration)
+    {
+        out -= uRoute->durationCost();
+        out -= twPenalty(uRoute->timeWarp());
 
-    out -= vRoute->durationCost();
-    out -= twPenalty(vRoute->timeWarp());
+        out -= vRoute->durationCost();
+        out -= twPenalty(vRoute->timeWarp());
+    }
 
     auto const uDist = uProposal.distanceSegment();
     out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist.distance());
@@ -311,7 +319,6 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    auto const &data = uProposal.data();
     if (!data.characteristics().hasDuration)
         return true;
 

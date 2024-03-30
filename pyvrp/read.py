@@ -265,7 +265,7 @@ def read(
         depots,
         vehicle_types,
         distances,
-        durations,
+        np.zeros_like(distances),
         groups,
     )
 

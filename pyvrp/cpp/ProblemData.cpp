@@ -26,7 +26,7 @@ static char *duplicate(char const *src)
 
 ProblemData::Characteristics::Characteristics(
     [[maybe_unused]] ProblemData const &data)
-    : hasDuration(false)
+    : hasDuration(data.durationMatrix().max() == 0)
 {
     // TODO
 }
