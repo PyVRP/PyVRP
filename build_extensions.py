@@ -109,6 +109,9 @@ def build(
 
 
 def workload():
+    # TODO if and when we actually start using PGO we should probably rethink
+    # what the profiling workload needs to be. For example, larger instances
+    # are harder to solve, so perhaps we should optimise for those?
     cmds = [
         "pytest",
         "pyvrp --seed 1 tests/data/X-n101-50-k13.vrp --max_runtime 5",
