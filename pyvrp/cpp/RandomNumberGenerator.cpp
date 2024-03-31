@@ -34,3 +34,8 @@ std::array<uint32_t, 4> const &RandomNumberGenerator::state() const
 {
     return state_;
 }
+
+double RandomNumberGenerator::rand()
+{
+    return operator()() / static_cast<double>(max());
+}

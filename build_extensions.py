@@ -30,17 +30,14 @@ def parse_args():
         help="Clean build and installation directories before building.",
     )
     parser.add_argument(
-        "--regenerate_type_stubs",
-        action="store_true",
-        help="""
-        Whether to regenerate the MyPy type stubs as well. Default False, since
-        this can overwrite manual adjustments to the type stubs.
-        """,
-    )
-    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Whether to print more verbose compilation output.",
+    )
+    parser.add_argument(
+        "--use_pgo",
+        action="store_true",
+        help="Whether to enable profile-guided optimisation.",
     )
     parser.add_argument(
         "--additional",
@@ -62,28 +59,11 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
         extension.unlink()
 
 
-def regenerate_stubs(install_dir: pathlib.Path):
-    def regen(extension):
-        ext_dir = extension.parent
-        ext_name, _ = extension.name.split(".", maxsplit=1)
-
-        check_call(
-            ["stubgen", "--parse-only", "-o", ".", "-m", ext_name],
-            cwd=ext_dir,
-        )
-
-    for extension in install_dir.rglob("*.so"):
-        regen(extension)
-
-    for extension in install_dir.rglob("*.pyd"):
-        regen(extension)
-
-
 def configure(
     build_dir: pathlib.Path,
     build_type: str,
     problem: str,
-    additional: list[str],
+    *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
     args = [
@@ -93,6 +73,7 @@ def configure(
         f"-Dpython.platlibdir={cwd.absolute()}",
         f"-Dproblem={problem}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
+        f"-Db_coverage={'true' if build_type != 'release' else 'false'}",
         *additional,
         # fmt: on
     ]
@@ -110,28 +91,62 @@ def install(build_dir: pathlib.Path):
     check_call(["meson", "install", "-C", build_dir])
 
 
+def build(
+    build_dir: pathlib.Path,
+    build_type: str,
+    problem: str,
+    verbose: bool,
+    *additional: list[str],
+):
+    configure(
+        build_dir,
+        build_type,
+        problem,
+        *additional,
+    )
+    compile(build_dir, verbose)
+    install(build_dir)
+
+
+def workload():
+    # TODO if and when we actually start using PGO we should probably rethink
+    # what the profiling workload needs to be. For example, larger instances
+    # are harder to solve, so perhaps we should optimise for those?
+    cmds = [
+        "pytest",
+        "pyvrp --seed 1 tests/data/X-n101-50-k13.vrp --max_runtime 5",
+        "pyvrp --seed 2 tests/data/RC208.vrp --max_runtime 5",
+    ]
+
+    for cmd in cmds:
+        check_call(cmd.split())
+
+
 def main():
     args = parse_args()
     cwd = pathlib.Path.cwd()
     build_dir = cwd / args.build_dir
-    install_dir = cwd / "pyvrp"
 
     if args.clean or os.environ.get("CIBUILDWHEEL", "0") == "1":
         # Always start from an entirely clean build when building wheels in
         # the CI. Else only do so when expressly asked.
+        install_dir = cwd / "pyvrp"
         clean(build_dir, install_dir)
 
-    configure(
+    build_args = (
         build_dir,
         args.build_type,
         args.problem,
-        args.additional,
+        args.verbose,
+        *args.additional,
     )
-    compile(build_dir, args.verbose)
-    install(build_dir)
 
-    if args.regenerate_type_stubs:
-        regenerate_stubs(install_dir)
+    if args.use_pgo:
+        build(*build_args, "-Db_pgo=generate")
+        workload()
+        build(*build_args, "-Db_pgo=use")
+    else:
+        build(*build_args)
 
 
 if __name__ == "__main__":

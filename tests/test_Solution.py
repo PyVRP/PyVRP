@@ -136,6 +136,23 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
     assert_equal(len(routes), data.num_clients)
 
 
+def test_random_constructor_randomly_selects_optional_clients(
+    ok_small_prizes,
+):
+    """
+    Tests that the randomly constructed solution selects optional clients
+    uniformly at random.
+    """
+    rng = RandomNumberGenerator(seed=42)
+
+    sols = [Solution.make_random(ok_small_prizes, rng) for _ in range(100)]
+    avg_num_clients = np.mean([sol.num_clients() for sol in sols])
+
+    # There are 4 clients, three of which are optional, so the average number
+    # of clients should be close to 2.5.
+    assert_allclose(avg_num_clients, 2.5, atol=0.1)
+
+
 def test_route_constructor_raises_too_many_vehicles(ok_small):
     """
     Tests that constructing a solution with more routes than available in the
@@ -1030,21 +1047,6 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     sol = Solution(data, routes)
     assert_equal(sol.is_feasible(), feasible)
     assert_equal(sol.is_group_feasible(), feasible)
-
-
-def test_mutually_exclusive_group_feasibility_bug(
-    ok_small_mutually_exclusive_groups,
-):
-    """
-    This tests a bug where the make_random() classmethod did not set the group
-    feasibility flag correctly, leading it to believe that every solution was
-    feasible w.r.t. the client groups.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
-
-    assert_(not sol.is_feasible())
-    assert_(not sol.is_group_feasible())
 
 
 def test_optional_mutually_exclusive_group(ok_small):

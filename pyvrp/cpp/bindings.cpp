@@ -812,7 +812,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("min", &RandomNumberGenerator::min)
         .def("max", &RandomNumberGenerator::max)
         .def("__call__", &RandomNumberGenerator::operator())
-        .def("rand", &RandomNumberGenerator::rand<double>)
+        .def("rand", &RandomNumberGenerator::rand)
         .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"))
         .def("state", &RandomNumberGenerator::state);
 }
