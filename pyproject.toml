@@ -88,12 +88,10 @@ pytest-cov = ">=2.6.1"
 codecov = "*"
 
 # These are used in the build script: for compiling the library (meson, ninja)
-# and for generating docs (docblock), type stubs (mypy), and coverage reports
-# (gcovr).
+# and generating docs (docblock) and coverage reports (gcovr).
 meson = "^1.0.0"
 ninja = "^1.11.1"
 gcovr = "^7.2"
-mypy = "^0.991"
 docblock = "^0.1.5"
 
 
