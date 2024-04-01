@@ -94,46 +94,25 @@ def test_route_eq(ok_small):
     assert_(route1 != -1.0)
 
 
-def test_random_constructor_cycles_over_routes(ok_small):
+@pytest.mark.parametrize("seed", [0, 8, 13])
+def test_random_constructor_spreads_clients_evenly_over_routes(rc208, seed):
     """
-    Tests that a randomly constructed solution fills all available vehicles
-    in turn.
+    Tests that the random constructor spreads clients evenly (albeit randomly)
+    over the routes. This means in expectation we expect each route to contain
+    # clients / # vehicles clients.
     """
-    # The OkSmall instance has four clients and three vehicles. Since 1 client
-    # per vehicle would not work (insufficient vehicles), each route is given
-    # two clients (and the last route should be empty).
-    rng = RandomNumberGenerator(seed=42)
+    rng = RandomNumberGenerator(seed=seed)
 
-    sol = Solution.make_random(ok_small, rng)
-    routes = sol.routes()
+    averages = []
+    for _ in range(100):
+        sol = Solution.make_random(rc208, rng)
+        averages.append(sol.num_clients() / sol.num_routes())
 
-    assert_equal(sol.num_routes(), 2)
-    assert_equal(len(routes), 2)
-
-    for idx, size in enumerate([2, 2]):
-        assert_equal(len(routes[idx]), size)
-
-
-@pytest.mark.parametrize("num_vehicles", (4, 5, 1_000))
-def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
-    """
-    Tests that the randomly constructed solution has exactly as many routes as
-    the number of clients when there are sufficient vehicles available.
-    """
-    data = ok_small.replace(
-        vehicle_types=[VehicleType(num_vehicles, capacity=10)]
+    assert_allclose(
+        np.mean(averages),
+        rc208.num_clients / rc208.num_vehicles,
+        atol=0.1,
     )
-    assert_equal(data.num_clients, 4)
-
-    rng = RandomNumberGenerator(seed=42)
-    sol = Solution.make_random(data, rng)
-    routes = sol.routes()
-
-    for route in routes:
-        assert_equal(len(route), 1)
-
-    assert_equal(sol.num_routes(), data.num_clients)
-    assert_equal(len(routes), data.num_clients)
 
 
 def test_random_constructor_randomly_selects_optional_clients(

@@ -256,7 +256,7 @@ def test_from_data_and_solve(small_cvrp, ok_small):
     assert_(res.is_feasible())
 
     model = Model.from_data(ok_small)
-    res = model.solve(stop=MaxIterations(100), seed=0)
+    res = model.solve(stop=MaxIterations(100), seed=5)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
@@ -267,7 +267,7 @@ def test_model_and_solve(ok_small):
     finds the correct (known) solutions.
     """
     model = Model.from_data(ok_small)
-    res = model.solve(stop=MaxIterations(100), seed=0)
+    res = model.solve(stop=MaxIterations(100), seed=5)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
@@ -305,7 +305,7 @@ def test_model_and_solve(ok_small):
             model.add_edge(client, other, from_client, from_client)
             model.add_edge(other, client, to_client, to_client)
 
-    res = model.solve(stop=MaxIterations(100), seed=0)
+    res = model.solve(stop=MaxIterations(100), seed=5)
 
     assert_(res.is_feasible())
     assert_equal(res.cost(), 9_155)
@@ -727,8 +727,8 @@ def test_minimise_distance_or_duration(ok_small):
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)
 
-    orig_res = orig_model.solve(stop=MaxIterations(10), seed=1)
-    new_res = new_model.solve(stop=MaxIterations(10), seed=1)
+    orig_res = orig_model.solve(stop=MaxIterations(10), seed=5)
+    new_res = new_model.solve(stop=MaxIterations(10), seed=5)
 
     assert_equal(orig_res.cost(), 9_155)
     assert_equal(new_res.cost(), 9_875)

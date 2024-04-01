@@ -90,15 +90,13 @@ def test_RC208(rc208, seed: int):
     """
     assert_(rc208.num_vehicles < rc208.num_clients)
 
-    # Let's first create a random solution that uses all vehicles.
     rng = RandomNumberGenerator(seed=seed)
     random = Solution.make_random(rc208, rng)
-    assert_equal(random.num_routes(), rc208.num_vehicles)
 
-    # Let's next create the routes we want to repair. To ensure we use the
-    # same number of vehicles, we initialise dummy routes.
+    # Let's next create the routes we want to repair, where we insert a subset
+    # of clients into dummy routes.
     routes = [Route(rc208, [idx + 1], 0) for idx in range(rc208.num_vehicles)]
-    unplanned = list(range(rc208.num_vehicles + 1, rc208.num_clients + 1))
+    unplanned = list(range(rc208.num_vehicles + 1, rc208.num_locations))
     cost_eval = CostEvaluator(1, 1, 0)
 
     # Repair inserting all clients that are not already in the dummy routes.
