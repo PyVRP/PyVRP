@@ -517,7 +517,7 @@ def test_model_solves_line_instance_with_multiple_depots():
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(stop=MaxIterations(100))
+    res = m.solve(seed=3, stop=MaxIterations(100))
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
