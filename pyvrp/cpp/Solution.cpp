@@ -149,7 +149,7 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
-    // Add all required clients, but randomly select optional clients.
+    // Add all required and randomly selected optional clients.
     std::vector<size_t> clients;
     clients.reserve(data.numClients());
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
