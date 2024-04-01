@@ -517,7 +517,7 @@ def test_model_solves_line_instance_with_multiple_depots():
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(stop=MaxIterations(100))
+    res = m.solve(stop=MaxIterations(100), seed=3)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
@@ -727,8 +727,8 @@ def test_minimise_distance_or_duration(ok_small):
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)
 
-    orig_res = orig_model.solve(stop=MaxIterations(10), seed=1)
-    new_res = new_model.solve(stop=MaxIterations(10), seed=1)
+    orig_res = orig_model.solve(stop=MaxIterations(20), seed=82)
+    new_res = new_model.solve(stop=MaxIterations(20), seed=82)
 
     assert_equal(orig_res.cost(), 9_155)
     assert_equal(new_res.cost(), 9_875)
