@@ -149,9 +149,9 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
-    std::vector<size_t> clients;
-
     // Add all required clients, but randomly select optional clients.
+    std::vector<size_t> clients;
+    clients.reserve(data.numClients());
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         pyvrp::ProblemData::Client const &clientData = data.location(idx);
@@ -177,15 +177,18 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
-    std::vector<size_t> vehTypes(data.numVehicles());
-    size_t count = 0;
+    std::vector<size_t> vehTypes;
+    vehTypes.reserve(data.numVehicles());
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
         auto const numAvailable = data.vehicleType(vehType).numAvailable;
-        std::fill_n(vehTypes.begin() + count, numAvailable, vehType);
-        count += numAvailable;
+        std::fill_n(std::back_inserter(vehTypes), numAvailable, vehType);
     }
 
+    // Shuffle vehicle types. This ensures used vehicle types are sufficiently
+    // diverse when there are many more vehicles than there are clients (which
+    // can happen when there is no fleet limitation in heterogeneous fleet VRP
+    // instances).
     std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
 
     routes_.reserve(numRoutes);
