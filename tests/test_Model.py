@@ -256,7 +256,7 @@ def test_from_data_and_solve(small_cvrp, ok_small):
     assert_(res.is_feasible())
 
     model = Model.from_data(ok_small)
-    res = model.solve(stop=MaxIterations(100), seed=5)
+    res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
@@ -267,7 +267,7 @@ def test_model_and_solve(ok_small):
     finds the correct (known) solutions.
     """
     model = Model.from_data(ok_small)
-    res = model.solve(stop=MaxIterations(100), seed=5)
+    res = model.solve(stop=MaxIterations(100), seed=0)
     assert_equal(res.cost(), 9_155)
     assert_(res.is_feasible())
 
@@ -305,7 +305,7 @@ def test_model_and_solve(ok_small):
             model.add_edge(client, other, from_client, from_client)
             model.add_edge(other, client, to_client, to_client)
 
-    res = model.solve(stop=MaxIterations(100), seed=5)
+    res = model.solve(stop=MaxIterations(100), seed=0)
 
     assert_(res.is_feasible())
     assert_equal(res.cost(), 9_155)
@@ -517,7 +517,7 @@ def test_model_solves_line_instance_with_multiple_depots():
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(seed=3, stop=MaxIterations(100))
+    res = m.solve(stop=MaxIterations(100), seed=3)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0

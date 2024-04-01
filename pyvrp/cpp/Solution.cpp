@@ -3,6 +3,7 @@
 #include "LoadSegment.h"
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
@@ -148,8 +149,9 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
-    // Add all required clients, but randomly select optional clients.
     std::vector<size_t> clients;
+
+    // Add all required clients, but randomly select optional clients.
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         pyvrp::ProblemData::Client const &clientData = data.location(idx);
@@ -160,23 +162,35 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     // Shuffle clients to create random routes.
     std::shuffle(clients.begin(), clients.end(), rng);
 
-    // Assign each client to a randomly selected route.
-    std::vector<std::vector<Client>> routes(data.numVehicles());
-    for (auto const client : clients)
-        routes[rng.randint(data.numVehicles())].push_back(client);
+    // Distribute clients evenly over the routes: the total number of clients
+    // per vehicle, with an adjustment in case the division is not perfect and
+    // there are not enough vehicles for single-client routes.
+    auto const numVehicles = data.numVehicles();
+    auto const numClients = clients.size();
+    auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
+    auto const adjustment
+        = numClients > numVehicles && numClients % numVehicles != 0;
+    auto const perRoute = perVehicle + adjustment;
+    auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
-    routes_.reserve(data.numVehicles());
+    std::vector<std::vector<Client>> routes(numRoutes);
+    for (size_t idx = 0; idx != numClients; ++idx)
+        routes[idx / perRoute].push_back(clients[idx]);
+
+    std::vector<size_t> vehTypes(data.numVehicles());
     size_t count = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
         auto const numAvailable = data.vehicleType(vehType).numAvailable;
-        for (size_t idx = 0; idx != numAvailable; ++idx)
-        {
-            if (!routes[count].empty())
-                routes_.emplace_back(data, routes[count], vehType);
-            count++;
-        }
+        std::fill_n(vehTypes.begin() + count, numAvailable, vehType);
+        count += numAvailable;
     }
+
+    std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
+
+    routes_.reserve(numRoutes);
+    for (size_t idx = 0; idx != routes.size(); idx++)
+        routes_.emplace_back(data, routes[idx], vehTypes[idx]);
 
     *this = Solution(data, routes_);
 }
