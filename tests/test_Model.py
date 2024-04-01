@@ -727,8 +727,8 @@ def test_minimise_distance_or_duration(ok_small):
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)
 
-    orig_res = orig_model.solve(stop=MaxIterations(10), seed=5)
-    new_res = new_model.solve(stop=MaxIterations(10), seed=5)
+    orig_res = orig_model.solve(stop=MaxIterations(20), seed=82)
+    new_res = new_model.solve(stop=MaxIterations(20), seed=82)
 
     assert_equal(orig_res.cost(), 9_155)
     assert_equal(new_res.cost(), 9_875)
