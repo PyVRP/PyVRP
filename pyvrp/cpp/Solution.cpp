@@ -185,11 +185,11 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
         std::fill_n(std::back_inserter(vehTypes), numAvailable, vehType);
     }
 
-    // Shuffle vehicle types. This ensures used vehicle types are sufficiently
-    // diverse when there are many more vehicles than there are clients (which
-    // can happen when there is no fleet limitation in heterogeneous fleet VRP
-    // instances).
-    std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
+    if (data.numVehicleTypes() > 1)
+        // Shuffle vehicle types when there is more than one. This ensures some
+        // additional diversity in the initial solutions, which sometimes (e.g.
+        // with heterogeneous fleet VRP) matters for consistent convergence.
+        std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
 
     routes_.reserve(numRoutes);
     for (size_t idx = 0; idx != routes.size(); idx++)
