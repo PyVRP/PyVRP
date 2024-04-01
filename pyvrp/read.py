@@ -125,9 +125,9 @@ def read(
         fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
 
     if "vehicles_unit_distance_cost" in instance:
-        unit_distance_costs = round_func(
-            instance["vehicles_unit_distance_cost"]
-        )
+        # Unit distance costs are not rounded: it is assumed that the instance
+        # contains the costs in the desired precision!
+        unit_distance_costs = instance["vehicles_unit_distance_cost"]
     else:
         unit_distance_costs = np.ones(num_vehicles, dtype=np.int64)
 
@@ -210,16 +210,6 @@ def read(
         backhaul = np.flatnonzero(backhauls > 0)
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
-
-    if "vehicles_unit_distance_cost" in instance:
-        # When there are unit distance costs, distances are effectively
-        # scaled/rounded twice: once in the distance matrix, and once in the
-        # unit distance costs. We also need to account for this in the other
-        # objective terms (fixed costs and prizes), so we scale/round them
-        # again. This only works if the fixed cost and prize data does not
-        # have too many decimal places.
-        fixed_costs *= round_func(1)
-        prizes *= round_func(1)
 
     # Checks
     contiguous_lower_idcs = np.arange(len(depot_idcs))
