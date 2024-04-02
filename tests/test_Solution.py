@@ -136,6 +136,25 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
     assert_equal(len(routes), data.num_clients)
 
 
+def test_random_constructor_uses_all_vehicle_types(ok_small):
+    """
+    Tests that vehicles of each available vehicle type are used when there are
+    more vehicles than clients.
+    """
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(ok_small.num_clients, capacity=10),
+            VehicleType(ok_small.num_clients, capacity=10),
+        ]
+    )
+
+    rng = RandomNumberGenerator(seed=42)
+    sol = Solution.make_random(data, rng)
+
+    used_vehicle_types = {route.vehicle_type() for route in sol.routes()}
+    assert_equal(used_vehicle_types, {0, 1})
+
+
 def test_random_constructor_randomly_selects_optional_clients(
     ok_small_prizes,
 ):

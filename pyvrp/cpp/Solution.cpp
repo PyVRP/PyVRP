@@ -3,6 +3,7 @@
 #include "LoadSegment.h"
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
@@ -148,9 +149,9 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
+    // Add all required and randomly selected optional clients.
     std::vector<size_t> clients;
-
-    // Add all required clients, but randomly select optional clients.
+    clients.reserve(data.numClients());
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         pyvrp::ProblemData::Client const &clientData = data.location(idx);
@@ -176,15 +177,23 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     for (size_t idx = 0; idx != numClients; ++idx)
         routes[idx / perRoute].push_back(clients[idx]);
 
-    routes_.reserve(numRoutes);
-    size_t count = 0;
+    std::vector<size_t> vehTypes;
+    vehTypes.reserve(data.numVehicles());
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
         auto const numAvailable = data.vehicleType(vehType).numAvailable;
-        for (size_t i = 0; i != numAvailable; ++i)
-            if (count < routes.size())
-                routes_.emplace_back(data, routes[count++], vehType);
+        std::fill_n(std::back_inserter(vehTypes), numAvailable, vehType);
     }
+
+    if (data.numVehicleTypes() > 1)
+        // Shuffle vehicle types when there is more than one. This ensures some
+        // additional diversity in the initial solutions, which sometimes (e.g.
+        // with heterogeneous fleet VRP) matters for consistent convergence.
+        std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
+
+    routes_.reserve(numRoutes);
+    for (size_t idx = 0; idx != routes.size(); idx++)
+        routes_.emplace_back(data, routes[idx], vehTypes[idx]);
 
     *this = Solution(data, routes_);
 }
