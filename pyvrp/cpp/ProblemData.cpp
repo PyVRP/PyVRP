@@ -181,6 +181,12 @@ ProblemData::Depot::Depot(Depot &&depot)
 
 ProblemData::Depot::~Depot() { delete[] name; }
 
+ProblemData::Profile::Profile(Matrix<Distance> distances,
+                              Matrix<Duration> durations)
+    : distances(std::move(distances)), durations(std::move(durations))
+{
+}
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t depot,
@@ -284,6 +290,11 @@ std::vector<ProblemData::ClientGroup> const &ProblemData::groups() const
     return groups_;
 }
 
+std::vector<ProblemData::Profile> const &ProblemData::profiles() const
+{
+    return profiles_;
+}
+
 std::vector<ProblemData::VehicleType> const &ProblemData::vehicleTypes() const
 {
     return vehicleTypes_;
@@ -295,21 +306,17 @@ ProblemData::ClientGroup const &ProblemData::group(size_t group) const
     return groups_[group];
 }
 
+ProblemData::Profile const &ProblemData::profile(size_t profile) const
+{
+    assert(profile < profiles_.size());
+    return profiles_[profile];
+}
+
 ProblemData::VehicleType const &
 ProblemData::vehicleType(size_t vehicleType) const
 {
     assert(vehicleType < vehicleTypes_.size());
     return vehicleTypes_[vehicleType];
-}
-
-Distance ProblemData::dist(size_t first, size_t second) const
-{
-    return dist_(first, second);
-}
-
-Duration ProblemData::duration(size_t first, size_t second) const
-{
-    return dur_(first, second);
 }
 
 std::pair<double, double> const &ProblemData::centroid() const
@@ -324,6 +331,8 @@ size_t ProblemData::numDepots() const { return depots_.size(); }
 size_t ProblemData::numGroups() const { return groups_.size(); }
 
 size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
+
+size_t ProblemData::numProfiles() const { return profiles_.size(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
@@ -387,56 +396,68 @@ void ProblemData::validate() const
         if (vehicleType.depot >= numDepots())
             throw std::out_of_range("Vehicle type has invalid depot.");
 
-        // if (vehicleType.profile >= numProfiles())
-        //     throw std::out_of_range("Vehicle type has invalid profile.");
+        if (vehicleType.profile >= numProfiles())
+            throw std::out_of_range("Vehicle type has invalid profile.");
     }
 
     // Matrix checks.
-    if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())
-        throw std::invalid_argument("Distance matrix shape does not match the "
-                                    "problem size.");
+    if (profiles_.size() != 1)  // TODO relax
+        throw std::invalid_argument("Expected exactly *one* profile.");
 
-    if (dur_.numRows() != numLocations() || dur_.numCols() != numLocations())
-        throw std::invalid_argument("Duration matrix shape does not match the "
-                                    "problem size.");
-
-    for (size_t idx = 0; idx != numLocations(); ++idx)
+    for (auto const &profile : profiles_)
     {
-        if (dist_(idx, idx) != 0)
-            throw std::invalid_argument("Distance matrix diagonal must be 0.");
+        auto const &dist = profile.distances;
+        auto const &dur = profile.durations;
 
-        if (dur_(idx, idx) != 0)
-            throw std::invalid_argument("Duration matrix diagonal must be 0.");
+        if (dist.numRows() != numLocations()
+            || dist.numCols() != numLocations())
+            throw std::invalid_argument("Distance matrix shape does not match "
+                                        "the problem size.");
+
+        if (dur.numRows() != numLocations() || dur.numCols() != numLocations())
+            throw std::invalid_argument("Duration matrix shape does not match "
+                                        "the problem size.");
+
+        for (size_t idx = 0; idx != numLocations(); ++idx)
+        {
+            if (dist(idx, idx) != 0)
+            {
+                auto const *msg = "Distance matrix diagonal must be 0.";
+                throw std::invalid_argument(msg);
+            }
+
+            if (dur(idx, idx) != 0)
+            {
+                auto const *msg = "Duration matrix diagonal must be 0.";
+                throw std::invalid_argument(msg);
+            }
+        }
     }
 }
 
 ProblemData
 ProblemData::replace(std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<Depot>> &depots,
+                     std::optional<std::vector<Profile>> &profiles,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
-                     std::optional<Matrix<Distance>> &distMat,
-                     std::optional<Matrix<Duration>> &durMat,
                      std::optional<std::vector<ClientGroup>> &groups)
 {
     return ProblemData(clients.value_or(clients_),
                        depots.value_or(depots_),
+                       profiles.value_or(profiles_),
                        vehicleTypes.value_or(vehicleTypes_),
-                       distMat.value_or(dist_),
-                       durMat.value_or(dur_),
                        groups.value_or(groups_));
 }
 
 ProblemData::ProblemData(std::vector<Client> clients,
                          std::vector<Depot> depots,
+                         std::vector<Profile> profiles,
                          std::vector<VehicleType> vehicleTypes,
-                         Matrix<Distance> distMat,
-                         Matrix<Duration> durMat,
                          std::vector<ClientGroup> groups)
     : centroid_({0, 0}),
-      dist_(std::move(distMat)),
-      dur_(std::move(durMat)),
       clients_(std::move(clients)),
       depots_(std::move(depots)),
+      profiles_(std::move(profiles)),
       vehicleTypes_(std::move(vehicleTypes)),
       groups_(std::move(groups)),
       numVehicles_(std::accumulate(vehicleTypes_.begin(),

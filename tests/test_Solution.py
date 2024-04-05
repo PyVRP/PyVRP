@@ -10,6 +10,7 @@ from pyvrp import (
     ClientGroup,
     Depot,
     ProblemData,
+    Profile,
     RandomNumberGenerator,
     Route,
     Solution,
@@ -431,13 +432,14 @@ def test_distance_calculation(ok_small):
     # check separately.
     assert_equal(sol.distance(), sum(route.distance() for route in routes))
 
-    expected = ok_small.dist(0, 1) + ok_small.dist(1, 2) + ok_small.dist(2, 0)
+    distances = ok_small.distance_matrix()
+    expected = distances[0, 1] + distances[1, 2] + distances[2, 0]
     assert_equal(routes[0].distance(), expected)
 
-    expected = ok_small.dist(0, 3) + ok_small.dist(3, 0)
+    expected = distances[0, 3] + distances[3, 0]
     assert_equal(routes[1].distance(), expected)
 
-    expected = ok_small.dist(0, 4) + ok_small.dist(4, 0)
+    expected = distances[0, 4] + distances[4, 0]
     assert_equal(routes[2].distance(), expected)
 
 
@@ -595,7 +597,8 @@ def test_route_start_and_end_time_calculations(ok_small):
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
-    start_time = ok_small.location(1).tw_early - ok_small.duration(0, 1)
+    durations = ok_small.duration_matrix()
+    start_time = ok_small.location(1).tw_early - durations[0, 1]
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())
@@ -676,9 +679,8 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
             Client(x=2, y=0, tw_late=5),
         ],
         depots=[Depot(x=0, y=0, tw_late=10)],
+        profiles=[Profile(dist_mat, dur_mat)],
         vehicle_types=[VehicleType(2)],
-        distance_matrix=dist_mat,
-        duration_matrix=dur_mat,
     )
 
     # This solution directly visits the second client from the depot, which is
@@ -708,9 +710,10 @@ def test_time_warp_return_to_depot():
     data = ProblemData(
         clients=[Client(x=1, y=0)],
         depots=[Depot(x=0, y=0, tw_late=1)],
+        profiles=[
+            Profile(np.asarray([[0, 0], [0, 0]]), np.asarray([[0, 1], [1, 0]]))
+        ],
         vehicle_types=[VehicleType()],
-        distance_matrix=np.asarray([[0, 0], [0, 0]]),
-        duration_matrix=np.asarray([[0, 1], [1, 0]]),
     )
 
     sol = Solution(data, [[1]])
@@ -850,9 +853,8 @@ def test_eq_unassigned():
             Client(x=1, y=0, required=False),
         ],
         depots=[Depot(x=0, y=0)],
+        profiles=[Profile(dist, dist)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=dist,
-        duration_matrix=dist,
     )
 
     sol1 = Solution(data, [[1]])

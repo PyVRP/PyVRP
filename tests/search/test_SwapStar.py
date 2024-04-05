@@ -7,6 +7,7 @@ from pyvrp import (
     CostEvaluator,
     Depot,
     ProblemData,
+    Profile,
     RandomNumberGenerator,
     Solution,
     VehicleType,
@@ -89,6 +90,15 @@ def test_swap_star_can_swap_in_place():
     different routes is V for U and U for V, but SWAP* should be able to handle
     such a case. This is explicitly tested here because it is so rare.
     """
+    dist_mat = np.asarray(
+        [
+            [0, 1, 10, 10],
+            [1, 0, 10, 10],
+            [10, 10, 0, 10],
+            [10, 10, 1, 0],
+        ]
+    )
+
     data = ProblemData(
         clients=[
             Client(x=1, y=1),
@@ -96,16 +106,8 @@ def test_swap_star_can_swap_in_place():
             Client(x=3, y=3),
         ],
         depots=[Depot(x=0, y=0)],
+        profiles=[Profile(dist_mat, np.zeros((4, 4)))],
         vehicle_types=[VehicleType(num_available=2)],
-        distance_matrix=np.asarray(
-            [
-                [0, 1, 10, 10],
-                [1, 0, 10, 10],
-                [10, 10, 0, 10],
-                [10, 10, 1, 0],
-            ]
-        ),
-        duration_matrix=np.zeros((4, 4), dtype=int),
     )
 
     nodes = [Node(loc=loc) for loc in range(data.num_locations)]
@@ -141,6 +143,15 @@ def test_wrong_load_calculation_bug():
     were incorrect because they used "best.U" instead of "U" when determining
     the load diff on a route. This test exercises the fix for that issue.
     """
+    dist_mat = np.asarray(
+        [
+            [0, 10, 10, 10, 1],
+            [1, 0, 10, 10, 10],
+            [10, 10, 0, 10, 10],
+            [10, 1, 10, 0, 10],
+            [10, 10, 1, 10, 0],
+        ]
+    )
     data = ProblemData(
         clients=[
             Client(x=1, y=1, delivery=0),
@@ -149,17 +160,8 @@ def test_wrong_load_calculation_bug():
             Client(x=4, y=4, delivery=0),
         ],
         depots=[Depot(x=0, y=0)],
+        profiles=[Profile(dist_mat, np.zeros((5, 5)))],
         vehicle_types=[VehicleType(num_available=2, capacity=12)],
-        distance_matrix=np.asarray(
-            [
-                [0, 10, 10, 10, 1],
-                [1, 0, 10, 10, 10],
-                [10, 10, 0, 10, 10],
-                [10, 1, 10, 0, 10],
-                [10, 10, 1, 10, 0],
-            ]
-        ),
-        duration_matrix=np.zeros((5, 5), dtype=int),
     )
 
     nodes = [Node(loc=loc) for loc in range(data.num_locations)]

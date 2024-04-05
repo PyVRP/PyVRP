@@ -6,7 +6,14 @@ from warnings import warn
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
+from pyvrp._pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    ProblemData,
+    Profile,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
@@ -263,9 +270,8 @@ def read(
     return ProblemData(
         clients,
         depots,
+        [Profile(distances, durations)],
         vehicle_types,
-        distances,
-        durations,
         groups,
     )
 

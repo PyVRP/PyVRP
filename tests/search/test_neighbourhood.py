@@ -142,12 +142,14 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     neighbours = compute_neighbours(small_cvrp, params)
     clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
 
+    distances = small_cvrp.distance_matrix()
+
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
         # (using stable sort). The test below checks that this is the same as
         # what comes out of the granular neighbourhood calculation.
         valid = np.array([other for other in clients if other != client])
-        dists = [small_cvrp.dist(client, other) for other in valid]
+        dists = distances[client, valid]
         by_proximity = valid[np.argsort(dists, kind="stable")]
         assert_equal(by_proximity, neighbours[client])
 

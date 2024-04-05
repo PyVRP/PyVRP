@@ -2,7 +2,14 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    Profile,
+    VehicleType,
+)
 from pyvrp.search import SwapRoutes
 from pyvrp.search._search import Node, Route
 
@@ -243,17 +250,18 @@ def test_evaluate_with_different_depots():
     Tests that SwapRoutes correctly evaluates distance changes due to different
     start and end depots of different vehicle types.
     """
+    dist_mat = [
+        [0, 10, 2, 8],
+        [10, 0, 8, 2],
+        [2, 8, 0, 6],
+        [8, 2, 6, 0],
+    ]
+
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=4, y=4)],
         depots=[Depot(x=0, y=0), Depot(x=5, y=5)],
+        profiles=[Profile(dist_mat, np.zeros_like(dist_mat))],
         vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
-        distance_matrix=[
-            [0, 10, 2, 8],
-            [10, 0, 8, 2],
-            [2, 8, 0, 6],
-            [8, 2, 6, 0],
-        ],
-        duration_matrix=np.zeros((4, 4), dtype=int),
     )
 
     # First route is first depot -> second client -> first depot.

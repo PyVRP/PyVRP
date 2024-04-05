@@ -1,7 +1,14 @@
 import numpy as np
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    Profile,
+    VehicleType,
+)
 from pyvrp.search._search import (
     Node,
     Route,
@@ -121,9 +128,8 @@ def test_insert_fixed_vehicle_cost():
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
+        profiles=[Profile(np.zeros((3, 3)), np.zeros((3, 3)))],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
-        distance_matrix=np.zeros((3, 3), dtype=int),
-        duration_matrix=np.zeros((3, 3), dtype=int),
     )
 
     # All distances, durations, and loads are equal. So the only cost change
@@ -148,9 +154,8 @@ def test_remove_fixed_vehicle_cost():
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
+        profiles=[Profile(np.zeros((3, 3)), np.zeros((3, 3)))],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
-        distance_matrix=np.zeros((3, 3), dtype=int),
-        duration_matrix=np.zeros((3, 3), dtype=int),
     )
 
     # All distances, durations, and loads are equal. So the only cost change

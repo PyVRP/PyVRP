@@ -7,6 +7,7 @@ from pyvrp import (
     CostEvaluator,
     Depot,
     ProblemData,
+    Profile,
     RandomNumberGenerator,
     Solution,
     VehicleType,
@@ -230,21 +231,25 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
             Client(x=2, y=0, tw_early=0, tw_late=5),
         ],
         depots=[Depot(x=0, y=0, tw_early=0, tw_late=10)],
+        profiles=[
+            Profile(
+                distances=np.asarray(
+                    [
+                        [0, 1, 5],
+                        [5, 0, 1],
+                        [1, 5, 0],
+                    ]
+                ),
+                durations=np.asarray(
+                    [
+                        [0, 100, 2],
+                        [1, 0, 100],
+                        [100, 2, 0],
+                    ]
+                ),
+            )
+        ],
         vehicle_types=[VehicleType(1)],
-        distance_matrix=np.asarray(
-            [
-                [0, 1, 5],
-                [5, 0, 1],
-                [1, 5, 0],
-            ]
-        ),
-        duration_matrix=np.asarray(
-            [
-                [0, 100, 2],
-                [1, 0, 100],
-                [100, 2, 0],
-            ]
-        ),
     )
 
     # We consider two solutions. The first is duration optimal, and overall the
@@ -400,9 +405,10 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
             Client(x=2, y=0, delivery=5),
         ],
         depots=[Depot(x=0, y=0)],
+        profiles=[
+            Profile(np.where(np.eye(4), 0, 1), np.zeros((4, 4), dtype=int))
+        ],
         vehicle_types=[VehicleType(capacity=5)],
-        distance_matrix=np.where(np.eye(4), 0, 1),
-        duration_matrix=np.zeros((4, 4), dtype=int),
     )
 
     op = operator(data)

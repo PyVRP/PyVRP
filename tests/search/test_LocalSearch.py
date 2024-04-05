@@ -7,6 +7,7 @@ from pyvrp import (
     CostEvaluator,
     Depot,
     ProblemData,
+    Profile,
     RandomNumberGenerator,
     Route,
     Solution,
@@ -425,9 +426,8 @@ def test_local_search_does_not_remove_required_clients():
             Client(x=2, y=2, prize=0, required=False),
         ],
         depots=[Depot(x=0, y=0)],
+        profiles=[Profile(np.where(np.eye(3), 0, 10), np.zeros((3, 3)))],
         vehicle_types=[VehicleType(1, capacity=50)],
-        distance_matrix=np.where(np.eye(3), 0, 10),
-        duration_matrix=np.zeros((3, 3), dtype=int),
     )
 
     ls = LocalSearch(data, rng, compute_neighbours(data))

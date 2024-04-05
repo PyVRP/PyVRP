@@ -150,6 +150,14 @@ PYBIND11_MODULE(_pyvrp, m)
             { return py::make_iterator(group.begin(), group.end()); },
             py::return_value_policy::reference_internal);
 
+    py::class_<ProblemData::Profile>(
+        m, "Profile", DOC(pyvrp, ProblemData, Profile))
+        .def(py::init<Matrix<pyvrp::Distance>, Matrix<pyvrp::Duration>>(),
+             py::arg("distances"),
+             py::arg("durations"))
+        .def_readonly("distances", &ProblemData::Profile::distances)
+        .def_readonly("durations", &ProblemData::Profile::durations);
+
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<size_t,
@@ -204,23 +212,20 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client>,
                       std::vector<ProblemData::Depot>,
+                      std::vector<ProblemData::Profile>,
                       std::vector<ProblemData::VehicleType>,
-                      Matrix<pyvrp::Distance>,
-                      Matrix<pyvrp::Duration>,
                       std::vector<ProblemData::ClientGroup>>(),
              py::arg("clients"),
              py::arg("depots"),
+             py::arg("profiles"),
              py::arg("vehicle_types"),
-             py::arg("distance_matrix"),
-             py::arg("duration_matrix"),
              py::arg("groups") = py::list())
         .def("replace",
              &ProblemData::replace,
              py::arg("clients") = py::none(),
              py::arg("depots") = py::none(),
+             py::arg("profiles") = py::none(),
              py::arg("vehicle_types") = py::none(),
-             py::arg("distance_matrix") = py::none(),
-             py::arg("duration_matrix") = py::none(),
              py::arg("groups") = py::none(),
              DOC(pyvrp, ProblemData, replace))
         .def_property_readonly("num_clients",
@@ -235,6 +240,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_locations",
                                &ProblemData::numLocations,
                                DOC(pyvrp, ProblemData, numLocations))
+        .def_property_readonly("num_profiles",
+                               &ProblemData::numProfiles,
+                               DOC(pyvrp, ProblemData, numProfiles))
         .def_property_readonly("num_vehicle_types",
                                &ProblemData::numVehicleTypes,
                                DOC(pyvrp, ProblemData, numVehicleTypes))
@@ -271,6 +279,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::groups,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, groups))
+        .def("profiles",
+             &ProblemData::profiles,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, profiles))
         .def("vehicle_types",
              &ProblemData::vehicleTypes,
              py::return_value_policy::reference_internal,
@@ -284,6 +296,11 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("group"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, group))
+        .def("profile",
+             &ProblemData::profile,
+             py::arg("profile"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, profile))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),
@@ -291,22 +308,14 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, ProblemData, vehicleType))
         .def("distance_matrix",
              &ProblemData::distanceMatrix,
+             py::arg("profile") = 0,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, distanceMatrix))
         .def("duration_matrix",
              &ProblemData::durationMatrix,
+             py::arg("profile") = 0,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, durationMatrix))
-        .def("dist",
-             &ProblemData::dist,
-             py::arg("first"),
-             py::arg("second"),
-             DOC(pyvrp, ProblemData, dist))
-        .def("duration",
-             &ProblemData::duration,
-             py::arg("first"),
-             py::arg("second"),
-             DOC(pyvrp, ProblemData, duration));
+             DOC(pyvrp, ProblemData, durationMatrix));
 
     py::class_<Solution::Route>(m, "Route", DOC(pyvrp, Solution, Route))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),

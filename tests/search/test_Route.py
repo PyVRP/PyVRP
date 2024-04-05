@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import Depot, ProblemData, VehicleType
+from pyvrp import Depot, ProblemData, Profile, VehicleType
 from pyvrp.search._search import Node, Route
 
 
@@ -244,11 +244,12 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     )
 
     # Distances on various segments of the route.
-    assert_equal(route.dist_between(0, 1).distance(), ok_small.dist(0, client))
-    assert_equal(route.dist_between(1, 2).distance(), ok_small.dist(client, 0))
+    distances = ok_small.distance_matrix()
+    assert_equal(route.dist_between(0, 1).distance(), distances[0, client])
+    assert_equal(route.dist_between(1, 2).distance(), distances[client, 0])
     assert_equal(
         route.dist_between(0, 2).distance(),
-        ok_small.dist(0, client) + ok_small.dist(client, 0),
+        distances[0, client] + distances[client, 0],
     )
 
     # This should always be zero because distance is a property of the edges,
@@ -445,9 +446,13 @@ def test_shift_duration_depot_time_window_interaction(
     data = ProblemData(
         clients=[],
         depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
+        profiles=[
+            Profile(
+                distances=np.zeros((1, 1), dtype=int),
+                durations=np.zeros((1, 1), dtype=int),
+            )
+        ],
         vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
-        distance_matrix=np.zeros((1, 1), dtype=int),
-        duration_matrix=np.zeros((1, 1), dtype=int),
     )
 
     route = Route(data, idx=0, vehicle_type=0)
