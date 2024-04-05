@@ -293,17 +293,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("duration_matrix",
              &ProblemData::durationMatrix,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, durationMatrix))
-        .def("dist",
-             &ProblemData::dist,
-             py::arg("first"),
-             py::arg("second"),
-             DOC(pyvrp, ProblemData, dist))
-        .def("duration",
-             &ProblemData::duration,
-             py::arg("first"),
-             py::arg("second"),
-             DOC(pyvrp, ProblemData, duration));
+             DOC(pyvrp, ProblemData, durationMatrix));
 
     py::class_<Solution::Route>(m, "Route", DOC(pyvrp, Solution, Route))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),

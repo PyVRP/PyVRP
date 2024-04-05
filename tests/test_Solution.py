@@ -431,13 +431,14 @@ def test_distance_calculation(ok_small):
     # check separately.
     assert_equal(sol.distance(), sum(route.distance() for route in routes))
 
-    expected = ok_small.dist(0, 1) + ok_small.dist(1, 2) + ok_small.dist(2, 0)
+    distances = ok_small.distance_matrix()
+    expected = distances[0, 1] + distances[1, 2] + distances[2, 0]
     assert_equal(routes[0].distance(), expected)
 
-    expected = ok_small.dist(0, 3) + ok_small.dist(3, 0)
+    expected = distances[0, 3] + distances[3, 0]
     assert_equal(routes[1].distance(), expected)
 
-    expected = ok_small.dist(0, 4) + ok_small.dist(4, 0)
+    expected = distances[0, 4] + distances[4, 0]
     assert_equal(routes[2].distance(), expected)
 
 
@@ -595,7 +596,8 @@ def test_route_start_and_end_time_calculations(ok_small):
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
-    start_time = ok_small.location(1).tw_early - ok_small.duration(0, 1)
+    durations = ok_small.duration_matrix()
+    start_time = ok_small.location(1).tw_early - durations[0, 1]
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())

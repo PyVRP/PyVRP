@@ -298,16 +298,6 @@ ProblemData::vehicleType(size_t vehicleType) const
     return vehicleTypes_[vehicleType];
 }
 
-Distance ProblemData::dist(size_t first, size_t second) const
-{
-    return dist_(first, second);
-}
-
-Duration ProblemData::duration(size_t first, size_t second) const
-{
-    return dur_(first, second);
-}
-
 std::pair<double, double> const &ProblemData::centroid() const
 {
     return centroid_;

@@ -43,6 +43,8 @@ def plot_route_schedule(
         _, ax = plt.subplots()
 
     vehicle_type = data.vehicle_type(route.vehicle_type())
+    distances = data.distance_matrix()
+    durations = data.duration_matrix()
     depot = data.location(route.depot())
     horizon = depot.tw_late - depot.tw_early
 
@@ -74,8 +76,8 @@ def plot_route_schedule(
     prev_idx = vehicle_type.depot
     for idx in [*list(route), vehicle_type.depot]:
         stop = data.location(idx)
-        delta_time = data.duration(prev_idx, idx)
-        delta_dist = data.dist(prev_idx, idx)
+        delta_time = durations[prev_idx, idx]
+        delta_dist = distances[prev_idx, idx]
         t += delta_time
         drive_time += delta_time
         dist += delta_dist
