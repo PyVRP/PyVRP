@@ -191,6 +191,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Distance maxDistance,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
+                                      size_t profile,
                                       char const *name)
     : numAvailable(numAvailable),
       depot(depot),
@@ -202,6 +203,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       fixedCost(fixedCost),
       unitDistanceCost(unitDistanceCost),
       unitDurationCost(unitDurationCost),
+      profile(profile),
       name(duplicate(name))
 {
     if (numAvailable == 0)
@@ -243,6 +245,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
+      profile(vehicleType.profile),
       name(duplicate(vehicleType.name))
 {
 }
@@ -258,6 +261,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
+      profile(vehicleType.profile),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -379,8 +383,13 @@ void ProblemData::validate() const
 
     // Vehicle type checks.
     for (auto const &vehicleType : vehicleTypes_)
+    {
         if (vehicleType.depot >= numDepots())
             throw std::out_of_range("Vehicle type has invalid depot.");
+
+        // if (vehicleType.profile >= numProfiles())
+        //     throw std::out_of_range("Vehicle type has invalid profile.");
+    }
 
     // Matrix checks.
     if (dist_.numRows() != numLocations() || dist_.numCols() != numLocations())

@@ -162,6 +162,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Distance,
                       pyvrp::Cost,
                       pyvrp::Cost,
+                      size_t,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
@@ -175,6 +176,7 @@ PYBIND11_MODULE(_pyvrp, m)
              = std::numeric_limits<pyvrp::Distance>::max(),
              py::arg("unit_distance_cost") = 1,
              py::arg("unit_duration_cost") = 0,
+             py::arg("profile") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -189,6 +191,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::unitDistanceCost)
         .def_readonly("unit_duration_cost",
                       &ProblemData::VehicleType::unitDurationCost)
+        .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)

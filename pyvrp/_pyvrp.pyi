@@ -100,6 +100,7 @@ class VehicleType:
     fixed_cost: int
     unit_distance_cost: int
     unit_duration_cost: int
+    profile: int
     name: str
     def __init__(
         self,
@@ -113,6 +114,7 @@ class VehicleType:
         fixed_cost: int = 0,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
+        profile: int = 0,
         *,
         name: str = "",
     ) -> None: ...
