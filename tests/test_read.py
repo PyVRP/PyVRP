@@ -85,10 +85,8 @@ def test_reading_OkSmall_instance():
 
     # For instances read through VRPLIB/read(), distance is duration. So the
     # dist/durs should be the same as the expected edge weights above.
-    for frm in range(data.num_locations):
-        for to in range(data.num_locations):
-            assert_equal(data.dist(frm, to), expected[frm][to])
-            assert_equal(data.duration(frm, to), expected[frm][to])
+    assert_equal(data.distance_matrix(), expected)
+    assert_equal(data.duration_matrix(), expected)
 
     # From the DEMAND_SECTION in the file
     expected = [0, 5, 5, 3, 5]
@@ -146,8 +144,9 @@ def test_reading_vrplib_instance():
     #      dY = 264 - 215 = 49
     #      dist = sqrt(dX^2 + dY^2) = 49.37
     #      int(10 * dist) = 493
-    assert_equal(data.dist(0, 1), 493)
-    assert_equal(data.dist(1, 0), 493)
+    distances = data.distance_matrix()
+    assert_equal(distances[0, 1], 493)
+    assert_equal(distances[1, 0], 493)
 
     # This is a CVRP instance, so all other fields should have default values.
     for loc in range(1, data.num_locations):
@@ -187,9 +186,10 @@ def test_round_func_round_nearest():
     assert_equal(data.location(1).y, 85)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
-    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
-    assert_equal(data.dist(0, 1), round(dist))
-    assert_equal(data.dist(1, 0), round(dist))
+    distances = data.distance_matrix()
+    expected_dist = round(sqrt((40 - 25) ** 2 + (85 - 50) ** 2))
+    assert_equal(distances[0, 1], expected_dist)
+    assert_equal(distances[1, 0], expected_dist)
 
 
 def test_round_func_exact():
@@ -209,9 +209,10 @@ def test_round_func_exact():
     assert_equal(data.location(1).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
-    dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000
-    assert_equal(data.dist(0, 1), round(dist))
-    assert_equal(data.dist(1, 0), round(dist))
+    distances = data.distance_matrix()
+    expected_dist = round(sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000)
+    assert_equal(distances[0, 1], expected_dist)
+    assert_equal(distances[1, 0], expected_dist)
 
 
 def test_service_time_specification():
@@ -372,17 +373,20 @@ def test_vrpb_instance():
     linehauls = set(range(1, 51))
     backhauls = set(range(51, 101))
 
+    distances = data.distance_matrix()
+    durations = data.duration_matrix()
+
     for frm in range(data.num_locations):
         for to in range(data.num_locations):
             depot2back = frm == 0 and to in backhauls
             back2line = frm in backhauls and to in linehauls
 
             if depot2back or back2line:
-                assert_equal(data.dist(frm, to), MAX_VALUE)
-                assert_equal(data.duration(frm, to), MAX_VALUE)
+                assert_equal(distances[frm, to], MAX_VALUE)
+                assert_equal(durations[frm, to], MAX_VALUE)
             else:
-                assert_(data.dist(frm, to) < MAX_VALUE)
-                assert_(data.duration(frm, to) < MAX_VALUE)
+                assert_(distances[frm, to] < MAX_VALUE)
+                assert_(durations[frm, to] < MAX_VALUE)
 
 
 def test_max_distance_constraint():

@@ -97,12 +97,15 @@ class Model:
         depots = data.depots()
         clients = data.clients()
         locs = depots + clients
+
+        distances = data.distance_matrix()
+        durations = data.duration_matrix()
         edges = [
             Edge(
                 frm=locs[frm],
                 to=locs[to],
-                distance=data.dist(frm, to),
-                duration=data.duration(frm, to),
+                distance=distances[frm, to],
+                duration=durations[frm, to],
             )
             for frm in range(data.num_locations)
             for to in range(data.num_locations)

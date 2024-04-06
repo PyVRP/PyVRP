@@ -351,8 +351,8 @@ def test_centroid(ok_small):
 
 def test_matrix_access():
     """
-    Tests that the ``duration()`` and ``dist()`` methods (and their matrix
-    access equivalents) correctly index the underlying data matrices.
+    Tests that the ``duration_matrix()`` and ``distance_matrix()`` methods
+    correctly return the underlying data matrices.
     """
     gen = default_rng(seed=42)
     size = 6
@@ -374,11 +374,6 @@ def test_matrix_access():
 
     assert_equal(data.distance_matrix(), dist_mat)
     assert_equal(data.duration_matrix(), dur_mat)
-
-    for frm in range(size):
-        for to in range(size):
-            assert_equal(data.dist(frm, to), dist_mat[frm, to])
-            assert_equal(data.duration(frm, to), dur_mat[frm, to])
 
 
 def test_matrices_are_not_writeable():

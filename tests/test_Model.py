@@ -239,10 +239,8 @@ def test_from_data(small_cvrp):
         small_cvrp.vehicle_type(0).capacity,
     )
 
-    # It's a bit cumbersome to compare the whole matrices, so we use a few
-    # sample traces from the distance and duration matrices instead.
-    assert_equal(model_data.dist(3, 4), small_cvrp.dist(3, 4))
-    assert_equal(model_data.duration(2, 1), small_cvrp.duration(2, 1))
+    assert_equal(model_data.distance_matrix(), small_cvrp.distance_matrix())
+    assert_equal(model_data.duration_matrix(), small_cvrp.duration_matrix())
 
 
 def test_from_data_and_solve(small_cvrp, ok_small):
@@ -360,8 +358,9 @@ def test_partial_distance_duration_matrix():
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
     data = model.data()
-    assert_equal(data.dist(0, 2), MAX_VALUE)
-    assert_equal(data.dist(1, 0), MAX_VALUE)
+    distances = data.distance_matrix()
+    assert_equal(distances[0, 2], MAX_VALUE)
+    assert_equal(distances[1, 0], MAX_VALUE)
 
     res = model.solve(stop=MaxIterations(100), seed=4)
     assert_equal(res.best.num_routes(), 1)

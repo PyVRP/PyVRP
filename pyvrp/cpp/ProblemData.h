@@ -507,32 +507,6 @@ public:
     [[nodiscard]] VehicleType const &vehicleType(size_t vehicleType) const;
 
     /**
-     * Returns the travel distance between the first and second argument,
-     * according to this instance's travel distance matrix.
-     *
-     * Parameters
-     * ----------
-     * first
-     *     Client or depot number.
-     * second
-     *     Client or depot number.
-     */
-    [[nodiscard]] Distance dist(size_t first, size_t second) const;
-
-    /**
-     * Returns the travel duration between the first and second argument,
-     * according to this instance's travel duration matrix.
-     *
-     * Parameters
-     * ----------
-     * first
-     *     Client or depot number.
-     * second
-     *     Client or depot number.
-     */
-    [[nodiscard]] Duration duration(size_t first, size_t second) const;
-
-    /**
      * The full travel distance matrix.
      *
      * .. note::

@@ -329,13 +329,16 @@ Solution::Route::Route(ProblemData const &data,
     auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.depot;
 
+    auto const &distances = data.distanceMatrix();
+    auto const &durations = data.durationMatrix();
+
     for (size_t idx = 0; idx != size(); ++idx)
     {
         auto const client = visits_[idx];
         ProblemData::Client const &clientData = data.location(client);
 
-        distance_ += data.dist(prevClient, client);
-        travel_ += data.duration(prevClient, client);
+        distance_ += distances(prevClient, client);
+        travel_ += durations(prevClient, client);
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
@@ -343,7 +346,7 @@ Solution::Route::Route(ProblemData const &data,
         centroid_.second += static_cast<double>(clientData.y) / size();
 
         auto const clientDS = DurationSegment(client, clientData);
-        ds = DurationSegment::merge(data.durationMatrix(), ds, clientDS);
+        ds = DurationSegment::merge(durations, ds, clientDS);
 
         auto const clientLs = LoadSegment(clientData);
         ls = LoadSegment::merge(ls, clientLs);
@@ -352,17 +355,17 @@ Solution::Route::Route(ProblemData const &data,
     }
 
     Client const last = visits_.back();  // last client has depot as successor
-    distance_ += data.dist(last, vehType.depot);
+    distance_ += distances(last, vehType.depot);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 
-    travel_ += data.duration(last, vehType.depot);
+    travel_ += durations(last, vehType.depot);
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    ds = DurationSegment::merge(data.durationMatrix(), ds, depotDS);
+    ds = DurationSegment::merge(durations, ds, depotDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
     startTime_ = ds.twEarly();
