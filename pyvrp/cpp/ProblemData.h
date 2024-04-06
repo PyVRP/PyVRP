@@ -560,7 +560,7 @@ public:
      * The full travel distance matrix of the given routing profile.
      *
      * Parameters
-     * ---------
+     * ----------
      * profile
      *     Routing profile for which to retrieve the distance matrix.
      *
@@ -577,7 +577,7 @@ public:
      * The full travel duration matrix of the given routing profile.
      *
      * Parameters
-     * ---------
+     * ----------
      * profile
      *     Routing profile for which to retrieve the duration matrix.
      *

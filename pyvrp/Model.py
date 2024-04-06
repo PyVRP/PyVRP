@@ -101,7 +101,6 @@ class Model:
 
         distances = data.distance_matrix()
         durations = data.duration_matrix()
-
         edges = [
             Edge(
                 frm=locs[frm],

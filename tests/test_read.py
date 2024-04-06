@@ -187,9 +187,9 @@ def test_round_func_round_nearest():
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix()
-    expected_dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2)
-    assert_equal(distances[0, 1], round(expected_dist))
-    assert_equal(distances[1, 0], round(expected_dist))
+    expected_dist = round(sqrt((40 - 25) ** 2 + (85 - 50) ** 2))
+    assert_equal(distances[0, 1], expected_dist)
+    assert_equal(distances[1, 0], expected_dist)
 
 
 def test_round_func_exact():
@@ -210,9 +210,9 @@ def test_round_func_exact():
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix()
-    expected_dist = sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000
-    assert_equal(distances[0, 1], round(expected_dist))
-    assert_equal(distances[1, 0], round(expected_dist))
+    expected_dist = round(sqrt((40 - 25) ** 2 + (85 - 50) ** 2) * 1_000)
+    assert_equal(distances[0, 1], expected_dist)
+    assert_equal(distances[1, 0], expected_dist)
 
 
 def test_service_time_specification():

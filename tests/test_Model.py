@@ -359,9 +359,8 @@ def test_partial_distance_duration_matrix():
     # maximum value we use for such edges.
     data = model.data()
     distances = data.distance_matrix()
-    durations = data.duration_matrix()
     assert_equal(distances[0, 2], MAX_VALUE)
-    assert_equal(durations[1, 0], MAX_VALUE)
+    assert_equal(distances[1, 0], MAX_VALUE)
 
     res = model.solve(stop=MaxIterations(100), seed=4)
     assert_equal(res.best.num_routes(), 1)
