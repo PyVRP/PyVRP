@@ -96,6 +96,10 @@ extensions = [
     ['search', 'search', libsearch],
 ]
 
+# Extension dependencies: Python itself, and pybind11.
+py = import('python').find_installation()
+dependencies = [py.dependency(), dependency('pybind11')]
+
 foreach extension : extensions
     rawname = extension[0]
     name = '_' + rawname
@@ -116,10 +120,6 @@ foreach extension : extensions
         command: ['python', '@INPUT@', '@OUTPUT@'],
         depend_files: [SRC_DIR / subdir / 'bindings.cpp'],
     )
-
-    # Next we get the extension dependencies.
-    py = import('python').find_installation()
-    dependencies = [py.dependency(), dependency('pybind11')]
 
     # Register extension module to build.
     py.extension_module(
