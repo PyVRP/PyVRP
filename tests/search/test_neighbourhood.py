@@ -143,8 +143,6 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
     distances = small_cvrp.distance_matrix()
 
-    distances = small_cvrp.distance_matrix()
-
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
         # (using stable sort). The test below checks that this is the same as
