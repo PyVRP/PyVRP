@@ -17,10 +17,10 @@ if get_option('problem') == 'cvrp'
     add_project_arguments('-DPYVRP_NO_TIME_WINDOWS', language: 'cpp')
 endif
 
-# We first compile common libraries that contains all regular, C++ code, one
+# We first compile static libraries that contains all regular, C++ code, one
 # per extension module. These are linked against when we compile the actual 
-# Python extension modules. We also define the top-level source directory here,
-# for convenience.
+# Python extension modules down below. We also define the top-level source 
+# directory here, for convenience.
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
 
