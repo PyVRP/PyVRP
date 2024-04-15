@@ -325,6 +325,7 @@ public:
      *     max_distance: int = np.iinfo(np.int64).max,
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
+     *     profile: int = 0,
      *     *,
      *     name: str = "",
      * )
@@ -359,6 +360,8 @@ public:
      * unit_duration_cost
      *     Cost per unit of duration on routes serviced by vehicles of this
      *     type. Default 0.
+     * profile
+     *     This vehcle type's routing profile. Default 0, the first profile.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -387,6 +390,8 @@ public:
      *     Cost per unit of distance travelled by vehicles of this type.
      * unit_duration_cost
      *     Cost per unit of duration on routes using vehicles of this type.
+     * profile
+     *     This vehcle type's routing profile.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -402,6 +407,7 @@ public:
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
+        size_t const profile;         // Distance and duration profile
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -414,6 +420,7 @@ public:
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
+                    size_t profile = 0,
                     char const *name = "");
 
         VehicleType(VehicleType const &vehicleType);

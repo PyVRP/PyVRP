@@ -24,6 +24,12 @@ if TYPE_CHECKING:
 class Edge:
     """
     Stores an edge connecting two locations.
+
+    Raises
+    ------
+    ValueError
+        When either distance or duration is a negative value, or when self
+        loops have nonzero distance or duration values.
     """
 
     __slots__ = ["frm", "to", "distance", "duration"]
@@ -35,10 +41,45 @@ class Edge:
         distance: int,
         duration: int,
     ):
+        if distance < 0 or duration < 0:
+            raise ValueError("Cannot have negative edge distance or duration.")
+
+        if frm == to and (distance != 0 or duration != 0):
+            raise ValueError("A self loop must have 0 distance and duration.")
+
+        if max(distance, duration) > MAX_VALUE:
+            msg = """
+            The given distance or duration value is very large. This may impact
+            numerical stability. Consider rescaling your input data.
+            """
+            warn(msg, ScalingWarning)
+
         self.frm = frm
         self.to = to
         self.distance = distance
         self.duration = duration
+
+
+class Profile:
+    """
+    Stores a routing profile.
+    """
+
+    edges: list[Edge]
+
+    def __init__(self):
+        self.edges = []
+
+    def add_edge(
+        self,
+        frm: Union[Client, Depot],
+        to: Union[Client, Depot],
+        distance: int,
+        duration: int = 0,
+    ) -> Edge:
+        edge = Edge(frm, to, distance, duration)
+        self.edges.append(edge)
+        return edge
 
 
 class Model:
@@ -51,6 +92,7 @@ class Model:
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
         self._groups: list[ClientGroup] = []
+        self._profiles: list[Profile] = []
         self._vehicle_types: list[VehicleType] = []
 
     @property
@@ -221,35 +263,28 @@ class Model:
         to: Union[Client, Depot],
         distance: int,
         duration: int = 0,
+        profile: Optional[Profile] = None,
     ) -> Edge:
         """
         Adds an edge :math:`(i, j)` between ``frm`` (:math:`i`) and ``to``
         (:math:`j`). The edge can be given distance and duration attributes.
         Distance is required, but the default duration is zero. Returns the
         created edge.
-
-        Raises
-        ------
-        ValueError
-            When either distance or duration is a negative value, or when self
-            loops have nonzero distance or duration values.
         """
-        if distance < 0 or duration < 0:
-            raise ValueError("Cannot have negative edge distance or duration.")
-
-        if frm == to and (distance != 0 or duration != 0):
-            raise ValueError("A self loop must have 0 distance and duration.")
-
-        if max(distance, duration) > MAX_VALUE:
-            msg = """
-            The given distance or duration value is very large. This may impact
-            numerical stability. Consider rescaling your input data.
-            """
-            warn(msg, ScalingWarning)
+        if profile is not None:
+            return profile.add_edge(frm, to, distance, duration)
 
         edge = Edge(frm=frm, to=to, distance=distance, duration=duration)
         self._edges.append(edge)
         return edge
+
+    def add_profile(self) -> Profile:
+        """
+        Adds a new routing profile to the model.
+        """
+        profile = Profile()
+        self._profiles.append(profile)
+        return profile
 
     def add_vehicle_type(
         self,
@@ -263,6 +298,7 @@ class Model:
         max_distance: int = np.iinfo(np.int64).max,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
+        profile: Optional[Profile] = None,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -278,14 +314,22 @@ class Model:
         Raises
         ------
         ValueError
-            When the given ``depot`` is not in this model instance.
+            When the given ``depot`` is not in this model instance, or when the
+            ``profile`` is not understood.
         """
         if depot is None:
             depot_idx = 0
         elif depot in self._depots:
             depot_idx = self._depots.index(depot)
         else:
-            raise ValueError("The given depot is not in this model instance.")
+            raise ValueError("The given depot is not in this model.")
+
+        if profile is None:
+            profile_idx = 0
+        elif profile in self._profiles:
+            profile_idx = self._profiles.index(profile)
+        else:
+            raise ValueError("The given profile is not in this model.")
 
         vehicle_type = VehicleType(
             num_available=num_available,
@@ -298,6 +342,7 @@ class Model:
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
+            profile=profile_idx,
             name=name,
         )
 
