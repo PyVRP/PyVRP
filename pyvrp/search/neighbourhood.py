@@ -150,8 +150,10 @@ def _compute_proximity(
     prize = np.zeros_like(early)
     prize[data.num_depots :] = [client.prize for client in data.clients()]
 
-    min_distance = np.minimum.reduce(data.distance_matrices())  # elementwise
-    min_duration = np.minimum.reduce(data.duration_matrices())  # elementwise
+    # We first determine the matrices of minimum distances and durations,
+    # across all routing profiles.
+    min_distance = np.minimum.reduce(data.distance_matrices())
+    min_duration = np.minimum.reduce(data.duration_matrices())
 
     # Minimum wait time and time warp of visiting j directly after i.
     min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]

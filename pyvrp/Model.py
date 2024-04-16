@@ -142,8 +142,8 @@ class Model:
 
         profiles = [Profile() for _ in range(data.num_profiles)]
         for idx, profile in enumerate(profiles):
-            distances = data.distance_matrix(idx)
-            durations = data.duration_matrix(idx)
+            distances = data.distance_matrix(profile=idx)
+            durations = data.duration_matrix(profile=idx)
             profile.edges = [
                 Edge(
                     frm=locs[frm],
