@@ -340,6 +340,11 @@ public:
     [[nodiscard]] inline Duration timeWarp() const;
 
     /**
+     * @return The routing profile of the vehicle servicing this route.
+     */
+    [[nodiscard]] inline size_t profile() const;
+
+    /**
      * @return true if this route is empty, false otherwise.
      */
     [[nodiscard]] inline bool empty() const;
@@ -543,7 +548,9 @@ Route::ProxyBetween::operator DurationSegment() const
 
     for (size_t step = start; step != end; ++step)
         durSegment = DurationSegment::merge(
-            route->data.durationMatrix(), durSegment, route->durAt[step + 1]);
+            route->data.durationMatrix(route->profile()),
+            durSegment,
+            route->durAt[step + 1]);
 
     return durSegment;
 }
@@ -662,6 +669,8 @@ Duration Route::timeWarp() const
     return durBefore.back().timeWarp(maxDuration());
 }
 
+size_t Route::profile() const { return vehicleType_.profile; }
+
 bool Route::empty() const { return size() == 0; }
 
 size_t Route::size() const
@@ -715,7 +724,10 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
     return std::apply(
         [&](auto &&...args)
-        { return DistanceSegment::merge(data.distanceMatrix(), args...); },
+        {
+            return DistanceSegment::merge(
+                data.distanceMatrix(current->profile()), args...);
+        },
         segments);
 }
 
@@ -724,7 +736,10 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     return std::apply(
         [&](auto &&...args)
-        { return DurationSegment::merge(data.durationMatrix(), args...); },
+        {
+            return DurationSegment::merge(
+                data.durationMatrix(current->profile()), args...);
+        },
         segments);
 }
 

@@ -150,14 +150,15 @@ def _compute_proximity(
     prize = np.zeros_like(early)
     prize[data.num_depots :] = [client.prize for client in data.clients()]
 
-    duration = data.duration_matrix()
+    min_distance = np.minimum.reduce(data.distance_matrices())  # elementwise
+    min_duration = np.minimum.reduce(data.duration_matrices())  # elementwise
 
     # Minimum wait time and time warp of visiting j directly after i.
-    min_wait = early[None, :] - duration - service[:, None] - late[:, None]
-    min_tw = early[:, None] + service[:, None] + duration - late[None, :]
+    min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]
+    min_tw = early[:, None] + service[:, None] + min_duration - late[None, :]
 
     return (
-        np.asarray(data.distance_matrix(), dtype=float)
+        min_distance.astype(float)
         + weight_wait_time * np.maximum(min_wait, 0)
         + weight_time_warp * np.maximum(min_tw, 0)
         - prize[None, :]

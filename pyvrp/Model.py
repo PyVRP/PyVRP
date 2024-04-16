@@ -140,24 +140,26 @@ class Model:
         clients = data.clients()
         locs = depots + clients
 
-        distances = data.distance_matrix()
-        durations = data.duration_matrix()
-        edges = [
-            Edge(
-                frm=locs[frm],
-                to=locs[to],
-                distance=distances[frm, to],
-                duration=durations[frm, to],
-            )
-            for frm in range(data.num_locations)
-            for to in range(data.num_locations)
-        ]
+        profiles = [Profile() for _ in range(data.num_profiles)]
+        for idx, profile in enumerate(profiles):
+            distances = data.distance_matrix(idx)
+            durations = data.duration_matrix(idx)
+            profile.edges = [
+                Edge(
+                    frm=locs[frm],
+                    to=locs[to],
+                    distance=distances[frm, to],
+                    duration=durations[frm, to],
+                )
+                for frm in range(data.num_locations)
+                for to in range(data.num_locations)
+            ]
 
         self = Model()
         self._clients = clients
         self._depots = depots
-        self._edges = edges
         self._groups = data.groups()
+        self._profiles = profiles
         self._vehicle_types = data.vehicle_types()
 
         return self
@@ -357,18 +359,42 @@ class Model:
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
-        # Default value is a sufficiently large value to make sure any edges
-        # not set below are never traversed.
-        distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
-        durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
-        np.fill_diagonal(distances, 0)
-        np.fill_diagonal(durations, 0)
+        # First we create the base distance and duration matrices. These are
+        # shared by all routing profiles. If an edge was not specified, we use
+        # a large default value here.
+        base_distance = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
+        base_duration = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
+        np.fill_diagonal(base_distance, 0)
+        np.fill_diagonal(base_duration, 0)
 
         for edge in self._edges:
             frm = loc2idx[id(edge.frm)]
             to = loc2idx[id(edge.to)]
-            distances[frm, to] = edge.distance
-            durations[frm, to] = edge.duration
+            base_distance[frm, to] = edge.distance
+            base_duration[frm, to] = edge.duration
+
+        # Now we create the profile-specific distance and duration matrices.
+        # These are based on the base matrices.
+        distances = []
+        durations = []
+        for profile in self._profiles:
+            prof_distance = base_distance.copy()
+            prof_duration = base_duration.copy()
+
+            for edge in profile.edges:
+                frm = loc2idx[id(edge.frm)]
+                to = loc2idx[id(edge.to)]
+                prof_distance[frm, to] = edge.distance
+                prof_duration[frm, to] = edge.duration
+
+            distances.append(prof_distance)
+            durations.append(prof_duration)
+
+        # When the user has not provided any profiles, we create an implicit
+        # zeroeth profile form the base matrices.
+        if not self._profiles:
+            distances = [base_distance]
+            durations = [base_duration]
 
         return ProblemData(
             self._clients,

@@ -329,8 +329,8 @@ Solution::Route::Route(ProblemData const &data,
     auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.depot;
 
-    auto const &distances = data.distanceMatrix();
-    auto const &durations = data.durationMatrix();
+    auto const &distances = data.distanceMatrix(vehType.profile);
+    auto const &durations = data.durationMatrix(vehType.profile);
 
     for (size_t idx = 0; idx != size(); ++idx)
     {

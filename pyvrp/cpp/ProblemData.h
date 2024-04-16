@@ -4,6 +4,7 @@
 #include "Matrix.h"
 #include "Measure.h"
 
+#include <cassert>
 #include <iosfwd>
 #include <limits>
 #include <optional>
@@ -16,8 +17,8 @@ namespace pyvrp
  *     clients: list[Client],
  *     depots: list[Depot],
  *     vehicle_types: list[VehicleType],
- *     distance_matrix: numpy.ndarray[int],
- *     duration_matrix: numpy.ndarray[int],
+ *     distance_matrices: list[numpy.ndarray[int]],
+ *     duration_matrices: list[numpy.ndarray[int]],
  *     groups: list[ClientGroup] = [],
  * )
  *
@@ -26,9 +27,10 @@ namespace pyvrp
  *
  * .. note::
  *
- *    The ``distance_matrix`` and ``duration_matrix`` arguments should have all
- *    depots in the lower indices, starting from index ``0``. See also the
- *    :meth:`~pyvrp._pyvrp.ProblemData.location` method for details.
+ *    The matrices of the ``distance_matrices`` and ``duration_matrices``
+ *    arguments should have all depots in the lower indices, starting from
+ *    index ``0``. See also the :meth:`~pyvrp._pyvrp.ProblemData.location`
+ *    method for details.
  *
  * Parameters
  * ----------
@@ -38,12 +40,12 @@ namespace pyvrp
  *     List of depots. At least one depot must be passed.
  * vehicle_types
  *     List of vehicle types in the problem instance.
- * distance_matrix
- *     A matrix that gives the travel distances between all locations: both
- *     depots and clients.
- * duration_matrix
- *     A matrix that gives the travel durations between all locations: both
- *     depots and clients.
+ * distance_matrices
+ *     Distance matrices that give the travel distances between all locations
+ *     (both depots and clients. Each matrix corresponds to a routing profile.
+ * duration_matrices
+ *     Duration matrices that give the travel durations between all locations
+ *     (both depots and clients. Each matrix corresponds to a routing profile.
  * groups
  *     List of client groups. Client groups have certain restrictions - see the
  *     definition for details. By default there are no groups, and empty groups
@@ -446,8 +448,8 @@ private:
     };
 
     std::pair<double, double> centroid_;           // Center of client locations
-    Matrix<Distance> const dist_;                  // Distance matrix
-    Matrix<Duration> const dur_;                   // Duration matrix
+    std::vector<Matrix<Distance>> const dists_;    // Distance matrices
+    std::vector<Matrix<Duration>> const durs_;     // Duration matrices
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
@@ -489,6 +491,16 @@ public:
     [[nodiscard]] std::vector<VehicleType> const &vehicleTypes() const;
 
     /**
+     * Returns a list of all distance matrices in the problem instance.
+     */
+    [[nodiscard]] std::vector<Matrix<Distance>> const &distanceMatrices() const;
+
+    /**
+     * Returns a list of all duration matrices in the problem instance.
+     */
+    [[nodiscard]] std::vector<Matrix<Duration>> const &durationMatrices() const;
+
+    /**
      * Center point of all client locations (excluding depots).
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
@@ -514,26 +526,40 @@ public:
     [[nodiscard]] VehicleType const &vehicleType(size_t vehicleType) const;
 
     /**
-     * The full travel distance matrix.
+     * The full travel distance matrix associated with the given routing
+     * profile.
      *
      * .. note::
      *
      *    This method returns a read-only view of the underlying data. No
      *    matrix is copied, but the resulting data cannot be modified in any
      *    way!
+     *
+     * Parameters
+     * ----------
+     * profile
+     *     Routing profile whose associated distance matrix to retrieve.
      */
-    [[nodiscard]] inline Matrix<Distance> const &distanceMatrix() const;
+    [[nodiscard]] inline Matrix<Distance> const &
+    distanceMatrix(size_t profile) const;
 
     /**
-     * The full travel duration matrix.
+     * The full travel duration matrix associated with the given routing
+     * profile.
      *
      * .. note::
      *
      *    This method returns a read-only view of the underlying data. No
      *    matrix is copied, but the resulting data cannot be modified in any
      *    way!
+     *
+     * Parameters
+     * ----------
+     * profile
+     *     Routing profile whose associated duration matrix to retrieve.
      */
-    [[nodiscard]] inline Matrix<Duration> const &durationMatrix() const;
+    [[nodiscard]] inline Matrix<Duration> const &
+    durationMatrix(size_t profile) const;
 
     /**
      * Number of clients in this problem instance.
@@ -567,6 +593,11 @@ public:
     [[nodiscard]] size_t numVehicles() const;
 
     /**
+     * Number of routing profiles in this problem instance.
+     */
+    [[nodiscard]] size_t numProfiles() const;
+
+    /**
      * Returns a new ProblemData instance with the same data as this instance,
      * except for the given parameters, which are used instead.
      *
@@ -578,10 +609,10 @@ public:
      *    Optional list of depots.
      * vehicle_types
      *    Optional list of vehicle types.
-     * distance_matrix
-     *    Optional distance matrix.
-     * duration_matrix
-     *    Optional duration matrix.
+     * distance_matrices
+     *    Optional distance matrices, one per routing profile.
+     * duration_matrices
+     *    Optional duration matrices, one per routing profile.
      * groups
      *    Optional client groups.
      *
@@ -593,15 +624,15 @@ public:
     ProblemData replace(std::optional<std::vector<Client>> &clients,
                         std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
-                        std::optional<Matrix<Distance>> &distMat,
-                        std::optional<Matrix<Duration>> &durMat,
+                        std::optional<std::vector<Matrix<Distance>>> &distMats,
+                        std::optional<std::vector<Matrix<Duration>>> &durMats,
                         std::optional<std::vector<ClientGroup>> &groups);
 
     ProblemData(std::vector<Client> clients,
                 std::vector<Depot> depots,
                 std::vector<VehicleType> vehicleTypes,
-                Matrix<Distance> distMat,
-                Matrix<Duration> durMat,
+                std::vector<Matrix<Distance>> distMats,
+                std::vector<Matrix<Duration>> durMats,
                 std::vector<ClientGroup> groups = {});
 
     ProblemData() = delete;
@@ -619,9 +650,17 @@ ProblemData::Location ProblemData::location(size_t idx) const
                : Location{.client = &clients_[idx - depots_.size()]};
 }
 
-Matrix<Distance> const &ProblemData::distanceMatrix() const { return dist_; }
+Matrix<Distance> const &ProblemData::distanceMatrix(size_t profile) const
+{
+    assert(profile < dists_.size());
+    return dists_[profile];
+}
 
-Matrix<Duration> const &ProblemData::durationMatrix() const { return dur_; }
+Matrix<Duration> const &ProblemData::durationMatrix(size_t profile) const
+{
+    assert(profile < durs_.size());
+    return durs_[profile];
+}
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H
