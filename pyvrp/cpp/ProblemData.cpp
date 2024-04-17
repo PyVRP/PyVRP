@@ -397,6 +397,10 @@ void ProblemData::validate() const
     }
 
     // Matrix checks.
+    if (dists_.empty() || durs_.empty())
+        throw std::invalid_argument("Need at least one distance and duration "
+                                    "matrix.");
+
     if (dists_.size() != durs_.size())
         throw std::invalid_argument("Inconsistent number of distance and "
                                     "duration matrices.");

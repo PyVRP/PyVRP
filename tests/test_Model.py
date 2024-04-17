@@ -228,19 +228,19 @@ def test_from_data(small_cvrp):
     Tests that initialising the model from a data instance results in a valid
     model representation of that data instance.
     """
-    model = Model.from_data(small_cvrp)
-    model_data = model.data()
+    m = Model.from_data(small_cvrp)
+    m_data = m.data()
 
     # We can first check if the overall problem dimension numbers agree.
-    assert_equal(model_data.num_clients, small_cvrp.num_clients)
-    assert_equal(model_data.num_vehicles, small_cvrp.num_vehicles)
+    assert_equal(m_data.num_clients, small_cvrp.num_clients)
+    assert_equal(m_data.num_vehicles, small_cvrp.num_vehicles)
     assert_equal(
-        model_data.vehicle_type(0).capacity,
+        m_data.vehicle_type(0).capacity,
         small_cvrp.vehicle_type(0).capacity,
     )
 
-    assert_equal(model_data.distance_matrix(), small_cvrp.distance_matrix())
-    assert_equal(model_data.duration_matrix(), small_cvrp.duration_matrix())
+    assert_equal(m_data.distance_matrices(), small_cvrp.distance_matrices())
+    assert_equal(m_data.duration_matrices(), small_cvrp.duration_matrices())
 
 
 def test_from_data_and_solve(small_cvrp, ok_small):
@@ -358,7 +358,7 @@ def test_partial_distance_duration_matrix():
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
     data = model.data()
-    distances = data.distance_matrix()
+    distances = data.distance_matrix(profile=0)
     assert_equal(distances[0, 2], MAX_VALUE)
     assert_equal(distances[1, 0], MAX_VALUE)
 
