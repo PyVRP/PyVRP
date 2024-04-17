@@ -77,6 +77,9 @@ class Profile:
         distance: int,
         duration: int = 0,
     ) -> Edge:
+        """
+        Adds a new edge to this routing profile.
+        """
         edge = Edge(frm, to, distance, duration)
         self.edges.append(edge)
         return edge
@@ -110,6 +113,13 @@ class Model:
         Returns all client groups currently in the model.
         """
         return self._groups
+
+    @property
+    def profiles(self) -> list[Profile]:
+        """
+        Returns all routing profiles currently in the model.
+        """
+        return self._profiles
 
     @property
     def vehicle_types(self) -> list[VehicleType]:

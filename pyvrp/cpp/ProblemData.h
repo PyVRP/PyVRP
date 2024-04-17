@@ -492,11 +492,23 @@ public:
 
     /**
      * Returns a list of all distance matrices in the problem instance.
+     *
+     * .. note::
+     *
+     *    This method returns a read-only view of the underlying data. No
+     *    matrices are copied, but the resulting data cannot be modified in any
+     *    way!
      */
     [[nodiscard]] std::vector<Matrix<Distance>> const &distanceMatrices() const;
 
     /**
      * Returns a list of all duration matrices in the problem instance.
+     *
+     * .. note::
+     *
+     *    This method returns a read-only view of the underlying data. No
+     *    matrices are copied, but the resulting data cannot be modified in any
+     *    way!
      */
     [[nodiscard]] std::vector<Matrix<Duration>> const &durationMatrices() const;
 
