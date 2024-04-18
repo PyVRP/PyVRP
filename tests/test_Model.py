@@ -6,7 +6,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, VehicleType
+from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -740,6 +740,20 @@ def test_minimise_distance_or_duration(ok_small):
     assert_equal(new_res.cost(), orig_res.cost() + service)
 
 
+def test_adding_vehicle_type_with_unknown_profile_raises():
+    """
+    Tests that adding a vehicle type with a routing profile that is not in the
+    model raises.
+    """
+    m = Model()
+
+    profile = Profile()
+    assert_(profile not in m.profiles)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(profile=profile)
+
+
 def test_adding_multiple_routing_profiles():
     """
     Tests that adding multiple routing profiles to the model works, and the
@@ -748,7 +762,10 @@ def test_adding_multiple_routing_profiles():
     m = Model()
 
     profile1 = m.add_profile()
+    assert_(m.profiles[0] is profile1)
+
     profile2 = m.add_profile()
+    assert_(m.profiles[1] is profile2)
 
     veh_type1 = m.add_vehicle_type(profile=profile1)
     assert_equal(veh_type1.profile, 0)
