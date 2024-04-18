@@ -200,10 +200,10 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, matrix, other_matrix)
+        ProblemData(clients, depots, vehicle_types, [matrix], [other_matrix])
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
+        ProblemData(clients, depots, vehicle_types, [other_matrix], [matrix])
 
 
 @pytest.mark.parametrize(
@@ -224,7 +224,7 @@ def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
     vehicle_types = [VehicleType(2, capacity=1)]
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, dist_mat, dur_mat)
+        ProblemData(clients, depots, vehicle_types, [dist_mat], [dur_mat])
 
 
 def test_problem_data_replace_no_changes():
@@ -618,6 +618,41 @@ def test_raises_invalid_vehicle_depot_indices(
 
     with assert_raises(IndexError):
         ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
+
+
+def test_raises_invalid_vehicle_profile_index(ok_small):
+    """
+    Tests that setting the profile index on a VehicleTyep to a value that's
+    outside the range of available profiles raises.
+    """
+    assert_equal(ok_small.num_profiles, 1)
+
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[VehicleType(profile=1)])
+
+
+@pytest.mark.parametrize(
+    ("distances", "durations"), [([], []), ([], None), (None, [])]
+)
+def test_raises_no_profiles(ok_small, distances, durations):
+    """
+    Tests that passing no profiles (i.e., no distance and duration matrices)
+    raises an error.
+    """
+    with assert_raises((ValueError, IndexError)):
+        ok_small.replace(
+            distance_matrices=distances,
+            duration_matrices=durations,
+        )
+
+
+def test_raises_inconsistent_profiles(ok_small):
+    """
+    Tests that passing an inconsistent number of distance and duration matrices
+    raises an error.
+    """
+    with assert_raises(ValueError):
+        ok_small.replace(distance_matrices=ok_small.distance_matrices() * 2)
 
 
 def test_raises_empty_group():

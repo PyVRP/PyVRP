@@ -738,3 +738,42 @@ def test_minimise_distance_or_duration(ok_small):
     # is something we can check.
     service = sum(data.location(loc).service_duration for loc in [1, 4])
     assert_equal(new_res.cost(), orig_res.cost() + service)
+
+
+def test_adding_multiple_routing_profiles():
+    """
+    Tests that adding multiple routing profiles to the model works, and the
+    solver finds the optimal solution.
+    """
+    m = Model()
+
+    profile1 = m.add_profile()
+    profile2 = m.add_profile()
+
+    veh_type1 = m.add_vehicle_type(profile=profile1)
+    assert_equal(veh_type1.profile, 0)
+
+    veh_type2 = m.add_vehicle_type(profile=profile2)
+    assert_equal(veh_type2.profile, 1)
+
+    m.add_depot(x=1, y=1)
+    m.add_client(x=2, y=2)
+
+    for frm in m.locations:
+        for to in m.locations:
+            if frm != to:
+                m.add_edge(frm, to, distance=10, duration=5, profile=profile1)
+                m.add_edge(frm, to, distance=5, duration=10, profile=profile2)
+
+    data = m.data()
+
+    # Check that the distance and duration matrices of both profiles are
+    # defined correctly.
+    assert_equal(data.distance_matrix(profile=0), [[0, 10], [10, 0]])
+    assert_equal(data.duration_matrix(profile=0), [[0, 5], [5, 0]])
+    assert_equal(data.distance_matrix(profile=1), [[0, 5], [5, 0]])
+    assert_equal(data.duration_matrix(profile=1), [[0, 10], [10, 0]])
+
+    res = m.solve(stop=MaxIterations(10))
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 10)
