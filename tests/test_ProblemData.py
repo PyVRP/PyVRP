@@ -622,7 +622,7 @@ def test_raises_invalid_vehicle_depot_indices(
 
 def test_raises_invalid_vehicle_profile_index(ok_small):
     """
-    Tests that setting the profile index on a VehicleTyep to a value that's
+    Tests that setting the profile index on a VehicleType to a value that's
     outside the range of available profiles raises.
     """
     assert_equal(ok_small.num_profiles, 1)

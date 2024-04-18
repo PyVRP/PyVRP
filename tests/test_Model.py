@@ -783,6 +783,7 @@ def test_adding_multiple_routing_profiles():
                 m.add_edge(frm, to, distance=5, duration=10, profile=profile2)
 
     data = m.data()
+    assert_equal(data.num_profiles, 2)
 
     # Check that the distance and duration matrices of both profiles are
     # defined correctly.

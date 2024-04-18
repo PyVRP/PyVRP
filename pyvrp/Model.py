@@ -326,8 +326,8 @@ class Model:
         Raises
         ------
         ValueError
-            When the given ``depot`` is not in this model instance, or when the
-            ``profile`` is not understood.
+            When the given ``depot`` or ``profile`` arguments are not in this
+            model instance.
         """
         if depot is None:
             depot_idx = 0
@@ -401,7 +401,7 @@ class Model:
             durations.append(prof_duration)
 
         # When the user has not provided any profiles, we create an implicit
-        # zeroeth profile form the base matrices.
+        # first profile from the base matrices.
         if not self._profiles:
             distances = [base_distance]
             durations = [base_duration]

@@ -27,7 +27,7 @@ namespace pyvrp
  *
  * .. note::
  *
- *    The matrices of the ``distance_matrices`` and ``duration_matrices``
+ *    The matrices in the ``distance_matrices`` and ``duration_matrices``
  *    arguments should have all depots in the lower indices, starting from
  *    index ``0``. See also the :meth:`~pyvrp._pyvrp.ProblemData.location`
  *    method for details.
@@ -42,10 +42,10 @@ namespace pyvrp
  *     List of vehicle types in the problem instance.
  * distance_matrices
  *     Distance matrices that give the travel distances between all locations
- *     (both depots and clients. Each matrix corresponds to a routing profile.
+ *     (both depots and clients). Each matrix corresponds to a routing profile.
  * duration_matrices
  *     Duration matrices that give the travel durations between all locations
- *     (both depots and clients. Each matrix corresponds to a routing profile.
+ *     (both depots and clients). Each matrix corresponds to a routing profile.
  * groups
  *     List of client groups. Client groups have certain restrictions - see the
  *     definition for details. By default there are no groups, and empty groups
