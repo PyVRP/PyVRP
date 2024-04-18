@@ -2,6 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
+from pyvrp import VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -217,3 +218,23 @@ def test_proximity_with_mutually_exclusive_groups(
     members = group.clients
     for client in members:
         assert_(all(other not in neighbours[client] for other in members))
+
+
+def test_multiple_routing_profiles(ok_small):
+    """
+    Tests the granular neighbourhood selects the right profiles in the
+    proximity calculation when working with multiple routing profiles.
+    """
+    huge_mat = np.where(np.eye(ok_small.num_locations), 0, 10_000)
+    data = ok_small.replace(
+        vehicle_types=[VehicleType(1, profile=1), *ok_small.vehicle_types()],
+        distance_matrices=[huge_mat, *ok_small.distance_matrices()],
+        duration_matrices=[huge_mat, *ok_small.duration_matrices()],
+    )
+
+    # The new routing profile has huge distances and durations, but the
+    # original profile and vehicles are still available. The neighbourhood
+    # computation should recognise this and use the best profile for
+    # neighbourhood computations, resulting in the same neighbourhood as with
+    # the original (unchanged) data.
+    assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
