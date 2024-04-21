@@ -220,6 +220,36 @@ def test_proximity_with_mutually_exclusive_groups(
         assert_(all(other not in neighbours[client] for other in members))
 
 
+def test_different_routing_costs(ok_small):
+    """
+    High-level smoke test that checks that the granular neighbourhood takes
+    into account the unit distance and duration costs of different vehicle
+    types.
+    """
+    rng = np.random.default_rng(seed=42)
+    new_dur = rng.integers(0, 1_000, size=(5, 5))
+    np.fill_diagonal(new_dur, 0)
+
+    # Because the OkSmall instance has the same distance and duration matrices,
+    # it is hard to make this test work. So we first introduce a new duration
+    # matrix.
+    new_data = ok_small.replace(duration_matrices=[new_dur])
+    new_neighbours = compute_neighbours(new_data)
+
+    # Now we also add vehicle types with different cost profiles: the first
+    # vehicle type is like the original and cares only about distance, whereas
+    # the second type aims to minimise route duration. This should result in a
+    # different neighbourhood structure.
+    different_cost_data = new_data.replace(
+        vehicle_types=[
+            VehicleType(3, unit_distance_cost=1, unit_duration_cost=0),
+            VehicleType(3, unit_distance_cost=0, unit_duration_cost=1),
+        ],
+    )
+    different_cost_neighbours = compute_neighbours(different_cost_data)
+    assert_(different_cost_neighbours != new_neighbours)
+
+
 def test_multiple_routing_profiles(ok_small):
     """
     Tests the granular neighbourhood selects the right profiles in the

@@ -17,11 +17,11 @@ class NeighbourhoodParams:
     Attributes
     ----------
     weight_wait_time
-        Weight given to the minimum wait time aspect of the proximity
+        Penalty weight given to the minimum wait time aspect of the proximity
         calculation. A large wait time indicates the clients are far apart
         in duration/time.
     weight_time_warp
-        Weight given to the minimum time warp aspect of the proximity
+        Penalty weight given to the minimum time warp aspect of the proximity
         calculation. A large time warp indicates the clients are far apart in
         duration/time.
     nb_granular
@@ -150,18 +150,26 @@ def _compute_proximity(
     prize = np.zeros_like(early)
     prize[data.num_depots :] = [client.prize for client in data.clients()]
 
-    # We first determine the matrices of minimum distances and durations,
-    # across all routing profiles.
-    min_distance = np.minimum.reduce(data.distance_matrices())
-    min_duration = np.minimum.reduce(data.duration_matrices())
+    # We first determine the elementwise minimum cost across all vehicle types.
+    # This is the cheapest way any edge can be traversed.
+    distances = data.distance_matrices()
+    durations = data.duration_matrices()
+    edge_costs = [  # edge costs per vehicle type
+        veh_type.unit_distance_cost * distances[veh_type.profile]
+        + veh_type.unit_duration_cost * durations[veh_type.profile]
+        for veh_type in data.vehicle_types()
+    ]
 
     # Minimum wait time and time warp of visiting j directly after i.
+    min_duration = np.minimum.reduce(durations)
     min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]
     min_tw = early[:, None] + service[:, None] + min_duration - late[None, :]
 
+    # Proximity is based on edge costs (and rewards) and penalties for known
+    # time-related violations.
     return (
-        min_distance.astype(float)
+        np.minimum.reduce(edge_costs, dtype=float)
+        - prize[None, :]
         + weight_wait_time * np.maximum(min_wait, 0)
         + weight_time_warp * np.maximum(min_tw, 0)
-        - prize[None, :]
     )
