@@ -43,13 +43,14 @@ namespace pyvrp
  */
 class DurationSegment
 {
-    size_t idxFirst_;       // Index of the first client in the segment
-    size_t idxLast_;        // Index of the last client in the segment
-    Duration duration_;     // Total duration, incl. waiting and servicing
-    Duration timeWarp_;     // Cumulative time warp
-    Duration twEarly_;      // Earliest visit moment of first client
-    Duration twLate_;       // Latest visit moment of first client
-    Duration releaseTime_;  // Earliest allowed moment to leave the depot
+    size_t idxFirst_;        // Index of the first client in the segment
+    size_t idxLast_;         // Index of the last client in the segment
+    Duration duration_;      // Total duration, incl. waiting and servicing
+    Duration timeWarp_;      // Cumulative time warp
+    Duration twEarly_;       // Earliest visit moment of first client
+    Duration twLate_;        // Latest visit moment of first client
+    Duration latestFinish_;  // Latest finish moment of last client
+    Duration releaseTime_;   // Earliest allowed moment to leave the depot
 
     [[nodiscard]] inline DurationSegment
     merge(Matrix<Duration> const &durationMatrix,
@@ -178,6 +179,7 @@ Duration DurationSegment::duration() const { return duration_; }
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
     // clang-format off
+    // assert(timeWarp_ == std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0));
     return timeWarp_
          + std::max<Duration>(releaseTime_ - twLate_, 0)
          + std::max<Duration>(duration_ - maxDuration, 0);
@@ -197,6 +199,7 @@ DurationSegment::DurationSegment(size_t idxFirst,
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),
+      latestFinish_(twLate + duration - timeWarp),
       releaseTime_(releaseTime)
 {
 }

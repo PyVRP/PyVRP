@@ -16,6 +16,7 @@ DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
       timeWarp_(0),
       twEarly_(client.twEarly),
       twLate_(client.twLate),
+      latestFinish_(client.twLate + client.serviceDuration),
       releaseTime_(client.releaseTime)
 {
 }
