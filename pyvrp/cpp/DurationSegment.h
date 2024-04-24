@@ -43,12 +43,12 @@ namespace pyvrp
  */
 class DurationSegment
 {
-    size_t idxFirst_;        // Index of the first client in the segment
-    size_t idxLast_;         // Index of the last client in the segment
-    Duration duration_;      // Total duration, incl. waiting and servicing
-    Duration timeWarp_;      // Cumulative time warp
-    Duration twEarly_;       // Earliest visit moment of first client
-    Duration twLate_;        // Latest visit moment of first client
+    size_t idxFirst_;    // Index of the first client in the segment
+    size_t idxLast_;     // Index of the last client in the segment
+    Duration duration_;  // Total duration, incl. waiting and servicing
+    // Duration timeWarp_;      // Cumulative time warp
+    Duration twEarly_;  // Earliest visit moment of first client
+    // Duration twLate_;        // Latest visit moment of first client
     Duration latestFinish_;  // Latest finish moment of last client
     Duration releaseTime_;   // Earliest allowed moment to leave the depot
 
@@ -118,6 +118,14 @@ public:
                            Duration twLate,
                            Duration releaseTime);
 
+    // Construct from raw data.
+    inline DurationSegment(size_t idxFirst,
+                           size_t idxLast,
+                           Duration duration,
+                           Duration twEarly,
+                           Duration latestFinish,
+                           Duration releaseTime);
+
     // Move or copy construct from the other duration segment.
     inline DurationSegment(DurationSegment const &) = default;
     inline DurationSegment(DurationSegment &&) = default;
@@ -135,24 +143,41 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
     // edgeDuration is the travel duration from our last to the other's first
     // client, and atOther the time (after starting from our first client) at
     // which we arrive there.
+    Dur const timeWarp = std::max<Dur>(twEarly_ + duration_ - latestFinish_, 0);
+    Dur const twLate = std::max<Dur>(latestFinish_ - duration_, twEarly_);
     Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
-    Dur const atOther = duration_ - timeWarp_ + edgeDuration;
+    Dur const atOther = duration_ - timeWarp + edgeDuration;
 
     // Time warp increases if we arrive at the other's first client after its
     // time window closes, whereas wait duration increases if we arrive there
     // before opening.
-    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - other.twLate_, 0);
-    Dur const diffWait = other.twEarly_ - atOther > twLate_
-                             ? other.twEarly_ - atOther - twLate_
+    Dur const otherTwLate
+        = std::max<Dur>(other.latestFinish_ - other.duration_, other.twEarly_);
+    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - otherTwLate, 0);
+    Dur const diffWait = other.twEarly_ - atOther > twLate
+                             ? other.twEarly_ - atOther - twLate
                              : 0;  // ternary rather than max avoids underflow
 
+    Dur const otherTimeWarp = std::max<Dur>(
+        other.twEarly_ + other.duration_ - other.latestFinish_, 0);
+    Dur const newTimeWarp = timeWarp + otherTimeWarp + diffTw;
+    Dur const newTwLate = std::min(otherTwLate - atOther, twLate) + diffTw;
+    Dur const newDuration
+        = duration_ + other.duration_ + edgeDuration + diffWait;
+    Dur const latestFinish = newTwLate + newDuration - newTimeWarp;
     return {idxFirst_,
             other.idxLast_,
-            duration_ + other.duration_ + edgeDuration + diffWait,
-            timeWarp_ + other.timeWarp_ + diffTw,
+            newDuration,
             std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
-            std::min(other.twLate_ - atOther, twLate_) + diffTw,
+            latestFinish,
             std::max(releaseTime_, other.releaseTime_)};
+    // return {idxFirst_,
+    //         other.idxLast_,
+    //         newDuration,
+    //         newTimeWarp,
+    //         std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
+    //         newTwLate,
+    //         std::max(releaseTime_, other.releaseTime_)};
 }
 
 template <typename... Args>
@@ -179,9 +204,10 @@ Duration DurationSegment::duration() const { return duration_; }
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
     // clang-format off
-    assert(timeWarp_ == std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0));
-    return timeWarp_
-         + std::max<Duration>(releaseTime_ - twLate_, 0)
+    // assert(timeWarp_ == std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0));
+    Duration const twLate = std::max<Duration>(latestFinish_ - duration_, twEarly_);
+    return std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0)
+         + std::max<Duration>(releaseTime_ - twLate, 0)
          + std::max<Duration>(duration_ - maxDuration, 0);
     // clang-format on
 }
@@ -196,10 +222,27 @@ DurationSegment::DurationSegment(size_t idxFirst,
     : idxFirst_(idxFirst),
       idxLast_(idxLast),
       duration_(duration),
-      timeWarp_(timeWarp),
+      //   timeWarp_(timeWarp),
       twEarly_(twEarly),
-      twLate_(twLate),
+      //   twLate_(twLate),
       latestFinish_(twLate + duration - timeWarp),
+      releaseTime_(releaseTime)
+{
+}
+
+DurationSegment::DurationSegment(size_t idxFirst,
+                                 size_t idxLast,
+                                 Duration duration,
+                                 Duration twEarly,
+                                 Duration latestFinish,
+                                 Duration releaseTime)
+    : idxFirst_(idxFirst),
+      idxLast_(idxLast),
+      duration_(duration),
+      //   timeWarp_(std::max<Duration>(twEarly + duration - latestFinish, 0)),
+      twEarly_(twEarly),
+      //   twLate_(std::max<Duration>(latestFinish - duration, twEarly)),
+      latestFinish_(latestFinish),
       releaseTime_(releaseTime)
 {
 }

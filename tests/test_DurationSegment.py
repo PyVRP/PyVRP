@@ -20,7 +20,7 @@ def test_merge_two():
     Tests merging two duration segments.
     """
     ds1 = DurationSegment(0, 0, 5, 0, 0, 5, 0)
-    ds2 = DurationSegment(1, 1, 0, 5, 3, 6, 0)
+    ds2 = DurationSegment(1, 1, 0, 5, 6, 6, 0)
 
     mat = np.asarray([[1, 4], [1, 2]])
     merged = DurationSegment.merge(mat, ds1, ds2)
@@ -34,7 +34,7 @@ def test_merge_two():
 
     # Now, let's add a bit of release time (3), so that the total time warp
     # should become 8 + 3 = 11.
-    ds2 = DurationSegment(1, 1, 0, 5, 3, 6, 3)
+    ds2 = DurationSegment(1, 1, 0, 5, 6, 6, 3)
     merged = DurationSegment.merge(mat, ds1, ds2)
     assert_equal(merged.time_warp(), 11)
 
