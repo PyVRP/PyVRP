@@ -179,7 +179,7 @@ Duration DurationSegment::duration() const { return duration_; }
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
     // clang-format off
-    // assert(timeWarp_ == std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0));
+    assert(timeWarp_ == std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0));
     return timeWarp_
          + std::max<Duration>(releaseTime_ - twLate_, 0)
          + std::max<Duration>(duration_ - maxDuration, 0);

@@ -67,8 +67,8 @@ def test_merging_two_previously_merged_duration_segments():
     segments, when both have time warp.
     """
     time_warp = 1
-    ds1 = DurationSegment(0, 0, 5, time_warp, 0, 5, 0)  # depot
-    ds2 = DurationSegment(1, 1, 1, time_warp, 3, 6, 0)  # client 1
+    ds1 = DurationSegment(0, 0, 5, time_warp, 0, 0, 0)  # depot
+    ds2 = DurationSegment(1, 1, 1, time_warp, 3, 3, 0)  # client 1
 
     # Each of these segments has some initial time warp.
     assert_equal(ds1.time_warp(), 1)
@@ -85,24 +85,24 @@ def test_merging_two_previously_merged_duration_segments():
 
     # Both segments start with 1 initial time warp. Going from depot -> client
     # happens at t = 5 - 1, and takes 4 time units to complete. So we arrive at
-    # t = 8, which is three units after the time window closes. This adds 2
+    # t = 8, which is five units after the time window closes. This adds 5
     # time warp to the segment, which, together with the initial time warps
-    # makes for 2 + 1 + 1 = 4 total time warp.
-    assert_equal(merged12.time_warp(), 4)
+    # makes for 5 + 1 + 1 = 7 total time warp.
+    assert_equal(merged12.time_warp(), 7)
 
     # We can leave at the earliest at t = 3, the start of the client's time
-    # window. We then arrive at t = 6, which adds one unit of time warp.
-    # Combined with the initial time warp, this results in 1 + 1 + 1 = 3 units
+    # window. We then arrive at t = 6, which adds six units of time warp.
+    # Combined with the initial time warp, this results in 6 + 1 + 1 = 8 units
     # of total time warp.
-    assert_equal(merged21.time_warp(), 3)
+    assert_equal(merged21.time_warp(), 8)
 
     # This merged DS represents the route plan 0 -> 1 -> 1 -> 0. We leave 1
-    # at t = 10 - 4, and travel takes no time. We do get the 1 unit of
-    # existing time warp. We then travel to the depot, arriving at t = 9. This
-    # is 4 time units after the time window closes, which adds 4 time warp
-    # (plus the existing unit). So we get 4 + 1 + 1 + 4 = 10 time warp.
+    # at t = 10 - 7, and travel takes no time. We do get the 1 unit of
+    # existing time warp. We then travel to the depot, arriving at t = 6. This
+    # is 6 time units after the time window closes, which adds 6 time warp
+    # (plus the existing unit). So we get 7 + 1 + 1 + 6 = 15 time warp.
     merged = DurationSegment.merge(mat, merged12, merged21)
-    assert_equal(merged.time_warp(), 10)
+    assert_equal(merged.time_warp(), 15)
 
 
 def test_max_duration_argument():
