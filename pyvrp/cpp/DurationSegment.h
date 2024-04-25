@@ -148,9 +148,9 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
     // wait at another moment for the same total duration since we cannot
     // finish the other route segment earlier.
     Dur const waitDuration
-        = latestFinish_ + edgeDuration < other.earliestStart_
+        = latestFinish_ < other.earliestStart_ - edgeDuration
               ? other.earliestStart_ - latestFinish_ - edgeDuration
-              : 0;
+              : 0;  // ternary rather than max avoids underflow
 
     // We compute the new latest finish time for the merged segment forward
     // from the latest finish time of the first segment.
@@ -194,14 +194,18 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
     //  remains true if we ignore timeWarp_ in the computation as that will only
     //  decrease the left operand of the max.
 
+    Dur const diffDuration = edgeDuration + waitDuration + other.duration_;
+    Dur const mergedLatestFinish
+        = latestFinish_ < other.latestFinish_ - diffDuration
+              ? latestFinish_ + diffDuration
+              : other.latestFinish_;  // Avoid overflow
     return {
         idxFirst_,
         other.idxLast_,
-        duration_ + edgeDuration + waitDuration + other.duration_,
+        duration_ + diffDuration,
         std::max(other.earliestStart_ - waitDuration - edgeDuration - duration_,
                  earliestStart_),
-        std::min(latestFinish_ + edgeDuration + waitDuration + other.duration_,
-                 other.latestFinish_),
+        mergedLatestFinish,
         std::max(releaseTime_, other.releaseTime_)};
 }
 
