@@ -326,6 +326,7 @@ class LoadSegment:
     def load(self) -> int: ...
 
 class DurationSegment:
+    @overload
     def __init__(
         self,
         idx_first: int,
@@ -334,6 +335,16 @@ class DurationSegment:
         time_warp: int,
         tw_early: int,
         tw_late: int,
+        release_time: int,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        idx_first: int,
+        idx_last: int,
+        duration: int,
+        earliest_start: int,
+        latest_finish: int,
         release_time: int,
     ) -> None: ...
     @overload
@@ -352,8 +363,8 @@ class DurationSegment:
         third: DurationSegment,
     ) -> DurationSegment: ...
     def duration(self) -> int: ...
-    def tw_early(self) -> int: ...
-    def tw_late(self) -> int: ...
+    def earliest_start(self) -> int: ...
+    def latest_finish(self) -> int: ...
     def time_warp(self, max_duration: int = ...) -> int: ...
 
 class RandomNumberGenerator:

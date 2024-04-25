@@ -365,8 +365,8 @@ Solution::Route::Route(ProblemData const &data,
     ds = DurationSegment::merge(data.durationMatrix(), ds, depotDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.twEarly();
-    slack_ = ds.twLate() - ds.twEarly();
+    startTime_ = ds.earliestStart();
+    slack_ = ds.latestStart() - ds.earliestStart();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
     release_ = ds.releaseTime();
 }

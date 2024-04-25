@@ -13,8 +13,8 @@ namespace pyvrp
  *     idx_last: int,
  *     duration: int,
  *     time_warp: int,
- *     tw_early: int,
- *     tw_late: int,
+ *     earliest_start: int,
+ *     latest_finish: int,
  *     release_time: int,
  * )
  *
@@ -32,25 +32,21 @@ namespace pyvrp
  *     Index of the last client in the route segment.
  * duration
  *     Total duration, including waiting time.
- * time_warp
- *     Total time warp on the route segment.
- * tw_early
+ * earliest_start
  *     Earliest visit moment of the first client.
- * tw_late
- *     Latest visit moment of the first client.
+ * latest_finish
+ *    Latest finish moment of the last client.
  * release_time
  *     Earliest moment to start the route segment.
  */
 class DurationSegment
 {
-    size_t idxFirst_;    // Index of the first client in the segment
-    size_t idxLast_;     // Index of the last client in the segment
-    Duration duration_;  // Total duration, incl. waiting and servicing
-    // Duration timeWarp_;      // Cumulative time warp
-    Duration twEarly_;  // Earliest visit moment of first client
-    // Duration twLate_;        // Latest visit moment of first client
-    Duration latestFinish_;  // Latest finish moment of last client
-    Duration releaseTime_;   // Earliest allowed moment to leave the depot
+    size_t idxFirst_;         // Index of the first client in the segment
+    size_t idxLast_;          // Index of the last client in the segment
+    Duration duration_;       // Total duration, incl. waiting and servicing
+    Duration earliestStart_;  // Earliest visit moment of first client
+    Duration latestFinish_;   // Latest finish moment of last client
+    Duration releaseTime_;    // Earliest allowed moment to leave the depot
 
     [[nodiscard]] inline DurationSegment
     merge(Matrix<Duration> const &durationMatrix,
@@ -93,13 +89,13 @@ public:
      * Earliest start time for this route segment that results in minimum route
      * segment duration.
      */
-    [[nodiscard]] Duration twEarly() const;
+    [[nodiscard]] Duration earliestStart() const;
 
     /**
      * Latest start time for this route segment that results in minimum route
      * segment duration.
      */
-    [[nodiscard]] Duration twLate() const;
+    [[nodiscard]] Duration latestStart() const;
 
     /**
      * Earliest possible release time of the clients in this route segment.
@@ -114,15 +110,15 @@ public:
                            size_t idxLast,
                            Duration duration,
                            Duration timeWarp,
-                           Duration twEarly,
-                           Duration twLate,
+                           Duration earliestStart,
+                           Duration latestStart,
                            Duration releaseTime);
 
     // Construct from raw data.
     inline DurationSegment(size_t idxFirst,
                            size_t idxLast,
                            Duration duration,
-                           Duration twEarly,
+                           Duration earliestStart,
                            Duration latestFinish,
                            Duration releaseTime);
 
@@ -141,43 +137,72 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
     using Dur = pyvrp::Duration;
 
     // edgeDuration is the travel duration from our last to the other's first
-    // client, and atOther the time (after starting from our first client) at
-    // which we arrive there.
-    Dur const timeWarp = std::max<Dur>(twEarly_ + duration_ - latestFinish_, 0);
-    Dur const twLate = std::max<Dur>(latestFinish_ - duration_, twEarly_);
+    // client
     Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
-    Dur const atOther = duration_ - timeWarp + edgeDuration;
 
-    // Time warp increases if we arrive at the other's first client after its
-    // time window closes, whereas wait duration increases if we arrive there
-    // before opening.
-    Dur const otherTwLate
-        = std::max<Dur>(other.latestFinish_ - other.duration_, other.twEarly_);
-    Dur const diffTw = std::max<Dur>(twEarly_ + atOther - otherTwLate, 0);
-    Dur const diffWait = other.twEarly_ - atOther > twLate
-                             ? other.twEarly_ - atOther - twLate
-                             : 0;  // ternary rather than max avoids underflow
+    // We must wait if we arrive before the earliest start time of the other
+    // segment. Note that the earliest start time of the other segment may not
+    // be the opening of the time window of the first client, but rather the
+    // time we should start to avoid unnecessary waiting time. We may still
+    // start earlier at that other segment, but this suggests that we should
+    // wait at another moment for the same total duration since we cannot
+    // finish the other route segment earlier.
+    Dur const waitDuration
+        = latestFinish_ + edgeDuration < other.earliestStart_
+              ? other.earliestStart_ - latestFinish_ - edgeDuration
+              : 0;
 
-    Dur const otherTimeWarp = std::max<Dur>(
-        other.twEarly_ + other.duration_ - other.latestFinish_, 0);
-    Dur const newTimeWarp = timeWarp + otherTimeWarp + diffTw;
-    Dur const newTwLate = std::min(otherTwLate - atOther, twLate) + diffTw;
-    Dur const newDuration
-        = duration_ + other.duration_ + edgeDuration + diffWait;
-    Dur const latestFinish = newTwLate + newDuration - newTimeWarp;
-    return {idxFirst_,
-            other.idxLast_,
-            newDuration,
-            std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
-            latestFinish,
-            std::max(releaseTime_, other.releaseTime_)};
-    // return {idxFirst_,
-    //         other.idxLast_,
-    //         newDuration,
-    //         newTimeWarp,
-    //         std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
-    //         newTwLate,
-    //         std::max(releaseTime_, other.releaseTime_)};
+    // We compute the new latest finish time for the merged segment forward
+    // from the latest finish time of the first segment.
+    // Formally, we should also include timeWarp_ in the second segment in the
+    // forward computation, however:
+    // - If other.timeWarp_ = 0, we can omit it from the computation
+    // - If other.timeWarp_ > 0, then other.earliestStart_ + other.duration_ -
+    //   other.timeWarp_ = other.latestFinish_
+    //   - If waitDuration > 0, it holds that:
+    //     latestFinish_ + edgeDuration + waitDuration + other.duration_ -
+    //     other.timeWarp_
+    //     = other.earliestStart_ + other.duration_ - other.timeWarp_
+    //     = other.latestFinish_
+    //   - If waitDuration = 0, it holds that:
+    //     latestFinish_ + edgeDuration >= other.earliestStart_
+    //     so latestFinish_ + edgeDuration + other.duration_ - other.timeWarp_
+    //     >= other.earliestStart_ + other.duration_ - other.timeWarp_
+    //     = other.latestFinish_
+    //  so in both cases the maximum is equal to latestFinish_, and this remains
+    //  true if we ignore timeWarp_ in the computation as that will only
+    //  increase the left operand of the min.
+
+    // We compute the new earliest start time for the merged segment backwards
+    // from the earliest start time for the second segment.
+    // Formally, we should also include timeWarp_ in the first segment in the
+    // backwards computation, however:
+    // - If timeWarp = 0, we can omit it from the computation
+    // - If timeWarp > 0, then earliestStart_ + duration_ - timeWarp_ =
+    // latestFinish_
+    //   - If waitDuration > 0, it holds that:
+    //     other.earliestStart_ - waitDuration - edgeDuration - (duration_ -
+    //     timeWarp_)
+    //     = latestFinish_ - (duration_ - timeWarp_) = earliestStart_
+    //   - If waitDuration = 0, it holds that:
+    //     latestFinish_ >= other.earliestStart_ - edgeDuration
+    //     so earliestStart_ + duration_ - timeWarp_ >= other.earliestStart_
+    //     - edgeDuration
+    //     so earliestStart_ >= other.earliestStart_ - edgeDuration - duration_
+    //     + timeWarp_
+    //  so in both cases the maximum is equal to earliestStart_, and this
+    //  remains true if we ignore timeWarp_ in the computation as that will only
+    //  decrease the left operand of the max.
+
+    return {
+        idxFirst_,
+        other.idxLast_,
+        duration_ + edgeDuration + waitDuration + other.duration_,
+        std::max(other.earliestStart_ - waitDuration - edgeDuration - duration_,
+                 earliestStart_),
+        std::min(latestFinish_ + edgeDuration + waitDuration + other.duration_,
+                 other.latestFinish_),
+        std::max(releaseTime_, other.releaseTime_)};
 }
 
 template <typename... Args>
@@ -204,10 +229,9 @@ Duration DurationSegment::duration() const { return duration_; }
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
     // clang-format off
-    // assert(timeWarp_ == std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0));
-    Duration const twLate = std::max<Duration>(latestFinish_ - duration_, twEarly_);
-    return std::max<Duration>(twEarly_ + duration_ - latestFinish_, 0)
-         + std::max<Duration>(releaseTime_ - twLate, 0)
+    Duration const latestStart = std::max<Duration>(latestFinish_ - duration_, earliestStart_);
+    return std::max<Duration>(earliestStart_ + duration_ - latestFinish_, 0)
+         + std::max<Duration>(releaseTime_ - latestStart, 0)
          + std::max<Duration>(duration_ - maxDuration, 0);
     // clang-format on
 }
@@ -216,32 +240,29 @@ DurationSegment::DurationSegment(size_t idxFirst,
                                  size_t idxLast,
                                  Duration duration,
                                  Duration timeWarp,
-                                 Duration twEarly,
-                                 Duration twLate,
+                                 Duration earliestStart,
+                                 Duration latestStart,
                                  Duration releaseTime)
     : idxFirst_(idxFirst),
       idxLast_(idxLast),
       duration_(duration),
-      //   timeWarp_(timeWarp),
-      twEarly_(twEarly),
-      //   twLate_(twLate),
-      latestFinish_(twLate + duration - timeWarp),
+      earliestStart_(earliestStart),
+      latestFinish_(latestStart + duration - timeWarp),
       releaseTime_(releaseTime)
 {
+    assert(timeWarp == 0 || earliestStart == latestStart);
 }
 
 DurationSegment::DurationSegment(size_t idxFirst,
                                  size_t idxLast,
                                  Duration duration,
-                                 Duration twEarly,
+                                 Duration earliestStart,
                                  Duration latestFinish,
                                  Duration releaseTime)
     : idxFirst_(idxFirst),
       idxLast_(idxLast),
       duration_(duration),
-      //   timeWarp_(std::max<Duration>(twEarly + duration - latestFinish, 0)),
-      twEarly_(twEarly),
-      //   twLate_(std::max<Duration>(latestFinish - duration, twEarly)),
+      earliestStart_(earliestStart),
       latestFinish_(latestFinish),
       releaseTime_(releaseTime)
 {

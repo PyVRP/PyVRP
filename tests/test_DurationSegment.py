@@ -39,6 +39,28 @@ def test_merge_two():
     assert_equal(merged.time_warp(), 11)
 
 
+def test_merge_two_with_time_warp_and_wait_time():
+    """
+    Tests merging two duration segments, where both have time warp so no slack.
+    However, when merging the two segments, we have a waiting time in between.
+    """
+    ds1 = DurationSegment(0, 0, 5, 4, 1, 1, 0)
+    ds2 = DurationSegment(1, 1, 5, 4, 20, 20, 0)
+
+    mat = np.asarray([[0, 4], [1, 0]])
+    merged = DurationSegment.merge(mat, ds1, ds2)
+
+    # There is no release time. The first segment (ds1) starts at 1, takes 5
+    # and there is 4 time warp so finishes at 1 + 5 - 4 = 2. The second segment
+    # starts at 20, so we incur 18 waiting time. It then takes 5, and has 4
+    # time warp so finishes at 20 + 5 - 4 = 21.
+
+    # The total duration should be 5 + 5 + 18 = 28, and the total time warp
+    # should be 8, such that indeed the latest finish is at 1 + 28 - 8 = 21.
+    assert_equal(merged.time_warp(), 8)
+    assert_equal(merged.duration(), 28)
+
+
 def test_merge_three():
     """
     Tests merging three duration segments.
