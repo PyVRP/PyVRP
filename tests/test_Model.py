@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from numpy.testing import (
     assert_,
@@ -6,7 +7,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, VehicleType
+from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -228,19 +229,19 @@ def test_from_data(small_cvrp):
     Tests that initialising the model from a data instance results in a valid
     model representation of that data instance.
     """
-    model = Model.from_data(small_cvrp)
-    model_data = model.data()
+    m = Model.from_data(small_cvrp)
+    m_data = m.data()
 
     # We can first check if the overall problem dimension numbers agree.
-    assert_equal(model_data.num_clients, small_cvrp.num_clients)
-    assert_equal(model_data.num_vehicles, small_cvrp.num_vehicles)
+    assert_equal(m_data.num_clients, small_cvrp.num_clients)
+    assert_equal(m_data.num_vehicles, small_cvrp.num_vehicles)
     assert_equal(
-        model_data.vehicle_type(0).capacity,
+        m_data.vehicle_type(0).capacity,
         small_cvrp.vehicle_type(0).capacity,
     )
 
-    assert_equal(model_data.distance_matrix(), small_cvrp.distance_matrix())
-    assert_equal(model_data.duration_matrix(), small_cvrp.duration_matrix())
+    assert_equal(m_data.distance_matrices(), small_cvrp.distance_matrices())
+    assert_equal(m_data.duration_matrices(), small_cvrp.duration_matrices())
 
 
 def test_from_data_and_solve(small_cvrp, ok_small):
@@ -358,7 +359,7 @@ def test_partial_distance_duration_matrix():
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
     data = model.data()
-    distances = data.distance_matrix()
+    distances = data.distance_matrix(profile=0)
     assert_equal(distances[0, 2], MAX_VALUE)
     assert_equal(distances[1, 0], MAX_VALUE)
 
@@ -738,3 +739,102 @@ def test_minimise_distance_or_duration(ok_small):
     # is something we can check.
     service = sum(data.location(loc).service_duration for loc in [1, 4])
     assert_equal(new_res.cost(), orig_res.cost() + service)
+
+
+def test_adding_vehicle_type_with_unknown_profile_raises():
+    """
+    Tests that adding a vehicle type with a routing profile that is not in the
+    model raises.
+    """
+    m = Model()
+
+    profile = Profile()
+    assert_(profile not in m.profiles)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(profile=profile)
+
+
+def test_adding_multiple_routing_profiles():
+    """
+    Tests that adding multiple routing profiles to the model works, and the
+    solver finds the optimal solution.
+    """
+    m = Model()
+
+    profile1 = m.add_profile()
+    assert_(m.profiles[0] is profile1)
+
+    profile2 = m.add_profile()
+    assert_(m.profiles[1] is profile2)
+
+    veh_type1 = m.add_vehicle_type(profile=profile1)
+    assert_equal(veh_type1.profile, 0)
+
+    veh_type2 = m.add_vehicle_type(profile=profile2)
+    assert_equal(veh_type2.profile, 1)
+
+    m.add_depot(x=1, y=1)
+    m.add_client(x=2, y=2)
+
+    for frm in m.locations:
+        for to in m.locations:
+            if frm != to:
+                m.add_edge(frm, to, distance=10, duration=5, profile=profile1)
+                m.add_edge(frm, to, distance=5, duration=10, profile=profile2)
+
+    data = m.data()
+    assert_equal(data.num_profiles, 2)
+
+    # Check that the distance and duration matrices of both profiles are
+    # defined correctly.
+    assert_equal(data.distance_matrix(profile=0), [[0, 10], [10, 0]])
+    assert_equal(data.duration_matrix(profile=0), [[0, 5], [5, 0]])
+    assert_equal(data.distance_matrix(profile=1), [[0, 5], [5, 0]])
+    assert_equal(data.duration_matrix(profile=1), [[0, 10], [10, 0]])
+
+    res = m.solve(stop=MaxIterations(10))
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 10)
+
+
+def test_profiles_build_on_base_edges():
+    """
+    Tests that distance and duration matrices belonging to different profiles
+    are all constructed from the same base matrices, with profile-specific
+    changes applied on top.
+    """
+    m = Model()
+
+    depot = m.add_depot(x=1, y=1)
+    client = m.add_client(x=2, y=2)
+
+    # Add base edges. These edges are used to construct base matrices that the
+    # profiles build on. Essentially, if an edge is not specifically provided
+    # in the profile, it will be inherited from the base edges.
+    for frm in m.locations:
+        for to in m.locations:
+            dist = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, dist)
+
+    prof1 = m.add_profile()
+    prof2 = m.add_profile()
+
+    # We have not yet added profile-specific edges. This means the profile
+    # matrices should all be the same as the base matrices.
+    data = m.data()
+    assert_equal(data.distance_matrix(0), [[0, 2], [2, 0]])
+    assert_equal(data.distance_matrix(1), [[0, 2], [2, 0]])
+    assert_equal(data.duration_matrix(0), np.zeros((2, 2)))
+    assert_equal(data.duration_matrix(1), np.zeros((2, 2)))
+
+    # Let's now add a few profile-specific edges and test that these overwrite
+    # the base data in the new data instance.
+    m.add_edge(depot, client, distance=5, duration=10, profile=prof1)
+    m.add_edge(depot, client, distance=10, duration=5, profile=prof2)
+
+    data = m.data()
+    assert_equal(data.distance_matrix(0), [[0, 5], [2, 0]])
+    assert_equal(data.distance_matrix(1), [[0, 10], [2, 0]])
+    assert_equal(data.duration_matrix(0), [[0, 10], [0, 0]])
+    assert_equal(data.duration_matrix(1), [[0, 5], [0, 0]])

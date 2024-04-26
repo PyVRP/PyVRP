@@ -43,8 +43,8 @@ def plot_route_schedule(
         _, ax = plt.subplots()
 
     vehicle_type = data.vehicle_type(route.vehicle_type())
-    distances = data.distance_matrix()
-    durations = data.duration_matrix()
+    distances = data.distance_matrix(vehicle_type.profile)
+    durations = data.duration_matrix(vehicle_type.profile)
     depot = data.location(route.depot())
     horizon = depot.tw_late - depot.tw_early
 

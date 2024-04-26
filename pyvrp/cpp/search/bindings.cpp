@@ -260,6 +260,7 @@ PYBIND11_MODULE(_search, m)
         .def("max_duration", &Route::maxDuration)
         .def("max_distance", &Route::maxDistance)
         .def("time_warp", &Route::timeWarp)
+        .def("profile", &Route::profile)
         .def(
             "dist_at",
             [](Route const &route, size_t idx)

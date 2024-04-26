@@ -165,8 +165,8 @@ def test_problem_data_raises_when_no_depot_is_provided():
             clients=[],
             depots=[],
             vehicle_types=[VehicleType(2, capacity=1)],
-            distance_matrix=np.asarray([[]], dtype=int),
-            duration_matrix=np.asarray([[]], dtype=int),
+            distance_matrices=[np.asarray([[]], dtype=int)],
+            duration_matrices=[np.asarray([[]], dtype=int)],
         )
 
     # One (or more) depots should not raise.
@@ -174,8 +174,8 @@ def test_problem_data_raises_when_no_depot_is_provided():
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=np.asarray([[0]]),
-        duration_matrix=np.asarray([[0]]),
+        distance_matrices=[np.asarray([[0]])],
+        duration_matrices=[np.asarray([[0]])],
     )
 
 
@@ -200,10 +200,10 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, matrix, other_matrix)
+        ProblemData(clients, depots, vehicle_types, [matrix], [other_matrix])
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
+        ProblemData(clients, depots, vehicle_types, [other_matrix], [matrix])
 
 
 @pytest.mark.parametrize(
@@ -224,7 +224,7 @@ def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
     vehicle_types = [VehicleType(2, capacity=1)]
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, dist_mat, dur_mat)
+        ProblemData(clients, depots, vehicle_types, [dist_mat], [dur_mat])
 
 
 def test_problem_data_replace_no_changes():
@@ -236,7 +236,7 @@ def test_problem_data_replace_no_changes():
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, depots, vehicle_types, mat, mat)
+    original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     new = original.replace()
 
@@ -255,11 +255,15 @@ def test_problem_data_replace_no_changes():
         assert_equal(new_veh_type.capacity, og_veh_type.capacity)
         assert_equal(new_veh_type.num_available, og_veh_type.num_available)
 
-    assert_(new.distance_matrix() is not original.distance_matrix())
-    assert_equal(new.distance_matrix(), original.distance_matrix())
+    new_dist = new.distance_matrix(profile=0)
+    orig_dist = original.distance_matrix(profile=0)
+    assert_(new_dist is not orig_dist)
+    assert_equal(new_dist, orig_dist)
 
-    assert_(new.duration_matrix() is not original.duration_matrix())
-    assert_equal(new.duration_matrix(), original.duration_matrix())
+    new_dur = new.duration_matrix(profile=0)
+    orig_dur = original.duration_matrix(profile=0)
+    assert_(new_dur is not orig_dur)
+    assert_equal(new_dur, orig_dur)
 
     assert_equal(new.num_clients, original.num_clients)
     assert_equal(new.num_vehicle_types, original.num_vehicle_types)
@@ -274,7 +278,7 @@ def test_problem_data_replace_with_changes():
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, depots, vehicle_types, mat, mat)
+    original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     # Let's replace the clients, vehicle types, and the distance matrix, each
     # with different values than in the original data. The duration matrix
@@ -282,7 +286,7 @@ def test_problem_data_replace_with_changes():
     new = original.replace(
         clients=[Client(x=1, y=1)],
         vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
-        distance_matrix=np.where(np.eye(2), 0, 2),
+        distance_matrices=[np.where(np.eye(2), 0, 2)],
     )
 
     assert_(new is not original)
@@ -298,12 +302,12 @@ def test_problem_data_replace_with_changes():
         assert_(new_veh_type.capacity != og_veh_type.capacity)
         assert_(new_veh_type.num_available != og_veh_type.num_available)
 
-    assert_(new.distance_matrix() is not original.distance_matrix())
+    assert_(new.distance_matrix(0) is not original.distance_matrix(0))
     with assert_raises(AssertionError):
-        assert_equal(new.distance_matrix(), original.distance_matrix())
+        assert_equal(new.distance_matrix(0), original.distance_matrix(0))
 
-    assert_(new.duration_matrix() is not original.duration_matrix())
-    assert_equal(new.duration_matrix(), original.duration_matrix())
+    assert_(new.duration_matrix(0) is not original.duration_matrix(0))
+    assert_equal(new.duration_matrix(0), original.duration_matrix(0))
 
     assert_equal(new.num_clients, original.num_clients)
     assert_(new.num_vehicle_types != original.num_vehicle_types)
@@ -318,22 +322,22 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
-    data = ProblemData(clients, depots, vehicle_types, mat, mat)
+    data = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
-    with assert_raises(ValueError):
-        data.replace(clients=[])  # matrices are 2x2
+    with assert_raises(ValueError):  # matrices are 2x2
+        data.replace(clients=[])
 
-    with assert_raises(ValueError):
-        data.replace(distance_matrix=np.where(np.eye(3), 0, 1))  # two clients
+    with assert_raises(ValueError):  # two clients
+        data.replace(distance_matrices=[np.where(np.eye(3), 0, 1)])
 
-    with assert_raises(ValueError):
-        data.replace(duration_matrix=np.where(np.eye(3), 0, 1))  # two clients
+    with assert_raises(ValueError):  # two clients
+        data.replace(duration_matrices=[np.where(np.eye(3), 0, 1)])
 
     with assert_raises(ValueError):
         data.replace(
             clients=[Client(x=1, y=1)],
-            distance_matrix=np.where(np.eye(3), 0, 1),
-            duration_matrix=np.where(np.eye(3), 0, 1),
+            distance_matrices=[np.where(np.eye(3), 0, 1)],
+            duration_matrices=[np.where(np.eye(3), 0, 1)],
         )
 
 
@@ -368,12 +372,12 @@ def test_matrix_access():
         clients=clients,
         depots=[depot],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=dist_mat,
-        duration_matrix=dur_mat,
+        distance_matrices=[dist_mat],
+        duration_matrices=[dur_mat],
     )
 
-    assert_equal(data.distance_matrix(), dist_mat)
-    assert_equal(data.duration_matrix(), dur_mat)
+    assert_equal(data.distance_matrix(profile=0), dist_mat)
+    assert_equal(data.duration_matrix(profile=0), dur_mat)
 
 
 def test_matrices_are_not_writeable():
@@ -389,12 +393,12 @@ def test_matrices_are_not_writeable():
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=np.array([[0]]),
-        duration_matrix=np.array([[0]]),
+        distance_matrices=[np.array([[0]])],
+        duration_matrices=[np.array([[0]])],
     )
 
-    dist_mat = data.distance_matrix()
-    dur_mat = data.duration_matrix()
+    dist_mat = data.distance_matrix(profile=0)
+    dur_mat = data.duration_matrix(profile=0)
 
     with assert_raises(ValueError):
         dist_mat[0, 0] = 1_000
@@ -414,24 +418,24 @@ def test_matrices_are_not_copies():
         clients=[Client(x=0, y=1)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=mat,
-        duration_matrix=mat,
+        distance_matrices=[mat],
+        duration_matrices=[mat],
     )
 
     # Ownership is taken, so the memory that's referenced is not that of the
     # matrices that are passed into ProblemData's constructor.
-    assert_(data.distance_matrix().base is not mat)
-    assert_(data.duration_matrix().base is not mat)
+    assert_(data.distance_matrix(profile=0).base is not mat)
+    assert_(data.duration_matrix(profile=0).base is not mat)
 
     # Repeated calls should return matrices that reference the same base data,
     # implying nothing is copied: the memory is not owned by the matrix.
-    dist1 = data.distance_matrix()
-    dist2 = data.distance_matrix()
+    dist1 = data.distance_matrix(profile=0)
+    dist2 = data.distance_matrix(profile=0)
     assert_(not dist1.flags["OWNDATA"])
     assert_(dist1.base is dist2.base)
 
-    dur1 = data.duration_matrix()
-    dur2 = data.duration_matrix()
+    dur1 = data.duration_matrix(profile=0)
+    dur2 = data.duration_matrix(profile=0)
     assert_(not dur1.flags["OWNDATA"])
     assert_(dur1.base is dur2.base)
 
@@ -616,6 +620,41 @@ def test_raises_invalid_vehicle_depot_indices(
         ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
 
 
+def test_raises_invalid_vehicle_profile_index(ok_small):
+    """
+    Tests that setting the profile index on a VehicleType to a value that's
+    outside the range of available profiles raises.
+    """
+    assert_equal(ok_small.num_profiles, 1)
+
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[VehicleType(profile=1)])
+
+
+@pytest.mark.parametrize(
+    ("distances", "durations"), [([], []), ([], None), (None, [])]
+)
+def test_raises_no_profiles(ok_small, distances, durations):
+    """
+    Tests that passing no profiles (i.e., no distance and duration matrices)
+    raises an error.
+    """
+    with assert_raises((ValueError, IndexError)):
+        ok_small.replace(
+            distance_matrices=distances,
+            duration_matrices=durations,
+        )
+
+
+def test_raises_inconsistent_profiles(ok_small):
+    """
+    Tests that passing an inconsistent number of distance and duration matrices
+    raises an error.
+    """
+    with assert_raises(ValueError):
+        ok_small.replace(distance_matrices=ok_small.distance_matrices() * 2)
+
+
 def test_raises_empty_group():
     """
     Tests that passing an empty client group raises a ValueError.
@@ -625,8 +664,8 @@ def test_raises_empty_group():
             clients=[],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=[[0]],
-            duration_matrix=[[0]],
+            distance_matrices=[[[0]]],
+            duration_matrices=[[[0]]],
             groups=[ClientGroup()],  # empty group - this should raise
         )
 
@@ -651,8 +690,8 @@ def test_raises_invalid_client_group_indices(
             clients=[Client(1, 1, required=False, group=index)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((2, 2)),
-            duration_matrix=np.zeros((2, 2)),
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
             groups=groups,
         )
 
@@ -670,8 +709,8 @@ def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
             clients=[Client(1, 1, required=False, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((2, 2)),
-            duration_matrix=np.zeros((2, 2)),
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
             groups=groups,
         )
 
@@ -692,8 +731,8 @@ def test_raises_wrong_mutual_group_referencing():
             ],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((3, 3)),
-            duration_matrix=np.zeros((3, 3)),
+            distance_matrices=[np.zeros((3, 3))],
+            duration_matrices=[np.zeros((3, 3))],
             groups=[ClientGroup([2])],
         )
 
@@ -702,8 +741,8 @@ def test_raises_wrong_mutual_group_referencing():
             clients=[Client(1, 1), Client(2, 2)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((3, 3)),
-            duration_matrix=np.zeros((3, 3)),
+            distance_matrices=[np.zeros((3, 3))],
+            duration_matrices=[np.zeros((3, 3))],
             # Group references a client that is not in the group. That should
             # raise as well.
             groups=[ClientGroup([1])],
@@ -722,8 +761,8 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             clients=[Client(1, 1, required=True, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((2, 2)),
-            duration_matrix=np.zeros((2, 2)),
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
             groups=[ClientGroup([1])],
         )
 

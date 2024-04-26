@@ -244,7 +244,7 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     )
 
     # Distances on various segments of the route.
-    distances = ok_small.distance_matrix()
+    distances = ok_small.distance_matrix(profile=0)
     assert_equal(route.dist_between(0, 1).distance(), distances[0, client])
     assert_equal(route.dist_between(1, 2).distance(), distances[client, 0])
     assert_equal(
@@ -447,8 +447,8 @@ def test_shift_duration_depot_time_window_interaction(
         clients=[],
         depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
         vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
-        distance_matrix=np.zeros((1, 1), dtype=int),
-        duration_matrix=np.zeros((1, 1), dtype=int),
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     route = Route(data, idx=0, vehicle_type=0)

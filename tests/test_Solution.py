@@ -431,7 +431,7 @@ def test_distance_calculation(ok_small):
     # check separately.
     assert_equal(sol.distance(), sum(route.distance() for route in routes))
 
-    distances = ok_small.distance_matrix()
+    distances = ok_small.distance_matrix(profile=0)
     expected = distances[0, 1] + distances[1, 2] + distances[2, 0]
     assert_equal(routes[0].distance(), expected)
 
@@ -596,7 +596,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     # The first route has timewarp, so there is no slack in the schedule. We
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
-    durations = ok_small.duration_matrix()
+    durations = ok_small.duration_matrix(profile=0)
     start_time = ok_small.location(1).tw_early - durations[0, 1]
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
@@ -679,8 +679,8 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
         ],
         depots=[Depot(x=0, y=0, tw_late=10)],
         vehicle_types=[VehicleType(2)],
-        distance_matrix=dist_mat,
-        duration_matrix=dur_mat,
+        distance_matrices=[dist_mat],
+        duration_matrices=[dur_mat],
     )
 
     # This solution directly visits the second client from the depot, which is
@@ -711,8 +711,8 @@ def test_time_warp_return_to_depot():
         clients=[Client(x=1, y=0)],
         depots=[Depot(x=0, y=0, tw_late=1)],
         vehicle_types=[VehicleType()],
-        distance_matrix=np.asarray([[0, 0], [0, 0]]),
-        duration_matrix=np.asarray([[0, 1], [1, 0]]),
+        distance_matrices=[np.asarray([[0, 0], [0, 0]])],
+        duration_matrices=[np.asarray([[0, 1], [1, 0]])],
     )
 
     sol = Solution(data, [[1]])
@@ -853,8 +853,8 @@ def test_eq_unassigned():
         ],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=dist,
-        duration_matrix=dist,
+        distance_matrices=[dist],
+        duration_matrices=[dist],
     )
 
     sol1 = Solution(data, [[1]])
