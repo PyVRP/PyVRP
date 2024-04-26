@@ -363,7 +363,7 @@ public:
      *     Cost per unit of duration on routes serviced by vehicles of this
      *     type. Default 0.
      * profile
-     *     This vehcle type's routing profile. Default 0, the first profile.
+     *     This vehicle type's routing profile. Default 0, the first profile.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -393,7 +393,7 @@ public:
      * unit_duration_cost
      *     Cost per unit of duration on routes using vehicles of this type.
      * profile
-     *     This vehcle type's routing profile.
+     *     This vehicle type's routing profile.
      * name
      *     Free-form name field for this vehicle type.
      */

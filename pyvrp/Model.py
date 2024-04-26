@@ -63,6 +63,12 @@ class Edge:
 class Profile:
     """
     Stores a routing profile.
+
+    A routing profile is a collection of edges with distance and duration
+    attributes that together define a complete distance and duration matrix.
+    These can be used to model, for example, the road uses of different types
+    of vehicles, like trucks, cars, or bicyclists. Each
+    :class:`~pyvrp._pyvrp.VehicleType` is associated with a routing profile.
     """
 
     edges: list[Edge]
@@ -282,6 +288,13 @@ class Model:
         (:math:`j`). The edge can be given distance and duration attributes.
         Distance is required, but the default duration is zero. Returns the
         created edge.
+
+        .. note::
+
+           If ``profile`` is not provided, the edge is a base edge that will be
+           set for all profiles in the model. Any profile-specific edge takes
+           precendence over a base edge with the same ``frm`` and ``to``
+           locations.
         """
         if profile is not None:
             return profile.add_edge(frm, to, distance, duration)
