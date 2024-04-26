@@ -130,9 +130,9 @@ private:
 
     public:
         inline ProxyAfter(Route const &route, size_t start);
-        inline operator DistanceSegment const &() const;
-        inline operator DurationSegment const &() const;
-        inline operator LoadSegment const &() const;
+        inline operator DistanceSegment() const;
+        inline operator DurationSegment() const;
+        inline operator LoadSegment() const;
     };
 
     /**
@@ -146,9 +146,9 @@ private:
 
     public:
         inline ProxyBefore(Route const &route, size_t end);
-        inline operator DistanceSegment const &() const;
-        inline operator DurationSegment const &() const;
-        inline operator LoadSegment const &() const;
+        inline operator DistanceSegment() const;
+        inline operator DurationSegment() const;
+        inline operator LoadSegment() const;
     };
 
     /**
@@ -501,32 +501,32 @@ Route::ProxyAt::operator pyvrp::LoadSegment const &() const
     return route->loadAt[idx];
 }
 
-Route::ProxyAfter::operator pyvrp::DistanceSegment const &() const
+Route::ProxyAfter::operator pyvrp::DistanceSegment() const
 {
     return route->distAfter[start];
 }
 
-Route::ProxyAfter::operator pyvrp::DurationSegment const &() const
+Route::ProxyAfter::operator pyvrp::DurationSegment() const
 {
     return route->durAfter[start];
 }
 
-Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
+Route::ProxyAfter::operator pyvrp::LoadSegment() const
 {
     return route->loadAfter[start];
 }
 
-Route::ProxyBefore::operator pyvrp::DistanceSegment const &() const
+Route::ProxyBefore::operator pyvrp::DistanceSegment() const
 {
     return route->distBefore[end];
 }
 
-Route::ProxyBefore::operator pyvrp::DurationSegment const &() const
+Route::ProxyBefore::operator pyvrp::DurationSegment() const
 {
     return route->durBefore[end];
 }
 
-Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
+Route::ProxyBefore::operator pyvrp::LoadSegment() const
 {
     return route->loadBefore[end];
 }
