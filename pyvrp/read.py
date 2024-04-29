@@ -115,7 +115,7 @@ def read(
         capacities = np.full(num_vehicles, _INT_MAX)
 
     if "vehicles_depot" in instance:
-        vehicles_depots = instance["vehicles_depot"] - 1  # make 0-indexed
+        vehicles_depots = instance["vehicles_depot"] - 1  # zero-indexed
     else:
         vehicles_depots = np.full(num_vehicles, depot_idcs[0])
 
@@ -125,8 +125,8 @@ def read(
         fixed_costs = np.zeros(num_vehicles, dtype=np.int64)
 
     if "vehicles_unit_distance_cost" in instance:
-        # Unit distance costs are not rounded: it is assumed that the instance
-        # contains the costs in the desired precision!
+        # Unit distance costs are not rounded: we assume here that the instance
+        # presents the costs in the desired precision!
         unit_distance_costs = instance["vehicles_unit_distance_cost"]
     else:
         unit_distance_costs = np.ones(num_vehicles, dtype=np.int64)
