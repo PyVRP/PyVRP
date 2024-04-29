@@ -1,6 +1,8 @@
 from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
 from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
+from .Model import Edge as Edge
 from .Model import Model as Model
+from .Model import Profile as Profile
 from .PenaltyManager import PenaltyManager as PenaltyManager
 from .PenaltyManager import PenaltyParams as PenaltyParams
 from .Population import Population as Population

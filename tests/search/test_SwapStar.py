@@ -97,15 +97,17 @@ def test_swap_star_can_swap_in_place():
         ],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(num_available=2)],
-        distance_matrix=np.asarray(
-            [
-                [0, 1, 10, 10],
-                [1, 0, 10, 10],
-                [10, 10, 0, 10],
-                [10, 10, 1, 0],
-            ]
-        ),
-        duration_matrix=np.zeros((4, 4), dtype=int),
+        distance_matrices=[
+            np.asarray(
+                [
+                    [0, 1, 10, 10],
+                    [1, 0, 10, 10],
+                    [10, 10, 0, 10],
+                    [10, 10, 1, 0],
+                ]
+            ),
+        ],
+        duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
     nodes = [Node(loc=loc) for loc in range(data.num_locations)]
@@ -150,16 +152,18 @@ def test_wrong_load_calculation_bug():
         ],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(num_available=2, capacity=12)],
-        distance_matrix=np.asarray(
-            [
-                [0, 10, 10, 10, 1],
-                [1, 0, 10, 10, 10],
-                [10, 10, 0, 10, 10],
-                [10, 1, 10, 0, 10],
-                [10, 10, 1, 10, 0],
-            ]
-        ),
-        duration_matrix=np.zeros((5, 5), dtype=int),
+        distance_matrices=[
+            np.asarray(
+                [
+                    [0, 10, 10, 10, 1],
+                    [1, 0, 10, 10, 10],
+                    [10, 10, 0, 10, 10],
+                    [10, 1, 10, 0, 10],
+                    [10, 10, 1, 10, 0],
+                ]
+            ),
+        ],
+        duration_matrices=[np.zeros((5, 5), dtype=int)],
     )
 
     nodes = [Node(loc=loc) for loc in range(data.num_locations)]

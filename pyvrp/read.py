@@ -298,8 +298,8 @@ def read(
         clients,
         depots,
         vehicle_types,
-        distances,
-        durations,
+        [distances],
+        [durations],
         groups,
     )
 
