@@ -14,6 +14,3 @@ pipx install cmake
 
 # Install poetry
 pipx install poetry
-
-# Install package dependencies
-poetry install
