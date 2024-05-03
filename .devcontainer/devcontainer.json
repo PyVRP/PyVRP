@@ -1,0 +1,17 @@
+{
+  "name": "PyVRP devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "features": {},
+  "onCreateCommand": ".devcontainer/setup.sh",
+  "postCreateCommand": "",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "twxs.cmake",
+        "benjamin-simmonds.pythoncpp-debug"
+      ]
+    }
+  }
+}
