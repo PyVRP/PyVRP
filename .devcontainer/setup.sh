@@ -4,7 +4,7 @@
 echo 'export PATH=~/.local/bin:$PATH' >> ~/.bashrc
 
 # Install g++-13
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
 sudo apt update
 sudo apt install g++-13
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
