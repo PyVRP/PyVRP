@@ -1,18 +1,17 @@
 {
-  // More info about Features: https://containers.dev/features
-  "hostRequirements": {
-    "memory": "8gb" // Added this because compilation fails on scipy.sparse if we have less than 8gb of RAM
-  },
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "name": "PyVRP devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
   "features": {},
-
   "onCreateCommand": ".devcontainer/setup.sh",
   "postCreateCommand": "",
-
   "customizations": {
     "vscode": {
-      "extensions": ["ms-python.python"],
-      "settings": {}
+      "extensions": [
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "twxs.cmake",
+        "benjamin-simmonds.pythoncpp-debug"
+      ]
     }
   }
 }
