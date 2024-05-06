@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Install g++-11
-sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt install g++-11
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+# Install Python3.10
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.10
 
 # Install poetry
-pipx install poetry
+pip install poetry
