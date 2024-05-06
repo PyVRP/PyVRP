@@ -7,4 +7,7 @@ sudo apt-get update
 sudo apt-get install python3.10
 
 # Install poetry
-pip install poetry
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+sudo pipx ensurepath --global
+pipx install poetry
