@@ -152,61 +152,34 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
               ? other.earliestStart_ - latestFinish_ - edgeDuration
               : 0;  // ternary rather than max avoids underflow
 
-    // We compute the new latest finish time for the merged segment forward
-    // from the latest finish time of the first segment.
-    // Formally, we should also include timeWarp_ in the second segment in the
-    // forward computation, however:
-    // - If other.timeWarp_ = 0, we can omit it from the computation
-    // - If other.timeWarp_ > 0, then other.earliestStart_ + other.duration_ -
-    //   other.timeWarp_ = other.latestFinish_
-    //   - If waitDuration > 0, it holds that:
-    //     latestFinish_ + edgeDuration + waitDuration + other.duration_ -
-    //     other.timeWarp_
-    //     = other.earliestStart_ + other.duration_ - other.timeWarp_
-    //     = other.latestFinish_
-    //   - If waitDuration = 0, it holds that:
-    //     latestFinish_ + edgeDuration >= other.earliestStart_
-    //     so latestFinish_ + edgeDuration + other.duration_ - other.timeWarp_
-    //     >= other.earliestStart_ + other.duration_ - other.timeWarp_
-    //     = other.latestFinish_
-    //  so in both cases the maximum is equal to latestFinish_, and this remains
-    //  true if we ignore timeWarp_ in the computation as that will only
-    //  increase the left operand of the min.
+    // The new earliest start time for the merged segment is either the
+    // earliest start time for the first/current segment or a later start time
+    // computed backwards from the earliest start time of the second/other
+    // segment. In this computation, we can ignore existing time warp in the
+    // first segment, since if there is existing time warp, there is no slack
+    // in the first segment and the earliest start time will not change.
+    Dur const mergedEarliestStart = std::max(other.earliestStart_ - waitDuration
+                                                 - edgeDuration - duration_,
+                                             earliestStart_);
 
-    // We compute the new earliest start time for the merged segment backwards
-    // from the earliest start time for the second segment.
-    // Formally, we should also include timeWarp_ in the first segment in the
-    // backwards computation, however:
-    // - If timeWarp = 0, we can omit it from the computation
-    // - If timeWarp > 0, then earliestStart_ + duration_ - timeWarp_ =
-    // latestFinish_
-    //   - If waitDuration > 0, it holds that:
-    //     other.earliestStart_ - waitDuration - edgeDuration - (duration_ -
-    //     timeWarp_)
-    //     = latestFinish_ - (duration_ - timeWarp_) = earliestStart_
-    //   - If waitDuration = 0, it holds that:
-    //     latestFinish_ >= other.earliestStart_ - edgeDuration
-    //     so earliestStart_ + duration_ - timeWarp_ >= other.earliestStart_
-    //     - edgeDuration
-    //     so earliestStart_ >= other.earliestStart_ - edgeDuration - duration_
-    //     + timeWarp_
-    //  so in both cases the maximum is equal to earliestStart_, and this
-    //  remains true if we ignore timeWarp_ in the computation as that will only
-    //  decrease the left operand of the max.
-
+    // The new latest finish time for the merged segment is either the latest
+    // finish time for the second/other segment or an earlier finish time
+    // computed forward from the latest finish time of the first/current
+    // segment. In this computation, we can ignore existing time warp in the
+    // second segment, since if there is existing time warp, there is no slack
+    // in the second segment and the latest finish time will not change.
     Dur const diffDuration = edgeDuration + waitDuration + other.duration_;
     Dur const mergedLatestFinish
         = latestFinish_ < other.latestFinish_ - diffDuration
               ? latestFinish_ + diffDuration
               : other.latestFinish_;  // Avoid overflow
-    return {
-        idxFirst_,
-        other.idxLast_,
-        duration_ + diffDuration,
-        std::max(other.earliestStart_ - waitDuration - edgeDuration - duration_,
-                 earliestStart_),
-        mergedLatestFinish,
-        std::max(releaseTime_, other.releaseTime_)};
+
+    return {idxFirst_,
+            other.idxLast_,
+            duration_ + diffDuration,
+            mergedEarliestStart,
+            mergedLatestFinish,
+            std::max(releaseTime_, other.releaseTime_)};
 }
 
 template <typename... Args>
