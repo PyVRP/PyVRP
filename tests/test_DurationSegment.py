@@ -161,7 +161,7 @@ def test_OkSmall_with_time_warp(ok_small):
     # to 3, and back to depot).
     ds = segments[0]
     for idx in [1, 3, 0]:
-        mat = ok_small.duration_matrix()
+        mat = ok_small.duration_matrix(profile=0)
         ds = DurationSegment.merge(mat, ds, segments[idx])
 
     # First the route's duration. This depends on the travel duration, service

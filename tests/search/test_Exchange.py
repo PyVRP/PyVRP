@@ -231,20 +231,24 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
         ],
         depots=[Depot(x=0, y=0, tw_early=0, tw_late=10)],
         vehicle_types=[VehicleType(1)],
-        distance_matrix=np.asarray(
-            [
-                [0, 1, 5],
-                [5, 0, 1],
-                [1, 5, 0],
-            ]
-        ),
-        duration_matrix=np.asarray(
-            [
-                [0, 100, 2],
-                [1, 0, 100],
-                [100, 2, 0],
-            ]
-        ),
+        distance_matrices=[
+            np.asarray(
+                [
+                    [0, 1, 5],
+                    [5, 0, 1],
+                    [1, 5, 0],
+                ]
+            ),
+        ],
+        duration_matrices=[
+            np.asarray(
+                [
+                    [0, 100, 2],
+                    [1, 0, 100],
+                    [100, 2, 0],
+                ]
+            ),
+        ],
     )
 
     # We consider two solutions. The first is duration optimal, and overall the
@@ -401,8 +405,8 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
         ],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(capacity=5)],
-        distance_matrix=np.where(np.eye(4), 0, 1),
-        duration_matrix=np.zeros((4, 4), dtype=int),
+        distance_matrices=[np.where(np.eye(4), 0, 1)],
+        duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
     op = operator(data)

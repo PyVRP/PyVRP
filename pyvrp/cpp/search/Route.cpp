@@ -232,13 +232,13 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         distBefore[idx] = DistanceSegment::merge(
-            data.distanceMatrix(), distBefore[idx - 1], distAt[idx]);
+            data.distanceMatrix(profile()), distBefore[idx - 1], distAt[idx]);
 
         loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
         durBefore[idx] = DurationSegment::merge(
-            data.durationMatrix(), durBefore[idx - 1], durAt[idx]);
+            data.durationMatrix(profile()), durBefore[idx - 1], durAt[idx]);
 #endif
     }
 
@@ -246,14 +246,14 @@ void Route::update()
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
     {
         distAfter[idx - 1] = DistanceSegment::merge(
-            data.distanceMatrix(), distAt[idx - 1], distAfter[idx]);
+            data.distanceMatrix(profile()), distAt[idx - 1], distAfter[idx]);
 
         loadAfter[idx - 1]
             = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
         durAfter[idx - 1] = DurationSegment::merge(
-            data.durationMatrix(), durAt[idx - 1], durAfter[idx]);
+            data.durationMatrix(profile()), durAt[idx - 1], durAfter[idx]);
 #endif
     }
 
