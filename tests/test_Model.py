@@ -7,7 +7,15 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    Model,
+    Profile,
+    Route,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -444,6 +452,45 @@ def test_model_solves_small_instance_with_fixed_costs():
 
     res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
+
+
+def test_bug_fix_overflow_more_timewarp_than_duration():
+    """
+    This test exercises the bug identified in issue #588, where the solver
+    would hang on an instance with infeasible solutions that have more
+    time warp than duration. This resulted in an overflow because the
+    implementation allowed for negative arrival times.
+    """
+    m = Model()
+
+    m.add_depot(x=0, y=0)
+    m.add_vehicle_type(num_available=1)
+    m.add_client(x=1, y=1, tw_early=16, tw_late=16)
+    m.add_client(x=2, y=2, tw_early=0, tw_late=4)
+
+    durations = [
+        [0, 1, 1],
+        [1, 0, 6],
+        [1, 1, 0],
+    ]
+    for frm_idx, frm in enumerate(m.locations):
+        for to_idx, to in enumerate(m.locations):
+            distance = durations[frm_idx][to_idx]
+            duration = durations[frm_idx][to_idx]
+            m.add_edge(frm, to, distance=distance, duration=duration)
+
+    route = Route(m.data(), [1, 2], 0)
+
+    # Visiting client 1 takes 1 travel time. Leave as late as possible
+    # to incur no waiting time, so it leaves at time 15, arriving at time 16.
+    # Travel to client 2 takes 6 time units, arriving at 22. The time warp at
+    # client 2 is 22 - 4 = 18, warping back to time 4. Travel back to the depot
+    # takes 1 time unit, arriving at 5. Before the bug fix, the time warp
+    # exceeding duration led to a negative arrival times at the depot.
+    # Combined with the default late depot time window (INT_MAX), this
+    # caused a time warp overflow.
+    assert_(route.duration() == 1 + 6 + 1)
+    assert_(route.time_warp() == 18)
 
 
 def test_model_solves_small_instance_with_shift_durations():
