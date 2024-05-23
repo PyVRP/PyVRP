@@ -163,16 +163,21 @@ def test_OkSmall_with_time_warp(ok_small):
 
 def test_bug_fix_overflow_more_timewarp_than_duration():
     """
-    This test exercises the bug identified in issue #588, when merging a
-    duration segment that has more time warp than duration with another
-    duration segment that has ``twLate = INT_MAX``.
+    This test exercises the issue identified in #588, when merging a duration
+    segment that has more time warp than duration with another duration segment
+    that has ``twLate = INT_MAX`` results in integer overflow.
     """
     matrix = np.array([[0, 0], [0, 0]])
-    ds1 = DurationSegment(1, 1, 9, 18, 0, 18, 0)
-    ds2 = DurationSegment(0, 0, 0, 0, 0, np.iinfo(np.int64).max, 0)
-    ds = DurationSegment.merge(matrix, ds1, ds2)
 
-    # ds1 has 9 duration and 18 time warp, which results in an arrival time
-    # of -9 at ds2. Before enforcing non-negative arrival times, this would
-    # result in an integer overflow.
-    assert_(ds.time_warp() == 18)
+    ds1 = DurationSegment(1, 1, 9, 18, 0, 18, 0)
+    assert_(ds1.duration() < ds1.time_warp())
+
+    ds2 = DurationSegment(0, 0, 0, 0, 0, np.iinfo(np.int64).max, 0)
+    assert_equal(ds2.tw_late(), np.iinfo(np.int64).max)
+
+    # ds1 has 9 duration and 18 time warp, which results in an arrival time of
+    # -9 at ds2. Before enforcing non-negative arrival times, this would result
+    # in an integer overflow when subtracting this arrival time from ds2's
+    # tw_late.
+    ds = DurationSegment.merge(matrix, ds1, ds2)
+    assert_equal(ds.time_warp(), 18)
