@@ -1,6 +1,7 @@
 {
   "name": "PyVRP devcontainer",
   "image": "mcr.microsoft.com/devcontainers/cpp:1.0.9-jammy",
+  "runArgs": ["--privileged"],
   "features": {},
 
   "onCreateCommand": "yes | .devcontainer/setup.sh",
