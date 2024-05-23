@@ -8,6 +8,7 @@ sudo apt-get install python3.10 python3-pip
 
 # Install poetry
 curl -sSL https://install.python-poetry.org | python3 -
+poetry config virtualenvs.in-project true
 
 # Initialize submodules
 git submodule update --init
