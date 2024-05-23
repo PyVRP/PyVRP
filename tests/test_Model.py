@@ -7,15 +7,7 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import (
-    Client,
-    ClientGroup,
-    Depot,
-    Model,
-    Profile,
-    Route,
-    VehicleType,
-)
+from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
 from pyvrp.stop import MaxIterations
