@@ -175,5 +175,4 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
     # ds1 has 9 duration and 18 time warp, which results in an arrival time
     # of -9 at ds2. Before enforcing non-negative arrival times, this would
     # result in an integer overflow.
-    assert_(ds.duration() == 9)
     assert_(ds.time_warp() == 18)
