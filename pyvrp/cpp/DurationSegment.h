@@ -146,15 +146,19 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
     Dur const diffWait = other.twEarly_ - atOther > twLate_
                              ? other.twEarly_ - atOther - twLate_
                              : 0;
-    Dur const otherTwLate
-        = atOther >= 0 ? other.twLate_ - atOther : other.twLate_;
+
+    // Only add atOther to other.twLate_ if it does not result in overflow.
+    Dur const maxDur = std::numeric_limits<Dur>::max();
+    Dur const twLateAtOther = atOther >= other.twLate_ - maxDur
+                                  ? other.twLate_ - atOther
+                                  : other.twLate_;
 
     return {idxFirst_,
             other.idxLast_,
             duration_ + other.duration_ + edgeDuration + diffWait,
             timeWarp_ + other.timeWarp_ + diffTw,
             std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
-            std::min(otherTwLate, twLate_) + diffTw,
+            std::min(twLateAtOther, twLate_) + diffTw,
             std::max(releaseTime_, other.releaseTime_)};
 }
 
