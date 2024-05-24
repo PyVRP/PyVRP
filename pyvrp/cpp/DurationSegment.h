@@ -135,7 +135,7 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
     // client, and atOther the time (after starting from our first client) at
     // which we arrive there.
     Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
-    Dur const atOther = std::max<Dur>(duration_ - timeWarp_ + edgeDuration, 0);
+    Dur const atOther = duration_ - timeWarp_ + edgeDuration;
 
     // Time warp increases if we arrive at the other's first client after its
     // time window closes, whereas wait duration increases if we arrive there
