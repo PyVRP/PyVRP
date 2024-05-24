@@ -147,7 +147,7 @@ DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
                              ? other.twEarly_ - atOther - twLate_
                              : 0;
 
-    // Only add atOther to other.twLate_ if it does not result in overflow.
+    // Only subtract ``atOther`` from ``other.twLate_`` if it does not overflow.
     Dur const maxDur = std::numeric_limits<Dur>::max();
     Dur const twLateAtOther = atOther >= other.twLate_ - maxDur
                                   ? other.twLate_ - atOther
