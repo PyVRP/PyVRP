@@ -105,14 +105,9 @@ public:
     // Construct from attributes of the given client.
     DurationSegment(size_t idx, ProblemData::Client const &client);
 
-    // Construct from raw data.
-    inline DurationSegment(size_t idxFirst,
-                           size_t idxLast,
-                           Duration duration,
-                           Duration timeWarp,
-                           Duration earliestStart,
-                           Duration latestStart,
-                           Duration releaseTime);
+    // Construct from attributes of the given depot and vehicle type.
+    DurationSegment(ProblemData::Depot const &depot,
+                    ProblemData::VehicleType const &vehicleType);
 
     // Construct from raw data.
     inline DurationSegment(size_t idxFirst,
@@ -215,23 +210,6 @@ Duration DurationSegment::timeWarp(Duration const maxDuration) const
 Duration DurationSegment::latestStart() const
 {
     return std::max<Duration>(latestFinish_ - duration_, earliestStart_);
-}
-
-DurationSegment::DurationSegment(size_t idxFirst,
-                                 size_t idxLast,
-                                 Duration duration,
-                                 Duration timeWarp,
-                                 Duration earliestStart,
-                                 Duration latestStart,
-                                 Duration releaseTime)
-    : idxFirst_(idxFirst),
-      idxLast_(idxLast),
-      duration_(duration),
-      earliestStart_(earliestStart),
-      latestFinish_(latestStart + duration - timeWarp),
-      releaseTime_(releaseTime)
-{
-    assert(timeWarp == 0 || earliestStart == latestStart);
 }
 
 DurationSegment::DurationSegment(size_t idxFirst,

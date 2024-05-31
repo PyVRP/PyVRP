@@ -330,18 +330,6 @@ class LoadSegment:
     def load(self) -> int: ...
 
 class DurationSegment:
-    @overload
-    def __init__(
-        self,
-        idx_first: int,
-        idx_last: int,
-        duration: int,
-        time_warp: int,
-        tw_early: int,
-        tw_late: int,
-        release_time: int,
-    ) -> None: ...
-    @overload
     def __init__(
         self,
         idx_first: int,
