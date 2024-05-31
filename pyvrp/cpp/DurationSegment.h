@@ -95,7 +95,7 @@ public:
      * Latest start time for this route segment that results in minimum route
      * segment duration.
      */
-    [[nodiscard]] Duration latestStart() const;
+    [[nodiscard]] inline Duration latestStart() const;
 
     /**
      * Earliest possible release time of the clients in this route segment.
@@ -206,11 +206,15 @@ Duration DurationSegment::duration() const { return duration_; }
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
     // clang-format off
-    Duration const latestStart = std::max<Duration>(latestFinish_ - duration_, earliestStart_);
     return std::max<Duration>(earliestStart_ + duration_ - latestFinish_, 0)
-         + std::max<Duration>(releaseTime_ - latestStart, 0)
+         + std::max<Duration>(releaseTime_ - latestStart(), 0)
          + std::max<Duration>(duration_ - maxDuration, 0);
     // clang-format on
+}
+
+Duration DurationSegment::latestStart() const
+{
+    return std::max<Duration>(latestFinish_ - duration_, earliestStart_);
 }
 
 DurationSegment::DurationSegment(size_t idxFirst,

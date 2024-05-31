@@ -5,11 +5,6 @@ using pyvrp::DurationSegment;
 
 Duration DurationSegment::earliestStart() const { return earliestStart_; }
 
-Duration DurationSegment::latestStart() const
-{
-    return std::max<Duration>(latestFinish_ - duration_, earliestStart_);
-}
-
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
 DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
