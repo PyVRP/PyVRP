@@ -23,6 +23,6 @@ class PenaltyBoundWarning(UserWarning):
     """
     Raised when a penalty parameter has reached its maximum value. This means
     PyVRP struggles to find a feasible solution for the instance that's being
-    solved, either because the instance has no feasible solution, or it just
+    solved, either because the instance has no feasible solution, or it is just
     very hard to find one.
     """

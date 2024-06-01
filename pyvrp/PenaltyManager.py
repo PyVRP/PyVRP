@@ -163,8 +163,8 @@ class PenaltyManager:
             A penalty parameter has reached its maximum value. This means PyVRP
             struggles to find a feasible solution for the instance that's being
             solved, either because the instance has no feasible solution, or it
-            just very hard to find one. Please check the instance carefully to
-            determine if a feasible solution exists.
+            is very hard to find one. Check the instance carefully to determine
+            if a feasible solution exists.
             """
             warn(msg, PenaltyBoundWarning)
 
