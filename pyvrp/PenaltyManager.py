@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from statistics import fmean
+from warnings import warn
 
 import numpy as np
 
 from pyvrp._pyvrp import CostEvaluator, Solution
+from pyvrp.exceptions import PenaltyBoundWarning
 
 
 @dataclass
@@ -119,6 +121,10 @@ class PenaltyManager:
         PenaltyManager parameters. If not provided, a default will be used.
     """
 
+    MIN_PENALTY = 1
+    MAX_PENALTY = 100_000
+    FEAS_TOL = 0.05
+
     def __init__(self, params: PenaltyParams = PenaltyParams()):
         self._params = params
 
@@ -136,17 +142,12 @@ class PenaltyManager:
             [],  # track recent distance feasibility
         ]
 
-    def _compute(
-        self,
-        penalty: int,
-        feas_percentage: float,
-        tolerance: float = 0.05,
-    ) -> int:
+    def _compute(self, penalty: int, feas_percentage: float) -> int:
         # Computes and returns the new penalty value, given the current value
         # and the percentage of feasible solutions since the last update.
         diff = self._params.target_feasible - feas_percentage
 
-        if abs(diff) < tolerance:
+        if abs(diff) < self.FEAS_TOL:
             return penalty
 
         # +/- 1 to ensure we do not get stuck at the same integer values.
@@ -155,7 +156,19 @@ class PenaltyManager:
         else:
             new_penalty = self._params.penalty_decrease * penalty - 1
 
-        return int(np.clip(new_penalty, 1, 100_000))
+        clipped = int(np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY))
+
+        if clipped == self.MAX_PENALTY:
+            msg = """
+            A penalty parameter has reached its maximum value. This means PyVRP
+            struggles to find a feasible solution for the instance that's being
+            solved, either because the instance has no feasible solution, or it
+            just very hard to find one. Please check the instance carefully to
+            determine if a feasible solution exists.
+            """
+            warn(msg, PenaltyBoundWarning)
+
+        return clipped
 
     def _register(self, feas_list: list[bool], penalty: int, is_feas: bool):
         feas_list.append(is_feas)

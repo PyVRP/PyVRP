@@ -1,10 +1,10 @@
+import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
-from pytest import mark
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     (
         "init_load_penalty",
         "init_tw_penalty",
@@ -295,6 +295,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 2)
 
 
+@pytest.mark.filterwarnings("ignore::pyvrp.exceptions.PenaltyBoundWarning")
 def test_max_min_penalty(ok_small):
     """
     Tests that penalty parameters are clipped to [1, 100_000] when updating
@@ -310,7 +311,7 @@ def test_max_min_penalty(ok_small):
 
     # Initial penalty is 100_000, so one unit of time warp should be penalised
     # by that value.
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 100_000)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), PenaltyManager.MAX_PENALTY)
 
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
@@ -319,7 +320,7 @@ def test_max_min_penalty(ok_small):
     # up by two times due to the penalty_increase parameter. But it's already
     # at the upper limit, and can thus not increase further.
     pm.register(infeas)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 100_000)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), PenaltyManager.MAX_PENALTY)
 
     feas = Solution(ok_small, [[1, 2], [3, 4]])
     assert_(not feas.has_time_warp())
@@ -328,4 +329,11 @@ def test_max_min_penalty(ok_small):
     # should drop to zero due to the penalty_decrease parameter. But penalty
     # parameters cannot drop below one.
     pm.register(feas)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 1)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), PenaltyManager.MIN_PENALTY)
+
+
+def test_warns_max_penalty_value():
+    """
+    TODO
+    """
+    pass
