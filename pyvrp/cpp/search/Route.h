@@ -722,6 +722,7 @@ Route const *Route::Proposal<Segments...>::route() const
 template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
+    // TODO handle when segment profile != current profile
     return std::apply(
         [&](auto &&...args)
         {
@@ -734,6 +735,7 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
+    // TODO handle when segment profile != current profile
     return std::apply(
         [&](auto &&...args)
         {
