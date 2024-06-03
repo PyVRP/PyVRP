@@ -116,3 +116,5 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoexception:: ScalingWarning
 
    .. autoexception:: TspWarning
+
+   .. autoexception:: PenaltyBoundWarning
