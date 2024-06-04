@@ -53,6 +53,9 @@ class Model:
         self._groups: list[ClientGroup] = []
         self._vehicle_types: list[VehicleType] = []
 
+        self.distance_matrix = None
+        self.duration_matrix = None
+
     @property
     def locations(self) -> list[Union[Client, Depot]]:
         """
@@ -248,6 +251,12 @@ class Model:
         self._edges.append(edge)
         return edge
 
+    def add_distance_matrix(self, distance_matrix: np.ndarray) -> None:
+        self.distance_matrix = distance_matrix
+
+    def add_duration_matrix(self, duration_matrix: np.ndarray) -> None:
+        self.duration_matrix = duration_matrix
+
     def add_vehicle_type(
         self,
         num_available: int = 1,
@@ -308,16 +317,31 @@ class Model:
 
         # Default value is a sufficiently large value to make sure any edges
         # not set below are never traversed.
-        distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
-        durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
-        np.fill_diagonal(distances, 0)
-        np.fill_diagonal(durations, 0)
+        if self.distance_matrix is None:
+            distances = np.full(
+                (len(locs), len(locs)), MAX_VALUE, dtype=np.int64
+            )
+            np.fill_diagonal(distances, 0)
+            for edge in self._edges:
+                frm = loc2idx[id(edge.frm)]
+                to = loc2idx[id(edge.to)]
+                distances[frm, to] = edge.distance
+        else:
+            distances = self.distance_matrix
 
-        for edge in self._edges:
-            frm = loc2idx[id(edge.frm)]
-            to = loc2idx[id(edge.to)]
-            distances[frm, to] = edge.distance
-            durations[frm, to] = edge.duration
+        if self.duration_matrix is None:
+            durations = np.full(
+                (len(locs), len(locs)), MAX_VALUE, dtype=np.int64
+            )
+            np.fill_diagonal(durations, 0)
+
+            for edge in self._edges:
+                frm = loc2idx[id(edge.frm)]
+                to = loc2idx[id(edge.to)]
+                distances[frm, to] = edge.distance
+                durations[frm, to] = edge.duration
+        else:
+            durations = self.duration_matrix
 
         return ProblemData(
             self._clients,
