@@ -75,7 +75,12 @@ public:
 
     public:
         [[nodiscard]] bool empty() const;
+
+        /**
+         * Returns the number of clients visited by this route.
+         */
         [[nodiscard]] size_t size() const;
+
         [[nodiscard]] Client operator[](size_t idx) const;
 
         Visits::const_iterator begin() const;
@@ -206,9 +211,25 @@ public:
          */
         [[nodiscard]] Depot depot() const;
 
+        /**
+         * Returns whether this route is feasible.
+         */
         [[nodiscard]] bool isFeasible() const;
+
+        /**
+         * Returns whether this route violates capacity constraints.
+         */
         [[nodiscard]] bool hasExcessLoad() const;
+
+        /**
+         * Returns whether this route violates maximum distance constraints.
+         */
         [[nodiscard]] bool hasExcessDistance() const;
+
+        /**
+         * Returns whether this solution violates time window or maximum
+         * duration constraints.
+         */
         [[nodiscard]] bool hasTimeWarp() const;
 
         bool operator==(Route const &other) const;
@@ -352,7 +373,8 @@ public:
     [[nodiscard]] bool hasExcessDistance() const;
 
     /**
-     * Returns whether this solution violates time window constraints.
+     * Returns whether this solution violates time window or maximum duration
+     * constraints.
      */
     [[nodiscard]] bool hasTimeWarp() const;
 
