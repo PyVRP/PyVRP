@@ -102,9 +102,9 @@ class PenaltyManager:
     params
         PenaltyManager parameters. If not provided, a default will be used.
     initial_penalties
-        Initial penalty values for load (idx 0), duration (1), and distance
-        (2) violations. Defaults to the values 20, 6, and 6. See also
-        :meth:`~initial_from_data` to compute potentially better values from
+        Initial penalty values for unit load (idx 0), duration (1), and
+        distance (2) violations. Defaults to the values 20, 6, and 6. See also
+        :meth:`~init_from_data` to compute potentially better values from
         a data instance.
     """
 
@@ -126,16 +126,27 @@ class PenaltyManager:
         ]
 
     @classmethod
-    def initial_from_data(
+    def init_from_data(
         cls,
         data: ProblemData,
         params: PenaltyParams = PenaltyParams(),
     ) -> PenaltyManager:
         """
-        TODO
+        Initialises from the given data instance and parameter object. The
+        initial penalty parameter values are computed from the problem data.
+
+        Parameters
+        ----------
+        data
+            Data instance to use when computing penalty parameters.
+        params
+            PenaltyManager parameters. If not provided, a default will be used.
         """
         # TODO use data
-        return cls(params, (20, 6, 6))
+        init_load = 20
+        init_tw = 6
+        init_dist = 6
+        return cls(params, (init_load, init_tw, init_dist))
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
         # Computes and returns the new penalty value, given the current value

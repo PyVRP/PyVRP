@@ -171,7 +171,7 @@ def solve(
     for route_op in params.route_ops:
         ls.add_route_operator(route_op(data))
 
-    pm = PenaltyManager.initial_from_data(data, params.penalty)
+    pm = PenaltyManager.init_from_data(data, params.penalty)
     pop = Population(bpd, params.population)
     init = [
         Solution.make_random(data, rng)
