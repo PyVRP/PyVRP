@@ -130,9 +130,9 @@ private:
 
     public:
         inline ProxyAfter(Route const &route, size_t start);
-        inline operator DistanceSegment() const;
-        inline operator DurationSegment() const;
-        inline operator LoadSegment() const;
+        inline operator DistanceSegment const &() const;
+        inline operator DurationSegment const &() const;
+        inline operator LoadSegment const &() const;
     };
 
     /**
@@ -146,9 +146,9 @@ private:
 
     public:
         inline ProxyBefore(Route const &route, size_t end);
-        inline operator DistanceSegment() const;
-        inline operator DurationSegment() const;
-        inline operator LoadSegment() const;
+        inline operator DistanceSegment const &() const;
+        inline operator DurationSegment const &() const;
+        inline operator LoadSegment const &() const;
     };
 
     /**
@@ -501,32 +501,32 @@ Route::ProxyAt::operator pyvrp::LoadSegment const &() const
     return route->loadAt[idx];
 }
 
-Route::ProxyAfter::operator pyvrp::DistanceSegment() const
+Route::ProxyAfter::operator pyvrp::DistanceSegment const &() const
 {
     return route->distAfter[start];
 }
 
-Route::ProxyAfter::operator pyvrp::DurationSegment() const
+Route::ProxyAfter::operator pyvrp::DurationSegment const &() const
 {
     return route->durAfter[start];
 }
 
-Route::ProxyAfter::operator pyvrp::LoadSegment() const
+Route::ProxyAfter::operator pyvrp::LoadSegment const &() const
 {
     return route->loadAfter[start];
 }
 
-Route::ProxyBefore::operator pyvrp::DistanceSegment() const
+Route::ProxyBefore::operator pyvrp::DistanceSegment const &() const
 {
     return route->distBefore[end];
 }
 
-Route::ProxyBefore::operator pyvrp::DurationSegment() const
+Route::ProxyBefore::operator pyvrp::DurationSegment const &() const
 {
     return route->durBefore[end];
 }
 
-Route::ProxyBefore::operator pyvrp::LoadSegment() const
+Route::ProxyBefore::operator pyvrp::LoadSegment const &() const
 {
     return route->loadBefore[end];
 }
@@ -722,7 +722,6 @@ Route const *Route::Proposal<Segments...>::route() const
 template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
-    // TODO handle when segment profile != current profile
     return std::apply(
         [&](auto &&...args)
         {
@@ -735,7 +734,6 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
-    // TODO handle when segment profile != current profile
     return std::apply(
         [&](auto &&...args)
         {
