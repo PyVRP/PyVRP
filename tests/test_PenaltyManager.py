@@ -1,5 +1,11 @@
+import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
+from numpy.testing import (
+    assert_,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
 from pyvrp.exceptions import PenaltyBoundWarning
@@ -337,3 +343,52 @@ def test_warns_max_penalty_value(ok_small):
 
     with assert_warns(PenaltyBoundWarning):
         pm.register(infeas)
+
+
+def test_init_from_load_penalty_value(ok_small):
+    """
+    Tests that ``init_from()`` computes the correct initial load penalty value
+    for the OkSmall instance.
+    """
+    pm = PenaltyManager.init_from(ok_small)
+    cost_eval = pm.cost_evaluator()
+
+    avg_cost = ok_small.distance_matrix(0).mean()
+    avg_load = np.mean([c.delivery for c in ok_small.clients()])
+    assert_equal(cost_eval.load_penalty(1, 0), round(avg_cost / avg_load))
+
+
+def test_init_from_tw_penalty_value(ok_small):
+    """
+    Tests that ``init_from()`` computes the correct initial time warp penalty
+    for a slightly modified OkSmall instance.
+    """
+    durations = ok_small.duration_matrix(0)
+    data = ok_small.replace(duration_matrices=[2 * durations])
+
+    pm = PenaltyManager.init_from(data)
+    cost_eval = pm.cost_evaluator()
+
+    avg_distance = data.distance_matrix(0).mean()
+    avg_duration = data.duration_matrix(0).mean()
+    assert_equal(cost_eval.tw_penalty(1), round(avg_distance / avg_duration))
+
+
+def test_init_from_different_unit_costs(ok_small):
+    """
+    Tests that ``init_from()`` computes the correct initial time warp and
+    distance penalty values when the vehicles have a unit cost function that
+    involves both distance and duration.
+    """
+    veh_type = VehicleType(3, 10, unit_distance_cost=1, unit_duration_cost=10)
+    data = ok_small.replace(vehicle_types=[veh_type])
+
+    pm = PenaltyManager.init_from(data)
+    cost_eval = pm.cost_evaluator()
+
+    avg_cost = np.mean(data.distance_matrix(0) + 10 * data.duration_matrix(0))
+    avg_distance = data.distance_matrix(0).mean()
+    avg_duration = data.duration_matrix(0).mean()
+
+    assert_equal(cost_eval.tw_penalty(1), round(avg_cost / avg_duration))
+    assert_equal(cost_eval.dist_penalty(1, 0), round(avg_cost / avg_distance))

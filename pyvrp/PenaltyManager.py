@@ -164,9 +164,11 @@ class PenaltyManager:
         avg_distance = np.minimum.reduce(distances).mean()
         avg_duration = np.minimum.reduce(durations).mean()
 
-        pickups = np.array([c.pickup for c in data.clients()])
-        deliveries = np.array([c.delivery for c in data.clients()])
-        avg_load = np.maximum(pickups, deliveries).mean()
+        avg_load = 0
+        if data.num_clients != 0:
+            pickups = np.array([c.pickup for c in data.clients()])
+            deliveries = np.array([c.delivery for c in data.clients()])
+            avg_load = np.maximum(pickups, deliveries).mean()
 
         # Initial penalty parameters are essentially meant to weigh an average
         # increase in the relevant value the same way as the average edge cost.
