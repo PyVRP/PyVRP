@@ -227,8 +227,8 @@ public:
         [[nodiscard]] bool hasExcessDistance() const;
 
         /**
-         * Returns whether this solution violates time window or maximum
-         * duration constraints.
+         * Returns whether this route violates time window or maximum duration
+         * constraints.
          */
         [[nodiscard]] bool hasTimeWarp() const;
 
