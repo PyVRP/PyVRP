@@ -100,15 +100,19 @@ class PenaltyManager:
     recent history, and can be used to provide a temporary penalty booster
     object that increases the penalties for a short duration.
 
+    .. note::
+
+       Consider initialising using :meth:`~init_from_data` to compute initial
+       penalty values from the data instance directly.
+
     Parameters
     ----------
     params
         PenaltyManager parameters. If not provided, a default will be used.
     initial_penalties
         Initial penalty values for unit load (idx 0), duration (1), and
-        distance (2) violations. Defaults to the values 20, 6, and 6. See also
-        :meth:`~init_from_data` to compute potentially better values from
-        a data instance.
+        distance (2) violations. Defaults to ``(20, 6, 6)`` for backwards
+        compatibility.
     """
 
     MIN_PENALTY = 1
@@ -136,12 +140,12 @@ class PenaltyManager:
     ) -> PenaltyManager:
         """
         Initialises from the given data instance and parameter object. The
-        initial penalty parameter values are computed from the problem data.
+        initial penalty values are computed from the problem data.
 
         Parameters
         ----------
         data
-            Data instance to use when computing penalty parameters.
+            Data instance to use when computing penalty values.
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
