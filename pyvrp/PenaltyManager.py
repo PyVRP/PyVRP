@@ -149,10 +149,30 @@ class PenaltyManager:
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
-        # TODO use data
-        init_load = 20
-        init_tw = 6
-        init_dist = 6
+        distances = data.distance_matrices()
+        durations = data.duration_matrices()
+        edge_costs = [  # edge costs per vehicle type
+            veh_type.unit_distance_cost * distances[veh_type.profile]
+            + veh_type.unit_duration_cost * durations[veh_type.profile]
+            for veh_type in data.vehicle_types()
+        ]
+
+        # First determine the best edge cost/distance/duration over all vehicle
+        # types, and then average that for the entire matrix to obtain an
+        # "average best edge value".
+        avg_cost = np.minimum.reduce(edge_costs).mean()
+        avg_distance = np.minimum.reduce(distances).mean()
+        avg_duration = np.minimum.reduce(durations).mean()
+
+        pickups = np.array([c.pickup for c in data.clients()])
+        deliveries = np.array([c.delivery for c in data.clients()])
+        avg_load = np.maximum(pickups, deliveries).mean()
+
+        # Initial penalty parameters are essentially meant to weigh an average
+        # increase in the relevant value the same way as the average edge cost.
+        init_load = round(avg_cost / max(avg_load, 1))
+        init_tw = round(avg_cost / max(avg_duration, 1))
+        init_dist = round(avg_cost / max(avg_distance, 1))
         return cls(params, (init_load, init_tw, init_dist))
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
