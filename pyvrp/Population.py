@@ -76,8 +76,14 @@ class Population:
 
     def add(self, solution: Solution, cost_evaluator: CostEvaluator):
         """
-        Adds the given solution to the population. Survivor selection is
-        automatically triggered when the population reaches its maximum size.
+        Inserts the given solution in the appropriate feasible or infeasible
+        (sub)population.
+
+        .. note::
+
+           Survivor selection is automatically triggered when the subpopulation
+           reaches its maximum size, given by
+           :attr:`~pyvrp.Population.PopulationParams.max_pop_size`.
 
         Parameters
         ----------

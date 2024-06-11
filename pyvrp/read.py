@@ -50,8 +50,8 @@ def read(
     round_func: Union[str, _RoundingFunc] = "none",
 ) -> ProblemData:
     """
-    Reads the VRPLIB file at the given location, and returns a ProblemData
-    instance.
+    Reads the ``VRPLIB`` file at the given location, and returns a
+    :class:`~pyvrp._pyvrp.ProblemData` instance.
 
     .. note::
 
@@ -63,7 +63,7 @@ def read(
     ----------
     where
         File location to read. Assumes the data on the given location is in
-        VRPLIB format.
+        ``VRPLIB`` format.
     round_func
         Optional rounding function that is applied to all data values in the
         instance. This can either be a function or a string:
@@ -272,14 +272,14 @@ def read(
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     """
-    Reads a solution in VRPLIB format from file at the given location, and
+    Reads a solution in ``VRPLIB`` format from the give file location, and
     returns the routes contained in it.
 
     Parameters
     ----------
     where
         File location to read. Assumes the solution in the file on the given
-        location is in VRPLIB solution format.
+        location is in ``VRPLIB`` solution format.
 
     Returns
     -------
