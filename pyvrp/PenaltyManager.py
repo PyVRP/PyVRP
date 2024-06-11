@@ -103,7 +103,7 @@ class PenaltyManager:
     .. note::
 
        Consider initialising using :meth:`~init_from` to compute initial
-       penalty values from the data instance directly.
+       penalty values that are scaled according to the data instance.
 
     Parameters
     ----------
@@ -157,9 +157,9 @@ class PenaltyManager:
             for veh_type in data.vehicle_types()
         ]
 
-        # First determine the best edge cost/distance/duration over all vehicle
-        # types, and then average that for the entire matrix to obtain an
-        # "average best edge value".
+        # Best edge cost/distance/duration over all vehicle types and profiles,
+        # and then average that for the entire matrix to obtain an "average
+        # best" edge cost/distance/duration.
         avg_cost = np.minimum.reduce(edge_costs).mean()
         avg_distance = np.minimum.reduce(distances).mean()
         avg_duration = np.minimum.reduce(durations).mean()
@@ -170,8 +170,8 @@ class PenaltyManager:
             deliveries = np.array([c.delivery for c in data.clients()])
             avg_load = np.maximum(pickups, deliveries).mean()
 
-        # Initial penalty parameters are essentially meant to weigh an average
-        # increase in the relevant value the same way as the average edge cost.
+        # Initial penalty parameters are meant to weigh an average increase
+        # in the relevant value by the same amount as the average edge cost.
         init_load = round(avg_cost / max(avg_load, 1))
         init_tw = round(avg_cost / max(avg_duration, 1))
         init_dist = round(avg_cost / max(avg_distance, 1))

@@ -356,7 +356,7 @@ def test_init_from_load_penalty_value(ok_small):
 def test_init_from_tw_penalty_value(ok_small):
     """
     Tests that ``init_from()`` computes the correct initial time warp penalty
-    for a slightly modified OkSmall instance.
+    value for a slightly modified OkSmall instance.
     """
     durations = ok_small.duration_matrix(0)
     data = ok_small.replace(duration_matrices=[2 * durations])
