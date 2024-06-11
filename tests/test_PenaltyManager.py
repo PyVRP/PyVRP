@@ -1,11 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import (
-    assert_,
-    assert_equal,
-    assert_raises,
-    assert_warns,
-)
+from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
 from pyvrp.exceptions import PenaltyBoundWarning
