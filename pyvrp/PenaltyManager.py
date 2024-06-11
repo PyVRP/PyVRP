@@ -102,7 +102,7 @@ class PenaltyManager:
 
     .. note::
 
-       Consider initialising using :meth:`~init_from_data` to compute initial
+       Consider initialising using :meth:`~init_from` to compute initial
        penalty values from the data instance directly.
 
     Parameters
@@ -133,7 +133,7 @@ class PenaltyManager:
         ]
 
     @classmethod
-    def init_from_data(
+    def init_from(
         cls,
         data: ProblemData,
         params: PenaltyParams = PenaltyParams(),
