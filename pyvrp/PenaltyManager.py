@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from statistics import fmean
 from warnings import warn
 
 import numpy as np
 
-from pyvrp._pyvrp import CostEvaluator, Solution
+from pyvrp._pyvrp import CostEvaluator, ProblemData, Solution
 from pyvrp.exceptions import PenaltyBoundWarning
 
 
@@ -15,17 +17,6 @@ class PenaltyParams:
 
     Parameters
     ----------
-    init_load_penalty
-        Initial penalty on excess load. This is the amount by which one unit of
-        excess load is penalised in the objective, at the start of the search.
-    init_time_warp_penalty
-        Initial penalty on time warp. This is the amount by which one unit of
-        time warp (time window violations) is penalised in the objective, at
-        the start of the search.
-    init_dist_penalty
-        Initial penalty on excess distance. This is the amount by which one
-        unit of excess distance is penalised in the objective, at the start of
-        the search.
     repair_booster
         A repair booster value :math:`r \\ge 1`. This value is used to
         temporarily multiply the current penalty terms, to force feasibility.
@@ -59,12 +50,6 @@ class PenaltyParams:
 
     Attributes
     ----------
-    init_load_penalty
-        Initial penalty on excess load.
-    init_time_warp_penalty
-        Initial penalty on time warp.
-    init_dist_penalty
-        Initial penalty on excess distance.
     repair_booster
         A repair booster value.
     solutions_between_updates
@@ -83,9 +68,6 @@ class PenaltyParams:
         in the last ``solutions_between_updates`` registrations.
     """
 
-    init_load_penalty: int = 20
-    init_time_warp_penalty: int = 6
-    init_dist_penalty: int = 6
     repair_booster: int = 12
     solutions_between_updates: int = 50
     penalty_increase: float = 1.34
@@ -119,28 +101,41 @@ class PenaltyManager:
     ----------
     params
         PenaltyManager parameters. If not provided, a default will be used.
+    initial_penalties
+        Initial penalty values for load (idx 0), duration (1), and distance
+        (2) violations. Defaults to the values 20, 6, and 6. See also
+        :meth:`~initial_from_data` to compute potentially better values from
+        a data instance.
     """
 
     MIN_PENALTY = 1
     MAX_PENALTY = 100_000
     FEAS_TOL = 0.05
 
-    def __init__(self, params: PenaltyParams = PenaltyParams()):
+    def __init__(
+        self,
+        params: PenaltyParams = PenaltyParams(),
+        initial_penalties: tuple[int, int, int] = (20, 6, 6),
+    ):
         self._params = params
-
-        self._penalties = np.array(
-            [
-                params.init_load_penalty,
-                params.init_time_warp_penalty,
-                params.init_dist_penalty,
-            ]
-        )
-
+        self._penalties = np.asarray(initial_penalties)
         self._feas_lists: list[list[bool]] = [
             [],  # tracks recent load feasibility
             [],  # track recent time feasibility
             [],  # track recent distance feasibility
         ]
+
+    @classmethod
+    def initial_from_data(
+        cls,
+        data: ProblemData,
+        params: PenaltyParams = PenaltyParams(),
+    ) -> PenaltyManager:
+        """
+        TODO
+        """
+        # TODO use data
+        return cls(params, (20, 6, 6))
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
         # Computes and returns the new penalty value, given the current value
