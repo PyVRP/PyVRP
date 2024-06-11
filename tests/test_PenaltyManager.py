@@ -14,13 +14,15 @@ from pyvrp.exceptions import PenaltyBoundWarning
         "target_feasible",
     ),
     [
-        (1, 0, -1.0, 0.5, 0.5),  # -1 penalty increase
-        (1, 0, 0.5, 0.5, 0.5),  # 0.5 penalty increase
-        (1, 0, 1.5, -1, 0.5),  # -1 penalty decrease
-        (1, 0, 1.5, 2, 0.5),  # 2 penalty decrease
-        (1, 0, 1, 1, -1),  # -1 target feasible
-        (1, 0, 1, 1, 2),  # 2 target feasible
-        (0, 0, 1, 1, 1),  # 0 repair booster
+        (1, -1, 1, 0.5, 0.5),  # -1 solutions between updates
+        (1, 0, 1, 0.5, 0.5),  # 0 solutions between updates
+        (1, 1, -1.0, 0.5, 0.5),  # -1 penalty increase
+        (1, 1, 0.5, 0.5, 0.5),  # 0.5 penalty increase
+        (1, 1, 1.5, -1, 0.5),  # -1 penalty decrease
+        (1, 1, 1.5, 2, 0.5),  # 2 penalty decrease
+        (1, 1, 1, 1, -1),  # -1 target feasible
+        (1, 1, 1, 1, 2),  # 2 target feasible
+        (0, 1, 1, 1, 1),  # 0 repair booster
     ],
 )
 def test_constructor_throws_when_arguments_invalid(

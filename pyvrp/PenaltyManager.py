@@ -75,17 +75,20 @@ class PenaltyParams:
     target_feasible: float = 0.43
 
     def __post_init__(self):
+        if not self.repair_booster >= 1:
+            raise ValueError("Expected repair_booster >= 1.")
+
+        if not self.solutions_between_updates >= 1:
+            raise ValueError("Expected solutions_between_updates >= 1.")
+
         if not self.penalty_increase >= 1.0:
             raise ValueError("Expected penalty_increase >= 1.")
 
-        if not 0.0 <= self.penalty_decrease <= 1.0:
+        if not (0.0 <= self.penalty_decrease <= 1.0):
             raise ValueError("Expected penalty_decrease in [0, 1].")
 
-        if not 0.0 <= self.target_feasible <= 1.0:
+        if not (0.0 <= self.target_feasible <= 1.0):
             raise ValueError("Expected target_feasible in [0, 1].")
-
-        if not self.repair_booster >= 1.0:
-            raise ValueError("Expected repair_booster >= 1.")
 
 
 class PenaltyManager:
