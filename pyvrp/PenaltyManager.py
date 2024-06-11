@@ -112,7 +112,8 @@ class PenaltyManager:
     initial_penalties
         Initial penalty values for unit load (idx 0), duration (1), and
         distance (2) violations. Defaults to ``(20, 6, 6)`` for backwards
-        compatibility.
+        compatibility. These values are clipped to the range ``[MIN_PENALTY,
+        MAX_PENALTY]``.
     """
 
     MIN_PENALTY = 1
@@ -125,7 +126,12 @@ class PenaltyManager:
         initial_penalties: tuple[int, int, int] = (20, 6, 6),
     ):
         self._params = params
-        self._penalties = np.asarray(initial_penalties)
+        self._penalties = np.clip(
+            initial_penalties,
+            self.MIN_PENALTY,
+            self.MAX_PENALTY,
+        )
+
         self._feas_lists: list[list[bool]] = [
             [],  # tracks recent load feasibility
             [],  # track recent time feasibility

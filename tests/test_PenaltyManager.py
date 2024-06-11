@@ -358,8 +358,8 @@ def test_init_from_tw_penalty_value(ok_small):
     Tests that ``init_from()`` computes the correct initial time warp penalty
     value for a slightly modified OkSmall instance.
     """
-    durations = ok_small.duration_matrix(0)
-    data = ok_small.replace(duration_matrices=[2 * durations])
+    distances = ok_small.distance_matrix(0)
+    data = ok_small.replace(distance_matrices=[2 * distances])
 
     pm = PenaltyManager.init_from(data)
     cost_eval = pm.cost_evaluator()
@@ -387,3 +387,17 @@ def test_init_from_different_unit_costs(ok_small):
 
     assert_equal(cost_eval.tw_penalty(1), round(avg_cost / avg_duration))
     assert_equal(cost_eval.dist_penalty(1, 0), round(avg_cost / avg_distance))
+
+
+def test_init_clips_penalties():
+    """
+    Tests that the initial penalty values are clipped to the [MIN_PENALTY,
+    MAX_PENALTY] range.
+    """
+    penalties = (0, PenaltyManager.MAX_PENALTY + 1, 2)
+    pm = PenaltyManager(initial_penalties=penalties)
+
+    cost_eval = pm.cost_evaluator()
+    assert_equal(cost_eval.load_penalty(1, 0), 1)  # set to MIN
+    assert_equal(cost_eval.tw_penalty(1), PenaltyManager.MAX_PENALTY)  # MAX
+    assert_equal(cost_eval.dist_penalty(1, 0), 2)  # already OK, so unchanged
