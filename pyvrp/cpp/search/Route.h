@@ -501,18 +501,22 @@ Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
 
 LoadSegment Route::SegmentAt::load() const { return route->loadAt[idx]; }
 
-DistanceSegment
-Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
+DistanceSegment Route::SegmentAfter::distance(size_t profile) const
 {
-    // TODO profile
-    return route->distAfter[start];
+    if (profile == route->profile())
+        return route->distAfter[start];
+
+    auto const between = SegmentBetween(*route, start, route->size());
+    return between.distance(profile);
 }
 
-DurationSegment
-Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
+DurationSegment Route::SegmentAfter::duration(size_t profile) const
 {
-    // TODO profile
-    return route->durAfter[start];
+    if (profile == route->profile())
+        return route->durAfter[start];
+
+    auto const between = SegmentBetween(*route, start, route->size());
+    return between.duration(profile);
 }
 
 LoadSegment Route::SegmentAfter::load() const
@@ -520,18 +524,22 @@ LoadSegment Route::SegmentAfter::load() const
     return route->loadAfter[start];
 }
 
-DistanceSegment
-Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
+DistanceSegment Route::SegmentBefore::distance(size_t profile) const
 {
-    // TODO profile
-    return route->distBefore[end];
+    if (profile == route->profile())
+        return route->distBefore[end];
+
+    auto const between = SegmentBetween(*route, size_t(0), end);
+    return between.distance(profile);
 }
 
-DurationSegment
-Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
+DurationSegment Route::SegmentBefore::duration(size_t profile) const
 {
-    // TODO profile
-    return route->durBefore[end];
+    if (profile == route->profile())
+        return route->durBefore[end];
+
+    auto const between = SegmentBetween(*route, size_t(0), end);
+    return between.duration(profile);
 }
 
 LoadSegment Route::SegmentBefore::load() const
