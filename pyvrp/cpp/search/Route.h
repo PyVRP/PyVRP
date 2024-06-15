@@ -113,9 +113,9 @@ private:
 
     public:
         inline SegmentAt(Route const &route, size_t idx);
-        inline operator DistanceSegment const &() const;
-        inline operator DurationSegment const &() const;
-        inline operator LoadSegment const &() const;
+        inline DistanceSegment distance(size_t profile) const;
+        inline DurationSegment duration(size_t profile) const;
+        inline LoadSegment load() const;
     };
 
     /**
@@ -129,9 +129,9 @@ private:
 
     public:
         inline SegmentAfter(Route const &route, size_t start);
-        inline operator DistanceSegment const &() const;
-        inline operator DurationSegment const &() const;
-        inline operator LoadSegment const &() const;
+        inline DistanceSegment distance(size_t profile) const;
+        inline DurationSegment duration(size_t profile) const;
+        inline LoadSegment load() const;
     };
 
     /**
@@ -145,9 +145,9 @@ private:
 
     public:
         inline SegmentBefore(Route const &route, size_t end);
-        inline operator DistanceSegment const &() const;
-        inline operator DurationSegment const &() const;
-        inline operator LoadSegment const &() const;
+        inline DistanceSegment distance(size_t profile) const;
+        inline DurationSegment duration(size_t profile) const;
+        inline LoadSegment load() const;
     };
 
     /**
@@ -162,9 +162,9 @@ private:
 
     public:
         inline SegmentBetween(Route const &route, size_t start, size_t end);
-        inline operator DistanceSegment() const;
-        inline operator DurationSegment() const;
-        inline operator LoadSegment() const;
+        inline DistanceSegment distance(size_t profile) const;
+        inline DurationSegment duration(size_t profile) const;
+        inline LoadSegment load() const;
     };
 
     ProblemData const &data;
@@ -487,53 +487,62 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
     assert(start <= end && end < route.nodes.size());
 }
 
-Route::SegmentAt::operator DistanceSegment const &() const
+DistanceSegment
+Route::SegmentAt::distance([[maybe_unused]] size_t profile) const
 {
     return route->distAt[idx];
 }
 
-Route::SegmentAt::operator pyvrp::DurationSegment const &() const
+DurationSegment
+Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
 {
     return route->durAt[idx];
 }
 
-Route::SegmentAt::operator pyvrp::LoadSegment const &() const
-{
-    return route->loadAt[idx];
-}
+LoadSegment Route::SegmentAt::load() const { return route->loadAt[idx]; }
 
-Route::SegmentAfter::operator pyvrp::DistanceSegment const &() const
+DistanceSegment
+Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
 {
+    // TODO profile
     return route->distAfter[start];
 }
 
-Route::SegmentAfter::operator pyvrp::DurationSegment const &() const
+DurationSegment
+Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
 {
+    // TODO profile
     return route->durAfter[start];
 }
 
-Route::SegmentAfter::operator pyvrp::LoadSegment const &() const
+LoadSegment Route::SegmentAfter::load() const
 {
     return route->loadAfter[start];
 }
 
-Route::SegmentBefore::operator pyvrp::DistanceSegment const &() const
+DistanceSegment
+Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
+    // TODO profile
     return route->distBefore[end];
 }
 
-Route::SegmentBefore::operator pyvrp::DurationSegment const &() const
+DurationSegment
+Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
+    // TODO profile
     return route->durBefore[end];
 }
 
-Route::SegmentBefore::operator pyvrp::LoadSegment const &() const
+LoadSegment Route::SegmentBefore::load() const
 {
     return route->loadBefore[end];
 }
 
-Route::SegmentBetween::operator DistanceSegment() const
+DistanceSegment
+Route::SegmentBetween::distance([[maybe_unused]] size_t profile) const
 {
+    // TODO profile
     auto const &startDist = route->distBefore[start];
     auto const &endDist = route->distBefore[end];
 
@@ -543,8 +552,10 @@ Route::SegmentBetween::operator DistanceSegment() const
                            endDist.distance() - startDist.distance());
 }
 
-Route::SegmentBetween::operator DurationSegment() const
+DurationSegment
+Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 {
+    // TODO profile
     auto durSegment = route->durAt[start];
 
     for (size_t step = start; step != end; ++step)
@@ -556,7 +567,7 @@ Route::SegmentBetween::operator DurationSegment() const
     return durSegment;
 }
 
-Route::SegmentBetween::operator LoadSegment() const
+LoadSegment Route::SegmentBetween::load() const
 {
     auto loadSegment = route->loadAt[start];
 
@@ -723,12 +734,12 @@ Route const *Route::Proposal<Segments...>::route() const
 template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
-    // TODO handle when segment profile != current profile
     return std::apply(
         [&](auto &&...args)
         {
             return DistanceSegment::merge(
-                data.distanceMatrix(current->profile()), args...);
+                data.distanceMatrix(current->profile()),
+                args.distance(current->profile())...);
         },
         segments);
 }
@@ -736,12 +747,12 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
-    // TODO handle when segment profile != current profile
     return std::apply(
         [&](auto &&...args)
         {
             return DurationSegment::merge(
-                data.durationMatrix(current->profile()), args...);
+                data.durationMatrix(current->profile()),
+                args.duration(current->profile())...);
         },
         segments);
 }
@@ -749,8 +760,9 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 template <typename... Segments>
 LoadSegment Route::Proposal<Segments...>::loadSegment() const
 {
-    return std::apply(
-        [](auto &&...args) { return LoadSegment::merge(args...); }, segments);
+    return std::apply([](auto &&...args)
+                      { return LoadSegment::merge(args.load()...); },
+                      segments);
 }
 
 }  // namespace pyvrp::search
