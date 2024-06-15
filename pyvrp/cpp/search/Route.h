@@ -539,10 +539,22 @@ LoadSegment Route::SegmentBefore::load() const
     return route->loadBefore[end];
 }
 
-DistanceSegment
-Route::SegmentBetween::distance([[maybe_unused]] size_t profile) const
+DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 {
-    // TODO profile
+    if (profile != route->profile())  // then we have to compute the distance
+    {                                 // segment from scratch.
+        auto distSegment = route->distAt[start];
+
+        for (size_t step = start; step != end; ++step)
+        {
+            auto const &mat = route->data.distanceMatrix(profile);
+            auto const &distAt = route->distAt[step + 1];
+            distSegment = DistanceSegment::merge(mat, distSegment, distAt);
+        }
+
+        return distSegment;
+    }
+
     auto const &startDist = route->distBefore[start];
     auto const &endDist = route->distBefore[end];
 
@@ -552,17 +564,16 @@ Route::SegmentBetween::distance([[maybe_unused]] size_t profile) const
                            endDist.distance() - startDist.distance());
 }
 
-DurationSegment
-Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
+DurationSegment Route::SegmentBetween::duration(size_t profile) const
 {
-    // TODO profile
     auto durSegment = route->durAt[start];
 
     for (size_t step = start; step != end; ++step)
-        durSegment = DurationSegment::merge(
-            route->data.durationMatrix(route->profile()),
-            durSegment,
-            route->durAt[step + 1]);
+    {
+        auto const &mat = route->data.durationMatrix(profile);
+        auto const &durAt = route->durAt[step + 1];
+        durSegment = DurationSegment::merge(mat, durSegment, durAt);
+    }
 
     return durSegment;
 }
