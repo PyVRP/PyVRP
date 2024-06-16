@@ -606,22 +606,12 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         assert_equal(after.delivery(), between_after.delivery())
 
 
-def test_distance_different_profiles(ok_small):
+def test_distance_different_profiles(ok_small_two_profiles):
     """
     Tests that accessing the distance concatenation scheme for different route
     segments takes into account the profile argument.
     """
-    distances = ok_small.distance_matrix(0)
-    durations = ok_small.duration_matrix(0)
-    data = ok_small.replace(
-        duration_matrices=[durations, durations],
-        distance_matrices=[distances, 2 * distances],  # 1: twice the distance
-        vehicle_types=[
-            VehicleType(3, 10, profile=0),
-            VehicleType(3, 10, profile=1),
-        ],
-    )
-
+    data = ok_small_two_profiles
     route = Route(data, idx=0, vehicle_type=0)
     for client in range(data.num_depots, data.num_locations):
         route.append(Node(loc=client))
@@ -642,22 +632,12 @@ def test_distance_different_profiles(ok_small):
     assert_equal(before_end.distance(), depot_to_depot.distance())
 
 
-def test_duration_different_profiles(ok_small):
+def test_duration_different_profiles(ok_small_two_profiles):
     """
     Tests that accessing the duration concatenation scheme for different route
     segments takes into account the profile argument.
     """
-    distances = ok_small.distance_matrix(0)
-    durations = ok_small.duration_matrix(0)
-    data = ok_small.replace(
-        duration_matrices=[durations, 2 * durations],  # 1: twice the duration
-        distance_matrices=[distances, distances],
-        vehicle_types=[
-            VehicleType(3, 10, profile=0),
-            VehicleType(3, 10, profile=1),
-        ],
-    )
-
+    data = ok_small_two_profiles
     route = Route(data, idx=0, vehicle_type=0)
     for client in range(data.num_depots, data.num_locations):
         route.append(Node(loc=client))

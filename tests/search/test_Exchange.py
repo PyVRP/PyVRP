@@ -545,8 +545,27 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     assert_equal(delta_dist + 10 * delta_excess, expected)
 
 
-def test_exchange_different_profiles():
+def test_swap_with_different_profiles(ok_small_two_profiles):
     """
-    TODO
+    Tests that swap correctly evaluates moves between routes with different
+    profiles.
     """
-    pass
+    data = ok_small_two_profiles
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=3))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=4))
+    route2.update()
+
+    op = Exchange11(data)
+    cost_eval = CostEvaluator(0, 0, 0)  # all zero so no costs from penalties
+
+    # This move evaluates swapping loc 3 and 4 between routes. The cost delta
+    # is as follows, taking into account the different profiles' distances.
+    dist1, dist2 = data.distance_matrices()
+    delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
+    delta -= route1.distance() + route2.distance()
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
