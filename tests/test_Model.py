@@ -842,6 +842,7 @@ def test_profiles_build_on_base_edges():
 
 def test_model_solves_instances_with_multiple_profiles():
     """
-    TODO
+    Smoke test to check that the model knows how to solve an instance with
+    multiple profiles.
     """
-    pass
+    pass  # TODO
