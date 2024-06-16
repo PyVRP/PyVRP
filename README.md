@@ -48,7 +48,10 @@ one!
 
 ### Getting help
 
-If you are looking for help, please follow the instructions [here][3].
+Feel free to open an issue or a new discussion thread here on GitHub.
+Please do not e-mail us with questions, modelling issues, or code examples.
+Those are much easier to discuss via GitHub than over e-mail.
+When writing your issue or discussion, please follow the instructions [here][3].
 
 ### How to cite PyVRP
 
