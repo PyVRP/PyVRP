@@ -543,3 +543,10 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
         ]
     )
     assert_equal(delta_dist + 10 * delta_excess, expected)
+
+
+def test_exchange_different_profiles():
+    """
+    TODO
+    """
+    pass

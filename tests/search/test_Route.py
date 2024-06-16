@@ -604,3 +604,17 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         assert_equal(after.load(), between_after.load())
         assert_equal(after.pickup(), between_after.pickup())
         assert_equal(after.delivery(), between_after.delivery())
+
+
+def test_dist_different_profiles(ok_small):
+    """
+    TODO
+    """
+    pass
+
+
+def test_dur_different_profiles(ok_small):
+    """
+    TODO
+    """
+    pass

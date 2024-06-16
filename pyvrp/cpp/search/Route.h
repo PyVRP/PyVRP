@@ -506,7 +506,7 @@ DistanceSegment Route::SegmentAfter::distance(size_t profile) const
     if (profile == route->profile())
         return route->distAfter[start];
 
-    auto const between = SegmentBetween(*route, start, route->size());
+    auto const between = SegmentBetween(*route, start, route->size() + 1);
     return between.distance(profile);
 }
 
@@ -515,7 +515,7 @@ DurationSegment Route::SegmentAfter::duration(size_t profile) const
     if (profile == route->profile())
         return route->durAfter[start];
 
-    auto const between = SegmentBetween(*route, start, route->size());
+    auto const between = SegmentBetween(*route, start, route->size() + 1);
     return between.duration(profile);
 }
 

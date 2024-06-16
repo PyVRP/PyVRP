@@ -838,3 +838,10 @@ def test_profiles_build_on_base_edges():
     assert_equal(data.distance_matrix(1), [[0, 10], [2, 0]])
     assert_equal(data.duration_matrix(0), [[0, 10], [0, 0]])
     assert_equal(data.duration_matrix(1), [[0, 5], [0, 0]])
+
+
+def test_model_solves_instances_with_multiple_profiles():
+    """
+    TODO
+    """
+    pass

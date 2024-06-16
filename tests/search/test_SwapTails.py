@@ -172,3 +172,10 @@ def test_move_involving_multiple_depots():
     # First would be 0 -> 0, second 1 -> 2 -> 3 -> 1. Distance on route1 would
     # be zero, and on route2 16. Thus delta cost is -16.
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), -16)
+
+
+def test_move_with_different_profiles():
+    """
+    TODO
+    """
+    pass
