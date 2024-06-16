@@ -606,15 +606,77 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         assert_equal(after.delivery(), between_after.delivery())
 
 
-def test_dist_different_profiles(ok_small):
+def test_distance_different_profiles(ok_small):
     """
-    TODO
+    Tests that accessing the distance concatenation scheme for different route
+    segments takes into account the profile argument.
     """
-    pass
+    distances = ok_small.distance_matrix(0)
+    durations = ok_small.duration_matrix(0)
+    data = ok_small.replace(
+        duration_matrices=[durations, durations],
+        distance_matrices=[distances, 2 * distances],  # 1: twice the distance
+        vehicle_types=[
+            VehicleType(3, 10, profile=0),
+            VehicleType(3, 10, profile=1),
+        ],
+    )
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
+    route.update()
+
+    assert_equal(route.distance(), 6_450)
+    assert_equal(route.profile(), 0)
+
+    # Let's test with a different profile. The disance on the route should be
+    # double using the second profile.
+    depot_to_depot = route.dist_between(0, len(route) + 1, profile=1)
+    assert_equal(depot_to_depot.distance(), 2 * route.distance())
+
+    after_start = route.dist_after(0, profile=1)
+    assert_equal(after_start.distance(), depot_to_depot.distance())
+
+    before_end = route.dist_before(len(route) + 1, profile=1)
+    assert_equal(before_end.distance(), depot_to_depot.distance())
 
 
-def test_dur_different_profiles(ok_small):
+def test_duration_different_profiles(ok_small):
     """
-    TODO
+    Tests that accessing the duration concatenation scheme for different route
+    segments takes into account the profile argument.
     """
-    pass
+    distances = ok_small.distance_matrix(0)
+    durations = ok_small.duration_matrix(0)
+    data = ok_small.replace(
+        duration_matrices=[durations, 2 * durations],  # 1: twice the duration
+        distance_matrices=[distances, distances],
+        vehicle_types=[
+            VehicleType(3, 10, profile=0),
+            VehicleType(3, 10, profile=1),
+        ],
+    )
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
+    route.update()
+
+    assert_equal(route.duration(), 7_950)
+    assert_equal(route.profile(), 0)
+
+    # Let's test with a different profile. The travel duration on the route
+    # doubles using the second profile, but that does not mean the actual
+    # *duration* doubles, since e.g. service duration remains the same. There
+    # is no wait time, so the new duration is twice the original duration,
+    # adjusted for the service duration.
+    depot_to_depot = route.duration_between(0, len(route) + 1, profile=1)
+    service = sum(c.service_duration for c in data.clients())
+    assert_equal(depot_to_depot.duration(), 2 * route.duration() - service)
+
+    after_start = route.duration_after(0, profile=1)
+    assert_equal(after_start.duration(), depot_to_depot.duration())
+
+    before_end = route.duration_before(len(route) + 1, profile=1)
+    assert_equal(before_end.duration(), depot_to_depot.duration())
