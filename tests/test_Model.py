@@ -836,3 +836,35 @@ def test_profiles_build_on_base_edges():
     assert_equal(data.distance_matrix(1), [[0, 10], [2, 0]])
     assert_equal(data.duration_matrix(0), [[0, 10], [0, 0]])
     assert_equal(data.duration_matrix(1), [[0, 5], [0, 0]])
+
+
+def test_model_solves_instances_with_multiple_profiles():
+    """
+    Smoke test to check that the model knows how to solve an instance with
+    multiple profiles.
+    """
+    m = Model()
+    m.add_depot(x=1, y=1)
+    m.add_client(x=1, y=2)
+    m.add_client(x=2, y=1)
+
+    prof1 = m.add_profile()  # this profile only cares about distance on x axis
+    prof2 = m.add_profile()  # this one only about distance on y axis
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, abs(frm.x - to.x), profile=prof1)
+            m.add_edge(frm, to, abs(frm.y - to.y), profile=prof2)
+
+    m.add_vehicle_type(1, profile=prof1)
+    m.add_vehicle_type(1, profile=prof2)
+
+    # The best we can do is have the first vehicle visit the first client (no
+    # distance), and the second vehicle the second client (also no distance).
+    # The resulting cost is thus zero.
+    res = m.solve(stop=MaxIterations(10))
+    assert_equal(res.cost(), 0)
+
+    route1, route2 = res.best.routes()
+    assert_equal(route1.visits(), [1])
+    assert_equal(route2.visits(), [2])

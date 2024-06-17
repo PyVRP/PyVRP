@@ -172,3 +172,43 @@ def test_move_involving_multiple_depots():
     # First would be 0 -> 0, second 1 -> 2 -> 3 -> 1. Distance on route1 would
     # be zero, and on route2 16. Thus delta cost is -16.
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), -16)
+
+
+def test_move_with_different_profiles(ok_small_two_profiles):
+    """
+    Tests that SwapTails correctly evaluates moves between routes with
+    different profiles.
+    """
+    data = ok_small_two_profiles
+    dist1, dist2 = data.distance_matrices()
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=3))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=2))
+    route2.update()
+
+    op = SwapTails(data)
+    cost_eval = CostEvaluator(0, 0, 0)  # all zero so no costs from penalties
+
+    # First route has profile 0, and its distance is thus computed using the
+    # first distance matrix.
+    assert_equal(route1.profile(), 0)
+    assert_equal(route1.distance(), dist1[0, 3] + dist1[3, 0])
+
+    # Second route has profile 1, and its distance is thus computed using the
+    # second distance matrix.
+    assert_equal(route2.profile(), 1)
+    assert_equal(route2.distance(), dist2[0, 2] + dist2[2, 0])
+
+    # This move evaluates the setting where the second route would be empty,
+    # and the first becomes 0 -> 3 -> 2 -> 0.
+    delta = dist1[3, 2] + dist1[2, 0] - dist1[3, 0] - route2.distance()
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), delta)
+
+    # This move evaluates the setting where the first route would be empty, and
+    # the second becomes 0 -> 2 -> 3 -> 0.
+    delta = dist2[2, 3] + dist2[3, 0] - dist2[2, 0] - route1.distance()
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), delta)
