@@ -12,7 +12,6 @@ namespace pyvrp
  *     idx_first: int,
  *     idx_last: int,
  *     duration: int,
- *     time_warp: int,
  *     earliest_start: int,
  *     latest_finish: int,
  *     release_time: int,
@@ -33,9 +32,11 @@ namespace pyvrp
  * duration
  *     Total duration, including waiting time.
  * earliest_start
- *     Earliest visit moment of the first client.
+ *     Earliest moment to start service at the first client in the segment that
+ *     will result in minimal time warp, waiting time and route duration.
  * latest_finish
- *    Latest finish moment of the last client.
+ *     Latest moment to finish service of the last client in the segment that
+ *     will result in minimal time warp, waiting time and route duration.
  * release_time
  *     Earliest moment to start the route segment.
  */

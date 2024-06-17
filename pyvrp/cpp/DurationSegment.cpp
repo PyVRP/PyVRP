@@ -12,7 +12,10 @@ DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
       idxLast_(idx),
       duration_(client.serviceDuration),
       earliestStart_(client.twEarly),
-      latestFinish_(client.twLate + client.serviceDuration),
+      latestFinish_(client.twLate > std::numeric_limits<Duration>::max()
+                                        - client.serviceDuration
+                        ? std::numeric_limits<Duration>::max()
+                        : client.twLate + client.serviceDuration),
       releaseTime_(client.releaseTime)
 {
 }
