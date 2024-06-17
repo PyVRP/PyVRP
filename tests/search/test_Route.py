@@ -620,7 +620,7 @@ def test_distance_different_profiles(ok_small_two_profiles):
     assert_equal(route.distance(), 6_450)
     assert_equal(route.profile(), 0)
 
-    # Let's test with a different profile. The disance on the route should be
+    # Let's test with a different profile. The distance on the route should be
     # double using the second profile.
     depot_to_depot = route.dist_between(0, len(route) + 1, profile=1)
     assert_equal(depot_to_depot.distance(), 2 * route.distance())

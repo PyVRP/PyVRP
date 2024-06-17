@@ -180,6 +180,7 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     different profiles.
     """
     data = ok_small_two_profiles
+    dist1, dist2 = data.distance_matrices()
 
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
@@ -192,16 +193,22 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     op = SwapTails(data)
     cost_eval = CostEvaluator(0, 0, 0)  # all zero so no costs from penalties
 
+    # First route has profile 0, and its distance is thus computed using the
+    # first distance matrix.
+    assert_equal(route1.profile(), 0)
+    assert_equal(route1.distance(), dist1[0, 3] + dist1[3, 0])
+
+    # Second route has profile 1, and its distance is thus computed using the
+    # second distance matrix.
+    assert_equal(route2.profile(), 1)
+    assert_equal(route2.distance(), dist2[0, 2] + dist2[2, 0])
+
     # This move evaluates the setting where the second route would be empty,
-    # and the first 0 -> 3 -> 2 -> 0.
-    dist = data.distance_matrix(0)
-    delta = dist[3, 2] + dist[2, 0] - dist[3, 0] - route2.distance()
+    # and the first becomes 0 -> 3 -> 2 -> 0.
+    delta = dist1[3, 2] + dist1[2, 0] - dist1[3, 0] - route2.distance()
     assert_equal(op.evaluate(route1[1], route2[0], cost_eval), delta)
 
     # This move evaluates the setting where the first route would be empty, and
-    # the second 0 -> 2 -> 3 -> 0.
-    assert_equal(route1.distance(), 3_994)
-
-    dist = data.distance_matrix(1)
-    delta = dist[2, 3] + dist[3, 0] - dist[2, 0] - route1.distance()
+    # the second becomes 0 -> 2 -> 3 -> 0.
+    delta = dist2[2, 3] + dist2[3, 0] - dist2[2, 0] - route1.distance()
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), delta)
