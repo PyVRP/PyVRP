@@ -31,7 +31,7 @@ namespace pyvrp::search
 class Route
 {
     // These classes (defined further below) handle transparent access to the
-    // route's segment-specific statistics.
+    // route's segment-specific concatenation schemes.
     friend class SegmentAt;
     friend class SegmentAfter;
     friend class SegmentBefore;
@@ -119,8 +119,8 @@ private:
     };
 
     /**
-     * Class storing related to the route segment starting at ``start``, and
-     * ending at the depot (inclusive).
+     * Class storing data related to the route segment starting at ``start``,
+     * and ending at the depot (inclusive).
      */
     class SegmentAfter
     {
