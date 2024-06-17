@@ -307,6 +307,13 @@ public:
 
     /**
      * Number of clients in this solution.
+     *
+     * .. warning::
+     *
+     *    An empty solution typically indicates that there is a significant
+     *    difference between the values of the prizes of the optional clients
+     *    and the other objective terms. This hints at a scaling issue in the
+     *    data.
      */
     [[nodiscard]] size_t numClients() const;
 

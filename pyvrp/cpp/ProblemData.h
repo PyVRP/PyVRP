@@ -112,7 +112,9 @@ public:
      *     time at which a vehicle may leave the depot to visit this client.
      *     Default 0.
      * prize
-     *     Prize collected by visiting this client. Default 0.
+     *     Prize collected by visiting this client. Default 0. If this client
+     *     is not required, the prize needs to be sufficiently large to offset
+     *     any travel cost before this client will be visited in a solution.
      * required
      *     Whether this client must be part of a feasible solution. Default
      *     True. Make sure to also update the prize value when setting this
