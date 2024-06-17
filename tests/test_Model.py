@@ -9,7 +9,7 @@ from numpy.testing import (
 
 from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
-from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
+from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
 
 
@@ -404,9 +404,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
-    with assert_warns(EmptySolutionWarning):
-        res = m.solve(stop=MaxIterations(1))
-
+    res = m.solve(stop=MaxIterations(1))
     solution = [r.visits() for r in res.best.routes()]
     assert_equal(solution, [])
 
