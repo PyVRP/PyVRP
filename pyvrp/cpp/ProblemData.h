@@ -321,7 +321,8 @@ public:
      * VehicleType(
      *     num_available: int = 1,
      *     capacity: int = 0,
-     *     depot: int = 0,
+     *     start_depot: int = 0,
+     *     end_depot: int = 0,
      *     fixed_cost: int = 0,
      *     tw_early: int = 0,
      *     tw_late: int = np.iinfo(np.int64).max,
@@ -345,9 +346,12 @@ public:
      *     Capacity of this vehicle type. This is the maximum total delivery or
      *     pickup amount the vehicle can store along the route. Must be
      *     non-negative. Default 0.
-     * depot
-     *     Depot (location index) that vehicles of this type dispatch from, and
-     *     return to at the end of their routes. Default 0 (first depot).
+     * start_depot
+     *     Depot (location index) where vehicles of this type start their
+     *     routes. Default 0 (first depot).
+     * end_depot
+     *     Depot (location index) that vehicles of this type return to at the
+     *     end of their routes. Default 0 (first depot).
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
@@ -375,8 +379,10 @@ public:
      *     Number of vehicles of this type that are available.
      * capacity
      *     Capacity (maximum total demand) of this vehicle type.
-     * depot
-     *     Depot associated with these vehicles.
+     * start_depot
+     *     Start location associated with these vehicles.
+     * end_depot
+     *     End location associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early
@@ -402,7 +408,8 @@ public:
     struct VehicleType
     {
         size_t const numAvailable;    // Available vehicles of this type
-        size_t const depot;           // Departure and return depot location
+        size_t const startDepot;      // Departure depot location
+        size_t const endDepot;        //  Return depot location
         Load const capacity;          // This type's vehicle capacity
         Duration const twEarly;       // Start of shift
         Duration const twLate;        // End of shift
@@ -416,7 +423,8 @@ public:
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
-                    size_t depot = 0,
+                    size_t startDepot = 0,
+                    size_t endDepot = 0,
                     Cost fixedCost = 0,
                     Duration twEarly = 0,
                     Duration twLate = std::numeric_limits<Duration>::max(),

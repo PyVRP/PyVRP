@@ -250,7 +250,8 @@ def read(
         VehicleType(
             num_available=len(vehicles),
             capacity=capacity,
-            depot=depot_idx,
+            start_depot=depot_idx,
+            end_depot=depot_idx,
             max_duration=max_duration,
             max_distance=max_distance,
             # A bit hacky, but this csv-like name is really useful to track the

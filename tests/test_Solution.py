@@ -56,17 +56,20 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
 
-def test_route_depot_accessor(ok_small_multi_depot):
+def test_route_depot_accessors(ok_small_multi_depot):
     """
-    Tests that Route's depot() member returns the correct depot location index.
+    Tests that Route's start_depot() and end_depot() members return the correct
+    depot location indices.
     """
     routes = [
         Route(ok_small_multi_depot, [2], 0),
         Route(ok_small_multi_depot, [3, 4], 1),
     ]
 
-    assert_equal(routes[0].depot(), 0)
-    assert_equal(routes[1].depot(), 1)
+    assert_equal(routes[0].start_depot(), 0)
+    assert_equal(routes[0].end_depot(), 0)
+    assert_equal(routes[1].start_depot(), 1)
+    assert_equal(routes[1].end_depot(), 1)
 
 
 def test_route_eq(ok_small):
@@ -291,7 +294,10 @@ def test_neighbours_multi_depot(ok_small):
     data = ok_small.replace(
         depots=locations[:2],
         clients=locations[2:],
-        vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
+        vehicle_types=[
+            VehicleType(start_depot=0, end_depot=0),
+            VehicleType(start_depot=1, end_depot=1),
+        ],
     )
 
     sol = Solution(data, [Route(data, [4], 0), Route(data, [2, 3], 1)])

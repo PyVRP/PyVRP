@@ -485,7 +485,6 @@ def test_vehicle_type_raises_invalid_data(
         VehicleType(
             num_available=num_available,
             capacity=capacity,
-            depot=0,
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -504,7 +503,8 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     vehicle_type = VehicleType(
         num_available=1,
         capacity=0,
-        depot=0,
+        start_depot=0,
+        end_depot=0,
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
@@ -515,7 +515,8 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     )
 
     assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.depot, 0)
+    assert_equal(vehicle_type.start_depot, 0)
+    assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
@@ -533,7 +534,8 @@ def test_vehicle_type_default_values():
     """
     vehicle_type = VehicleType()
     assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.depot, 0)
+    assert_equal(vehicle_type.start_depot, 0)
+    assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
@@ -555,7 +557,8 @@ def test_vehicle_type_attribute_access():
     """
     vehicle_type = VehicleType(
         num_available=7,
-        depot=29,
+        start_depot=29,
+        end_depot=43,
         capacity=13,
         fixed_cost=3,
         tw_early=17,
@@ -568,7 +571,8 @@ def test_vehicle_type_attribute_access():
     )
 
     assert_equal(vehicle_type.num_available, 7)
-    assert_equal(vehicle_type.depot, 29)
+    assert_equal(vehicle_type.start_depot, 29)
+    assert_equal(vehicle_type.end_depot, 43)
     assert_equal(vehicle_type.capacity, 13)
     assert_equal(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.tw_early, 17)
@@ -613,11 +617,13 @@ def test_raises_invalid_vehicle_depot_indices(
     assert_equal(ok_small.num_depots, 1)
 
     if not should_raise:
-        ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
+        vehicle_types = [VehicleType(start_depot=depot, end_depot=depot)]
+        ok_small.replace(vehicle_types=vehicle_types)
         return
 
     with assert_raises(IndexError):
-        ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
+        vehicle_types = [VehicleType(start_depot=depot, end_depot=depot)]
+        ok_small.replace(vehicle_types=vehicle_types)
 
 
 def test_raises_invalid_vehicle_profile_index(ok_small):

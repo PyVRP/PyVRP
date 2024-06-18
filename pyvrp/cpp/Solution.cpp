@@ -100,12 +100,14 @@ void Solution::makeNeighbours(ProblemData const &data)
 {
     for (auto const &route : routes_)
     {
-        auto const depot = data.vehicleType(route.vehicleType()).depot;
+        auto const &vehicleType = data.vehicleType(route.vehicleType());
+        auto const startDepot = vehicleType.startDepot;
+        auto const endDepot = vehicleType.endDepot;
 
         for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours_[route[idx]]
-                = {idx == 0 ? depot : route[idx - 1],                  // pred
-                   idx == route.size() - 1 ? depot : route[idx + 1]};  // succ
+            neighbours_[route[idx]] = {
+                idx == 0 ? startDepot : route[idx - 1],                // pred
+                idx == route.size() - 1 ? endDepot : route[idx + 1]};  // succ
     }
 }
 
@@ -309,25 +311,26 @@ Solution::Route::Route(ProblemData const &data,
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
     auto const &vehType = data.vehicleType(vehicleType);
-    depot_ = vehType.depot;
+    startDepot_ = vehType.startDepot;
+    endDepot_ = vehType.endDepot;
 
     if (visits_.empty())
         return;
 
     // Time window is limited by both the depot open and closing times, and
     // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &depotLocation = data.location(depot_);
-    DurationSegment depotDS(depot_,
-                            depot_,
+    ProblemData::Depot const &startLocation = data.location(startDepot_);
+    DurationSegment startDS(startDepot_,
+                            startDepot_,
                             0,
                             0,
-                            std::max(depotLocation.twEarly, vehType.twEarly),
-                            std::min(depotLocation.twLate, vehType.twLate),
+                            std::max(startLocation.twEarly, vehType.twEarly),
+                            std::min(startLocation.twLate, vehType.twLate),
                             0);
 
-    auto ds = depotDS;
+    auto ds = startDS;
     auto ls = LoadSegment(0, 0, 0);
-    size_t prevClient = vehType.depot;
+    size_t prevClient = vehType.startDepot;
 
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
@@ -355,17 +358,28 @@ Solution::Route::Route(ProblemData const &data,
     }
 
     Client const last = visits_.back();  // last client has depot as successor
-    distance_ += distances(last, vehType.depot);
+    distance_ += distances(last, vehType.endDepot);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 
-    travel_ += durations(last, vehType.depot);
+    travel_ += durations(last, vehType.endDepot);
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    ds = DurationSegment::merge(durations, ds, depotDS);
+    // Time window is limited by both the depot open and closing times, and
+    // the vehicle's start and end of shift, whichever is tighter.
+    ProblemData::Depot const &endLocation = data.location(endDepot_);
+    DurationSegment endDS(endDepot_,
+                          endDepot_,
+                          0,
+                          0,
+                          std::max(endLocation.twEarly, vehType.twEarly),
+                          std::min(endLocation.twLate, vehType.twLate),
+                          0);
+
+    ds = DurationSegment::merge(durations, ds, endDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
     startTime_ = ds.twEarly();
@@ -393,7 +407,8 @@ Solution::Route::Route(Visits visits,
                        Cost prizes,
                        std::pair<double, double> centroid,
                        size_t vehicleType,
-                       size_t depot)
+                       size_t startDepot,
+                       size_t endDepot)
     : visits_(std::move(visits)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -413,7 +428,8 @@ Solution::Route::Route(Visits visits,
       prizes_(prizes),
       centroid_(centroid),
       vehicleType_(vehicleType),
-      depot_(depot)
+      startDepot_(startDepot),
+      endDepot_(endDepot)
 {
 }
 
@@ -479,7 +495,9 @@ std::pair<double, double> const &Solution::Route::centroid() const
 
 size_t Solution::Route::vehicleType() const { return vehicleType_; }
 
-size_t Solution::Route::depot() const { return depot_; }
+size_t Solution::Route::startDepot() const { return startDepot_; }
+
+size_t Solution::Route::endDepot() const { return endDepot_; }
 
 bool Solution::Route::isFeasible() const
 {
