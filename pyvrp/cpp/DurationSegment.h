@@ -187,10 +187,14 @@ Duration DurationSegment::duration() const { return duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
+    // We apply the maximum duration constraint to the net duration, which is
+    // the difference between the start and and time of the route which equals
+    // the total duration minus existing time warp.
+    // Hence, if duration - timeWarp > maxDuration, we increase timeWarp such
+    // duration - timeWarp = maxDuration.
     // clang-format off
-    return timeWarp_
-         + std::max<Duration>(releaseTime_ - twLate_, 0)
-         + std::max<Duration>(duration_ - maxDuration, 0);
+    return std::max<Duration>(duration_ - maxDuration, timeWarp_)
+         + std::max<Duration>(releaseTime_ - twLate_, 0);
     // clang-format on
 }
 
