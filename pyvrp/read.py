@@ -249,9 +249,9 @@ def read(
             num_available=len(vehicles),
             capacity=capacity,
             depot=depot_idx,
-            # The literature instances have depot time windows, which are not
-            # set specifically on the vehicles. We not have depot time windows
-            # but instead set those on the vehicles. The two are equivalent.
+            # The literature specifies depot time windows. We do not have depot
+            # time windows but instead set those on the vehicles, generalising
+            # the depot time windows.
             tw_early=time_windows[depot_idx][0],
             tw_late=time_windows[depot_idx][1],
             max_duration=max_duration,

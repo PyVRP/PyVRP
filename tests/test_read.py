@@ -258,7 +258,7 @@ def test_multiple_depots():
 
     # Second vehicle type should have one vehicle at the second depot. The
     # vehicle should have a tighter time window than that associated with the
-    # first depot.
+    # first vehicle type.
     veh_type2 = data.vehicle_type(1)
     assert_equal(veh_type2.depot, 1)
     assert_equal(veh_type2.num_available, 1)
