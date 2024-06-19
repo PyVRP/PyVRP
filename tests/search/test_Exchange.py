@@ -354,10 +354,10 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
 @pytest.mark.parametrize(
     ("op", "max_dur", "cost"),
     [
-        (Exchange20, 0, -841),
-        (Exchange20, 5_000, 4_159),
-        (Exchange21, 0, -2_780),
-        (Exchange21, 5_000, -1_410),
+        (Exchange20, 0, -4_044),
+        (Exchange20, 5_000, 956),
+        (Exchange21, 0, -693),
+        (Exchange21, 5_000, -596),
     ],
 )
 def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
@@ -380,10 +380,13 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
         route2.append(Node(loc=loc))
     route2.update()
 
-    # Both routes are substantially longer than 5K duration units. So there's
-    # always a max duration violation. Consolidation - either into a single
-    # route, or more into the same route - is typically improving, especially
-    # when the maximum duration violations are significant.
+    # Without maximum duration, route1 has a duration of 5_229 and no time warp
+    # while route2 has a duration of 5_814 and timewarp 2_087, for a net
+    # duration of 5_814 - 2_087 = 3_727 so no violation.
+    # Consolidation into a single route may or may not be improving as the
+    # total distance decreases but the maximum duration violation increases.
+    # Moving from the first to the second route reduces the maximum duration
+    # violation in the first route and is typically improving.
     assert_equal(route1.duration(), 5_229)
     assert_equal(route2.duration(), 5_814)
 
