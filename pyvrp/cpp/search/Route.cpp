@@ -82,15 +82,12 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &depot = data.location(vehicleType_.depot);
     DurationSegment depotDS(vehicleType_.depot,
                             vehicleType_.depot,
                             0,
                             0,
-                            std::max(depot.twEarly, vehicleType_.twEarly),
-                            std::min(depot.twLate, vehicleType_.twLate),
+                            vehicleType_.twEarly,
+                            vehicleType_.twLate,
                             0);
 
     // Clear all existing statistics and reinsert depot statistics.
