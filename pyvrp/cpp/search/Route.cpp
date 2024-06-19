@@ -82,14 +82,6 @@ void Route::clear()
     endDepot.idx_ = 1;
     endDepot.route_ = this;
 
-    DurationSegment depotDS(vehicleType_.depot,
-                            vehicleType_.depot,
-                            0,
-                            0,
-                            vehicleType_.twEarly,
-                            vehicleType_.twLate,
-                            0);
-
     // Clear all existing statistics and reinsert depot statistics.
     distAt = {DistanceSegment(vehicleType_.depot),
               DistanceSegment(vehicleType_.depot)};
@@ -100,6 +92,7 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
+    DurationSegment depotDS(vehicleType_);
     durAt = {depotDS, depotDS};
     durAfter = durAt;
     durBefore = durAt;

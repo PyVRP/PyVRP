@@ -314,8 +314,7 @@ Solution::Route::Route(ProblemData const &data,
     if (visits_.empty())
         return;
 
-    DurationSegment depotDS(
-        depot_, depot_, 0, 0, vehType.twEarly, vehType.twLate, 0);
+    DurationSegment depotDS(vehType);
 
     auto ds = depotDS;
     auto ls = LoadSegment(0, 0, 0);
