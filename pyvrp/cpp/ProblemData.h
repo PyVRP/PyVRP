@@ -334,8 +334,8 @@ public:
      *     Depot (location index) where vehicles of this type start their
      *     routes. Default 0 (first depot).
      * end_depot
-     *     Depot (location index) that vehicles of this type return to at the
-     *     end of their routes. Default 0 (first depot).
+     *     Depot (location index) where vehicles of this type end routes.
+     *     Default 0 (first depot).
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
@@ -393,7 +393,7 @@ public:
     {
         size_t const numAvailable;    // Available vehicles of this type
         size_t const startDepot;      // Departure depot location
-        size_t const endDepot;        //  Return depot location
+        size_t const endDepot;        // Return depot location
         Load const capacity;          // This type's vehicle capacity
         Duration const twEarly;       // Start of shift
         Duration const twLate;        // End of shift
