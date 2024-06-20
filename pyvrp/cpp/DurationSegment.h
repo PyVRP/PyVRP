@@ -190,11 +190,13 @@ Duration DurationSegment::duration() const { return duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
-    // clang-format off
     return timeWarp_
-         + std::max<Duration>(releaseTime_ - twLate_, 0)
-         + std::max<Duration>(duration_ - maxDuration, 0);
-    // clang-format on
+           + std::max<Duration>(releaseTime_ - twLate_, 0)
+           // Max duration constraint applies only to net route duration,
+           // subtracting existing time warp. Use ternary to avoid underflow.
+           + (duration_ - timeWarp_ > maxDuration
+                  ? duration_ - timeWarp_ - maxDuration
+                  : 0);
 }
 
 DurationSegment::DurationSegment(size_t idxFirst,

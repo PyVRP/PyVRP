@@ -450,8 +450,10 @@ def test_route_centroid(ok_small, clients):
     ("max_duration", "expected"),
     [
         (100_000, 3_633),  # large enough; same time warp as other tests
-        (5_000, 6_583),  # now max_duration constraint applies
-        (0, 11_583),  # the max_duration constraint scales linearly
+        (5_000, 3_633),  # no effect of max_duration due to existing time warp
+        (4_000, 3_950),  # now max_duration constraint applies
+        (3_000, 4_950),  # the max_duration constraint scales linearly
+        (0, 7_950),  # max_duration = 0, so time warp equals route duration
     ],
 )
 def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
@@ -467,6 +469,7 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
         route.append(Node(loc=client))
 
     route.update()
+    assert_equal(route.duration(), 7_950)
     assert_(route.has_time_warp())
     assert_equal(route.time_warp(), expected)
 
