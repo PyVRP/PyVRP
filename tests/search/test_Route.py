@@ -631,3 +631,24 @@ def test_duration_different_profiles(ok_small_two_profiles):
 
     before_end = route.duration_before(len(route) + 1, profile=1)
     assert_equal(before_end.duration(), depot_to_depot.duration())
+
+
+def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
+    """
+    Tests that empty routes correctly evaluate distance and duration travelled
+    between depots, even though there are no actual clients on the route.
+    """
+    vehicle_type = VehicleType(3, 10, start_depot=0, end_depot=1)
+    data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, idx=0, vehicle_type=0)
+    route.update()
+
+    assert_equal(route.start_depot(), 0)
+    assert_equal(route.end_depot(), 1)
+
+    dist_mat = data.distance_matrix(0)
+    assert_equal(route.distance(), dist_mat[0, 1])
+
+    dur_mat = data.duration_matrix(0)
+    assert_equal(route.duration(), dur_mat[0, 1])

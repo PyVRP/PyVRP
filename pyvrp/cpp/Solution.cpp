@@ -314,9 +314,6 @@ Solution::Route::Route(ProblemData const &data,
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
 
-    if (visits_.empty())
-        return;
-
     DurationSegment ds = {vehType.startDepot, vehType};
     auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.startDepot;
@@ -346,7 +343,7 @@ Solution::Route::Route(ProblemData const &data,
         prevClient = client;
     }
 
-    Client const last = visits_.back();  // last client has depot as successor
+    auto const last = visits_.empty() ? startDepot_ : visits_.back();
     distance_ += distances(last, vehType.endDepot);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
