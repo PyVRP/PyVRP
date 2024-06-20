@@ -122,14 +122,15 @@ def test_OkSmall_with_time_warp(ok_small):
     Tests a small example route using the OkSmall instance. In particular, we
     also check that duration does not include time warp.
     """
+    vehicle_type = ok_small.vehicle_type(0)
     segments = [
         DurationSegment(
             idx_first=idx,
             idx_last=idx,
             duration=loc.service_duration if idx != 0 else 0,
             time_warp=0,
-            tw_early=loc.tw_early,
-            tw_late=loc.tw_late,
+            tw_early=loc.tw_early if idx > 0 else vehicle_type.tw_early,
+            tw_late=loc.tw_late if idx > 0 else vehicle_type.tw_late,
             release_time=loc.release_time if idx != 0 else 0,
         )
         for idx, loc in enumerate(ok_small.depots() + ok_small.clients())

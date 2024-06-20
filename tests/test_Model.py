@@ -113,12 +113,9 @@ def test_add_depot_attributes():
     in.
     """
     model = Model()
-    depot = model.add_depot(x=1, y=0, tw_early=3, tw_late=5)
-
+    depot = model.add_depot(x=1, y=0)
     assert_equal(depot.x, 1)
     assert_equal(depot.y, 0)
-    assert_equal(depot.tw_early, 3)
-    assert_equal(depot.tw_late, 5)
 
 
 def test_add_edge():
@@ -273,8 +270,14 @@ def test_model_and_solve(ok_small):
     # Now do the same thing, but model the instance using the modelling API.
     # This should of course result in the same solution.
     model = Model()
-    model.add_vehicle_type(num_available=3, capacity=10)
-    depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
+    model.add_vehicle_type(
+        num_available=3,
+        capacity=10,
+        tw_early=0,
+        tw_late=45000,
+    )
+
+    depot = model.add_depot(x=2334, y=726)
     clients = [
         model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
         model.add_client(590, 530, 5, 0, 360, 12000, 19500),
@@ -428,9 +431,15 @@ def test_model_solves_small_instance_with_fixed_costs():
     m = Model()
 
     for idx in range(2):
-        m.add_vehicle_type(capacity=0, num_available=5, fixed_cost=10)
+        m.add_vehicle_type(
+            capacity=0,
+            num_available=5,
+            fixed_cost=10,
+            tw_early=0,
+            tw_late=40,
+        )
 
-    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+    m.add_depot(x=0, y=0)
 
     for idx in range(5):
         m.add_client(x=idx, y=idx, service_duration=1, tw_early=0, tw_late=20)
@@ -463,7 +472,7 @@ def test_model_solves_small_instance_with_shift_durations():
             tw_late=tw_late,
         )
 
-    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+    m.add_depot(x=0, y=0)
 
     for idx in range(5):
         # Vehicles of the first type can visit two clients before having to
