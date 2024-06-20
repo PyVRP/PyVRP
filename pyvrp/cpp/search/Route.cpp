@@ -92,27 +92,8 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
-    // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &start = data.location(vehicleType_.startDepot);
-    DurationSegment startDS(vehicleType_.startDepot,
-                            vehicleType_.startDepot,
-                            0,
-                            0,
-                            std::max(start.twEarly, vehicleType_.twEarly),
-                            std::min(start.twLate, vehicleType_.twLate),
-                            0);
-
-    ProblemData::Depot const &end = data.location(vehicleType_.endDepot);
-    DurationSegment endDS(vehicleType_.endDepot,
-                          vehicleType_.endDepot,
-                          0,
-                          0,
-                          std::max(end.twEarly, vehicleType_.twEarly),
-                          std::min(end.twLate, vehicleType_.twLate),
-                          0);
-
-    durAt = {startDS, endDS};
+    durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
+             DurationSegment(vehicleType_.endDepot, vehicleType_)};
     durAfter = durAt;
     durBefore = durAt;
 

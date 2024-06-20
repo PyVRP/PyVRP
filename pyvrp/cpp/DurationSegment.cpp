@@ -19,3 +19,15 @@ DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
       releaseTime_(client.releaseTime)
 {
 }
+
+DurationSegment::DurationSegment(size_t depot,
+                                 ProblemData::VehicleType const &vehicleType)
+    : idxFirst_(depot),
+      idxLast_(depot),
+      duration_(0),
+      timeWarp_(0),
+      twEarly_(vehicleType.twEarly),
+      twLate_(vehicleType.twLate),
+      releaseTime_(0)
+{
+}

@@ -683,8 +683,8 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
-        depots=[Depot(x=0, y=0, tw_late=10)],
-        vehicle_types=[VehicleType(2)],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, tw_late=10)],
         distance_matrices=[dist_mat],
         duration_matrices=[dur_mat],
     )
@@ -715,8 +715,8 @@ def test_time_warp_return_to_depot():
     """
     data = ProblemData(
         clients=[Client(x=1, y=0)],
-        depots=[Depot(x=0, y=0, tw_late=1)],
-        vehicle_types=[VehicleType()],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(tw_late=1)],
         distance_matrices=[np.asarray([[0, 0], [0, 0]])],
         duration_matrices=[np.asarray([[0, 1], [1, 0]])],
     )
@@ -725,9 +725,9 @@ def test_time_warp_return_to_depot():
     route, *_ = sol.routes()
 
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
-    # more than the depot time window 1, giving a time warp of 1.
+    # more than the vehicle time window 1, giving a time warp of 1.
     assert_equal(route.duration(), 2)
-    assert_equal(data.location(0).tw_late, 1)
+    assert_equal(data.vehicle_type(0).tw_late, 1)
     assert_equal(sol.time_warp(), 1)
 
 

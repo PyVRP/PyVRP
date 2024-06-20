@@ -145,35 +145,18 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x,
-                          Coordinate y,
-                          Duration twEarly,
-                          Duration twLate,
-                          char const *name)
-    : x(x), y(y), twEarly(twEarly), twLate(twLate), name(duplicate(name))
+ProblemData::Depot::Depot(Coordinate x, Coordinate y, char const *name)
+    : x(x), y(y), name(duplicate(name))
 {
-    if (twEarly > twLate)
-        throw std::invalid_argument("tw_early must be <= tw_late.");
-
-    if (twEarly < 0)
-        throw std::invalid_argument("tw_early must be >= 0.");
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
-    : x(depot.x),
-      y(depot.y),
-      twEarly(depot.twEarly),
-      twLate(depot.twLate),
-      name(duplicate(depot.name))
+    : x(depot.x), y(depot.y), name(duplicate(depot.name))
 {
 }
 
 ProblemData::Depot::Depot(Depot &&depot)
-    : x(depot.x),
-      y(depot.y),
-      twEarly(depot.twEarly),
-      twLate(depot.twLate),
-      name(depot.name)  // we can steal
+    : x(depot.x), y(depot.y), name(depot.name)  // we can steal
 {
     depot.name = nullptr;  // stolen
 }

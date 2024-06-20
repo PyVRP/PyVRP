@@ -317,18 +317,7 @@ Solution::Route::Route(ProblemData const &data,
     if (visits_.empty())
         return;
 
-    // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &startLocation = data.location(startDepot_);
-    DurationSegment startDS(startDepot_,
-                            startDepot_,
-                            0,
-                            0,
-                            std::max(startLocation.twEarly, vehType.twEarly),
-                            std::min(startLocation.twLate, vehType.twLate),
-                            0);
-
-    auto ds = startDS;
+    DurationSegment ds = {vehType.startDepot, vehType};
     auto ls = LoadSegment(0, 0, 0);
     size_t prevClient = vehType.startDepot;
 
@@ -368,17 +357,7 @@ Solution::Route::Route(ProblemData const &data,
     pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &endLocation = data.location(endDepot_);
-    DurationSegment endDS(endDepot_,
-                          endDepot_,
-                          0,
-                          0,
-                          std::max(endLocation.twEarly, vehType.twEarly),
-                          std::min(endLocation.twLate, vehType.twLate),
-                          0);
-
+    DurationSegment endDS(vehType.endDepot, vehType);
     ds = DurationSegment::merge(durations, ds, endDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);

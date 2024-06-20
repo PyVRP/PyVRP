@@ -134,27 +134,6 @@ def test_raises_for_invalid_client_data(
         )
 
 
-@pytest.mark.parametrize(
-    ("x", "y", "tw_early", "tw_late"),
-    [
-        (0, 0, 1, 0),  # tw_early > tw_late
-        (0, 0, -1, 0),  # tw_early < 0
-        (0, 0, 0, -1),  # tw_late < 0
-    ],
-)
-def test_raises_for_invalid_depot_data(
-    x: int,
-    y: int,
-    tw_early: int,
-    tw_late: int,
-):
-    """
-    Tests that an invalid depot configuration is not accepted.
-    """
-    with assert_raises(ValueError):
-        Depot(x, y, tw_early, tw_late)
-
-
 def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
@@ -366,11 +345,9 @@ def test_matrix_access():
     np.fill_diagonal(dist_mat, 0)
     np.fill_diagonal(dur_mat, 0)
 
-    depot = Depot(x=0, y=0, tw_late=10)
-    clients = [Client(x=0, y=0, tw_late=10) for _ in range(size - 1)]
     data = ProblemData(
-        clients=clients,
-        depots=[depot],
+        clients=[Client(x=0, y=0, tw_late=10) for _ in range(size - 1)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
         distance_matrices=[dist_mat],
         duration_matrices=[dur_mat],

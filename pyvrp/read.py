@@ -218,8 +218,6 @@ def read(
         Depot(
             x=coords[idx][0],
             y=coords[idx][1],
-            tw_early=time_windows[idx][0],
-            tw_late=time_windows[idx][1],
         )
         for idx in range(len(depot_idcs))
     ]
@@ -252,6 +250,11 @@ def read(
             capacity=capacity,
             start_depot=depot_idx,
             end_depot=depot_idx,
+            # The literature specifies depot time windows. We do not have depot
+            # time windows but instead set those on the vehicles, generalising
+            # the depot time windows.
+            tw_early=time_windows[depot_idx][0],
+            tw_late=time_windows[depot_idx][1],
             max_duration=max_duration,
             max_distance=max_distance,
             # A bit hacky, but this csv-like name is really useful to track the
