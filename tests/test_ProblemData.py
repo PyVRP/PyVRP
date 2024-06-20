@@ -576,15 +576,17 @@ def test_location_raises_invalid_index(ok_small, idx: int):
 
 
 @pytest.mark.parametrize(
-    ("depot", "should_raise"),
+    ("start_depot", "end_depot", "should_raise"),
     [
-        (0, False),  # correct index - should not raise
-        (1, True),  # index is the number of depots: too large; should raise
-        (2, True),  # index is too large; should raise
+        (0, 0, False),  # correct; index smaller than number of depots
+        (1, 0, True),  # index is too large; same as number of depots
+        (0, 1, True),  # index is too large; same as number of depots
+        (2, 0, True),  # index is too large; bigger than number of depots
+        (0, 2, True),  # index is too large; bigger than number of depots
     ],
 )
 def test_raises_invalid_vehicle_depot_indices(
-    ok_small, depot: int, should_raise: bool
+    ok_small, start_depot: int, end_depot: int, should_raise: bool
 ):
     """
     Tests that setting the depot index on a VehicleType to a value that's not
@@ -594,13 +596,13 @@ def test_raises_invalid_vehicle_depot_indices(
     assert_equal(ok_small.num_depots, 1)
 
     if not should_raise:
-        vehicle_types = [VehicleType(start_depot=depot, end_depot=depot)]
-        ok_small.replace(vehicle_types=vehicle_types)
+        veh_types = [VehicleType(start_depot=start_depot, end_depot=end_depot)]
+        ok_small.replace(vehicle_types=veh_types)
         return
 
     with assert_raises(IndexError):
-        vehicle_types = [VehicleType(start_depot=depot, end_depot=depot)]
-        ok_small.replace(vehicle_types=vehicle_types)
+        veh_types = [VehicleType(start_depot=start_depot, end_depot=end_depot)]
+        ok_small.replace(vehicle_types=veh_types)
 
 
 def test_raises_invalid_vehicle_profile_index(ok_small):
