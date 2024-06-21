@@ -1,4 +1,5 @@
 import pathlib
+from collections import defaultdict
 from numbers import Number
 from typing import Callable, Union
 from warnings import warn
@@ -106,19 +107,46 @@ def read(
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
 
-    capacity: int = instance.get("capacity", _INT_MAX)
-    if capacity != _INT_MAX:
-        capacity = round_func(np.array([capacity])).item()
+    if isinstance(instance.get("capacity"), Number):
+        capacities = round_func(np.full(num_vehicles, instance["capacity"]))
+    elif "capacity" in instance:
+        capacities = round_func(instance["capacity"])
+    else:
+        capacities = np.full(num_vehicles, _INT_MAX)
 
-    # If the max_duration or max_distance values are supplied, we should pass
-    # them through the round func and then unwrap the result.
-    max_duration: int = instance.get("vehicles_max_duration", _INT_MAX)
-    if max_duration != _INT_MAX:
-        max_duration = round_func(np.array([max_duration])).item()
+    if "vehicles_allowed_clients" in instance:
+        vehicles_allowed_clients = tuple(
+            tuple(idx - 1 for idx in clients)
+            for clients in instance["vehicles_allowed_clients"]
+        )
+    else:
+        vehicles_allowed_clients = tuple(
+            tuple(idx for idx in range(len(depot_idcs), dimension))
+            for _ in range(num_vehicles)
+        )
 
-    max_distance: int = instance.get("vehicles_max_distance", _INT_MAX)
-    if max_distance != _INT_MAX:
-        max_distance = round_func(np.array([max_distance])).item()
+    if "vehicles_depot" in instance:
+        vehicles_depots = instance["vehicles_depot"] - 1  # zero-indexed
+    else:
+        vehicles_depots = np.full(num_vehicles, depot_idcs[0])
+
+    if isinstance(instance.get("vehicles_max_distance"), Number):
+        vehicles_max_distance = round_func(
+            np.full(num_vehicles, instance["vehicles_max_distance"])
+        )
+    elif "vehicles_max_distance" in instance:
+        vehicles_max_distance = round_func(instance["vehicles_max_distance"])
+    else:
+        vehicles_max_distance = np.full(num_vehicles, _INT_MAX)
+
+    if isinstance(instance.get("vehicles_max_duration"), Number):
+        vehicles_max_duration = round_func(
+            np.full(num_vehicles, instance["vehicles_max_duration"])
+        )
+    elif "vehicles_max_duration" in instance:
+        vehicles_max_duration = round_func(instance["vehicles_max_duration"])
+    else:
+        vehicles_max_duration = np.full(num_vehicles, _INT_MAX)
 
     if "backhaul" in instance:
         backhauls: np.ndarray = round_func(instance["backhaul"])
@@ -156,15 +184,6 @@ def read(
         time_windows[:, 0] = 0
         time_windows[:, 1] = _INT_MAX
 
-    if "vehicles_depot" in instance:
-        items: list[list[int]] = [[] for _ in depot_idcs]
-        for vehicle, depot in enumerate(instance["vehicles_depot"], 1):
-            items[depot - 1].append(vehicle)
-
-        depot_vehicle_pairs = items
-    else:
-        depot_vehicle_pairs = [[idx + 1 for idx in range(num_vehicles)]]
-
     if "release_time" in instance:
         release_times: np.ndarray = round_func(instance["release_time"])
     else:
@@ -197,6 +216,21 @@ def read(
         backhaul = np.flatnonzero(backhauls > 0)
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
+
+    vehicle_data = (
+        capacities,
+        vehicles_allowed_clients,
+        vehicles_depots,
+        vehicles_max_distance,
+        vehicles_max_duration,
+    )
+    if any(len(arr) != num_vehicles for arr in vehicle_data):
+        msg = """
+        The number of elements in the vehicle capacity, depot, fixed cost, and
+        unit distance cost sections should be equal to the number of vehicles
+        in the problem.
+        """
+        raise ValueError(msg)
 
     # Checks
     contiguous_lower_idcs = np.arange(len(depot_idcs))
@@ -244,8 +278,23 @@ def read(
         for idx in range(len(depot_idcs), dimension)
     ]
 
-    vehicle_types = [
-        VehicleType(
+    veh_type2idcs = defaultdict(list)
+    for idx, veh_type in enumerate(zip(*vehicle_data)):
+        veh_type2idcs[veh_type].append(idx)
+
+    vehicle_types = []
+    dist_profiles = []
+    dur_profiles = []
+    for type_idx, (attributes, vehicles) in enumerate(veh_type2idcs.items()):
+        (
+            capacity,
+            allowed_clients,
+            depot_idx,
+            max_distance,
+            max_duration,
+        ) = attributes
+
+        vehicle_type = VehicleType(
             num_available=len(vehicles),
             capacity=capacity,
             depot=depot_idx,
@@ -256,19 +305,37 @@ def read(
             tw_late=time_windows[depot_idx][1],
             max_duration=max_duration,
             max_distance=max_distance,
+            profile=type_idx,
             # A bit hacky, but this csv-like name is really useful to track the
             # actual vehicles that make up this vehicle type.
             name=",".join(map(str, vehicles)),
         )
-        for depot_idx, vehicles in enumerate(depot_vehicle_pairs)
-    ]
+        vehicle_types.append(vehicle_type)
+
+        dist = distances.copy()
+        dur = durations.copy()
+
+        for idx in range(len(depots), len(depots) + len(clients)):
+            # Set distances and durations to MAX_VALUE for clients that are not
+            # allowed to be served by this vehicle type.
+            if idx not in allowed_clients:
+                dist[:, idx] = MAX_VALUE
+                dist[idx, :] = MAX_VALUE
+                dur[:, idx] = MAX_VALUE
+                dur[idx, :] = MAX_VALUE
+
+        np.fill_diagonal(dist, 0)
+        np.fill_diagonal(dur, 0)
+
+        dist_profiles.append(dist)
+        dur_profiles.append(dur)
 
     return ProblemData(
         clients,
         depots,
         vehicle_types,
-        [distances],
-        [durations],
+        dist_profiles,
+        dur_profiles,
         groups,
     )
 
