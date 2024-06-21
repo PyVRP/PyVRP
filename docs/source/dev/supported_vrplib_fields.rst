@@ -26,6 +26,8 @@ PyVRP supports the following specifications:
    ``CAPACITY``
       Homogeneous capacity of all vehicles in the instance.
       The number of vehicles is provided using the :term:`VEHICLES` specification.
+      To specify heterogeneous capacities, see :term:`CAPACITY_SECTION`.
+      When :term:`CAPACITY` and :term:`CAPACITY_SECTION` are both provided, the data from :term:`CAPACITY_SECTION` is used.
 
    ``DIMENSION``
       Number of locations in the instance.
@@ -48,7 +50,8 @@ PyVRP supports the following specifications:
    ``VEHICLES_MAX_DURATION``
       Maximum route duration for each vehicle.
       Route durations are assumed to be unconstrained if this value is not specified.
-
+      To specify heterogeneous maximum route durations, see :term:`VEHICLES_MAX_DURATION_SECTION`.
+      When :term:`VEHICLES_MAX_DURATION` and :term:`VEHICLES_MAX_DURATION_SECTION` are both provided, the data from :term:`VEHICLES_MAX_DURATION_SECTION` is used.
 
 Data sections
 -------------
@@ -62,6 +65,10 @@ PyVRP supports the following data sections:
    ``BACKHAUL_SECTION``
       Array of backhaul quantities, one for each location.
       This is the amount picked up at the client and transported back to the depot.
+
+   ``CAPACITY_SECTION``
+      Maximum capacity for each vehicle, typically used in heterogeneous fleet instances.
+      When :term:`CAPACITY` and :term:`CAPACITY_SECTION` are both provided, the data from :term:`CAPACITY_SECTION` is used.
 
    ``DEMAND_SECTION``
    ``LINEHAUL_SECTION``
@@ -96,6 +103,16 @@ PyVRP supports the following data sections:
    ``TIME_WINDOW_SECTION``
       Array of :math:`[e, l]` time window data, for each location.
 
+   ``VEHICLES_ALLOWED_CLIENTS_SECTION``
+      Nested list specifying the client location indices that each vehicle is allowed to serve, with one sub-list for each vehicle.
+      Vehicles are allowed to visit all clients if this section is not provided.
+      This section is commonly used in site-dependent instances.
+
    ``VEHICLES_DEPOT_SECTION``
       Depot assignments for each vehicle, typically used in multi-depot instances.
       Vehicles are assigned to the first depot if this section is not provided.
+
+   ``VEHICLES_MAX_DURATION_SECTION``
+      Maximum route duration for each vehicle.
+      Route durations are assumed to be unconstrained if this section is not specified.
+      When :term:`VEHICLES_MAX_DURATION` and :term:`VEHICLES_MAX_DURATION_SECTION` are both provided, the data from :term:`VEHICLES_MAX_DURATION_SECTION` is used.
