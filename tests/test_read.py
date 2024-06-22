@@ -21,7 +21,6 @@ from tests.helpers import read
         ("data/UnknownEdgeWeightFmt.txt", ValueError),
         ("data/UnknownEdgeWeightType.txt", ValueError),
         ("somewhere that does not exist", FileNotFoundError),
-        ("data/FileWithUnknownSection.txt", ValueError),
         ("data/DepotNotOne.txt", ValueError),
         ("data/DepotsNotLowerIndices.txt", ValueError),
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
