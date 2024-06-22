@@ -249,10 +249,7 @@ def read(
         warn(msg, ScalingWarning)
 
     depots = [
-        Depot(
-            x=coords[idx][0],
-            y=coords[idx][1],
-        )
+        Depot(x=coords[idx][0], y=coords[idx][1])
         for idx in range(len(depot_idcs))
     ]
 
@@ -283,8 +280,8 @@ def read(
         veh_type2idcs[veh_type].append(idx + 1)  # VRPLIB style 1-indexed
 
     vehicle_types = []
-    dist_profiles = []
-    dur_profiles = []
+    distance_matrices = []
+    duration_matrices = []
     for type_idx, (attributes, vehicles) in enumerate(veh_type2idcs.items()):
         (
             capacity,
@@ -315,27 +312,25 @@ def read(
         dist = distances.copy()
         dur = durations.copy()
 
-        for idx in range(len(depots), len(depots) + len(clients)):
-            # Set distances and durations to MAX_VALUE for clients that are not
-            # allowed to be served by this vehicle type.
+        for idx in range(len(depots), dimension):
             if idx not in allowed_clients:
-                dist[:, idx] = MAX_VALUE
-                dist[idx, :] = MAX_VALUE
-                dur[:, idx] = MAX_VALUE
-                dur[idx, :] = MAX_VALUE
+                # Set MAX_VALUE to and from disallowed clients, preventing
+                # this vehicle type from serving them.
+                dist[:, idx] = dist[idx, :] = MAX_VALUE
+                dur[:, idx] = dur[idx, :] = MAX_VALUE
 
         np.fill_diagonal(dist, 0)
         np.fill_diagonal(dur, 0)
 
-        dist_profiles.append(dist)
-        dur_profiles.append(dur)
+        distance_matrices.append(dist)
+        duration_matrices.append(dur)
 
     return ProblemData(
         clients,
         depots,
         vehicle_types,
-        dist_profiles,
-        dur_profiles,
+        distance_matrices,
+        duration_matrices,
         groups,
     )
 
