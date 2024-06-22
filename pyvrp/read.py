@@ -280,7 +280,7 @@ def read(
 
     veh_type2idcs = defaultdict(list)
     for idx, veh_type in enumerate(zip(*vehicle_data)):
-        veh_type2idcs[veh_type].append(idx)
+        veh_type2idcs[veh_type].append(idx + 1)  # VRPLIB style 1-indexed
 
     vehicle_types = []
     dist_profiles = []
