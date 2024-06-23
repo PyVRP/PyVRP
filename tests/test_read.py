@@ -303,7 +303,7 @@ def test_mdvrptw_instance():
         # Each depot has ten vehicles, and they are nicely grouped (so the
         # first ten are assigned to the first depot, the second ten to the
         # second depot, etc.).
-        expected_name = ",".join(str(10 * idx + veh + 1) for veh in range(10))
+        expected_name = ",".join(str(10 * idx + veh) for veh in range(10))
         assert_equal(vehicle_type.name, expected_name)
 
     # We haven't seen many instances with negative coordinates, but this
