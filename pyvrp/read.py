@@ -218,16 +218,16 @@ def read(
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-    vehicle_data = (
+    vehicles_data = (
         capacities,
         vehicles_allowed_clients,
         vehicles_depots,
         vehicles_max_distance,
         vehicles_max_duration,
     )
-    if any(len(arr) != num_vehicles for arr in vehicle_data):
+    if any(len(arr) != num_vehicles for arr in vehicles_data):
         msg = """
-        The number of elements in the vehicle data attributes should be equal
+        The number of elements in the vehicles data attributes should be equal
         to the number of vehicles in the problem.
         """
         raise ValueError(msg)
@@ -275,7 +275,7 @@ def read(
     ]
 
     veh_type2idcs = defaultdict(list)
-    for idx, veh_type in enumerate(zip(*vehicle_data)):
+    for idx, veh_type in enumerate(zip(*vehicles_data)):
         veh_type2idcs[veh_type].append(idx)
 
     vehicle_types = []

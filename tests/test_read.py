@@ -27,6 +27,7 @@ from tests.helpers import read
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
+        ("data/MissingVehicleData.txt", ValueError),
     ],
 )
 def test_raises_invalid_file(where: str, exception: Exception):
