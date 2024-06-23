@@ -72,8 +72,8 @@ def plot_route_schedule(
     add_traces(dist, t, drive_time, serv_time, load)
     add_traces(dist, t, drive_time, serv_time, load)
 
-    prev_idx = vehicle_type.depot
-    for idx in [*list(route), vehicle_type.depot]:
+    prev_idx = vehicle_type.start_depot
+    for idx in [*list(route), vehicle_type.end_depot]:
         stop = data.location(idx)
 
         if isinstance(stop, Client):

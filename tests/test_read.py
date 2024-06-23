@@ -251,7 +251,8 @@ def test_multiple_depots():
 
     # First vehicle type should have two vehicles at the first depot.
     veh_type1 = data.vehicle_type(0)
-    assert_equal(veh_type1.depot, 0)
+    assert_equal(veh_type1.start_depot, 0)
+    assert_equal(veh_type1.end_depot, 0)
     assert_equal(veh_type1.num_available, 2)
     assert_equal(veh_type1.tw_early, 0)
     assert_equal(veh_type1.tw_late, 45_000)
@@ -260,7 +261,8 @@ def test_multiple_depots():
     # vehicle should have a tighter time window than that associated with the
     # first vehicle type.
     veh_type2 = data.vehicle_type(1)
-    assert_equal(veh_type2.depot, 1)
+    assert_equal(veh_type2.start_depot, 1)
+    assert_equal(veh_type2.end_depot, 1)
     assert_equal(veh_type2.num_available, 1)
     assert_equal(veh_type2.tw_early, 5_000)
     assert_equal(veh_type2.tw_late, 20_000)
@@ -292,7 +294,8 @@ def test_mdvrptw_instance():
         # There should be ten vehicles for each depot, with the following
         # capacities and maximum route durations.
         assert_equal(vehicle_type.num_available, 10)
-        assert_equal(vehicle_type.depot, idx)
+        assert_equal(vehicle_type.start_depot, idx)
+        assert_equal(vehicle_type.end_depot, idx)
         assert_equal(vehicle_type.capacity, 200)
         assert_equal(vehicle_type.max_duration, 450)
 

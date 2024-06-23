@@ -71,7 +71,8 @@ public:
 
         std::pair<double, double> centroid_;  // Route center
         VehicleType vehicleType_;             // Type of vehicle
-        Depot depot_;                         // Assigned depot
+        Depot startDepot_;                    // Assigned start depot
+        Depot endDepot_;                      // Assigned end depot
 
     public:
         [[nodiscard]] bool empty() const;
@@ -207,9 +208,14 @@ public:
         [[nodiscard]] VehicleType vehicleType() const;
 
         /**
-         * Location index of the route's depot.
+         * Location index of the route's starting depot.
          */
-        [[nodiscard]] Depot depot() const;
+        [[nodiscard]] Depot startDepot() const;
+
+        /**
+         * Location index of the route's ending depot.
+         */
+        [[nodiscard]] Depot endDepot() const;
 
         /**
          * Returns whether this route is feasible.
@@ -261,7 +267,8 @@ public:
               Cost prizes,
               std::pair<double, double> centroid,
               VehicleType vehicleType,
-              Depot depot);
+              Depot startDepot,
+              Depot endDepot);
     };
 
 private:

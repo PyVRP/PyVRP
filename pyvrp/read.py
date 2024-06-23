@@ -248,7 +248,8 @@ def read(
         VehicleType(
             num_available=len(vehicles),
             capacity=capacity,
-            depot=depot_idx,
+            start_depot=depot_idx,
+            end_depot=depot_idx,
             # The literature specifies depot time windows. We do not have depot
             # time windows but instead set those on the vehicles, generalising
             # the depot time windows.
