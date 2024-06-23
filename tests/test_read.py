@@ -500,10 +500,10 @@ def test_sdvrptw_instance():
         assert_array_equal(duration_matrix[client, idcs], MAX_VALUE)
 
 
-def test_specification_and_section():
+def test_data_with_both_specification_and_section():
     """
-    Tests that when both a specification and a section are present in the same
-    file, the data from the section is used.
+    Tests that if both specification and section fields are present in an
+    instance, then the section data takes precedence.
     """
     data = read("data/SpecificationAndSection.txt")
 
