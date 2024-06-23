@@ -314,9 +314,9 @@ Solution::Route::Route(ProblemData const &data,
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
 
-    DurationSegment ds = {vehType.startDepot, vehType};
+    DurationSegment ds = {startDepot_, vehType};
     auto ls = LoadSegment(0, 0, 0);
-    size_t prevClient = vehType.startDepot;
+    size_t prevClient = startDepot_;
 
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
@@ -344,17 +344,17 @@ Solution::Route::Route(ProblemData const &data,
     }
 
     auto const last = visits_.empty() ? startDepot_ : visits_.back();
-    distance_ += distances(last, vehType.endDepot);
+    distance_ += distances(last, endDepot_);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 
-    travel_ += durations(last, vehType.endDepot);
+    travel_ += durations(last, endDepot_);
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    DurationSegment endDS(vehType.endDepot, vehType);
+    DurationSegment endDS(endDepot_, vehType);
     ds = DurationSegment::merge(durations, ds, endDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
