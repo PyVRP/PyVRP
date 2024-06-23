@@ -498,3 +498,19 @@ def test_sdvrptw_instance():
         assert_array_equal(distance_matrix[client, idcs], MAX_VALUE)
         assert_array_equal(duration_matrix[idcs, client], MAX_VALUE)
         assert_array_equal(duration_matrix[client, idcs], MAX_VALUE)
+
+
+def test_specification_and_section():
+    """
+    Tests that when both a specification and a section are present in the same
+    file, the data from the section is used.
+    """
+    data = read("data/SpecificationAndSection.txt")
+
+    # The instance includes data about capacity, max distance and max duration
+    # as specification (value 10), and a section (values 20). The section data
+    # should be used.
+    veh_type = data.vehicle_type(0)
+    assert_equal(veh_type.capacity, 20)
+    assert_equal(veh_type.max_distance, 20)
+    assert_equal(veh_type.max_duration, 20)

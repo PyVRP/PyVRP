@@ -107,10 +107,10 @@ def read(
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
     num_vehicles: int = instance.get("vehicles", dimension - 1)
 
-    if isinstance(instance.get("capacity"), Number):
-        capacities = round_func(np.full(num_vehicles, instance["capacity"]))
-    elif "capacity" in instance:
+    if isinstance(instance.get("capacity"), np.ndarray):
         capacities = round_func(instance["capacity"])
+    elif "capacity" in instance:
+        capacities = round_func(np.full(num_vehicles, instance["capacity"]))
     else:
         capacities = np.full(num_vehicles, _INT_MAX)
 
@@ -130,21 +130,21 @@ def read(
     else:
         vehicles_depots = np.full(num_vehicles, depot_idcs[0])
 
-    if isinstance(instance.get("vehicles_max_distance"), Number):
+    if isinstance(instance.get("vehicles_max_distance"), np.ndarray):
+        vehicles_max_distance = round_func(instance["vehicles_max_distance"])
+    elif "vehicles_max_distance" in instance:
         vehicles_max_distance = round_func(
             np.full(num_vehicles, instance["vehicles_max_distance"])
         )
-    elif "vehicles_max_distance" in instance:
-        vehicles_max_distance = round_func(instance["vehicles_max_distance"])
     else:
         vehicles_max_distance = np.full(num_vehicles, _INT_MAX)
 
-    if isinstance(instance.get("vehicles_max_duration"), Number):
+    if isinstance(instance.get("vehicles_max_duration"), np.ndarray):
+        vehicles_max_duration = round_func(instance["vehicles_max_duration"])
+    elif "vehicles_max_duration" in instance:
         vehicles_max_duration = round_func(
             np.full(num_vehicles, instance["vehicles_max_duration"])
         )
-    elif "vehicles_max_duration" in instance:
-        vehicles_max_duration = round_func(instance["vehicles_max_duration"])
     else:
         vehicles_max_duration = np.full(num_vehicles, _INT_MAX)
 
