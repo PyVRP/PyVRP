@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import (
     assert_,
     assert_allclose,
+    assert_array_equal,
     assert_equal,
     assert_raises,
     assert_warns,
@@ -420,3 +421,38 @@ def test_reading_mutually_exclusive_group():
         client_data = data.location(client)  # type: ignore
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
+
+
+def test_reading_allowed_clients():
+    """
+    Tests that read() correctly parses a small instance with allowed clients
+    for each vehicle.
+    """
+    data = read("data/OkSmallAllowedClients.txt")
+    assert_equal(data.num_vehicle_types, 2)
+
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.capacity, 10)
+    assert_equal(veh_type1.num_available, 2)
+    assert_equal(veh_type1.profile, 0)
+
+    distance_matrix = data.distance_matrix(veh_type1.profile)
+    duration_matrix = data.duration_matrix(veh_type1.profile)
+
+    # First vehicle type has no vehicle-client restrictions.
+    assert_(np.all(distance_matrix != MAX_VALUE))
+    assert_(np.all(duration_matrix != MAX_VALUE))
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.capacity, 10)
+    assert_equal(veh_type2.num_available, 1)
+    assert_equal(veh_type2.profile, 1)
+
+    distance_matrix = data.distance_matrix(veh_type2.profile)
+    duration_matrix = data.duration_matrix(veh_type2.profile)
+
+    # Second vehicle type is not allowed to serve client idx 4.
+    assert_array_equal(distance_matrix[:3, 4], MAX_VALUE)
+    assert_array_equal(distance_matrix[4, :3], MAX_VALUE)
+    assert_array_equal(duration_matrix[:3, 4], MAX_VALUE)
+    assert_array_equal(duration_matrix[4, :3], MAX_VALUE)
