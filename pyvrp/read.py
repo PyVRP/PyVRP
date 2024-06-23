@@ -116,15 +116,15 @@ def read(
         capacities = np.full(num_vehicles, _INT_MAX)
 
     if "vehicles_allowed_clients" in instance:
-        vehicles_allowed_clients = tuple(
+        vehicles_allowed_clients = [
             tuple(idx - 1 for idx in clients)
             for clients in instance["vehicles_allowed_clients"]
-        )
+        ]
     else:
-        vehicles_allowed_clients = tuple(
+        vehicles_allowed_clients = [
             tuple(idx for idx in range(num_depots, dimension))
             for _ in range(num_vehicles)
-        )
+        ]
 
     if "vehicles_depot" in instance:
         vehicles_depots = instance["vehicles_depot"] - 1  # zero-indexed
