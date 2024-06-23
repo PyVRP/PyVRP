@@ -135,7 +135,10 @@ def test_move_involving_multiple_depots():
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=4, y=4)],
         depots=[Depot(x=0, y=0), Depot(x=5, y=5)],
-        vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
+        vehicle_types=[
+            VehicleType(start_depot=0, end_depot=0),
+            VehicleType(start_depot=1, end_depot=1),
+        ],
         distance_matrices=[
             [
                 [0, 10, 2, 8],
