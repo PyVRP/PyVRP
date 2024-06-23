@@ -456,3 +456,42 @@ def test_reading_allowed_clients():
     assert_array_equal(distance_matrix[4, :3], MAX_VALUE)
     assert_array_equal(duration_matrix[:3, 4], MAX_VALUE)
     assert_array_equal(duration_matrix[4, :3], MAX_VALUE)
+
+
+def test_sdvrptw_instance():
+    """
+    Tests that reading an SDVRPTW instance happens correctly, particularly the
+    heterogeneous vehicles data sections.
+    """
+    data = read("data/PR01.vrp")
+
+    # One routing profile per vehicle type.
+    assert_equal(data.num_vehicle_types, 4)
+    assert_equal(len(data.distance_matrices()), 4)
+    assert_equal(len(data.duration_matrices()), 4)
+
+    # Each vehicle type has a different capacity. We only check the first two.
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 2)
+    assert_equal(veh_type1.capacity, 100)
+    assert_equal(veh_type1.max_duration, 500)
+    assert_equal(veh_type1.profile, 0)
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 2)
+    assert_equal(veh_type2.capacity, 150)
+    assert_equal(veh_type2.max_duration, 500)
+    assert_equal(veh_type2.profile, 1)
+
+    # The first vehicle type cannot serve clients 38-48. Let's check that the
+    # distance and duration matrices reflect this.
+    distance_matrix = data.distance_matrix(veh_type1.profile)
+    duration_matrix = data.duration_matrix(veh_type1.profile)
+
+    for client in range(38, 48):
+        # This avoids checking diagonals.
+        idcs = [idx for idx in range(data.num_locations) if idx != client]
+        assert_array_equal(distance_matrix[idcs, client], MAX_VALUE)
+        assert_array_equal(distance_matrix[client, idcs], MAX_VALUE)
+        assert_array_equal(duration_matrix[idcs, client], MAX_VALUE)
+        assert_array_equal(duration_matrix[client, idcs], MAX_VALUE)
