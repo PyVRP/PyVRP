@@ -105,6 +105,7 @@ def read(
 
     dimension: int = instance.get("dimension", durations.shape[0])
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
+    num_depots = len(depot_idcs)
     num_vehicles: int = instance.get("vehicles", dimension - 1)
 
     if isinstance(instance.get("capacity"), np.ndarray):
@@ -121,7 +122,7 @@ def read(
         )
     else:
         vehicles_allowed_clients = tuple(
-            tuple(idx for idx in range(len(depot_idcs), dimension))
+            tuple(idx for idx in range(num_depots, dimension))
             for _ in range(num_vehicles)
         )
 
@@ -232,8 +233,8 @@ def read(
         raise ValueError(msg)
 
     # Checks
-    contiguous_lower_idcs = np.arange(len(depot_idcs))
-    if len(depot_idcs) == 0 or (depot_idcs != contiguous_lower_idcs).any():
+    contiguous_lower_idcs = np.arange(num_depots)
+    if num_depots == 0 or (depot_idcs != contiguous_lower_idcs).any():
         msg = """
         Source file should contain at least one depot in the contiguous lower
         indices, starting from 1.
@@ -248,8 +249,7 @@ def read(
         warn(msg, ScalingWarning)
 
     depots = [
-        Depot(x=coords[idx][0], y=coords[idx][1])
-        for idx in range(len(depot_idcs))
+        Depot(x=coords[idx][0], y=coords[idx][1]) for idx in range(num_depots)
     ]
 
     idx2group = [None for _ in range(dimension)]
@@ -271,7 +271,7 @@ def read(
             required=np.isclose(prizes[idx], 0) and idx2group[idx] is None,
             group=idx2group[idx],
         )
-        for idx in range(len(depot_idcs), dimension)
+        for idx in range(num_depots, dimension)
     ]
 
     veh_type2idcs = defaultdict(list)
@@ -281,6 +281,7 @@ def read(
     vehicle_types = []
     distance_matrices = []
     duration_matrices = []
+
     for type_idx, (attributes, vehicles) in enumerate(veh_type2idcs.items()):
         (
             capacity,
@@ -312,7 +313,7 @@ def read(
         dist = distances.copy()
         dur = durations.copy()
 
-        for idx in range(len(depots), dimension):
+        for idx in range(num_depots, dimension):
             if idx not in allowed_clients:
                 # Set MAX_VALUE to and from disallowed clients, preventing
                 # this vehicle type from serving them.
