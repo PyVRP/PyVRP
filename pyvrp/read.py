@@ -226,9 +226,8 @@ def read(
     )
     if any(len(arr) != num_vehicles for arr in vehicle_data):
         msg = """
-        The number of elements in the vehicle capacity, depot, fixed cost, and
-        unit distance cost sections should be equal to the number of vehicles
-        in the problem.
+        The number of elements in the vehicle data attributes should be equal
+        to the number of vehicles in the problem.
         """
         raise ValueError(msg)
 
