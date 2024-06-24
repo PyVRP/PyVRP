@@ -28,7 +28,9 @@ VEHICLES_MAX_DURATION_SECTION
 2    3
 3    4
 VEHICLES_DEPOT_SECTION
-1    2
+# The instance has three vehicles, but this section only includes information
+# about the first vehicle.
+1    1
 DEPOT_SECTION
 1
 -1
