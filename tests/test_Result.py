@@ -73,7 +73,7 @@ def test_num_iterations(ok_small, num_iterations: int):
 )
 def test_summary_contains_essential_information(ok_small, routes):
     """
-    Tests that calling ``summary()``) returns a summary of the solution.
+    Tests that calling ``summary()`` returns a summary of the solution.
     """
     sol = Solution(ok_small, routes)
     res = Result(sol, Statistics(), 0, 0.0)
@@ -87,6 +87,8 @@ def test_summary_contains_essential_information(ok_small, routes):
         assert_("INFEASIBLE" in summary)
 
     # Test that standard statistics are always present.
+    assert_(str(sol.num_routes()) in summary)
+    assert_(str(sol.num_clients()) in summary)
     assert_(str(sol.distance()) in summary)
     assert_(str(sol.duration()) in summary)
 
