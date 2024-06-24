@@ -58,7 +58,7 @@ class Result:
 
     def summary(self) -> str:
         """
-        Returns a nicely formatted summary of this solution.
+        Returns a nicely formatted result summary.
         """
         obj_str = f"{self.cost()}" if self.is_feasible() else "INFEASIBLE"
         summary = [
