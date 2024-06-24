@@ -73,8 +73,7 @@ def test_num_iterations(ok_small, num_iterations: int):
 )
 def test_summary_contains_essential_information(ok_small, routes):
     """
-    Tests that printing (or, in general, calling ```str(result)``) returns a
-    summary of the solution.
+    Tests that calling ``summary()``) returns a summary of the solution.
     """
     sol = Solution(ok_small, routes)
     res = Result(sol, Statistics(), 0, 0.0)
@@ -98,7 +97,7 @@ def test_summary_contains_essential_information(ok_small, routes):
 )
 def test_str_contains_summary_and_routes(ok_small, routes):
     """
-    Tests that printing (or, in general, calling ```str(result)``) returns a
+    Tests that printing (or, in general, calling ``str(result)``) returns a
     summary of the solution and the solution's routes.
     """
     sol = Solution(ok_small, routes)
