@@ -60,7 +60,7 @@ class Result:
         """
         Returns a nicely formatted summary of this solution.
         """
-        obj_str = f"{self.cost():.2f}" if self.is_feasible() else "INFEASIBLE"
+        obj_str = f"{self.cost()}" if self.is_feasible() else "INFEASIBLE"
         summary = [
             "Solution results",
             "================",
