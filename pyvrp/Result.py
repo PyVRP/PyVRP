@@ -78,6 +78,7 @@ class Result:
     def __str__(self) -> str:
         content = [
             self.summary(),
+            "",
             "Routes",
             "------",
             str(self.best),
