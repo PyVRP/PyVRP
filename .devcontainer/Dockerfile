@@ -11,8 +11,9 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
 RUN apt-get update \
- && apt-get -y install build-essential gdb python3 python3-pip python3-dev \
+ && apt-get -y install --no-install-recommends build-essential gdb python3 python3-pip python3-dev \
  && apt-get -y autoremove \
- && apt-get -y clean
+ && apt-get -y clean \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN pip install poetry
+RUN pip3 install poetry

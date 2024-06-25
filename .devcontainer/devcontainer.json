@@ -4,6 +4,7 @@
     "dockerfile": "Dockerfile"
   },
   "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
+  "onCreateCommand": ".devcontainer/setup.sh",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -12,8 +13,5 @@
         "benjamin-simmonds.pythoncpp-debug"
       ]
     }
-  },
-  "onCreateCommand": ".devcontainer/setup.sh",
-  "postCreateCommand": "",
-  "features": {}
+  }
 }
