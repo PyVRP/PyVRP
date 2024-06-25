@@ -61,10 +61,10 @@ Once the setup completes, execute the test suite to verify everything runs smoot
    poetry run pytest
 
 
-Building the native extensions
-------------------------------
+Building the extensions
+-----------------------
 
-PyVRP uses a number of native extensions for Python that are written in C++ for performance.
+PyVRP uses a number of native Python extensions that are written in C++ for performance.
 These extensions are built every time ``poetry install`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
 These (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
@@ -84,8 +84,8 @@ Meson is configured using the ``meson.build`` file in the repository root.
 You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
 
 
-Debugging Python extensions
----------------------------
+Debugging the extensions
+------------------------
 
 This section explains how to perform cross-debugging for mixed Python and C++ code.
 We will use the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug <https://github.com/benibenj/vscode-pythonCpp>`_ extension.
