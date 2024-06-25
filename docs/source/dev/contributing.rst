@@ -50,9 +50,11 @@ Setting up Github Codespaces
 If you are having trouble building PyVRP from source or setting up your local development environment, you can try to build PyVRP with GitHub Codespaces.
 Github Codespaces allows you to create the correct development environment right in your browser, reducing the need to install local development environments and deal with incompatible dependencies.
 
-To setup Codespaces, go to the main repository https://github.com/PyVRP/PyVRP and click on the green button.
-Select the Codespaces tab and click on the `+` icon to create a Github Codespaces environment.
-This environment is configured with all necessary dependencies to build PyVRP, you can then follow the relevant parts of the PyVRP documentation to build, develop and contribute to PyVRP.
+To setup Github Codespaces, go to the `GitHub website <https://github.com/PyVRP/PyVRP>`_ and click on the green button.
+Select the Codespaces tab and click on the `+` icon to create a Codespaces environment.
+This environment is configured with all necessary dependencies to build PyVRP.
+Once installed, you can follow the relevant parts of the PyVRP documentation to build, develop and contribute to PyVRP.
+For more information on Github Codespaces, see the `documentation <https://docs.github.com/en/codespaces>`_.
 
 
 Building the Python extensions
@@ -78,6 +80,47 @@ Meson is configured using the ``meson.build`` file in the repository root.
 You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
 
 
+Debugging Python extensions
+---------------------------
+This section explains how to perform cross-debugging for mixed Python and C/C++ code using the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug extension <https://github.com/benibenj/vscode-pythonCpp>`_.
+
+First, build PyVRP in debug mode:
+
+.. code-block:: sh
+
+    poetry run python build_extensions.py --build_type debug
+
+Create a test Python file that calls some C++ code.
+
+.. code-block:: python
+
+    from pyvrp import Client
+
+    Client(x=0, y=0)
+
+Set breakpoints in `ProblemData.cpp` within the `Client` constructor.
+Next, setup up your debugger configuration by creating a `launch.json` file in the `.vscode` directory with the following content:
+
+.. code-block:: json
+
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python C++ Debugger",
+                "type": "pythoncpp",
+                "request": "launch",
+                "pythonConfig": "default",
+                "cppConfig": "default (gdb) Attach"
+            }
+        ]
+    }
+
+Start the debugger in Visual Studio Code and step through the code.
+The debugger should break at the set breakpoints in `ProblemData.cpp`.
+Ensure you have selected the Poetry-managed Python environment as your interpreter.
+
+
 Committing changes
 ------------------
 
@@ -101,8 +144,3 @@ This greatly reduces the job of maintaining and releasing the software.
 .. note::
 
    Please use the "Pull request" template on GitHub when opening a pull request.
-
-
-Debugging native extensions
----------------------------
-TODO
