@@ -9,7 +9,6 @@
         "seccomp=unconfined"
     ],
     "onCreateCommand": ".devcontainer/onCreate.sh",
-    "postCreateCommand": ".devcontainer/postCreate.sh",
     "customizations": {
         "vscode": {
             "extensions": [
