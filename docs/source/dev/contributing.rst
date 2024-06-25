@@ -47,14 +47,15 @@ Now make sure everything runs smoothly, by executing the test suite:
 
 Setting up Github Codespaces
 ----------------------------
-If you are having trouble building PyVRP from source or setting up your local development environment, you can try to build PyVRP with GitHub Codespaces.
-Github Codespaces allows you to create the correct development environment right in your browser, reducing the need to install local development environments and deal with incompatible dependencies.
 
-To setup Github Codespaces, go to the `GitHub website <https://github.com/PyVRP/PyVRP>`_ and click on the green button.
+If you are having trouble building PyVRP from source or setting up your local development environment, you can try to build PyVRP online, using GitHub Codespaces.
+Github Codespaces allows you to create a development environment right in your browser, removing the need to install local development environments and deal with incompatible dependencies.
+
+To launch Github Codespaces, go to the `repository <https://github.com/PyVRP/PyVRP>`_ and click on the green button.
 Select the Codespaces tab and click on the `+` icon to create a Codespaces environment.
 This environment is configured with all necessary dependencies to build PyVRP.
-Once installed, you can follow the relevant parts of the PyVRP documentation to build, develop and contribute to PyVRP.
-For more information on Github Codespaces, see the `documentation <https://docs.github.com/en/codespaces>`_.
+Once installed, you can follow the relevant parts of the local installation above to build, develop and contribute to PyVRP.
+For more information about Github Codespaces, see the `documentation <https://docs.github.com/en/codespaces>`_.
 
 
 Building the Python extensions
@@ -82,42 +83,44 @@ You should not have to touch this file often: all compilation is handled via the
 
 Debugging Python extensions
 ---------------------------
-This section explains how to perform cross-debugging for mixed Python and C/C++ code using the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug <https://github.com/benibenj/vscode-pythonCpp>`_ extension.
+
+This section explains how to perform cross-debugging for mixed Python and C++ code.
+We will use the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug <https://github.com/benibenj/vscode-pythonCpp>`_ extension.
 
 First, build PyVRP in debug mode:
 
-.. code-block:: sh
+.. code-block:: shell
 
-    poetry run python build_extensions.py --build_type debug
+   poetry run python build_extensions.py --build_type debug
 
-Create a test Python file that calls some C++ code.
+Create a test Python file that calls some C++ code, like so:
 
 .. code-block:: python
 
-    from pyvrp import Client
+   from pyvrp import Client
 
-    Client(x=0, y=0)
+   Client(x=0, y=0)
 
 Set breakpoints in ``pyvrp/cpp/ProblemData.cpp`` within the ``Client`` constructor.
 Next, set-up your debugger configuration by creating a ``launch.json`` file in the ``.vscode`` directory with the following content:
 
 .. code-block:: json
 
-    {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "Python C++ Debugger",
-                "type": "pythoncpp",
-                "request": "launch",
-                "pythonConfig": "default",
-                "cppConfig": "default (gdb) Attach"
-            }
-        ]
-    }
+   {
+       "version": "0.2.0",
+       "configurations": [
+           {
+               "name": "Python C++ Debugger",
+               "type": "pythoncpp",
+               "request": "launch",
+               "pythonConfig": "default",
+               "cppConfig": "default (gdb) Attach"
+           }
+       ]
+   }
 
 Start the debugger in Visual Studio Code and step through the code.
-The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp`.
+The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp``.
 
 
 Committing changes

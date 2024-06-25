@@ -4,14 +4,18 @@
     "dockerfile": "Dockerfile"
   },
   "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
-  "onCreateCommand": ".devcontainer/setup.sh",
+  "onCreateCommand": ".devcontainer/onCreate.sh",
+  "postCreateCommand": ".devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
         "ms-vscode.cpptools",
         "benjamin-simmonds.pythoncpp-debug"
-      ]
+      ],
+      "settings": {
+          "python.defaultInterpreterPath": ".venv/bin/python"
+      }
     }
   }
 }
