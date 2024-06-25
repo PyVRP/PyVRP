@@ -18,18 +18,7 @@
                 "benjamin-simmonds.pythoncpp-debug"
             ],
             "settings": {
-                "python.defaultInterpreterPath": ".venv/bin/python",
-                "launch": {
-                    "configurations": [
-                        {
-                            "name": "Python C++ Debugger",
-                            "type": "pythoncpp",
-                            "request": "launch",
-                            "pythonConfig": "default",
-                            "cppConfig": "default (gdb) Attach"
-                        }
-                    ]
-                }
+                "python.defaultInterpreterPath": ".venv/bin/python"
             }
         }
     }

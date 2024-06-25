@@ -109,7 +109,24 @@ Create a test Python file that calls some C++ code, like so:
    Client(x=0, y=0)
 
 Set breakpoints in ``pyvrp/cpp/ProblemData.cpp`` within the ``Client`` constructor.
-Now, start the debugger in Visual Studio Code and step through the code.
+Next, set-up your debugger configuration by creating the ``.vscode/launch.json`` file, with the following content:
+
+.. code-block:: json
+
+   {
+       "version": "0.2.0",
+       "configurations": [
+           {
+               "name": "Python C++ Debugger",
+               "type": "pythoncpp",
+               "request": "launch",
+               "pythonConfig": "default",
+               "cppConfig": "default (gdb) Attach"
+           }
+       ]
+   }
+
+Start the debugger in Visual Studio Code and step through the code.
 The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp``.
 
 
