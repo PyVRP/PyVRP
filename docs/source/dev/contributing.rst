@@ -54,14 +54,21 @@ Github Codespaces allows you to create a development environment right in your b
 To launch Github Codespaces, go to the `repository <https://github.com/PyVRP/PyVRP>`_ and click on the green button.
 Select the Codespaces tab and click on the `+` icon to create a Codespaces environment.
 This environment is configured with all necessary dependencies to build PyVRP.
-Once installed, you can follow the relevant parts of the local installation above to build, develop and contribute to PyVRP.
-For more information about Github Codespaces, see the `documentation <https://docs.github.com/en/codespaces>`_.
+Once the setup completes, execute the test suite to verify everything runs smoothly:
+
+.. code-block:: shell
+
+   poetry run pytest
+
+.. hint::
+
+   For more information about Github Codespaces, see the `documentation <https://docs.github.com/en/codespaces>`_.
 
 
-Building the Python extensions
+Building the native extensions
 ------------------------------
 
-PyVRP uses a number of Python extensions that are written in C++ for performance.
+PyVRP uses a number of native extensions for Python that are written in C++ for performance.
 These extensions are built every time ``poetry install`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
 These (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
@@ -102,24 +109,7 @@ Create a test Python file that calls some C++ code, like so:
    Client(x=0, y=0)
 
 Set breakpoints in ``pyvrp/cpp/ProblemData.cpp`` within the ``Client`` constructor.
-Next, set-up your debugger configuration by creating a ``launch.json`` file in the ``.vscode`` directory with the following content:
-
-.. code-block:: json
-
-   {
-       "version": "0.2.0",
-       "configurations": [
-           {
-               "name": "Python C++ Debugger",
-               "type": "pythoncpp",
-               "request": "launch",
-               "pythonConfig": "default",
-               "cppConfig": "default (gdb) Attach"
-           }
-       ]
-   }
-
-Start the debugger in Visual Studio Code and step through the code.
+Now, start the debugger in Visual Studio Code and step through the code.
 The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp``.
 
 
