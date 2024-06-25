@@ -75,7 +75,12 @@ public:
 
     public:
         [[nodiscard]] bool empty() const;
+
+        /**
+         * Returns the number of clients visited by this route.
+         */
         [[nodiscard]] size_t size() const;
+
         [[nodiscard]] Client operator[](size_t idx) const;
 
         Visits::const_iterator begin() const;
@@ -206,9 +211,25 @@ public:
          */
         [[nodiscard]] Depot depot() const;
 
+        /**
+         * Returns whether this route is feasible.
+         */
         [[nodiscard]] bool isFeasible() const;
+
+        /**
+         * Returns whether this route violates capacity constraints.
+         */
         [[nodiscard]] bool hasExcessLoad() const;
+
+        /**
+         * Returns whether this route violates maximum distance constraints.
+         */
         [[nodiscard]] bool hasExcessDistance() const;
+
+        /**
+         * Returns whether this route violates time window or maximum duration
+         * constraints.
+         */
         [[nodiscard]] bool hasTimeWarp() const;
 
         bool operator==(Route const &other) const;
@@ -286,6 +307,13 @@ public:
 
     /**
      * Number of clients in this solution.
+     *
+     * .. warning::
+     *
+     *    An empty solution typically indicates that there is a significant
+     *    difference between the values of the prizes of the optional clients
+     *    and the other objective terms. This hints at a scaling issue in the
+     *    data.
      */
     [[nodiscard]] size_t numClients() const;
 
@@ -352,7 +380,8 @@ public:
     [[nodiscard]] bool hasExcessDistance() const;
 
     /**
-     * Returns whether this solution violates time window constraints.
+     * Returns whether this solution violates time window or maximum duration
+     * constraints.
      */
     [[nodiscard]] bool hasTimeWarp() const;
 

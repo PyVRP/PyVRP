@@ -50,8 +50,8 @@ def read(
     round_func: Union[str, _RoundingFunc] = "none",
 ) -> ProblemData:
     """
-    Reads the VRPLIB file at the given location, and returns a ProblemData
-    instance.
+    Reads the ``VRPLIB`` file at the given location, and returns a
+    :class:`~pyvrp._pyvrp.ProblemData` instance.
 
     .. note::
 
@@ -63,7 +63,7 @@ def read(
     ----------
     where
         File location to read. Assumes the data on the given location is in
-        VRPLIB format.
+        ``VRPLIB`` format.
     round_func
         Optional rounding function that is applied to all data values in the
         instance. This can either be a function or a string:
@@ -218,8 +218,6 @@ def read(
         Depot(
             x=coords[idx][0],
             y=coords[idx][1],
-            tw_early=time_windows[idx][0],
-            tw_late=time_windows[idx][1],
         )
         for idx in range(len(depot_idcs))
     ]
@@ -251,6 +249,11 @@ def read(
             num_available=len(vehicles),
             capacity=capacity,
             depot=depot_idx,
+            # The literature specifies depot time windows. We do not have depot
+            # time windows but instead set those on the vehicles, generalising
+            # the depot time windows.
+            tw_early=time_windows[depot_idx][0],
+            tw_late=time_windows[depot_idx][1],
             max_duration=max_duration,
             max_distance=max_distance,
             # A bit hacky, but this csv-like name is really useful to track the
@@ -272,14 +275,14 @@ def read(
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     """
-    Reads a solution in VRPLIB format from file at the given location, and
+    Reads a solution in ``VRPLIB`` format from the give file location, and
     returns the routes contained in it.
 
     Parameters
     ----------
     where
         File location to read. Assumes the solution in the file on the given
-        location is in VRPLIB solution format.
+        location is in ``VRPLIB`` solution format.
 
     Returns
     -------

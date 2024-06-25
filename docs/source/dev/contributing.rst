@@ -143,3 +143,13 @@ This greatly reduces the job of maintaining and releasing the software.
 .. note::
 
    Please use the "Pull request" template on GitHub when opening a pull request.
+
+
+Licensing
+---------
+
+PyVRP is licensed under the MIT license.
+All code, documentation and other files added to PyVRP by contributors is licensed under this license, unless another license is explicitly specified in the source file.
+For your contribution, please check that it can be included into PyVRP under the MIT license.
+If you did not write the code yourself, you must ensure that the existing license is compatible and include the license information in the contributed files, or obtain permission from the original author to relicense the contributed code.
+Contributors keep the copyright for code they wrote and submit for inclusion to PyVRP.

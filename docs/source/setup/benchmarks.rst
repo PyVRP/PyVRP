@@ -102,11 +102,11 @@ The reported values represent the average gaps to the best-known solutions (at t
      - PCVRPTW
      - MDVRPTW
      - VRPB
-   * - 11 February 2024
+   * - 20 May 2024
      - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note3]_
-     - 5.23%
-     - 10.86%
-     - 13.24%
+     - 4.42%
+     - 9.38%
+     - 10.72%
      -
      -
    * - 28 February 2023
@@ -152,7 +152,7 @@ The reported values represent the average gaps to the best-known solutions (at t
    The best-known solutions have been updated to address this issue.
 
 .. [#note3]
-   Results obtained using Google OR-Tools `v9.8.3296 <https://pypi.org/project/ortools/9.8.3296/>`_.
+   Results obtained using Google OR-Tools `v9.10.4067 <https://pypi.org/project/ortools/9.10.4067/>`_.
    The reported average gap is over only one seed, because there is no interface to set the seed.
    The code used to benchmark Google OR-tools can be found in `this issue <https://github.com/PyVRP/PyVRP/issues/453>`_.
 
