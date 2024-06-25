@@ -12,7 +12,6 @@
       "extensions": [
         "ms-python.python",
         "ms-vscode.cpptools",
-        "twxs.cmake",
         "benjamin-simmonds.pythoncpp-debug"
       ]
     }
