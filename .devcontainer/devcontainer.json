@@ -1,12 +1,9 @@
 {
   "name": "PyVRP devcontainer",
-  "image": "mcr.microsoft.com/devcontainers/cpp:1.0.9-jammy",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
-  "features": {},
-
-  "onCreateCommand": "yes | .devcontainer/setup.sh",
-  "postCreateCommand": "",
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -15,5 +12,8 @@
         "benjamin-simmonds.pythoncpp-debug"
       ]
     }
-  }
+  },
+  "onCreateCommand": ".devcontainer/setup.sh",
+  "postCreateCommand": "",
+  "features": {}
 }
