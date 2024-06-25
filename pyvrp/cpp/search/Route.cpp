@@ -14,8 +14,8 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       vehicleType_(data.vehicleType(vehicleType)),
       vehTypeIdx_(vehicleType),
       idx_(idx),
-      startDepot(vehicleType_.depot),
-      endDepot(vehicleType_.depot)
+      startDepot_(vehicleType_.startDepot),
+      endDepot_(vehicleType_.endDepot)
 {
     clear();
 }
@@ -73,18 +73,18 @@ void Route::clear()
     }
 
     nodes.clear();  // clear nodes and reinsert the depots.
-    nodes.push_back(&startDepot);
-    nodes.push_back(&endDepot);
+    nodes.push_back(&startDepot_);
+    nodes.push_back(&endDepot_);
 
-    startDepot.idx_ = 0;
-    startDepot.route_ = this;
+    startDepot_.idx_ = 0;
+    startDepot_.route_ = this;
 
-    endDepot.idx_ = 1;
-    endDepot.route_ = this;
+    endDepot_.idx_ = 1;
+    endDepot_.route_ = this;
 
     // Clear all existing statistics and reinsert depot statistics.
-    distAt = {DistanceSegment(vehicleType_.depot),
-              DistanceSegment(vehicleType_.depot)};
+    distAt = {DistanceSegment(vehicleType_.startDepot),
+              DistanceSegment(vehicleType_.endDepot)};
     distAfter = distAt;
     distBefore = distAt;
 
@@ -92,8 +92,8 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
-    DurationSegment depotDS(vehicleType_);
-    durAt = {depotDS, depotDS};
+    durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
+             DurationSegment(vehicleType_.endDepot, vehicleType_)};
     durAfter = durAt;
     durBefore = durAt;
 

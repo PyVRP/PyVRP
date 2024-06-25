@@ -87,7 +87,8 @@ class Depot:
 
 class VehicleType:
     num_available: int
-    depot: int
+    start_depot: int
+    end_depot: int
     capacity: int
     tw_early: int
     tw_late: int
@@ -102,7 +103,8 @@ class VehicleType:
         self,
         num_available: int = 1,
         capacity: int = 0,
-        depot: int = 0,
+        start_depot: int = 0,
+        end_depot: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
         max_duration: int = ...,
@@ -193,7 +195,8 @@ class Route:
     def prizes(self) -> int: ...
     def centroid(self) -> tuple[float, float]: ...
     def vehicle_type(self) -> int: ...
-    def depot(self) -> int: ...
+    def start_depot(self) -> int: ...
+    def end_depot(self) -> int: ...
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
