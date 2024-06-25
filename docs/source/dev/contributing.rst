@@ -99,7 +99,7 @@ Create a test Python file that calls some C++ code.
     Client(x=0, y=0)
 
 Set breakpoints in ``pyvrp/cpp/ProblemData.cpp`` within the ``Client`` constructor.
-Next, setup up your debugger configuration by creating a ``launch.json`` file in the ``.vscode`` directory with the following content:
+Next, set-up your debugger configuration by creating a ``launch.json`` file in the ``.vscode`` directory with the following content:
 
 .. code-block:: json
 
