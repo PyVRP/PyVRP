@@ -82,7 +82,7 @@ You should not have to touch this file often: all compilation is handled via the
 
 Debugging Python extensions
 ---------------------------
-This section explains how to perform cross-debugging for mixed Python and C/C++ code using the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug extension <https://github.com/benibenj/vscode-pythonCpp>`_.
+This section explains how to perform cross-debugging for mixed Python and C/C++ code using the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug <https://github.com/benibenj/vscode-pythonCpp>`_ extension.
 
 First, build PyVRP in debug mode:
 
@@ -98,8 +98,8 @@ Create a test Python file that calls some C++ code.
 
     Client(x=0, y=0)
 
-Set breakpoints in `ProblemData.cpp` within the `Client` constructor.
-Next, setup up your debugger configuration by creating a `launch.json` file in the `.vscode` directory with the following content:
+Set breakpoints in ``pyvrp/cpp/ProblemData.cpp`` within the ``Client`` constructor.
+Next, setup up your debugger configuration by creating a ``launch.json`` file in the ``.vscode`` directory with the following content:
 
 .. code-block:: json
 
@@ -117,8 +117,7 @@ Next, setup up your debugger configuration by creating a `launch.json` file in t
     }
 
 Start the debugger in Visual Studio Code and step through the code.
-The debugger should break at the set breakpoints in `ProblemData.cpp`.
-Ensure you have selected the Poetry-managed Python environment as your interpreter.
+The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp`.
 
 
 Committing changes
