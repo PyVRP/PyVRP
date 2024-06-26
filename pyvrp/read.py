@@ -78,9 +78,9 @@ def read(
             f" or one of {ROUND_FUNCS.keys()}."
         )
 
-    instance = _Instance(vrplib.read_instance(where), round_func)
-    parser = _Parser(instance)
-    return parser.data()
+    parser = _InstanceParser(vrplib.read_instance(where), round_func)
+    builder = _ProblemDataBuilder(parser)
+    return builder.data()
 
 
 def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
@@ -103,7 +103,7 @@ def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     return sol["routes"]  # type: ignore
 
 
-class _Instance:
+class _InstanceParser:
     """
     read() helper that parses VRPLIB data into meaningful parts for further
     processing.
@@ -262,13 +262,14 @@ class _Instance:
         return [group for group in raw_groups if len(group) > 1]
 
 
-class _Parser:
+class _ProblemDataBuilder:
     """
-    read() helper that parses an instance into a ``ProblemData`` object.
+    read() helper that builds ``ProblemData`` object from the instance
+    attributes of the given parser.
     """
 
-    def __init__(self, instance: _Instance):
-        self.instance = instance
+    def __init__(self, parser: _InstanceParser):
+        self.parser = parser
 
     def data(self) -> ProblemData:
         clients = self._clients()
@@ -289,8 +290,8 @@ class _Parser:
         )
 
     def _depots(self) -> list[Depot]:
-        num_depots = self.instance.num_depots
-        depot_idcs = self.instance.depot_idcs()
+        num_depots = self.parser.num_depots
+        depot_idcs = self.parser.depot_idcs()
 
         contiguous_lower_idcs = np.arange(num_depots)
         if num_depots == 0 or (depot_idcs != contiguous_lower_idcs).any():
@@ -300,28 +301,28 @@ class _Parser:
             """
             raise ValueError(msg)
 
-        coords = self.instance.coords()
+        coords = self.parser.coords()
         return [
             Depot(x=coords[idx][0], y=coords[idx][1])
             for idx in range(num_depots)
         ]
 
     def _clients(self) -> list[Client]:
-        groups = self.instance.mutually_exclusive_groups()
-        num_locs = self.instance.num_locations
+        groups = self.parser.mutually_exclusive_groups()
+        num_locs = self.parser.num_locations
 
         idx2group: list[Optional[int]] = [None for _ in range(num_locs)]
         for group, members in enumerate(groups):
             for client in members:
                 idx2group[client] = group
 
-        coords = self.instance.coords()
-        demands = self.instance.demands()
-        backhauls = self.instance.backhauls()
-        service_duration = self.instance.service_times()
-        time_windows = self.instance.time_windows()
-        release_times = self.instance.release_times()
-        prizes = self.instance.prizes()  # we interpret a zero-prize client as
+        coords = self.parser.coords()
+        demands = self.parser.demands()
+        backhauls = self.parser.backhauls()
+        service_duration = self.parser.service_times()
+        time_windows = self.parser.time_windows()
+        release_times = self.parser.release_times()
+        prizes = self.parser.prizes()  # we interpret a zero-prize client as
         required = np.isclose(prizes, 0)  # required in the benchmark instances
 
         return [
@@ -338,17 +339,17 @@ class _Parser:
                 required=required[idx] and idx2group[idx] is None,
                 group=idx2group[idx],
             )
-            for idx in range(self.instance.num_depots, num_locs)
+            for idx in range(self.parser.num_depots, num_locs)
         ]
 
     def _vehicle_types(self) -> list[VehicleType]:
-        num_vehicles = self.instance.num_vehicles
+        num_vehicles = self.parser.num_vehicles
         vehicles_data = (
-            self.instance.capacities(),
-            self.instance.allowed_clients(),
-            self.instance.vehicles_depots(),
-            self.instance.max_distances(),
-            self.instance.max_durations(),
+            self.parser.capacities(),
+            self.parser.allowed_clients(),
+            self.parser.vehicles_depots(),
+            self.parser.max_distances(),
+            self.parser.max_durations(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -365,7 +366,7 @@ class _Parser:
             type2idcs[veh_type].append(vehicle)
 
         client2profile = self._allowed2profile()
-        time_windows = self.instance.time_windows()
+        time_windows = self.parser.time_windows()
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
@@ -392,16 +393,16 @@ class _Parser:
         return vehicle_types
 
     def _distance_matrices(self) -> list[np.ndarray]:
-        distances = self.instance.edge_weight()
+        distances = self.parser.edge_weight()
 
-        if self.instance.type() == "VRPB":
+        if self.parser.type() == "VRPB":
             # In VRPB, linehauls must be served before backhauls. This can be
             # enforced by setting a high value for the distance/duration from
             # depot to backhaul (forcing linehaul to be served first) and a
             # large value from backhaul to linehaul (avoiding linehaul after
             # backhaul clients).
-            linehaul = self.instance.demands() > 0
-            backhaul = self.instance.backhauls() > 0
+            linehaul = self.parser.demands() > 0
+            backhaul = self.parser.backhauls() > 0
             distances[0, backhaul] = MAX_VALUE
             distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
@@ -410,8 +411,8 @@ class _Parser:
         dist_mats = [distances.copy() for _ in range(num_profiles)]
 
         for allowed_clients, type_idx in allowed2profile.items():
-            num_depots = self.instance.num_depots
-            num_locations = self.instance.num_locations
+            num_depots = self.parser.num_depots
+            num_locations = self.parser.num_locations
 
             # This profile is allowed to visit every depot and all clients in
             # the allowed clients section.
@@ -435,13 +436,13 @@ class _Parser:
         return dist_mats
 
     def _groups(self) -> list[ClientGroup]:
-        groups = self.instance.mutually_exclusive_groups()
+        groups = self.parser.mutually_exclusive_groups()
         return [ClientGroup(group) for group in groups]
 
     def _allowed2profile(self) -> dict[tuple[int, ...], int]:
         allowed_clients2profile_idx = {}
         profile_idx = count(0)
-        for clients in self.instance.allowed_clients():
+        for clients in self.parser.allowed_clients():
             if clients not in allowed_clients2profile_idx:
                 allowed_clients2profile_idx[clients] = next(profile_idx)
 
