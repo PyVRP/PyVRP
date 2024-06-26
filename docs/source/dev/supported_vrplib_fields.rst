@@ -25,7 +25,6 @@ PyVRP supports the following specifications:
 
    ``CAPACITY``
       Homogeneous capacity of all vehicles in the instance.
-      The number of vehicles is provided using the :term:`VEHICLES` specification.
       To specify heterogeneous capacities, see :term:`CAPACITY_SECTION`.
 
    ``DIMENSION``
@@ -69,7 +68,7 @@ PyVRP supports the following data sections:
 
    ``CAPACITY_SECTION``
       Maximum capacity for each vehicle, typically used in heterogeneous fleet instances.
-      If all vehicles have the same capacity, the `CAPACITY` specification can also be used instead.
+      Vehicle capacities are assumed to be unconstrained if this section is not present.
 
    ``DEMAND_SECTION``
    ``LINEHAUL_SECTION``
@@ -106,8 +105,8 @@ PyVRP supports the following data sections:
 
    ``VEHICLES_ALLOWED_CLIENTS_SECTION``
       Nested list specifying the client location indices that each vehicle is allowed to serve, with one sub-list for each vehicle.
-      This section is commonly used in site-dependent instances.
       Vehicles are allowed to visit all clients if this section is not provided.
+      This section is commonly used in site-dependent instances.
 
    ``VEHICLES_DEPOT_SECTION``
       Depot assignments for each vehicle, typically used in multi-depot instances.

@@ -129,8 +129,7 @@ def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
 
 class Instance:
     """
-    Helper class for VRPLIB instance data. It sets default values and applies
-    rounding function to the data when necessary.
+    Helper class for VRPLIB instance data.
 
     Parameters
     ----------
@@ -155,9 +154,7 @@ class Instance:
 
     @cached_property
     def num_locations(self) -> int:
-        return self._instance.get(
-            "dimension", self._instance["edge_weight"].shape[0]
-        )
+        return self._instance.get("dimension", self.edge_weight.shape[0])
 
     @cached_property
     def num_depots(self) -> int:
@@ -382,14 +379,14 @@ def _vehicle_types(instance: Instance) -> list[VehicleType]:
         instance.max_durations,
     )
 
-    if any(len(arr) != instance.num_vehicles for arr in vehicles_data):
+    if any(len(attr) != instance.num_vehicles for attr in vehicles_data):
         msg = """
         The number of elements in the vehicles data attributes should be equal
         to the number of vehicles in the problem.
         """
         raise ValueError(msg)
 
-    # VRPLIB instances present data for each available vehicle. We group
+    # VRPLIB instances includes data for each available vehicle. We group
     # vehicles by their attributes to create unique vehicle types.
     veh_type2idcs = defaultdict(list)
     for idx, veh_type in enumerate(zip(*vehicles_data)):
@@ -425,7 +422,7 @@ def _matrices(
     instance: Instance, vehicle_types: list[VehicleType]
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
-    Extracts the distance and duration matrices from VRPLIB data.
+    Extracts the distance and duration matrices from the VRPLIB instance.
     """
     distances = instance.edge_weight
 
@@ -439,15 +436,15 @@ def _matrices(
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-    # Create one distance matrix for each vehicle type.
+    # Create a unique distance matrix for each vehicle type.
     distance_matrices = [distances.copy() for _ in range(len(vehicle_types))]
 
     for type_idx, vehicle_type in enumerate(vehicle_types):
         # A bit hacky, but the vehicle type name tracks the actual vehicles
         # that make up this vehicle type. We parse this to get the allowed
         # clients for this vehicle type.
-        vehicle_idx = vehicle_type.name.split(",")[0]
-        allowed_clients = instance.allowed_clients[int(vehicle_idx)]
+        vehicle_idx = int(vehicle_type.name.split(",")[0])
+        allowed_clients = instance.allowed_clients[vehicle_idx]
         distance_matrix = distance_matrices[type_idx]
 
         for idx in range(instance.num_depots, instance.num_locations):
@@ -460,8 +457,8 @@ def _matrices(
 
     if any(dist.max() > MAX_VALUE for dist in distance_matrices):
         msg = """
-        The maximum distance or duration value is very large. This might
-        impact numerical stability. Consider rescaling your input data.
+        The maximum distance value is very large. This might impact numerical
+        stability. Consider rescaling your input data.
         """
         warn(msg, ScalingWarning)
 
