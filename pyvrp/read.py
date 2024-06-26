@@ -99,6 +99,15 @@ def read(
 
     instance = vrplib.read_instance(where)
 
+    # Set defaults for data that will be used everywhere.
+    if "dimension" not in instance:
+        instance["dimension"] = instance["edge_weight"].shape[0]
+
+    instance["num_depots"] = instance.get("depot", np.array([0])).size
+    instance["num_vehicles"] = instance.get(
+        "vehicles", instance["dimension"] - 1
+    )
+
     clients = _clients(instance, round_func)
     depots = _depots(instance, round_func)
     vehicle_types = _vehicle_types(instance, round_func)
@@ -141,10 +150,9 @@ def _depots(instance, round_func) -> list[Depot]:
     """
     Extracts the depot data from the VRPLIB instance.
     """
-    durations = round_func(instance["edge_weight"])
-    dimension: int = instance.get("dimension", durations.shape[0])
+    dimension = instance["dimension"]
+    num_depots = instance["num_depots"]
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-    num_depots = len(depot_idcs)
 
     contiguous_lower_idcs = np.arange(num_depots)
     if num_depots == 0 or (depot_idcs != contiguous_lower_idcs).any():
@@ -168,10 +176,8 @@ def _clients(instance, round_func) -> list[Client]:
     """
     Extracts the client data from the VRPLIB instance.
     """
-    durations = round_func(instance["edge_weight"])
-    dimension: int = instance.get("dimension", durations.shape[0])
-    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-    num_depots = len(depot_idcs)
+    dimension = instance["dimension"]
+    num_depots = instance["num_depots"]
 
     if "backhaul" in instance:
         backhauls: np.ndarray = round_func(instance["backhaul"])
@@ -259,11 +265,10 @@ def _vehicle_types(instance, round_func) -> list[VehicleType]:
     """
     Extracts the vehicle type data from the VRPLIB instance.
     """
-    durations = round_func(instance["edge_weight"])
-    dimension: int = instance.get("dimension", durations.shape[0])
+    dimension = instance["dimension"]
+    num_depots = instance["num_depots"]
+    num_vehicles = instance["num_vehicles"]
     depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-    num_depots = len(depot_idcs)
-    num_vehicles: int = instance.get("vehicles", dimension - 1)
 
     if isinstance(instance.get("capacity"), np.ndarray):
         capacities = round_func(instance["capacity"])
@@ -306,6 +311,14 @@ def _vehicle_types(instance, round_func) -> list[VehicleType]:
     else:
         vehicles_max_duration = np.full(num_vehicles, _INT_MAX)
 
+    if "time_window" in instance:
+        location_time_windows: np.ndarray = round_func(instance["time_window"])
+    else:
+        # No time window data. So the time window component is not relevant.
+        location_time_windows = np.empty((dimension, 2), dtype=np.int64)
+        location_time_windows[:, 0] = 0
+        location_time_windows[:, 1] = _INT_MAX
+
     vehicles_data = (
         capacities,
         vehicles_allowed_clients,
@@ -320,14 +333,8 @@ def _vehicle_types(instance, round_func) -> list[VehicleType]:
         """
         raise ValueError(msg)
 
-    if "time_window" in instance:
-        time_windows: np.ndarray = round_func(instance["time_window"])
-    else:
-        # No time window data. So the time window component is not relevant.
-        time_windows = np.empty((dimension, 2), dtype=np.int64)
-        time_windows[:, 0] = 0
-        time_windows[:, 1] = _INT_MAX
-
+    # VRPLIB instances present data for each avilable vehicle. We group
+    # vehicles by their attributes to create unique vehicle types.
     veh_type2idcs = defaultdict(list)
     for idx, veh_type in enumerate(zip(*vehicles_data)):
         veh_type2idcs[veh_type].append(idx)
@@ -344,8 +351,8 @@ def _vehicle_types(instance, round_func) -> list[VehicleType]:
             # The literature specifies depot time windows. We do not have depot
             # time windows but instead set those on the vehicles, generalising
             # the depot time windows.
-            tw_early=time_windows[depot_idx][0],
-            tw_late=time_windows[depot_idx][1],
+            tw_early=location_time_windows[depot_idx][0],
+            tw_late=location_time_windows[depot_idx][1],
             max_duration=max_duration,
             max_distance=max_distance,
             profile=type_idx,
@@ -365,10 +372,9 @@ def _matrices(instance, clients, vehicle_types, round_func):
     # VRPLIB instances typically do not have a duration data field, so we
     # assume duration == distance.
     durations = distances = round_func(instance["edge_weight"])
-    dimension: int = instance.get("dimension", durations.shape[0])
-    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-    num_depots = len(depot_idcs)
-    num_vehicles: int = instance.get("vehicles", dimension - 1)
+    dimension = instance["dimension"]
+    num_depots = instance["num_depots"]
+    num_vehicles = instance["num_vehicles"]
 
     if instance.get("type") == "VRPB":
         # In VRPB, linehauls must be served before backhauls. This can be
