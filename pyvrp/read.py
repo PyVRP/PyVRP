@@ -154,7 +154,7 @@ class Instance:
         self._round_func = round_func
 
     @cached_property
-    def dimension(self) -> int:
+    def num_locations(self) -> int:
         return self._instance.get(
             "dimension", self._instance["edge_weight"].shape[0]
         )
@@ -165,7 +165,7 @@ class Instance:
 
     @cached_property
     def num_vehicles(self) -> int:
-        return self._instance.get("vehicles", self.dimension - 1)
+        return self._instance.get("vehicles", self.num_locations - 1)
 
     @cached_property
     def type(self) -> str:
@@ -176,16 +176,20 @@ class Instance:
         return self._round_func(self._instance["edge_weight"])
 
     @cached_property
+    def depot_idcs(self) -> np.ndarray:
+        return self._instance.get("depot", np.array([0]))
+
+    @cached_property
     def backhauls(self) -> np.ndarray:
         if "backhaul" not in self._instance:
-            return np.zeros(self.dimension, dtype=np.int64)
+            return np.zeros(self.num_locations, dtype=np.int64)
 
         return self._round_func(self._instance["backhaul"])
 
     @cached_property
     def demands(self) -> np.ndarray:
         if "demand" not in self._instance and "linehaul" not in self._instance:
-            return np.zeros(self.dimension, dtype=np.int64)
+            return np.zeros(self.num_locations, dtype=np.int64)
 
         return self._round_func(
             self._instance.get("demand", self._instance.get("linehaul"))
@@ -194,21 +198,21 @@ class Instance:
     @cached_property
     def coords(self) -> np.ndarray:
         if "node_coord" not in self._instance:
-            return np.zeros((self.dimension, 2), dtype=np.int64)
+            return np.zeros((self.num_locations, 2), dtype=np.int64)
 
         return self._round_func(self._instance["node_coord"])
 
     @cached_property
     def service_times(self) -> np.ndarray:
         if "service_time" not in self._instance:
-            return np.zeros(self.dimension, dtype=np.int64)
+            return np.zeros(self.num_locations, dtype=np.int64)
 
         service_times = self._instance["service_time"]
 
         if isinstance(service_times, Number):
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
-            service_times = np.full(self.dimension, service_times)
+            service_times = np.full(self.num_locations, service_times)
             service_times[0] = 0
 
         return self._round_func(service_times)
@@ -216,7 +220,7 @@ class Instance:
     @cached_property
     def time_windows(self) -> np.ndarray:
         if "time_window" not in self._instance:
-            time_windows = np.empty((self.dimension, 2), dtype=np.int64)
+            time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
             time_windows[:, 0] = 0
             time_windows[:, 1] = _INT_MAX
             return time_windows
@@ -226,20 +230,16 @@ class Instance:
     @cached_property
     def release_times(self) -> np.ndarray:
         if "release_time" not in self._instance:
-            return np.zeros(self.dimension, dtype=np.int64)
+            return np.zeros(self.num_locations, dtype=np.int64)
 
         return self._round_func(self._instance["release_time"])
 
     @cached_property
     def prizes(self) -> np.ndarray:
         if "prize" not in self._instance:
-            return np.zeros(self.dimension, dtype=np.int64)
+            return np.zeros(self.num_locations, dtype=np.int64)
 
         return self._round_func(self._instance["prize"])
-
-    @cached_property
-    def depot_idcs(self) -> np.ndarray:
-        return self._instance.get("depot", np.array([0]))
 
     @cached_property
     def capacities(self) -> np.ndarray:
@@ -256,9 +256,9 @@ class Instance:
         return self._round_func(capacities)
 
     @cached_property
-    def vehicles_allowed_clients(self) -> list[tuple[int, ...]]:
+    def allowed_clients(self) -> list[tuple[int, ...]]:
         if "vehicles_allowed_clients" not in self._instance:
-            client_idcs = tuple(range(self.num_depots, self.dimension))
+            client_idcs = tuple(range(self.num_depots, self.num_locations))
             return [client_idcs for _ in range(self.num_vehicles)]
 
         return [
@@ -274,36 +274,32 @@ class Instance:
         return self._instance["vehicles_depot"] - 1  # zero-indexed
 
     @cached_property
-    def vehicles_max_distance(self) -> np.ndarray:
+    def max_distances(self) -> np.ndarray:
         if "vehicles_max_distance" not in self._instance:
             return np.full(self.num_vehicles, _INT_MAX)
 
-        vehicles_max_distance = self._instance["vehicles_max_distance"]
+        max_distances = self._instance["vehicles_max_distance"]
 
-        if isinstance(vehicles_max_distance, Number):
+        if isinstance(max_distances, Number):
             # Some instances describe a uniform max distance as a single
             # value that applies to all vehicles.
-            vehicles_max_distance = np.full(
-                self.num_vehicles, vehicles_max_distance
-            )
+            max_distances = np.full(self.num_vehicles, max_distances)
 
-        return self._round_func(vehicles_max_distance)
+        return self._round_func(max_distances)
 
     @cached_property
-    def vehicles_max_duration(self) -> np.ndarray:
+    def max_durations(self) -> np.ndarray:
         if "vehicles_max_duration" not in self._instance:
             return np.full(self.num_vehicles, _INT_MAX)
 
-        vehicles_max_duration = self._instance["vehicles_max_duration"]
+        max_durations = self._instance["vehicles_max_duration"]
 
-        if isinstance(vehicles_max_duration, Number):
+        if isinstance(max_durations, Number):
             # Some instances describe a uniform max duration as a single
             # value that applies to all vehicles.
-            vehicles_max_duration = np.full(
-                self.num_vehicles, vehicles_max_duration
-            )
+            max_durations = np.full(self.num_vehicles, max_durations)
 
-        return self._round_func(vehicles_max_duration)
+        return self._round_func(max_durations)
 
     @cached_property
     def mutually_exclusive_groups(self) -> list[list[int]]:
@@ -338,10 +334,9 @@ def _depots(instance: Instance) -> list[Depot]:
         """
         raise ValueError(msg)
 
-    coords = instance.coords
-
     return [
-        Depot(x=coords[idx][0], y=coords[idx][1]) for idx in range(num_depots)
+        Depot(x=instance.coords[idx][0], y=instance.coords[idx][1])
+        for idx in range(num_depots)
     ]
 
 
@@ -349,7 +344,9 @@ def _clients(instance: Instance) -> list[Client]:
     """
     Extracts the clients from the VRPLIB instance.
     """
-    idx2group: list[Optional[int]] = [None for _ in range(instance.dimension)]
+    idx2group: list[Optional[int]] = [
+        None for _ in range(instance.num_locations)
+    ]
     for group, members in enumerate(instance.mutually_exclusive_groups):
         for client in members:
             idx2group[client] = group
@@ -369,7 +366,7 @@ def _clients(instance: Instance) -> list[Client]:
             and idx2group[idx] is None,
             group=idx2group[idx],
         )
-        for idx in range(instance.num_depots, instance.dimension)
+        for idx in range(instance.num_depots, instance.num_locations)
     ]
 
 
@@ -379,10 +376,10 @@ def _vehicle_types(instance: Instance) -> list[VehicleType]:
     """
     vehicles_data = (
         instance.capacities,
-        instance.vehicles_allowed_clients,
+        instance.allowed_clients,
         instance.vehicles_depots,
-        instance.vehicles_max_distance,
-        instance.vehicles_max_duration,
+        instance.max_distances,
+        instance.max_durations,
     )
 
     if any(len(arr) != instance.num_vehicles for arr in vehicles_data):
@@ -450,10 +447,10 @@ def _matrices(
         # that make up this vehicle type. We parse this to get the allowed
         # clients for this vehicle type.
         vehicle_idx = vehicle_type.name.split(",")[0]
-        allowed_clients = instance.vehicles_allowed_clients[int(vehicle_idx)]
+        allowed_clients = instance.allowed_clients[int(vehicle_idx)]
         distance_matrix = distance_matrices[type_idx]
 
-        for idx in range(instance.num_depots, instance.dimension):
+        for idx in range(instance.num_depots, instance.num_locations):
             if idx not in allowed_clients:
                 # Set MAX_VALUE to and from disallowed clients, preventing
                 # this vehicle type from serving them.
