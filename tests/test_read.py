@@ -1,6 +1,7 @@
 from math import sqrt
 
 import numpy as np
+import pytest
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -8,14 +9,13 @@ from numpy.testing import (
     assert_raises,
     assert_warns,
 )
-from pytest import mark
 
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("where", "exception"),
     [
         ("data/UnknownEdgeWeightFmt.txt", ValueError),
@@ -26,6 +26,7 @@ from tests.helpers import read
         ("data/TimeWindowOpenLargerThanClose.txt", ValueError),
         ("data/EdgeWeightsNoExplicit.txt", ValueError),
         ("data/EdgeWeightsNotFullMatrix.txt", ValueError),
+        ("data/MissingVehicleData.txt", ValueError),
     ],
 )
 def test_raises_invalid_file(where: str, exception: Exception):
@@ -250,6 +251,7 @@ def test_multiple_depots():
 
     # First vehicle type should have two vehicles at the first depot.
     veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.profile, 0)
     assert_equal(veh_type1.start_depot, 0)
     assert_equal(veh_type1.end_depot, 0)
     assert_equal(veh_type1.num_available, 2)
@@ -260,6 +262,7 @@ def test_multiple_depots():
     # vehicle should have a tighter time window than that associated with the
     # first vehicle type.
     veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.profile, 0)
     assert_equal(veh_type2.start_depot, 1)
     assert_equal(veh_type2.end_depot, 1)
     assert_equal(veh_type2.num_available, 1)
@@ -302,7 +305,7 @@ def test_mdvrptw_instance():
         # Each depot has ten vehicles, and they are nicely grouped (so the
         # first ten are assigned to the first depot, the second ten to the
         # second depot, etc.).
-        expected_name = ",".join(str(10 * idx + veh + 1) for veh in range(10))
+        expected_name = ",".join(str(10 * idx + veh) for veh in range(10))
         assert_equal(vehicle_type.name, expected_name)
 
     # We haven't seen many instances with negative coordinates, but this
@@ -423,3 +426,77 @@ def test_reading_mutually_exclusive_group():
         client_data = data.location(client)  # type: ignore
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
+
+
+def test_reading_allowed_clients():
+    """
+    Tests that read() correctly parses a small instance with allowed clients
+    for each vehicle.
+    """
+    data = read("data/OkSmallAllowedClients.txt")
+    assert_equal(data.num_vehicle_types, 2)
+
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.capacity, 10)
+    assert_equal(veh_type1.num_available, 2)
+    assert_equal(veh_type1.profile, 0)
+
+    distance_matrix = data.distance_matrix(veh_type1.profile)
+    duration_matrix = data.duration_matrix(veh_type1.profile)
+
+    # First vehicle type has no vehicle-client restrictions.
+    assert_(np.all(distance_matrix != MAX_VALUE))
+    assert_(np.all(duration_matrix != MAX_VALUE))
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.capacity, 10)
+    assert_equal(veh_type2.num_available, 1)
+    assert_equal(veh_type2.profile, 1)
+
+    distance_matrix = data.distance_matrix(veh_type2.profile)
+    duration_matrix = data.duration_matrix(veh_type2.profile)
+
+    # Second vehicle type is not allowed to serve client idx 4.
+    assert_equal(distance_matrix[:3, 4], MAX_VALUE)
+    assert_equal(distance_matrix[4, :3], MAX_VALUE)
+    assert_equal(duration_matrix[:3, 4], MAX_VALUE)
+    assert_equal(duration_matrix[4, :3], MAX_VALUE)
+
+
+def test_sdvrptw_instance():
+    """
+    Tests that reading an SDVRPTW instance happens correctly, particularly the
+    heterogeneous vehicles data sections.
+    """
+    data = read("data/PR01.vrp")
+
+    # One routing profile per unique client group.
+    assert_equal(data.num_profiles, 4)
+    assert_equal(len(data.distance_matrices()), 4)
+    assert_equal(len(data.duration_matrices()), 4)
+
+    # Each vehicle type has a different capacity. We only check the first two.
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 2)
+    assert_equal(veh_type1.capacity, 100)
+    assert_equal(veh_type1.max_duration, 500)
+    assert_equal(veh_type1.profile, 0)
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 2)
+    assert_equal(veh_type2.capacity, 150)
+    assert_equal(veh_type2.max_duration, 500)
+    assert_equal(veh_type2.profile, 1)
+
+    # The first vehicle type cannot serve clients 38-48. Let's check that the
+    # distance and duration matrices reflect this.
+    distance_matrix = data.distance_matrix(veh_type1.profile)
+    duration_matrix = data.duration_matrix(veh_type1.profile)
+
+    for client in range(38, 48):
+        # This avoids checking diagonals.
+        idcs = [idx for idx in range(data.num_locations) if idx != client]
+        assert_equal(distance_matrix[idcs, client], MAX_VALUE)
+        assert_equal(distance_matrix[client, idcs], MAX_VALUE)
+        assert_equal(duration_matrix[idcs, client], MAX_VALUE)
+        assert_equal(duration_matrix[client, idcs], MAX_VALUE)
