@@ -115,9 +115,7 @@ PyVRP supports the following data sections:
    ``VEHICLES_MAX_DISTANCE_SECTION``
       Maximum route distance for each vehicle.
       Route distances are assumed to be unconstrained if this section is not present.
-      If all vehicles have the same maximum route distance, the `VEHICLES_MAX_DISTANCE` specification can also be used instead.
 
    ``VEHICLES_MAX_DURATION_SECTION``
       Maximum route duration for each vehicle.
       Route durations are assumed to be unconstrained if this section is not present.
-      If all vehicles have the same maximum route duration, the `VEHICLES_MAX_DURATION` specification can also be used instead.
