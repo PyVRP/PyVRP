@@ -122,6 +122,10 @@ class _InstanceParser:
         return self.instance.get("depot", np.array([0])).size
 
     @property
+    def num_clients(self) -> int:
+        return self.num_locations - self.num_depots
+
+    @property
     def num_vehicles(self) -> int:
         return self.instance.get("vehicles", self.num_locations - 1)
 
@@ -411,14 +415,24 @@ class _ProblemDataBuilder:
         dist_mats = [distances.copy() for _ in range(num_profiles)]
 
         for allowed_clients, type_idx in allowed2profile.items():
+            if len(allowed_clients) == self.parser.num_clients:
+                # True if this feature is unused, and the distance matrix for
+                # this profile does not have to be modified.
+                continue
+
             num_depots = self.parser.num_depots
             num_locations = self.parser.num_locations
 
             # This profile is allowed to visit every depot and all clients in
-            # the allowed clients section.
+            # its allowed clients section.
             allowed = np.zeros((num_locations,), dtype=bool)
             allowed[:num_depots] = True
             allowed[list(allowed_clients)] = True
+
+            # Some dtype trickery to ensure the MAX_VALUE assignment below does
+            # not overflow.
+            dtype = np.promote_types(dist_mats[type_idx].dtype, np.int64)
+            dist_mats[type_idx] = dist_mats[type_idx].astype(dtype)
 
             # Set MAX_VALUE to and from disallowed clients, preventing this
             # vehicle type from serving them.
