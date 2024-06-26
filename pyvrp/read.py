@@ -100,9 +100,9 @@ def read(
     instance = vrplib.read_instance(where)
 
     # Set defaults for data that will be used everywhere.
-    if "dimension" not in instance:
-        instance["dimension"] = instance["edge_weight"].shape[0]
-
+    instance["dimension"] = instance.get(
+        "dimension", instance["edge_weight"].shape[0]
+    )
     instance["num_depots"] = instance.get("depot", np.array([0])).size
     instance["num_vehicles"] = instance.get(
         "vehicles", instance["dimension"] - 1
@@ -112,7 +112,7 @@ def read(
     depots = _depots(instance, round_func)
     vehicle_types = _vehicle_types(instance, round_func)
     distance_matrices, duration_matrices = _matrices(
-        instance, clients, vehicle_types, round_func
+        instance, round_func, clients, vehicle_types
     )
     groups = _groups(instance)
 
@@ -146,7 +146,7 @@ def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     return sol["routes"]  # type: ignore
 
 
-def _depots(instance, round_func) -> list[Depot]:
+def _depots(instance: dict, round_func: _RoundingFunc) -> list[Depot]:
     """
     Extracts the depot data from the VRPLIB instance.
     """
@@ -172,7 +172,7 @@ def _depots(instance, round_func) -> list[Depot]:
     ]
 
 
-def _clients(instance, round_func) -> list[Client]:
+def _clients(instance: dict, round_func: _RoundingFunc) -> list[Client]:
     """
     Extracts the client data from the VRPLIB instance.
     """
@@ -261,7 +261,9 @@ def _clients(instance, round_func) -> list[Client]:
     ]
 
 
-def _vehicle_types(instance, round_func) -> list[VehicleType]:
+def _vehicle_types(
+    instance: dict, round_func: _RoundingFunc
+) -> list[VehicleType]:
     """
     Extracts the vehicle type data from the VRPLIB instance.
     """
@@ -365,9 +367,15 @@ def _vehicle_types(instance, round_func) -> list[VehicleType]:
     return vehicle_types
 
 
-def _matrices(instance, clients, vehicle_types, round_func):
+def _matrices(
+    instance: dict,
+    round_func: _RoundingFunc,
+    clients: list[Client],
+    vehicle_types: list[VehicleType],
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Extracts the distance and duration matrices, one per vehicle type.
+    Extracts the distance and duration matrices from VRPLIB data.
+    One distance and duration matrix is crated per vehicle type.
     """
     # VRPLIB instances typically do not have a duration data field, so we
     # assume duration == distance.
@@ -439,7 +447,7 @@ def _matrices(instance, clients, vehicle_types, round_func):
     return distance_matrices, duration_matrices
 
 
-def _groups(instance) -> list[ClientGroup]:
+def _groups(instance: dict) -> list[ClientGroup]:
     """
     Extracts the mutually exclusive groups from the VRPLIB instance.
     """
