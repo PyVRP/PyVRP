@@ -325,7 +325,7 @@ class Instance:
 
 def _depots(instance: Instance) -> list[Depot]:
     """
-    Extracts the depot data from the VRPLIB instance.
+    Extracts the depots from the VRPLIB instance.
     """
     num_depots = instance.num_depots
     depot_idcs = instance.depot_idcs
@@ -347,7 +347,7 @@ def _depots(instance: Instance) -> list[Depot]:
 
 def _clients(instance: Instance) -> list[Client]:
     """
-    Extracts the client data from the VRPLIB instance.
+    Extracts the clients from the VRPLIB instance.
     """
     idx2group: list[Optional[int]] = [None for _ in range(instance.dimension)]
     for group, members in enumerate(instance.mutually_exclusive_groups):
@@ -375,7 +375,7 @@ def _clients(instance: Instance) -> list[Client]:
 
 def _vehicle_types(instance: Instance) -> list[VehicleType]:
     """
-    Extracts the vehicle type data from the VRPLIB instance.
+    Extracts the vehicle types from the VRPLIB instance.
     """
     vehicles_data = (
         instance.capacities,
@@ -392,7 +392,7 @@ def _vehicle_types(instance: Instance) -> list[VehicleType]:
         """
         raise ValueError(msg)
 
-    # VRPLIB instances present data for each avilable vehicle. We group
+    # VRPLIB instances present data for each available vehicle. We group
     # vehicles by their attributes to create unique vehicle types.
     veh_type2idcs = defaultdict(list)
     for idx, veh_type in enumerate(zip(*vehicles_data)):
@@ -429,7 +429,6 @@ def _matrices(
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     Extracts the distance and duration matrices from VRPLIB data.
-    One distance and duration matrix is created per vehicle type.
     """
     distances = instance.edge_weight
 
@@ -443,16 +442,15 @@ def _matrices(
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-    vehicles_allowed_clients = instance.vehicles_allowed_clients
-    num_veh_types = len(vehicle_types)
-    distance_matrices = [distances.copy() for _ in range(num_veh_types)]
+    # Create one distance matrix for each vehicle type.
+    distance_matrices = [distances.copy() for _ in range(len(vehicle_types))]
 
     for type_idx, vehicle_type in enumerate(vehicle_types):
         # A bit hacky, but the vehicle type name tracks the actual vehicles
         # that make up this vehicle type. We parse this to get the allowed
         # clients for this vehicle type.
         vehicle_idx = vehicle_type.name.split(",")[0]
-        allowed_clients = vehicles_allowed_clients[int(vehicle_idx)]
+        allowed_clients = instance.vehicles_allowed_clients[int(vehicle_idx)]
         distance_matrix = distance_matrices[type_idx]
 
         for idx in range(instance.num_depots, instance.dimension):
