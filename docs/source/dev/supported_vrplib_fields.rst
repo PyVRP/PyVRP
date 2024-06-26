@@ -39,7 +39,7 @@ PyVRP supports the following specifications:
       Specifies how the edge weights (distances and durations) are given.
 
    ``SERVICE_TIME``
-      Service time value for all clients.
+      Service time for all clients.
       To specify heterogeneous client service times, see :term:`SERVICE_TIME_SECTION`.
 
    ``VEHICLES``
@@ -47,11 +47,11 @@ PyVRP supports the following specifications:
       The number of vehicles defaults to the number of clients in the instance when this specification is not provided: PyVRP assumes an unlimited fleet in this case.
 
    ``VEHICLES_MAX_DISTANCE``
-      Maximum route distance value for all vehicles.
+      Maximum route distance for all vehicles.
       To specify heterogeneous maximum route distances, see :term:`VEHICLES_MAX_DISTANCE_SECTION`.
 
    ``VEHICLES_MAX_DURATION``
-      Maximum route duration value for all vehicles.
+      Maximum route duration for all vehicles.
       To specify heterogeneous maximum route durations, see :term:`VEHICLES_MAX_DURATION_SECTION`.
 
 Data sections
