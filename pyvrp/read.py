@@ -264,7 +264,7 @@ class _InstanceParser:
 
 class _ProblemDataBuilder:
     """
-    read() helper that builds ``ProblemData`` object from the instance
+    read() helper that builds a ``ProblemData`` object from the instance
     attributes of the given parser.
     """
 
