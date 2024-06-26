@@ -1,7 +1,7 @@
 The VRPLIB format
 =================
 
-PyVRP supports reading benchmark instances in the VRPLIB format through the `VRPLIB <https://github.com/leonlan/VRPLIB>`_ package.
+PyVRP supports reading benchmark instances in the VRPLIB format through the `VRPLIB <https://github.com/PyVRP/VRPLIB>`_ package.
 Although generally used, this format is not all that well standardised, so it merits some description what PyVRP actually supports.
 In addition to standard specifications and data sections, PyVRP uses several data sections that are not commonly found in (other) benchmark instances.
 On this page, we explain all specifications and data sections that PyVRP understands.
@@ -67,7 +67,7 @@ PyVRP supports the following data sections:
       This is the amount picked up at the client and transported back to the depot.
 
    ``CAPACITY_SECTION``
-      Maximum capacity for each vehicle, typically used in heterogeneous fleet instances.
+      Capacity for each vehicle, typically used in heterogeneous fleet instances.
       Vehicle capacities are assumed to be unconstrained if this section is not present.
 
    ``DEMAND_SECTION``
@@ -104,8 +104,8 @@ PyVRP supports the following data sections:
       Array of :math:`[e, l]` time window data, for each location.
 
    ``VEHICLES_ALLOWED_CLIENTS_SECTION``
-      Nested list specifying the client location indices that each vehicle is allowed to serve, with one sub-list for each vehicle.
-      Vehicles are allowed to visit all clients if this section is not provided.
+      Lists specifying the client locations that each vehicle is allowed to service, one list for each vehicle.
+      Each vehicle is allowed to visit each client if this section is not provided.
       This section is commonly used in site-dependent instances.
 
    ``VEHICLES_DEPOT_SECTION``

@@ -1,23 +1,21 @@
 from math import sqrt
 
 import numpy as np
+import pytest
 from numpy.testing import (
     assert_,
     assert_allclose,
-    assert_array_equal,
     assert_equal,
     assert_raises,
     assert_warns,
 )
-from pytest import mark
 
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
-from pyvrp.read import _INT_MAX, Instance
 from tests.helpers import read
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("where", "exception"),
     [
         ("data/UnknownEdgeWeightFmt.txt", ValueError),
@@ -225,87 +223,6 @@ def test_round_func_exact():
     assert_equal(distances[1, 0], expected_dist)
 
 
-@mark.parametrize(
-    "data, attribute, expected",
-    [
-        ({"dimension": 2}, "num_locations", 2),
-        ({"depot": np.array([0])}, "num_depots", 1),
-        ({"vehicles": 1}, "num_vehicles", 1),
-        ({"type": "CVRP"}, "type", "CVRP"),
-        (
-            {"edge_weight": np.ones((2, 2))},
-            "edge_weight",
-            10 * np.ones((2, 2)),
-        ),
-        ({"depot": np.array([0])}, "depot_idcs", np.array([0])),
-        ({"backhaul": np.array([1])}, "backhauls", np.array([10])),
-        ({"linehaul": np.array([1])}, "demands", np.array([10])),
-        ({"demand": np.array([1])}, "demands", np.array([10])),
-        ({"node_coord": np.array([[1, 2]])}, "coords", np.array([[10, 20]])),
-        ({"service_time": 1}, "service_times", np.array([0, 10])),
-        ({"service_time": np.array([1])}, "service_times", np.array([10])),
-        ({"time_window": np.array([[1, 2]])}, "time_windows", [[10, 20]]),
-        ({"release_time": np.array([1])}, "release_times", np.array([10])),
-        ({"prize": np.array([1])}, "prizes", np.array([10])),
-        ({"capacity": 1}, "capacities", np.array([10])),
-        ({"capacity": np.array([1])}, "capacities", np.array([10])),
-        ({"vehicles_allowed_clients": [[2]]}, "allowed_clients", [[1]]),
-        ({"vehicles_depots": np.array([1])}, "vehicles_depots", np.array([0])),
-        ({"vehicles_max_distance": 1}, "max_distances", np.array([10])),
-        ({"vehicles_max_distance": np.array([1])}, "max_distances", [10]),
-        ({"vehicles_max_duration": 1}, "max_durations", np.array([10])),
-        ({"vehicles_max_duration": np.array([1])}, "max_durations", [10]),
-        (
-            {"mutually_exclusive_group": [1, 1]},
-            "mutually_exclusive_groups",
-            [[0, 1]],
-        ),
-    ],
-)
-def test_instance_attributes_and_rounding(data, attribute, expected):
-    """
-    Tests that Instance attributes return the correct values with rounding,
-    if applicable.
-    """
-    # VRPLIB instance needs to have an edge weight matrix.
-    instance = Instance({"edge_weight": np.ones((2, 2))} | data, "dimacs")
-
-    assert_equal(getattr(instance, attribute), expected)
-
-
-@mark.parametrize(
-    "attribute, expected",
-    [
-        ("num_locations", 2),
-        ("num_depots", 1),
-        ("num_vehicles", 1),
-        ("type", ""),
-        ("depot_idcs", np.array([0])),
-        ("backhauls", np.array([0, 0])),
-        ("demands", np.array([0, 0])),
-        ("coords", np.array([[0, 0], [0, 0]])),
-        ("service_times", np.array([0, 0])),
-        ("time_windows", np.array([[0, _INT_MAX], [0, _INT_MAX]])),
-        ("release_times", np.array([0, 0])),
-        ("prizes", np.array([0, 0])),
-        ("capacities", np.array([_INT_MAX])),
-        ("allowed_clients", [(1,)]),
-        ("vehicles_depots", np.array([0])),
-        ("max_distances", np.array([_INT_MAX])),
-        ("max_durations", np.array([_INT_MAX])),
-        ("mutually_exclusive_groups", []),
-    ],
-)
-def test_instance_attributes_default_values(attribute, expected):
-    """
-    Tests that the instance attributes return the correct default values.
-    """
-    # VRPLIB instance needs to have an edge weight matrix.
-    instance = Instance({"edge_weight": np.ones((2, 2))}, round_func="none")
-
-    assert_equal(getattr(instance, attribute), expected)
-
-
 def test_service_time_specification():
     """
     Tests that specifying the service time as a specification (key-value pair)
@@ -334,6 +251,7 @@ def test_multiple_depots():
 
     # First vehicle type should have two vehicles at the first depot.
     veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.profile, 0)
     assert_equal(veh_type1.start_depot, 0)
     assert_equal(veh_type1.end_depot, 0)
     assert_equal(veh_type1.num_available, 2)
@@ -344,6 +262,7 @@ def test_multiple_depots():
     # vehicle should have a tighter time window than that associated with the
     # first vehicle type.
     veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.profile, 0)
     assert_equal(veh_type2.start_depot, 1)
     assert_equal(veh_type2.end_depot, 1)
     assert_equal(veh_type2.num_available, 1)
@@ -538,10 +457,10 @@ def test_reading_allowed_clients():
     duration_matrix = data.duration_matrix(veh_type2.profile)
 
     # Second vehicle type is not allowed to serve client idx 4.
-    assert_array_equal(distance_matrix[:3, 4], MAX_VALUE)
-    assert_array_equal(distance_matrix[4, :3], MAX_VALUE)
-    assert_array_equal(duration_matrix[:3, 4], MAX_VALUE)
-    assert_array_equal(duration_matrix[4, :3], MAX_VALUE)
+    assert_equal(distance_matrix[:3, 4], MAX_VALUE)
+    assert_equal(distance_matrix[4, :3], MAX_VALUE)
+    assert_equal(duration_matrix[:3, 4], MAX_VALUE)
+    assert_equal(duration_matrix[4, :3], MAX_VALUE)
 
 
 def test_sdvrptw_instance():
@@ -551,8 +470,8 @@ def test_sdvrptw_instance():
     """
     data = read("data/PR01.vrp")
 
-    # One routing profile per vehicle type.
-    assert_equal(data.num_vehicle_types, 4)
+    # One routing profile per unique client group.
+    assert_equal(data.num_profiles, 4)
     assert_equal(len(data.distance_matrices()), 4)
     assert_equal(len(data.duration_matrices()), 4)
 
@@ -577,7 +496,7 @@ def test_sdvrptw_instance():
     for client in range(38, 48):
         # This avoids checking diagonals.
         idcs = [idx for idx in range(data.num_locations) if idx != client]
-        assert_array_equal(distance_matrix[idcs, client], MAX_VALUE)
-        assert_array_equal(distance_matrix[client, idcs], MAX_VALUE)
-        assert_array_equal(duration_matrix[idcs, client], MAX_VALUE)
-        assert_array_equal(duration_matrix[client, idcs], MAX_VALUE)
+        assert_equal(distance_matrix[idcs, client], MAX_VALUE)
+        assert_equal(distance_matrix[client, idcs], MAX_VALUE)
+        assert_equal(duration_matrix[idcs, client], MAX_VALUE)
+        assert_equal(duration_matrix[client, idcs], MAX_VALUE)
