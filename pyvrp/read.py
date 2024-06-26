@@ -1,7 +1,8 @@
 import pathlib
 from collections import defaultdict
+from functools import cached_property
 from numbers import Number
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -88,32 +89,12 @@ def read(
     ProblemData
         Data instance constructed from the read data.
     """
-    if (key := str(round_func)) in ROUND_FUNCS:
-        round_func = ROUND_FUNCS[key]
+    instance = Instance(vrplib.read_instance(where), round_func)
 
-    if not callable(round_func):
-        raise TypeError(
-            f"round_func = {round_func} is not understood. Can be a function,"
-            f" or one of {ROUND_FUNCS.keys()}."
-        )
-
-    instance = vrplib.read_instance(where)
-
-    # Set defaults for data that will be used everywhere.
-    instance["dimension"] = instance.get(
-        "dimension", instance["edge_weight"].shape[0]
-    )
-    instance["num_depots"] = instance.get("depot", np.array([0])).size
-    instance["num_vehicles"] = instance.get(
-        "vehicles", instance["dimension"] - 1
-    )
-
-    clients = _clients(instance, round_func)
-    depots = _depots(instance, round_func)
-    vehicle_types = _vehicle_types(instance, round_func)
-    distance_matrices, duration_matrices = _matrices(
-        instance, round_func, clients, vehicle_types
-    )
+    clients = _clients(instance)
+    depots = _depots(instance)
+    vehicle_types = _vehicle_types(instance)
+    distance_matrices, duration_matrices = _matrices(instance, vehicle_types)
     groups = _groups(instance)
 
     return ProblemData(
@@ -146,85 +127,190 @@ def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
     return sol["routes"]  # type: ignore
 
 
-def _depots(instance: dict, round_func: _RoundingFunc) -> list[Depot]:
+class Instance:
     """
-    Extracts the depot data from the VRPLIB instance.
+    Helper class for VRPLIB instance data. It sets default values and applies
+    rounding function to the data when necessary.
+
+    Parameters
+    ----------
+    instance
+        The original VRPLIB instance data.
+    round_func
+        The rounding function to apply to the data.
     """
-    dimension = instance["dimension"]
-    num_depots = instance["num_depots"]
-    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
 
-    contiguous_lower_idcs = np.arange(num_depots)
-    if num_depots == 0 or (depot_idcs != contiguous_lower_idcs).any():
-        msg = """
-        Source file should contain at least one depot in the contiguous lower
-        indices, starting from 1.
-        """
-        raise ValueError(msg)
+    def __init__(self, instance: dict, round_func: Union[str, _RoundingFunc]):
+        if (key := str(round_func)) in ROUND_FUNCS:
+            round_func = ROUND_FUNCS[key]
 
-    if "node_coord" in instance:
-        coords: np.ndarray = round_func(instance["node_coord"])
-    else:
-        coords = np.zeros((dimension, 2), dtype=np.int64)
+        if not callable(round_func):
+            raise TypeError(
+                f"round_func = {round_func} is not understood. Can be a"
+                f" function, or one of {ROUND_FUNCS.keys()}."
+            )
 
-    return [
-        Depot(x=coords[idx][0], y=coords[idx][1]) for idx in range(num_depots)
-    ]
+        self._instance = instance
+        self._round_func = round_func
 
+    @cached_property
+    def dimension(self) -> int:
+        return self._instance.get(
+            "dimension", self._instance["edge_weight"].shape[0]
+        )
 
-def _clients(instance: dict, round_func: _RoundingFunc) -> list[Client]:
-    """
-    Extracts the client data from the VRPLIB instance.
-    """
-    dimension = instance["dimension"]
-    num_depots = instance["num_depots"]
+    @cached_property
+    def num_depots(self) -> int:
+        return self._instance.get("depot", np.array([0])).size
 
-    if "backhaul" in instance:
-        backhauls: np.ndarray = round_func(instance["backhaul"])
-    else:
-        backhauls = np.zeros(dimension, dtype=np.int64)
+    @cached_property
+    def num_vehicles(self) -> int:
+        return self._instance.get("vehicles", self.dimension - 1)
 
-    if "demand" in instance or "linehaul" in instance:
-        demands: np.ndarray = instance.get("demand", instance.get("linehaul"))
-        demands = round_func(demands)
-    else:
-        demands = np.zeros(dimension, dtype=np.int64)
+    @cached_property
+    def type(self) -> str:
+        return self._instance.get("type", "")
 
-    if "node_coord" in instance:
-        coords: np.ndarray = round_func(instance["node_coord"])
-    else:
-        coords = np.zeros((dimension, 2), dtype=np.int64)
+    @cached_property
+    def edge_weight(self) -> np.ndarray:
+        return self._round_func(self._instance["edge_weight"])
 
-    if "service_time" in instance:
-        if isinstance(instance["service_time"], Number):
+    @cached_property
+    def backhauls(self) -> np.ndarray:
+        if "backhaul" not in self._instance:
+            return np.zeros(self.dimension, dtype=np.int64)
+
+        return self._round_func(self._instance["backhaul"])
+
+    @cached_property
+    def demands(self) -> np.ndarray:
+        if "demand" not in self._instance and "linehaul" not in self._instance:
+            return np.zeros(self.dimension, dtype=np.int64)
+
+        return self._round_func(
+            self._instance.get("demand", self._instance.get("linehaul"))
+        )
+
+    @cached_property
+    def coords(self) -> np.ndarray:
+        if "node_coord" not in self._instance:
+            return np.zeros((self.dimension, 2), dtype=np.int64)
+
+        return self._round_func(self._instance["node_coord"])
+
+    @cached_property
+    def service_times(self) -> np.ndarray:
+        if "service_time" not in self._instance:
+            return np.zeros(self.dimension, dtype=np.int64)
+
+        service_times = self._instance["service_time"]
+
+        if isinstance(service_times, Number):
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
-            service_times = np.full(dimension, instance["service_time"])
+            service_times = np.full(self.dimension, service_times)
             service_times[0] = 0
-            service_times = round_func(service_times)
-        else:
-            service_times = round_func(instance["service_time"])
-    else:
-        service_times = np.zeros(dimension, dtype=np.int64)
 
-    if "time_window" in instance:
-        time_windows: np.ndarray = round_func(instance["time_window"])
-    else:
-        # No time window data. So the time window component is not relevant.
-        time_windows = np.empty((dimension, 2), dtype=np.int64)
-        time_windows[:, 0] = 0
-        time_windows[:, 1] = _INT_MAX
+        return self._round_func(service_times)
 
-    if "release_time" in instance:
-        release_times: np.ndarray = round_func(instance["release_time"])
-    else:
-        release_times = np.zeros(dimension, dtype=np.int64)
+    @cached_property
+    def time_windows(self) -> np.ndarray:
+        if "time_window" not in self._instance:
+            time_windows = np.empty((self.dimension, 2), dtype=np.int64)
+            time_windows[:, 0] = 0
+            time_windows[:, 1] = _INT_MAX
+            return time_windows
 
-    default_prizes = np.zeros(dimension, dtype=np.int64)
-    prizes = round_func(instance.get("prize", default_prizes))
+        return self._round_func(self._instance["time_window"])
 
-    if "mutually_exclusive_group" in instance:
-        group_data = instance["mutually_exclusive_group"]
+    @cached_property
+    def release_times(self) -> np.ndarray:
+        if "release_time" not in self._instance:
+            return np.zeros(self.dimension, dtype=np.int64)
+
+        return self._round_func(self._instance["release_time"])
+
+    @cached_property
+    def prizes(self) -> np.ndarray:
+        if "prize" not in self._instance:
+            return np.zeros(self.dimension, dtype=np.int64)
+
+        return self._round_func(self._instance["prize"])
+
+    @cached_property
+    def depot_idcs(self) -> np.ndarray:
+        return self._instance.get("depot", np.array([0]))
+
+    @cached_property
+    def capacities(self) -> np.ndarray:
+        if "capacity" not in self._instance:
+            return np.full(self.num_vehicles, _INT_MAX)
+
+        capacities = self._instance["capacity"]
+
+        if isinstance(capacities, Number):
+            # Some instances describe a uniform capacity as a single value
+            # that applies to all vehicles.
+            capacities = np.full(self.num_vehicles, capacities)
+
+        return self._round_func(capacities)
+
+    @cached_property
+    def vehicles_allowed_clients(self) -> list[tuple[int, ...]]:
+        if "vehicles_allowed_clients" not in self._instance:
+            client_idcs = tuple(range(self.num_depots, self.dimension))
+            return [client_idcs for _ in range(self.num_vehicles)]
+
+        return [
+            tuple(idx - 1 for idx in clients)
+            for clients in self._instance["vehicles_allowed_clients"]
+        ]
+
+    @cached_property
+    def vehicles_depots(self) -> np.ndarray:
+        if "vehicles_depot" not in self._instance:
+            return np.full(self.num_vehicles, self.depot_idcs[0])
+
+        return self._instance["vehicles_depot"] - 1  # zero-indexed
+
+    @cached_property
+    def vehicles_max_distance(self) -> np.ndarray:
+        if "vehicles_max_distance" not in self._instance:
+            return np.full(self.num_vehicles, _INT_MAX)
+
+        vehicles_max_distance = self._instance["vehicles_max_distance"]
+
+        if isinstance(vehicles_max_distance, Number):
+            # Some instances describe a uniform max distance as a single
+            # value that applies to all vehicles.
+            vehicles_max_distance = np.full(
+                self.num_vehicles, vehicles_max_distance
+            )
+
+        return self._round_func(vehicles_max_distance)
+
+    @cached_property
+    def vehicles_max_duration(self) -> np.ndarray:
+        if "vehicles_max_duration" not in self._instance:
+            return np.full(self.num_vehicles, _INT_MAX)
+
+        vehicles_max_duration = self._instance["vehicles_max_duration"]
+
+        if isinstance(vehicles_max_duration, Number):
+            # Some instances describe a uniform max duration as a single
+            # value that applies to all vehicles.
+            vehicles_max_duration = np.full(
+                self.num_vehicles, vehicles_max_duration
+            )
+
+        return self._round_func(vehicles_max_duration)
+
+    @cached_property
+    def mutually_exclusive_groups(self) -> list[list[int]]:
+        if "mutually_exclusive_group" not in self._instance:
+            return []
+
+        group_data = self._instance["mutually_exclusive_group"]
 
         # This assumes groups are numeric, and are numbered {1, 2, ...}.
         raw_groups: list[list[int]] = [[] for _ in range(max(group_data))]
@@ -234,101 +320,72 @@ def _clients(instance: dict, round_func: _RoundingFunc) -> list[Client]:
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
         # in keeping them.
-        groups = [ClientGroup(group) for group in raw_groups if len(group) > 1]
-    else:
-        groups = []
+        return [group for group in raw_groups if len(group) > 1]
 
-    idx2group = [None for _ in range(dimension)]
-    for group, members in enumerate(groups):
+
+def _depots(instance: Instance) -> list[Depot]:
+    """
+    Extracts the depot data from the VRPLIB instance.
+    """
+    num_depots = instance.num_depots
+    depot_idcs = instance.depot_idcs
+
+    contiguous_lower_idcs = np.arange(num_depots)
+    if num_depots == 0 or (depot_idcs != contiguous_lower_idcs).any():
+        msg = """
+        Source file should contain at least one depot in the contiguous lower
+        indices, starting from 1.
+        """
+        raise ValueError(msg)
+
+    coords = instance.coords
+
+    return [
+        Depot(x=coords[idx][0], y=coords[idx][1]) for idx in range(num_depots)
+    ]
+
+
+def _clients(instance: Instance) -> list[Client]:
+    """
+    Extracts the client data from the VRPLIB instance.
+    """
+    idx2group: list[Optional[int]] = [None for _ in range(instance.dimension)]
+    for group, members in enumerate(instance.mutually_exclusive_groups):
         for client in members:
             idx2group[client] = group
 
     return [
         Client(
-            x=coords[idx][0],
-            y=coords[idx][1],
-            delivery=demands[idx],
-            pickup=backhauls[idx],
-            service_duration=service_times[idx],
-            tw_early=time_windows[idx][0],
-            tw_late=time_windows[idx][1],
-            release_time=release_times[idx],
-            prize=prizes[idx],
-            required=np.isclose(prizes[idx], 0) and idx2group[idx] is None,
+            x=instance.coords[idx][0],
+            y=instance.coords[idx][1],
+            delivery=instance.demands[idx],
+            pickup=instance.backhauls[idx],
+            service_duration=instance.service_times[idx],
+            tw_early=instance.time_windows[idx][0],
+            tw_late=instance.time_windows[idx][1],
+            release_time=instance.release_times[idx],
+            prize=instance.prizes[idx],
+            required=np.isclose(instance.prizes[idx], 0)
+            and idx2group[idx] is None,
             group=idx2group[idx],
         )
-        for idx in range(num_depots, dimension)
+        for idx in range(instance.num_depots, instance.dimension)
     ]
 
 
-def _vehicle_types(
-    instance: dict, round_func: _RoundingFunc
-) -> list[VehicleType]:
+def _vehicle_types(instance: Instance) -> list[VehicleType]:
     """
     Extracts the vehicle type data from the VRPLIB instance.
     """
-    dimension = instance["dimension"]
-    num_depots = instance["num_depots"]
-    num_vehicles = instance["num_vehicles"]
-    depot_idcs: np.ndarray = instance.get("depot", np.array([0]))
-
-    if isinstance(instance.get("capacity"), np.ndarray):
-        capacities = round_func(instance["capacity"])
-    elif "capacity" in instance:
-        capacities = round_func(np.full(num_vehicles, instance["capacity"]))
-    else:
-        capacities = np.full(num_vehicles, _INT_MAX)
-
-    if "vehicles_allowed_clients" in instance:
-        vehicles_allowed_clients = [
-            tuple(idx - 1 for idx in clients)
-            for clients in instance["vehicles_allowed_clients"]
-        ]
-    else:
-        vehicles_allowed_clients = [
-            tuple(idx for idx in range(num_depots, dimension))
-            for _ in range(num_vehicles)
-        ]
-
-    if "vehicles_depot" in instance:
-        vehicles_depots = instance["vehicles_depot"] - 1  # zero-indexed
-    else:
-        vehicles_depots = np.full(num_vehicles, depot_idcs[0])
-
-    if isinstance(instance.get("vehicles_max_distance"), np.ndarray):
-        vehicles_max_distance = round_func(instance["vehicles_max_distance"])
-    elif "vehicles_max_distance" in instance:
-        vehicles_max_distance = round_func(
-            np.full(num_vehicles, instance["vehicles_max_distance"])
-        )
-    else:
-        vehicles_max_distance = np.full(num_vehicles, _INT_MAX)
-
-    if isinstance(instance.get("vehicles_max_duration"), np.ndarray):
-        vehicles_max_duration = round_func(instance["vehicles_max_duration"])
-    elif "vehicles_max_duration" in instance:
-        vehicles_max_duration = round_func(
-            np.full(num_vehicles, instance["vehicles_max_duration"])
-        )
-    else:
-        vehicles_max_duration = np.full(num_vehicles, _INT_MAX)
-
-    if "time_window" in instance:
-        location_time_windows: np.ndarray = round_func(instance["time_window"])
-    else:
-        # No time window data. So the time window component is not relevant.
-        location_time_windows = np.empty((dimension, 2), dtype=np.int64)
-        location_time_windows[:, 0] = 0
-        location_time_windows[:, 1] = _INT_MAX
-
     vehicles_data = (
-        capacities,
-        vehicles_allowed_clients,
-        vehicles_depots,
-        vehicles_max_distance,
-        vehicles_max_duration,
+        instance.capacities,
+        instance.vehicles_allowed_clients,
+        instance.vehicles_depots,
+        instance.vehicles_max_distance,
+        instance.vehicles_max_duration,
     )
-    if any(len(arr) != num_vehicles for arr in vehicles_data):
+
+    if any(len(arr) != instance.num_vehicles for arr in vehicles_data):
         msg = """
         The number of elements in the vehicles data attributes should be equal
         to the number of vehicles in the problem.
@@ -353,8 +410,8 @@ def _vehicle_types(
             # The literature specifies depot time windows. We do not have depot
             # time windows but instead set those on the vehicles, generalising
             # the depot time windows.
-            tw_early=location_time_windows[depot_idx][0],
-            tw_late=location_time_windows[depot_idx][1],
+            tw_early=instance.time_windows[depot_idx][0],
+            tw_late=instance.time_windows[depot_idx][1],
             max_duration=max_duration,
             max_distance=max_distance,
             profile=type_idx,
@@ -368,54 +425,27 @@ def _vehicle_types(
 
 
 def _matrices(
-    instance: dict,
-    round_func: _RoundingFunc,
-    clients: list[Client],
-    vehicle_types: list[VehicleType],
-) -> tuple[np.ndarray, np.ndarray]:
+    instance: Instance, vehicle_types: list[VehicleType]
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     Extracts the distance and duration matrices from VRPLIB data.
-    One distance and duration matrix is crated per vehicle type.
+    One distance and duration matrix is created per vehicle type.
     """
-    # VRPLIB instances typically do not have a duration data field, so we
-    # assume duration == distance.
-    durations = distances = round_func(instance["edge_weight"])
-    dimension = instance["dimension"]
-    num_depots = instance["num_depots"]
-    num_vehicles = instance["num_vehicles"]
+    distances = instance.edge_weight
 
-    if instance.get("type") == "VRPB":
+    if instance.type == "VRPB":
         # In VRPB, linehauls must be served before backhauls. This can be
         # enforced by setting a high value for the distance/duration from depot
         # to backhaul (forcing linehaul to be served first) and a large value
         # from backhaul to linehaul (avoiding linehaul after backhaul clients).
-        linehaul = [
-            idx + num_depots
-            for idx, client in enumerate(clients)
-            if client.delivery > 0
-        ]
-        backhaul = [
-            idx + num_depots
-            for idx, client in enumerate(clients)
-            if client.pickup > 0
-        ]
+        linehaul = instance.demands > 0
+        backhaul = instance.backhauls > 0
         distances[0, backhaul] = MAX_VALUE
         distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-    if "vehicles_allowed_clients" in instance:
-        vehicles_allowed_clients = [
-            tuple(idx - 1 for idx in clients)
-            for clients in instance["vehicles_allowed_clients"]
-        ]
-    else:
-        vehicles_allowed_clients = [
-            tuple(idx for idx in range(num_depots, dimension))
-            for _ in range(num_vehicles)
-        ]
-
+    vehicles_allowed_clients = instance.vehicles_allowed_clients
     num_veh_types = len(vehicle_types)
     distance_matrices = [distances.copy() for _ in range(num_veh_types)]
-    duration_matrices = [durations.copy() for _ in range(num_veh_types)]
 
     for type_idx, vehicle_type in enumerate(vehicle_types):
         # A bit hacky, but the vehicle type name tracks the actual vehicles
@@ -423,45 +453,32 @@ def _matrices(
         # clients for this vehicle type.
         vehicle_idx = vehicle_type.name.split(",")[0]
         allowed_clients = vehicles_allowed_clients[int(vehicle_idx)]
+        distance_matrix = distance_matrices[type_idx]
 
-        dist = distance_matrices[type_idx]
-        dur = duration_matrices[type_idx]
-
-        for idx in range(num_depots, dimension):
+        for idx in range(instance.num_depots, instance.dimension):
             if idx not in allowed_clients:
                 # Set MAX_VALUE to and from disallowed clients, preventing
                 # this vehicle type from serving them.
-                dist[:, idx] = dist[idx, :] = MAX_VALUE
-                dur[:, idx] = dur[idx, :] = MAX_VALUE
+                distance_matrix[:, idx] = distance_matrix[idx, :] = MAX_VALUE
 
-        np.fill_diagonal(dist, 0)
-        np.fill_diagonal(dur, 0)
+        np.fill_diagonal(distance_matrix, 0)
 
-    if max(distances.max(), durations.max()) > MAX_VALUE:
+    if any(dist.max() > MAX_VALUE for dist in distance_matrices):
         msg = """
         The maximum distance or duration value is very large. This might
         impact numerical stability. Consider rescaling your input data.
         """
         warn(msg, ScalingWarning)
 
+    # VRPLIB instances typically do not have a duration data field, so we
+    # assume duration == distance.
+    duration_matrices = [matrix.copy() for matrix in distance_matrices]
+
     return distance_matrices, duration_matrices
 
 
-def _groups(instance: dict) -> list[ClientGroup]:
+def _groups(instance: Instance) -> list[ClientGroup]:
     """
     Extracts the mutually exclusive groups from the VRPLIB instance.
     """
-    if "mutually_exclusive_group" not in instance:
-        return []  # no groups
-
-    group_data = instance["mutually_exclusive_group"]
-
-    # This assumes groups are numeric, and are numbered {1, 2, ...}.
-    raw_groups: list[list[int]] = [[] for _ in range(max(group_data))]
-    for client, group in enumerate(group_data):
-        raw_groups[group - 1].append(client)
-
-    # Only keep groups if they have more than one member. Empty groups or
-    # groups with one member are trivial to decide, so there is no point
-    # in keeping them.
-    return [ClientGroup(group) for group in raw_groups if len(group) > 1]
+    return [ClientGroup(group) for group in instance.mutually_exclusive_groups]

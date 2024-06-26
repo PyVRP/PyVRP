@@ -499,3 +499,7 @@ def test_sdvrptw_instance():
         assert_array_equal(distance_matrix[client, idcs], MAX_VALUE)
         assert_array_equal(duration_matrix[idcs, client], MAX_VALUE)
         assert_array_equal(duration_matrix[client, idcs], MAX_VALUE)
+
+
+def test_instance():
+    pass  # TODO
