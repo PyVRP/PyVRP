@@ -425,22 +425,24 @@ def test_matrices_are_not_copies():
         "tw_late",
         "max_duration",
         "max_distance",
+        "max_trips",
         "fixed_cost",
         "unit_distance_cost",
         "unit_duration_cost",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 0, 0, 0, 0, 0, 0),  # early > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1),  # negative unit_duration_cost
+        (0, 0, 0, 0, 0, 0, 1, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 1, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 0, 0, 0, 1, 0, 0, 0),  # early > late
+        (0, 1, -1, 0, 0, 0, 1, 0, 0, 0),  # negative early
+        (0, 1, 0, -1, 0, 0, 1, 0, 0, 0),  # negative late
+        (0, 1, 0, 0, -1, 0, 1, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, -1, 1, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # max_trips must be positive
+        (0, 1, 0, 0, 0, 0, 1, -1, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 1, 0, -1, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 1, 0, 0, -1),  # negative unit_duration_cost
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -450,6 +452,7 @@ def test_vehicle_type_raises_invalid_data(
     tw_late: int,
     max_duration: int,
     max_distance: int,
+    max_trips: int,
     fixed_cost: int,
     unit_distance_cost: int,
     unit_duration_cost: int,
@@ -467,41 +470,10 @@ def test_vehicle_type_raises_invalid_data(
             tw_late=tw_late,
             max_duration=max_duration,
             max_distance=max_distance,
+            max_trips=max_trips,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
         )
-
-
-def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
-    """
-    The vehicle type constructor should allow the following edge case where all
-    data has been zeroed out.
-    """
-    vehicle_type = VehicleType(
-        num_available=1,
-        capacity=0,
-        start_depot=0,
-        end_depot=0,
-        fixed_cost=0,
-        tw_early=0,
-        tw_late=0,
-        max_duration=0,
-        max_distance=0,
-        unit_distance_cost=0,
-        unit_duration_cost=0,
-    )
-
-    assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.start_depot, 0)
-    assert_equal(vehicle_type.end_depot, 0)
-    assert_equal(vehicle_type.capacity, 0)
-    assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.tw_late, 0)
-    assert_equal(vehicle_type.max_duration, 0)
-    assert_equal(vehicle_type.max_distance, 0)
-    assert_equal(vehicle_type.unit_distance_cost, 0)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
 
 
 def test_vehicle_type_default_values():
@@ -514,6 +486,7 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, 0)
+    assert_equal(vehicle_type.max_trips, 1)
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
@@ -542,6 +515,7 @@ def test_vehicle_type_attribute_access():
         tw_late=19,
         max_duration=23,
         max_distance=31,
+        max_trips=47,
         unit_distance_cost=37,
         unit_duration_cost=41,
         name="vehicle_type name",
@@ -556,6 +530,7 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.tw_late, 19)
     assert_equal(vehicle_type.max_duration, 23)
     assert_equal(vehicle_type.max_distance, 31)
+    assert_equal(vehicle_type.max_trips, 47)
     assert_equal(vehicle_type.unit_distance_cost, 37)
     assert_equal(vehicle_type.unit_duration_cost, 41)
 

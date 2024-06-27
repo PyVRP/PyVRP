@@ -312,6 +312,7 @@ public:
      *     tw_late: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
+     *     max_trips: int = 1,
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
@@ -380,6 +381,10 @@ public:
      *     Maximum travel distance of the route this vehicle type is assigned
      *     to. This is a very large number when the maximum distance is
      *     unconstrained.
+     * max_trips
+     *     Maximum number of trips vehicles of this type can do. A trip is
+     *     ended by a return to the depot. Default 1, in which case the whole
+     *     route is a single trip.
      * unit_distance_cost
      *     Cost per unit of distance travelled by vehicles of this type.
      * unit_duration_cost
@@ -399,6 +404,7 @@ public:
         Duration const twLate;        // End of shift
         Duration const maxDuration;   // Maximum route duration
         Distance const maxDistance;   // Maximum route distance
+        size_t const maxTrips;        // Maximum number of trips in the route
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
@@ -414,6 +420,7 @@ public:
                     Duration twLate = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
+                    size_t maxTrips = 1,
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,

@@ -172,6 +172,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Duration twLate,
                                       Duration maxDuration,
                                       Distance maxDistance,
+                                      size_t maxTrips,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
                                       size_t profile,
@@ -184,6 +185,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       twLate(twLate),
       maxDuration(maxDuration),
       maxDistance(maxDistance),
+      maxTrips(maxTrips),
       fixedCost(fixedCost),
       unitDistanceCost(unitDistanceCost),
       unitDurationCost(unitDurationCost),
@@ -208,6 +210,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (maxDistance < 0)
         throw std::invalid_argument("max_distance must be >= 0.");
 
+    if (maxTrips == 0)
+        throw std::invalid_argument("max_trips must be > 0.");
+
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
 
@@ -227,6 +232,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
+      maxTrips(vehicleType.maxTrips),
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
@@ -244,6 +250,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
+      maxTrips(vehicleType.maxTrips),
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),

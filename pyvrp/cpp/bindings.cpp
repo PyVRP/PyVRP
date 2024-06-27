@@ -153,6 +153,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Distance,
+                      size_t,
                       pyvrp::Cost,
                       pyvrp::Cost,
                       size_t,
@@ -168,6 +169,7 @@ PYBIND11_MODULE(_pyvrp, m)
              = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_distance")
              = std::numeric_limits<pyvrp::Distance>::max(),
+             py::arg("max_trips") = 1,
              py::arg("unit_distance_cost") = 1,
              py::arg("unit_duration_cost") = 0,
              py::arg("profile") = 0,
@@ -182,6 +184,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
+        .def_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("unit_distance_cost",
                       &ProblemData::VehicleType::unitDistanceCost)
         .def_readonly("unit_duration_cost",
