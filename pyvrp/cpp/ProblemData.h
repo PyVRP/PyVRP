@@ -382,9 +382,9 @@ public:
      *     to. This is a very large number when the maximum distance is
      *     unconstrained.
      * max_trips
-     *     Maximum number of trips vehicles of this type can do. A trip is
-     *     ended by a return to the depot. Default 1, in which case the whole
-     *     route is a single trip.
+     *     Maximum number of trips this vehicle type can do in a single route.
+     *     A trip is completed by a return to the depot. Default 1, in which
+     *     case the route consists of a single trip.
      * unit_distance_cost
      *     Cost per unit of distance travelled by vehicles of this type.
      * unit_duration_cost
