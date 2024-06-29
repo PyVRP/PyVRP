@@ -324,6 +324,18 @@ PYBIND11_MODULE(_pyvrp, m)
              &Solution::Route::visits,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Solution, Route, visits))
+        .def("trips",
+             &Solution::Route::trips,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, Route, trips))
+        .def("trip",
+             &Solution::Route::trip,
+             py::arg("trip"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, Route, trip))
+        .def("num_trips",
+             &Solution::Route::numTrips,
+             DOC(pyvrp, Solution, Route, numTrips))
         .def("distance",
              &Solution::Route::distance,
              DOC(pyvrp, Solution, Route, distance))

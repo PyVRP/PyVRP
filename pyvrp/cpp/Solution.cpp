@@ -443,6 +443,14 @@ std::vector<std::vector<Client>> const &Solution::Route::trips() const
     return trips_;
 }
 
+std::vector<Client> const &Solution::Route::trip(size_t trip) const
+{
+    assert(trip < trips_.size());
+    return trips_[trip];
+}
+
+size_t Solution::Route::numTrips() const { return trips_.size(); }
+
 Distance Solution::Route::distance() const { return distance_; }
 
 Cost Solution::Route::distanceCost() const { return distanceCost_; }

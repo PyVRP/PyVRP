@@ -105,6 +105,16 @@ public:
         [[nodiscard]] Trips const &trips() const;
 
         /**
+         * Returns the trip data of the given trip index.
+         */
+        [[nodiscard]] Trip const &trip(size_t trip) const;
+
+        /**
+         * Number of trips in this route.
+         */
+        [[nodiscard]] size_t numTrips() const;
+
+        /**
          * Total distance travelled on this route.
          */
         [[nodiscard]] Distance distance() const;
