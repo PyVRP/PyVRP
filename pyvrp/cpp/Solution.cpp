@@ -316,9 +316,6 @@ Solution::Route::Route(ProblemData const &data,
                        VehicleType vehicleType)
     : trips_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
-    if (trips_.size() != 1)
-        throw std::invalid_argument("Expected a single trip!");
-
     auto const &vehType = data.vehicleType(vehicleType);
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
@@ -420,9 +417,16 @@ Solution::Route::Route(Trips trips,
 {
 }
 
-bool Solution::Route::empty() const { return trips_[0].empty(); }
+bool Solution::Route::empty() const { return size() == 0; }
 
-size_t Solution::Route::size() const { return trips_[0].size(); }
+size_t Solution::Route::size() const
+{
+    return std::accumulate(trips_.begin(),
+                           trips_.end(),
+                           0,
+                           [](size_t count, auto const &trip)
+                           { return count + trip.size(); });
+}
 
 Client Solution::Route::operator[](size_t idx) const { return trips_[0][idx]; }
 
