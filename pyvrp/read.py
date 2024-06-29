@@ -253,12 +253,10 @@ class _InstanceParser:
         if "mutually_exclusive_group" not in self.instance:
             return []
 
-        group_data = self.instance["mutually_exclusive_group"]
-
-        # This assumes groups are numeric, and are numbered {1, 2, ...}.
-        raw_groups: list[list[int]] = [[] for _ in range(max(group_data))]
-        for client, group in enumerate(group_data):
-            raw_groups[group - 1].append(client)
+        raw_groups = [
+            [idx - 1 for idx in group]
+            for group in self.instance["mutually_exclusive_group"]
+        ]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
