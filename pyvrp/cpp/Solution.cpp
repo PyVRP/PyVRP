@@ -314,62 +314,68 @@ Solution::Route::Route(ProblemData const &data,
 Solution::Route::Route(ProblemData const &data,
                        Trips visits,
                        VehicleType vehicleType)
-    : trips_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
+    : trips_(visits.empty() ? Trips{{}} : std::move(visits)),
+      centroid_({0, 0}),
+      vehicleType_(vehicleType)
 {
+    assert(!trips_.empty());
+
     auto const &vehType = data.vehicleType(vehicleType);
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
 
-    DurationSegment ds = {startDepot_, vehType};
-    auto ls = LoadSegment(0, 0, 0);
-    size_t prevClient = startDepot_;
-
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
-    auto const &trip = trips_[0];
-
-    for (size_t idx = 0; idx != trip.size(); ++idx)
+    // TODO make all this work with multi-trip
+    for (size_t trip = 0; trip != numTrips(); ++trip)
     {
-        auto const client = trip[idx];
-        ProblemData::Client const &clientData = data.location(client);
+        auto ls = LoadSegment(0, 0, 0);
 
-        distance_ += distances(prevClient, client);
-        travel_ += durations(prevClient, client);
-        service_ += clientData.serviceDuration;
-        prizes_ += clientData.prize;
+        size_t prev = trip == 0 ? startDepot_ : endDepot_;
+        DurationSegment ds = {trip == 0 ? startDepot_ : endDepot_, vehType};
 
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
+        for (auto const client : trips_[trip])
+        {
+            ProblemData::Client const &clientData = data.location(client);
 
-        auto const clientDS = DurationSegment(client, clientData);
-        ds = DurationSegment::merge(durations, ds, clientDS);
+            distance_ += distances(prev, client);
+            travel_ += durations(prev, client);
+            service_ += clientData.serviceDuration;
+            prizes_ += clientData.prize;
 
-        auto const clientLs = LoadSegment(clientData);
-        ls = LoadSegment::merge(ls, clientLs);
+            centroid_.first += static_cast<double>(clientData.x) / size();
+            centroid_.second += static_cast<double>(clientData.y) / size();
 
-        prevClient = client;
+            auto const clientDS = DurationSegment(client, clientData);
+            ds = DurationSegment::merge(durations, ds, clientDS);
+
+            auto const clientLs = LoadSegment(clientData);
+            ls = LoadSegment::merge(ls, clientLs);
+
+            prev = client;
+        }
+
+        distance_ += distances(prev, endDepot_);
+        distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
+        excessDistance_
+            = std::max<Distance>(distance_ - vehType.maxDistance, 0);
+
+        travel_ += durations(prev, endDepot_);
+
+        delivery_ = ls.delivery();
+        pickup_ = ls.pickup();
+        excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
+
+        DurationSegment endDS(endDepot_, vehType);
+        ds = DurationSegment::merge(durations, ds, endDS);
+        duration_ = ds.duration();
+        durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
+        startTime_ = ds.twEarly();
+        slack_ = ds.twLate() - ds.twEarly();
+        timeWarp_ = ds.timeWarp(vehType.maxDuration);
+        release_ = ds.releaseTime();
     }
-
-    auto const last = trip.empty() ? startDepot_ : trip.back();
-    distance_ += distances(last, endDepot_);
-    distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
-    excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
-
-    travel_ += durations(last, endDepot_);
-
-    delivery_ = ls.delivery();
-    pickup_ = ls.pickup();
-    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
-
-    DurationSegment endDS(endDepot_, vehType);
-    ds = DurationSegment::merge(durations, ds, endDS);
-    duration_ = ds.duration();
-    durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.twEarly();
-    slack_ = ds.twLate() - ds.twEarly();
-    timeWarp_ = ds.timeWarp(vehType.maxDuration);
-    release_ = ds.releaseTime();
 }
 
 Solution::Route::Route(Trips trips,

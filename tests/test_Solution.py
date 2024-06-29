@@ -1143,11 +1143,16 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
 def test_route_trip_access(ok_small):
     """
-    Tests that accessing the trips in a multi-trip route works correctly.
+    Tests that accessing trips and client visits in a multi-trip route works
+    correctly.
     """
     route = Route(ok_small, [[1, 2], [3, 4]], 0)
-    assert_equal(len(route), 4)
 
+    assert_equal(len(route), 4)
     assert_equal(route.num_trips(), 2)
+
+    assert_equal(route.visits(), [1, 2, 3, 4])
+    assert_equal(route.trips(), [[1, 2], [3, 4]])
+
     assert_equal(route.trip(0), [1, 2])
     assert_equal(route.trip(1), [3, 4])
