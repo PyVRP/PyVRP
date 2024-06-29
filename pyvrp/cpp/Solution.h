@@ -43,15 +43,22 @@ class Solution
 
 public:
     /**
-     * Route(data: ProblemData, visits: list[int], vehicle_type: int)
+     * Route(
+     *     data: ProblemData,
+     *     visits: Union[list[int], list[list[int]]],
+     *     vehicle_type: int,
+     * )
      *
-     * A simple class that stores the route plan and some statistics.
+     * A simple class that stores the client ``visits`` and some statistics.
+     * The client visits can be organised into multiple distinct trips,
+     * separated by a depot visit.
      */
     class Route
     {
-        using Visits = std::vector<Client>;
+        using Trip = std::vector<Client>;
+        using Trips = std::vector<Trip>;
 
-        Visits visits_ = {};           // Client visits on this route
+        Trips trips_ = {};             // Trips that make up this route
         Distance distance_ = 0;        // Total travel distance on this route
         Cost distanceCost_ = 0;        // Total cost of travel distance
         Distance excessDistance_ = 0;  // Excess travel distance
@@ -84,13 +91,18 @@ public:
 
         [[nodiscard]] Client operator[](size_t idx) const;
 
-        Visits::const_iterator begin() const;
-        Visits::const_iterator end() const;
+        std::vector<Client>::const_iterator begin() const;
+        std::vector<Client>::const_iterator end() const;
 
         /**
          * Route visits, as a list of clients.
          */
-        [[nodiscard]] Visits const &visits() const;
+        [[nodiscard]] std::vector<Client> const &visits() const;
+
+        /**
+         * List of trips that constitute this route.
+         */
+        [[nodiscard]] Trips const &trips() const;
 
         /**
          * Total distance travelled on this route.
@@ -242,13 +254,15 @@ public:
 
         Route() = delete;
 
-        Route(ProblemData const &data,
-              Visits visits,
-              VehicleType const vehicleType);
+        // Case where the visits are made in a single trip.
+        Route(ProblemData const &data, Trip visits, VehicleType vehicleType);
+
+        // Case where the visits are made over one or more trips.
+        Route(ProblemData const &data, Trips visits, VehicleType vehicleType);
 
         // This constructor does *no* validation. Useful when unserialising
         // objects.
-        Route(Visits visits,
+        Route(Trips trips,
               Distance distance,
               Cost distanceCost,
               Distance excessDistance,

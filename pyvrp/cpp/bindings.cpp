@@ -314,6 +314,12 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
+        .def(py::init<ProblemData const &,
+                      std::vector<std::vector<size_t>>,
+                      size_t>(),
+             py::arg("data"),
+             py::arg("visits"),
+             py::arg("vehicle_type"))
         .def("visits",
              &Solution::Route::visits,
              py::return_value_policy::reference_internal,
@@ -416,7 +422,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Solution::Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
-                return py::make_tuple(route.visits(),
+                return py::make_tuple(route.trips(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
@@ -440,8 +446,8 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 Solution::Route route = Solution::Route(
-                    t[0].cast<std::vector<size_t>>(),         // visits
-                    t[1].cast<pyvrp::Distance>(),             // distance
+                    t[0].cast<std::vector<std::vector<size_t>>>(),  // trips
+                    t[1].cast<pyvrp::Distance>(),                   // distance
                     t[2].cast<pyvrp::Cost>(),                 // distance cost
                     t[3].cast<pyvrp::Distance>(),             // excess distance
                     t[4].cast<pyvrp::Load>(),                 // delivery

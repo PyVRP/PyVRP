@@ -15,7 +15,6 @@ using pyvrp::Load;
 using pyvrp::Solution;
 
 using Client = size_t;
-using Visits = std::vector<Client>;
 using Routes = std::vector<Solution::Route>;
 using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
@@ -306,10 +305,20 @@ Solution::Solution(size_t numClients,
 }
 
 Solution::Route::Route(ProblemData const &data,
-                       Visits visits,
-                       size_t const vehicleType)
-    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
+                       Trip visits,
+                       VehicleType vehicleType)
+    : Route(data, std::vector<Trip>{visits}, vehicleType)
 {
+}
+
+Solution::Route::Route(ProblemData const &data,
+                       Trips visits,
+                       VehicleType vehicleType)
+    : trips_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
+{
+    if (trips_.size() != 1)
+        throw std::invalid_argument("Expected a single trip!");
+
     auto const &vehType = data.vehicleType(vehicleType);
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
@@ -321,9 +330,11 @@ Solution::Route::Route(ProblemData const &data,
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
-    for (size_t idx = 0; idx != size(); ++idx)
+    auto const &trip = trips_[0];
+
+    for (size_t idx = 0; idx != trip.size(); ++idx)
     {
-        auto const client = visits_[idx];
+        auto const client = trip[idx];
         ProblemData::Client const &clientData = data.location(client);
 
         distance_ += distances(prevClient, client);
@@ -343,7 +354,7 @@ Solution::Route::Route(ProblemData const &data,
         prevClient = client;
     }
 
-    auto const last = visits_.empty() ? startDepot_ : visits_.back();
+    auto const last = trip.empty() ? startDepot_ : trip.back();
     distance_ += distances(last, endDepot_);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
@@ -364,7 +375,7 @@ Solution::Route::Route(ProblemData const &data,
     release_ = ds.releaseTime();
 }
 
-Solution::Route::Route(Visits visits,
+Solution::Route::Route(Trips trips,
                        Distance distance,
                        Cost distanceCost,
                        Distance excessDistance,
@@ -385,7 +396,7 @@ Solution::Route::Route(Visits visits,
                        size_t vehicleType,
                        size_t startDepot,
                        size_t endDepot)
-    : visits_(std::move(visits)),
+    : trips_(std::move(trips)),
       distance_(distance),
       distanceCost_(distanceCost),
       excessDistance_(excessDistance),
@@ -409,20 +420,28 @@ Solution::Route::Route(Visits visits,
 {
 }
 
-bool Solution::Route::empty() const { return visits_.empty(); }
+bool Solution::Route::empty() const { return trips_[0].empty(); }
 
-size_t Solution::Route::size() const { return visits_.size(); }
+size_t Solution::Route::size() const { return trips_[0].size(); }
 
-Client Solution::Route::operator[](size_t idx) const { return visits_[idx]; }
+Client Solution::Route::operator[](size_t idx) const { return trips_[0][idx]; }
 
-Visits::const_iterator Solution::Route::begin() const
+std::vector<Client>::const_iterator Solution::Route::begin() const
 {
-    return visits_.cbegin();
+    return trips_[0].cbegin();
 }
 
-Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
+std::vector<Client>::const_iterator Solution::Route::end() const
+{
+    return trips_[0].cend();
+}
 
-Visits const &Solution::Route::visits() const { return visits_; }
+std::vector<Client> const &Solution::Route::visits() const { return trips_[0]; }
+
+std::vector<std::vector<Client>> const &Solution::Route::trips() const
+{
+    return trips_;
+}
 
 Distance Solution::Route::distance() const { return distance_; }
 
@@ -496,7 +515,7 @@ bool Solution::Route::operator==(Solution::Route const &other) const
         && pickup_ == other.pickup_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
-        && visits_ == other.visits_;
+        && trips_ == other.trips_;
     // clang-format on
 }
 
