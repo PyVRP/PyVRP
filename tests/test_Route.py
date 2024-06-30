@@ -20,8 +20,11 @@ def test_depot_accessors(ok_small_multi_depot):
 
     assert_equal(routes[0].start_depot(), 0)
     assert_equal(routes[0].end_depot(), 0)
+    assert_(routes[0].reload_depot() is None)
+
     assert_equal(routes[1].start_depot(), 1)
     assert_equal(routes[1].end_depot(), 1)
+    assert_(routes[0].reload_depot() is None)
 
 
 def test_eq(ok_small):
@@ -306,6 +309,7 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
     assert_equal(route.start_depot(), 0)
     assert_equal(route.end_depot(), 1)
+    assert_(route.reload_depot() is None)
 
     dist_mat = data.distance_matrix(0)
     assert_equal(route.distance(), dist_mat[0, 1])
@@ -347,6 +351,7 @@ def test_trip_access(ok_small):
 
     assert_equal(len(route), 4)
     assert_equal(route.num_trips(), 2)
+    assert_equal(route.reload_depot(), 0)
 
     assert_equal(route.visits(), [1, 2, 3, 4])
     assert_equal(route.trips(), [[1, 2], [3, 4]])

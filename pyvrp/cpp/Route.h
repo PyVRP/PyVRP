@@ -88,6 +88,7 @@ class Route
     VehicleType vehicleType_;             // Type of vehicle
     Depot startDepot_;                    // Assigned start depot
     Depot endDepot_;                      // Assigned end depot
+    std::optional<Depot> reloadDepot_;    // Optionally assigned reload depot
 
 public:
     [[nodiscard]] bool empty() const;
@@ -248,6 +249,11 @@ public:
     [[nodiscard]] Depot endDepot() const;
 
     /**
+     * Optional location index of the route's reload depot, if available.
+     */
+    [[nodiscard]] std::optional<Depot> reloadDepot() const;
+
+    /**
      * Returns whether this route is feasible.
      */
     [[nodiscard]] bool isFeasible() const;
@@ -298,7 +304,8 @@ public:
           std::pair<double, double> centroid,
           VehicleType vehicleType,
           Depot startDepot,
-          Depot endDepot);
+          Depot endDepot,
+          std::optional<Depot> reloadDepot);
 };
 }  // namespace pyvrp
 

@@ -375,6 +375,8 @@ PYBIND11_MODULE(_pyvrp, m)
             "vehicle_type", &Route::vehicleType, DOC(pyvrp, Route, vehicleType))
         .def("start_depot", &Route::startDepot, DOC(pyvrp, Route, startDepot))
         .def("end_depot", &Route::endDepot, DOC(pyvrp, Route, endDepot))
+        .def(
+            "reload_depot", &Route::reloadDepot, DOC(pyvrp, Route, reloadDepot))
         .def("is_feasible", &Route::isFeasible, DOC(pyvrp, Route, isFeasible))
         .def("has_excess_load",
              &Route::hasExcessLoad,
@@ -425,7 +427,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.centroid(),
                                       route.vehicleType(),
                                       route.startDepot(),
-                                      route.endDepot());
+                                      route.endDepot(),
+                                      route.reloadDepot());
             },
             [](py::tuple t) {  // __setstate__
                 Route route(
@@ -448,7 +451,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[16].cast<std::pair<double, double>>(),  // centroid
                     t[17].cast<size_t>(),                     // vehicle type
                     t[18].cast<size_t>(),                     // start depot
-                    t[19].cast<size_t>());                    // end depot
+                    t[19].cast<size_t>(),                     // end depot
+                    t[20].cast<std::optional<size_t>>());     // reload depot
 
                 return route;
             }))

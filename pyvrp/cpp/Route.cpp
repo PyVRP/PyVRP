@@ -15,6 +15,7 @@ using pyvrp::Load;
 using pyvrp::Route;
 
 using Client = size_t;
+using Depot = size_t;
 
 Route::Iterator::Iterator(Trips const &trips, size_t trip, size_t visit)
     : trips(&trips), trip(trip), visit(visit)
@@ -96,7 +97,8 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
       centroid_({0, 0}),
       vehicleType_(vehicleType),
       startDepot_(data.vehicleType(vehicleType).startDepot),
-      endDepot_(data.vehicleType(vehicleType).endDepot)
+      endDepot_(data.vehicleType(vehicleType).endDepot),
+      reloadDepot_(data.vehicleType(vehicleType).reloadDepot)
 {
     auto const &vehType = data.vehicleType(vehicleType);
     auto const &distances = data.distanceMatrix(vehType.profile);
@@ -204,8 +206,9 @@ Route::Route(Trips trips,
              Cost prizes,
              std::pair<double, double> centroid,
              size_t vehicleType,
-             size_t startDepot,
-             size_t endDepot)
+             Depot startDepot,
+             Depot endDepot,
+             std::optional<Depot> reloadDepot)
     : trips_(std::move(trips)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -225,7 +228,8 @@ Route::Route(Trips trips,
       centroid_(centroid),
       vehicleType_(vehicleType),
       startDepot_(startDepot),
-      endDepot_(endDepot)
+      endDepot_(endDepot),
+      reloadDepot_(reloadDepot)
 {
 }
 
@@ -305,9 +309,11 @@ std::pair<double, double> const &Route::centroid() const { return centroid_; }
 
 size_t Route::vehicleType() const { return vehicleType_; }
 
-size_t Route::startDepot() const { return startDepot_; }
+Depot Route::startDepot() const { return startDepot_; }
 
-size_t Route::endDepot() const { return endDepot_; }
+Depot Route::endDepot() const { return endDepot_; }
+
+std::optional<Depot> Route::reloadDepot() const { return reloadDepot_; }
 
 bool Route::isFeasible() const
 {
