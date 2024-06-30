@@ -113,12 +113,7 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
     // TODO can we merge this with the regular case somehow?
     if (empty())  // special case where the route is empty, and we only need to
     {             // compute distance and duration from travel between depots
-        auto const distSegment = DistanceSegment::merge(
-            distances,
-            DistanceSegment(startDepot_, startDepot_, 0),
-            DistanceSegment(endDepot_, endDepot_, 0));
-
-        distance_ = distSegment.distance();
+        distance_ = distances(startDepot_, endDepot_);
         distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
         excessDistance_
             = std::max<Distance>(distance_ - vehType.maxDistance, 0);
@@ -130,14 +125,16 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
 
         duration_ = durSegment.duration();
         durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-        travel_ = duration_;
+
+        timeWarp_ = durSegment.timeWarp(vehType.maxDuration);
+        travel_ = durations(startDepot_, endDepot_);
         startTime_ = durSegment.twEarly();
         slack_ = durSegment.twLate() - durSegment.twEarly();
-        timeWarp_ = durSegment.timeWarp(vehType.maxDuration);
+
+        return;
     }
 
     // TODO make all this work with multi-trip
-    // TODO use distance segment
     for (size_t trip = 0; trip != numTrips(); ++trip)
     {
         auto ls = LoadSegment(0, 0, 0);
