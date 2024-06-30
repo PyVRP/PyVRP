@@ -155,10 +155,10 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Distance,
-                      size_t,
                       pyvrp::Cost,
                       pyvrp::Cost,
                       size_t,
+                      std::optional<size_t>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
@@ -171,10 +171,10 @@ PYBIND11_MODULE(_pyvrp, m)
              = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_distance")
              = std::numeric_limits<pyvrp::Distance>::max(),
-             py::arg("max_trips") = 1,
              py::arg("unit_distance_cost") = 1,
              py::arg("unit_duration_cost") = 0,
              py::arg("profile") = 0,
+             py::arg("reload_depot") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -186,12 +186,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
-        .def_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("unit_distance_cost",
                       &ProblemData::VehicleType::unitDistanceCost)
         .def_readonly("unit_duration_cost",
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
+        .def_readonly("reload_depot", &ProblemData::VehicleType::reloadDepot)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)

@@ -102,6 +102,12 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
+    if (numTrips() > 1 && !vehType.reloadDepot)
+    {
+        auto const *msg = "Cannot have multiple trips without a reload depot.";
+        throw std::invalid_argument(msg);
+    }
+
     // TODO can we merge this with the regular case somehow?
     if (empty())  // special case where the route is empty, and we only need to
     {             // compute distance and duration from travel between depots

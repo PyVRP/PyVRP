@@ -8,7 +8,7 @@ from pyvrp import RandomNumberGenerator, Route, Solution, VehicleType
 from tests.helpers import read
 
 
-def test_route_depot_accessors(ok_small_multi_depot):
+def test_depot_accessors(ok_small_multi_depot):
     """
     Tests that Route's start_depot() and end_depot() members return the correct
     depot location indices.
@@ -24,7 +24,7 @@ def test_route_depot_accessors(ok_small_multi_depot):
     assert_equal(routes[1].end_depot(), 1)
 
 
-def test_route_eq(ok_small):
+def test_eq(ok_small):
     """
     Tests ``Route``'s equality operator.
     """
@@ -49,7 +49,7 @@ def test_route_eq(ok_small):
     assert_(route1 != -1.0)
 
 
-def test_route_access_methods(ok_small):
+def test_access_methods(ok_small):
     """
     Tests that accessing route statistics returns the correct numbers.
     """
@@ -83,7 +83,7 @@ def test_route_access_methods(ok_small):
     assert_equal(routes[1].service_duration(), services[2] + services[4])
 
 
-def test_route_time_warp_calculations(ok_small):
+def test_time_warp_calculations(ok_small):
     """
     Tests route time warp calculations.
     """
@@ -102,7 +102,7 @@ def test_route_time_warp_calculations(ok_small):
     assert_equal(routes[1].time_warp(), 0)
 
 
-def test_route_wait_time_calculations():
+def test_wait_time_calculations():
     """
     Tests route wait time and slack calculations.
     """
@@ -193,7 +193,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     assert_equal(routes[1].end_time(), 10_056 + 5_229)
 
 
-def test_route_release_time():
+def test_release_time():
     """
     Tests that routes return the correct release times, and, when feasible,
     start after the release time.
@@ -213,7 +213,7 @@ def test_route_release_time():
     assert_(routes[1].start_time() > routes[1].release_time())
 
 
-def test_route_centroid(ok_small):
+def test_centroid(ok_small):
     """
     Tests that each route's center point is the center point of all clients
     visited by that route.
@@ -257,9 +257,7 @@ def test_route_can_be_pickled(rc208):
         (10_000, 20_000, 277),  # before earliest possible return
     ],
 )
-def test_route_shift_duration(
-    ok_small, tw_early: int, tw_late: int, expected: int
-):
+def test_shift_duration(ok_small, tw_early: int, tw_late: int, expected: int):
     """
     Tests that Route computes time warp due to shift durations correctly on a
     simple, two-client route.
@@ -317,12 +315,13 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
 
 @pytest.mark.parametrize("visits", [[1, 2, 3, 4], [[1, 2], [3, 4]]])
-def test_route_indexing(ok_small, visits):
+def test_indexing(ok_small, visits):
     """
     Tests that routes are properly indexed with one or multiple trips, and
     raise an index error when the given argument is out-of-bounds.
     """
-    route = Route(ok_small, visits, 0)
+    data = ok_small.replace(vehicle_types=[VehicleType(3, 10, reload_depot=0)])
+    route = Route(data, visits, 0)
 
     assert_equal(len(route), 4)
     assert_equal(route[0], 1)
@@ -338,12 +337,13 @@ def test_route_indexing(ok_small, visits):
         route[5]
 
 
-def test_route_trip_access(ok_small):
+def test_trip_access(ok_small):
     """
     Tests that accessing trips and client visits in a multi-trip route works
     correctly.
     """
-    route = Route(ok_small, [[1, 2], [3, 4]], 0)
+    data = ok_small.replace(vehicle_types=[VehicleType(3, 10, reload_depot=0)])
+    route = Route(data, [[1, 2], [3, 4]], 0)
 
     assert_equal(len(route), 4)
     assert_equal(route.num_trips(), 2)
@@ -362,3 +362,14 @@ def test_bug_route_empty_visits(ok_small):
     """
     route = Route(ok_small, [], 0)
     assert_equal(route.visits(), [])
+
+
+def test_raises_multiple_trips_without_reload_depot(ok_small):
+    """
+    Tests that the Route constructor raises when provided with multi-trip
+    visits and a vehicle type that does not have a reload depot location.
+    """
+    assert_(ok_small.vehicle_type(0).reload_depot is None)
+
+    with assert_raises(ValueError):
+        Route(ok_small, [[1], [2]], 0)

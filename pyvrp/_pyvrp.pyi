@@ -94,11 +94,11 @@ class VehicleType:
     tw_late: int
     max_duration: int
     max_distance: int
-    max_trips: int
     fixed_cost: int
     unit_distance_cost: int
     unit_duration_cost: int
     profile: int
+    reload_depot: Optional[int] = None
     name: str
     def __init__(
         self,
@@ -110,11 +110,11 @@ class VehicleType:
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
-        max_trips: int = 1,
         fixed_cost: int = 0,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: int = 0,
+        reload_depot: Optional[int] = None,
         *,
         name: str = "",
     ) -> None: ...

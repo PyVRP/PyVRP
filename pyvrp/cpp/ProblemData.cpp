@@ -172,10 +172,10 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Duration twLate,
                                       Duration maxDuration,
                                       Distance maxDistance,
-                                      size_t maxTrips,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
                                       size_t profile,
+                                      std::optional<size_t> reloadDepot,
                                       char const *name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -185,11 +185,11 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       twLate(twLate),
       maxDuration(maxDuration),
       maxDistance(maxDistance),
-      maxTrips(maxTrips),
       fixedCost(fixedCost),
       unitDistanceCost(unitDistanceCost),
       unitDurationCost(unitDurationCost),
       profile(profile),
+      reloadDepot(reloadDepot),
       name(duplicate(name))
 {
     if (numAvailable == 0)
@@ -210,9 +210,6 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (maxDistance < 0)
         throw std::invalid_argument("max_distance must be >= 0.");
 
-    if (maxTrips == 0)
-        throw std::invalid_argument("max_trips must be > 0.");
-
     if (fixedCost < 0)
         throw std::invalid_argument("fixed_cost must be >= 0.");
 
@@ -232,11 +229,11 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
-      maxTrips(vehicleType.maxTrips),
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
+      reloadDepot(vehicleType.reloadDepot),
       name(duplicate(vehicleType.name))
 {
 }
@@ -250,11 +247,11 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
-      maxTrips(vehicleType.maxTrips),
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
+      reloadDepot(vehicleType.reloadDepot),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen

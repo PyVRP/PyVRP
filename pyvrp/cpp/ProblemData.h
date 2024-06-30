@@ -312,10 +312,10 @@ public:
      *     tw_late: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
-     *     max_trips: int = 1,
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
+     *     reload_depot: Optional[int] = None,
      *     *,
      *     name: str = "",
      * )
@@ -355,6 +355,10 @@ public:
      *     type. Default 0.
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
+     * reload_depot
+     *     Optional depot where the vehicle may reload along the route. This
+     *     enables multiple trips in a single route. Reloads are only allowed
+     *     when this argument is provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -381,16 +385,16 @@ public:
      *     Maximum travel distance of the route this vehicle type is assigned
      *     to. This is a very large number when the maximum distance is
      *     unconstrained.
-     * max_trips
-     *     Maximum number of trips this vehicle type can do in a single route.
-     *     A trip is completed by a return to the depot. Default 1, in which
-     *     case the route consists of a single trip.
      * unit_distance_cost
      *     Cost per unit of distance travelled by vehicles of this type.
      * unit_duration_cost
      *     Cost per unit of duration on routes using vehicles of this type.
      * profile
      *     This vehicle type's routing profile.
+     * reload_depot
+     *     Optional depot where the vehicle may reload along the route. This
+     *     enables multiple trips in a single route. Reloads are only allowed
+     *     when this argument is provided.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -404,12 +408,12 @@ public:
         Duration const twLate;        // End of shift
         Duration const maxDuration;   // Maximum route duration
         Distance const maxDistance;   // Maximum route distance
-        size_t const maxTrips;        // Maximum number of trips in the route
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
-        char const *name;             // Type name (for reference)
+        std::optional<size_t> const reloadDepot;  // Reload depot location
+        char const *name;                         // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
@@ -420,10 +424,10 @@ public:
                     Duration twLate = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
-                    size_t maxTrips = 1,
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
+                    std::optional<size_t> reloadDepot = std::nullopt,
                     char const *name = "");
 
         VehicleType(VehicleType const &vehicleType);
