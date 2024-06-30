@@ -1,5 +1,5 @@
-#ifndef PYVRP_ROUTE_H
-#define PYVRP_ROUTE_H
+#ifndef PYVRP_SEARCH_ROUTE_H
+#define PYVRP_SEARCH_ROUTE_H
 
 #include "DistanceSegment.h"
 #include "DurationSegment.h"
@@ -796,4 +796,4 @@ LoadSegment Route::Proposal<Segments...>::loadSegment() const
 // Outputs a route into a given ostream in CVRPLib format
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
 
-#endif  // PYVRP_ROUTE_H
+#endif  // PYVRP_SEARCH_ROUTE_H

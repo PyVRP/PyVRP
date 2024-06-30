@@ -1,5 +1,5 @@
-#ifndef PYVRP_SWAPSTAR_H
-#define PYVRP_SWAPSTAR_H
+#ifndef PYVRP_SEARCH_SWAPSTAR_H
+#define PYVRP_SEARCH_SWAPSTAR_H
 
 #include "LocalSearchOperator.h"
 #include "Matrix.h"
@@ -96,4 +96,4 @@ public:
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SWAPSTAR_H
+#endif  // PYVRP_SEARCH_SWAPSTAR_H

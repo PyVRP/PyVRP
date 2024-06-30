@@ -1,5 +1,5 @@
-#ifndef PYVRP_GREEDY_REPAIR_H
-#define PYVRP_GREEDY_REPAIR_H
+#ifndef PYVRP_REPAIR_GREEDY_REPAIR_H
+#define PYVRP_REPAIR_GREEDY_REPAIR_H
 
 #include "CostEvaluator.h"
 #include "ProblemData.h"
@@ -44,4 +44,4 @@ greedyRepair(std::vector<Solution::Route> const &routes,
              CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::repair
 
-#endif  // PYVRP_GREEDY_REPAIR_H
+#endif  // PYVRP_REPAIR_GREEDY_REPAIR_H
