@@ -406,7 +406,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.endDepot());
             },
             [](py::tuple t) {  // __setstate__
-                Route route = Route(
+                Route route(
                     t[0].cast<std::vector<size_t>>(),         // visits
                     t[1].cast<pyvrp::Distance>(),             // distance
                     t[2].cast<pyvrp::Cost>(),                 // distance cost
@@ -440,11 +440,10 @@ PYBIND11_MODULE(_pyvrp, m)
              });
 
     py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
-        // Note, the order of constructors is important! Since Route
-        // implements __len__ and __getitem__, it can also be converted to
-        // std::vector<size_t> and thus a list of Routes is a valid argument
-        // for both constructors. We want to avoid using the second constructor
-        // since that would lose the vehicle types associations. As pybind11
+        // Since Route implements __len__ and __getitem__, it is convertible to
+        // std::vector<size_t> and thus a list of Routes is a valid argument for
+        // both constructors. We want to avoid using the second constructor
+        // since that would lose the vehicle type associations. As pybind11
         // will use the first matching constructor we put this one first.
         .def(py::init<ProblemData const &, std::vector<Route> const &>(),
              py::arg("data"),
@@ -555,22 +554,21 @@ PYBIND11_MODULE(_pyvrp, m)
                 using Neighbours
                     = std::vector<std::optional<std::pair<size_t, size_t>>>;
 
-                Solution sol
-                    = Solution(t[0].cast<size_t>(),           // num clients
-                               t[1].cast<size_t>(),           // num missing
-                               t[2].cast<pyvrp::Distance>(),  // distance
-                               t[3].cast<pyvrp::Cost>(),      // distance cost
-                               t[4].cast<pyvrp::Duration>(),  // duration
-                               t[5].cast<pyvrp::Cost>(),      // duration cost
-                               t[6].cast<pyvrp::Distance>(),  // excess distance
-                               t[7].cast<pyvrp::Load>(),      // excess load
-                               t[8].cast<pyvrp::Cost>(),      // fixed veh cost
-                               t[9].cast<pyvrp::Cost>(),      // prizes
-                               t[10].cast<pyvrp::Cost>(),     // uncollected
-                               t[11].cast<pyvrp::Duration>(),  // time warp
-                               t[12].cast<bool>(),         // is group feasible
-                               t[13].cast<Routes>(),       // routes
-                               t[14].cast<Neighbours>());  // neighbours
+                Solution sol(t[0].cast<size_t>(),            // num clients
+                             t[1].cast<size_t>(),            // num missing
+                             t[2].cast<pyvrp::Distance>(),   // distance
+                             t[3].cast<pyvrp::Cost>(),       // distance cost
+                             t[4].cast<pyvrp::Duration>(),   // duration
+                             t[5].cast<pyvrp::Cost>(),       // duration cost
+                             t[6].cast<pyvrp::Distance>(),   // excess distance
+                             t[7].cast<pyvrp::Load>(),       // excess load
+                             t[8].cast<pyvrp::Cost>(),       // fixed veh cost
+                             t[9].cast<pyvrp::Cost>(),       // prizes
+                             t[10].cast<pyvrp::Cost>(),      // uncollected
+                             t[11].cast<pyvrp::Duration>(),  // time warp
+                             t[12].cast<bool>(),         // is group feasible
+                             t[13].cast<Routes>(),       // routes
+                             t[14].cast<Neighbours>());  // neighbours
 
                 return sol;
             }))

@@ -126,14 +126,14 @@ public:
 
     /**
      * Start time of this route. This is the earliest possible time at which
-     * the route can leave the depot and have a minimal duration and time
-     * warp. If there is positive :meth:`~slack`, the start time can be
-     * delayed by at most :meth:`~slack` time units without increasing the
-     * total (minimal) route duration, or time warp.
+     * the route can leave the depot and have a minimal duration and time warp.
+     * If there is positive :meth:`~slack`, the start time can be delayed by at
+     * most :meth:`~slack` time units without increasing the total (minimal)
+     * route duration, or time warp.
      *
      * .. note::
      *
-     *    It may be possible to leave before the start time (if the depot
+     *    It may be possible to leave before the start time (if the vehicle's
      *    time window allows for it). That will introduce additional waiting
      *    time, such that the route duration will then no longer be minimal.
      *    Delaying departure by more than :meth:`~slack` time units always
@@ -143,19 +143,19 @@ public:
 
     /**
      * End time of the route. This is equivalent to
-     * ``start_time + duration - time_warp``.
+     *  ``start_time + duration - time_warp``.
      */
     [[nodiscard]] Duration endTime() const;
 
     /**
-     * Time by which departure from the depot can be delayed without
-     * resulting in (additional) time warp or increased route duration.
+     * Time by which departure from the depot can be delayed without resulting
+     * in (additional) time warp or increased route duration.
      */
     [[nodiscard]] Duration slack() const;
 
     /**
-     * Earliest time at which this route can leave the depot. Follows from
-     * the release times of clients visited on this route.
+     * Earliest time at which this route can leave the depot. Follows from the
+     * release times of clients visited on this route.
      *
      * .. note::
      *
@@ -218,8 +218,7 @@ public:
           Visits visits,
           VehicleType const vehicleType);
 
-    // This constructor does *no* validation. Useful when unserialising
-    // objects.
+    // This constructor does *no* validation. Useful when unserialising objects.
     Route(Visits visits,
           Distance distance,
           Cost distanceCost,
