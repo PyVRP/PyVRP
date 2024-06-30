@@ -1,4 +1,5 @@
 #include "Route.h"
+#include "DistanceSegment.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 
@@ -91,17 +92,40 @@ Route::Route(ProblemData const &data, Trip visits, VehicleType vehicleType)
 }
 
 Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
-    : trips_(visits.empty() ? Trips{{}} : std::move(visits)),
+    : trips_(std::move(visits)),
       centroid_({0, 0}),
       vehicleType_(vehicleType),
       startDepot_(data.vehicleType(vehicleType).startDepot),
       endDepot_(data.vehicleType(vehicleType).endDepot)
 {
-    assert(!trips_.empty());
-
     auto const &vehType = data.vehicleType(vehicleType);
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
+
+    if (empty())  // special case where the route is empty, and we only need to
+    {             // compute distance and duration from travel between depots
+        auto const distSegment = DistanceSegment::merge(
+            distances,
+            DistanceSegment(startDepot_, startDepot_, 0),
+            DistanceSegment(endDepot_, endDepot_, 0));
+
+        distance_ = distSegment.distance();
+        distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
+        excessDistance_
+            = std::max<Distance>(distance_ - vehType.maxDistance, 0);
+
+        auto const durSegment
+            = DurationSegment::merge(durations,
+                                     DurationSegment(startDepot_, vehType),
+                                     DurationSegment(endDepot_, vehType));
+
+        duration_ = durSegment.duration();
+        durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
+        travel_ = duration_;
+        startTime_ = durSegment.twEarly();
+        slack_ = durSegment.twLate() - durSegment.twEarly();
+        timeWarp_ = durSegment.timeWarp(vehType.maxDuration);
+    }
 
     // TODO make all this work with multi-trip
     // TODO use distance segment
@@ -167,7 +191,6 @@ Route::Route(Trips trips,
              Duration timeWarp,
              Duration travel,
              Duration service,
-             Duration wait,
              Duration release,
              Duration startTime,
              Duration slack,
@@ -188,7 +211,6 @@ Route::Route(Trips trips,
       timeWarp_(timeWarp),
       travel_(travel),
       service_(service),
-      wait_(wait),
       release_(release),
       startTime_(startTime),
       slack_(slack),

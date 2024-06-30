@@ -353,3 +353,12 @@ def test_route_trip_access(ok_small):
 
     assert_equal(route.trip(0), [1, 2])
     assert_equal(route.trip(1), [3, 4])
+
+
+def test_bug_route_empty_visits(ok_small):
+    """
+    Tests that a bug where an empty route caused a bounds violation has been
+    fixed.
+    """
+    route = Route(ok_small, [], 0)
+    assert_equal(route.visits(), [])
