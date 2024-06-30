@@ -112,36 +112,31 @@ void Solution::makeNeighbours(ProblemData const &data)
 
 bool Solution::operator==(Solution const &other) const
 {
-    // First compare simple attributes, since that's quick and cheap.
     // clang-format off
-    bool const simpleChecks = distance_ == other.distance_
+    bool const attributeChecks = distance_ == other.distance_
                               && duration_ == other.duration_
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
                               && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_
-                              && routes_.size() == other.routes_.size();
+                              && routes_.size() == other.routes_.size()
+                              && neighbours_ == other.neighbours_;
     // clang-format on
 
-    if (!simpleChecks)
-        return false;
-
-    // Now test if the neighbours are all equal. If that's the case we have
-    // the same visit structure across routes.
-    if (neighbours_ != other.neighbours_)
+    if (!attributeChecks)
         return false;
 
     // The visits are the same for both solutions, but the vehicle assignments
     // need not be. We check this via a mapping from the first client in each
     // route to the vehicle type of that route. We need to base this on the
-    // visits since the routes need not be in the same order between solutions.
+    // visits since the route order can differ between solutions.
     std::unordered_map<Client, VehicleType> client2vehType;
     for (auto const &route : routes_)
-        client2vehType[route.visits()[0]] = route.vehicleType();
+        client2vehType[route[0]] = route.vehicleType();
 
     for (auto const &route : other.routes_)
-        if (client2vehType[route.visits()[0]] != route.vehicleType())
+        if (client2vehType[route[0]] != route.vehicleType())
             return false;
 
     return true;
