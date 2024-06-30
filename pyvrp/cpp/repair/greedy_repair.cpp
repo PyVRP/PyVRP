@@ -8,14 +8,12 @@
 
 using pyvrp::Solution;
 using pyvrp::search::insertCost;
-using pyvrp::search::Route;
 
-using Locations = std::vector<Route::Node>;
-using Routes = std::vector<Route>;
-using SolRoutes = std::vector<Solution::Route>;
+using SearchRoute = pyvrp::search::Route;
+using SolRoute = pyvrp::Route;
 
-std::vector<Solution::Route>
-pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
+std::vector<SolRoute>
+pyvrp::repair::greedyRepair(std::vector<SolRoute> const &solRoutes,
                             std::vector<size_t> const &unplanned,
                             ProblemData const &data,
                             CostEvaluator const &costEvaluator)
@@ -23,16 +21,16 @@ pyvrp::repair::greedyRepair(SolRoutes const &solRoutes,
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
 
-    Locations locs;
-    Routes routes;
+    std::vector<SearchRoute::Node> locs;
+    std::vector<SearchRoute> routes;
     setupRoutes(locs, routes, solRoutes, data);
 
     for (auto const client : unplanned)
     {
-        Route::Node *U = &locs[client];
+        SearchRoute::Node *U = &locs[client];
         assert(!U->route());
 
-        Route::Node *UAfter = nullptr;
+        SearchRoute::Node *UAfter = nullptr;
         pyvrp::Cost deltaCost = std::numeric_limits<pyvrp::Cost>::max();
 
         for (auto &route : routes)
