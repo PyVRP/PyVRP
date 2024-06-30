@@ -102,6 +102,7 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
+    // TODO can we merge this with the regular case somehow?
     if (empty())  // special case where the route is empty, and we only need to
     {             // compute distance and duration from travel between depots
         auto const distSegment = DistanceSegment::merge(
