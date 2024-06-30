@@ -50,13 +50,6 @@ Route::Iterator Route::Iterator::operator++(int)
     return tmp;
 }
 
-Route::Iterator Route::Iterator::operator--(int)
-{
-    auto tmp = *this;
-    --*this;
-    return tmp;
-}
-
 Route::Iterator &Route::Iterator::operator++()
 {
     auto const tripSize = (*trips)[trip].size();
@@ -67,21 +60,6 @@ Route::Iterator &Route::Iterator::operator++()
     {
         ++trip;
         visit = 0;
-    }
-
-    return *this;
-}
-
-Route::Iterator &Route::Iterator::operator--()
-{
-    if (visit != 0)
-        --visit;
-    else
-    {
-        --trip;
-
-        auto const tripSize = (*trips)[trip].size();
-        visit = tripSize - 1;
     }
 
     return *this;
@@ -249,6 +227,8 @@ Client Route::operator[](size_t idx) const
         else
             idx -= trip.size();
 
+    // TODO this should probably become std::unreachable() once more compilers
+    // support it.
     throw std::out_of_range("Index out of range.");
 }
 

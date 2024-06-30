@@ -32,7 +32,7 @@ class Route
     using Trips = std::vector<Trip>;
 
     /**
-     * A bidirectional iterator through the clients visited by this route.
+     * Forward iterator through the clients visited by this route.
      */
     class Iterator
     {
@@ -61,10 +61,7 @@ class Route
         Client operator*() const;
 
         Iterator operator++(int);
-        Iterator operator--(int);
-
         Iterator &operator++();
-        Iterator &operator--();
     };
 
     Trips trips_;                  // Trips that make up this route
