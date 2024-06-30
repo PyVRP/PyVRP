@@ -1,5 +1,5 @@
-#ifndef PYVRP_ORDERED_CROSSOVER_H
-#define PYVRP_ORDERED_CROSSOVER_H
+#ifndef PYVRP_CROSSOVER_ORDERED_CROSSOVER_H
+#define PYVRP_CROSSOVER_ORDERED_CROSSOVER_H
 
 #include "CostEvaluator.h"
 #include "ProblemData.h"
@@ -29,4 +29,4 @@ orderedCrossover(std::pair<Solution const *, Solution const *> const &parents,
                  std::pair<size_t, size_t> const &indices);
 }  // namespace pyvrp::crossover
 
-#endif  // PYVRP_ORDERED_CROSSOVER_H
+#endif  // PYVRP_CROSSOVER_ORDERED_CROSSOVER_H

@@ -1,5 +1,5 @@
-#ifndef PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
-#define PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
+#ifndef PYVRP_CROSSOVER_SELECTIVE_ROUTE_EXCHANGE_H
+#define PYVRP_CROSSOVER_SELECTIVE_ROUTE_EXCHANGE_H
 
 #include "CostEvaluator.h"
 #include "ProblemData.h"
@@ -36,4 +36,4 @@ Solution selectiveRouteExchange(
     size_t const numMovedRoutes);
 }  // namespace pyvrp::crossover
 
-#endif  // PYVRP_SELECTIVE_ROUTE_EXCHANGE_H
+#endif  // PYVRP_CROSSOVER_SELECTIVE_ROUTE_EXCHANGE_H
