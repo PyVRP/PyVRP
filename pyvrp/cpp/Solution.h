@@ -237,8 +237,8 @@ public:
      */
     Solution(ProblemData const &data, RandomNumberGenerator &rng);
 
-    // This constructs using routes given as lists of client indices. Assumes
-    // all routes use vehicles having vehicle type 0.
+    // This constructs from the given lists of client indices. Assumes all
+    // routes are intended to use vehicles of the first vehicle type.
     Solution(ProblemData const &data,
              std::vector<std::vector<Client>> const &routes);
 

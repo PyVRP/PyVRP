@@ -459,12 +459,11 @@ PYBIND11_MODULE(_pyvrp, m)
              });
 
     py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
-        // Note, the order of constructors is important! Since Route implements
-        // __len__ and __getitem__, it is convertible to std::vector<size_t>
-        // and thus a list of Routes is a valid argument for both constructors.
-        // We want to avoid using the second constructor  since that would lose
-        // the vehicle types associations. As pybind11c will use the first
-        // matching constructor we put this one first.
+        // Since Route implements __len__ and __getitem__, it is convertible to
+        // std::vector<size_t> and thus a list of Routes is a valid argument for
+        // both constructors. We want to avoid using the second constructor
+        // since that would lose the vehicle type associations. As pybind11
+        // will use the first matching constructor we put this one first.
         .def(py::init<ProblemData const &, std::vector<Route> const &>(),
              py::arg("data"),
              py::arg("routes"))

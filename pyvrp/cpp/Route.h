@@ -243,7 +243,7 @@ public:
     // Case where the visits are made over one or more trips.
     Route(ProblemData const &data, Trips visits, VehicleType vehicleType);
 
-    // This constructor does *no* validation. Useful when unserialising routes.
+    // This constructor does *no* validation. Useful when unserialising objects.
     Route(Trips trips,
           Distance distance,
           Cost distanceCost,
