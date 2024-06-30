@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <numeric>
+#include <stdexcept>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -14,6 +15,76 @@ using pyvrp::Route;
 
 using Client = size_t;
 
+Route::Iterator::Iterator(Trips const &trips, size_t trip, size_t visit)
+    : trips(&trips), trip(trip), visit(visit)
+{
+}
+
+Route::Iterator Route::Iterator::begin(Trips const &trips)
+{
+    return Iterator(trips, 0, 0);
+}
+
+Route::Iterator Route::Iterator::end(Trips const &trips)
+{
+    return Iterator(trips, trips.size(), 0);
+}
+
+bool Route::Iterator::operator==(Iterator const &other) const
+{
+    return trips == other.trips && trip == other.trip && visit == other.visit;
+}
+
+Client Route::Iterator::operator*() const
+{
+    assert(trip < trips->size());
+    return (*trips)[trip][visit];
+}
+
+Route::Iterator Route::Iterator::operator++(int)
+{
+    auto tmp = *this;
+    ++*this;
+    return tmp;
+}
+
+Route::Iterator Route::Iterator::operator--(int)
+{
+    auto tmp = *this;
+    --*this;
+    return tmp;
+}
+
+Route::Iterator &Route::Iterator::operator++()
+{
+    auto const tripSize = (*trips)[trip].size();
+
+    if (visit + 1 < tripSize)
+        ++visit;
+    else
+    {
+        ++trip;
+        visit = 0;
+    }
+
+    return *this;
+}
+
+Route::Iterator &Route::Iterator::operator--()
+{
+    if (visit != 0)
+        --visit;
+    else
+    {
+        --trip;
+
+        auto const tripSize = (*trips)[trip].size();
+        visit = tripSize - 1;
+    }
+
+    return *this;
+}
+
 Route::Route(ProblemData const &data, Trip visits, VehicleType vehicleType)
     : Route(data, std::vector<Trip>{visits}, vehicleType)
 {
@@ -22,14 +93,13 @@ Route::Route(ProblemData const &data, Trip visits, VehicleType vehicleType)
 Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
     : trips_(visits.empty() ? Trips{{}} : std::move(visits)),
       centroid_({0, 0}),
-      vehicleType_(vehicleType)
+      vehicleType_(vehicleType),
+      startDepot_(data.vehicleType(vehicleType).startDepot),
+      endDepot_(data.vehicleType(vehicleType).endDepot)
 {
     assert(!trips_.empty());
 
     auto const &vehType = data.vehicleType(vehicleType);
-    startDepot_ = vehType.startDepot;
-    endDepot_ = vehType.endDepot;
-
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
@@ -141,19 +211,22 @@ size_t Route::size() const
                            { return count + trip.size(); });
 }
 
-Client Route::operator[](size_t idx) const { return trips_[0][idx]; }
-
-std::vector<Client>::const_iterator Route::begin() const
+Client Route::operator[](size_t idx) const
 {
-    return trips_[0].cbegin();
+    for (auto const &trip : trips_)
+        if (idx < trip.size())
+            return trip[idx];
+        else
+            idx -= trip.size();
+
+    throw std::out_of_range("Index out of range.");
 }
 
-std::vector<Client>::const_iterator Route::end() const
-{
-    return trips_[0].cend();
-}
+Route::Iterator Route::begin() const { return Iterator::begin(trips_); }
 
-std::vector<Client> const &Route::visits() const { return trips_[0]; }
+Route::Iterator Route::end() const { return Iterator::end(trips_); }
+
+std::vector<Client> Route::visits() const { return {begin(), end()}; }
 
 std::vector<std::vector<Client>> const &Route::trips() const { return trips_; }
 

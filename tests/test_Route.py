@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import RandomNumberGenerator, Route, Solution, VehicleType
 from tests.helpers import read
@@ -314,6 +314,28 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
     dur_mat = data.duration_matrix(0)
     assert_equal(route.duration(), dur_mat[0, 1])
+
+
+@pytest.mark.parametrize("visits", [[1, 2, 3, 4], [[1, 2], [3, 4]]])
+def test_route_indexing(ok_small, visits):
+    """
+    Tests that routes are properly indexed with one or multiple trips, and
+    raise an index error when the given argument is out-of-bounds.
+    """
+    route = Route(ok_small, visits, 0)
+
+    assert_equal(len(route), 4)
+    assert_equal(route[0], 1)
+    assert_equal(route[1], 2)
+    assert_equal(route[2], 3)
+
+    # Last visit on the route is 4, which can also be obtained by indexing
+    # with negative numbers.
+    assert_equal(route[3], 4)
+    assert_equal(route[-1], 4)
+
+    with assert_raises(IndexError):  # 5 is out-of-bounds.
+        route[5]
 
 
 def test_route_trip_access(ok_small):
