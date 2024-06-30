@@ -37,11 +37,10 @@ namespace pyvrp::repair
  *     When the list of routes is empty but the list of unplanned clients is
  *     not.
  */
-std::vector<Solution::Route>
-greedyRepair(std::vector<Solution::Route> const &routes,
-             std::vector<size_t> const &unplanned,
-             ProblemData const &data,
-             CostEvaluator const &costEvaluator);
+std::vector<pyvrp::Route> greedyRepair(std::vector<pyvrp::Route> const &routes,
+                                       std::vector<size_t> const &unplanned,
+                                       ProblemData const &data,
+                                       CostEvaluator const &costEvaluator);
 }  // namespace pyvrp::repair
 
 #endif  // PYVRP_REPAIR_GREEDY_REPAIR_H
