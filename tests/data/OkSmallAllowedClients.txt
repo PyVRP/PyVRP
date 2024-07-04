@@ -1,5 +1,5 @@
 NAME : TEST
-COMMENT : Small problem instance with four customers and a mutually exclusive group
+COMMENT : Small problem instance with four customers and vehicle-client restrictions
 DIMENSION : 5
 EDGE_WEIGHT_TYPE : EXPLICIT
 EDGE_WEIGHT_FORMAT : FULL_MATRIX
@@ -35,9 +35,10 @@ SERVICE_TIME_SECTION
 3    360
 4    420
 5    360
-MUTUALLY_EXCLUSIVE_GROUP_SECTION
-1    2  3   4
-2    5
+VEHICLES_ALLOWED_CLIENTS_SECTION
+1    2   3   4   5
+2    2   3   4   5
+3    2   3   4
 DEPOT_SECTION
 1
 -1

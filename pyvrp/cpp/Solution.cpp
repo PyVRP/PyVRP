@@ -1,7 +1,6 @@
 #include "Solution.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
-#include "ProblemData.h"
 
 #include <algorithm>
 #include <fstream>
@@ -12,11 +11,11 @@ using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
+using pyvrp::Route;
 using pyvrp::Solution;
 
 using Client = size_t;
-using Visits = std::vector<Client>;
-using Routes = std::vector<Solution::Route>;
+using Routes = std::vector<Route>;
 using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
 void Solution::evaluate(ProblemData const &data)
@@ -100,47 +99,44 @@ void Solution::makeNeighbours(ProblemData const &data)
 {
     for (auto const &route : routes_)
     {
-        auto const depot = data.vehicleType(route.vehicleType()).depot;
+        auto const &vehicleType = data.vehicleType(route.vehicleType());
+        auto const startDepot = vehicleType.startDepot;
+        auto const endDepot = vehicleType.endDepot;
 
         for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours_[route[idx]]
-                = {idx == 0 ? depot : route[idx - 1],                  // pred
-                   idx == route.size() - 1 ? depot : route[idx + 1]};  // succ
+            neighbours_[route[idx]] = {
+                idx == 0 ? startDepot : route[idx - 1],                // pred
+                idx == route.size() - 1 ? endDepot : route[idx + 1]};  // succ
     }
 }
 
 bool Solution::operator==(Solution const &other) const
 {
-    // First compare simple attributes, since that's quick and cheap.
     // clang-format off
-    bool const simpleChecks = distance_ == other.distance_
+    bool const attributeChecks = distance_ == other.distance_
                               && duration_ == other.duration_
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
                               && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_
-                              && routes_.size() == other.routes_.size();
+                              && routes_.size() == other.routes_.size()
+                              && neighbours_ == other.neighbours_;
     // clang-format on
 
-    if (!simpleChecks)
-        return false;
-
-    // Now test if the neighbours are all equal. If that's the case we have
-    // the same visit structure across routes.
-    if (neighbours_ != other.neighbours_)
+    if (!attributeChecks)
         return false;
 
     // The visits are the same for both solutions, but the vehicle assignments
     // need not be. We check this via a mapping from the first client in each
     // route to the vehicle type of that route. We need to base this on the
-    // visits since the routes need not be in the same order between solutions.
+    // visits since the route order can differ between solutions.
     std::unordered_map<Client, VehicleType> client2vehType;
     for (auto const &route : routes_)
-        client2vehType[route.visits()[0]] = route.vehicleType();
+        client2vehType[route[0]] = route.vehicleType();
 
     for (auto const &route : other.routes_)
-        if (client2vehType[route.visits()[0]] != route.vehicleType())
+        if (client2vehType[route[0]] != route.vehicleType())
             return false;
 
     return true;
@@ -303,200 +299,6 @@ Solution::Solution(size_t numClients,
 {
 }
 
-Solution::Route::Route(ProblemData const &data,
-                       Visits visits,
-                       size_t const vehicleType)
-    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
-{
-    auto const &vehType = data.vehicleType(vehicleType);
-    depot_ = vehType.depot;
-
-    if (visits_.empty())
-        return;
-
-    DurationSegment depotDS(vehType);
-
-    auto ds = depotDS;
-    auto ls = LoadSegment(0, 0, 0);
-    size_t prevClient = vehType.depot;
-
-    auto const &distances = data.distanceMatrix(vehType.profile);
-    auto const &durations = data.durationMatrix(vehType.profile);
-
-    for (size_t idx = 0; idx != size(); ++idx)
-    {
-        auto const client = visits_[idx];
-        ProblemData::Client const &clientData = data.location(client);
-
-        distance_ += distances(prevClient, client);
-        travel_ += durations(prevClient, client);
-        service_ += clientData.serviceDuration;
-        prizes_ += clientData.prize;
-
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
-
-        auto const clientDS = DurationSegment(client, clientData);
-        ds = DurationSegment::merge(durations, ds, clientDS);
-
-        auto const clientLs = LoadSegment(clientData);
-        ls = LoadSegment::merge(ls, clientLs);
-
-        prevClient = client;
-    }
-
-    Client const last = visits_.back();  // last client has depot as successor
-    distance_ += distances(last, vehType.depot);
-    distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
-    excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
-
-    travel_ += durations(last, vehType.depot);
-
-    delivery_ = ls.delivery();
-    pickup_ = ls.pickup();
-    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
-
-    ds = DurationSegment::merge(durations, ds, depotDS);
-    duration_ = ds.duration();
-    durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.earliestStart();
-    slack_ = ds.latestStart() - ds.earliestStart();
-    timeWarp_ = ds.timeWarp(vehType.maxDuration);
-    release_ = ds.releaseTime();
-}
-
-Solution::Route::Route(Visits visits,
-                       Distance distance,
-                       Cost distanceCost,
-                       Distance excessDistance,
-                       Load delivery,
-                       Load pickup,
-                       Load excessLoad,
-                       Duration duration,
-                       Cost durationCost,
-                       Duration timeWarp,
-                       Duration travel,
-                       Duration service,
-                       Duration wait,
-                       Duration release,
-                       Duration startTime,
-                       Duration slack,
-                       Cost prizes,
-                       std::pair<double, double> centroid,
-                       size_t vehicleType,
-                       size_t depot)
-    : visits_(std::move(visits)),
-      distance_(distance),
-      distanceCost_(distanceCost),
-      excessDistance_(excessDistance),
-      delivery_(delivery),
-      pickup_(pickup),
-      excessLoad_(excessLoad),
-      duration_(duration),
-      durationCost_(durationCost),
-      timeWarp_(timeWarp),
-      travel_(travel),
-      service_(service),
-      wait_(wait),
-      release_(release),
-      startTime_(startTime),
-      slack_(slack),
-      prizes_(prizes),
-      centroid_(centroid),
-      vehicleType_(vehicleType),
-      depot_(depot)
-{
-}
-
-bool Solution::Route::empty() const { return visits_.empty(); }
-
-size_t Solution::Route::size() const { return visits_.size(); }
-
-Client Solution::Route::operator[](size_t idx) const { return visits_[idx]; }
-
-Visits::const_iterator Solution::Route::begin() const
-{
-    return visits_.cbegin();
-}
-
-Visits::const_iterator Solution::Route::end() const { return visits_.cend(); }
-
-Visits const &Solution::Route::visits() const { return visits_; }
-
-Distance Solution::Route::distance() const { return distance_; }
-
-Cost Solution::Route::distanceCost() const { return distanceCost_; }
-
-Distance Solution::Route::excessDistance() const { return excessDistance_; }
-
-Load Solution::Route::delivery() const { return delivery_; }
-
-Load Solution::Route::pickup() const { return pickup_; }
-
-Load Solution::Route::excessLoad() const { return excessLoad_; }
-
-Duration Solution::Route::duration() const { return duration_; }
-
-Cost Solution::Route::durationCost() const { return durationCost_; }
-
-Duration Solution::Route::serviceDuration() const { return service_; }
-
-Duration Solution::Route::timeWarp() const { return timeWarp_; }
-
-Duration Solution::Route::waitDuration() const
-{
-    return duration_ - travel_ - service_;
-}
-
-Duration Solution::Route::travelDuration() const { return travel_; }
-
-Duration Solution::Route::startTime() const { return startTime_; }
-
-Duration Solution::Route::endTime() const
-{
-    return startTime_ + duration_ - timeWarp_;
-}
-
-Duration Solution::Route::slack() const { return slack_; }
-
-Duration Solution::Route::releaseTime() const { return release_; }
-
-Cost Solution::Route::prizes() const { return prizes_; }
-
-std::pair<double, double> const &Solution::Route::centroid() const
-{
-    return centroid_;
-}
-
-size_t Solution::Route::vehicleType() const { return vehicleType_; }
-
-size_t Solution::Route::depot() const { return depot_; }
-
-bool Solution::Route::isFeasible() const
-{
-    return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
-}
-
-bool Solution::Route::hasExcessLoad() const { return excessLoad_ > 0; }
-
-bool Solution::Route::hasExcessDistance() const { return excessDistance_ > 0; }
-
-bool Solution::Route::hasTimeWarp() const { return timeWarp_ > 0; }
-
-bool Solution::Route::operator==(Solution::Route const &other) const
-{
-    // First compare simple attributes, since that's a quick and cheap check.
-    // Only when these are the same we test if the visits are all equal.
-    // clang-format off
-    return distance_ == other.distance_
-        && delivery_ == other.delivery_
-        && pickup_ == other.pickup_
-        && timeWarp_ == other.timeWarp_
-        && vehicleType_ == other.vehicleType_
-        && visits_ == other.visits_;
-    // clang-format on
-}
-
 std::ostream &operator<<(std::ostream &out, Solution const &sol)
 {
     auto const &routes = sol.routes();
@@ -504,12 +306,5 @@ std::ostream &operator<<(std::ostream &out, Solution const &sol)
     for (size_t idx = 0; idx != routes.size(); ++idx)
         out << "Route #" << idx + 1 << ": " << routes[idx] << '\n';
 
-    return out;
-}
-
-std::ostream &operator<<(std::ostream &out, Solution::Route const &route)
-{
-    for (Client const client : route)
-        out << client << ' ';
     return out;
 }

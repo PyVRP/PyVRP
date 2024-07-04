@@ -1,5 +1,5 @@
-#ifndef PYVRP_LOCALSEARCHOPERATOR_H
-#define PYVRP_LOCALSEARCHOPERATOR_H
+#ifndef PYVRP_SEARCH_LOCALSEARCHOPERATOR_H
+#define PYVRP_SEARCH_LOCALSEARCHOPERATOR_H
 
 #include "CostEvaluator.h"
 #include "Measure.h"
@@ -78,4 +78,4 @@ public:
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_LOCALSEARCHOPERATOR_H
+#endif  // PYVRP_SEARCH_LOCALSEARCHOPERATOR_H

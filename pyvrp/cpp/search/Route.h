@@ -1,5 +1,5 @@
-#ifndef PYVRP_ROUTE_H
-#define PYVRP_ROUTE_H
+#ifndef PYVRP_SEARCH_ROUTE_H
+#define PYVRP_SEARCH_ROUTE_H
 
 #include "DistanceSegment.h"
 #include "DurationSegment.h"
@@ -179,8 +179,8 @@ private:
     std::vector<Node *> nodes;  // Nodes in this route, including depots
     std::pair<double, double> centroid_;  // Center point of route's clients
 
-    Node startDepot;  // Departure depot for this route
-    Node endDepot;    // Return depot for this route
+    Node startDepot_;  // Departure depot for this route
+    Node endDepot_;    // Return depot for this route
 
     std::vector<DistanceSegment> distAt;      // Dist data at each node
     std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
@@ -282,9 +282,14 @@ public:
     [[nodiscard]] inline Load capacity() const;
 
     /**
-     * @return The location index of this route's depot.
+     * @return The location index of this route's starting depot.
      */
-    [[nodiscard]] inline size_t depot() const;
+    [[nodiscard]] inline size_t startDepot() const;
+
+    /**
+     * @return The location index of this route's ending depot.
+     */
+    [[nodiscard]] inline size_t endDepot() const;
 
     /**
      * @return The fixed cost of the vehicle servicing this route.
@@ -658,7 +663,9 @@ Distance Route::excessDistance() const
 
 Load Route::capacity() const { return vehicleType_.capacity; }
 
-size_t Route::depot() const { return vehicleType_.depot; }
+size_t Route::startDepot() const { return vehicleType_.startDepot; }
+
+size_t Route::endDepot() const { return vehicleType_.endDepot; }
 
 Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 
@@ -789,4 +796,4 @@ LoadSegment Route::Proposal<Segments...>::loadSegment() const
 // Outputs a route into a given ostream in CVRPLib format
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
 
-#endif  // PYVRP_ROUTE_H
+#endif  // PYVRP_SEARCH_ROUTE_H

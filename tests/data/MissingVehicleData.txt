@@ -1,5 +1,5 @@
 NAME : TEST
-COMMENT : Small problem instance with four customers and a mutually exclusive group
+COMMENT : Small problem instance with four customers
 DIMENSION : 5
 EDGE_WEIGHT_TYPE : EXPLICIT
 EDGE_WEIGHT_FORMAT : FULL_MATRIX
@@ -23,21 +23,14 @@ DEMAND_SECTION
 3    5
 4    3
 5    5
-TIME_WINDOW_SECTION
-1    0      45000
-2    15600  22500
-3    12000  19500
-4    8400   15300
-5    12000  19500
-SERVICE_TIME_SECTION
-1    0
-2    360
-3    360
-4    420
-5    360
-MUTUALLY_EXCLUSIVE_GROUP_SECTION
-1    2  3   4
-2    5
+VEHICLES_MAX_DURATION_SECTION
+1    2
+2    3
+3    4
+VEHICLES_DEPOT_SECTION
+# The instance has three vehicles, but this section only includes information
+# about the first vehicle.
+1    1
 DEPOT_SECTION
 1
 -1

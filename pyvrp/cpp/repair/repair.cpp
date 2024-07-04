@@ -3,15 +3,13 @@
 #include <cassert>
 
 using pyvrp::Solution;
-using pyvrp::search::Route;
 
-using Locations = std::vector<Route::Node>;
-using Routes = std::vector<Route>;
-using SolRoutes = std::vector<Solution::Route>;
+using SearchRoute = pyvrp::search::Route;
+using SolRoute = pyvrp::Route;
 
-void pyvrp::repair::setupRoutes(Locations &locs,
-                                Routes &routes,
-                                SolRoutes const &solRoutes,
+void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
+                                std::vector<SearchRoute> &routes,
+                                std::vector<SolRoute> const &solRoutes,
                                 ProblemData const &data)
 {
     assert(locs.empty() && routes.empty());
@@ -35,10 +33,11 @@ void pyvrp::repair::setupRoutes(Locations &locs,
     }
 }
 
-std::vector<Solution::Route>
-pyvrp::repair::exportRoutes(ProblemData const &data, Routes const &routes)
+std::vector<SolRoute>
+pyvrp::repair::exportRoutes(ProblemData const &data,
+                            std::vector<SearchRoute> const &routes)
 {
-    std::vector<Solution::Route> solRoutes;
+    std::vector<SolRoute> solRoutes;
     solRoutes.reserve(routes.size());
 
     for (auto const &route : routes)

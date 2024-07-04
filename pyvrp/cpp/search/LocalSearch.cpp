@@ -411,7 +411,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
 Solution LocalSearch::exportSolution() const
 {
-    std::vector<Solution::Route> solRoutes;
+    std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
     for (auto const &route : routes)

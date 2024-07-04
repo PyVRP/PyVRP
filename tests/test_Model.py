@@ -158,10 +158,10 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.max_distance, 97)
 
 
-def test_add_vehicle_type_default_depot():
+def test_add_vehicle_type_default_depots():
     """
     Tests that ``Model.add_vehicle_type`` correctly sets the (default) depot
-    attribute on the vehicle type.
+    attributes on the vehicle type.
     """
     m = Model()
     depot1 = m.add_depot(x=0, y=0)
@@ -169,15 +169,23 @@ def test_add_vehicle_type_default_depot():
 
     # No depot specified: should default to the first (location index 0).
     vehicle_type1 = m.add_vehicle_type()
-    assert_equal(vehicle_type1.depot, 0)
+    assert_equal(vehicle_type1.start_depot, 0)
+    assert_equal(vehicle_type1.end_depot, 0)
 
     # First depot specified, should set first (location index 0).
-    vehicle_type2 = m.add_vehicle_type(depot=depot1)
-    assert_equal(vehicle_type2.depot, 0)
+    vehicle_type2 = m.add_vehicle_type(start_depot=depot1, end_depot=depot1)
+    assert_equal(vehicle_type2.start_depot, 0)
+    assert_equal(vehicle_type2.end_depot, 0)
 
     # Second depot specified, should set second (location index 1).
-    vehicle_type3 = m.add_vehicle_type(depot=depot2)
-    assert_equal(vehicle_type3.depot, 1)
+    vehicle_type3 = m.add_vehicle_type(start_depot=depot2, end_depot=depot2)
+    assert_equal(vehicle_type3.start_depot, 1)
+    assert_equal(vehicle_type3.start_depot, 1)
+
+    # A mix is also OK.
+    vehicle_type3 = m.add_vehicle_type(start_depot=depot1, end_depot=depot2)
+    assert_equal(vehicle_type3.start_depot, 0)
+    assert_equal(vehicle_type3.end_depot, 1)
 
 
 def test_add_vehicle_type_raises_for_unknown_depot():
@@ -189,7 +197,10 @@ def test_add_vehicle_type_raises_for_unknown_depot():
     depot = Depot(x=0, y=0)
 
     with assert_raises(ValueError):
-        m.add_vehicle_type(depot=depot)
+        m.add_vehicle_type(start_depot=depot)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(end_depot=depot)
 
 
 def test_get_locations():
@@ -508,8 +519,8 @@ def test_model_solves_line_instance_with_multiple_depots():
     depot1 = m.add_depot(x=0, y=0)  # location 0
     depot2 = m.add_depot(x=5, y=0)  # location 1
 
-    m.add_vehicle_type(1, depot=depot1)
-    m.add_vehicle_type(1, depot=depot2)
+    m.add_vehicle_type(1, start_depot=depot1, end_depot=depot1)
+    m.add_vehicle_type(1, start_depot=depot2, end_depot=depot2)
 
     for idx in range(1, 5):  # locations 2, 3, 4, and 5
         m.add_client(x=idx, y=0)

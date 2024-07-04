@@ -13,11 +13,11 @@ namespace pyvrp::repair
 // Populate the given locs and routes vectors with routes from the solution.
 void setupRoutes(std::vector<search::Route::Node> &locs,
                  std::vector<search::Route> &routes,
-                 std::vector<Solution::Route> const &solRoutes,
+                 std::vector<pyvrp::Route> const &solRoutes,
                  ProblemData const &data);
 
 // Turns the given search routes into solution routes.
-std::vector<Solution::Route>
+std::vector<pyvrp::Route>
 exportRoutes(ProblemData const &data, std::vector<search::Route> const &routes);
 }  // namespace pyvrp::repair
 
