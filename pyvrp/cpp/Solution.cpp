@@ -314,15 +314,7 @@ Solution::Route::Route(ProblemData const &data,
     if (visits_.empty())
         return;
 
-    // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &depotLocation = data.location(depot_);
-    DurationSegment depotDS(depot_,
-                            depot_,
-                            0,
-                            std::max(depotLocation.twEarly, vehType.twEarly),
-                            std::min(depotLocation.twLate, vehType.twLate),
-                            0);
+    DurationSegment depotDS(vehType);
 
     auto ds = depotDS;
     auto ls = LoadSegment(0, 0, 0);

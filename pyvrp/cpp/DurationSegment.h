@@ -106,6 +106,9 @@ public:
     // Construct from attributes of the given client.
     DurationSegment(size_t idx, ProblemData::Client const &client);
 
+    // Construct from attributes of the given vehicle type.
+    DurationSegment(ProblemData::VehicleType const &vehicleType);
+
     // Construct from raw data.
     inline DurationSegment(size_t idxFirst,
                            size_t idxLast,
@@ -197,11 +200,13 @@ Duration DurationSegment::duration() const { return duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
-    // clang-format off
-    return std::max<Duration>(earliestStart_ + duration_ - latestFinish_, 0)
-         + std::max<Duration>(releaseTime_ - latestStart(), 0)
-         + std::max<Duration>(duration_ - maxDuration, 0);
-    // clang-format on
+    auto const tw
+        = std::max<Duration>(earliestStart_ + duration_ - latestFinish_, 0);
+    return tw
+           + std::max<Duration>(releaseTime_ - latestStart(), 0)
+           // Max duration constraint applies only to net route duration,
+           // subtracting existing time warp. Use ternary to avoid underflow.
+           + (duration_ - tw > maxDuration ? duration_ - tw - maxDuration : 0);
 }
 
 Duration DurationSegment::latestStart() const
