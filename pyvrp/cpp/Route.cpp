@@ -65,8 +65,8 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     ds = DurationSegment::merge(durations, ds, endDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.twEarly();
-    slack_ = ds.twLate() - ds.twEarly();
+    startTime_ = ds.earliestStart();
+    slack_ = ds.latestStart() - ds.earliestStart();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
     release_ = ds.releaseTime();
 }

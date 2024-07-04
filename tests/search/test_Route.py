@@ -332,12 +332,12 @@ def test_route_duration_access(ok_small):
 
         if is_depot:
             vehicle_type = ok_small.vehicle_type(route.vehicle_type)
-            assert_equal(ds.tw_early(), vehicle_type.tw_early)
-            assert_equal(ds.tw_late(), vehicle_type.tw_late)
+            assert_equal(ds.earliest_start(), vehicle_type.tw_early)
+            assert_equal(ds.latest_start(), vehicle_type.tw_late)
             assert_equal(ds.duration(), 0)
         else:
-            assert_equal(ds.tw_early(), loc.tw_early)
-            assert_equal(ds.tw_late(), loc.tw_late)
+            assert_equal(ds.earliest_start(), loc.tw_early)
+            assert_equal(ds.latest_start(), loc.tw_late)
             assert_equal(ds.duration(), loc.service_duration)
 
 
