@@ -4,7 +4,15 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import RandomNumberGenerator, Route, Solution, VehicleType
+from pyvrp import (
+    Client,
+    Depot,
+    ProblemData,
+    RandomNumberGenerator,
+    Route,
+    Solution,
+    VehicleType,
+)
 from tests.helpers import read
 
 
@@ -316,6 +324,26 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
     dur_mat = data.duration_matrix(0)
     assert_equal(route.duration(), dur_mat[0, 1])
+
+
+def test_bug_start_time_before_release_time():
+    """
+    Tests that the bug identified in https://github.com/PyVRP/PyVRP/issues/633
+    has been corrected.
+    """
+    mat = [[0, 10], [10, 0]]
+    data = ProblemData(
+        clients=[Client(1, 1, release_time=5)],
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[mat],
+        duration_matrices=[mat],
+    )
+
+    route = Route(data, [1], 0)
+    assert_(route.is_feasible())
+    assert_equal(route.start_time(), 5)
+    assert_equal(route.end_time(), 25)
 
 
 @pytest.mark.parametrize("visits", [[1, 2, 3, 4], [[1, 2], [3, 4]]])
