@@ -406,3 +406,43 @@ def test_raises_multiple_trips_without_reload_depot(ok_small):
 
     with assert_raises(ValueError):
         Route(ok_small, [[1], [2]], 0)
+
+
+def test_load_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates load violations with multiple trips.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, 10, reload_depot=0)])
+
+    # Route wants to visit every client in a single trip. That does not fit in
+    # the vehicle's capacity, so this has excess load.
+    route1 = Route(data, [1, 2, 3, 4], 0)
+    assert_(route1.has_excess_load())
+    assert_equal(route1.delivery(), 18)
+
+    # But splitting the visits up over two different trips is fine, now the
+    # vehicle's capacity is respected.
+    route2 = Route(data, [[1, 2], [3, 4]], 0)
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.delivery(), 18)
+
+
+def test_distance_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates travel distance and maximum distance
+    violations with multiple trips.
+    """
+    vehicle_type = VehicleType(3, 10, max_distance=7_000, reload_depot=0)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    dist = data.distance_matrix(0)
+
+    route1 = Route(data, [[1, 2, 3, 4]], 0)
+    assert_(not route1.has_excess_distance())
+    assert_equal(route1.distance(), 6_450)
+
+    route2 = Route(data, [[1, 2], [3, 4]], 0)
+    assert_(route2.has_excess_distance())
+    assert_equal(
+        route2.distance(),
+        route1.distance() + dist[2, 0] + dist[0, 3] - dist[2, 3],
+    )

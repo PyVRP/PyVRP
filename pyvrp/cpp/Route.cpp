@@ -112,13 +112,16 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
         return;
     }
 
-    // TODO make all this work with multi-trip
     for (size_t trip = 0; trip != numTrips(); ++trip)
     {
         auto ls = LoadSegment(0, 0, 0);
 
-        size_t prev = trip == 0 ? startDepot_ : endDepot_;
-        DurationSegment ds = {trip == 0 ? startDepot_ : endDepot_, vehType};
+        size_t end = reloadDepot_.value_or(endDepot_);
+        if (trip == numTrips() - 1)
+            end = endDepot_;
+
+        size_t prev = trip == 0 ? startDepot_ : end;
+        DurationSegment ds = {trip == 0 ? startDepot_ : end, vehType};
 
         for (auto const client : trips_[trip])
         {
@@ -141,18 +144,15 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
             prev = client;
         }
 
-        distance_ += distances(prev, endDepot_);
-        distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
-        excessDistance_
-            = std::max<Distance>(distance_ - vehType.maxDistance, 0);
+        distance_ += distances(prev, end);
+        travel_ += durations(prev, end);
 
-        travel_ += durations(prev, endDepot_);
+        delivery_ += ls.delivery();
+        pickup_ += ls.pickup();
+        excessLoad_ += std::max<Load>(ls.load() - vehType.capacity, 0);
 
-        delivery_ = ls.delivery();
-        pickup_ = ls.pickup();
-        excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
-
-        DurationSegment endDS(endDepot_, vehType);
+        // TODO fix this
+        DurationSegment endDS(end, vehType);
         ds = DurationSegment::merge(durations, ds, endDS);
         duration_ = ds.duration();
         durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
@@ -161,6 +161,9 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
         timeWarp_ = ds.timeWarp(vehType.maxDuration);
         release_ = ds.releaseTime();
     }
+
+    distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
+    excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 }
 
 Route::Route(Trips trips,
