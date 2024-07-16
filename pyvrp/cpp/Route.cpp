@@ -112,16 +112,14 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
         return;
     }
 
+    DurationSegment routeDuration = {startDepot_, vehType};
+
     for (size_t trip = 0; trip != numTrips(); ++trip)
     {
         auto ls = LoadSegment(0, 0, 0);
 
-        size_t end = reloadDepot_.value_or(endDepot_);
-        if (trip == numTrips() - 1)
-            end = endDepot_;
-
-        size_t prev = trip == 0 ? startDepot_ : end;
-        DurationSegment ds = {trip == 0 ? startDepot_ : end, vehType};
+        size_t prev = trip == 0 ? startDepot_ : reloadDepot_.value();
+        DurationSegment ds = {prev, vehType};
 
         for (auto const client : trips_[trip])
         {
@@ -144,6 +142,7 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
             prev = client;
         }
 
+        size_t end = trip == numTrips() - 1 ? endDepot_ : reloadDepot_.value();
         distance_ += distances(prev, end);
         travel_ += durations(prev, end);
 
@@ -151,19 +150,23 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
         pickup_ += ls.pickup();
         excessLoad_ += std::max<Load>(ls.load() - vehType.capacity, 0);
 
-        // TODO fix this
         DurationSegment endDS(end, vehType);
         ds = DurationSegment::merge(durations, ds, endDS);
-        duration_ = ds.duration();
-        durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-        startTime_ = ds.twEarly();
-        slack_ = ds.twLate() - ds.twEarly();
-        timeWarp_ = ds.timeWarp(vehType.maxDuration);
-        release_ = ds.releaseTime();
+
+        if (trip == 0)
+            release_ = ds.releaseTime();
+
+        routeDuration = DurationSegment::merge(durations, routeDuration, ds);
     }
 
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
+
+    duration_ = routeDuration.duration();
+    durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
+    startTime_ = routeDuration.twEarly();
+    slack_ = routeDuration.twLate() - routeDuration.twEarly();
+    timeWarp_ = routeDuration.timeWarp(vehType.maxDuration);
 }
 
 Route::Route(Trips trips,

@@ -446,3 +446,50 @@ def test_distance_multi_trip(ok_small):
         route2.distance(),
         route1.distance() + dist[2, 0] + dist[0, 3] - dist[2, 3],
     )
+
+
+def test_duration_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates travel duration and time warp on routes
+    with multiple trips.
+    """
+    vehicle_type = VehicleType(3, 10, reload_depot=0)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    duration = data.duration_matrix(0)
+
+    route1 = Route(data, [[1, 2, 4]], 0)
+    assert_(not route1.has_time_warp())
+    assert_equal(route1.time_warp(), 0)
+    assert_equal(route1.duration(), 7_181)
+
+    # After servicing the first trip, returning to the depot, and arriving at
+    # client 4 the time is 21_753. That is 2_253 after its time window closes
+    # at 19_500. There is thus 2_253 time warp on this route.
+    route2 = Route(data, [[1, 2], [4]], 0)
+    assert_(route2.has_time_warp())
+    assert_equal(route2.time_warp(), 2_253)
+
+    # The duration solely increases due to the increased travel duration, since
+    # all other aspects remain unchanged.
+    delta_travel = duration[2, 0] + duration[0, 4] - duration[2, 4]
+    assert_equal(route2.duration(), route1.duration() + delta_travel)
+
+
+def test_release_time_multi_trip_depends_only_on_the_first_trip():
+    """
+    Tests that client release times for the whole route are taken only from
+    the first trip: each subsequent trip has its own release time.
+    """
+    init_data = read("data/OkSmallReleaseTimes.txt")
+    vehicle_type = VehicleType(3, 10, reload_depot=0)
+    data = init_data.replace(vehicle_types=[vehicle_type])
+
+    # The first client has a release time of 20_000, so that is also the
+    # route's release time.
+    route1 = Route(data, [1, 2, 3, 4], 0)
+    assert_equal(route1.release_time(), 20_000)
+
+    # The first client is now in the second trip. The first trip (and thus the
+    # route) is released at 5_000, the third client's release time.
+    route2 = Route(data, [[3, 4], [1, 2]], 0)
+    assert_equal(route2.release_time(), 5_000)
