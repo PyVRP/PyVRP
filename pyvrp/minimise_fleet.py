@@ -12,16 +12,20 @@ def minimise_fleet(
     params: SolveParams = SolveParams(),
 ) -> list[VehicleType]:
     """
-    Attempts to reduce the necessary vehicles to achieve a feasible solution
-    to the given problem instance, subject to a stopping criterion.
+    Attempts to reduce the number of vehicles needed to achieve a feasible
+    solution to the given problem instance, subject to a stopping criterion.
 
     Parameters
     ----------
     data
         Problem instance with a given vehicle composition.
     stop
-        Stopping criterion that determines how much effort to spend finding
+        Stopping criterion that determines how much effort to spend on finding
         smaller fleet compositions.
+    seed
+        Seed value to use for the random number stream. Default 0.
+    params
+        Solver parameters to use. If not provided, a default will be used.
 
     Returns
     -------
@@ -33,8 +37,7 @@ def minimise_fleet(
     feas_fleet = data.vehicle_types()
 
     while True:
-        # Take one vehicle out.
-        # TODO which?
+        # TODO which vehicle to take out?
         fleet = feas_fleet
         fleet = _vehicles({0: fleet[0].num_available - 1}, fleet)
         data = data.replace(vehicle_types=fleet)
@@ -50,6 +53,9 @@ def minimise_fleet(
 
         if stop(res.cost()) or not res.is_feasible():
             return feas_fleet
+
+        # TODO we can also quit if we have hit a lower bound. See e.g.
+        # https://hal.science/hal-00992081/document for ideas
 
         feas_fleet = fleet
         if res.best.num_routes() < data.num_vehicles:
