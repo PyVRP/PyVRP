@@ -62,7 +62,7 @@ def minimise_fleet(
             # Then we can make a bigger jump because more than one vehicle of
             # the feasible fleet was unused.
             used_types = Counter(r.vehicle_type() for r in res.best.routes())
-            feas_fleet = _vehicles(used_types, data.vehicle_types())
+            feas_fleet = _vehicles(used_types, fleet)
 
 
 def _vehicles(type_counts, vehicle_types):
