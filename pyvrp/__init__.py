@@ -19,6 +19,7 @@ from ._pyvrp import RandomNumberGenerator as RandomNumberGenerator
 from ._pyvrp import Route as Route
 from ._pyvrp import Solution as Solution
 from ._pyvrp import VehicleType as VehicleType
+from .minimise_fleet import minimise_fleet as minimise_fleet
 from .read import read as read
 from .read import read_solution as read_solution
 from .show_versions import show_versions as show_versions
