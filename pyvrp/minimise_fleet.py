@@ -19,15 +19,17 @@ def minimise_fleet(
     Parameters
     ----------
     data
-        TODO
+        Problem instance with a given vehicle composition.
     max_runtime
-        TODO
+        Maximum runtime to spend reducing the fleet size.
 
     Returns
     -------
     list[VehicleType]
-        The reduced number of vehicles (and types) needed to find a feasible
-        solution to the given problem instance.
+        The smallest fleet composition admitting a feasible solution to the
+        problem instances that could be found in the given amount of runtime.
+        If no feasible solution could be found, the original fleet composition
+        is returned.
     """
     start = time.perf_counter()
     end = start + max_runtime.max_runtime
