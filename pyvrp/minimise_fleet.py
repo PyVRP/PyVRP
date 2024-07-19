@@ -1,43 +1,38 @@
-import time
 from collections import Counter
 
 from pyvrp._pyvrp import ProblemData, VehicleType
 from pyvrp.solve import SolveParams, solve
-from pyvrp.stop import FirstFeasible, MaxRuntime, MultipleCriteria
+from pyvrp.stop import FirstFeasible, MultipleCriteria, StoppingCriterion
 
 
 def minimise_fleet(
     data: ProblemData,
-    max_runtime: MaxRuntime,
+    stop: StoppingCriterion,
     seed: int = 0,
     params: SolveParams = SolveParams(),
 ) -> list[VehicleType]:
     """
     Attempts to reduce the necessary vehicles to achieve a feasible solution
-    to the given problem instance, within the given runtime budget.
+    to the given problem instance, subject to a stopping criterion.
 
     Parameters
     ----------
     data
         Problem instance with a given vehicle composition.
-    max_runtime
-        Maximum runtime to spend reducing the fleet size.
+    stop
+        Stopping criterion that determines how much effort to spend finding
+        smaller fleet compositions.
 
     Returns
     -------
     list[VehicleType]
         The smallest fleet composition admitting a feasible solution to the
-        problem instances that could be found in the given amount of runtime.
-        If no feasible solution could be found, the original fleet composition
-        is returned.
+        problem instances that could be found before the stopping criterion was
+        hit. The original fleet is returned if no feasible solution was found.
     """
-    start = time.perf_counter()
-    end = start + max_runtime.max_runtime
-    feas_fleet = fleet = data.vehicle_types()
+    feas_fleet = data.vehicle_types()
 
-    while (remaining := end - time.perf_counter()) >= 0:
-        stop = MultipleCriteria([MaxRuntime(remaining), FirstFeasible()])
-
+    while True:
         # Take one vehicle out.
         # TODO which?
         fleet = feas_fleet
@@ -46,14 +41,14 @@ def minimise_fleet(
 
         res = solve(
             data,
-            stop=stop,
+            stop=MultipleCriteria([stop, FirstFeasible()]),
             seed=seed,
             collect_stats=False,
             display=False,
             params=params,
         )
 
-        if not res.is_feasible():  # then we return the last feasible fleet
+        if stop(res.cost()) or not res.is_feasible():
             return feas_fleet
 
         feas_fleet = fleet
@@ -62,8 +57,6 @@ def minimise_fleet(
             # the feasible fleet was unused.
             used_types = Counter(r.vehicle_type() for r in res.best.routes())
             feas_fleet = _vehicles(used_types, data.vehicle_types())
-
-    return feas_fleet
 
 
 def _vehicles(type_counts, vehicle_types):
