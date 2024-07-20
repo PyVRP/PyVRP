@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -16,7 +16,7 @@ from pyvrp import (
 from tests.helpers import read
 
 
-def test_route_depot_accessors(ok_small_multi_depot):
+def test_depot_accessors(ok_small_multi_depot):
     """
     Tests that Route's start_depot() and end_depot() members return the correct
     depot location indices.
@@ -28,11 +28,14 @@ def test_route_depot_accessors(ok_small_multi_depot):
 
     assert_equal(routes[0].start_depot(), 0)
     assert_equal(routes[0].end_depot(), 0)
+    assert_(routes[0].reload_depot() is None)
+
     assert_equal(routes[1].start_depot(), 1)
     assert_equal(routes[1].end_depot(), 1)
+    assert_(routes[0].reload_depot() is None)
 
 
-def test_route_eq(ok_small):
+def test_eq(ok_small):
     """
     Tests ``Route``'s equality operator.
     """
@@ -57,7 +60,7 @@ def test_route_eq(ok_small):
     assert_(route1 != -1.0)
 
 
-def test_route_access_methods(ok_small):
+def test_access_methods(ok_small):
     """
     Tests that accessing route statistics returns the correct numbers.
     """
@@ -91,7 +94,7 @@ def test_route_access_methods(ok_small):
     assert_equal(routes[1].service_duration(), services[2] + services[4])
 
 
-def test_route_time_warp_calculations(ok_small):
+def test_time_warp_calculations(ok_small):
     """
     Tests route time warp calculations.
     """
@@ -110,7 +113,7 @@ def test_route_time_warp_calculations(ok_small):
     assert_equal(routes[1].time_warp(), 0)
 
 
-def test_route_wait_time_calculations():
+def test_wait_time_calculations():
     """
     Tests route wait time and slack calculations.
     """
@@ -201,7 +204,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     assert_equal(routes[1].end_time(), 10_056 + 5_229)
 
 
-def test_route_release_time():
+def test_release_time():
     """
     Tests that routes return the correct release times, and, when feasible,
     start after the release time.
@@ -221,7 +224,7 @@ def test_route_release_time():
     assert_(routes[1].start_time() > routes[1].release_time())
 
 
-def test_route_centroid(ok_small):
+def test_centroid(ok_small):
     """
     Tests that each route's center point is the center point of all clients
     visited by that route.
@@ -265,9 +268,7 @@ def test_route_can_be_pickled(rc208):
         (10_000, 20_000, 277),  # before earliest possible return
     ],
 )
-def test_route_shift_duration(
-    ok_small, tw_early: int, tw_late: int, expected: int
-):
+def test_shift_duration(ok_small, tw_early: int, tw_late: int, expected: int):
     """
     Tests that Route computes time warp due to shift durations correctly on a
     simple, two-client route.
@@ -316,6 +317,7 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
     assert_equal(route.start_depot(), 0)
     assert_equal(route.end_depot(), 1)
+    assert_(route.reload_depot() is None)
 
     dist_mat = data.distance_matrix(0)
     assert_equal(route.distance(), dist_mat[0, 1])
@@ -342,3 +344,152 @@ def test_bug_start_time_before_release_time():
     assert_(route.is_feasible())
     assert_equal(route.start_time(), 5)
     assert_equal(route.end_time(), 25)
+
+
+@pytest.mark.parametrize("visits", [[1, 2, 3, 4], [[1, 2], [3, 4]]])
+def test_indexing(ok_small, visits):
+    """
+    Tests that routes are properly indexed with one or multiple trips, and
+    raise an index error when the given argument is out-of-bounds.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, 10, reload_depot=0)])
+    route = Route(data, visits, 0)
+
+    assert_equal(len(route), 4)
+    assert_equal(route[0], 1)
+    assert_equal(route[1], 2)
+    assert_equal(route[2], 3)
+
+    # Last visit on the route is 4, which can also be obtained by indexing
+    # with negative numbers.
+    assert_equal(route[3], 4)
+    assert_equal(route[-1], 4)
+
+    with assert_raises(IndexError):  # 5 is out-of-bounds.
+        route[5]
+
+
+def test_trip_access(ok_small):
+    """
+    Tests that accessing trips and client visits in a multi-trip route works
+    correctly.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, 10, reload_depot=0)])
+    route = Route(data, [[1, 2], [3, 4]], 0)
+
+    assert_equal(len(route), 4)
+    assert_equal(route.num_trips(), 2)
+    assert_equal(route.reload_depot(), 0)
+
+    assert_equal(route.visits(), [1, 2, 3, 4])
+    assert_equal(route.trips(), [[1, 2], [3, 4]])
+
+    assert_equal(route.trip(0), [1, 2])
+    assert_equal(route.trip(1), [3, 4])
+
+
+def test_bug_route_empty_visits(ok_small):
+    """
+    Tests that a bug where an empty route caused a bounds violation has been
+    fixed.
+    """
+    route = Route(ok_small, [], 0)
+    assert_equal(route.visits(), [])
+
+
+def test_raises_multiple_trips_without_reload_depot(ok_small):
+    """
+    Tests that the Route constructor raises when provided with multi-trip
+    visits and a vehicle type that does not have a reload depot location.
+    """
+    assert_(ok_small.vehicle_type(0).reload_depot is None)
+
+    with assert_raises(ValueError):
+        Route(ok_small, [[1], [2]], 0)
+
+
+def test_load_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates load violations with multiple trips.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, 10, reload_depot=0)])
+
+    # Route wants to visit every client in a single trip. That does not fit in
+    # the vehicle's capacity, so this has excess load.
+    route1 = Route(data, [1, 2, 3, 4], 0)
+    assert_(route1.has_excess_load())
+    assert_equal(route1.delivery(), 18)
+
+    # But splitting the visits up over two different trips is fine, now the
+    # vehicle's capacity is respected.
+    route2 = Route(data, [[1, 2], [3, 4]], 0)
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.delivery(), 18)
+
+
+def test_distance_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates travel distance and maximum distance
+    violations with multiple trips.
+    """
+    vehicle_type = VehicleType(3, 10, max_distance=7_000, reload_depot=0)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    dist = data.distance_matrix(0)
+
+    route1 = Route(data, [[1, 2, 3, 4]], 0)
+    assert_(not route1.has_excess_distance())
+    assert_equal(route1.distance(), 6_450)
+
+    route2 = Route(data, [[1, 2], [3, 4]], 0)
+    assert_(route2.has_excess_distance())
+    assert_equal(
+        route2.distance(),
+        route1.distance() + dist[2, 0] + dist[0, 3] - dist[2, 3],
+    )
+
+
+def test_duration_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates travel duration and time warp on routes
+    with multiple trips.
+    """
+    vehicle_type = VehicleType(3, 10, reload_depot=0)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    duration = data.duration_matrix(0)
+
+    route1 = Route(data, [[1, 2, 4]], 0)
+    assert_(not route1.has_time_warp())
+    assert_equal(route1.time_warp(), 0)
+    assert_equal(route1.duration(), 7_181)
+
+    # After servicing the first trip, returning to the depot, and arriving at
+    # client 4 the time is 21_753. That is 2_253 after its time window closes
+    # at 19_500. There is thus 2_253 time warp on this route.
+    route2 = Route(data, [[1, 2], [4]], 0)
+    assert_(route2.has_time_warp())
+    assert_equal(route2.time_warp(), 2_253)
+
+    # The duration solely increases due to the increased travel duration, since
+    # all other aspects remain unchanged.
+    delta_travel = duration[2, 0] + duration[0, 4] - duration[2, 4]
+    assert_equal(route2.duration(), route1.duration() + delta_travel)
+
+
+def test_release_time_multi_trip_depends_only_on_the_first_trip():
+    """
+    Tests that client release times for the whole route are taken only from
+    the first trip: each subsequent trip has its own release time.
+    """
+    init_data = read("data/OkSmallReleaseTimes.txt")
+    vehicle_type = VehicleType(3, 10, reload_depot=0)
+    data = init_data.replace(vehicle_types=[vehicle_type])
+
+    # The first client has a release time of 20_000, so that is also the
+    # route's release time.
+    route1 = Route(data, [1, 2, 3, 4], 0)
+    assert_equal(route1.release_time(), 20_000)
+
+    # The first client is now in the second trip. The first trip (and thus the
+    # route) is released at 5_000, the third client's release time.
+    route2 = Route(data, [[3, 4], [1, 2]], 0)
+    assert_equal(route2.release_time(), 5_000)

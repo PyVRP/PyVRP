@@ -41,5 +41,9 @@ DurationSegment::DurationSegment(size_t depot,
       twLate_(vehicleType.twLate),
       releaseTime_(0)
 {
-    assert(depot == vehicleType.startDepot || depot == vehicleType.endDepot);
+    // clang-format off
+    assert(depot == vehicleType.startDepot 
+           || depot == vehicleType.endDepot
+           || depot == vehicleType.reloadDepot);
+    // clang-format off
 }

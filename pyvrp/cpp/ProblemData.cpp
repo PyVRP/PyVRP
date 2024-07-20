@@ -176,6 +176,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
                                       size_t profile,
+                                      std::optional<size_t> reloadDepot,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -189,6 +190,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       unitDistanceCost(unitDistanceCost),
       unitDurationCost(unitDurationCost),
       profile(profile),
+      reloadDepot(reloadDepot),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -232,6 +234,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
+      reloadDepot(vehicleType.reloadDepot),
       name(duplicate(vehicleType.name))
 {
 }
@@ -249,6 +252,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       unitDistanceCost(vehicleType.unitDistanceCost),
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
+      reloadDepot(vehicleType.reloadDepot),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -256,20 +260,21 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
 
 ProblemData::VehicleType::~VehicleType() { delete[] name; }
 
-ProblemData::VehicleType
-ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
-                                  std::optional<Load> capacity,
-                                  std::optional<size_t> startDepot,
-                                  std::optional<size_t> endDepot,
-                                  std::optional<Cost> fixedCost,
-                                  std::optional<Duration> twEarly,
-                                  std::optional<Duration> twLate,
-                                  std::optional<Duration> maxDuration,
-                                  std::optional<Distance> maxDistance,
-                                  std::optional<Cost> unitDistanceCost,
-                                  std::optional<Cost> unitDurationCost,
-                                  std::optional<size_t> profile,
-                                  std::optional<std::string> name) const
+ProblemData::VehicleType ProblemData::VehicleType::replace(
+    std::optional<size_t> numAvailable,
+    std::optional<Load> capacity,
+    std::optional<size_t> startDepot,
+    std::optional<size_t> endDepot,
+    std::optional<Cost> fixedCost,
+    std::optional<Duration> twEarly,
+    std::optional<Duration> twLate,
+    std::optional<Duration> maxDuration,
+    std::optional<Distance> maxDistance,
+    std::optional<Cost> unitDistanceCost,
+    std::optional<Cost> unitDurationCost,
+    std::optional<size_t> profile,
+    std::optional<std::optional<size_t>> reloadDepot,
+    std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
             capacity.value_or(this->capacity),
@@ -283,6 +288,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             unitDistanceCost.value_or(this->unitDistanceCost),
             unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
+            reloadDepot.value_or(this->reloadDepot),
             name.value_or(this->name)};
 }
 
