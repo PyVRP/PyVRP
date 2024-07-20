@@ -283,7 +283,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             unitDistanceCost.value_or(this->unitDistanceCost),
             unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
-            name ? name.value().data() : this->name};
+            name.value_or(this->name)};
 }
 
 std::vector<ProblemData::Client> const &ProblemData::clients() const
