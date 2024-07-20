@@ -44,24 +44,29 @@ def minimise_fleet(
     ------
     ValueError
         When the instance contains more than one vehicle type. That setting is
-        not yet supported.
+        not yet supported. Alternatively, when the instance contains optional
+        clients. This method attempts to find a good upper bound on the number
+        of vehicles needed to solve the complete problem.
     """
     if data.num_vehicle_types != 1:
         msg = "Fleet minimisation does not understand multiple vehicle types."
+        raise ValueError(msg)
+
+    if any(not client.required for client in data.clients()):
+        msg = "Fleet minimisation does not work with optional clients."
         raise ValueError(msg)
 
     feas_fleet = data.vehicle_type(0)
     lower_bound = _lower_bound(data)
 
     while feas_fleet.num_available > lower_bound:
-        # Reduce from feasible fleet by one vehicle, and retry solving that
-        # reduced instance.
+        # Reduce feasible fleet by one vehicle, and retry solving.
         fleet = _vehicles(feas_fleet.num_available - 1, feas_fleet)
         data = data.replace(vehicle_types=[fleet])
 
         res = solve(
             data,
-            stop=MultipleCriteria([stop, FirstFeasible()]),
+            stop=MultipleCriteria([FirstFeasible(), stop]),
             seed=seed,
             collect_stats=False,
             display=False,
