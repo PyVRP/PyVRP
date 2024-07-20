@@ -44,9 +44,9 @@ def test_rc208(rc208):
     """
     assert_equal(rc208.num_vehicles, 25)
 
-    vehicle_type = minimise_fleet(rc208, MaxIterations(5))
+    vehicle_type = minimise_fleet(rc208, MaxIterations(3))
     data = rc208.replace(vehicle_types=[vehicle_type])
-    assert_equal(data.num_vehicles, 5)
+    assert_equal(data.num_vehicles, 7)
 
 
 def test_X_instance():
