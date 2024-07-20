@@ -156,6 +156,7 @@ Route::Route(ProblemData const &data, Trips visits, VehicleType vehicleType)
         if (trip == 0)
             release_ = ds.releaseTime();
 
+        // TODO should ignore release time when merging
         routeDuration = DurationSegment::merge(durations, routeDuration, ds);
     }
 
