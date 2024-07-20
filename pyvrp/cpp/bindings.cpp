@@ -195,6 +195,24 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
+        .def("replace",
+             &ProblemData::VehicleType::replace,
+             py::arg("num_available") = py::none(),
+             py::arg("capacity") = py::none(),
+             py::arg("start_depot") = py::none(),
+             py::arg("end_depot") = py::none(),
+             py::arg("fixed_cost") = py::none(),
+             py::arg("tw_early") = py::none(),
+             py::arg("tw_late") = py::none(),
+             py::arg("max_duration") = py::none(),
+             py::arg("max_distance") = py::none(),
+             py::arg("unit_distance_cost") = py::none(),
+             py::arg("unit_duration_cost") = py::none(),
+             py::arg("profile") = py::none(),
+             py::arg("reload_depot") = py::none(),
+             py::kw_only(),
+             py::arg("name") = py::none(),
+             DOC(pyvrp, ProblemData, VehicleType, replace))
         .def(
             "__str__",
             [](ProblemData::VehicleType const &vehType)

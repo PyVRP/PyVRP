@@ -34,6 +34,9 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: GeneticAlgorithm
       :members:
 
+.. automodule:: pyvrp.minimise_fleet
+   :members:
+
 .. automodule:: pyvrp.PenaltyManager
 
    .. autoclass:: PenaltyParams

@@ -106,11 +106,11 @@ class VehicleType:
         capacity: int = 0,
         start_depot: int = 0,
         end_depot: int = 0,
+        fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
-        fixed_cost: int = 0,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: int = 0,
@@ -118,6 +118,24 @@ class VehicleType:
         *,
         name: str = "",
     ) -> None: ...
+    def replace(
+        self,
+        num_available: Optional[int] = None,
+        capacity: Optional[int] = None,
+        start_depot: Optional[int] = None,
+        end_depot: Optional[int] = None,
+        fixed_cost: Optional[int] = None,
+        tw_early: Optional[int] = None,
+        tw_late: Optional[int] = None,
+        max_duration: Optional[int] = None,
+        max_distance: Optional[int] = None,
+        unit_distance_cost: Optional[int] = None,
+        unit_duration_cost: Optional[int] = None,
+        profile: Optional[int] = None,
+        reload_depot: Optional[Optional[int]] = None,
+        *,
+        name: Optional[str] = None,
+    ) -> VehicleType: ...
 
 class ProblemData:
     def __init__(
