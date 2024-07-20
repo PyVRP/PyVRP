@@ -37,7 +37,7 @@ def minimise_fleet(
     -------
     VehicleType
         The smallest fleet composition admitting a feasible solution to the
-        problem instances that could be found before the stopping criterion was
+        problem instance that could be found before the stopping criterion was
         hit. The original fleet is returned if no feasible solution was found.
 
     Raises
