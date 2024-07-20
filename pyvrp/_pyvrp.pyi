@@ -116,6 +116,23 @@ class VehicleType:
         *,
         name: str = "",
     ) -> None: ...
+    def replace(
+        self,
+        num_available: Optional[int] = None,
+        capacity: Optional[int] = None,
+        start_depot: Optional[int] = None,
+        end_depot: Optional[int] = None,
+        fixed_cost: Optional[int] = None,
+        tw_early: Optional[int] = None,
+        tw_late: Optional[int] = None,
+        max_duration: Optional[int] = None,
+        max_distance: Optional[int] = None,
+        unit_distance_cost: Optional[int] = None,
+        unit_duration_cost: Optional[int] = None,
+        profile: Optional[int] = None,
+        *,
+        name: Optional[str] = None,
+    ) -> VehicleType: ...
 
 class ProblemData:
     def __init__(

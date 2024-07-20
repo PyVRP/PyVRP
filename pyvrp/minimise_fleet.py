@@ -61,7 +61,7 @@ def minimise_fleet(
 
     while feas_fleet.num_available > lower_bound:
         # Reduce feasible fleet by one vehicle, and retry solving.
-        fleet = _vehicles(feas_fleet.num_available - 1, feas_fleet)
+        fleet = feas_fleet.replace(num_available=feas_fleet.num_available - 1)
         data = data.replace(vehicle_types=[fleet])
 
         res = solve(
@@ -80,27 +80,9 @@ def minimise_fleet(
         if res.best.num_routes() < data.num_vehicles:
             # Then we can make a bigger jump because more than one vehicle of
             # the feasible fleet was unused.
-            feas_fleet = _vehicles(res.best.num_routes(), fleet)
+            feas_fleet = fleet.replace(num_available=res.best.num_routes())
 
     return feas_fleet
-
-
-def _vehicles(num_available: int, vehicle_type: VehicleType) -> VehicleType:
-    return VehicleType(
-        num_available,
-        vehicle_type.capacity,
-        vehicle_type.start_depot,
-        vehicle_type.end_depot,
-        vehicle_type.fixed_cost,
-        vehicle_type.tw_early,
-        vehicle_type.tw_late,
-        vehicle_type.max_duration,
-        vehicle_type.max_distance,
-        vehicle_type.unit_distance_cost,
-        vehicle_type.unit_duration_cost,
-        vehicle_type.profile,
-        name=vehicle_type.name,
-    )
 
 
 def _lower_bound(data: ProblemData) -> int:
