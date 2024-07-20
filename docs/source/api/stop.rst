@@ -16,6 +16,11 @@ All stopping criteria implement the :class:`~pyvrp.stop.StoppingCriterion.Stoppi
       :members:
       :special-members: __call__
 
+.. automodule:: pyvrp.stop.FirstFeasible
+
+   .. autoclass:: FirstFeasible
+      :members:
+
 .. automodule:: pyvrp.stop.MaxIterations
 
    .. autoclass:: MaxIterations

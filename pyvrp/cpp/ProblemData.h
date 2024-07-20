@@ -8,6 +8,7 @@
 #include <iosfwd>
 #include <limits>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace pyvrp
@@ -180,7 +181,7 @@ public:
                Cost prize = 0,
                bool required = true,
                std::optional<size_t> group = std::nullopt,
-               char const *name = "");
+               std::string name = "");
 
         Client(Client const &client);
         Client(Client &&client);
@@ -290,7 +291,7 @@ public:
         Coordinate const y;
         char const *name;  // Depot name (for reference)
 
-        Depot(Coordinate x, Coordinate y, char const *name = "");
+        Depot(Coordinate x, Coordinate y, std::string name = "");
 
         Depot(Depot const &depot);
         Depot(Depot &&depot);
@@ -417,7 +418,7 @@ public:
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
-                    char const *name = "");
+                    std::string name = "");
 
         VehicleType(VehicleType const &vehicleType);
         VehicleType(VehicleType &&vehicleType);
@@ -426,6 +427,24 @@ public:
         VehicleType &operator=(VehicleType &&vehicleType) = delete;
 
         ~VehicleType();
+
+        /**
+         * Returns a new ``VehicleType`` with the same data as this one, except
+         * for the given parameters, which are used instead.
+         */
+        VehicleType replace(std::optional<size_t> numAvailable,
+                            std::optional<Load> capacity,
+                            std::optional<size_t> startDepot,
+                            std::optional<size_t> endDepot,
+                            std::optional<Cost> fixedCost,
+                            std::optional<Duration> twEarly,
+                            std::optional<Duration> twLate,
+                            std::optional<Duration> maxDuration,
+                            std::optional<Distance> maxDistance,
+                            std::optional<Cost> unitDistanceCost,
+                            std::optional<Cost> unitDurationCost,
+                            std::optional<size_t> profile,
+                            std::optional<std::string> name) const;
     };
 
 private:
@@ -632,7 +651,7 @@ public:
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<std::vector<Matrix<Distance>>> &distMats,
                         std::optional<std::vector<Matrix<Duration>>> &durMats,
-                        std::optional<std::vector<ClientGroup>> &groups);
+                        std::optional<std::vector<ClientGroup>> &groups) const;
 
     ProblemData(std::vector<Client> clients,
                 std::vector<Depot> depots,

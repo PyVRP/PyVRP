@@ -563,6 +563,24 @@ def test_vehicle_type_attribute_access():
     assert_equal(str(vehicle_type), "vehicle_type name")
 
 
+def test_vehicle_type_replace():
+    """
+    Tests that calling replace() on a VehicleType functions correctly.
+    """
+    vehicle_type = VehicleType(num_available=7, capacity=10, name="test")
+    assert_equal(vehicle_type.num_available, 7)
+    assert_equal(vehicle_type.capacity, 10)
+    assert_equal(vehicle_type.name, "test")
+
+    # Replacing the number of available vehicles and name should be reflected
+    # in the returned vehicle type, but any other values should remain the same
+    # as the original. In particular, capacity should not be changed.
+    new = vehicle_type.replace(num_available=5, name="new")
+    assert_equal(new.num_available, 5)
+    assert_equal(new.capacity, 10)
+    assert_equal(new.name, "new")
+
+
 @pytest.mark.parametrize("idx", [5, 6])
 def test_location_raises_invalid_index(ok_small, idx: int):
     """

@@ -14,7 +14,8 @@ namespace
 // Small local helper for what is essentially strdup() from the C23 standard,
 // which my compiler does not (yet) have. See here for the actual recipe:
 // https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
-// malloc).
+// malloc). We do all this so we can use C-style strings, rather than C++'s
+// std::string, which are much larger objects.
 static char *duplicate(char const *src)
 {
     char *dst = new char[std::strlen(src) + 1];  // space for src + null
@@ -34,7 +35,7 @@ ProblemData::Client::Client(Coordinate x,
                             Cost prize,
                             bool required,
                             std::optional<size_t> group,
-                            char const *name)
+                            std::string name)
     : x(x),
       y(y),
       delivery(delivery),
@@ -46,7 +47,7 @@ ProblemData::Client::Client(Coordinate x,
       prize(prize),
       required(required),
       group(group),
-      name(duplicate(name))
+      name(duplicate(name.data()))
 {
     if (delivery < 0)
         throw std::invalid_argument("delivery amount must be >= 0.");
@@ -145,8 +146,8 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x, Coordinate y, char const *name)
-    : x(x), y(y), name(duplicate(name))
+ProblemData::Depot::Depot(Coordinate x, Coordinate y, std::string name)
+    : x(x), y(y), name(duplicate(name.data()))
 {
 }
 
@@ -175,7 +176,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
                                       size_t profile,
-                                      char const *name)
+                                      std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
       endDepot(endDepot),
@@ -188,7 +189,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       unitDistanceCost(unitDistanceCost),
       unitDurationCost(unitDurationCost),
       profile(profile),
-      name(duplicate(name))
+      name(duplicate(name.data()))
 {
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
@@ -254,6 +255,36 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
 }
 
 ProblemData::VehicleType::~VehicleType() { delete[] name; }
+
+ProblemData::VehicleType
+ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
+                                  std::optional<Load> capacity,
+                                  std::optional<size_t> startDepot,
+                                  std::optional<size_t> endDepot,
+                                  std::optional<Cost> fixedCost,
+                                  std::optional<Duration> twEarly,
+                                  std::optional<Duration> twLate,
+                                  std::optional<Duration> maxDuration,
+                                  std::optional<Distance> maxDistance,
+                                  std::optional<Cost> unitDistanceCost,
+                                  std::optional<Cost> unitDurationCost,
+                                  std::optional<size_t> profile,
+                                  std::optional<std::string> name) const
+{
+    return {numAvailable.value_or(this->numAvailable),
+            capacity.value_or(this->capacity),
+            startDepot.value_or(this->startDepot),
+            endDepot.value_or(this->endDepot),
+            fixedCost.value_or(this->fixedCost),
+            twEarly.value_or(this->twEarly),
+            twLate.value_or(this->twLate),
+            maxDuration.value_or(this->maxDuration),
+            maxDistance.value_or(this->maxDistance),
+            unitDistanceCost.value_or(this->unitDistanceCost),
+            unitDurationCost.value_or(this->unitDurationCost),
+            profile.value_or(this->profile),
+            name.value_or(this->name)};
+}
 
 std::vector<ProblemData::Client> const &ProblemData::clients() const
 {
@@ -428,14 +459,14 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<std::vector<Matrix<Distance>>> &distMats,
                      std::optional<std::vector<Matrix<Duration>>> &durMats,
-                     std::optional<std::vector<ClientGroup>> &groups)
+                     std::optional<std::vector<ClientGroup>> &groups) const
 {
-    return ProblemData(clients.value_or(clients_),
-                       depots.value_or(depots_),
-                       vehicleTypes.value_or(vehicleTypes_),
-                       distMats.value_or(dists_),
-                       durMats.value_or(durs_),
-                       groups.value_or(groups_));
+    return {clients.value_or(clients_),
+            depots.value_or(depots_),
+            vehicleTypes.value_or(vehicleTypes_),
+            distMats.value_or(dists_),
+            durMats.value_or(durs_),
+            groups.value_or(groups_)};
 }
 
 ProblemData::ProblemData(std::vector<Client> clients,
