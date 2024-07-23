@@ -10,9 +10,8 @@ namespace
 {
 using Client = size_t;
 
-// Depot value, which is never in a route (since it's not a client). We use
-// this as filler to account for possibly missing clients.
-static constexpr size_t UNUSED = 0;
+// Sentinel value used as filler to account for possibly missing clients.
+static constexpr size_t UNUSED = std::numeric_limits<size_t>::max();
 }  // namespace
 
 pyvrp::Solution pyvrp::crossover::orderedCrossover(
@@ -29,7 +28,7 @@ pyvrp::Solution pyvrp::crossover::orderedCrossover(
     // New route. This route is initially empty, indicated by all UNUSED
     // values. Any such values that remain after crossover are filtered away.
     std::vector<Client> newRoute(numClients, UNUSED);
-    DynamicBitset isInserted(data.numLocations());  // tracks inserted clients
+    DynamicBitset isInserted(data.numClients());  // tracks inserted clients
 
     // Insert the clients from the first route into the new route, from start
     // to end (possibly wrapping around the end of the route).

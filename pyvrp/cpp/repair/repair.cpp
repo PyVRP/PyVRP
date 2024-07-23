@@ -7,27 +7,27 @@ using pyvrp::Solution;
 using SearchRoute = pyvrp::search::Route;
 using SolRoute = pyvrp::Route;
 
-void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
+void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &clients,
                                 std::vector<SearchRoute> &routes,
                                 std::vector<SolRoute> const &solRoutes,
                                 ProblemData const &data)
 {
-    assert(locs.empty() && routes.empty());
+    assert(clients.empty() && routes.empty());
 
     // Doing this avoids re-allocations, which would break the pointer structure
     // that Route and Route::Node use.
-    locs.reserve(data.numLocations());
+    clients.reserve(data.numClients());
     routes.reserve(solRoutes.size());
 
-    for (size_t loc = 0; loc != data.numLocations(); ++loc)
-        locs.emplace_back(loc);
+    for (size_t client = 0; client != data.numClients(); ++client)
+        clients.emplace_back(client);
 
     size_t idx = 0;
     for (auto const &solRoute : solRoutes)
     {
         auto &route = routes.emplace_back(data, idx++, solRoute.vehicleType());
         for (auto const client : solRoute)
-            route.push_back(&locs[client]);
+            route.push_back(&clients[client]);
 
         route.update();
     }

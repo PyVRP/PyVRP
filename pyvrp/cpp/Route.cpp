@@ -12,56 +12,50 @@ using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Route;
 
-using Client = size_t;
-
 Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
     auto const &vehType = data.vehicleType(vehicleType);
-    startDepot_ = vehType.startDepot;
-    endDepot_ = vehType.endDepot;
+    startLocation_ = vehType.startLocation;
+    endLocation_ = vehType.endLocation;
 
-    DurationSegment ds = {startDepot_, vehType};
+    DurationSegment ds = {startLocation_, vehType};
     auto ls = LoadSegment(0, 0, 0);
-    size_t prevClient = startDepot_;
+    size_t prevLocation = startLocation_;
 
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
-    for (size_t idx = 0; idx != size(); ++idx)
+    for (size_t const visit : visits_)
     {
-        auto const client = visits_[idx];
-        ProblemData::Client const &clientData = data.location(client);
+        auto const &client = data.client(visit);
+        service_ += client.serviceDuration;
+        prizes_ += client.prize;
 
-        distance_ += distances(prevClient, client);
-        travel_ += durations(prevClient, client);
-        service_ += clientData.serviceDuration;
-        prizes_ += clientData.prize;
+        distance_ += distances(prevLocation, client.location);
+        travel_ += durations(prevLocation, client.location);
 
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
+        auto const &location = data.location(client.location);
+        centroid_.first += static_cast<double>(location.x) / size();
+        centroid_.second += static_cast<double>(location.y) / size();
 
-        auto const clientDS = DurationSegment(client, clientData);
-        ds = DurationSegment::merge(durations, ds, clientDS);
+        ds = DurationSegment::merge(durations, ds, DurationSegment(client));
+        ls = LoadSegment::merge(ls, LoadSegment(client));
 
-        auto const clientLs = LoadSegment(clientData);
-        ls = LoadSegment::merge(ls, clientLs);
-
-        prevClient = client;
+        prevLocation = client.location;
     }
 
-    auto const last = visits_.empty() ? startDepot_ : visits_.back();
-    distance_ += distances(last, endDepot_);
+    distance_ += distances(prevLocation, endLocation_);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 
-    travel_ += durations(last, endDepot_);
+    travel_ += durations(prevLocation, endLocation_);
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
     excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
 
-    DurationSegment endDS(endDepot_, vehType);
+    DurationSegment endDS(endLocation_, vehType);
     ds = DurationSegment::merge(durations, ds, endDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
@@ -90,8 +84,8 @@ Route::Route(Visits visits,
              Cost prizes,
              std::pair<double, double> centroid,
              size_t vehicleType,
-             size_t startDepot,
-             size_t endDepot)
+             size_t startLocation,
+             size_t endLocation)
     : visits_(std::move(visits)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -111,8 +105,8 @@ Route::Route(Visits visits,
       prizes_(prizes),
       centroid_(centroid),
       vehicleType_(vehicleType),
-      startDepot_(startDepot),
-      endDepot_(endDepot)
+      startLocation_(startLocation),
+      endLocation_(endLocation)
 {
 }
 
@@ -120,7 +114,7 @@ bool Route::empty() const { return visits_.empty(); }
 
 size_t Route::size() const { return visits_.size(); }
 
-Client Route::operator[](size_t idx) const { return visits_[idx]; }
+size_t Route::operator[](size_t idx) const { return visits_[idx]; }
 
 Route::Visits::const_iterator Route::begin() const { return visits_.cbegin(); }
 
@@ -166,9 +160,9 @@ std::pair<double, double> const &Route::centroid() const { return centroid_; }
 
 size_t Route::vehicleType() const { return vehicleType_; }
 
-size_t Route::startDepot() const { return startDepot_; }
+size_t Route::startLocation() const { return startLocation_; }
 
-size_t Route::endDepot() const { return endDepot_; }
+size_t Route::endLocation() const { return endLocation_; }
 
 bool Route::isFeasible() const
 {

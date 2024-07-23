@@ -29,8 +29,7 @@ class DynamicBitset:
     def reset(self) -> DynamicBitset: ...
 
 class Client:
-    x: int
-    y: int
+    location: int
     delivery: int
     pickup: int
     service_duration: int
@@ -43,8 +42,7 @@ class Client:
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        location: int,
         delivery: int = 0,
         pickup: int = 0,
         service_duration: int = 0,
@@ -73,7 +71,7 @@ class ClientGroup:
     def add_client(self, client: int) -> None: ...
     def clear(self) -> None: ...
 
-class Depot:
+class Location:
     x: int
     y: int
     name: str
@@ -87,8 +85,8 @@ class Depot:
 
 class VehicleType:
     num_available: int
-    start_depot: int
-    end_depot: int
+    start_location: int
+    end_location: int
     capacity: int
     tw_early: int
     tw_late: int
@@ -103,8 +101,8 @@ class VehicleType:
         self,
         num_available: int = 1,
         capacity: int = 0,
-        start_depot: int = 0,
-        end_depot: int = 0,
+        start_location: int = 0,
+        end_location: int = 0,
         fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
@@ -120,8 +118,8 @@ class VehicleType:
         self,
         num_available: Optional[int] = None,
         capacity: Optional[int] = None,
-        start_depot: Optional[int] = None,
-        end_depot: Optional[int] = None,
+        start_location: Optional[int] = None,
+        end_location: Optional[int] = None,
         fixed_cost: Optional[int] = None,
         tw_early: Optional[int] = None,
         tw_late: Optional[int] = None,
@@ -138,15 +136,14 @@ class ProblemData:
     def __init__(
         self,
         clients: list[Client],
-        depots: list[Depot],
+        locations: list[Location],
         vehicle_types: list[VehicleType],
         distance_matrices: list[np.ndarray[int]],
         duration_matrices: list[np.ndarray[int]],
         groups: list[ClientGroup] = [],
     ) -> None: ...
-    def location(self, idx: int) -> Union[Client, Depot]: ...
     def clients(self) -> list[Client]: ...
-    def depots(self) -> list[Depot]: ...
+    def locations(self) -> list[Location]: ...
     def groups(self) -> list[ClientGroup]: ...
     def vehicle_types(self) -> list[VehicleType]: ...
     def distance_matrices(self) -> list[np.ndarray[int]]: ...
@@ -154,13 +151,15 @@ class ProblemData:
     def replace(
         self,
         clients: Optional[list[Client]] = None,
-        depots: Optional[list[Depot]] = None,
+        locations: Optional[list[Location]] = None,
         vehicle_types: Optional[list[VehicleType]] = None,
         distance_matrices: Optional[list[np.ndarray[int]]] = None,
         duration_matrices: Optional[list[np.ndarray[int]]] = None,
         groups: Optional[list[ClientGroup]] = None,
     ) -> ProblemData: ...
     def centroid(self) -> tuple[float, float]: ...
+    def client(self, client: int) -> Client: ...
+    def location(self, location: int) -> Location: ...
     def group(self, group: int) -> ClientGroup: ...
     def vehicle_type(self, vehicle_type: int) -> VehicleType: ...
     def distance_matrix(self, profile: int) -> np.ndarray[int]: ...
@@ -169,8 +168,6 @@ class ProblemData:
     def num_clients(self) -> int: ...
     @property
     def num_groups(self) -> int: ...
-    @property
-    def num_depots(self) -> int: ...
     @property
     def num_locations(self) -> int: ...
     @property
@@ -212,8 +209,8 @@ class Route:
     def prizes(self) -> int: ...
     def centroid(self) -> tuple[float, float]: ...
     def vehicle_type(self) -> int: ...
-    def start_depot(self) -> int: ...
-    def end_depot(self) -> int: ...
+    def start_location(self) -> int: ...
+    def end_location(self) -> int: ...
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 

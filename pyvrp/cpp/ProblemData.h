@@ -98,8 +98,8 @@ public:
      *     Unconstrained if not provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
-     *     time at which a vehicle may leave the depot to visit this client.
-     *     Default 0.
+     *     time at which a vehicle may leave its start location to visit this
+     *     client. Default 0.
      * prize
      *     Prize collected by visiting this client. Default 0. If this client
      *     is not required, the prize needs to be sufficiently large to offset
@@ -130,8 +130,8 @@ public:
      * tw_late
      *     Latest time at which this client may be visited to start service.
      * release_time
-     *     Earliest time at which a vehicle may leave the depot to visit this
-     *     client.
+     *     Earliest time at which a vehicle may leave its start location to
+     *     visit this client.
      * prize
      *     Prize collected by visiting this client.
      * required
@@ -444,16 +444,6 @@ private:
 
 public:
     /**
-     * Returns location data for the location at the given index.
-     */
-    [[nodiscard]] inline Location const &location(size_t location) const;
-
-    /**
-     * Returns client data for the client at the given index.
-     */
-    [[nodiscard]] inline Client const &client(size_t client) const;
-
-    /**
      * Returns a list of all clients in the problem instance.
      */
     [[nodiscard]] std::vector<Client> const &clients() const;
@@ -499,6 +489,16 @@ public:
      * Center point of all client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
+
+    /**
+     * Returns client data for the client at the given index.
+     */
+    [[nodiscard]] inline Client const &client(size_t client) const;
+
+    /**
+     * Returns location data for the location at the given index.
+     */
+    [[nodiscard]] inline Location const &location(size_t location) const;
 
     /**
      * Returns the client group at the given index.
@@ -564,7 +564,7 @@ public:
     /**
      * Number of locations in this problem instance.
      */
-    [[nodiscard]] size_t numlocations() const;
+    [[nodiscard]] size_t numLocations() const;
 
     /**
      * Number of client groups in this problem instance.
@@ -629,8 +629,8 @@ public:
 
 ProblemData::Location const &ProblemData::location(size_t location) const
 {
-    assert(idx < numLocations());
-    return locations_[idx];
+    assert(location < numLocations());
+    return locations_[location];
 }
 
 ProblemData::Client const &ProblemData::client(size_t client) const

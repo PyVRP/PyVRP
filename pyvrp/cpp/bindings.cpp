@@ -64,8 +64,7 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::Client>(
         m, "Client", DOC(pyvrp, ProblemData, Client))
-        .def(py::init<pyvrp::Coordinate,
-                      pyvrp::Coordinate,
+        .def(py::init<size_t,
                       pyvrp::Load,
                       pyvrp::Load,
                       pyvrp::Duration,
@@ -76,8 +75,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       bool,
                       std::optional<size_t>,
                       char const *>(),
-             py::arg("x"),
-             py::arg("y"),
+             py::arg("location"),
              py::arg("delivery") = 0,
              py::arg("pickup") = 0,
              py::arg("service_duration") = 0,
@@ -89,8 +87,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("group") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
-        .def_readonly("x", &ProblemData::Client::x)
-        .def_readonly("y", &ProblemData::Client::y)
+        .def_readonly("location", &ProblemData::Client::location)
         .def_readonly("delivery", &ProblemData::Client::delivery)
         .def_readonly("pickup", &ProblemData::Client::pickup)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
@@ -108,20 +105,20 @@ PYBIND11_MODULE(_pyvrp, m)
             [](ProblemData::Client const &client) { return client.name; },
             py::return_value_policy::reference_internal);
 
-    py::class_<ProblemData::Depot>(m, "Depot", DOC(pyvrp, ProblemData, Depot))
+    py::class_<ProblemData::Location>(m, "Location", DOC(pyvrp, ProblemData, Location))
         .def(py::init<pyvrp::Coordinate, pyvrp::Coordinate, char const *>(),
              py::arg("x"),
              py::arg("y"),
              py::kw_only(),
              py::arg("name") = "")
-        .def_readonly("x", &ProblemData::Depot::x)
-        .def_readonly("y", &ProblemData::Depot::y)
+        .def_readonly("x", &ProblemData::Location::x)
+        .def_readonly("y", &ProblemData::Location::y)
         .def_readonly("name",
-                      &ProblemData::Depot::name,
+                      &ProblemData::Location::name,
                       py::return_value_policy::reference_internal)
         .def(
             "__str__",
-            [](ProblemData::Depot const &depot) { return depot.name; },
+            [](ProblemData::Location const &loc) { return loc.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::ClientGroup>(
@@ -177,8 +174,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
-        .def_readonly("start_depot", &ProblemData::VehicleType::startLocation)
-        .def_readonly("end_depot", &ProblemData::VehicleType::endLocation)
+        .def_readonly("start_location", &ProblemData::VehicleType::startLocation)
+        .def_readonly("end_location", &ProblemData::VehicleType::endLocation)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
@@ -356,8 +353,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("centroid", &Route::centroid, DOC(pyvrp, Route, centroid))
         .def(
             "vehicle_type", &Route::vehicleType, DOC(pyvrp, Route, vehicleType))
-        .def("start_depot", &Route::startDepot, DOC(pyvrp, Route, startDepot))
-        .def("end_depot", &Route::endDepot, DOC(pyvrp, Route, endDepot))
+        .def("start_location", &Route::startLocation, DOC(pyvrp, Route, startLocation))
+        .def("end_location", &Route::endLocation, DOC(pyvrp, Route, endLocation))
         .def("is_feasible", &Route::isFeasible, DOC(pyvrp, Route, isFeasible))
         .def("has_excess_load",
              &Route::hasExcessLoad,
@@ -408,8 +405,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.prizes(),
                                       route.centroid(),
                                       route.vehicleType(),
-                                      route.startDepot(),
-                                      route.endDepot());
+                                      route.startLocation(),
+                                      route.endLocation());
             },
             [](py::tuple t) {  // __setstate__
                 Route route(
@@ -432,8 +429,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[16].cast<pyvrp::Cost>(),                // prizes
                     t[17].cast<std::pair<double, double>>(),  // centroid
                     t[18].cast<size_t>(),                     // vehicle type
-                    t[19].cast<size_t>(),                     // start depot
-                    t[20].cast<size_t>());                    // end depot
+                    t[19].cast<size_t>(),                     // start location
+                    t[20].cast<size_t>());                    // end location
 
                 return route;
             }))

@@ -19,18 +19,19 @@ public:
 
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
     {
-        return pyvrp::DistanceSegment(client);
+        auto const &clientData = data.client(client);
+        return pyvrp::DistanceSegment(clientData.location);
     }
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(client);
-        return pyvrp::DurationSegment(client, clientData);
+        auto const &clientData = data.client(client);
+        return pyvrp::DurationSegment(clientData);
     }
 
     pyvrp::LoadSegment load() const
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(client);
+        auto const &clientData = data.client(client);
         return pyvrp::LoadSegment(clientData);
     }
 };
@@ -41,11 +42,11 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
                                       ProblemData const &data,
                                       CostEvaluator const &costEvaluator)
 {
-    if (!V->route() || U->isDepot())
+    if (!V->route() || !U->isClient())
         return 0;
 
     auto *route = V->route();
-    ProblemData::Client const &client = data.location(U->client());
+    auto const &client = data.client(U->client());
 
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
@@ -63,11 +64,11 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
                                       ProblemData const &data,
                                       CostEvaluator const &costEvaluator)
 {
-    if (!U->route() || U->isDepot())
+    if (!U->route() || !U->isClient())
         return 0;
 
     auto *route = U->route();
-    ProblemData::Client const &client = data.location(U->client());
+    auto const &client = data.client(U->client());
 
     Cost deltaCost
         = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
@@ -88,8 +89,8 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
         return 0;
 
     auto const *route = V->route();
-    ProblemData::Client const &uClient = data.location(U->client());
-    ProblemData::Client const &vClient = data.location(V->client());
+    auto const &uClient = data.client(U->client());
+    auto const &vClient = data.client(V->client());
 
     Cost deltaCost = vClient.prize - uClient.prize;
 

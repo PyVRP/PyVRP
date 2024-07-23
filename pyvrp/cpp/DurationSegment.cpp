@@ -21,9 +21,9 @@ Duration DurationSegment::twLate() const { return twLate_; }
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
-DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
-    : idxFirst_(idx),
-      idxLast_(idx),
+DurationSegment::DurationSegment(ProblemData::Client const &client)
+    : idxFirst_(client.location),
+      idxLast_(client.location),
       duration_(client.serviceDuration),
       timeWarp_(0),
       twEarly_(client.twEarly),

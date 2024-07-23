@@ -20,17 +20,17 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     // We're going to incur fixed cost if a route is currently empty but
     // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && !n(V)->isDepot())
+    if (uRoute->empty() && n(V)->isClient())
         deltaCost += uRoute->fixedVehicleCost();
 
-    if (vRoute->empty() && !n(U)->isDepot())
+    if (vRoute->empty() && n(U)->isClient())
         deltaCost += vRoute->fixedVehicleCost();
 
     // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
+    if (!uRoute->empty() && !U->isClient() && !n(V)->isClient())
         deltaCost -= uRoute->fixedVehicleCost();
 
-    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
+    if (!vRoute->empty() && !V->isClient() && !n(U)->isClient())
         deltaCost -= vRoute->fixedVehicleCost();
 
     if (U->idx() < uRoute->size() && V->idx() < vRoute->size())
@@ -81,7 +81,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     auto *nV = n(V);
 
     auto insertIdx = U->idx() + 1;
-    while (!nV->isDepot())
+    while (nV->isClient())
     {
         auto *node = nV;
         nV = n(nV);
@@ -90,7 +90,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     }
 
     insertIdx = V->idx() + 1;
-    while (!nU->isDepot())
+    while (nU->isClient())
     {
         auto *node = nU;
         nU = n(nU);
