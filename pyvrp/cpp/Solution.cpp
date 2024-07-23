@@ -17,6 +17,7 @@ using pyvrp::Solution;
 using Client = size_t;
 using Routes = std::vector<Route>;
 using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
+using VehicleType = size_t;
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -100,13 +101,18 @@ void Solution::makeNeighbours(ProblemData const &data)
     for (auto const &route : routes_)
     {
         auto const &vehicleType = data.vehicleType(route.vehicleType());
-        auto const startDepot = vehicleType.startDepot;
-        auto const endDepot = vehicleType.endDepot;
 
         for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours_[route[idx]] = {
-                idx == 0 ? startDepot : route[idx - 1],                // pred
-                idx == route.size() - 1 ? endDepot : route[idx + 1]};  // succ
+        {
+            auto const start = idx == 0 ? vehicleType.startLocation
+                                        : data.client(route[idx - 1]).location;
+
+            auto const end = route.size() - 1
+                                 ? vehicleType.endLocation
+                                 : data.client(route[idx + 1]).location;
+
+            neighbours_[route[idx]] = {start, end};
+        }
     }
 }
 
@@ -143,14 +149,14 @@ bool Solution::operator==(Solution const &other) const
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.numLocations(), std::nullopt)
+    : neighbours_(data.numClients(), std::nullopt)
 {
     // Add all required and randomly selected optional clients.
     std::vector<size_t> clients;
     clients.reserve(data.numClients());
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(idx);
+        pyvrp::ProblemData::Client const &clientData = data.client(idx);
         if (clientData.required || rng.rand() < 0.5)
             clients.push_back(idx);
     }
@@ -206,7 +212,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours_(data.numLocations(), std::nullopt)
+    : routes_(routes), neighbours_(data.numClients(), std::nullopt)
 {
     if (routes.size() > data.numVehicles())
     {
@@ -214,7 +220,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         throw std::runtime_error(msg);
     }
 
-    std::vector<size_t> visits(data.numLocations(), 0);
+    std::vector<size_t> visits(data.numClients(), 0);
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
@@ -226,10 +232,9 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             visits[client]++;
     }
 
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
+    for (size_t client = 0; client != data.numClients(); ++client)
     {
-        ProblemData::Client const &clientData = data.location(client);
+        ProblemData::Client const &clientData = data.client(client);
         if (clientData.required && visits[client] == 0)
             numMissingClients_ += 1;
 

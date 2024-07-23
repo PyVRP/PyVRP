@@ -16,7 +16,7 @@ namespace pyvrp
 /**
  * ProblemData(
  *     clients: list[Client],
- *     depots: list[Depot],
+ *     locations: list[Location],
  *     vehicle_types: list[VehicleType],
  *     distance_matrices: list[numpy.ndarray[int]],
  *     duration_matrices: list[numpy.ndarray[int]],
@@ -26,27 +26,20 @@ namespace pyvrp
  * Creates a problem data instance. This instance contains all information
  * needed to solve the vehicle routing problem.
  *
- * .. note::
- *
- *    The matrices in the ``distance_matrices`` and ``duration_matrices``
- *    arguments should have all depots in the lower indices, starting from
- *    index ``0``. See also the :meth:`~pyvrp._pyvrp.ProblemData.location`
- *    method for details.
- *
  * Parameters
  * ----------
  * clients
  *     List of clients to visit.
- * depots
- *     List of depots. At least one depot must be passed.
+ * locations
+ *     List of locations. At least one location must be passed.
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrices
- *     Distance matrices that give the travel distances between all locations
- *     (both depots and clients). Each matrix corresponds to a routing profile.
+ *     Distance matrices that give the travel distances between all locations.
+ *     Each matrix corresponds to a routing profile.
  * duration_matrices
- *     Duration matrices that give the travel durations between all locations
- *     (both depots and clients). Each matrix corresponds to a routing profile.
+ *     Duration matrices that give the travel durations between all locations.
+ *     Each matrix corresponds to a routing profile.
  * groups
  *     List of client groups. Client groups have certain restrictions - see the
  *     definition for details. By default there are no groups, and empty groups
@@ -57,8 +50,8 @@ namespace pyvrp
  * ValueError
  *     When the data is inconsistent.
  * IndexError
- *     When the data references clients, depots, or groups that do not exist
- *     because the referenced index is out of range.
+ *     When the data references locations or groups that do not exist because
+ *     the referenced index is out of range.
  */
 class ProblemData
 {
@@ -68,8 +61,7 @@ class ProblemData
 public:
     /**
      * Client(
-     *    x: int,
-     *    y: int,
+     *    location: int,
      *    delivery: int = 0,
      *    pickup: int = 0,
      *    service_duration: int = 0,
@@ -87,12 +79,8 @@ public:
      *
      * Parameters
      * ----------
-     * x
-     *     Horizontal coordinate of this client, that is, the 'x' part of the
-     *     client's (x, y) location tuple.
-     * y
-     *     Vertical coordinate of this client, that is, the 'y' part of the
-     *     client's (x, y) location tuple.
+     * location
+     *     Location of this client.
      * delivery
      *     The amount this client demands from the depot. Default 0.
      * pickup
@@ -128,14 +116,12 @@ public:
      *
      * Attributes
      * ----------
-     * x
-     *     Horizontal coordinate of this client.
-     * y
-     *     Vertical coordinate of this client.
+     * location
+     *     Location index associated with this client.
      * delivery
-     *     Client delivery amount, shipped from depot.
+     *     Client delivery amount, shipped from a depot.
      * pickup
-     *     Client pickup amount, returned back to depot.
+     *     Client pickup amount, returned back to a depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route.
@@ -157,8 +143,7 @@ public:
      */
     struct Client
     {
-        Coordinate const x;
-        Coordinate const y;
+        size_t const location;
         Load const delivery;
         Load const pickup;
         Duration const serviceDuration;
@@ -170,8 +155,7 @@ public:
         std::optional<size_t> const group;  // Optional client group membership
         char const *name;                   // Client name (for reference)
 
-        Client(Coordinate x,
-               Coordinate y,
+        Client(size_t location,
                Load delivery = 0,
                Load pickup = 0,
                Duration serviceDuration = 0,
@@ -256,58 +240,58 @@ public:
     };
 
     /**
-     * Depot(
+     * Location(
      *    x: int,
      *    y: int,
      *    *,
      *    name: str = "",
      * )
      *
-     * Simple data object storing all depot data as (read-only) properties.
+     * Simple data object storing location data as (read-only) properties.
      *
      * Parameters
      * ----------
      * x
-     *     Horizontal coordinate of this depot, that is, the 'x' part of the
-     *     depot's (x, y) location tuple.
+     *     Horizontal coordinate, that is, the 'x' part of the location's
+     *     (x, y) coordinates.
      * y
-     *     Vertical coordinate of this depot, that is, the 'y' part of the
-     *     depot's (x, y) location tuple.
+     *     Vertical coordinate, that is, the 'y' part of the location's (x, y)
+     *     coordinates.
      * name
-     *     Free-form name field for this depot. Default empty.
+     *     Free-form name field for this location. Default empty.
      *
      * Attributes
      * ----------
      * x
-     *     Horizontal coordinate of this depot.
+     *     Horizontal coordinate of this location.
      * y
-     *     Vertical coordinate of this depot.
+     *     Vertical coordinate of this location.
      * name
-     *     Free-form name field for this depot.
+     *     Free-form name field for this location.
      */
-    struct Depot
+    struct Location
     {
         Coordinate const x;
         Coordinate const y;
-        char const *name;  // Depot name (for reference)
+        char const *name;  // Location name (for reference)
 
-        Depot(Coordinate x, Coordinate y, std::string name = "");
+        Location(Coordinate x, Coordinate y, std::string name = "");
 
-        Depot(Depot const &depot);
-        Depot(Depot &&depot);
+        Location(Location const &location);
+        Location(Location &&location);
 
-        Depot &operator=(Depot const &depot) = delete;
-        Depot &operator=(Depot &&depot) = delete;
+        Location &operator=(Location const &location) = delete;
+        Location &operator=(Location &&location) = delete;
 
-        ~Depot();
+        ~Location();
     };
 
     /**
      * VehicleType(
      *     num_available: int = 1,
      *     capacity: int = 0,
-     *     start_depot: int = 0,
-     *     end_depot: int = 0,
+     *     start_location: int = 0,
+     *     end_location: int = 0,
      *     fixed_cost: int = 0,
      *     tw_early: int = 0,
      *     tw_late: int = np.iinfo(np.int64).max,
@@ -331,12 +315,12 @@ public:
      *     Capacity of this vehicle type. This is the maximum total delivery or
      *     pickup amount the vehicle can store along the route. Must be
      *     non-negative. Default 0.
-     * start_depot
-     *     Depot (location index) where vehicles of this type start their
-     *     routes. Default 0 (first depot).
-     * end_depot
-     *     Depot (location index) where vehicles of this type end routes.
-     *     Default 0 (first depot).
+     * start_location
+     *     Index of the location where vehicles of this type start their
+     *     routes. Default 0 (first location).
+     * end_location
+     *     Index of the location where vehicles of this type end their routes.
+     *     Default 0 (first location).
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
@@ -364,9 +348,9 @@ public:
      *     Number of vehicles of this type that are available.
      * capacity
      *     Capacity (maximum total demand) of this vehicle type.
-     * start_depot
+     * start_location
      *     Start location associated with these vehicles.
-     * end_depot
+     * end_location
      *     End location associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
@@ -393,8 +377,8 @@ public:
     struct VehicleType
     {
         size_t const numAvailable;    // Available vehicles of this type
-        size_t const startDepot;      // Departure depot location
-        size_t const endDepot;        // Return depot location
+        size_t const startLocation;   // Departure location
+        size_t const endLocation;     // Return location
         Load const capacity;          // This type's vehicle capacity
         Duration const twEarly;       // Start of shift
         Duration const twLate;        // End of shift
@@ -408,8 +392,8 @@ public:
 
         VehicleType(size_t numAvailable = 1,
                     Load capacity = 0,
-                    size_t startDepot = 0,
-                    size_t endDepot = 0,
+                    size_t startlocation = 0,
+                    size_t endlocation = 0,
                     Cost fixedCost = 0,
                     Duration twEarly = 0,
                     Duration twLate = std::numeric_limits<Duration>::max(),
@@ -434,8 +418,8 @@ public:
          */
         VehicleType replace(std::optional<size_t> numAvailable,
                             std::optional<Load> capacity,
-                            std::optional<size_t> startDepot,
-                            std::optional<size_t> endDepot,
+                            std::optional<size_t> startlocation,
+                            std::optional<size_t> endlocation,
                             std::optional<Cost> fixedCost,
                             std::optional<Duration> twEarly,
                             std::optional<Duration> twLate,
@@ -448,23 +432,11 @@ public:
     };
 
 private:
-    /**
-     * Simple union type that distinguishes between client and depot locations.
-     */
-    union Location
-    {
-        Client const *client;
-        Depot const *depot;
-
-        inline operator Client const &() const;
-        inline operator Depot const &() const;
-    };
-
     std::pair<double, double> centroid_;           // Center of client locations
     std::vector<Matrix<Distance>> const dists_;    // Distance matrices
     std::vector<Matrix<Duration>> const durs_;     // Duration matrices
     std::vector<Client> const clients_;            // Client information
-    std::vector<Depot> const depots_;              // Depot information
+    std::vector<Location> const locations_;        // Location information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
     std::vector<ClientGroup> const groups_;        // Client groups
 
@@ -472,16 +444,14 @@ private:
 
 public:
     /**
-     * Returns location data for the location at the given index. This can
-     * be a depot or a client: a depot if the ``idx`` argument is smaller than
-     * :py:attr:`~num_depots`, and a client if the ``idx`` is bigger than that.
-     *
-     * Parameters
-     * ----------
-     * idx
-     *     Location index whose information to retrieve.
+     * Returns location data for the location at the given index.
      */
-    [[nodiscard]] inline Location location(size_t idx) const;
+    [[nodiscard]] inline Location const &location(size_t location) const;
+
+    /**
+     * Returns client data for the client at the given index.
+     */
+    [[nodiscard]] inline Client const &client(size_t client) const;
 
     /**
      * Returns a list of all clients in the problem instance.
@@ -489,9 +459,9 @@ public:
     [[nodiscard]] std::vector<Client> const &clients() const;
 
     /**
-     * Returns a list of all depots in the problem instance.
+     * Returns a list of all locations in the problem instance.
      */
-    [[nodiscard]] std::vector<Depot> const &depots() const;
+    [[nodiscard]] std::vector<Location> const &locations() const;
 
     /**
      * Returns a list of all client groups in the problem instance.
@@ -526,7 +496,7 @@ public:
     [[nodiscard]] std::vector<Matrix<Duration>> const &durationMatrices() const;
 
     /**
-     * Center point of all client locations (excluding depots).
+     * Center point of all client locations.
      */
     [[nodiscard]] std::pair<double, double> const &centroid() const;
 
@@ -592,20 +562,14 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
-     * Number of depots in this problem instance.
+     * Number of locations in this problem instance.
      */
-    [[nodiscard]] size_t numDepots() const;
+    [[nodiscard]] size_t numlocations() const;
 
     /**
      * Number of client groups in this problem instance.
      */
     [[nodiscard]] size_t numGroups() const;
-
-    /**
-     * Number of locations in this problem instance, that is, the number of
-     * depots plus the number of clients in the instance.
-     */
-    [[nodiscard]] size_t numLocations() const;
 
     /**
      * Number of vehicle types in this problem instance.
@@ -630,8 +594,8 @@ public:
      * ----------
      * clients
      *    Optional list of clients.
-     * depots
-     *    Optional list of depots.
+     * locations
+     *    Optional list of locations.
      * vehicle_types
      *    Optional list of vehicle types.
      * distance_matrices
@@ -647,14 +611,14 @@ public:
      *    A new ProblemData instance with possibly replaced data.
      * */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
-                        std::optional<std::vector<Depot>> &depots,
+                        std::optional<std::vector<Location>> &locations,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<std::vector<Matrix<Distance>>> &distMats,
                         std::optional<std::vector<Matrix<Duration>>> &durMats,
                         std::optional<std::vector<ClientGroup>> &groups) const;
 
     ProblemData(std::vector<Client> clients,
-                std::vector<Depot> depots,
+                std::vector<Location> locations,
                 std::vector<VehicleType> vehicleTypes,
                 std::vector<Matrix<Distance>> distMats,
                 std::vector<Matrix<Duration>> durMats,
@@ -663,16 +627,16 @@ public:
     ProblemData() = delete;
 };
 
-ProblemData::Location::operator Client const &() const { return *client; }
-
-ProblemData::Location::operator Depot const &() const { return *depot; }
-
-ProblemData::Location ProblemData::location(size_t idx) const
+ProblemData::Location const &ProblemData::location(size_t location) const
 {
     assert(idx < numLocations());
-    return idx < depots_.size()
-               ? Location{.depot = &depots_[idx]}
-               : Location{.client = &clients_[idx - depots_.size()]};
+    return locations_[idx];
+}
+
+ProblemData::Client const &ProblemData::client(size_t client) const
+{
+    assert(client < numClients());
+    return clients_[client];
 }
 
 Matrix<Distance> const &ProblemData::distanceMatrix(size_t profile) const

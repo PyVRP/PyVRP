@@ -96,9 +96,9 @@ public:
     /**
      * Hand-waving some details, each solution consists of a set of non-empty
      * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a
-     * sequence of edges, starting and ending at a depot. Each route :math:`R`
-     * has an assigned vehicle type, through which the route is equipped with a
-     * fixed vehicle cost :math:`f_R`, and unit distance and duration costs
+     * sequence of edges. Each route :math:`R` has an assigned vehicle type,
+     * through which the route is equipped with a fixed vehicle cost
+     * :math:`f_R`, and unit distance and duration costs
      * :math:`c^\text{distance}_R` and :math:`c^\text{duration}_R`,
      * respectively. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
      * locations visited by route :math:`R`, and :math:`d_R` and :math:`t_R`

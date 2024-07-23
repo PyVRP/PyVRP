@@ -161,8 +161,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = 0,
-             py::arg("start_depot") = 0,
-             py::arg("end_depot") = 0,
+             py::arg("start_location") = 0,
+             py::arg("end_location") = 0,
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
@@ -177,8 +177,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
         .def_readonly("capacity", &ProblemData::VehicleType::capacity)
-        .def_readonly("start_depot", &ProblemData::VehicleType::startDepot)
-        .def_readonly("end_depot", &ProblemData::VehicleType::endDepot)
+        .def_readonly("start_depot", &ProblemData::VehicleType::startLocation)
+        .def_readonly("end_depot", &ProblemData::VehicleType::endLocation)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
@@ -196,8 +196,8 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::VehicleType::replace,
              py::arg("num_available") = py::none(),
              py::arg("capacity") = py::none(),
-             py::arg("start_depot") = py::none(),
-             py::arg("end_depot") = py::none(),
+             py::arg("start_location") = py::none(),
+             py::arg("end_location") = py::none(),
              py::arg("fixed_cost") = py::none(),
              py::arg("tw_early") = py::none(),
              py::arg("tw_late") = py::none(),
@@ -217,13 +217,13 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
         .def(py::init<std::vector<ProblemData::Client>,
-                      std::vector<ProblemData::Depot>,
+                      std::vector<ProblemData::Location>,
                       std::vector<ProblemData::VehicleType>,
                       std::vector<Matrix<pyvrp::Distance>>,
                       std::vector<Matrix<pyvrp::Duration>>,
                       std::vector<ProblemData::ClientGroup>>(),
              py::arg("clients"),
-             py::arg("depots"),
+             py::arg("locations"),
              py::arg("vehicle_types"),
              py::arg("distance_matrices"),
              py::arg("duration_matrices"),
@@ -231,7 +231,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("replace",
              &ProblemData::replace,
              py::arg("clients") = py::none(),
-             py::arg("depots") = py::none(),
+             py::arg("locations") = py::none(),
              py::arg("vehicle_types") = py::none(),
              py::arg("distance_matrices") = py::none(),
              py::arg("duration_matrices") = py::none(),
@@ -240,9 +240,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
                                DOC(pyvrp, ProblemData, numClients))
-        .def_property_readonly("num_depots",
-                               &ProblemData::numDepots,
-                               DOC(pyvrp, ProblemData, numDepots))
         .def_property_readonly("num_groups",
                                &ProblemData::numGroups,
                                DOC(pyvrp, ProblemData, numGroups))
@@ -258,32 +255,14 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_profiles",
                                &ProblemData::numProfiles,
                                DOC(pyvrp, ProblemData, numProfiles))
-        .def(
-            "location",
-            [](ProblemData const &data,
-               size_t idx) -> std::variant<ProblemData::Client const *,
-                                           ProblemData::Depot const *>
-            {
-                if (idx >= data.numLocations())
-                    throw py::index_error();
-
-                auto const proxy = data.location(idx);
-                if (idx < data.numDepots())
-                    return proxy.depot;
-                else
-                    return proxy.client;
-            },
-            py::arg("idx"),
-            py::return_value_policy::reference_internal,
-            DOC(pyvrp, ProblemData, location))
         .def("clients",
              &ProblemData::clients,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, clients))
-        .def("depots",
-             &ProblemData::depots,
+        .def("locations",
+             &ProblemData::locations,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, depots))
+             DOC(pyvrp, ProblemData, locations))
         .def("groups",
              &ProblemData::groups,
              py::return_value_policy::reference_internal,
@@ -304,6 +283,16 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::centroid,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, centroid))
+        .def("client",
+             &ProblemData::client,
+             py::arg("client"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, client))
+        .def("location",
+             &ProblemData::location,
+             py::arg("location"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, location))
         .def("group",
              &ProblemData::group,
              py::arg("group"),

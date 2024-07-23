@@ -32,15 +32,16 @@ DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
 {
 }
 
-DurationSegment::DurationSegment(size_t depot,
+DurationSegment::DurationSegment(size_t location,
                                  ProblemData::VehicleType const &vehicleType)
-    : idxFirst_(depot),
-      idxLast_(depot),
+    : idxFirst_(location),
+      idxLast_(location),
       duration_(0),
       timeWarp_(0),
       twEarly_(vehicleType.twEarly),
       twLate_(vehicleType.twLate),
       releaseTime_(0)
 {
-    assert(depot == vehicleType.startDepot || depot == vehicleType.endDepot);
+    assert(location == vehicleType.startLocation
+           || location == vehicleType.endLocation);
 }
