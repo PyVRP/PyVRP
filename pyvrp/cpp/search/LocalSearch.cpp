@@ -94,7 +94,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    if (!p(V)->isClient()
+                        && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -251,7 +252,7 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
-    ProblemData::Client const &uData = data.location(U->client());
+    auto const &uData = data.client(U->client());
 
     if (uData.group)  // groups have their own operator - applyGroupMoves()
         return;
@@ -270,7 +271,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 void LocalSearch::applyGroupMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator)
 {
-    ProblemData::Client const &uData = data.location(U->client());
+    auto const &uData = data.client(U->client());
 
     if (!uData.group)
         return;
@@ -437,23 +438,20 @@ void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
-    if (neighbours.size() != data.numLocations())
+    if (neighbours.size() != data.numClients())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
+    for (size_t client = 0; client != data.numClients(); ++client)
     {
         auto const beginPos = neighbours[client].begin();
         auto const endPos = neighbours[client].end();
 
-        auto const pred = [&](auto item)
-        { return item == client || item < data.numDepots(); };
-
+        auto const pred = [&](auto item) { return item == client; };
         if (std::any_of(beginPos, endPos, pred))
         {
             throw std::runtime_error("Neighbourhood of client "
                                      + std::to_string(client)
-                                     + " contains itself or a depot.");
+                                     + " contains itself.");
         }
     }
 
@@ -467,19 +465,19 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
-      neighbours_(data.numLocations()),
+      neighbours_(data.numClients()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);
 
-    std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
+    std::iota(orderNodes.begin(), orderNodes.end(), 0);
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
-    nodes.reserve(data.numLocations());
-    for (size_t loc = 0; loc != data.numLocations(); ++loc)
-        nodes.emplace_back(loc);
+    nodes.reserve(data.numClients());
+    for (size_t client = 0; client != data.numClients(); ++client)
+        nodes.emplace_back(client);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;

@@ -27,8 +27,8 @@ class Exchange : public LocalSearchOperator<Route::Node>
 
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 
-    // Tests if the segment starting at node of given length contains the depot
-    bool containsDepot(Route::Node *node, size_t segLength) const;
+    // Tests if the segment starting at node of given length has only clients
+    bool onlyClients(Route::Node *node, size_t segLength) const;
 
     // Tests if the segments of U and V overlap in the same route
     bool overlap(Route::Node *U, Route::Node *V) const;
@@ -55,21 +55,21 @@ public:
 };
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
+bool Exchange<N, M>::onlyClients(Route::Node *node, size_t segLength) const
 {
     // size() is the position of the last client in the route. So the segment
-    // must include the depot if idx + move length - 1 (-1 since we're also
-    // moving the node *at* idx) is larger than size().
-    return node->isDepot()
-           || (node->idx() + segLength - 1 > node->route()->size());
+    // consists of only clients if idx + move length - 1 (-1 since we're also
+    // moving the node *at* idx) is not larger than size().
+    return node->isClient()
+        && (node->idx() + segLength - 1 <= node->route()->size());
 }
 
 template <size_t N, size_t M>
 bool Exchange<N, M>::overlap(Route::Node *U, Route::Node *V) const
 {
     return U->route() == V->route()
-           // We need max(M, 1) here because when V is the depot and M == 0,
-           // this would turn negative and wrap around to a large number.
+           // We need max(M, 1) here because when V is the start location and
+           // M == 0, this would turn negative and wrap around.
            && U->idx() <= V->idx() + std::max<size_t>(M, 1) - 1
            && V->idx() <= U->idx() + N - 1;
 }
@@ -190,11 +190,11 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
                               Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
-    if (containsDepot(U, N) || overlap(U, V))
+    if (!onlyClients(U, N) || overlap(U, V))
         return 0;
 
     if constexpr (M > 0)
-        if (containsDepot(V, M))
+        if (!onlyClients(V, M))
             return 0;
 
     if constexpr (M == 0)  // special case where nothing in V is moved

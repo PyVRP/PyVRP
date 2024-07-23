@@ -7,15 +7,15 @@
 
 using pyvrp::search::Route;
 
-Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
+Route::Node::Node(size_t client) : client_(client), idx_(0), route_(nullptr) {}
 
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
       vehTypeIdx_(vehicleType),
       idx_(idx),
-      startDepot_(vehicleType_.startDepot),
-      endDepot_(vehicleType_.endDepot)
+      startLocation_(vehicleType_.startLocation),
+      endLocation_(vehicleType_.endLocation)
 {
     clear();
 }
@@ -72,19 +72,19 @@ void Route::clear()
         node->route_ = nullptr;
     }
 
-    nodes.clear();  // clear nodes and reinsert the depots.
-    nodes.push_back(&startDepot_);
-    nodes.push_back(&endDepot_);
+    nodes.clear();  // clear nodes and reinsert the start and end locations.
+    nodes.push_back(&startLocation_);
+    nodes.push_back(&endLocation_);
 
-    startDepot_.idx_ = 0;
-    startDepot_.route_ = this;
+    startLocation_.idx_ = 0;
+    startLocation_.route_ = this;
 
-    endDepot_.idx_ = 1;
-    endDepot_.route_ = this;
+    endLocation_.idx_ = 1;
+    endLocation_.route_ = this;
 
-    // Clear all existing statistics and reinsert depot statistics.
-    distAt = {DistanceSegment(vehicleType_.startDepot),
-              DistanceSegment(vehicleType_.endDepot)};
+    // Clear all existing statistics and reinsert for start and end locations.
+    distAt = {DistanceSegment(vehicleType_.startLocation),
+              DistanceSegment(vehicleType_.endLocation)};
     distAfter = distAt;
     distBefore = distAt;
 
@@ -92,8 +92,8 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
-    durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
-             DurationSegment(vehicleType_.endDepot, vehicleType_)};
+    durAt = {DurationSegment(vehicleType_.startLocation, vehicleType_),
+             DurationSegment(vehicleType_.endLocation, vehicleType_)};
     durAfter = durAt;
     durBefore = durAt;
 
@@ -120,15 +120,15 @@ void Route::insert(size_t idx, Node *node)
     distBefore.emplace(distBefore.begin() + idx, node->client());
     distAfter.emplace(distAfter.begin() + idx, node->client());
 
-    ProblemData::Client const &client = data.location(node->client());
+    auto const &client = data.client(node->client());
 
     loadAt.emplace(loadAt.begin() + idx, client);
     loadAfter.emplace(loadAfter.begin() + idx, client);
     loadBefore.emplace(loadBefore.begin() + idx, client);
 
-    durAt.emplace(durAt.begin() + idx, node->client(), client);
-    durAfter.emplace(durAfter.begin() + idx, node->client(), client);
-    durBefore.emplace(durBefore.begin() + idx, node->client(), client);
+    durAt.emplace(durAt.begin() + idx, client);
+    durAfter.emplace(durAfter.begin() + idx, client);
+    durBefore.emplace(durBefore.begin() + idx, client);
 
 #ifndef NDEBUG
     dirty = true;
@@ -208,17 +208,17 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const *node = nodes[idx];
-        size_t const client = node->client();
 
-        if (!node->isDepot())
+        if (node->isClient())
         {
-            ProblemData::Client const &clientData = data.location(client);
-            centroid_.first += static_cast<double>(clientData.x) / size();
-            centroid_.second += static_cast<double>(clientData.y) / size();
+            auto const &clientData = data.client(node->client());
+            auto const &location = data.location(clientData.location);
+            centroid_.first += static_cast<double>(location.x) / size();
+            centroid_.second += static_cast<double>(location.y) / size();
         }
     }
 
-    // Backward segments (depot -> client).
+    // Backward segments (start -> client).
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         distBefore[idx] = DistanceSegment::merge(
@@ -232,7 +232,7 @@ void Route::update()
 #endif
     }
 
-    // Forward segments (client -> depot).
+    // Forward segments (client -> end).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
     {
         distAfter[idx - 1] = DistanceSegment::merge(

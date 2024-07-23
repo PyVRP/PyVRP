@@ -16,21 +16,21 @@ namespace pyvrp
  * Creates a distance segment.
  *
  * Distance segments can be efficiently concatenated, and track statistics
- * about route distance from visiting clients in the concatenated order.
+ * about route distance from visiting locations in the concatenated order.
  *
  * Parameters
  * ----------
  * idx_first
- *     Index of the first client in the route segment.
+ *     Index of the first location in the route segment.
  * idx_last
- *     Index of the last client in the route segment.
+ *     Index of the last location in the route segment.
  * distance
  *     Total distance in the route segment.
  */
 class DistanceSegment
 {
-    size_t idxFirst_;    // Index of the first client in the segment
-    size_t idxLast_;     // Index of the last client in the segment
+    size_t idxFirst_;    // Index of the first location in the segment
+    size_t idxLast_;     // Index of the last location in the segment
     Distance distance_;  // Total distance
 
 public:
@@ -46,7 +46,7 @@ public:
      */
     [[nodiscard]] inline Distance distance() const;
 
-    // Construct an empty distance segment for the given client index.
+    // Construct an empty distance segment for the given location index.
     DistanceSegment(size_t idx);
 
     // Construct from raw data.

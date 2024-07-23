@@ -22,8 +22,7 @@ class LocalSearch
 
     ProblemData const &data;
 
-    // Neighborhood restrictions: list of nearby clients for each client (size
-    // numLocations, but nothing is stored for the depots!)
+    // Neighborhood restrictions: list of nearby clients for each client.
     Neighbours neighbours_;
 
     std::vector<size_t> orderNodes;   // node order used by LS::search
@@ -93,8 +92,7 @@ public:
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
-     * the neighbourhood structure is a vector of nearby clients. Depots have
-     * no nearby client.
+     * the neighbourhood structure is a vector of nearby clients.
      */
     void setNeighbours(Neighbours neighbours);
 

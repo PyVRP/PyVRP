@@ -10,7 +10,6 @@ Cost SwapRoutes::evaluate(Route *U,
     if (U == V || U->vehicleType() == V->vehicleType())
         return 0;
 
-    // Evaluate swapping the routes after the two depots.
     return op.evaluate((*U)[0], (*V)[0], costEvaluator);
 }
 

@@ -50,7 +50,7 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
         cache(R->idx(), idx).shouldUpdate = true;
 }
 
@@ -172,8 +172,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // calculating remove and insert costs - that is all handled here.
             // So it's pretty rough but fast and seems to work well enough for
             // most instances.
-            ProblemData::Client const &uClient = data.location(U->client());
-            ProblemData::Client const &vClient = data.location(V->client());
+            auto const &uClient = data.client(U->client());
+            auto const &vClient = data.client(V->client());
             auto const uLoad = std::max(uClient.delivery, uClient.pickup);
             auto const vLoad = std::max(vClient.delivery, vClient.pickup);
             auto const loadDiff = uLoad - vLoad;

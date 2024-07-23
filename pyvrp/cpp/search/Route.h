@@ -15,12 +15,13 @@ namespace pyvrp::search
  * This ``Route`` class supports fast delta cost computations and in-place
  * modification. It can be used to implement move evaluations.
  *
- * A ``Route`` object tracks a full route, including the depots. The clients
- * and depots on the route can be accessed using ``Route::operator[]`` on a
- * ``route`` object: ``route[0]`` and ``route[route.size() + 1]`` are the start
- * and end depots, respectively, and any clients in between are on the indices
- * ``{1, ..., size()}`` (empty if ``size() == 0``). Note that ``Route::size()``
- * returns the number of *clients* in the route; this excludes the depots.
+ * A ``Route`` object tracks a full route, including the start and end
+ * locations. The clients and locations on the route can be accessed using a
+ * ``Route::operator[]`` on a ``route`` object: ``route[0]`` and
+ * ``route[route.size() + 1]`` are the start and end locations, respectively,
+ * and any clients in between are on the indices ``{1, ..., size()}``
+ * (empty if ``size() == 0``). Note that ``Route::size()`` returns the number
+ * of *clients* in the route; this excludes the start and end locations.
  *
  * .. note::
  *
@@ -63,43 +64,40 @@ public:
     };
 
     /**
-     * Light wrapper class around a client or depot location. This class tracks
-     * the route it is in, and the position and role it currently has in that
-     * route.
+     * Light wrapper class around a location. This class tracks the route it is
+     * in, and the position and role it currently has in that route.
      */
     class Node
     {
         friend class Route;
 
-        size_t loc_;    // Location represented by this node
-        size_t idx_;    // Position in the route
-        Route *route_;  // Indicates membership of a route, if any
+        size_t client_;  // Location represented by this node
+        size_t idx_;     // Position in the route
+        Route *route_;   // Indicates membership of a route, if any
 
     public:
-        Node(size_t loc);
+        Node(size_t client);
 
         /**
-         * Returns the location represented by this node.
+         * Returns the client represented by this node.
          */
-        [[nodiscard]] inline size_t client() const;  // TODO rename to loc
+        [[nodiscard]] inline size_t client() const;
 
         /**
-         * Returns this node's position in a route. This value is ``0`` when
-         * the node is *not* in a route.
+         * Returns this node's position in a route.
          */
         [[nodiscard]] inline size_t idx() const;
 
         /**
-         * Returns the route this node is currently in. If the node is not in
-         * a route, this returns ``None`` (C++: ``nullptr``).
+         * Returns the route this node is currently in, or a nullptr if it is
+         * not in any route.
          */
         [[nodiscard]] inline Route *route() const;
 
         /**
-         * Returns whether this node is a depot. A node can only be a depot if
-         * it is in a route.
+         * Returns whether this node represents a client.
          */
-        [[nodiscard]] inline bool isDepot() const;
+        [[nodiscard]] inline bool isClient() const;
     };
 
 private:
@@ -120,7 +118,7 @@ private:
 
     /**
      * Class storing data related to the route segment starting at ``start``,
-     * and ending at the depot (inclusive).
+     * and ending at the end location (inclusive).
      */
     class SegmentAfter
     {
@@ -135,8 +133,8 @@ private:
     };
 
     /**
-     * Class storing data related to the route segment starting at the depot,
-     * and ending at ``end`` (inclusive).
+     * Class storing data related to the route segment starting at the start
+     * location, and ending at ``end`` (inclusive).
      */
     class SegmentBefore
     {
@@ -176,23 +174,23 @@ private:
     size_t const vehTypeIdx_;
     size_t const idx_;
 
-    std::vector<Node *> nodes;  // Nodes in this route, including depots
+    std::vector<Node *> nodes;  // Nodes in this route, including start and end
     std::pair<double, double> centroid_;  // Center point of route's clients
 
-    Node startDepot_;  // Departure depot for this route
-    Node endDepot_;    // Return depot for this route
+    Node startLocation_;  // Departure location for this route
+    Node endLocation_;    // Return location for this route
 
     std::vector<DistanceSegment> distAt;      // Dist data at each node
-    std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
-    std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
+    std::vector<DistanceSegment> distAfter;   // Dist of client -> end (incl.)
+    std::vector<DistanceSegment> distBefore;  // Dist of start -> client (incl.)
 
     std::vector<LoadSegment> loadAt;      // Load data at each node
-    std::vector<LoadSegment> loadAfter;   // Load of client -> depot (incl)
-    std::vector<LoadSegment> loadBefore;  // Load of depot -> client (incl)
+    std::vector<LoadSegment> loadAfter;   // Load of client -> end (incl)
+    std::vector<LoadSegment> loadBefore;  // Load of start -> client (incl)
 
     std::vector<DurationSegment> durAt;      // Duration data at each node
-    std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
-    std::vector<DurationSegment> durBefore;  // Dur of depot -> client (incl.)
+    std::vector<DurationSegment> durAfter;   // Dur of client -> end (incl.)
+    std::vector<DurationSegment> durBefore;  // Dur of start -> client (incl.)
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -210,16 +208,16 @@ public:
     [[nodiscard]] inline size_t idx() const;
 
     /**
-     * @return The client or depot node at the given ``idx``.
+     * The node at the given ``idx`` in the route.
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
 
     // First client in the route if the route is non-empty. Else it is the
-    // end depot. In either case the iterator is valid!
+    // end location. In either case the iterator is valid!
     [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
     [[nodiscard]] std::vector<Node *>::iterator begin();
 
-    // End depot. The iterator is valid!
+    // End location. The iterator is valid!
     [[nodiscard]] std::vector<Node *>::const_iterator end() const;
     [[nodiscard]] std::vector<Node *>::iterator end();
 
@@ -282,14 +280,14 @@ public:
     [[nodiscard]] inline Load capacity() const;
 
     /**
-     * @return The location index of this route's starting depot.
+     * @return this route's starting location index.
      */
-    [[nodiscard]] inline size_t startDepot() const;
+    [[nodiscard]] inline size_t startLocation() const;
 
     /**
-     * @return The location index of this route's ending depot.
+     * @return this route's ending location index.
      */
-    [[nodiscard]] inline size_t endDepot() const;
+    [[nodiscard]] inline size_t endLocation() const;
 
     /**
      * @return The fixed cost of the vehicle servicing this route.
@@ -453,17 +451,26 @@ inline Route::Node *n(Route::Node *node)
     return route[node->idx() + 1];
 }
 
-size_t Route::Node::client() const { return loc_; }
+size_t Route::Node::client() const
+{
+    assert(isClient());
+    return client_;
+}
 
-size_t Route::Node::idx() const { return idx_; }
+size_t Route::Node::idx() const
+{
+    assert(route_);
+    return idx_;
+}
 
 Route *Route::Node::route() const { return route_; }
 
-bool Route::Node::isDepot() const
+bool Route::Node::isClient() const
 {
-    // We need to be in a route to be the depot. If we are, then we need to
-    // be either the route's start or end depot.
-    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
+    // We are either a client or a start or end location of a route. But we can
+    // only be a start or end location for a route if we're in a route, and if
+    // our index matches the start or end location index of the route.
+    return !route_ || idx_ > 0 || idx_ <= route_->size();
 }
 
 Route::SegmentAt::SegmentAt(Route const &route, size_t idx)
@@ -663,9 +670,9 @@ Distance Route::excessDistance() const
 
 Load Route::capacity() const { return vehicleType_.capacity; }
 
-size_t Route::startDepot() const { return vehicleType_.startDepot; }
+size_t Route::startLocation() const { return vehicleType_.startLocation; }
 
-size_t Route::endDepot() const { return vehicleType_.endDepot; }
+size_t Route::endLocation() const { return vehicleType_.endLocation; }
 
 Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 
@@ -713,7 +720,7 @@ bool Route::empty() const { return size() == 0; }
 
 size_t Route::size() const
 {
-    assert(nodes.size() >= 2);  // excl. depots
+    assert(nodes.size() >= 2);  // excl. start and end locations
     return nodes.size() - 2;
 }
 

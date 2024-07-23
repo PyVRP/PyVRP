@@ -21,13 +21,13 @@ pyvrp::repair::greedyRepair(std::vector<SolRoute> const &solRoutes,
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
 
-    std::vector<SearchRoute::Node> locs;
+    std::vector<SearchRoute::Node> clients;
     std::vector<SearchRoute> routes;
-    setupRoutes(locs, routes, solRoutes, data);
+    setupRoutes(clients, routes, solRoutes, data);
 
     for (auto const client : unplanned)
     {
-        SearchRoute::Node *U = &locs[client];
+        SearchRoute::Node *U = &clients[client];
         assert(!U->route());
 
         SearchRoute::Node *UAfter = nullptr;
@@ -36,7 +36,7 @@ pyvrp::repair::greedyRepair(std::vector<SolRoute> const &solRoutes,
         for (auto &route : routes)
         {
             auto const cost = insertCost(U, route[0], data, costEvaluator);
-            if (cost < deltaCost)  // evaluate after depot
+            if (cost < deltaCost)  // evaluate after start location
             {
                 deltaCost = cost;
                 UAfter = route[0];

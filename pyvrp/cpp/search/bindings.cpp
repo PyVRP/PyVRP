@@ -246,8 +246,8 @@ PYBIND11_MODULE(_search, m)
         .def("has_excess_distance", &Route::hasExcessDistance)
         .def("has_time_warp", &Route::hasTimeWarp)
         .def("capacity", &Route::capacity)
-        .def("start_depot", &Route::startDepot)
-        .def("end_depot", &Route::endDepot)
+        .def("start_location", &Route::startLocation)
+        .def("end_location", &Route::endLocation)
         .def("fixed_vehicle_cost", &Route::fixedVehicleCost)
         .def("load", &Route::load)
         .def("excess_load", &Route::excessLoad)
@@ -352,11 +352,11 @@ PYBIND11_MODULE(_search, m)
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
-        .def(py::init<size_t>(), py::arg("loc"))
+        .def(py::init<size_t>(), py::arg("client"))
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("route", &Route::Node::route)
-        .def("is_depot", &Route::Node::isDepot);
+        .def("is_client", &Route::Node::isClient);
 
     m.def("insert_cost",
           &insertCost,

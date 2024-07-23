@@ -39,9 +39,6 @@ namespace pyvrp
 class Solution
 {
     using Client = size_t;
-    using Depot = size_t;
-    using VehicleType = size_t;
-
     using Routes = std::vector<Route>;
     using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
@@ -105,8 +102,7 @@ public:
      * Returns
      * -------
      * list
-     *     A list of routes. Each :class:`~Route` starts and ends at a depot,
-     *     but that is implicit: the depot is not part of the returned routes.
+     *     A list of routes.
      */
     [[nodiscard]] Routes const &routes() const;
 
@@ -117,8 +113,8 @@ public:
      * -------
      * list
      *     A list of ``(pred, succ)`` tuples that encode for each client their
-     *     predecessor and successors in this solutions's routes. ``None`` in
-     *     case the client is not in the solution (or is a depot).
+     *     predecessor and successors locations in this solutions's routes.
+     *     ``None`` in case the client is not in the solution.
      */
     [[nodiscard]] Neighbours const &neighbours() const;
 

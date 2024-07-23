@@ -19,7 +19,7 @@ namespace pyvrp
 class Route
 {
     using Client = size_t;
-    using Depot = size_t;
+    using Location = size_t;
     using VehicleType = size_t;
     using Visits = std::vector<Client>;
 
@@ -43,8 +43,8 @@ class Route
 
     std::pair<double, double> centroid_;  // Route center
     VehicleType vehicleType_;             // Type of vehicle
-    Depot startDepot_;                    // Assigned start depot
-    Depot endDepot_;                      // Assigned end depot
+    Location startLocation_;              // Assigned start location
+    Location endLocation_;                // Assigned end location
 
 public:
     [[nodiscard]] bool empty() const;
@@ -126,10 +126,10 @@ public:
 
     /**
      * Start time of this route. This is the earliest possible time at which
-     * the route can leave the depot and have a minimal duration and time warp.
-     * If there is positive :meth:`~slack`, the start time can be delayed by at
-     * most :meth:`~slack` time units without increasing the total (minimal)
-     * route duration, or time warp.
+     * the route can leave the start location and have a minimal duration and
+     * time warp. If there is positive :meth:`~slack`, the start time can be
+     * delayed by at most :meth:`~slack` time units without increasing the
+     * total (minimal) route duration, or time warp.
      *
      * .. note::
      *
@@ -148,14 +148,14 @@ public:
     [[nodiscard]] Duration endTime() const;
 
     /**
-     * Time by which departure from the depot can be delayed without resulting
-     * in (additional) time warp or increased route duration.
+     * Time by which departure from the start location can be delayed without
+     * resulting in (additional) time warp or increased route duration.
      */
     [[nodiscard]] Duration slack() const;
 
     /**
-     * Earliest time at which this route can leave the depot. Follows from the
-     * release times of clients visited on this route.
+     * Earliest time at which this route can leave the start location. Follows
+     * from the release times of clients visited on this route.
      *
      * .. note::
      *
@@ -180,14 +180,14 @@ public:
     [[nodiscard]] VehicleType vehicleType() const;
 
     /**
-     * Location index of the route's starting depot.
+     * Starting location index.
      */
-    [[nodiscard]] Depot startDepot() const;
+    [[nodiscard]] Location startLocation() const;
 
     /**
-     * Location index of the route's ending depot.
+     * End location index.
      */
-    [[nodiscard]] Depot endDepot() const;
+    [[nodiscard]] Location endLocation() const;
 
     /**
      * Returns whether this route is feasible.
@@ -238,8 +238,8 @@ public:
           Cost prizes,
           std::pair<double, double> centroid,
           VehicleType vehicleType,
-          Depot startDepot,
-          Depot endDepot);
+          Location startLocation,
+          Location endLocation);
 };
 }  // namespace pyvrp
 

@@ -21,9 +21,9 @@ Duration DurationSegment::twLate() const { return twLate_; }
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
-DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
-    : idxFirst_(idx),
-      idxLast_(idx),
+DurationSegment::DurationSegment(ProblemData::Client const &client)
+    : idxFirst_(client.location),
+      idxLast_(client.location),
       duration_(client.serviceDuration),
       timeWarp_(0),
       twEarly_(client.twEarly),
@@ -32,15 +32,16 @@ DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
 {
 }
 
-DurationSegment::DurationSegment(size_t depot,
+DurationSegment::DurationSegment(size_t location,
                                  ProblemData::VehicleType const &vehicleType)
-    : idxFirst_(depot),
-      idxLast_(depot),
+    : idxFirst_(location),
+      idxLast_(location),
       duration_(0),
       timeWarp_(0),
       twEarly_(vehicleType.twEarly),
       twLate_(vehicleType.twLate),
       releaseTime_(0)
 {
-    assert(depot == vehicleType.startDepot || depot == vehicleType.endDepot);
+    assert(location == vehicleType.startLocation
+           || location == vehicleType.endLocation);
 }

@@ -23,15 +23,17 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
     if (solRoutes.empty() && !unplanned.empty())
         throw std::invalid_argument("Need routes to repair!");
 
-    std::vector<SearchRoute::Node> locs;
+    std::vector<SearchRoute::Node> clients;
     std::vector<SearchRoute> routes;
-    setupRoutes(locs, routes, solRoutes, data);
+    setupRoutes(clients, routes, solRoutes, data);
 
     for (size_t client : unplanned)
     {
-        SearchRoute::Node *U = &locs[client];
-        ProblemData::Client const &clientData = data.location(client);
+        SearchRoute::Node *U = &clients[client];
         assert(!U->route());
+
+        auto const &clientData = data.client(client);
+        auto const &location = data.location(clientData.location);
 
         // Determine route with centroid nearest to this client.
         auto const cmp = [&](auto const &a, auto const &b)
@@ -42,8 +44,8 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
             if (b.empty() && !a.empty())
                 return true;
 
-            auto const x = static_cast<double>(clientData.x);
-            auto const y = static_cast<double>(clientData.y);
+            auto const x = static_cast<double>(location.x);
+            auto const y = static_cast<double>(location.y);
 
             auto const [aX, aY] = a.centroid();
             auto const [bX, bY] = b.centroid();
@@ -54,7 +56,7 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
         auto &route = *std::min_element(routes.begin(), routes.end(), cmp);
 
         // Find best insertion point in selected route, either after a client,
-        // or, initially, after the depot.
+        // or, initially, after the start location.
         Cost bestCost = insertCost(U, route[0], data, costEvaluator);
         auto offset = 1;
 
