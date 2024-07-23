@@ -13,6 +13,7 @@ Duration DurationSegment::twEarly() const
     // 2) When twLate >= releaseTime_, there is a feasible start time that does
     //    not cause time warp due to release times. Then we return either the
     //    earliest start time, or the release time, whichever is larger.
+    assert(twEarly_ <= twLate_);
     return std::max(twEarly_, std::min(twLate_, releaseTime_));
 }
 
