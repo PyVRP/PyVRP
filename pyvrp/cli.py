@@ -6,8 +6,10 @@ from typing import Optional
 import numpy as np
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import ProblemData, Result, SolveParams, solve
+from pyvrp import ProblemData, Result, SolveParams
+from pyvrp import solve as solve_hgs
 from pyvrp.read import ROUND_FUNCS, read
+from pyvrp.solve_ils import solve as solve_ils
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
@@ -74,6 +76,7 @@ def _solve(
     per_client: bool,
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
+    algorithm: str,
     **kwargs,
 ) -> tuple[str, str, float, int, float]:
     """
@@ -100,6 +103,8 @@ def _solve(
         The directory to write runtime statistics to.
     sol_dir
         The directory to write the best found solutions to.
+    algorithm
+        Algorithm to use. One of ['ils', 'hgs'].
 
     Returns
     -------
@@ -108,9 +113,9 @@ def _solve(
         the solution cost, the number of iterations, and the runtime.
     """
     if kwargs.get("config_loc"):
-        params = SolveParams.from_file(kwargs["config_loc"])
+        SolveParams.from_file(kwargs["config_loc"])
     else:
-        params = SolveParams()
+        SolveParams()
 
     data = read(data_loc, round_func)
 
@@ -127,7 +132,8 @@ def _solve(
         ]
     )
 
-    result = solve(data, stop, seed, bool(stats_dir), params=params)
+    solve = solve_hgs if algorithm == "hgs" else solve_ils
+    result = solve(data, stop, seed, collect_stats=True, display=True)
     instance_name = data_loc.stem
 
     if stats_dir:
@@ -248,6 +254,9 @@ def main():
 
     msg = "Whether to scale stopping criteria values by the number of clients."
     stop.add_argument("--per_client", action="store_true")
+
+    msg = "Algorithm to use for solving. One of ['ils', 'hgs']."
+    parser.add_argument("--algorithm", choices=["ils", "hgs"], default="hgs")
 
     benchmark(**vars(parser.parse_args()))
 
