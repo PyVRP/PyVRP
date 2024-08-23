@@ -1,5 +1,6 @@
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <cstring>
 #include <numeric>
 #include <stdexcept>
@@ -22,12 +23,14 @@ static char *duplicate(char const *src)
     std::strcpy(dst, src);
     return dst;
 }
+
+bool isNegative(auto value) { return value < 0; }
 }  // namespace
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
-                            Load delivery,
-                            Load pickup,
+                            std::vector<Load> delivery,
+                            std::vector<Load> pickup,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -49,11 +52,11 @@ ProblemData::Client::Client(Coordinate x,
       group(group),
       name(duplicate(name.data()))
 {
-    if (delivery < 0)
-        throw std::invalid_argument("delivery amount must be >= 0.");
+    if (std::any_of(delivery.begin(), delivery.end(), isNegative<Load>))
+        throw std::invalid_argument("delivery amounts must be >= 0.");
 
-    if (pickup < 0)
-        throw std::invalid_argument("pickup amount must be >= 0.");
+    if (std::any_of(pickup.begin(), pickup.end(), isNegative<Load>))
+        throw std::invalid_argument("pickup amounts must be >= 0.");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0.");
@@ -165,7 +168,7 @@ ProblemData::Depot::Depot(Depot &&depot)
 ProblemData::Depot::~Depot() { delete[] name; }
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
-                                      Load capacity,
+                                      std::vector<Load> capacity,
                                       size_t startDepot,
                                       size_t endDepot,
                                       Cost fixedCost,
@@ -194,8 +197,8 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
 
-    if (capacity < 0)
-        throw std::invalid_argument("capacity must be >= 0.");
+    if (std::any_of(capacity.begin(), capacity.end(), isNegative<Load>))
+        throw std::invalid_argument("capacities must be all >= 0.");
 
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
@@ -258,7 +261,7 @@ ProblemData::VehicleType::~VehicleType() { delete[] name; }
 
 ProblemData::VehicleType
 ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
-                                  std::optional<Load> capacity,
+                                  std::optional<std::vector<Load>> capacity,
                                   std::optional<size_t> startDepot,
                                   std::optional<size_t> endDepot,
                                   std::optional<Cost> fixedCost,

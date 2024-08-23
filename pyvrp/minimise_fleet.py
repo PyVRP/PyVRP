@@ -92,9 +92,11 @@ def _lower_bound(data: ProblemData) -> int:
     # time properties. See https://doi.org/10.1007/978-3-319-07046-9_30 for
     # details.
 
-    # Computes a simple bound based on packing delivery or pickup demand in the
-    # given vehicles.
-    delivery = sum(c.delivery for c in data.clients())
-    pickup = sum(c.pickup for c in data.clients())
-    demand = max(delivery, pickup)
-    return int(np.ceil(demand / max(vehicle_type.capacity, 1)))
+    # Computes a simple bound based on packing delivery or pickup demands in
+    # the given vehicles.
+    delivery = np.array([c.delivery for c in data.clients()])
+    pickup = np.array([c.pickup for c in data.clients()])
+    demand = np.maximum(delivery.sum(axis=0), pickup.sum(axis=0))
+
+    needed = np.divide(demand, np.maximum(vehicle_type.capacity, 1))
+    return int(np.ceil(needed).max())
