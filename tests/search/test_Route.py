@@ -24,7 +24,10 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     type.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(1, capacity=1), VehicleType(2, capacity=2)]
+        vehicle_types=[
+            VehicleType(1, capacity=[1]),
+            VehicleType(2, capacity=[2]),
+        ]
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
@@ -215,7 +218,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     type's fixed cost value.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
+        vehicle_types=[VehicleType(2, capacity=[10], fixed_cost=fixed_cost)]
     )
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(route.fixed_vehicle_cost(), fixed_cost)
@@ -462,7 +465,7 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
     Tests that the maximum duration attribute of vehicle types is reflected
     in the route's time warp calculations.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_duration=max_duration)
+    vehicle_type = VehicleType(3, capacity=[10], max_duration=max_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -488,7 +491,7 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
     Tests that the maximum distance attribute of vehicle types is reflected
     in the route's excess distance calculations.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_distance=max_distance)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -520,7 +523,7 @@ def test_is_feasible(
     Tests that various constraint violations are taken into account when
     determining overall route feasibility.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)

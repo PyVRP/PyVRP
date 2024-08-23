@@ -56,8 +56,8 @@ def test_client_constructor_initialises_data_fields_correctly(
     client = Client(
         x=x,
         y=y,
-        delivery=delivery,
-        pickup=pickup,
+        delivery=[delivery],
+        pickup=[pickup],
         service_duration=service_duration,
         tw_early=tw_early,
         tw_late=tw_late,
@@ -124,8 +124,8 @@ def test_raises_for_invalid_client_data(
         Client(
             x,
             y,
-            delivery,
-            pickup,
+            [delivery],
+            [pickup],
             service,
             tw_early,
             tw_late,
@@ -143,7 +143,7 @@ def test_problem_data_raises_when_no_depot_is_provided():
         ProblemData(
             clients=[],
             depots=[],
-            vehicle_types=[VehicleType(2, capacity=1)],
+            vehicle_types=[VehicleType(2, capacity=[1])],
             distance_matrices=[np.asarray([[]], dtype=int)],
             duration_matrices=[np.asarray([[]], dtype=int)],
         )
@@ -152,7 +152,7 @@ def test_problem_data_raises_when_no_depot_is_provided():
     ProblemData(
         clients=[],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=1)],
+        vehicle_types=[VehicleType(2, capacity=[1])],
         distance_matrices=[np.asarray([[0]])],
         duration_matrices=[np.asarray([[0]])],
     )
@@ -175,7 +175,7 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     """
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=1)]
+    vehicle_types = [VehicleType(2, capacity=[1])]
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
@@ -200,7 +200,7 @@ def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
     """
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=1)]
+    vehicle_types = [VehicleType(2, capacity=[1])]
 
     with assert_raises(ValueError):
         ProblemData(clients, depots, vehicle_types, [dist_mat], [dur_mat])
@@ -213,7 +213,7 @@ def test_problem_data_replace_no_changes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=1)]
+    vehicle_types = [VehicleType(2, capacity=[1])]
     mat = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
@@ -255,7 +255,7 @@ def test_problem_data_replace_with_changes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=1)]
+    vehicle_types = [VehicleType(2, capacity=[1])]
     mat = np.zeros((2, 2), dtype=int)
     original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
@@ -299,7 +299,7 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=1)]
+    vehicle_types = [VehicleType(2, capacity=[1])]
     mat = np.zeros((2, 2), dtype=int)
     data = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
@@ -348,7 +348,7 @@ def test_matrix_access():
     data = ProblemData(
         clients=[Client(x=0, y=0, tw_late=10) for _ in range(size - 1)],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=1)],
+        vehicle_types=[VehicleType(2, capacity=[1])],
         distance_matrices=[dist_mat],
         duration_matrices=[dur_mat],
     )
@@ -369,7 +369,7 @@ def test_matrices_are_not_writeable():
     data = ProblemData(
         clients=[],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=1)],
+        vehicle_types=[VehicleType(2, capacity=[1])],
         distance_matrices=[np.array([[0]])],
         duration_matrices=[np.array([[0]])],
     )
@@ -394,7 +394,7 @@ def test_matrices_are_not_copies():
     data = ProblemData(
         clients=[Client(x=0, y=1)],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=1)],
+        vehicle_types=[VehicleType(2, capacity=[1])],
         distance_matrices=[mat],
         duration_matrices=[mat],
     )
@@ -461,7 +461,7 @@ def test_vehicle_type_raises_invalid_data(
     with assert_raises(ValueError):
         VehicleType(
             num_available=num_available,
-            capacity=capacity,
+            capacity=[capacity],
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -479,7 +479,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     """
     vehicle_type = VehicleType(
         num_available=1,
-        capacity=0,
+        capacity=[],
         start_depot=0,
         end_depot=0,
         fixed_cost=0,
@@ -494,7 +494,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
-    assert_equal(vehicle_type.capacity, 0)
+    assert_equal(vehicle_type.capacity, [])
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.tw_late, 0)
@@ -536,7 +536,7 @@ def test_vehicle_type_attribute_access():
         num_available=7,
         start_depot=29,
         end_depot=43,
-        capacity=13,
+        capacity=[13],
         fixed_cost=3,
         tw_early=17,
         tw_late=19,
@@ -550,7 +550,7 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.num_available, 7)
     assert_equal(vehicle_type.start_depot, 29)
     assert_equal(vehicle_type.end_depot, 43)
-    assert_equal(vehicle_type.capacity, 13)
+    assert_equal(vehicle_type.capacity, [13])
     assert_equal(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
@@ -567,9 +567,9 @@ def test_vehicle_type_replace():
     """
     Tests that calling replace() on a VehicleType functions correctly.
     """
-    vehicle_type = VehicleType(num_available=7, capacity=10, name="test")
+    vehicle_type = VehicleType(num_available=7, capacity=[10], name="test")
     assert_equal(vehicle_type.num_available, 7)
-    assert_equal(vehicle_type.capacity, 10)
+    assert_equal(vehicle_type.capacity, [10])
     assert_equal(vehicle_type.name, "test")
 
     # Replacing the number of available vehicles and name should be reflected
@@ -577,7 +577,7 @@ def test_vehicle_type_replace():
     # as the original. In particular, capacity should not be changed.
     new = vehicle_type.replace(num_available=5, name="new")
     assert_equal(new.num_available, 5)
-    assert_equal(new.capacity, 10)
+    assert_equal(new.capacity, [10])
     assert_equal(new.name, "new")
 
 

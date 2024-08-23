@@ -276,7 +276,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     This test asserts that a customer will be relocated to a non-empty route
     with a different capacity even if there is another empty route in between.
     """
-    vehicle_types = [VehicleType(1, capacity=cap) for cap in [12, 5, 1, 3]]
+    vehicle_types = [VehicleType(1, capacity=[cap]) for cap in [12, 5, 1, 3]]
     data = ok_small.replace(vehicle_types=vehicle_types)
 
     # Use a huge cost for load penalties to make other aspects irrelevant
@@ -330,7 +330,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     not changed), and vary the fixed vehicle cost. The total delta cost should
     also vary as a result.
     """
-    vehicle_type = VehicleType(2, capacity=10, fixed_cost=fixed_cost)
+    vehicle_type = VehicleType(2, capacity=[10], fixed_cost=fixed_cost)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
@@ -365,7 +365,7 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
     Tests that the exchange operators correctly evaluate time warp due to
     maximum duration violations.
     """
-    vehicle_type = VehicleType(2, capacity=10, max_duration=max_dur)
+    vehicle_type = VehicleType(2, capacity=[10], max_duration=max_dur)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
@@ -402,12 +402,12 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     """
     data = ProblemData(
         clients=[
-            Client(x=1, y=0, pickup=5),
+            Client(x=1, y=0, pickup=[5]),
             Client(x=2, y=0),
-            Client(x=2, y=0, delivery=5),
+            Client(x=2, y=0, delivery=[5]),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(capacity=5)],
+        vehicle_types=[VehicleType(capacity=[5])],
         distance_matrices=[np.where(np.eye(4), 0, 1)],
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
@@ -447,7 +447,7 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     violations, and can identify improving moves that increase overall distance
     but reduce the maximum distance violation.
     """
-    vehicle_type = VehicleType(2, capacity=10, max_distance=max_distance)
+    vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -502,7 +502,7 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     violations, and can identify improving moves that increase overall distance
     but reduce the maximum distance violation.
     """
-    vehicle_type = VehicleType(2, capacity=10, max_distance=max_distance)
+    vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route1 = Route(data, idx=0, vehicle_type=0)

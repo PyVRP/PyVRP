@@ -22,10 +22,10 @@ def test_model_data():
 
     # Let's add some data: a single client, and edges from/to the depot.
     depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1, delivery=1)
+    client = model.add_client(0, 1, delivery=[1])
     model.add_edge(depot, client, 1, 1)
     model.add_edge(client, depot, 1, 1)
-    model.add_vehicle_type(capacity=1, num_available=1)
+    model.add_vehicle_type(capacity=[1], num_available=1)
 
     data = model.data()
     assert_equal(data.num_clients, 1)
@@ -141,7 +141,7 @@ def test_add_vehicle_type():
     model = Model()
     vehicle_type = model.add_vehicle_type(
         num_available=10,
-        capacity=998,
+        capacity=[998],
         fixed_cost=1_001,
         tw_early=17,
         tw_late=19,
@@ -150,7 +150,7 @@ def test_add_vehicle_type():
     )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, 998)
+    assert_equal(vehicle_type.capacity, [998])
     assert_equal(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
@@ -223,8 +223,8 @@ def test_get_vehicle_types():
     Tests the ``vehicle_types`` property.
     """
     model = Model()
-    vehicle_type1 = model.add_vehicle_type(1, capacity=2)
-    vehicle_type2 = model.add_vehicle_type(1, capacity=3)
+    vehicle_type1 = model.add_vehicle_type(1, capacity=[2])
+    vehicle_type2 = model.add_vehicle_type(1, capacity=[3])
 
     # Test that we can get the vehicle types by index, or as a list.
     assert_equal(model.vehicle_types[0], vehicle_type1)
@@ -283,7 +283,7 @@ def test_model_and_solve(ok_small):
     model = Model()
     model.add_vehicle_type(
         num_available=3,
-        capacity=10,
+        capacity=[10],
         tw_early=0,
         tw_late=45000,
     )
@@ -368,7 +368,7 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type(capacity=0, num_available=1)
+    model.add_vehicle_type()
 
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
@@ -390,7 +390,7 @@ def test_data_warns_about_scaling_issues(recwarn):
     by scaling issues, so a warning is appropriate.
     """
     model = Model()
-    model.add_vehicle_type(capacity=0, num_available=1)
+    model.add_vehicle_type()
     depot = model.add_depot(0, 0)
     client = model.add_client(1, 1)
 
@@ -414,7 +414,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     could not solve an instance with zero clients or just one client.
     """
     m = Model()
-    m.add_vehicle_type(capacity=15, num_available=1)
+    m.add_vehicle_type(capacity=[15], num_available=1)
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
@@ -443,7 +443,6 @@ def test_model_solves_small_instance_with_fixed_costs():
 
     for idx in range(2):
         m.add_vehicle_type(
-            capacity=0,
             num_available=5,
             fixed_cost=10,
             tw_early=0,
@@ -477,7 +476,6 @@ def test_model_solves_small_instance_with_shift_durations():
     # vehicles in total, two for each vehicle type.
     for tw_early, tw_late in [(0, 15), (5, 25)]:
         m.add_vehicle_type(
-            capacity=0,
             num_available=2,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -595,12 +593,12 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     """
     m = Model()
     m.add_depot(0, 0)
-    m.add_vehicle_type(capacity=10)
+    m.add_vehicle_type(capacity=[10])
 
-    m.add_client(x=1, y=1, delivery=deliveries[0], pickup=pickups[0])
-    m.add_client(x=2, y=2, delivery=deliveries[1], pickup=pickups[1])
-    m.add_client(x=3, y=3, delivery=deliveries[2], pickup=pickups[2])
-    m.add_client(x=4, y=4, delivery=deliveries[3], pickup=pickups[3])
+    m.add_client(x=1, y=1, delivery=[deliveries[0]], pickup=[pickups[0]])
+    m.add_client(x=2, y=2, delivery=[deliveries[1]], pickup=[pickups[1]])
+    m.add_client(x=3, y=3, delivery=[deliveries[2]], pickup=[pickups[2]])
+    m.add_client(x=4, y=4, delivery=[deliveries[3]], pickup=[pickups[3]])
 
     for frm in m.locations:
         for to in m.locations:
@@ -739,8 +737,8 @@ def test_minimise_distance_or_duration(ok_small):
     orig_model = Model.from_data(ok_small)
 
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=0),
-        VehicleType(capacity=10, unit_distance_cost=0, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=0),
+        VehicleType(capacity=[10], unit_distance_cost=0, unit_duration_cost=1),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)

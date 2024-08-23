@@ -37,7 +37,10 @@ def test_route_eq(ok_small):
     Tests ``Route``'s equality operator.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(capacity=10), VehicleType(2, capacity=20)]
+        vehicle_types=[
+            VehicleType(capacity=[10]),
+            VehicleType(2, capacity=[20]),
+        ]
     )
 
     route1 = Route(data, [1, 2], 0)
@@ -297,7 +300,7 @@ def test_route_shift_duration(
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=10, tw_early=tw_early, tw_late=tw_late)
+            VehicleType(2, capacity=[10], tw_early=tw_early, tw_late=tw_late)
         ]
     )
 
@@ -315,8 +318,8 @@ def test_distance_duration_cost_calculations(ok_small):
     Tests route-level distance and duration cost calculations.
     """
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 

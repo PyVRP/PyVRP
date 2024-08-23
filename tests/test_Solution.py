@@ -38,7 +38,10 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     Tests that Solution's route constructor respects vehicle types.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(capacity=10), VehicleType(2, capacity=20)]
+        vehicle_types=[
+            VehicleType(capacity=[10]),
+            VehicleType(2, capacity=[20]),
+        ]
     )
 
     sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
@@ -83,7 +86,7 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
     the number of clients when there are sufficient vehicles available.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(num_vehicles, capacity=10)]
+        vehicle_types=[VehicleType(num_vehicles, capacity=[10])]
     )
     assert_equal(data.num_clients, 4)
 
@@ -105,8 +108,8 @@ def test_random_constructor_uses_all_vehicle_types(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(ok_small.num_clients, capacity=10),
-            VehicleType(ok_small.num_clients, capacity=10),
+            VehicleType(ok_small.num_clients, capacity=[10]),
+            VehicleType(ok_small.num_clients, capacity=[10]),
         ]
     )
 
@@ -154,7 +157,10 @@ def test_route_constructor_raises_too_many_vehicles(ok_small):
 
     # Now test the case with multiple vehicle types.
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=10), VehicleType(capacity=20)]
+        vehicle_types=[
+            VehicleType(2, capacity=[10]),
+            VehicleType(capacity=[20]),
+        ]
     )
 
     # Only two routes (of type 0) should not raise.
@@ -334,7 +340,7 @@ def test_feasibility_max_duration(ok_small):
 
     # Modify the data to impose a maximum route duration constraint of 3'000,
     # and check that the previously feasible solution is now not feasible.
-    vehicle_type = VehicleType(4, capacity=10, max_duration=3_000)
+    vehicle_type = VehicleType(4, capacity=[10], max_duration=3_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     sol = Solution(data, [[1, 2], [3, 4]])
@@ -360,7 +366,7 @@ def test_feasibility_max_distance(ok_small):
     sol = Solution(ok_small, [[1, 2], [3, 4]])
     assert_(sol.is_feasible())
 
-    vehicle_type = VehicleType(4, capacity=10, max_distance=5_000)
+    vehicle_type = VehicleType(4, capacity=[10], max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     sol = Solution(data, [[1, 2], [3, 4]])
@@ -426,7 +432,10 @@ def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):
     load calaculations.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=10), VehicleType(capacity=20)]
+        vehicle_types=[
+            VehicleType(2, capacity=[10]),
+            VehicleType(capacity=[20]),
+        ]
     )
 
     # This instance has capacities 10 and 20 for vehicle type 0 and 1. The
@@ -522,7 +531,10 @@ def tests_that_not_specifying_the_vehicle_type_assumes_a_default(ok_small):
     using too many vehicles of the first type.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=10), VehicleType(capacity=20)]
+        vehicle_types=[
+            VehicleType(2, capacity=[10]),
+            VehicleType(capacity=[20]),
+        ]
     )
 
     sol = Solution(data, [[1, 2, 3, 4]])
@@ -607,7 +619,10 @@ def test_eq_with_multiple_vehicle_types(ok_small):
     # violations so have the same attributes, such that we actually test if the
     # assignments are used for the equality comparison.
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=20), VehicleType(capacity=30)]
+        vehicle_types=[
+            VehicleType(2, capacity=[20]),
+            VehicleType(capacity=[30]),
+        ]
     )
 
     # These two should be the same
@@ -642,7 +657,7 @@ def test_eq_unassigned():
             Client(x=1, y=0, required=False),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=1)],
+        vehicle_types=[VehicleType(2, capacity=[1])],
         distance_matrices=[dist],
         duration_matrices=[dist],
     )
@@ -661,7 +676,7 @@ def test_duplicate_vehicle_types(ok_small):
     considered completely different during optimisation.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(capacity=10), VehicleType(capacity=10)]
+        vehicle_types=[VehicleType(capacity=[10]), VehicleType(capacity=[10])]
     )
 
     sol1 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
@@ -673,8 +688,8 @@ def test_duplicate_vehicle_types(ok_small):
 @pytest.mark.parametrize(
     "vehicle_types",
     [
-        [VehicleType(3, capacity=10)],
-        [VehicleType(2, capacity=10), VehicleType(capacity=20)],
+        [VehicleType(3, capacity=[10])],
+        [VehicleType(2, capacity=[10]), VehicleType(capacity=[20])],
     ],
 )
 def test_str_contains_routes(ok_small, vehicle_types):
@@ -748,8 +763,8 @@ def test_fixed_vehicle_cost(
     # should be able to track this.
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=10, fixed_cost=0),
-            VehicleType(2, capacity=10, fixed_cost=10),
+            VehicleType(2, capacity=[10], fixed_cost=0),
+            VehicleType(2, capacity=[10], fixed_cost=10),
         ]
     )
 
@@ -821,8 +836,8 @@ def test_distance_duration_cost_calculations(ok_small):
     Tests solution-level distance and duration cost calculations.
     """
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
     routes = [Route(data, [1, 2], 0), Route(data, [3, 4], 1)]
