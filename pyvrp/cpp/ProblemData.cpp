@@ -24,6 +24,7 @@ static char *duplicate(char const *src)
     return dst;
 }
 
+// Pad vec1 with zeroes to the size of vec1 and vec2, whichever is larger.
 auto &pad(auto &vec1, auto const &vec2)
 {
     vec1.resize(std::max(vec1.size(), vec2.size()));
@@ -206,7 +207,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
         throw std::invalid_argument("num_available must be > 0.");
 
     if (std::any_of(capacity.begin(), capacity.end(), isNegative<Load>))
-        throw std::invalid_argument("capacities must be all >= 0.");
+        throw std::invalid_argument("capacity amounts must be >= 0.");
 
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
