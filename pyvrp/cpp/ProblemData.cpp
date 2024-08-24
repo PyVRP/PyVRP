@@ -58,6 +58,8 @@ ProblemData::Client::Client(Coordinate x,
       group(group),
       name(duplicate(name.data()))
 {
+    assert(delivery.size() == pickup.size());
+
     if (std::any_of(delivery.begin(), delivery.end(), isNegative<Load>))
         throw std::invalid_argument("delivery amounts must be >= 0.");
 
