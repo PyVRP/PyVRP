@@ -70,8 +70,8 @@ def test_client_constructor_initialises_data_fields_correctly(
 
     assert_equal(client.x, x)
     assert_equal(client.y, y)
-    assert_equal(client.delivery, delivery)
-    assert_equal(client.pickup, pickup)
+    assert_equal(client.delivery, [delivery])
+    assert_equal(client.pickup, [pickup])
     assert_equal(client.service_duration, service_duration)
     assert_equal(client.tw_early, tw_early)
     assert_equal(client.tw_late, tw_late)
@@ -264,7 +264,7 @@ def test_problem_data_replace_with_changes():
     # is left unchanged.
     new = original.replace(
         clients=[Client(x=1, y=1)],
-        vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
+        vehicle_types=[VehicleType(3, [4]), VehicleType(5, [6])],
         distance_matrices=[np.where(np.eye(2), 0, 2)],
     )
 
@@ -513,7 +513,7 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.num_available, 1)
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
-    assert_equal(vehicle_type.capacity, 0)
+    assert_equal(vehicle_type.capacity, [])
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
@@ -801,3 +801,27 @@ def test_replacing_client_groups(ok_small):
     # client as its only member.
     assert_equal(data.num_groups, 1)
     assert_equal(data.group(0).clients, [1])
+
+
+@pytest.mark.parametrize(
+    ("delivery", "pickup", "exp_delivery", "exp_pickup"),
+    [
+        ([], [], [], []),
+        ([], [0, 1, 2], [0, 0, 0], [0, 1, 2]),
+        ([0, 1, 2], [], [0, 1, 2], [0, 0, 0]),
+        ([0, 2], [1], [0, 2], [1, 0]),
+    ],
+)
+def test_client_load_dimensions_are_padded_with_zeroes(
+    delivery: list[int],
+    pickup: list[int],
+    exp_delivery: list[int],
+    exp_pickup: list[int],
+):
+    """
+    Tests that any missing load dimensions for the pickup and delivery Client
+    arguments are padded with zeroes.
+    """
+    client = Client(x=0, y=1, delivery=delivery, pickup=pickup)
+    assert_equal(client.delivery, exp_delivery)
+    assert_equal(client.pickup, exp_pickup)

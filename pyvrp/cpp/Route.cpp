@@ -59,7 +59,7 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
 
     delivery_ = ls.delivery();
     pickup_ = ls.pickup();
-    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
+    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity[0], 0);
 
     DurationSegment endDS(endDepot_, vehType);
     ds = DurationSegment::merge(durations, ds, endDS);

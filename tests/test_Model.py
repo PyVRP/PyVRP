@@ -85,8 +85,8 @@ def test_add_client_attributes():
     client = model.add_client(
         x=1,
         y=2,
-        delivery=3,
-        pickup=9,
+        delivery=[3],
+        pickup=[9],
         service_duration=4,
         tw_early=5,
         tw_late=6,
@@ -97,8 +97,8 @@ def test_add_client_attributes():
 
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
-    assert_equal(client.delivery, 3)
-    assert_equal(client.pickup, 9)
+    assert_equal(client.delivery, [3])
+    assert_equal(client.pickup, [9])
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
@@ -290,10 +290,10 @@ def test_model_and_solve(ok_small):
 
     depot = model.add_depot(x=2334, y=726)
     clients = [
-        model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
-        model.add_client(590, 530, 5, 0, 360, 12000, 19500),
-        model.add_client(435, 718, 3, 0, 420, 8400, 15300),
-        model.add_client(1191, 639, 5, 0, 360, 12000, 19500),
+        model.add_client(226, 1297, [5], [0], 360, 15600, 22500),
+        model.add_client(590, 530, [5], [0], 360, 12000, 19500),
+        model.add_client(435, 718, [3], [0], 420, 8400, 15300),
+        model.add_client(1191, 639, [5], [0], 360, 12000, 19500),
     ]
 
     edge_weights = [

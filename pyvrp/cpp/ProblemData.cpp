@@ -24,6 +24,12 @@ static char *duplicate(char const *src)
     return dst;
 }
 
+auto &pad(auto &vec1, auto const &vec2)
+{
+    vec1.resize(std::max(vec1.size(), vec2.size()));
+    return vec1;
+}
+
 bool isNegative(auto value) { return value < 0; }
 }  // namespace
 
@@ -41,8 +47,8 @@ ProblemData::Client::Client(Coordinate x,
                             std::string name)
     : x(x),
       y(y),
-      delivery(delivery),
-      pickup(pickup),
+      delivery(pad(delivery, pickup)),
+      pickup(pad(pickup, delivery)),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
