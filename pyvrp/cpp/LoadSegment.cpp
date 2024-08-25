@@ -3,13 +3,13 @@
 using pyvrp::Load;
 using pyvrp::LoadSegment;
 
-Load LoadSegment::delivery() const { return delivery_; }
+std::vector<Load> LoadSegment::delivery() const { return delivery_; }
 
-Load LoadSegment::pickup() const { return pickup_; }
+std::vector<Load> LoadSegment::pickup() const { return pickup_; }
 
 LoadSegment::LoadSegment(ProblemData::Client const &client)
-    : delivery_(client.delivery[0]),
-      pickup_(client.pickup[0]),
-      load_(std::max(client.delivery[0], client.pickup[0]))
+    : delivery_(client.delivery), pickup_(client.pickup)
 {
+    for (size_t idx = 0; idx != delivery_.size(); ++idx)
+        load_.push_back(std::max(delivery_[idx], pickup_[idx]));
 }
