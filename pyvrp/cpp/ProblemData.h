@@ -472,6 +472,7 @@ private:
     std::vector<ClientGroup> const groups_;        // Client groups
 
     size_t const numVehicles_;
+    size_t const numLoadDimensions_;
 
 public:
     /**

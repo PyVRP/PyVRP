@@ -211,7 +211,7 @@ def test_problem_data_replace_no_changes():
     Tests that when using ``ProblemData.replace()`` without any arguments
     returns a new instance with different objects, but with the same values.
     """
-    clients = [Client(x=0, y=0)]
+    clients = [Client(x=0, y=0, delivery=[0])]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=[1])]
     mat = np.zeros((2, 2), dtype=int)
@@ -253,7 +253,7 @@ def test_problem_data_replace_with_changes():
     Tests that when calling ``ProblemData.replace()`` indeed replaces the
     data values with those passed to the method.
     """
-    clients = [Client(x=0, y=0)]
+    clients = [Client(x=0, y=0, delivery=[0])]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=[1])]
     mat = np.zeros((2, 2), dtype=int)
@@ -263,7 +263,7 @@ def test_problem_data_replace_with_changes():
     # with different values than in the original data. The duration matrix
     # is left unchanged.
     new = original.replace(
-        clients=[Client(x=1, y=1)],
+        clients=[Client(x=1, y=1, delivery=[0])],
         vehicle_types=[VehicleType(3, [4]), VehicleType(5, [6])],
         distance_matrices=[np.where(np.eye(2), 0, 2)],
     )
@@ -299,7 +299,7 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     """
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=[1])]
+    vehicle_types = [VehicleType(2)]
     mat = np.zeros((2, 2), dtype=int)
     data = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
@@ -348,7 +348,7 @@ def test_matrix_access():
     data = ProblemData(
         clients=[Client(x=0, y=0, tw_late=10) for _ in range(size - 1)],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=[1])],
+        vehicle_types=[VehicleType(2)],
         distance_matrices=[dist_mat],
         duration_matrices=[dur_mat],
     )
@@ -369,7 +369,7 @@ def test_matrices_are_not_writeable():
     data = ProblemData(
         clients=[],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=[1])],
+        vehicle_types=[VehicleType(2)],
         distance_matrices=[np.array([[0]])],
         duration_matrices=[np.array([[0]])],
     )
@@ -394,7 +394,7 @@ def test_matrices_are_not_copies():
     data = ProblemData(
         clients=[Client(x=0, y=1)],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=[1])],
+        vehicle_types=[VehicleType(2)],
         distance_matrices=[mat],
         duration_matrices=[mat],
     )
@@ -612,15 +612,18 @@ def test_raises_invalid_vehicle_depot_indices(
     constructing a ProblemData instance).
     """
     assert_equal(ok_small.num_depots, 1)
+    veh_type = VehicleType(
+        capacity=[10],
+        start_depot=start_depot,
+        end_depot=end_depot,
+    )
 
     if not should_raise:
-        veh_types = [VehicleType(start_depot=start_depot, end_depot=end_depot)]
-        ok_small.replace(vehicle_types=veh_types)
+        ok_small.replace(vehicle_types=[veh_type])
         return
 
     with assert_raises(IndexError):
-        veh_types = [VehicleType(start_depot=start_depot, end_depot=end_depot)]
-        ok_small.replace(vehicle_types=veh_types)
+        ok_small.replace(vehicle_types=[veh_type])
 
 
 def test_raises_invalid_vehicle_profile_index(ok_small):
@@ -631,7 +634,7 @@ def test_raises_invalid_vehicle_profile_index(ok_small):
     assert_equal(ok_small.num_profiles, 1)
 
     with assert_raises(IndexError):
-        ok_small.replace(vehicle_types=[VehicleType(profile=1)])
+        ok_small.replace(vehicle_types=[VehicleType(capacity=[0], profile=1)])
 
 
 @pytest.mark.parametrize(
@@ -794,7 +797,7 @@ def test_replacing_client_groups(ok_small):
     # Let's add the first client to a group, and define a new data instance
     # that has a mutually exclusive group.
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, required=False, group=0)
+    clients[0] = Client(1, 1, delivery=[0], required=False, group=0)
     data = ok_small.replace(clients=clients, groups=[ClientGroup([1])])
 
     # There should now be a single client group (at index 0) that has the first
@@ -825,3 +828,30 @@ def test_client_load_dimensions_are_padded_with_zeroes(
     client = Client(x=0, y=1, delivery=delivery, pickup=pickup)
     assert_equal(client.delivery, exp_delivery)
     assert_equal(client.pickup, exp_pickup)
+
+
+@pytest.mark.parametrize(
+    ("clients", "vehicle_types"),
+    [
+        ([Client(x=0, y=0)], [VehicleType(capacity=[10])]),
+        ([Client(x=0, y=0, delivery=[10, 2])], [VehicleType(capacity=[10])]),
+        ([Client(x=0, y=0, delivery=[10, 2])], [VehicleType()]),
+        ([Client(x=0, y=0)], [VehicleType(capacity=[10, 2])]),
+    ],
+)
+def test_raises_inconsistent_client_and_vehicle_loads(
+    clients: list[Client],
+    vehicle_types: list[VehicleType],
+):
+    """
+    Tests that the ProblemData constructor complains when clients and vehicle
+    types have an inconsistent number of load dimensions.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=clients,
+            depots=[Depot(x=0, y=0)],
+            vehicle_types=vehicle_types,
+            distance_matrices=[np.zeros((len(clients) + 1, len(clients) + 1))],
+            duration_matrices=[np.zeros((len(clients) + 1, len(clients) + 1))],
+        )

@@ -370,6 +370,19 @@ void ProblemData::validate() const
     for (size_t idx = numDepots(); idx != numLocations(); ++idx)
     {
         ProblemData::Client const &client = location(idx);
+
+        if (client.delivery.size() != numLoadDimensions_)
+        {
+            auto const *msg = "Client has inconsistent delivery size.";
+            throw std::invalid_argument(msg);
+        }
+
+        if (client.pickup.size() != numLoadDimensions_)
+        {
+            auto const *msg = "Client has inconsistent pickup size.";
+            throw std::invalid_argument(msg);
+        }
+
         if (!client.group)
             continue;
 
@@ -419,6 +432,12 @@ void ProblemData::validate() const
     // Vehicle type checks.
     for (auto const &vehicleType : vehicleTypes_)
     {
+        if (vehicleType.capacity.size() != numLoadDimensions_)
+        {
+            auto const *msg = "Vehicle type has inconsistent capacity size.";
+            throw std::invalid_argument(msg);
+        }
+
         if (vehicleType.startDepot >= numDepots())
             throw std::out_of_range("Vehicle type has invalid start depot.");
 
@@ -498,7 +517,15 @@ ProblemData::ProblemData(std::vector<Client> clients,
                                    vehicleTypes_.end(),
                                    0,
                                    [](auto sum, VehicleType const &type)
-                                   { return sum + type.numAvailable; }))
+                                   { return sum + type.numAvailable; })),
+      numLoadDimensions_(
+          clients_.empty()
+              // If there are no clients we look at the vehicle types. If both
+              // are empty we default to 0. Clients have pickups and deliveries
+              // but the client constructor already ensures those are of equal
+              // size (within a single client).
+              ? (vehicleTypes_.empty() ? 0 : vehicleTypes_[0].capacity.size())
+              : clients_[0].delivery.size())
 {
     for (auto const &client : clients_)
     {
