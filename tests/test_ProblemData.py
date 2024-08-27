@@ -804,16 +804,14 @@ def test_replacing_client_groups(ok_small):
     assert_equal(data.group(0).clients, [1])
 
 
-def test_pickle_client():
+@pytest.mark.parametrize("cls", (Client, Depot))
+def test_pickle_locations(cls):
     """
-    Tests that client objects can be serialised and unserialised.
+    Tests that client and depot locations can be serialised and unserialised.
     """
-    before_pickle = Client(x=0, y=1, name="test")
-
+    before_pickle = cls(x=0, y=1, name="test")
     bytes = pickle.dumps(before_pickle)
-    after_pickle = pickle.loads(bytes)
-
-    assert_equal(after_pickle, before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
 
 
 def test_pickle_vehicle_type():

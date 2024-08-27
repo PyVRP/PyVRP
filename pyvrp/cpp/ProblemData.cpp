@@ -182,6 +182,11 @@ ProblemData::Depot::Depot(Depot &&depot)
 
 ProblemData::Depot::~Depot() { delete[] name; }
 
+bool ProblemData::Depot::operator==(Depot const &other) const
+{
+    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+}
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
                                       size_t startDepot,

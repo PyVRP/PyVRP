@@ -154,6 +154,19 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::Depot::name,
                       py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::Depot const &depot) {  // __getstate__
+                // Returns a tuple that completely encodes the depot's state.
+                return py::make_tuple(depot.x, depot.y, depot.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::Depot depot(t[0].cast<pyvrp::Coordinate>(),  // x
+                                         t[1].cast<pyvrp::Coordinate>(),  // y
+                                         t[2].cast<std::string>());  // name
+
+                return depot;
+            }))
         .def(
             "__str__",
             [](ProblemData::Depot const &depot) { return depot.name; },

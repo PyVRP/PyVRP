@@ -295,6 +295,8 @@ public:
 
         Depot(Coordinate x, Coordinate y, std::string name = "");
 
+        bool operator==(Depot const &other) const;
+
         Depot(Depot const &depot);
         Depot(Depot &&depot);
 
