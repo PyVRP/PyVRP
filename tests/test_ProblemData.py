@@ -811,12 +811,12 @@ def test_client_eq():
     """
     Tests the client's equality operator.
     """
-    client1 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=0)
-    client2 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=1)
+    client1 = Client(x=0, y=0, delivery=[1], pickup=[2], tw_late=3, group=0)
+    client2 = Client(x=0, y=0, delivery=[1], pickup=[2], tw_late=3, group=1)
     assert_(client1 != client2)
 
     # This client is equivalent to client1.
-    client3 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=0)
+    client3 = Client(x=0, y=0, delivery=[1], pickup=[2], tw_late=3, group=0)
     assert_(client1 == client3)
     assert_(client3 == client3)
 
