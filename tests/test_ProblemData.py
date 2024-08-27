@@ -1,3 +1,4 @@
+import pickle
 from typing import Optional
 
 import numpy as np
@@ -801,3 +802,106 @@ def test_replacing_client_groups(ok_small):
     # client as its only member.
     assert_equal(data.num_groups, 1)
     assert_equal(data.group(0).clients, [1])
+
+
+def test_client_eq():
+    """
+    Tests the client's equality operator.
+    """
+    client1 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=0)
+    client2 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=1)
+    assert_(client1 != client2)
+
+    # This client is equivalent to client1.
+    client3 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=0)
+    assert_(client1 == client3)
+    assert_(client3 == client3)
+
+    # And some things that are not clients.
+    assert_(client1 != "text")
+    assert_(client1 != 1)
+
+
+def test_depot_eq():
+    """
+    Tests the depot's equality operator.
+    """
+    depot1 = Depot(x=0, y=0)
+    depot2 = Depot(x=0, y=1)
+    assert_(depot1 != depot2)
+
+    # This depot is equivalent to depot1.
+    depot3 = Depot(x=0, y=0)
+    assert_(depot1 == depot3)
+    assert_(depot3 == depot3)
+
+    # And some things that are not depots.
+    assert_(depot1 != "text")
+    assert_(depot1 != 3)
+
+
+def test_vehicle_type_eq():
+    """
+    Tests the vehicle type's equality operator.
+    """
+    veh_type1 = VehicleType(num_available=3, profile=0)
+    veh_type2 = VehicleType(num_available=3, profile=1)
+    assert_(veh_type1 != veh_type2)
+
+    # This vehicle type is equivalent to veh_type1.
+    veh_type3 = VehicleType(num_available=3, profile=0)
+    assert_(veh_type1 == veh_type3)
+
+    # And some things that are not vehicle types.
+    assert_(veh_type1 != "text")
+    assert_(veh_type1 != 5)
+
+
+def test_eq_checks_names():
+    """
+    Tests that the equality operators on named objects also considers the name
+    when determining equality.
+    """
+    x, y = 0, 0
+    assert_(Client(x, y, name="1") != Client(x, y, name="2"))
+    assert_(Depot(x, y, name="1") != Depot(x, y, name="2"))
+    assert_(VehicleType(name="1") != VehicleType(name="2"))
+
+
+@pytest.mark.parametrize("cls", (Client, Depot))
+def test_pickle_locations(cls):
+    """
+    Tests that client and depot locations can be serialised and unserialised.
+    """
+    before_pickle = cls(x=0, y=1, name="test")
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_client_group():
+    """
+    Tests that client groups can be serialised and unserialised.
+    """
+    before_pickle = ClientGroup(clients=[1, 2, 3], required=False)
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_vehicle_type():
+    """
+    Tests that vehicle types can be serialised and unserialised.
+    """
+    before_pickle = VehicleType(num_available=12, capacity=3, name="test123")
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_data(ok_small, rc208):
+    """
+    Tests that problem data instances can be serialised and unserialised.
+    """
+    bytes = pickle.dumps(ok_small)
+    assert_equal(pickle.loads(bytes), ok_small)
+
+    bytes = pickle.dumps(rc208)
+    assert_equal(pickle.loads(bytes), rc208)

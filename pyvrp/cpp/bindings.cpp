@@ -19,6 +19,7 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
+#include <string>
 #include <variant>
 
 namespace py = pybind11;
@@ -103,6 +104,39 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::Client::name,
                       py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::Client const &client) {  // __getstate__
+                return py::make_tuple(client.x,
+                                      client.y,
+                                      client.delivery,
+                                      client.pickup,
+                                      client.serviceDuration,
+                                      client.twEarly,
+                                      client.twLate,
+                                      client.releaseTime,
+                                      client.prize,
+                                      client.required,
+                                      client.group,
+                                      client.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::Client client(
+                    t[0].cast<pyvrp::Coordinate>(),       // x
+                    t[1].cast<pyvrp::Coordinate>(),       // y
+                    t[2].cast<pyvrp::Load>(),             // delivery
+                    t[3].cast<pyvrp::Load>(),             // pickup
+                    t[4].cast<pyvrp::Duration>(),         // service duration
+                    t[5].cast<pyvrp::Duration>(),         // tw early
+                    t[6].cast<pyvrp::Duration>(),         // tw late
+                    t[7].cast<pyvrp::Duration>(),         // release time
+                    t[8].cast<pyvrp::Cost>(),             // prize
+                    t[9].cast<bool>(),                    // required
+                    t[10].cast<std::optional<size_t>>(),  // group
+                    t[11].cast<std::string>());           // name
+
+                return client;
+            }))
         .def(
             "__str__",
             [](ProblemData::Client const &client) { return client.name; },
@@ -119,6 +153,18 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::Depot::name,
                       py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::Depot const &depot) {  // __getstate__
+                return py::make_tuple(depot.x, depot.y, depot.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::Depot depot(t[0].cast<pyvrp::Coordinate>(),  // x
+                                         t[1].cast<pyvrp::Coordinate>(),  // y
+                                         t[2].cast<std::string>());  // name
+
+                return depot;
+            }))
         .def(
             "__str__",
             [](ProblemData::Depot const &depot) { return depot.name; },
@@ -137,6 +183,18 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
                       &ProblemData::ClientGroup::mutuallyExclusive)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::ClientGroup const &group) {  // __getstate__
+                return py::make_tuple(group.clients(), group.required);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::ClientGroup group(
+                    t[0].cast<std::vector<size_t>>(),  // clients
+                    t[1].cast<bool>());                // required
+
+                return group;
+            }))
         .def("__len__", &ProblemData::ClientGroup::size)
         .def(
             "__iter__",
@@ -209,6 +267,41 @@ PYBIND11_MODULE(_pyvrp, m)
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
+                return py::make_tuple(vehicleType.numAvailable,
+                                      vehicleType.capacity,
+                                      vehicleType.startDepot,
+                                      vehicleType.endDepot,
+                                      vehicleType.fixedCost,
+                                      vehicleType.twEarly,
+                                      vehicleType.twLate,
+                                      vehicleType.maxDuration,
+                                      vehicleType.maxDistance,
+                                      vehicleType.unitDistanceCost,
+                                      vehicleType.unitDurationCost,
+                                      vehicleType.profile,
+                                      vehicleType.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::VehicleType vehicleType(
+                    t[0].cast<size_t>(),           // num available
+                    t[1].cast<pyvrp::Load>(),      // capacity
+                    t[2].cast<size_t>(),           // start depot
+                    t[3].cast<size_t>(),           // end depot
+                    t[4].cast<pyvrp::Cost>(),      // fixed cost
+                    t[5].cast<pyvrp::Duration>(),  // tw early
+                    t[6].cast<pyvrp::Duration>(),  // tw late
+                    t[7].cast<pyvrp::Duration>(),  // max duration
+                    t[8].cast<pyvrp::Distance>(),  // max distance
+                    t[9].cast<pyvrp::Cost>(),      // unit distance cost
+                    t[10].cast<pyvrp::Cost>(),     // unit duration cost
+                    t[11].cast<size_t>(),          // profile
+                    t[12].cast<std::string>());    // name
+
+                return vehicleType;
+            }))
         .def(
             "__str__",
             [](ProblemData::VehicleType const &vehType)
@@ -323,7 +416,34 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrix,
              py::arg("profile"),
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, durationMatrix));
+             DOC(pyvrp, ProblemData, durationMatrix))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData const &data) {  // __getstate__
+                return py::make_tuple(data.clients(),
+                                      data.depots(),
+                                      data.vehicleTypes(),
+                                      data.distanceMatrices(),
+                                      data.durationMatrices(),
+                                      data.groups());
+            },
+            [](py::tuple t) {  // __setstate__
+                using Clients = std::vector<ProblemData::Client>;
+                using Depots = std::vector<ProblemData::Depot>;
+                using VehicleTypes = std::vector<ProblemData::VehicleType>;
+                using DistMats = std::vector<pyvrp::Matrix<pyvrp::Distance>>;
+                using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
+                using Groups = std::vector<ProblemData::ClientGroup>;
+
+                ProblemData data(t[0].cast<Clients>(),
+                                 t[1].cast<Depots>(),
+                                 t[2].cast<VehicleTypes>(),
+                                 t[3].cast<DistMats>(),
+                                 t[4].cast<DurMats>(),
+                                 t[5].cast<Groups>());
+
+                return data;
+            }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),

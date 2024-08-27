@@ -109,6 +109,24 @@ ProblemData::Client::Client(Client &&client)
 
 ProblemData::Client::~Client() { delete[] name; }
 
+bool ProblemData::Client::operator==(Client const &other) const
+{
+    // clang-format off
+    return x == other.x
+        && y == other.y
+        && delivery == other.delivery
+        && pickup == other.pickup
+        && serviceDuration == other.serviceDuration
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && releaseTime == other.releaseTime
+        && prize == other.prize
+        && required == other.required
+        && group == other.group
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
+}
+
 ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
                                       bool required)
     : required(required)
@@ -163,6 +181,11 @@ ProblemData::Depot::Depot(Depot &&depot)
 }
 
 ProblemData::Depot::~Depot() { delete[] name; }
+
+bool ProblemData::Depot::operator==(Depot const &other) const
+{
+    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+}
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Load capacity,
@@ -284,6 +307,25 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
             name.value_or(this->name)};
+}
+
+bool ProblemData::VehicleType::operator==(VehicleType const &other) const
+{
+    // clang-format off
+    return numAvailable == other.numAvailable
+        && capacity == other.capacity
+        && startDepot == other.startDepot
+        && endDepot == other.endDepot
+        && fixedCost == other.fixedCost
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && maxDuration == other.maxDuration
+        && maxDistance == other.maxDistance
+        && unitDistanceCost == other.unitDistanceCost
+        && unitDurationCost == other.unitDurationCost
+        && profile == other.profile
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
 }
 
 std::vector<ProblemData::Client> const &ProblemData::clients() const

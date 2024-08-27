@@ -183,6 +183,8 @@ public:
                std::optional<size_t> group = std::nullopt,
                std::string name = "");
 
+        bool operator==(Client const &other) const;
+
         Client(Client const &client);
         Client(Client &&client);
 
@@ -236,6 +238,8 @@ public:
 
         explicit ClientGroup(std::vector<size_t> clients = {},
                              bool required = true);
+
+        bool operator==(ClientGroup const &other) const = default;
 
         ClientGroup(ClientGroup const &group) = default;
         ClientGroup(ClientGroup &&group) = default;
@@ -292,6 +296,8 @@ public:
         char const *name;  // Depot name (for reference)
 
         Depot(Coordinate x, Coordinate y, std::string name = "");
+
+        bool operator==(Depot const &other) const;
 
         Depot(Depot const &depot);
         Depot(Depot &&depot);
@@ -420,6 +426,8 @@ public:
                     size_t profile = 0,
                     std::string name = "");
 
+        bool operator==(VehicleType const &other) const;
+
         VehicleType(VehicleType const &vehicleType);
         VehicleType(VehicleType &&vehicleType);
 
@@ -471,6 +479,8 @@ private:
     size_t const numVehicles_;
 
 public:
+    bool operator==(ProblemData const &other) const = default;
+
     /**
      * Returns location data for the location at the given index. This can
      * be a depot or a client: a depot if the ``idx`` argument is smaller than
