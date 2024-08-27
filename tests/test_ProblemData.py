@@ -825,9 +825,11 @@ def test_pickle_client_group():
 
 def test_pickle_vehicle_type():
     """
-    TODO
+    Tests that vehicle types can be serialised and unserialised.
     """
-    pass
+    before_pickle = VehicleType(num_available=12, capacity=3, name="test123")
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
 
 
 def test_pickle_data():

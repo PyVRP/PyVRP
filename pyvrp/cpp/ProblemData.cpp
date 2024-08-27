@@ -309,6 +309,25 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             name.value_or(this->name)};
 }
 
+bool ProblemData::VehicleType::operator==(VehicleType const &other) const
+{
+    // clang-format off
+    return numAvailable == other.numAvailable
+        && capacity == other.capacity
+        && startDepot == other.startDepot
+        && endDepot == other.endDepot
+        && fixedCost == other.fixedCost
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && maxDuration == other.maxDuration
+        && maxDistance == other.maxDistance
+        && unitDistanceCost == other.unitDistanceCost
+        && unitDurationCost == other.unitDurationCost
+        && profile == other.profile
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
+}
+
 std::vector<ProblemData::Client> const &ProblemData::clients() const
 {
     return clients_;

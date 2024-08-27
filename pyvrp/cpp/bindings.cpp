@@ -107,7 +107,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Client const &client) {  // __getstate__
-                // Returns a tuple that completely encodes the client's state.
                 return py::make_tuple(client.x,
                                       client.y,
                                       client.delivery,
@@ -157,7 +156,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Depot const &depot) {  // __getstate__
-                // Returns a tuple that completely encodes the depot's state.
                 return py::make_tuple(depot.x, depot.y, depot.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -188,7 +186,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::ClientGroup const &group) {  // __getstate__
-                // Returns a tuple that completely encodes the group's state.
                 return py::make_tuple(group.clients(), group.required);
             },
             [](py::tuple t) {  // __setstate__
@@ -270,6 +267,41 @@ PYBIND11_MODULE(_pyvrp, m)
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
+                return py::make_tuple(vehicleType.numAvailable,
+                                      vehicleType.capacity,
+                                      vehicleType.startDepot,
+                                      vehicleType.endDepot,
+                                      vehicleType.fixedCost,
+                                      vehicleType.twEarly,
+                                      vehicleType.twLate,
+                                      vehicleType.maxDuration,
+                                      vehicleType.maxDistance,
+                                      vehicleType.unitDistanceCost,
+                                      vehicleType.unitDurationCost,
+                                      vehicleType.profile,
+                                      vehicleType.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::VehicleType vehicleType(
+                    t[0].cast<size_t>(),           // num available
+                    t[1].cast<pyvrp::Load>(),      // capacity
+                    t[2].cast<size_t>(),           // start depot
+                    t[3].cast<size_t>(),           // end depot
+                    t[4].cast<pyvrp::Cost>(),      // fixed cost
+                    t[5].cast<pyvrp::Duration>(),  // tw early
+                    t[6].cast<pyvrp::Duration>(),  // tw late
+                    t[7].cast<pyvrp::Duration>(),  // max duration
+                    t[8].cast<pyvrp::Distance>(),  // max distance
+                    t[9].cast<pyvrp::Cost>(),      // unit distance cost
+                    t[10].cast<pyvrp::Cost>(),     // unit duration cost
+                    t[11].cast<size_t>(),          // profile
+                    t[12].cast<std::string>());    // name
+
+                return vehicleType;
+            }))
         .def(
             "__str__",
             [](ProblemData::VehicleType const &vehType)

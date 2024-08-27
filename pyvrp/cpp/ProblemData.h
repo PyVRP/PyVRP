@@ -426,6 +426,8 @@ public:
                     size_t profile = 0,
                     std::string name = "");
 
+        bool operator==(VehicleType const &other) const;
+
         VehicleType(VehicleType const &vehicleType);
         VehicleType(VehicleType &&vehicleType);
 
