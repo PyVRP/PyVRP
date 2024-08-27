@@ -416,7 +416,34 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrix,
              py::arg("profile"),
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, durationMatrix));
+             DOC(pyvrp, ProblemData, durationMatrix))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData const &data) {  // __getstate__
+                return py::make_tuple(data.clients(),
+                                      data.depots(),
+                                      data.vehicleTypes(),
+                                      data.distanceMatrices(),
+                                      data.durationMatrices(),
+                                      data.groups());
+            },
+            [](py::tuple t) {  // __setstate__
+                using Clients = std::vector<ProblemData::Client>;
+                using Depots = std::vector<ProblemData::Depot>;
+                using VehicleTypes = std::vector<ProblemData::VehicleType>;
+                using DistMats = std::vector<pyvrp::Matrix<pyvrp::Distance>>;
+                using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
+                using Groups = std::vector<ProblemData::ClientGroup>;
+
+                ProblemData data(t[0].cast<Clients>(),
+                                 t[1].cast<Depots>(),
+                                 t[2].cast<VehicleTypes>(),
+                                 t[3].cast<DistMats>(),
+                                 t[4].cast<DurMats>(),
+                                 t[5].cast<Groups>());
+
+                return data;
+            }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),

@@ -479,6 +479,8 @@ private:
     size_t const numVehicles_;
 
 public:
+    bool operator==(ProblemData const &other) const = default;
+
     /**
      * Returns location data for the location at the given index. This can
      * be a depot or a client: a depot if the ``idx`` argument is smaller than

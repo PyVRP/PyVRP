@@ -832,8 +832,12 @@ def test_pickle_vehicle_type():
     assert_equal(pickle.loads(bytes), before_pickle)
 
 
-def test_pickle_data():
+def test_pickle_data(ok_small, rc208):
     """
-    TODO
+    Tests that problem data instances can be serialised and unserialised.
     """
-    pass
+    bytes = pickle.dumps(ok_small)
+    assert_equal(pickle.loads(bytes), ok_small)
+
+    bytes = pickle.dumps(rc208)
+    assert_equal(pickle.loads(bytes), rc208)
