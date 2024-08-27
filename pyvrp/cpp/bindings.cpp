@@ -185,6 +185,19 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
                       &ProblemData::ClientGroup::mutuallyExclusive)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::ClientGroup const &group) {  // __getstate__
+                // Returns a tuple that completely encodes the group's state.
+                return py::make_tuple(group.clients(), group.required);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::ClientGroup group(
+                    t[0].cast<std::vector<size_t>>(),  // clients
+                    t[1].cast<bool>());                // required
+
+                return group;
+            }))
         .def("__len__", &ProblemData::ClientGroup::size)
         .def(
             "__iter__",

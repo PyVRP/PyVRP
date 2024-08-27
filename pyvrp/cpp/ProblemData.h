@@ -239,6 +239,8 @@ public:
         explicit ClientGroup(std::vector<size_t> clients = {},
                              bool required = true);
 
+        bool operator==(ClientGroup const &other) const = default;
+
         ClientGroup(ClientGroup const &group) = default;
         ClientGroup(ClientGroup &&group) = default;
 

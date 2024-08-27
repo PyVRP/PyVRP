@@ -814,14 +814,16 @@ def test_pickle_locations(cls):
     assert_equal(pickle.loads(bytes), before_pickle)
 
 
-def test_pickle_vehicle_type():
-    """
-    TODO
-    """
-    pass
-
-
 def test_pickle_client_group():
+    """
+    Tests that client groups can be serialised and unserialised.
+    """
+    before_pickle = ClientGroup(clients=[1, 2, 3], required=False)
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_vehicle_type():
     """
     TODO
     """
