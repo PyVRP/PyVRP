@@ -109,6 +109,24 @@ ProblemData::Client::Client(Client &&client)
 
 ProblemData::Client::~Client() { delete[] name; }
 
+bool ProblemData::Client::operator==(Client const &other) const
+{
+    // clang-format off
+    return x == other.x
+        && y == other.y
+        && delivery == other.delivery
+        && pickup == other.pickup
+        && serviceDuration == other.serviceDuration
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && releaseTime == other.releaseTime
+        && prize == other.prize
+        && required == other.required
+        && group == other.group
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
+}
+
 ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
                                       bool required)
     : required(required)

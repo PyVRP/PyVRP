@@ -19,6 +19,7 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
+#include <string>
 #include <variant>
 
 namespace py = pybind11;
@@ -103,6 +104,40 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::Client::name,
                       py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::Client const &client) {  // __getstate__
+                // Returns a tuple that completely encodes the client's state.
+                return py::make_tuple(client.x,
+                                      client.y,
+                                      client.delivery,
+                                      client.pickup,
+                                      client.serviceDuration,
+                                      client.twEarly,
+                                      client.twLate,
+                                      client.releaseTime,
+                                      client.prize,
+                                      client.required,
+                                      client.group,
+                                      client.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::Client client(
+                    t[0].cast<pyvrp::Coordinate>(),       // x
+                    t[1].cast<pyvrp::Coordinate>(),       // y
+                    t[2].cast<pyvrp::Load>(),             // delivery
+                    t[3].cast<pyvrp::Load>(),             // pickup
+                    t[4].cast<pyvrp::Duration>(),         // service duration
+                    t[5].cast<pyvrp::Duration>(),         // tw early
+                    t[6].cast<pyvrp::Duration>(),         // tw late
+                    t[7].cast<pyvrp::Duration>(),         // release time
+                    t[8].cast<pyvrp::Cost>(),             // prize
+                    t[9].cast<bool>(),                    // required
+                    t[10].cast<std::optional<size_t>>(),  // group
+                    t[11].cast<std::string>());           // name
+
+                return client;
+            }))
         .def(
             "__str__",
             [](ProblemData::Client const &client) { return client.name; },

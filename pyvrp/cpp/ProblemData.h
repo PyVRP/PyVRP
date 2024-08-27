@@ -183,6 +183,8 @@ public:
                std::optional<size_t> group = std::nullopt,
                std::string name = "");
 
+        bool operator==(Client const &other) const;
+
         Client(Client const &client);
         Client(Client &&client);
 

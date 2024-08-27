@@ -1,3 +1,4 @@
+import pickle
 from typing import Optional
 
 import numpy as np
@@ -801,3 +802,36 @@ def test_replacing_client_groups(ok_small):
     # client as its only member.
     assert_equal(data.num_groups, 1)
     assert_equal(data.group(0).clients, [1])
+
+
+def test_pickle_client():
+    """
+    Tests that client objects can be serialised and unserialised.
+    """
+    before_pickle = Client(x=0, y=1, name="test")
+
+    bytes = pickle.dumps(before_pickle)
+    after_pickle = pickle.loads(bytes)
+
+    assert_equal(after_pickle, before_pickle)
+
+
+def test_pickle_vehicle_type():
+    """
+    TODO
+    """
+    pass
+
+
+def test_pickle_client_group():
+    """
+    TODO
+    """
+    pass
+
+
+def test_pickle_data():
+    """
+    TODO
+    """
+    pass
