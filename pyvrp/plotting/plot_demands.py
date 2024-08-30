@@ -26,14 +26,16 @@ def plot_demands(
     if not ax:
         _, ax = plt.subplots()
 
-    demand = np.array([client.delivery for client in data.clients()])
+    demand = np.array([client.delivery[0] for client in data.clients()])
     demand = np.sort(demand)
 
     ax.bar(np.arange(data.num_depots, data.num_locations), demand)
 
     if title is None:
         weights = [veh_type.num_available for veh_type in data.vehicle_types()]
-        capacities = [veh_type.capacity for veh_type in data.vehicle_types()]
+        capacities = [
+            veh_type.capacity[0] for veh_type in data.vehicle_types()
+        ]
         mean_capacity = np.average(capacities, weights=weights)
         title = (
             f"Demands (avg. cap = {mean_capacity:.2f}, "

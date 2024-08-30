@@ -417,7 +417,7 @@ def test_excess_load_calculation(ok_small):
 
     # All clients are visited on the same route/by the same vehicle. The total
     # delivery demand is 18, but the vehicle capacity is only 10.
-    assert_equal(sol.excess_load(), 18 - ok_small.vehicle_type(0).capacity)
+    assert_equal(sol.excess_load(), 18 - ok_small.vehicle_type(0).capacity[0])
 
 
 def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):

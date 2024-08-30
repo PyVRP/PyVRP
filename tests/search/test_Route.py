@@ -233,15 +233,15 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
-    assert_equal(route.load(), ok_small.location(client).delivery)
+    assert_equal(route.load(), ok_small.location(client).delivery[0])
     assert_equal(
-        route.load_between(0, 2).load(), ok_small.location(client).delivery
+        route.load_between(0, 2).load(), ok_small.location(client).delivery[0]
     )
 
     # The load_between() function is inclusive.
     assert_equal(route.load_between(0, 0).load(), 0)
     assert_equal(
-        route.load_between(1, 1).load(), ok_small.location(client).delivery
+        route.load_between(1, 1).load(), ok_small.location(client).delivery[0]
     )
 
     # Distances on various segments of the route.

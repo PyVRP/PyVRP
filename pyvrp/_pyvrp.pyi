@@ -31,8 +31,8 @@ class DynamicBitset:
 class Client:
     x: int
     y: int
-    delivery: int
-    pickup: int
+    delivery: list[int]
+    pickup: list[int]
     service_duration: int
     tw_early: int
     tw_late: int
@@ -45,8 +45,8 @@ class Client:
         self,
         x: int,
         y: int,
-        delivery: int = 0,
-        pickup: int = 0,
+        delivery: int | list[int] = 0,
+        pickup: int | list[int] = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
@@ -98,7 +98,7 @@ class VehicleType:
     num_available: int
     start_depot: int
     end_depot: int
-    capacity: int
+    capacity: list[int]
     tw_early: int
     tw_late: int
     max_duration: int
@@ -111,7 +111,7 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        capacity: int = 0,
+        capacity: int | list[int] = 0,
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: int = 0,
@@ -128,7 +128,7 @@ class VehicleType:
     def replace(
         self,
         num_available: Optional[int] = None,
-        capacity: Optional[int] = None,
+        capacity: Optional[int | list[int]] = None,
         start_depot: Optional[int] = None,
         end_depot: Optional[int] = None,
         fixed_cost: Optional[int] = None,

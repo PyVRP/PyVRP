@@ -8,8 +8,8 @@ Load LoadSegment::delivery() const { return delivery_; }
 Load LoadSegment::pickup() const { return pickup_; }
 
 LoadSegment::LoadSegment(ProblemData::Client const &client)
-    : delivery_(client.delivery),
-      pickup_(client.pickup),
-      load_(std::max(client.delivery, client.pickup))
+    : delivery_(client.delivery[0]),
+      pickup_(client.pickup[0]),
+      load_(std::max(client.delivery[0], client.pickup[0]))
 {
 }

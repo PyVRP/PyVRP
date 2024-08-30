@@ -349,7 +349,7 @@ def test_init_from_load_penalty_value(ok_small):
     cost_eval = pm.cost_evaluator()
 
     avg_cost = ok_small.distance_matrix(0).mean()
-    avg_load = np.mean([c.delivery for c in ok_small.clients()])
+    avg_load = np.mean([c.delivery[0] for c in ok_small.clients()])
     assert_equal(cost_eval.load_penalty(1, 0), round(avg_cost / avg_load))
 
 

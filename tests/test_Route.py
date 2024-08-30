@@ -73,7 +73,7 @@ def test_route_access_methods(ok_small):
 
     # Total route delivery demand (and pickups, which are all zero for this
     # instance).
-    deliveries = [0] + [client.delivery for client in ok_small.clients()]
+    deliveries = [0] + [client.delivery[0] for client in ok_small.clients()]
     assert_equal(routes[0].delivery(), deliveries[1] + deliveries[3])
     assert_equal(routes[1].delivery(), deliveries[2] + deliveries[4])
 

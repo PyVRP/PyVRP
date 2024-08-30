@@ -94,7 +94,7 @@ def _lower_bound(data: ProblemData) -> int:
 
     # Computes a simple bound based on packing delivery or pickup demand in the
     # given vehicles.
-    delivery = sum(c.delivery for c in data.clients())
-    pickup = sum(c.pickup for c in data.clients())
+    delivery = sum(c.delivery[0] for c in data.clients())
+    pickup = sum(c.pickup[0] for c in data.clients())
     demand = max(delivery, pickup)
-    return int(np.ceil(demand / max(vehicle_type.capacity, 1)))
+    return int(np.ceil(demand / max(vehicle_type.capacity[0], 1)))

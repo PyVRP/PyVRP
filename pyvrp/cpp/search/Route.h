@@ -661,7 +661,7 @@ Distance Route::excessDistance() const
     return std::max<Distance>(distance() - maxDistance(), 0);
 }
 
-Load Route::capacity() const { return vehicleType_.capacity; }
+Load Route::capacity() const { return vehicleType_.capacity[0]; }
 
 size_t Route::startDepot() const { return vehicleType_.startDepot; }
 
