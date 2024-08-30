@@ -905,3 +905,39 @@ def test_pickle_data(ok_small, rc208):
 
     bytes = pickle.dumps(rc208)
     assert_equal(pickle.loads(bytes), rc208)
+
+
+def test_client_load_dimensions_are_padded_with_zeroes():
+    """
+    Tests that the pickup and delivery arguments are padded with zeroes for any
+    missing dimensions.
+    """
+    client = Client(x=0, y=1, delivery=[0, 2], pickup=[1])
+    assert_equal(client.delivery, [0, 2])
+    assert_equal(client.pickup, [1, 0])
+
+
+@pytest.mark.parametrize(
+    ("clients", "vehicle_types"),
+    [
+        ([Client(x=0, y=0, delivery=[10, 2])], [VehicleType(capacity=[10])]),
+        ([Client(x=0, y=0, delivery=[10, 2])], [VehicleType()]),
+        ([Client(x=0, y=0)], [VehicleType(capacity=[10, 2])]),
+    ],
+)
+def test_raises_inconsistent_client_and_vehicle_loads(
+    clients: list[Client],
+    vehicle_types: list[VehicleType],
+):
+    """
+    Tests that the ProblemData constructor complains when clients and vehicle
+    types have an inconsistent number of load dimensions.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=clients,
+            depots=[Depot(x=0, y=0)],
+            vehicle_types=vehicle_types,
+            distance_matrices=[np.zeros((len(clients) + 1, len(clients) + 1))],
+            duration_matrices=[np.zeros((len(clients) + 1, len(clients) + 1))],
+        )

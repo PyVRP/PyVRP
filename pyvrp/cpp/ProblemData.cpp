@@ -60,7 +60,6 @@ ProblemData::Client::Client(Coordinate x,
       name(duplicate(name.data()))
 {
     assert(delivery.size() == pickup.size());
-    assert(delivery.size() == 1);  // TODO remove
 
     if (std::any_of(delivery.begin(), delivery.end(), isNegative<Load>))
         throw std::invalid_argument("delivery amounts must be >= 0.");
@@ -227,8 +226,6 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       profile(profile),
       name(duplicate(name.data()))
 {
-    assert(capacity.size() == 1);  // TODO remove
-
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
 
