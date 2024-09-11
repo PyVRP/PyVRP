@@ -59,7 +59,7 @@ def test_reading_OkSmall_instance():
     assert_equal(data.num_clients, 4)
     assert_equal(data.num_vehicles, 3)
     assert_equal(data.num_vehicle_types, 1)
-    assert_equal(data.vehicle_type(0).capacity, [10])
+    assert_equal(data.vehicle_type(0).capacity, 10)
 
     # From the NODE_COORD_SECTION in the file
     expected = [
@@ -93,7 +93,7 @@ def test_reading_OkSmall_instance():
     expected = [0, 5, 5, 3, 5]
 
     for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
-        assert_equal(data.location(loc).delivery, [expected[loc]])
+        assert_equal(data.location(loc).delivery, expected[loc])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
@@ -130,7 +130,7 @@ def test_reading_vrplib_instance():
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_locations, 22)
-    assert_equal(data.vehicle_type(0).capacity, [60_000])
+    assert_equal(data.vehicle_type(0).capacity, 60_000)
 
     assert_equal(len(data.depots()), data.num_depots)
     assert_equal(len(data.clients()), data.num_clients)
@@ -298,7 +298,7 @@ def test_mdvrptw_instance():
         assert_equal(vehicle_type.num_available, 10)
         assert_equal(vehicle_type.start_depot, idx)
         assert_equal(vehicle_type.end_depot, idx)
-        assert_equal(vehicle_type.capacity, [200])
+        assert_equal(vehicle_type.capacity, 200)
         assert_equal(vehicle_type.max_duration, 450)
 
         # Essentially all vehicle indices for each depot, separated by a comma.
@@ -332,7 +332,7 @@ def test_vrpspd_instance():
 
     vehicle_type = data.vehicle_type(0)
     assert_equal(vehicle_type.num_available, 4)
-    assert_equal(vehicle_type.capacity, [200])
+    assert_equal(vehicle_type.capacity, 200)
 
     # The first client is a linehaul client (only delivery, no pickup), and
     # the second client is a backhaul client (only pickup, no delivery). All
@@ -341,8 +341,8 @@ def test_vrpspd_instance():
     pickups = [0, 3, 10, 40]
 
     for idx, client in enumerate(data.clients()):
-        assert_equal(client.delivery, [deliveries[idx]])
-        assert_equal(client.pickup, [pickups[idx]])
+        assert_equal(client.delivery, deliveries[idx])
+        assert_equal(client.pickup, pickups[idx])
 
     # Test that distance/duration are not set to a large value, as in VRPB.
     assert_equal(np.max(data.distance_matrix(profile=0)), 39)
@@ -366,24 +366,18 @@ def test_vrpb_instance():
 
     vehicle_type = data.vehicle_type(0)
     assert_equal(vehicle_type.num_available, 100)
-    assert_equal(vehicle_type.capacity, [206])
+    assert_equal(vehicle_type.capacity, 206)
 
     # The first 50 clients are linehaul, the rest are backhaul.
     clients = data.clients()
 
     for client in clients[:50]:
-        assert_equal(len(client.pickup), 1)
-        assert_equal(len(client.delivery), 1)
-
-        assert_equal(client.pickup[0], 0)
-        assert_(client.delivery[0] > 0)
+        assert_equal(client.pickup, 0)
+        assert_(client.delivery > 0)
 
     for client in clients[50:]:
-        assert_equal(len(client.pickup), 1)
-        assert_equal(len(client.delivery), 1)
-
-        assert_(client.pickup[0] > 0)
-        assert_equal(client.delivery[0], 0)
+        assert_(client.pickup > 0)
+        assert_equal(client.delivery, 0)
 
     # Tests that distance/duration from depot to backhaul clients is set to
     # ``MAX_VALUE``, as well as for backhaul to linehaul clients.
@@ -443,7 +437,7 @@ def test_reading_allowed_clients():
     assert_equal(data.num_vehicle_types, 2)
 
     veh_type1 = data.vehicle_type(0)
-    assert_equal(veh_type1.capacity, [10])
+    assert_equal(veh_type1.capacity, 10)
     assert_equal(veh_type1.num_available, 2)
     assert_equal(veh_type1.profile, 0)
 
@@ -455,7 +449,7 @@ def test_reading_allowed_clients():
     assert_(np.all(duration_matrix != MAX_VALUE))
 
     veh_type2 = data.vehicle_type(1)
-    assert_equal(veh_type2.capacity, [10])
+    assert_equal(veh_type2.capacity, 10)
     assert_equal(veh_type2.num_available, 1)
     assert_equal(veh_type2.profile, 1)
 
@@ -484,13 +478,13 @@ def test_sdvrptw_instance():
     # Each vehicle type has a different capacity. We only check the first two.
     veh_type1 = data.vehicle_type(0)
     assert_equal(veh_type1.num_available, 2)
-    assert_equal(veh_type1.capacity, [100])
+    assert_equal(veh_type1.capacity, 100)
     assert_equal(veh_type1.max_duration, 500)
     assert_equal(veh_type1.profile, 0)
 
     veh_type2 = data.vehicle_type(1)
     assert_equal(veh_type2.num_available, 2)
-    assert_equal(veh_type2.capacity, [150])
+    assert_equal(veh_type2.capacity, 150)
     assert_equal(veh_type2.max_duration, 500)
     assert_equal(veh_type2.profile, 1)
 

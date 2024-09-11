@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -37,10 +37,7 @@ def test_route_eq(ok_small):
     Tests ``Route``'s equality operator.
     """
     data = ok_small.replace(
-        vehicle_types=[
-            VehicleType(capacity=[10]),
-            VehicleType(2, capacity=[20]),
-        ]
+        vehicle_types=[VehicleType(capacity=10), VehicleType(2, capacity=20)]
     )
 
     route1 = Route(data, [1, 2], 0)
@@ -92,6 +89,24 @@ def test_route_access_methods(ok_small):
     services = [0] + [client.service_duration for client in ok_small.clients()]
     assert_equal(routes[0].service_duration(), services[1] + services[3])
     assert_equal(routes[1].service_duration(), services[2] + services[4])
+
+
+def test_route_load_access_methods_raise_for_dimension_out_of_bounds(ok_small):
+    """
+    Tests that accessing the route's delivery, pickup and excess load amount
+    raises an IndexError for out of bounds dimension.
+    """
+    route = Route(ok_small, [1, 2, 3, 4], 0)
+    num_load_dimensions = ok_small.num_load_dimensions
+
+    with assert_raises(IndexError):
+        route.delivery(num_load_dimensions)
+
+    with assert_raises(IndexError):
+        route.pickup(num_load_dimensions)
+
+    with assert_raises(IndexError):
+        route.excess_load(num_load_dimensions)
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -281,6 +296,25 @@ def test_route_can_be_pickled(rc208):
         assert_equal(after_pickle, before_pickle)
 
 
+def test_route_with_multiple_load_dimensions_can_be_pickled():
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[2, 1]),
+            Client(x=1, y=1, delivery=[3, 2]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=[1, 1])],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    before_pickle = Route(data, [1, 2], 0)
+    bytes = pickle.dumps(before_pickle)
+    after_pickle = pickle.loads(bytes)
+
+    assert_equal(after_pickle, before_pickle)
+
+
 @pytest.mark.parametrize(
     ("tw_early", "tw_late", "expected"),
     [
@@ -300,7 +334,7 @@ def test_route_shift_duration(
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=[10], tw_early=tw_early, tw_late=tw_late)
+            VehicleType(2, capacity=10, tw_early=tw_early, tw_late=tw_late)
         ]
     )
 
@@ -318,8 +352,8 @@ def test_distance_duration_cost_calculations(ok_small):
     Tests route-level distance and duration cost calculations.
     """
     vehicle_types = [
-        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 

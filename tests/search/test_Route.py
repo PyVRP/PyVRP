@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import ProblemData, VehicleType
+from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 
 
@@ -24,10 +24,7 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     type.
     """
     data = ok_small.replace(
-        vehicle_types=[
-            VehicleType(1, capacity=[1]),
-            VehicleType(2, capacity=[2]),
-        ]
+        vehicle_types=[VehicleType(1, capacity=1), VehicleType(2, capacity=2)]
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
@@ -218,7 +215,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     type's fixed cost value.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=[10], fixed_cost=fixed_cost)]
+        vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
     )
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(route.fixed_vehicle_cost(), fixed_cost)
@@ -465,7 +462,7 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
     Tests that the maximum duration attribute of vehicle types is reflected
     in the route's time warp calculations.
     """
-    vehicle_type = VehicleType(3, capacity=[10], max_duration=max_duration)
+    vehicle_type = VehicleType(3, capacity=10, max_duration=max_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -491,7 +488,7 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
     Tests that the maximum distance attribute of vehicle types is reflected
     in the route's excess distance calculations.
     """
-    vehicle_type = VehicleType(3, capacity=[10], max_distance=max_distance)
+    vehicle_type = VehicleType(3, capacity=10, max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -523,7 +520,7 @@ def test_is_feasible(
     Tests that various constraint violations are taken into account when
     determining overall route feasibility.
     """
-    vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
+    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -581,6 +578,84 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         assert_equal(after.load(), between_after.load())
         assert_equal(after.pickup(), between_after.pickup())
         assert_equal(after.delivery(), between_after.delivery())
+
+
+def test_load_between_for_multidimensional_load():
+    """
+    Tests that the load_between() method correctly calculates the load for
+    multiple dimensions.
+    """
+    clients = [
+        Client(1, 0, delivery=[1, 2]),
+        Client(2, 0, delivery=[4, 5]),
+    ]
+    data = ProblemData(
+        clients=clients,
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType(1, capacity=[10, 10])],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route = Route(data, idx=0, vehicle_type=0)
+    route.append(Node(loc=1))
+    route.append(Node(loc=2))
+    route.update()
+
+    # First load dimension
+    assert_equal(route.load_between(0, 0, dimension=0).load(), 0)
+    assert_equal(route.load_between(0, 1, dimension=0).load(), 1)
+    assert_equal(route.load_between(0, 2, dimension=0).load(), 1 + 4)
+    assert_equal(route.load_between(0, 3, dimension=0).load(), 1 + 4)
+    assert_equal(route.load_between(1, 2, dimension=0).load(), 1 + 4)
+    assert_equal(route.load_between(2, 3, dimension=0).load(), 4)
+
+    # Second load dimension
+    assert_equal(route.load_between(0, 0, dimension=1).load(), 0)
+    assert_equal(route.load_between(0, 1, dimension=1).load(), 2)
+    assert_equal(route.load_between(0, 2, dimension=1).load(), 2 + 5)
+    assert_equal(route.load_between(0, 3, dimension=1).load(), 2 + 5)
+    assert_equal(route.load_between(1, 2, dimension=1).load(), 2 + 5)
+    assert_equal(route.load_between(2, 3, dimension=1).load(), 5)
+
+
+def test_load_between_equal_to_before_after_for_multidimensional_load():
+    """
+    Tests that ``load_between()`` returns the same value as
+    ``load_before()`` or ``load_after()`` for multiple load dimensions when one
+    side is the depot.
+    """
+    clients = [
+        Client(1, 0, delivery=[1, 2]),
+        Client(2, 0, delivery=[4, 5]),
+    ]
+    data = ProblemData(
+        clients=clients,
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType(1, capacity=[10, 10])],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for client in range(data.num_depots, data.num_locations):
+        route.append(Node(loc=client))
+
+    route.update()
+
+    for idx in [1, 2, 3]:
+        for dim in range(data.num_load_dimensions):
+            before = route.load_before(idx, dim)
+            between_before = route.load_between(0, idx, dim)
+            assert_equal(before.load(), between_before.load())
+            assert_equal(before.pickup(), between_before.pickup())
+            assert_equal(before.delivery(), between_before.delivery())
+
+            after = route.load_after(idx, dim)
+            between_after = route.load_between(idx, len(route) + 1, dim)
+            assert_equal(after.load(), between_after.load())
+            assert_equal(after.pickup(), between_after.pickup())
+            assert_equal(after.delivery(), between_after.delivery())
 
 
 def test_distance_different_profiles(ok_small_two_profiles):

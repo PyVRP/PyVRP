@@ -22,7 +22,11 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     endDepot_ = vehType.endDepot;
 
     DurationSegment ds = {startDepot_, vehType};
-    auto ls = LoadSegment(0, 0, 0);
+    std::vector<LoadSegment> loadSegments;
+    loadSegments.reserve(data.numLoadDimensions());
+    for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+        loadSegments.emplace_back(0, 0, 0);
+
     size_t prevClient = startDepot_;
 
     auto const &distances = data.distanceMatrix(vehType.profile);
@@ -44,8 +48,11 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
         auto const clientDS = DurationSegment(client, clientData);
         ds = DurationSegment::merge(durations, ds, clientDS);
 
-        auto const clientLs = LoadSegment(clientData);
-        ls = LoadSegment::merge(ls, clientLs);
+        for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+        {
+            auto const clientLs = LoadSegment(clientData, i);
+            loadSegments[i] = LoadSegment::merge(loadSegments[i], clientLs);
+        }
 
         prevClient = client;
     }
@@ -57,9 +64,16 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
 
     travel_ += durations(last, endDepot_);
 
-    delivery_ = ls.delivery();
-    pickup_ = ls.pickup();
-    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity[0], 0);
+    delivery_.reserve(data.numLoadDimensions());
+    pickup_.reserve(data.numLoadDimensions());
+    excessLoad_.reserve(data.numLoadDimensions());
+    for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+    {
+        delivery_.push_back(loadSegments[i].delivery());
+        pickup_.push_back(loadSegments[i].pickup());
+        excessLoad_.push_back(
+            std::max<Load>(loadSegments[i].load() - vehType.capacity[i], 0));
+    }
 
     DurationSegment endDS(endDepot_, vehType);
     ds = DurationSegment::merge(durations, ds, endDS);
@@ -75,9 +89,9 @@ Route::Route(Visits visits,
              Distance distance,
              Cost distanceCost,
              Distance excessDistance,
-             Load delivery,
-             Load pickup,
-             Load excessLoad,
+             std::vector<Load> delivery,
+             std::vector<Load> pickup,
+             std::vector<Load> excessLoad,
              Duration duration,
              Cost durationCost,
              Duration timeWarp,
@@ -96,9 +110,9 @@ Route::Route(Visits visits,
       distance_(distance),
       distanceCost_(distanceCost),
       excessDistance_(excessDistance),
-      delivery_(delivery),
-      pickup_(pickup),
-      excessLoad_(excessLoad),
+      delivery_(std::move(delivery)),
+      pickup_(std::move(pickup)),
+      excessLoad_(std::move(excessLoad)),
       duration_(duration),
       durationCost_(durationCost),
       timeWarp_(timeWarp),
@@ -115,6 +129,8 @@ Route::Route(Visits visits,
       endDepot_(endDepot)
 {
 }
+
+size_t Route::numLoadDimensions() const { return excessLoad_.size(); }
 
 bool Route::empty() const { return visits_.empty(); }
 
@@ -134,11 +150,32 @@ Cost Route::distanceCost() const { return distanceCost_; }
 
 Distance Route::excessDistance() const { return excessDistance_; }
 
-Load Route::delivery() const { return delivery_; }
+Load Route::delivery(size_t dimension) const
+{
+    if (dimension >= delivery_.size())
+        throw std::out_of_range(
+            "Dimension is out of range for the route's delivery load.");
 
-Load Route::pickup() const { return pickup_; }
+    return delivery_[dimension];
+}
 
-Load Route::excessLoad() const { return excessLoad_; }
+Load Route::pickup(size_t dimension) const
+{
+    if (dimension >= pickup_.size())
+        throw std::out_of_range(
+            "Dimension is out of range for the route's pickup load.");
+
+    return pickup_[dimension];
+}
+
+Load Route::excessLoad(size_t dimension) const
+{
+    if (dimension >= excessLoad_.size())
+        throw std::out_of_range(
+            "Dimension is out of range for the route's excess load.");
+
+    return excessLoad_[dimension];
+}
 
 Duration Route::duration() const { return duration_; }
 
@@ -175,7 +212,14 @@ bool Route::isFeasible() const
     return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 
-bool Route::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Route::hasExcessLoad() const
+{
+    for (Load const &load : excessLoad_)
+        if (load > 0)
+            return true;
+
+    return false;
+}
 
 bool Route::hasExcessDistance() const { return excessDistance_ > 0; }
 
@@ -187,8 +231,7 @@ bool Route::operator==(Route const &other) const
     // Only when these are the same we test if the visits are all equal.
     // clang-format off
     return distance_ == other.distance_
-        && delivery_ == other.delivery_
-        && pickup_ == other.pickup_
+        && duration_ == other.duration_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;

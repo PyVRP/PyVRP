@@ -2,7 +2,15 @@ import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
-from pyvrp import CostEvaluator, Route, Solution, VehicleType
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    Route,
+    Solution,
+    VehicleType,
+)
 
 
 def test_load_penalty():
@@ -168,7 +176,7 @@ def test_excess_distance_penalised_cost(ok_small):
     """
     Tests that excess distance is properly penalised in the cost computations.
     """
-    vehicle_type = VehicleType(3, capacity=[10], max_distance=5_000)
+    vehicle_type = VehicleType(3, capacity=10, max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     sol = Solution(data, [[1, 2], [3, 4]])
@@ -188,6 +196,41 @@ def test_excess_distance_penalised_cost(ok_small):
     assert_equal(cost_eval.penalised_cost(sol), 5501 + 4224 + 10 * 501)
 
 
+def test_excess_load_penalised_cost():
+    """
+    Tests that excess load is properly penalised in the cost computations.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[2, 1], pickup=[0, 0]),
+            Client(x=1, y=1, delivery=[3, 2], pickup=[0, 0]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[
+            VehicleType(2, capacity=[1, 1]),
+        ],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],  # zero distance
+        duration_matrices=[np.zeros((3, 3), dtype=int)],  # zero duration
+    )
+    assert_equal(data.num_load_dimensions, 2)
+
+    sol = Solution(data, [[1], [2]])
+    assert_(not sol.is_feasible())
+    assert_(sol.has_excess_load())
+
+    routes = sol.routes()
+    assert_equal(routes[0].excess_load(0), 1)  # load 2, capacity 1 => excess 1
+    assert_equal(routes[0].excess_load(1), 0)  # load 1, capacity 1 => excess 0
+    assert_equal(routes[1].excess_load(0), 2)  # load 3, capacity 1 => excess 2
+    assert_equal(routes[1].excess_load(1), 1)  # load 2, capacity 1 => excess 1
+    assert_equal(sol.excess_load(0), 1 + 2)
+    assert_equal(sol.excess_load(1), 0 + 1)
+
+    # Both dimensions are penalised
+    cost_eval = CostEvaluator(10, 0, 0)
+    assert_equal(cost_eval.penalised_cost(sol), 10 * (1 + 2) + 10 * (0 + 1))
+
+
 @mark.parametrize(
     ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
 )
@@ -202,8 +245,8 @@ def test_cost_with_fixed_vehicle_cost(
     # should be able to track this.
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=[10], fixed_cost=0),
-            VehicleType(2, capacity=[10], fixed_cost=10),
+            VehicleType(2, capacity=10, fixed_cost=0),
+            VehicleType(2, capacity=10, fixed_cost=10),
         ]
     )
 
@@ -228,8 +271,8 @@ def test_unit_distance_duration_cost(ok_small):
     duration costs can vary between routes.
     """
     vehicle_types = [
-        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 

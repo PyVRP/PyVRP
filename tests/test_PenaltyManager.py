@@ -254,7 +254,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     Tests that updates only happen every ``num_registrations`` times, not every
     time a new value is registered.
     """
-    vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
+    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     num_registrations = 4

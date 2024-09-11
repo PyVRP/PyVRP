@@ -9,7 +9,7 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(delivery: list[int], pickup: list[int], load: list[int])
+ * LoadSegment(delivery: int = 0, pickup: int = 0, load: int = 0)
  *
  * Creates a new load segment. Load segments can be efficiently concatenated,
  * and track statistics about capacity violations resulting from visiting
@@ -18,17 +18,17 @@ namespace pyvrp
  * Parameters
  * ----------
  * delivery
- *     Total delivery amounts on this segment.
+ *     Total delivery amount on this segment for a single load dimension.
  * pickup
- *     Total pickup amounts on this segment.
+ *     Total pickup amount on this segment for a single load dimension.
  * load
- *     Maximum load amounts on this segment.
+ *     Maximum load on this segment for a single load dimension.
  */
 class LoadSegment
 {
-    std::vector<Load> delivery_;
-    std::vector<Load> pickup_;
-    std::vector<Load> load_;
+    Load delivery_;
+    Load pickup_;
+    Load load_;
 
 public:
     template <typename... Args>
@@ -36,27 +36,28 @@ public:
     merge(LoadSegment const &first, LoadSegment const &second, Args &&...args);
 
     /**
-     * Returns the amounts delivered to clients on this segment.
+     * Returns the delivery amount, that is, the total amount of load delivered
+     * to clients on this segment for a single load dimension.
      */
-    [[nodiscard]] std::vector<Load> delivery() const;
+    [[nodiscard]] Load delivery() const;
 
     /**
-     * Returns the amounts picked up from clients on this segment.
+     * Returns the amount picked up from clients on this segment for a single
+     * load dimension.
      */
-    [[nodiscard]] std::vector<Load> pickup() const;
+    [[nodiscard]] Load pickup() const;
 
     /**
-     * Returns the maximum load amounts encountered on this segment.
+     * Returns the maximum load encountered on this segment for a single load
+     * dimension.
      */
-    [[nodiscard]] inline std::vector<Load> load() const;
+    [[nodiscard]] inline Load load() const;
 
-    // Construct from attributes of the given client.
-    LoadSegment(ProblemData::Client const &client);
+    // Construct from attributes of the given client at a given load dimension.
+    LoadSegment(ProblemData::Client const &client, size_t const dimension);
 
     // Construct from raw data.
-    inline LoadSegment(std::vector<Load> delivery,
-                       std::vector<Load> pickup,
-                       std::vector<Load> load);
+    inline LoadSegment(Load delivery, Load pickup, Load load);
 
     // Move or copy construct from the other load segment.
     inline LoadSegment(LoadSegment const &) = default;
@@ -72,42 +73,24 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
                                LoadSegment const &second,
                                Args &&...args)
 {
-    assert(first.delivery_.size() == second.delivery_.size());
-    assert(first.pickup_.size() == second.pickup_.size());
-    assert(first.load_.size() == second.load_.size());
-
     // See Vidal et al. (2014) for details. This function implements equations
-    // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045 for each load
-    // dimension.
-    std::vector<Load> delivery(first.delivery_.size());
-    std::vector<Load> pickup(first.pickup_.size());
-    std::vector<Load> load(first.load_.size());
-
-    for (size_t idx = 0; idx != first.delivery_.size(); ++idx)
-    {
-        delivery[idx] = first.delivery_[idx] + second.delivery_[idx];
-        pickup[idx] = first.pickup_[idx] + second.pickup_[idx];
-        load[idx] = std::max(first.load_[idx] + second.delivery_[idx],
-                             second.load_[idx] + first.pickup_[idx]);
-    }
+    // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
+    LoadSegment const res = {
+        first.delivery_ + second.delivery_,
+        first.pickup_ + second.pickup_,
+        std::max(first.load_ + second.delivery_, second.load_ + first.pickup_)};
 
     if constexpr (sizeof...(args) == 0)
-        return {delivery, pickup, load};
+        return res;
     else
-        return merge({delivery, pickup, load}, args...);
+        return merge(res, args...);
 }
 
-std::vector<Load> LoadSegment::load() const { return load_; }
+Load LoadSegment::load() const { return load_; }
 
-LoadSegment::LoadSegment(std::vector<Load> delivery,
-                         std::vector<Load> pickup,
-                         std::vector<Load> load)
-    : delivery_(std::move(delivery)),
-      pickup_(std::move(pickup)),
-      load_(std::move(load))
+LoadSegment::LoadSegment(Load delivery, Load pickup, Load load)
+    : delivery_(delivery), pickup_(pickup), load_(load)
 {
-    assert(delivery_.size() == pickup_.size());
-    assert(delivery_.size() == load_.size());
 }
 }  // namespace pyvrp
 

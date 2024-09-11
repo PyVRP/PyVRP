@@ -30,6 +30,8 @@ namespace pyvrp::search
  */
 class Route
 {
+    using LoadSegments = std::vector<LoadSegment>;
+
     // These classes (defined further below) handle transparent access to the
     // route's segment-specific concatenation schemes.
     friend class SegmentAt;
@@ -59,7 +61,7 @@ public:
 
         DistanceSegment distanceSegment() const;
         DurationSegment durationSegment() const;
-        LoadSegment loadSegment() const;
+        LoadSegment loadSegment(size_t dimension) const;
     };
 
     /**
@@ -115,7 +117,7 @@ private:
         inline SegmentAt(Route const &route, size_t idx);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load() const;
+        inline LoadSegment load(size_t dimension) const;
     };
 
     /**
@@ -131,7 +133,7 @@ private:
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load() const;
+        inline LoadSegment load(size_t dimension) const;
     };
 
     /**
@@ -147,7 +149,7 @@ private:
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load() const;
+        inline LoadSegment load(size_t dimension) const;
     };
 
     /**
@@ -164,7 +166,7 @@ private:
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load() const;
+        inline LoadSegment load(size_t dimension) const;
     };
 
     ProblemData const &data;
@@ -186,9 +188,9 @@ private:
     std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
     std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
 
-    std::vector<LoadSegment> loadAt;      // Load data at each node
-    std::vector<LoadSegment> loadAfter;   // Load of client -> depot (incl)
-    std::vector<LoadSegment> loadBefore;  // Load of depot -> client (incl)
+    std::vector<LoadSegments> loadAt;      // Load data at each node
+    std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
+    std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
 
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
@@ -260,15 +262,17 @@ public:
     [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
-     * @return Total load on this route.
+     * @param dimension The load dimension to query.
+     * @return Total load on this route for the given load dimension.
      */
-    [[nodiscard]] inline Load load() const;
+    [[nodiscard]] inline Load load(size_t dimension) const;
 
     /**
-     * Load (as a consequence of pickup and deliveries) in excess of the
-     * vehicle's capacity.
+     * @param dimension The load dimension to query.
+     * @return Load (as a consequence of pickup and deliveries) in excess of
+     * the vehicle's capacity for the given dimension.
      */
-    [[nodiscard]] inline Load excessLoad() const;
+    [[nodiscard]] inline Load excessLoad(size_t dimension) const;
 
     /**
      * Travel distance in excess of the assigned vehicle type's maximum
@@ -277,9 +281,11 @@ public:
     [[nodiscard]] inline Distance excessDistance() const;
 
     /**
-     * @return The load capacity of the vehicle servicing this route.
+     * @param dimension The load dimension to query.
+     * @return The load capacity of this route's vehicle type for the given
+     * dimension.
      */
-    [[nodiscard]] inline Load capacity() const;
+    [[nodiscard]] inline Load capacity(size_t dimension) const;
 
     /**
      * @return The location index of this route's starting depot.
@@ -347,6 +353,11 @@ public:
      * @return The routing profile of the vehicle servicing this route.
      */
     [[nodiscard]] inline size_t profile() const;
+
+    /**
+     * @return The number of load dimensions in this route's problem instance.
+     */
+    [[nodiscard]] inline size_t numLoadDimensions() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -504,7 +515,10 @@ Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
     return route->durAt[idx];
 }
 
-LoadSegment Route::SegmentAt::load() const { return route->loadAt[idx]; }
+LoadSegment Route::SegmentAt::load(size_t dimension) const
+{
+    return route->loadAt[idx][dimension];
+}
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
 {
@@ -524,9 +538,9 @@ DurationSegment Route::SegmentAfter::duration(size_t profile) const
     return between.duration(profile);
 }
 
-LoadSegment Route::SegmentAfter::load() const
+LoadSegment Route::SegmentAfter::load(size_t dimension) const
 {
-    return route->loadAfter[start];
+    return route->loadAfter[start][dimension];
 }
 
 DistanceSegment Route::SegmentBefore::distance(size_t profile) const
@@ -547,9 +561,9 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
     return between.duration(profile);
 }
 
-LoadSegment Route::SegmentBefore::load() const
+LoadSegment Route::SegmentBefore::load(size_t dimension) const
 {
-    return route->loadBefore[end];
+    return route->loadBefore[end][dimension];
 }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
@@ -591,12 +605,12 @@ DurationSegment Route::SegmentBetween::duration(size_t profile) const
     return durSegment;
 }
 
-LoadSegment Route::SegmentBetween::load() const
+LoadSegment Route::SegmentBetween::load(size_t dimension) const
 {
-    auto loadSegment = route->loadAt[start];
-
+    auto loadSegment = route->loadAt[start][dimension];
     for (size_t step = start; step != end; ++step)
-        loadSegment = LoadSegment::merge(loadSegment, route->loadAt[step + 1]);
+        loadSegment = LoadSegment::merge(loadSegment,
+                                         route->loadAt[step + 1][dimension]);
 
     return loadSegment;
 }
@@ -610,7 +624,13 @@ bool Route::isFeasible() const
 bool Route::hasExcessLoad() const
 {
     assert(!dirty);
-    return excessLoad() > 0;
+    // Note that the result of this method is not cached, as this method is not
+    // called during move evaluations.
+    for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+        if (excessLoad(i) > 0)
+            return true;
+
+    return false;
 }
 
 bool Route::hasExcessDistance() const
@@ -643,16 +663,16 @@ Route::Proposal<Segments...> Route::proposal(Segments &&...segments) const
     return {this, data, std::forward<Segments>(segments)...};
 }
 
-Load Route::load() const
+Load Route::load(size_t dimension) const
 {
     assert(!dirty);
-    return loadBefore.back().load();
+    return loadBefore.back()[dimension].load();
 }
 
-Load Route::excessLoad() const
+Load Route::excessLoad(size_t dimension) const
 {
     assert(!dirty);
-    return std::max<Load>(load() - capacity(), 0);
+    return std::max<Load>(load(dimension) - capacity(dimension), 0);
 }
 
 Distance Route::excessDistance() const
@@ -661,7 +681,10 @@ Distance Route::excessDistance() const
     return std::max<Distance>(distance() - maxDistance(), 0);
 }
 
-Load Route::capacity() const { return vehicleType_.capacity[0]; }
+Load Route::capacity(size_t dimension) const
+{
+    return vehicleType_.capacity[dimension];
+}
 
 size_t Route::startDepot() const { return vehicleType_.startDepot; }
 
@@ -708,6 +731,8 @@ Duration Route::timeWarp() const
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
+
+size_t Route::numLoadDimensions() const { return data.numLoadDimensions(); }
 
 bool Route::empty() const { return size() == 0; }
 
@@ -784,10 +809,10 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 }
 
 template <typename... Segments>
-LoadSegment Route::Proposal<Segments...>::loadSegment() const
+LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
 {
-    return std::apply([](auto &&...args)
-                      { return LoadSegment::merge(args.load()...); },
+    return std::apply([dimension](auto &&...args)
+                      { return LoadSegment::merge(args.load(dimension)...); },
                       segments);
 }
 

@@ -85,7 +85,14 @@ def minimise_fleet(
     return feas_fleet
 
 
-def _lower_bound(data: ProblemData) -> int:
+def _lower_bound(data: ProblemData, load_dimension: int | None = None) -> int:
+
+    if load_dimension is None:
+        # Take strongest lower bound across all load dimensions.
+        return max(
+            _lower_bound(data, dim) for dim in range(data.num_load_dimensions)
+        )
+
     vehicle_type = data.vehicle_type(0)
 
     # TODO additional simple bounding techniques exist, for example based on
@@ -94,9 +101,9 @@ def _lower_bound(data: ProblemData) -> int:
 
     # Computes a simple bound based on packing delivery or pickup demands in
     # the given vehicles.
-    delivery = np.array([c.delivery for c in data.clients()])
-    pickup = np.array([c.pickup for c in data.clients()])
-    demand = np.maximum(delivery.sum(axis=0), pickup.sum(axis=0))
+    delivery = sum(c.get_delivery(load_dimension) for c in data.clients())
+    pickup = sum(c.get_pickup(load_dimension) for c in data.clients())
+    demand = max(delivery, pickup)
+    capacity = vehicle_type.get_capacity(load_dimension)
 
-    needed = np.divide(demand, np.maximum(vehicle_type.capacity, 1))
-    return int(np.ceil(needed).max())
+    return int(np.ceil(demand / max(capacity, 1)))

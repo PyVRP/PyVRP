@@ -37,6 +37,36 @@ def test_OkSmall(ok_small):
     assert_equal(data.num_vehicles, 2)
 
 
+def test_OkSmall_multidimensional_load(ok_small):
+    """
+    Tests that the fleet minimisation procedure attains the lower bound on the
+    OkSmall instance when considering multiple load dimensions.
+    """
+    assert_equal(ok_small.num_vehicles, 3)
+
+    # Make first dimension obsolete and move capacity to second dimension
+    capacity = ok_small.vehicle_type(0).capacity
+    vehicle_type = ok_small.vehicle_type(0).replace(capacity=[100, capacity])
+    # Same for delivery
+    clients = [c.replace(delivery=[1, c.delivery]) for c in ok_small.clients()]
+    ok_small2 = ok_small.replace(vehicle_types=[vehicle_type], clients=clients)
+
+    result_vehicle_type = minimise_fleet(ok_small2, MaxIterations(10))
+    result_data = ok_small2.replace(vehicle_types=[result_vehicle_type])
+    assert_equal(result_data.num_vehicles, 2)
+
+    # Now change first capacity so we can fit at most one client per vehicle.
+    assert_equal(ok_small.num_clients, 4)
+    vehicle_type = ok_small.vehicle_type(0).replace(
+        num_available=5, capacity=[1, capacity]
+    )
+    ok_small3 = ok_small.replace(vehicle_types=[vehicle_type], clients=clients)
+
+    result_vehicle_type = minimise_fleet(ok_small3, MaxIterations(10))
+    result_data = ok_small3.replace(vehicle_types=[result_vehicle_type])
+    assert_equal(result_data.num_vehicles, 4)
+
+
 def test_rc208(rc208):
     """
     Tests that the fleet minimisation procedure significantly reduces the

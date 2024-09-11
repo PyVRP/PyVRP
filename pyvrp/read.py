@@ -331,8 +331,8 @@ class _ProblemDataBuilder:
             Client(
                 x=coords[idx][0],
                 y=coords[idx][1],
-                delivery=[demands[idx]],
-                pickup=[backhauls[idx]],
+                delivery=demands[idx],
+                pickup=backhauls[idx],
                 service_duration=service_duration[idx],
                 tw_early=time_windows[idx][0],
                 tw_late=time_windows[idx][1],
@@ -376,7 +376,7 @@ class _ProblemDataBuilder:
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
-                capacity=[capacity],
+                capacity=capacity,
                 start_depot=depot_idx,
                 end_depot=depot_idx,
                 # The literature specifies depot time windows. We do not have

@@ -8,6 +8,7 @@ from pyvrp import ProblemData
 
 def plot_demands(
     data: ProblemData,
+    dimension: int = 0,
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
 ):
@@ -18,6 +19,8 @@ def plot_demands(
     ----------
     data
         Data instance.
+    dimension
+        Load dimension to plot. Default 0.
     title
         Title to add to the plot.
     ax
@@ -26,7 +29,9 @@ def plot_demands(
     if not ax:
         _, ax = plt.subplots()
 
-    demand = np.array([client.delivery for client in data.clients()])
+    demand = np.array(
+        [client.get_delivery(dimension) for client in data.clients()]
+    )
     demand = np.sort(demand)
 
     ax.bar(np.arange(data.num_depots, data.num_locations), demand)

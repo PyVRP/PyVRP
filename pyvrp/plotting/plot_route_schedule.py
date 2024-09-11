@@ -10,6 +10,7 @@ from pyvrp import Client, ProblemData, Route
 def plot_route_schedule(
     data: ProblemData,
     route: Route,
+    load_dimension: int = 0,
     legend: bool = True,
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
@@ -24,7 +25,8 @@ def plot_route_schedule(
       warp on the route.
     * Dash-dotted: driving and service time, excluding wait time and time warp.
     * Dotted: pure driving time.
-    * Grey shaded background: remaining load in the vehicle.
+    * Grey shaded background: remaining load in the vehicle for the provided
+      load dimension.
 
     Parameters
     ----------
@@ -32,6 +34,8 @@ def plot_route_schedule(
         Data instance for which to plot the route schedule.
     route
         Route (list of clients) whose schedule to plot.
+    load_dimension
+        Load dimension to plot. Default 0.
     legend
         Whether or not to show the legends. Default True.
     title
@@ -52,7 +56,7 @@ def plot_route_schedule(
     drive_time = 0
     serv_time = 0
     dist = 0
-    load = route.delivery()
+    load = route.delivery(load_dimension)
     slack = horizon
 
     # Traces and objects used for plotting
@@ -100,8 +104,8 @@ def plot_route_schedule(
             t = tw_late
 
         if isinstance(stop, Client):
-            load -= stop.delivery
-            load += stop.pickup
+            load -= stop.get_delivery(load_dimension)
+            load += stop.get_pickup(load_dimension)
 
         add_traces(dist, t, drive_time, serv_time, load)
 
@@ -154,12 +158,14 @@ def plot_route_schedule(
     twin1.fill_between(
         *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
     )
-    twin1.set_ylim([0, vehicle_type.capacity])
+    twin1.set_ylim([0, vehicle_type.get_capacity(load_dimension)])
 
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {vehicle_type.capacity:.0f})")
+    twin1.set_ylabel(
+        f"Load (capacity = {vehicle_type.get_capacity(load_dimension):.0f})"
+    )
 
     if legend:
         twin1.legend(loc="upper right")

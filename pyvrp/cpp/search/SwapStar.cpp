@@ -174,19 +174,25 @@ Cost SwapStar::evaluate(Route *routeU,
             // most instances.
             ProblemData::Client const &uClient = data.location(U->client());
             ProblemData::Client const &vClient = data.location(V->client());
-            auto const uLoad = std::max(uClient.delivery[0], uClient.pickup[0]);
-            auto const vLoad = std::max(vClient.delivery[0], vClient.pickup[0]);
-            auto const loadDiff = uLoad - vLoad;
 
-            deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
-                                                   routeU->capacity());
-            deltaCost -= costEvaluator.loadPenalty(routeU->load(),
-                                                   routeU->capacity());
+            for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+            {
+                Load const uLoad
+                    = std::max<Load>(uClient.delivery[i], uClient.pickup[i]);
+                Load const vLoad
+                    = std::max<Load>(vClient.delivery[i], vClient.pickup[i]);
+                Load const loadDiff = uLoad - vLoad;
 
-            deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
-                                                   routeV->capacity());
-            deltaCost -= costEvaluator.loadPenalty(routeV->load(),
-                                                   routeV->capacity());
+                deltaCost += costEvaluator.loadPenalty(
+                    routeU->load(i) - loadDiff, routeU->capacity(i));
+                deltaCost -= costEvaluator.loadPenalty(routeU->load(i),
+                                                       routeU->capacity(i));
+
+                deltaCost += costEvaluator.loadPenalty(
+                    routeV->load(i) + loadDiff, routeV->capacity(i));
+                deltaCost -= costEvaluator.loadPenalty(routeV->load(i),
+                                                       routeV->capacity(i));
+            }
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());

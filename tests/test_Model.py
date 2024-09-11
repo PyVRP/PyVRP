@@ -22,10 +22,10 @@ def test_model_data():
 
     # Let's add some data: a single client, and edges from/to the depot.
     depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1, delivery=[1])
+    client = model.add_client(0, 1, delivery=1)
     model.add_edge(depot, client, 1, 1)
     model.add_edge(client, depot, 1, 1)
-    model.add_vehicle_type(capacity=[1], num_available=1)
+    model.add_vehicle_type(capacity=1, num_available=1)
 
     data = model.data()
     assert_equal(data.num_clients, 1)
@@ -85,8 +85,8 @@ def test_add_client_attributes():
     client = model.add_client(
         x=1,
         y=2,
-        delivery=[3],
-        pickup=[9],
+        delivery=3,
+        pickup=9,
         service_duration=4,
         tw_early=5,
         tw_late=6,
@@ -97,14 +97,30 @@ def test_add_client_attributes():
 
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
-    assert_equal(client.delivery, [3])
-    assert_equal(client.pickup, [9])
+    assert_equal(client.delivery, 3)
+    assert_equal(client.pickup, 9)
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
     assert_equal(client.release_time, 0)
     assert_equal(client.prize, 8)
     assert_(not client.required)
+
+
+def test_add_client_with_multidimensional_load():
+    """
+    Smoke test that checks if multidimensional load is set correctly.
+    """
+    model = Model()
+    client = model.add_client(x=1, y=2, delivery=[3, 4], pickup=[5, 6])
+
+    assert_equal(client.delivery, 3)  # First dimension
+    assert_equal(client.get_delivery(0), 3)
+    assert_equal(client.get_delivery(1), 4)
+
+    assert_equal(client.pickup, 5)  # First dimension
+    assert_equal(client.get_pickup(0), 5)
+    assert_equal(client.get_pickup(1), 6)
 
 
 def test_add_depot_attributes():
@@ -141,7 +157,7 @@ def test_add_vehicle_type():
     model = Model()
     vehicle_type = model.add_vehicle_type(
         num_available=10,
-        capacity=[998],
+        capacity=998,
         fixed_cost=1_001,
         tw_early=17,
         tw_late=19,
@@ -150,7 +166,7 @@ def test_add_vehicle_type():
     )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, [998])
+    assert_equal(vehicle_type.capacity, 998)
     assert_equal(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
@@ -203,6 +219,20 @@ def test_add_vehicle_type_raises_for_unknown_depot():
         m.add_vehicle_type(end_depot=depot)
 
 
+def test_add_vehicle_type_multidimensional_load():
+    """
+    Smoke test that checks whether vehicle type correctly sets capacity for a
+    multidimensional load.
+    """
+    model = Model()
+    vehicle_type = model.add_vehicle_type(num_available=10, capacity=[998, 37])
+
+    assert_equal(vehicle_type.num_available, 10)
+    assert_equal(vehicle_type.capacity, 998)  # First dimension
+    assert_equal(vehicle_type.get_capacity(0), 998)
+    assert_equal(vehicle_type.get_capacity(1), 37)
+
+
 def test_get_locations():
     """
     Checks that the ``locations`` property returns the depot and all clients.
@@ -223,8 +253,8 @@ def test_get_vehicle_types():
     Tests the ``vehicle_types`` property.
     """
     model = Model()
-    vehicle_type1 = model.add_vehicle_type(1, capacity=[2])
-    vehicle_type2 = model.add_vehicle_type(1, capacity=[3])
+    vehicle_type1 = model.add_vehicle_type(1, capacity=2)
+    vehicle_type2 = model.add_vehicle_type(1, capacity=3)
 
     # Test that we can get the vehicle types by index, or as a list.
     assert_equal(model.vehicle_types[0], vehicle_type1)
@@ -283,17 +313,17 @@ def test_model_and_solve(ok_small):
     model = Model()
     model.add_vehicle_type(
         num_available=3,
-        capacity=[10],
+        capacity=10,
         tw_early=0,
         tw_late=45000,
     )
 
     depot = model.add_depot(x=2334, y=726)
     clients = [
-        model.add_client(226, 1297, [5], [0], 360, 15600, 22500),
-        model.add_client(590, 530, [5], [0], 360, 12000, 19500),
-        model.add_client(435, 718, [3], [0], 420, 8400, 15300),
-        model.add_client(1191, 639, [5], [0], 360, 12000, 19500),
+        model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
+        model.add_client(590, 530, 5, 0, 360, 12000, 19500),
+        model.add_client(435, 718, 3, 0, 420, 8400, 15300),
+        model.add_client(1191, 639, 5, 0, 360, 12000, 19500),
     ]
 
     edge_weights = [
@@ -368,7 +398,7 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type()
+    model.add_vehicle_type(capacity=0, num_available=1)
 
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
@@ -390,7 +420,7 @@ def test_data_warns_about_scaling_issues(recwarn):
     by scaling issues, so a warning is appropriate.
     """
     model = Model()
-    model.add_vehicle_type()
+    model.add_vehicle_type(capacity=0, num_available=1)
     depot = model.add_depot(0, 0)
     client = model.add_client(1, 1)
 
@@ -414,7 +444,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     could not solve an instance with zero clients or just one client.
     """
     m = Model()
-    m.add_vehicle_type(capacity=[15], num_available=1)
+    m.add_vehicle_type(capacity=15, num_available=1)
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
@@ -443,6 +473,7 @@ def test_model_solves_small_instance_with_fixed_costs():
 
     for idx in range(2):
         m.add_vehicle_type(
+            capacity=0,
             num_available=5,
             fixed_cost=10,
             tw_early=0,
@@ -476,6 +507,7 @@ def test_model_solves_small_instance_with_shift_durations():
     # vehicles in total, two for each vehicle type.
     for tw_early, tw_late in [(0, 15), (5, 25)]:
         m.add_vehicle_type(
+            capacity=0,
             num_available=2,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -593,12 +625,12 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     """
     m = Model()
     m.add_depot(0, 0)
-    m.add_vehicle_type(capacity=[10])
+    m.add_vehicle_type(capacity=10)
 
-    m.add_client(x=1, y=1, delivery=[deliveries[0]], pickup=[pickups[0]])
-    m.add_client(x=2, y=2, delivery=[deliveries[1]], pickup=[pickups[1]])
-    m.add_client(x=3, y=3, delivery=[deliveries[2]], pickup=[pickups[2]])
-    m.add_client(x=4, y=4, delivery=[deliveries[3]], pickup=[pickups[3]])
+    m.add_client(x=1, y=1, delivery=deliveries[0], pickup=pickups[0])
+    m.add_client(x=2, y=2, delivery=deliveries[1], pickup=pickups[1])
+    m.add_client(x=3, y=3, delivery=deliveries[2], pickup=pickups[2])
+    m.add_client(x=4, y=4, delivery=deliveries[3], pickup=pickups[3])
 
     for frm in m.locations:
         for to in m.locations:
@@ -737,8 +769,8 @@ def test_minimise_distance_or_duration(ok_small):
     orig_model = Model.from_data(ok_small)
 
     vehicle_types = [
-        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=0),
-        VehicleType(capacity=[10], unit_distance_cost=0, unit_duration_cost=1),
+        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=0),
+        VehicleType(capacity=10, unit_distance_cost=0, unit_duration_cost=1),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)
@@ -886,3 +918,35 @@ def test_model_solves_instances_with_multiple_profiles():
     route1, route2 = res.best.routes()
     assert_equal(route1.visits(), [1])
     assert_equal(route2.visits(), [2])
+
+
+def test_model_solves_instance_with_zero_load_dims():
+    """
+    Smoke test to check that the model can solve an instance with zero load
+    dimensions.
+    """
+    m = Model()
+    m.add_depot(x=1, y=1)
+    m.add_client(x=1, y=2, delivery=[], pickup=[])
+    m.add_client(x=2, y=1, delivery=[], pickup=[])
+    m.add_client(x=2, y=2, delivery=[], pickup=[])
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    m.add_vehicle_type(1, capacity=[])
+
+    assert_equal(m.data().num_load_dimensions, 0)
+
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.best.num_routes(), 1)
+
+    # The best we can do is to first visit client 1 or 3, then visit client 2,
+    # then the remaining client (1 or 3), and finally return to the depot. This
+    # results in a distance of 1 + 1 + 1 + 1 = 4.
+    route = res.best.routes()[0]
+    assert_equal(route.distance(), 4)

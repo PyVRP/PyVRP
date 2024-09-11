@@ -70,8 +70,8 @@ public:
      * Client(
      *    x: int,
      *    y: int,
-     *    delivery: list[int] = [],
-     *    pickup: list[int] = [],
+     *    delivery: int | list[int] = 0,
+     *    pickup: int | list[int] = 0,
      *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
@@ -94,11 +94,11 @@ public:
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple.
      * delivery
-     *     The amounts this client demands from the depot, for each load
-     *     dimension. Defaults to an empty list.
+     *     The amount this client demands from the depot, or a list of amounts
+     *     for multiple load dimensions. Default 0.
      * pickup
-     *     The amounts this client ships back to the depot, for each load
-     *     dimension. Defaults to an empty list.
+     *     The amount this client ships back to the depot, or a list of amounts
+     *     for multiple load dimensions. Default 0.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route. Service should start (but not necessarily end)
@@ -135,9 +135,13 @@ public:
      * y
      *     Vertical coordinate of this client.
      * delivery
-     *     Client delivery amounts, shipped from depot.
+     *     Client delivery amount, shipped from depot, for the first load
+     *     dimension. For additional load dimensions, use
+     *     :meth:`~pyvrp._pyvrp.Client.get_delivery`.
      * pickup
-     *     Client pickup amounts, returned back to depot.
+     *     Client pickup amount, returned back to depot, for the first load
+     *     dimension. For additional load dimensions, use
+     *     :meth:`~pyvrp._pyvrp.Client.get_pickup`.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route.
@@ -174,8 +178,8 @@ public:
 
         Client(Coordinate x,
                Coordinate y,
-               std::vector<Load> delivery = {},
-               std::vector<Load> pickup = {},
+               std::vector<Load> delivery = {0},
+               std::vector<Load> pickup = {0},
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = std::numeric_limits<Duration>::max(),
@@ -194,6 +198,59 @@ public:
         Client &operator=(Client &&client) = delete;
 
         ~Client();
+
+        /**
+         * Returns the client delivery amount for the given load dimension.
+         *
+         * Parameters
+         * ----------
+         * dimension
+         *     Load dimension for which to return the delivery amount.
+         *
+         * Raises
+         * ------
+         * IndexError
+         *     When the given load dimension is out of range.
+         */
+        [[nodiscard]] inline Load getDelivery(size_t dimension) const;
+
+        /**
+         * Returns the client pickup amount for the given load dimension.
+         *
+         * Parameters
+         * ----------
+         * dimension
+         *     Load dimension for which to return the pickup amount.
+         *
+         * Raises
+         * ------
+         * IndexError
+         *     When the given load dimension is out of range.
+         */
+        [[nodiscard]] inline Load getPickup(size_t dimension) const;
+
+        /**
+         * Returns a new ``Client`` with the same data as this one, except
+         * for the given parameters, which are used instead.
+         *
+         * .. note::
+         *
+         *    Currently it is not possible to remove a group membership using
+         *    this method. As a workaround, create a new client.
+         *
+         */
+        Client replace(std::optional<Coordinate> x,
+                       std::optional<Coordinate> y,
+                       std::optional<std::vector<Load>> delivery,
+                       std::optional<std::vector<Load>> pickup,
+                       std::optional<Duration> serviceDuration,
+                       std::optional<Duration> twEarly,
+                       std::optional<Duration> twLate,
+                       std::optional<Duration> releaseTime,
+                       std::optional<Cost> prize,
+                       std::optional<bool> required,
+                       std::optional<size_t> group,
+                       std::optional<std::string> name) const;
     };
 
     /**
@@ -313,7 +370,7 @@ public:
     /**
      * VehicleType(
      *     num_available: int = 1,
-     *     capacity: list[int] = [],
+     *     capacity: int | list[int] = 0,
      *     start_depot: int = 0,
      *     end_depot: int = 0,
      *     fixed_cost: int = 0,
@@ -336,10 +393,10 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      *     Default 1.
      * capacity
-     *     Capacity of this vehicle type, for each load dimension. This is the
-     *     maximum total delivery or pickup amount (in each dimension) that the
-     *     vehicle can store along the route. The values must be non-negative.
-     *     Defaults to an empty list.
+     *     Capacity of this vehicle type, or a list of capacities for multiple
+     *     load dimensions. This is the maximum total delivery or pickup amount
+     *     that the vehicle can store along the route (per load dimension). The
+     *     values must be non-negative. Default 0.
      * start_depot
      *     Depot (location index) where vehicles of this type start their
      *     routes. Default 0 (first depot).
@@ -372,7 +429,9 @@ public:
      * num_available
      *     Number of vehicles of this type that are available.
      * capacity
-     *     Capacity of this vehicle type for each load dimension.
+     *     Capacity of this vehicle type, for the first load dimension. For
+     *     additional load dimensions, use
+     *     :meth:`~pyvrp._pyvrp.VehicleType.get_capacity`.
      * start_depot
      *     Start location associated with these vehicles.
      * end_depot
@@ -416,7 +475,7 @@ public:
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
-                    std::vector<Load> capacity = {},
+                    std::vector<Load> capacity = {0},
                     size_t startDepot = 0,
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
@@ -438,6 +497,21 @@ public:
         VehicleType &operator=(VehicleType &&vehicleType) = delete;
 
         ~VehicleType();
+
+        /**
+         * Returns the vehicle type capacity for the given load dimension.
+         *
+         * Parameters
+         * ----------
+         * dimension
+         *     Load dimension for which to return the capacity.
+         *
+         * Raises
+         * ------
+         * IndexError
+         *     When the given load dimension is out of range.
+         */
+        [[nodiscard]] inline Load getCapacity(size_t dimension) const;
 
         /**
          * Returns a new ``VehicleType`` with the same data as this one, except
@@ -637,6 +711,11 @@ public:
     [[nodiscard]] size_t numProfiles() const;
 
     /**
+     * Number of load dimensions in this problem instance.
+     */
+    [[nodiscard]] size_t numLoadDimensions() const;
+
+    /**
      * Returns a new ProblemData instance with the same data as this instance,
      * except for the given parameters, which are used instead.
      *
@@ -659,7 +738,7 @@ public:
      * -------
      * ProblemData
      *    A new ProblemData instance with possibly replaced data.
-     * */
+     */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
                         std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
@@ -676,6 +755,32 @@ public:
 
     ProblemData() = delete;
 };
+
+Load ProblemData::Client::getDelivery(size_t dimension) const
+{
+    if (dimension >= delivery.size())
+        throw std::out_of_range(
+            "Dimension is out of range for client delivery.");
+
+    return delivery[dimension];
+}
+
+Load ProblemData::Client::getPickup(size_t dimension) const
+{
+    if (dimension >= pickup.size())
+        throw std::out_of_range("Dimension is out of range for client pickup.");
+
+    return pickup[dimension];
+}
+
+Load ProblemData::VehicleType::getCapacity(size_t dimension) const
+{
+    if (dimension >= capacity.size())
+        throw std::out_of_range(
+            "Dimension is out of range for vehicle type capacity.");
+
+    return capacity[dimension];
+}
 
 ProblemData::Location::operator Client const &() const { return *client; }
 
