@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 
 from pyvrp._pyvrp import ProblemData, VehicleType
@@ -85,7 +87,9 @@ def minimise_fleet(
     return feas_fleet
 
 
-def _lower_bound(data: ProblemData, load_dimension: int | None = None) -> int:
+def _lower_bound(
+    data: ProblemData, load_dimension: Optional[int] | None = None
+) -> int:
 
     if load_dimension is None:
         # Take strongest lower bound across all load dimensions.

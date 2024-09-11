@@ -48,8 +48,8 @@ class Client:
         self,
         x: int,
         y: int,
-        delivery: int | list[int] = 0,
-        pickup: int | list[int] = 0,
+        delivery: Union[int, list[int]] = 0,
+        pickup: Union[int, list[int]] = 0,
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
@@ -132,7 +132,7 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        capacity: int | list[int] = 0,
+        capacity: Union[int, list[int]] = 0,
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: int = 0,
@@ -150,7 +150,7 @@ class VehicleType:
     def replace(
         self,
         num_available: Optional[int] = None,
-        capacity: Optional[int | list[int]] = None,
+        capacity: Optional[Union[int, list[int]]] = None,
         start_depot: Optional[int] = None,
         end_depot: Optional[int] = None,
         fixed_cost: Optional[int] = None,
