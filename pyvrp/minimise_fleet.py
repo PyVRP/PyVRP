@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 from pyvrp._pyvrp import ProblemData, VehicleType
@@ -87,27 +85,22 @@ def minimise_fleet(
     return feas_fleet
 
 
-def _lower_bound(
-    data: ProblemData, load_dimension: Optional[int] = None
-) -> int:
-
-    if load_dimension is None:
-        # Take strongest lower bound across all load dimensions.
-        return max(
-            _lower_bound(data, dim) for dim in range(data.num_load_dimensions)
-        )
-
+def _lower_bound(data: ProblemData) -> int:
     vehicle_type = data.vehicle_type(0)
 
     # TODO additional simple bounding techniques exist, for example based on
     # time properties. See https://doi.org/10.1007/978-3-319-07046-9_30 for
     # details.
 
-    # Computes a simple bound based on packing delivery or pickup demands in
-    # the given vehicles.
-    delivery = sum(c.get_delivery(load_dimension) for c in data.clients())
-    pickup = sum(c.get_pickup(load_dimension) for c in data.clients())
-    demand = max(delivery, pickup)
-    capacity = vehicle_type.get_capacity(load_dimension)
+    # Computes a bound based on packing delivery or pickup demands in the given
+    # vehicles over all load dimensions. The strongest bound is returned.
+    bound = 0
+    for dim in range(data.num_load_dimensions):
+        delivery = sum(c.get_delivery(dim) for c in data.clients())
+        pickup = sum(c.get_pickup(dim) for c in data.clients())
+        demand = max(delivery, pickup)
+        capacity = vehicle_type.get_capacity(dim)
 
-    return int(np.ceil(demand / max(capacity, 1)))
+        bound = max(int(np.ceil(demand / max(capacity, 1))), bound)
+
+    return bound
