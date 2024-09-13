@@ -88,7 +88,7 @@ def minimise_fleet(
 
 
 def _lower_bound(
-    data: ProblemData, load_dimension: Optional[int] | None = None
+    data: ProblemData, load_dimension: Optional[int] = None
 ) -> int:
 
     if load_dimension is None:
