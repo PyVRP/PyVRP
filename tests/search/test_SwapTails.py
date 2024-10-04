@@ -19,11 +19,11 @@ from pyvrp.search._search import Node, Route
 @mark.parametrize(
     "vehicle_types",
     [
-        [VehicleType(capacity=10), VehicleType(capacity=10)],
-        [VehicleType(capacity=8), VehicleType(capacity=10)],
-        [VehicleType(capacity=10), VehicleType(capacity=8)],
-        [VehicleType(capacity=9), VehicleType(capacity=9)],
-        [VehicleType(capacity=8), VehicleType(capacity=8)],
+        [VehicleType(capacity=[10]), VehicleType(capacity=[10])],
+        [VehicleType(capacity=[8]), VehicleType(capacity=[10])],
+        [VehicleType(capacity=[10]), VehicleType(capacity=[8])],
+        [VehicleType(capacity=[9]), VehicleType(capacity=[9])],
+        [VehicleType(capacity=[8]), VehicleType(capacity=[8])],
     ],
 )
 def test_OkSmall_multiple_vehicle_types(

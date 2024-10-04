@@ -245,12 +245,12 @@ PYBIND11_MODULE(_search, m)
         .def("has_excess_load", &Route::hasExcessLoad)
         .def("has_excess_distance", &Route::hasExcessDistance)
         .def("has_time_warp", &Route::hasTimeWarp)
-        .def("capacity", &Route::capacity)
+        .def("capacity", &Route::capacity, py::arg("dimension") = 0)
         .def("start_depot", &Route::startDepot)
         .def("end_depot", &Route::endDepot)
         .def("fixed_vehicle_cost", &Route::fixedVehicleCost)
-        .def("load", &Route::load)
-        .def("excess_load", &Route::excessLoad)
+        .def("load", &Route::load, py::arg("dimension") = 0)
+        .def("excess_load", &Route::excessLoad, py::arg("dimension") = 0)
         .def("excess_distance", &Route::excessDistance)
         .def("distance", &Route::distance)
         .def("distance_cost", &Route::distanceCost)
@@ -289,24 +289,29 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "load_at",
-            [](Route const &route, size_t idx) { return route.at(idx).load(); },
-            py::arg("idx"))
+            [](Route const &route, size_t idx, size_t dimension)
+            { return route.at(idx).load(dimension); },
+            py::arg("idx"),
+            py::arg("dimension") = 0)
         .def(
             "load_between",
-            [](Route const &route, size_t start, size_t end)
-            { return route.between(start, end).load(); },
+            [](Route const &route, size_t start, size_t end, size_t dimension)
+            { return route.between(start, end).load(dimension); },
             py::arg("start"),
-            py::arg("end"))
+            py::arg("end"),
+            py::arg("dimension") = 0)
         .def(
             "load_after",
-            [](Route const &route, size_t start)
-            { return route.after(start).load(); },
-            py::arg("start"))
+            [](Route const &route, size_t start, size_t dimension)
+            { return route.after(start).load(dimension); },
+            py::arg("start"),
+            py::arg("dimension") = 0)
         .def(
             "load_before",
-            [](Route const &route, size_t end)
-            { return route.before(end).load(); },
-            py::arg("end"))
+            [](Route const &route, size_t end, size_t dimension)
+            { return route.before(end).load(dimension); },
+            py::arg("end"),
+            py::arg("dimension") = 0)
         .def(
             "duration_at",
             [](Route const &route, size_t idx, size_t profile)

@@ -254,7 +254,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     Tests that updates only happen every ``num_registrations`` times, not every
     time a new value is registered.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     num_registrations = 4
@@ -375,7 +375,8 @@ def test_init_from_different_unit_costs(ok_small):
     distance penalty values when the vehicles have a unit cost function that
     involves both distance and duration.
     """
-    veh_type = VehicleType(3, 10, unit_distance_cost=1, unit_duration_cost=10)
+    orig_type = ok_small.vehicle_type(0)
+    veh_type = orig_type.replace(unit_distance_cost=1, unit_duration_cost=10)
     data = ok_small.replace(vehicle_types=[veh_type])
 
     pm = PenaltyManager.init_from(data)

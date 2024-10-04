@@ -87,8 +87,8 @@ def test_evaluate_empty_routes(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(3, capacity=10),
-            VehicleType(3, capacity=10),
+            VehicleType(3, capacity=[10]),
+            VehicleType(3, capacity=[10]),
         ]
     )
 
@@ -120,7 +120,7 @@ def test_evaluate_capacity_differences(ok_small):
     Tests that changes in vehicle capacity violations are evaluated correctly.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(capacity=10), VehicleType(capacity=20)]
+        vehicle_types=[VehicleType(capacity=[10]), VehicleType(capacity=[20])]
     )
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -171,8 +171,8 @@ def test_evaluate_shift_time_window_differences(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(capacity=10, tw_early=10_000, tw_late=15_000),
-            VehicleType(capacity=10, tw_early=15_000, tw_late=20_000),
+            VehicleType(capacity=[10], tw_early=10_000, tw_late=15_000),
+            VehicleType(capacity=[10], tw_early=15_000, tw_late=20_000),
         ]
     )
 
@@ -205,8 +205,8 @@ def test_evaluate_max_duration_constraints(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(capacity=10, max_duration=3_000),
-            VehicleType(capacity=10),
+            VehicleType(capacity=[10], max_duration=3_000),
+            VehicleType(capacity=[10]),
         ]
     )
 
@@ -288,8 +288,9 @@ def test_different_objectives(ok_small_multi_depot):
     coefficients correctly evaluates the resulting cost delta.
     """
     vehicle_types = [
-        VehicleType(unit_duration_cost=0),
+        VehicleType(capacity=[10], unit_duration_cost=0),
         VehicleType(
+            capacity=[10],
             start_depot=1,
             end_depot=1,
             unit_distance_cost=0,

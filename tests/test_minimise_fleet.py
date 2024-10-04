@@ -37,6 +37,20 @@ def test_OkSmall(ok_small):
     assert_equal(data.num_vehicles, 2)
 
 
+def test_OkSmall_multidimensional_load(ok_small_multiple_load):
+    """
+    Tests that the fleet minimisation procedure attains the lower bound on the
+    OkSmall instance when considering multiple load dimensions.
+    """
+    assert_equal(ok_small_multiple_load.num_load_dimensions, 2)
+    assert_equal(ok_small_multiple_load.num_vehicle_types, 1)
+
+    # Need at least three because the client demand in the second dimension
+    # sums to 5, yet each vehicle can only carry 2.
+    vehicle_type = minimise_fleet(ok_small_multiple_load, MaxIterations(10))
+    assert_equal(vehicle_type.num_available, 3)
+
+
 def test_rc208(rc208):
     """
     Tests that the fleet minimisation procedure significantly reduces the
