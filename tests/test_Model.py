@@ -379,7 +379,7 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type(capacity=0, num_available=1)
+    model.add_vehicle_type(num_available=1)
 
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
@@ -425,7 +425,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     could not solve an instance with zero clients or just one client.
     """
     m = Model()
-    m.add_vehicle_type(capacity=15, num_available=1)
+    m.add_vehicle_type(num_available=1)
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
@@ -454,7 +454,6 @@ def test_model_solves_small_instance_with_fixed_costs():
 
     for idx in range(2):
         m.add_vehicle_type(
-            capacity=0,
             num_available=5,
             fixed_cost=10,
             tw_early=0,
@@ -488,7 +487,6 @@ def test_model_solves_small_instance_with_shift_durations():
     # vehicles in total, two for each vehicle type.
     for tw_early, tw_late in [(0, 15), (5, 25)]:
         m.add_vehicle_type(
-            capacity=0,
             num_available=2,
             tw_early=tw_early,
             tw_late=tw_late,
