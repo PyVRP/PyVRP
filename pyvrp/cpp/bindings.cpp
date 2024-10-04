@@ -115,22 +115,6 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("dimension"))
         .def(
             "get_pickup", &ProblemData::Client::getPickup, py::arg("dimension"))
-        .def("replace",
-             &ProblemData::Client::replace,
-             py::arg("x") = py::none(),
-             py::arg("y") = py::none(),
-             py::arg("delivery") = py::none(),
-             py::arg("pickup") = py::none(),
-             py::arg("service_duration") = py::none(),
-             py::arg("tw_early") = py::none(),
-             py::arg("tw_late") = py::none(),
-             py::arg("release_time") = py::none(),
-             py::arg("prize") = py::none(),
-             py::arg("required") = py::none(),
-             py::arg("group") = py::none(),
-             py::kw_only(),
-             py::arg("name") = py::none(),
-             DOC(pyvrp, ProblemData, Client, replace))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Client const &client) {  // __getstate__

@@ -364,8 +364,11 @@ class _ProblemDataBuilder:
         # VRPLIB instances includes data for each available vehicle. We group
         # vehicles by their attributes to create unique vehicle types.
         type2idcs = defaultdict(list)
-        for vehicle, veh_type in enumerate(zip(*vehicles_data)):
-            type2idcs[veh_type].append(vehicle)
+        for vehicle, (capacity, *veh_type) in enumerate(zip(*vehicles_data)):
+            if not isinstance(capacity, Number):
+                capacity = tuple(capacity)
+
+            type2idcs[capacity, *veh_type].append(vehicle)
 
         client2profile = self._allowed2profile()
         time_windows = self.parser.time_windows()

@@ -122,34 +122,6 @@ ProblemData::Client::Client(Client &&client)
 
 ProblemData::Client::~Client() { delete[] name; }
 
-ProblemData::Client
-ProblemData::Client::replace(std::optional<Coordinate> x,
-                             std::optional<Coordinate> y,
-                             std::optional<std::vector<Load>> delivery,
-                             std::optional<std::vector<Load>> pickup,
-                             std::optional<Duration> serviceDuration,
-                             std::optional<Duration> twEarly,
-                             std::optional<Duration> twLate,
-                             std::optional<Duration> releaseTime,
-                             std::optional<Cost> prize,
-                             std::optional<bool> required,
-                             std::optional<size_t> group,
-                             std::optional<std::string> name) const
-{
-    return {x.value_or(this->x),
-            y.value_or(this->y),
-            delivery.value_or(this->delivery),
-            pickup.value_or(this->pickup),
-            serviceDuration.value_or(this->serviceDuration),
-            twEarly.value_or(this->twEarly),
-            twLate.value_or(this->twLate),
-            releaseTime.value_or(this->releaseTime),
-            prize.value_or(this->prize),
-            required.value_or(this->required),
-            group.has_value() ? group : this->group,
-            name.value_or(this->name)};
-}
-
 bool ProblemData::Client::operator==(Client const &other) const
 {
     // clang-format off

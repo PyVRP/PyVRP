@@ -228,29 +228,6 @@ public:
          *     When the given load dimension is out of range.
          */
         [[nodiscard]] inline Load getPickup(size_t dimension) const;
-
-        /**
-         * Returns a new ``Client`` with the same data as this one, except
-         * for the given parameters, which are used instead.
-         *
-         * .. note::
-         *
-         *    Currently it is not possible to remove a group membership using
-         *    this method. As a workaround, create a new client.
-         *
-         */
-        Client replace(std::optional<Coordinate> x,
-                       std::optional<Coordinate> y,
-                       std::optional<std::vector<Load>> delivery,
-                       std::optional<std::vector<Load>> pickup,
-                       std::optional<Duration> serviceDuration,
-                       std::optional<Duration> twEarly,
-                       std::optional<Duration> twLate,
-                       std::optional<Duration> releaseTime,
-                       std::optional<Cost> prize,
-                       std::optional<bool> required,
-                       std::optional<size_t> group,
-                       std::optional<std::string> name) const;
     };
 
     /**
