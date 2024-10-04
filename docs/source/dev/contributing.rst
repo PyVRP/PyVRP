@@ -126,6 +126,52 @@ Start the debugger in Visual Studio Code and step through the code.
 The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp``.
 
 
+Profiling the extensions
+------------------------
+
+Typically, the most computationally intense components in PyVRP are written in C++, as native extensions.
+While developing new functionality that touches the C++ components, it is important to pay attention to performance.
+For this, profiling is an incredibly useful tool.
+There are many ways to get started with profiling, but the following may be helpful.
+
+First, build a debug optimised build of PyVRP, as follows:
+
+.. code-block:: shell
+
+   poetry run python build_extensions.py --build_type debugoptimized
+
+This ensures all debug symbols are retained, so the profiling output contains meaningful information.
+Next, we need to use a profiling tool, which varies based on your operating system.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Linux
+
+        Make sure you install ``perf``, the Linux profiling tool.
+        Now, all we need to do is let ``perf`` record PyVRP doing some work, like for example:
+
+        .. code-block:: shell
+
+            poetry run perf record pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 5
+
+        The resulting ``perf.data`` file will contain all relevant profiling results.
+        Such a file can be inspected using ``perf`` on the command line, or with a GUI using, for example, KDAB's `hotspot <https://github.com/KDAB/hotspot>`_ program.
+
+    .. md-tab-item:: macOS
+
+        macOS comes with a profiling tool named Instruments, which is bundled inside Apple's `Xcode <https://developer.apple.com/xcode/>`_.
+        First, make sure you have Xcode installed.
+        Now, run PyVRP for a period of time long enough that we can attach to the corresponding process, like for example:
+
+        .. code-block:: shell
+
+            poetry run pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 60
+
+        Next, open the Instruments application.
+        Select the "CPU Profiler" template, click on the search bar at the top of the window, and select the corresponding Python process as your target, which is usually the most recent one.
+        Start profiling by clicking on the red circle in the top-left corner.
+        Once you are ready, you can stop the profiling and analyze the results.
+
 Committing changes
 ------------------
 
