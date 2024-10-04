@@ -104,8 +104,8 @@ def plot_route_schedule(
             t = tw_late
 
         if isinstance(stop, Client):
-            load -= stop.get_delivery(load_dimension)
-            load += stop.get_pickup(load_dimension)
+            load -= stop.delivery[load_dimension]
+            load += stop.pickup[load_dimension]
 
         add_traces(dist, t, drive_time, serv_time, load)
 
@@ -158,13 +158,13 @@ def plot_route_schedule(
     twin1.fill_between(
         *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
     )
-    twin1.set_ylim([0, vehicle_type.get_capacity(load_dimension)])
+    twin1.set_ylim([0, vehicle_type.capacity[load_dimension]])
 
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
     twin1.set_ylabel(
-        f"Load (capacity = {vehicle_type.get_capacity(load_dimension):.0f})"
+        f"Load (capacity = {vehicle_type.capacity[load_dimension]:.0f})"
     )
 
     if legend:

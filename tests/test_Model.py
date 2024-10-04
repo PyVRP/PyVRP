@@ -97,8 +97,8 @@ def test_add_client_attributes():
 
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
-    assert_equal(client.delivery, 3)
-    assert_equal(client.pickup, 9)
+    assert_equal(client.delivery, [3])
+    assert_equal(client.pickup, [9])
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
@@ -114,13 +114,8 @@ def test_add_client_with_multidimensional_load():
     model = Model()
     client = model.add_client(x=1, y=2, delivery=[3, 4], pickup=[5, 6])
 
-    assert_equal(client.delivery, 3)  # First dimension
-    assert_equal(client.get_delivery(0), 3)
-    assert_equal(client.get_delivery(1), 4)
-
-    assert_equal(client.pickup, 5)  # First dimension
-    assert_equal(client.get_pickup(0), 5)
-    assert_equal(client.get_pickup(1), 6)
+    assert_equal(client.delivery, [3, 4])
+    assert_equal(client.pickup, [5, 6])
 
 
 def test_add_depot_attributes():
@@ -166,7 +161,7 @@ def test_add_vehicle_type():
     )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, 998)
+    assert_equal(vehicle_type.capacity, [998])
     assert_equal(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
@@ -217,20 +212,6 @@ def test_add_vehicle_type_raises_for_unknown_depot():
 
     with assert_raises(ValueError):
         m.add_vehicle_type(end_depot=depot)
-
-
-def test_add_vehicle_type_multidimensional_load():
-    """
-    Smoke test that checks whether vehicle type correctly sets capacity for a
-    multidimensional load.
-    """
-    model = Model()
-    vehicle_type = model.add_vehicle_type(num_available=10, capacity=[998, 37])
-
-    assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, 998)  # First dimension
-    assert_equal(vehicle_type.get_capacity(0), 998)
-    assert_equal(vehicle_type.get_capacity(1), 37)
 
 
 def test_get_locations():
@@ -662,8 +643,8 @@ def test_from_data_client_group(ok_small):
     correctly sets up the client groups in the model.
     """
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, required=False, group=0)
-    clients[1] = Client(1, 1, required=False, group=0)
+    clients[0] = Client(1, 1, delivery=[1], required=False, group=0)
+    clients[1] = Client(1, 1, delivery=[1], required=False, group=0)
 
     group = ClientGroup([1, 2])
 
@@ -769,8 +750,8 @@ def test_minimise_distance_or_duration(ok_small):
     orig_model = Model.from_data(ok_small)
 
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=0),
-        VehicleType(capacity=10, unit_distance_cost=0, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=0),
+        VehicleType(capacity=[10], unit_distance_cost=0, unit_duration_cost=1),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)

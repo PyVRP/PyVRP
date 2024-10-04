@@ -79,8 +79,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       char const *>(),
              py::arg("x"),
              py::arg("y"),
-             py::arg("delivery") = 0,
-             py::arg("pickup") = 0,
+             py::arg("delivery") = py::list(),
+             py::arg("pickup") = py::list(),
              py::arg("service_duration") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
@@ -92,14 +92,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
-        .def_property_readonly(
-            "delivery",  // First load dimension for backwards compatability
-            [](ProblemData::Client const &client)
-            { return client.getDelivery(0); })
-        .def_property_readonly(
-            "pickup",  // First load dimension for backwards compatability
-            [](ProblemData::Client const &client)
-            { return client.getPickup(0); })
+        .def_readonly("delivery", &ProblemData::Client::delivery)
+        .def_readonly("pickup", &ProblemData::Client::pickup)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
@@ -110,26 +104,13 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::Client::name,
                       py::return_value_policy::reference_internal)
-        .def("get_delivery",
-             &ProblemData::Client::getDelivery,
-             py::arg("dimension"))
-        .def(
-            "get_pickup", &ProblemData::Client::getPickup, py::arg("dimension"))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Client const &client) {  // __getstate__
-                std::vector<pyvrp::Value> delivery(client.delivery.size());
-                std::vector<pyvrp::Value> pickup(client.pickup.size());
-                for (size_t i = 0; i != client.delivery.size(); ++i)
-                {
-                    delivery[i] = client.delivery[i].get();
-                    pickup[i] = client.pickup[i].get();
-                }
-
                 return py::make_tuple(client.x,
                                       client.y,
-                                      delivery,
-                                      pickup,
+                                      client.delivery,
+                                      client.pickup,
                                       client.serviceDuration,
                                       client.twEarly,
                                       client.twLate,
@@ -237,7 +218,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       char const *>(),
              py::arg("num_available") = 1,
-             py::arg("capacity") = 0,
+             py::arg("capacity") = py::list(),
              py::arg("start_depot") = 0,
              py::arg("end_depot") = 0,
              py::arg("fixed_cost") = 0,
@@ -253,10 +234,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
-        .def_property_readonly(
-            "capacity",  // First load dimension for backwards compatability
-            [](ProblemData::VehicleType const &vehType)
-            { return vehType.getCapacity(0); })
+        .def_readonly("capacity", &ProblemData::VehicleType::capacity)
         .def_readonly("start_depot", &ProblemData::VehicleType::startDepot)
         .def_readonly("end_depot", &ProblemData::VehicleType::endDepot)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
@@ -272,9 +250,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
-        .def("get_capacity",
-             &ProblemData::VehicleType::getCapacity,
-             py::arg("dimension"))
         .def("replace",
              &ProblemData::VehicleType::replace,
              py::arg("num_available") = py::none(),
@@ -295,12 +270,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
-                std::vector<pyvrp::Value> capacity(vehicleType.capacity.size());
-                for (size_t i = 0; i != vehicleType.capacity.size(); ++i)
-                    capacity[i] = vehicleType.capacity[i].get();
-
                 return py::make_tuple(vehicleType.numAvailable,
-                                      capacity,
+                                      vehicleType.capacity,
                                       vehicleType.startDepot,
                                       vehicleType.endDepot,
                                       vehicleType.fixedCost,

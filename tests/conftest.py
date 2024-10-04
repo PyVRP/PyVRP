@@ -111,7 +111,7 @@ def ok_small_two_profiles(ok_small):
         duration_matrices=[durations, 2 * durations],
         distance_matrices=[distances, 2 * distances],
         vehicle_types=[
-            VehicleType(3, 10, profile=0),
-            VehicleType(3, 10, profile=1),
+            VehicleType(3, [10], profile=0),
+            VehicleType(3, [10], profile=1),
         ],
     )

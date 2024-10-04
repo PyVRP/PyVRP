@@ -176,7 +176,7 @@ def test_excess_distance_penalised_cost(ok_small):
     """
     Tests that excess distance is properly penalised in the cost computations.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_distance=5_000)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     sol = Solution(data, [[1, 2], [3, 4]])
@@ -245,8 +245,8 @@ def test_cost_with_fixed_vehicle_cost(
     # should be able to track this.
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=10, fixed_cost=0),
-            VehicleType(2, capacity=10, fixed_cost=10),
+            VehicleType(2, capacity=[10], fixed_cost=0),
+            VehicleType(2, capacity=[10], fixed_cost=10),
         ]
     )
 
@@ -271,8 +271,8 @@ def test_unit_distance_duration_cost(ok_small):
     duration costs can vary between routes.
     """
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 

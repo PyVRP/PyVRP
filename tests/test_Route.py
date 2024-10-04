@@ -37,7 +37,10 @@ def test_route_eq(ok_small):
     Tests ``Route``'s equality operator.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(capacity=10), VehicleType(2, capacity=20)]
+        vehicle_types=[
+            VehicleType(capacity=[10]),
+            VehicleType(2, capacity=[20]),
+        ]
     )
 
     route1 = Route(data, [1, 2], 0)
@@ -73,7 +76,7 @@ def test_route_access_methods(ok_small):
 
     # Total route delivery demand (and pickups, which are all zero for this
     # instance).
-    deliveries = [0] + [client.delivery for client in ok_small.clients()]
+    deliveries = [0] + [client.delivery[0] for client in ok_small.clients()]
     assert_equal(routes[0].delivery(), deliveries[1] + deliveries[3])
     assert_equal(routes[1].delivery(), deliveries[2] + deliveries[4])
 
@@ -247,7 +250,7 @@ def test_release_time_and_max_duration():
     that starting moment - it does not affect the overall maximum duration.
     """
     ok_small = read("data/OkSmallReleaseTimes.txt")
-    vehicle_type = VehicleType(3, 10, max_duration=5_000)
+    vehicle_type = VehicleType(3, [10], max_duration=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     # This route has a release time of 5000, but should not start until much
@@ -334,7 +337,7 @@ def test_route_shift_duration(
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=10, tw_early=tw_early, tw_late=tw_late)
+            VehicleType(2, capacity=[10], tw_early=tw_early, tw_late=tw_late)
         ]
     )
 
@@ -352,8 +355,8 @@ def test_distance_duration_cost_calculations(ok_small):
     Tests route-level distance and duration cost calculations.
     """
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 
@@ -369,7 +372,7 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
     Tests that empty routes correctly evaluate distance and duration travelled
     between depots, even though there are no actual clients on the route.
     """
-    vehicle_type = VehicleType(3, 10, start_depot=0, end_depot=1)
+    vehicle_type = VehicleType(3, [10], start_depot=0, end_depot=1)
     data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, [], vehicle_type=0)

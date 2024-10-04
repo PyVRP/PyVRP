@@ -96,10 +96,10 @@ def _lower_bound(data: ProblemData) -> int:
     # vehicles over all load dimensions. The strongest bound is returned.
     bound = 0
     for dim in range(data.num_load_dimensions):
-        delivery = sum(c.get_delivery(dim) for c in data.clients())
-        pickup = sum(c.get_pickup(dim) for c in data.clients())
+        delivery = sum(c.delivery[dim] for c in data.clients())
+        pickup = sum(c.pickup[dim] for c in data.clients())
         demand = max(delivery, pickup)
-        capacity = vehicle_type.get_capacity(dim)
+        capacity = vehicle_type.capacity[dim]
 
         bound = max(int(np.ceil(demand / max(capacity, 1))), bound)
 

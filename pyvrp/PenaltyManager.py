@@ -174,16 +174,16 @@ class PenaltyManager:
         if data.num_clients != 0 and data.num_load_dimensions != 0:
             pickups = np.array(
                 [
-                    c.get_pickup(i)
-                    for c in data.clients()
-                    for i in range(data.num_load_dimensions)
+                    client.pickup[dim]
+                    for client in data.clients()
+                    for dim in range(data.num_load_dimensions)
                 ]
             )
             deliveries = np.array(
                 [
-                    c.get_delivery(i)
-                    for c in data.clients()
-                    for i in range(data.num_load_dimensions)
+                    client.delivery[dim]
+                    for client in data.clients()
+                    for dim in range(data.num_load_dimensions)
                 ]
             )
             avg_load = np.maximum(pickups, deliveries).mean()

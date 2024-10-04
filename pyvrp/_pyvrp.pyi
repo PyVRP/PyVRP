@@ -34,8 +34,8 @@ class DynamicBitset:
 class Client:
     x: int
     y: int
-    delivery: int
-    pickup: int
+    delivery: list[int]
+    pickup: list[int]
     service_duration: int
     tw_early: int
     tw_late: int
@@ -48,8 +48,8 @@ class Client:
         self,
         x: int,
         y: int,
-        delivery: Union[int, list[int]] = 0,
-        pickup: Union[int, list[int]] = 0,
+        delivery: list[int] = [],
+        pickup: list[int] = [],
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
@@ -60,8 +60,6 @@ class Client:
         *,
         name: str = "",
     ) -> None: ...
-    def get_delivery(self, dimension: int) -> int: ...
-    def get_pickup(self, dimension: int) -> int: ...
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
@@ -103,7 +101,7 @@ class VehicleType:
     num_available: int
     start_depot: int
     end_depot: int
-    capacity: int
+    capacity: list[int]
     tw_early: int
     tw_late: int
     max_duration: int
@@ -116,7 +114,7 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        capacity: Union[int, list[int]] = 0,
+        capacity: list[int] = [],
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: int = 0,
@@ -130,11 +128,10 @@ class VehicleType:
         *,
         name: str = "",
     ) -> None: ...
-    def get_capacity(self, dimension: int) -> int: ...
     def replace(
         self,
         num_available: Optional[int] = None,
-        capacity: Optional[Union[int, list[int]]] = None,
+        capacity: Optional[list[int]] = None,
         start_depot: Optional[int] = None,
         end_depot: Optional[int] = None,
         fixed_cost: Optional[int] = None,

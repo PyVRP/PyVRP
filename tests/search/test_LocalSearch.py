@@ -245,8 +245,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     # Now make the instance heterogeneous and update the local search.
     data = rc208.replace(
         vehicle_types=[
-            VehicleType(25, capacity=10_000),
-            VehicleType(25, capacity=10_000),
+            VehicleType(25, capacity=[10_000]),
+            VehicleType(25, capacity=[10_000]),
         ]
     )
 
@@ -273,8 +273,8 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(1, capacity=10),
-            VehicleType(2, capacity=10),
+            VehicleType(1, capacity=[10]),
+            VehicleType(2, capacity=[10]),
         ]
     )
 
@@ -419,13 +419,13 @@ def test_local_search_does_not_remove_required_clients():
         clients=[
             # This client cannot be removed, even though it causes significant
             # load violations.
-            Client(x=1, y=1, delivery=100, required=True),
-            # This client can be removed, and should be , because the prize is
-            # not worth the detour.
-            Client(x=2, y=2, prize=0, required=False),
+            Client(x=1, y=1, delivery=[100], required=True),
+            # This client can and should be removed, because the prize is not
+            # worth the detour.
+            Client(x=2, y=2, delivery=[0], prize=0, required=False),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(1, capacity=50)],
+        vehicle_types=[VehicleType(1, capacity=[50])],
         distance_matrices=[np.where(np.eye(3), 0, 10)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )

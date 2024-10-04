@@ -100,41 +100,4 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
         return PyLong_FromLongLong(src.get());
     }
 };
-
-// For load vectors, we want to maintain flexibility and backwards
-// compatibility, so we either accept a vector or a scalar when converting from
-// Python to C++. There is no need to convert vectors back to scalars (when
-// converting from C++ to Python).
-template <> struct type_caster<std::vector<pyvrp::Load>>
-{
-    PYBIND11_TYPE_CASTER(std::vector<pyvrp::Load>, _("numpy.ndarray[int]"));
-
-    bool load(pybind11::handle src, bool convert)  // Python -> C++
-    {
-        if (!convert && !pybind11::array_t<pyvrp::Value>::check_(src))
-            return false;
-
-        auto const style
-            = pybind11::array::c_style | pybind11::array::forcecast;
-        auto const buf = pybind11::array_t<pyvrp::Value, style>::ensure(src);
-
-        if (buf && buf.ndim() == 0)
-        {
-            // Parse as a scalar
-            auto const raw = PyLong_AsLong(src.ptr());
-            std::vector<pyvrp::Load> vector(1, pyvrp::Load(raw));
-            value = vector;
-            return !PyErr_Occurred();
-        }
-
-        if (!buf || buf.ndim() != 1)
-            throw pybind11::value_error("Expected 1D np.ndarray argument!");
-
-        if (buf.size() == 0)  // then the default constructed object is already
-            return !PyErr_Occurred();  // OK, and we have nothing to do.
-
-        value = {buf.data(), buf.data() + buf.size()};
-        return !PyErr_Occurred();
-    }
-};
 }  // namespace pybind11::detail

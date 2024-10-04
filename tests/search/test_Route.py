@@ -24,7 +24,10 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     type.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(1, capacity=1), VehicleType(2, capacity=2)]
+        vehicle_types=[
+            VehicleType(1, capacity=[1]),
+            VehicleType(2, capacity=[2]),
+        ],
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
@@ -215,7 +218,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     type's fixed cost value.
     """
     data = ok_small.replace(
-        vehicle_types=[VehicleType(2, capacity=10, fixed_cost=fixed_cost)]
+        vehicle_types=[VehicleType(2, capacity=[10], fixed_cost=fixed_cost)]
     )
     route = Route(data, idx=0, vehicle_type=0)
     assert_equal(route.fixed_vehicle_cost(), fixed_cost)
@@ -227,21 +230,28 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     Tests that the route calculates distance and load correctly for a
     single-client route.
     """
+    assert_equal(ok_small.num_load_dimensions, 1)
+
     route = Route(ok_small, idx=0, vehicle_type=0)
     route.append(Node(loc=client))
     route.update()
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
-    assert_equal(route.load(), ok_small.location(client).delivery)
     assert_equal(
-        route.load_between(0, 2).load(), ok_small.location(client).delivery
+        route.load(dimension=0),
+        ok_small.location(client).delivery[0],
+    )
+    assert_equal(
+        route.load_between(0, 2, dimension=0).load(),
+        ok_small.location(client).delivery[0],
     )
 
     # The load_between() function is inclusive.
-    assert_equal(route.load_between(0, 0).load(), 0)
+    assert_equal(route.load_between(0, 0, dimension=0).load(), 0)
     assert_equal(
-        route.load_between(1, 1).load(), ok_small.location(client).delivery
+        route.load_between(1, 1, dimension=0).load(),
+        ok_small.location(client).delivery[0],
     )
 
     # Distances on various segments of the route.
@@ -462,7 +472,7 @@ def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
     Tests that the maximum duration attribute of vehicle types is reflected
     in the route's time warp calculations.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_duration=max_duration)
+    vehicle_type = VehicleType(3, capacity=[10], max_duration=max_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -488,7 +498,7 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
     Tests that the maximum distance attribute of vehicle types is reflected
     in the route's excess distance calculations.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_distance=max_distance)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -520,7 +530,7 @@ def test_is_feasible(
     Tests that various constraint violations are taken into account when
     determining overall route feasibility.
     """
-    vehicle_type = VehicleType(3, capacity=10, max_distance=6_000)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -719,7 +729,7 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
     Tests that empty routes correctly evaluate distance and duration travelled
     between depots, even though there are no actual clients on the route.
     """
-    vehicle_type = VehicleType(3, 10, start_depot=0, end_depot=1)
+    vehicle_type = VehicleType(3, [10], start_depot=0, end_depot=1)
     data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, idx=0, vehicle_type=0)
