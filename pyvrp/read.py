@@ -368,7 +368,7 @@ class _ProblemDataBuilder:
             if not isinstance(capacity, Number):
                 capacity = tuple(capacity)
 
-            type2idcs[capacity, *veh_type].append(vehicle)
+            type2idcs[(capacity, *veh_type)].append(vehicle)
 
         client2profile = self._allowed2profile()
         time_windows = self.parser.time_windows()
