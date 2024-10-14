@@ -459,9 +459,9 @@ private:
 /**
  * Simple union type that distinguishes between client and depot locations.
  */
-#if defined(__GNUC__) && !defined(__clang__)  // check if this is GCC
-    // Inside macro because GCC issues a false positive when accessing the
-    // Location's data via one of the casting operators.
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 13)
+    // Inside macro because GCC 13 and up issues a false positive when accessing
+    // the Location's data via one of its casting operators.
     union [[gnu::no_dangling]] Location
 #else
     union Location
