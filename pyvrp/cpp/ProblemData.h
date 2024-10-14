@@ -456,22 +456,21 @@ public:
     };
 
 private:
-/**
- * Simple union type that distinguishes between client and depot locations.
- */
-#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 13)
-    // Inside macro because GCC 13 and up issues a false positive when accessing
-    // the Location's data via one of its casting operators.
-    union [[gnu::no_dangling]] Location
-#else
+    /**
+     * Simple union type that distinguishes between client and depot locations.
+     */
     union Location
-#endif
     {
         Client const *client;
         Depot const *depot;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference"
+        // GCC 13 and up issue a false positive when accessing the Location's
+        // data via one of its casting operators.
         inline operator Client const &() const;
         inline operator Depot const &() const;
+#pragma GCC diagnostic pop
     };
 
     std::pair<double, double> centroid_;           // Center of client locations
