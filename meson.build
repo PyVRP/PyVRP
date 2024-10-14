@@ -17,6 +17,14 @@ if get_option('problem') == 'cvrp'
     add_project_arguments('-DPYVRP_NO_TIME_WINDOWS', language: 'cpp')
 endif
 
+compiler = meson.get_compiler('cpp')
+if compiler.has_argument('-Wno-dangling-reference')
+    # This is a new diagnostic in GCC 13 and up, but it is a bit buggy right
+    # now and issues false positives for some of our code. See #656 and #657
+    # for details.
+    add_project_arguments('-Wno-dangling-reference', language: 'cpp')
+endif
+
 # We first compile static libraries that contains all regular, C++ code, one
 # per extension module. These are linked against when we compile the actual 
 # Python extension modules down below. We also define the top-level source 
