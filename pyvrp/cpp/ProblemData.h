@@ -465,8 +465,9 @@ private:
         Depot const *depot;
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wno-unknown-pragmas"
 #pragma GCC diagnostic ignored "-Wdangling-reference"
-        // GCC 13 and up issue a false positive when accessing the Location's
+        // GCC 13 and up issues a false positive when accessing the Location's
         // data via one of its casting operators.
         inline operator Client const &() const;
         inline operator Depot const &() const;
