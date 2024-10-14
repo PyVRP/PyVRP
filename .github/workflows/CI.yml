@@ -66,6 +66,7 @@ jobs:
         name: Set up clang
         run: |
           sudo apt-get install -y clang-${{ matrix.compiler-version }}
+
           echo "CC=clang-${{ matrix.compiler-version }}" >> $GITHUB_ENV
           echo "CXX=clang++-${{ matrix.compiler-version }}" >> $GITHUB_ENV
       - if: matrix.compiler == 'gcc'
