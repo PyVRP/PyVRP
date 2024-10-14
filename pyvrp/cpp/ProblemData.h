@@ -459,7 +459,7 @@ private:
     /**
      * Simple union type that distinguishes between client and depot locations.
      */
-    union Location
+    union [[gnu::no_dangling]] Location
     {
         Client const *client;
         Depot const *depot;
