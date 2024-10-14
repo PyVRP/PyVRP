@@ -66,14 +66,22 @@ jobs:
         name: Set up clang
         run: |
           sudo apt-get install -y clang-${{ matrix.compiler-version }}
-          echo "CC=clang-${{ matrix.compiler-version }}" >> $GITHUB_ENV
-          echo "CXX=clang++-${{ matrix.compiler-version }}" >> $GITHUB_ENV
+
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${{ matrix.compiler-version }}" 10
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ matrix.compiler-version }}" 10
+
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
       - if: matrix.compiler == 'gcc'
         name: Set up GCC
         run: |
-          sudo apt-get install -y g++-${{ matrix.compiler-version }}
-          echo "CC=gcc-${{ matrix.compiler-version }}" >> $GITHUB_ENV
-          echo "CXX=g++-${{ matrix.compiler-version }}" >> $GITHUB_ENV
+          sudo apt-get install -y gcc-${{ matrix.compiler-version }} g++-${{ matrix.compiler-version }}
+
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.compiler-version }} 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.compiler-version }} 10
+
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
         # This step consists of two commands. First, we install the project into
         # the poetry environment. This ensures imports like "from pyvrp import X"
