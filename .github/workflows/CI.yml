@@ -19,28 +19,19 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        compiler: [gcc, clang]
-        compiler-version: ['10', '12', 'latest']
-        python-version: ['3.9', '3.12']
-        exclude:
-          - compiler: clang
-            compiler-version: '10'  # minimum gcc version
-          - compiler: gcc
-            compiler-version: '12'  # minimum clang version
-  
-          # No need to test 'old' compilers with 'new' Python versions. This
-          # saves a bit in the CI process.
-          - compiler: gcc
+        include:
+          - compiler: gcc  # minimum gcc version
             compiler-version: '10'
-            python-version: '3.12'
-          - compiler: clang
-            compiler-version: '12'
-            python-version: '3.12'
-
-          # No need to test 'new' compilers with 'old' Python versions. This
-          # saves a bit in the CI process.
-          - compiler-version: latest
             python-version: '3.9'
+          - compiler: gcc  # recent gcc version
+            compiler-version: '14'
+            python-version: '3.12'
+          - compiler: clang  # minimum clang version
+            compiler-version: '12'
+            python-version: '3.9'
+          - compiler: clang  # recent clang version
+            compiler-version: '19'
+            python-version: '3.12'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
