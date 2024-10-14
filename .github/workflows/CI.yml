@@ -15,32 +15,23 @@ jobs:
     name: >
       Build and test pyvrp using ${{ matrix.compiler }} 
       ${{ matrix.compiler-version }} and Python ${{ matrix.python-version }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
       matrix:
-        compiler: [gcc, clang]
-        compiler-version: ['10', '12', 'latest']
-        python-version: ['3.9', '3.12']
-        exclude:
-          - compiler: clang
-            compiler-version: '10'  # minimum gcc version
-          - compiler: gcc
-            compiler-version: '12'  # minimum clang version
-  
-          # No need to test 'old' compilers with 'new' Python versions. This
-          # saves a bit in the CI process.
-          - compiler: gcc
+        include:
+          - compiler: gcc  # minimum gcc version
             compiler-version: '10'
-            python-version: '3.12'
-          - compiler: clang
-            compiler-version: '12'
-            python-version: '3.12'
-
-          # No need to test 'new' compilers with 'old' Python versions. This
-          # saves a bit in the CI process.
-          - compiler-version: latest
             python-version: '3.9'
+          - compiler: gcc  # recent gcc version
+            compiler-version: '14'
+            python-version: '3.12'
+          - compiler: clang  # minimum clang version
+            compiler-version: '14'
+            python-version: '3.9'
+          - compiler: clang  # recent clang version
+            compiler-version: '18'
+            python-version: '3.12'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -73,14 +64,22 @@ jobs:
         run: poetry run pre-commit run --all-files
       - if: matrix.compiler == 'clang'
         name: Set up clang
-        uses: egor-tensin/setup-clang@v1
-        with:
-          version: ${{ matrix.compiler-version }}
+        run: |
+          sudo apt-get install -y clang-${{ matrix.compiler-version }}
+
+          echo "CC=clang-${{ matrix.compiler-version }}" >> $GITHUB_ENV
+          echo "CXX=clang++-${{ matrix.compiler-version }}" >> $GITHUB_ENV
       - if: matrix.compiler == 'gcc'
         name: Set up GCC
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: ${{ matrix.compiler-version }}
+        run: |
+          sudo apt-get install -y gcc-${{ matrix.compiler-version }} g++-${{ matrix.compiler-version }}
+
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.compiler-version }} 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.compiler-version }} 10
+          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-${{ matrix.compiler-version }} 10
+
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
         # This step consists of two commands. First, we install the project into
         # the poetry environment. This ensures imports like "from pyvrp import X"
