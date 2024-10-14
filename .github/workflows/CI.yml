@@ -75,6 +75,7 @@ jobs:
 
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.compiler-version }} 10
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.compiler-version }} 10
+          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-${{ matrix.compiler-version }} 10
 
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
