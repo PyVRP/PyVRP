@@ -464,14 +464,19 @@ private:
         Client const *client;
         Depot const *depot;
 
+#if defined(__GNUC__) && (__GNUC__ >= 13) && !defined(__clang__)
+// GCC 13 and up issues a false positive for this warning when accessing the
+// Location's data via one of its casting operators.
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wdangling-reference"
-        // GCC 13 and up issues a false positive when accessing the Location's
-        // data via one of its casting operators.
+#endif
+
         inline operator Client const &() const;
         inline operator Depot const &() const;
+
+#if defined(__GNUC__) && (__GNUC__ >= 13)
 #pragma GCC diagnostic pop
+#endif
     };
 
     std::pair<double, double> centroid_;           // Center of client locations
