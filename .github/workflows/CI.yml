@@ -27,10 +27,10 @@ jobs:
             compiler-version: '14'
             python-version: '3.12'
           - compiler: clang  # minimum clang version
-            compiler-version: '12'
+            compiler-version: '14'
             python-version: '3.9'
           - compiler: clang  # recent clang version
-            compiler-version: '19'
+            compiler-version: '18'
             python-version: '3.12'
     steps:
       - uses: actions/checkout@v4
