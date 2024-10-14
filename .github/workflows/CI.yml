@@ -64,10 +64,16 @@ jobs:
         run: poetry run pre-commit run --all-files
       - if: matrix.compiler == 'clang'
         name: Set up clang
-        run: sudo apt-get install -y clang-${{ matrix.compiler-version }}
+        run: |
+          sudo apt-get install -y clang-${{ matrix.compiler-version }}
+          echo "clang=clang-${{ matrix.compiler-version }}" >> $env:GITHUB_OUTPUT
+          echo "clangxx=clang++-${{ matrix.compiler-version }}" >> $env:GITHUB_OUTPUT
       - if: matrix.compiler == 'gcc'
         name: Set up GCC
-        run: sudo apt-get install -y gcc-${{ matrix.compiler-version }}
+        run: |
+          sudo apt-get install -y gcc-${{ matrix.compiler-version }}
+          echo "gcc=gcc-${{ matrix.compiler-version }}" >> $env:GITHUB_OUTPUT
+          echo "gxx=g++-${{ matrix.compiler-version }}" >> $env:GITHUB_OUTPUT
       - name: Build pyvrp
         # This step consists of two commands. First, we install the project into
         # the poetry environment. This ensures imports like "from pyvrp import X"
