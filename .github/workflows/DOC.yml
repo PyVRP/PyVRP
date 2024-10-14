@@ -44,9 +44,10 @@ jobs:
         if: steps.cache-python.outputs.cache-hit != 'true'
         run: poetry install --no-root --with docs,examples
       - name: Set up GCC
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: 'latest'
+        run: |
+          sudo apt-get install -y gcc-11 g++-11
+          echo "CC=gcc-11" >> $GITHUB_ENV
+          echo "CXX=g++-11" >> $GITHUB_ENV
       - name: Build PyVRP
         run: poetry install --only-root
       - name: Build documentation
