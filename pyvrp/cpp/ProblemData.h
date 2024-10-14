@@ -456,10 +456,16 @@ public:
     };
 
 private:
-    /**
-     * Simple union type that distinguishes between client and depot locations.
-     */
+/**
+ * Simple union type that distinguishes between client and depot locations.
+ */
+#if defined(__GNUC__) && !defined(__clang__)  // check if this is GCC
+    // Inside macro because GCC issues a false positive when accessing the
+    // Location's data via one of the casting operators.
     union [[gnu::no_dangling]] Location
+#else
+    union Location
+#endif
     {
         Client const *client;
         Depot const *depot;
