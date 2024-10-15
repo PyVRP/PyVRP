@@ -32,3 +32,7 @@ preferred-citation:
   journal: "INFORMS Journal on Computing"
   year: 2024
   doi: "10.1287/ijoc.2023.0055"
+  volume: 36
+  issue: 4
+  start: 943
+  end: 955
