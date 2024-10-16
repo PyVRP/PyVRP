@@ -1,6 +1,5 @@
 #include "Solution.h"
 #include "DurationSegment.h"
-#include "LoadSegment.h"
 
 #include <algorithm>
 #include <fstream>
@@ -24,6 +23,7 @@ void Solution::evaluate(ProblemData const &data)
     for (auto const &client : data.clients())
         allPrizes += client.prize;
 
+    excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
@@ -35,12 +35,16 @@ void Solution::evaluate(ProblemData const &data)
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
-        excessLoad_ += route.excessLoad();
         fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
+
+        for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+            excessLoad_[i] += route.excessLoad(i);
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
 }
+
+size_t Solution::numLoadDimensions() const { return excessLoad_.size(); }
 
 bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
 
@@ -69,7 +73,14 @@ bool Solution::isGroupFeasible() const { return isGroupFeas_; }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
-bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::hasExcessLoad() const
+{
+    for (Load const &load : excessLoad_)
+        if (load > 0)
+            return true;
+
+    return false;
+}
 
 bool Solution::hasExcessDistance() const { return excessDistance_ > 0; }
 
@@ -83,7 +94,14 @@ Duration Solution::duration() const { return duration_; }
 
 Cost Solution::durationCost() const { return durationCost_; }
 
-Load Solution::excessLoad() const { return excessLoad_; }
+Load Solution::excessLoad(size_t dimension) const
+{
+    if (dimension >= excessLoad_.size())
+        throw std::out_of_range(
+            "Dimension is out of range for the solution's excess load.");
+
+    return excessLoad_[dimension];
+}
 
 Distance Solution::excessDistance() const { return excessDistance_; }
 
@@ -117,7 +135,6 @@ bool Solution::operator==(Solution const &other) const
                               && duration_ == other.duration_
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
-                              && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_
                               && routes_.size() == other.routes_.size()
@@ -273,7 +290,7 @@ Solution::Solution(size_t numClients,
                    Duration duration,
                    Cost durationCost,
                    Distance excessDistance,
-                   Load excessLoad,
+                   std::vector<Load> const &excessLoad,
                    Cost fixedVehicleCost,
                    Cost prizes,
                    Cost uncollectedPrizes,
