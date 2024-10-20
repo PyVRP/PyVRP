@@ -56,7 +56,7 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
 def configure(
     build_dir: pathlib.Path,
     build_type: str,
-    additional: list[str],
+    *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
     args = [
