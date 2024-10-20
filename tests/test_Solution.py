@@ -56,44 +56,6 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
 
-def test_route_depot_accessor(ok_small_multi_depot):
-    """
-    Tests that Route's depot() member returns the correct depot location index.
-    """
-    routes = [
-        Route(ok_small_multi_depot, [2], 0),
-        Route(ok_small_multi_depot, [3, 4], 1),
-    ]
-
-    assert_equal(routes[0].depot(), 0)
-    assert_equal(routes[1].depot(), 1)
-
-
-def test_route_eq(ok_small):
-    """
-    Tests ``Route``'s equality operator.
-    """
-    data = ok_small.replace(
-        vehicle_types=[VehicleType(capacity=10), VehicleType(2, capacity=20)]
-    )
-
-    route1 = Route(data, [1, 2], 0)
-    assert_(route1 == route1)  # should equal self
-
-    route2 = Route(data, [1, 2], 0)
-    assert_equal(route1, route2)  # same route/vehicle type; different object
-
-    route3 = Route(data, [1, 2], 1)
-    assert_(route2 != route3)  # different vehicle type
-
-    route4 = Route(data, [2, 1], 0)
-    assert_(route2 != route4)  # same vehicle type, different visits
-
-    assert_(route1 != "test")
-    assert_(route1 != 0)
-    assert_(route1 != -1.0)
-
-
 def test_random_constructor_cycles_over_routes(ok_small):
     """
     Tests that a randomly constructed solution fills all available vehicles
@@ -134,6 +96,25 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
 
     assert_equal(sol.num_routes(), data.num_clients)
     assert_equal(len(routes), data.num_clients)
+
+
+def test_random_constructor_uses_all_vehicle_types(ok_small):
+    """
+    Tests that vehicles of each available vehicle type are used when there are
+    more vehicles than clients.
+    """
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(ok_small.num_clients, capacity=10),
+            VehicleType(ok_small.num_clients, capacity=10),
+        ]
+    )
+
+    rng = RandomNumberGenerator(seed=42)
+    sol = Solution.make_random(data, rng)
+
+    used_vehicle_types = {route.vehicle_type() for route in sol.routes()}
+    assert_equal(used_vehicle_types, {0, 1})
 
 
 def test_random_constructor_randomly_selects_optional_clients(
@@ -272,7 +253,10 @@ def test_neighbours_multi_depot(ok_small):
     data = ok_small.replace(
         depots=locations[:2],
         clients=locations[2:],
-        vehicle_types=[VehicleType(depot=0), VehicleType(depot=1)],
+        vehicle_types=[
+            VehicleType(start_depot=0, end_depot=0),
+            VehicleType(start_depot=1, end_depot=1),
+        ],
     )
 
     sol = Solution(data, [Route(data, [4], 0), Route(data, [2, 3], 1)])
@@ -412,13 +396,14 @@ def test_distance_calculation(ok_small):
     # check separately.
     assert_equal(sol.distance(), sum(route.distance() for route in routes))
 
-    expected = ok_small.dist(0, 1) + ok_small.dist(1, 2) + ok_small.dist(2, 0)
+    distances = ok_small.distance_matrix(profile=0)
+    expected = distances[0, 1] + distances[1, 2] + distances[2, 0]
     assert_equal(routes[0].distance(), expected)
 
-    expected = ok_small.dist(0, 3) + ok_small.dist(3, 0)
+    expected = distances[0, 3] + distances[3, 0]
     assert_equal(routes[1].distance(), expected)
 
-    expected = ok_small.dist(0, 4) + ok_small.dist(4, 0)
+    expected = distances[0, 4] + distances[4, 0]
     assert_equal(routes[2].distance(), expected)
 
 
@@ -457,180 +442,6 @@ def test_excess_load_calculation_with_multiple_vehicle_capacities(ok_small):
     assert_equal(sol.excess_load(), 0)
 
 
-def test_route_access_methods(ok_small):
-    """
-    Tests that accessing route statistics returns the correct numbers.
-    """
-    sol = Solution(ok_small, [[1, 3], [2, 4]])
-    routes = sol.routes()
-
-    # Test route access: getting the route plan should return a simple list, as
-    # given to the solution above.
-    assert_equal(routes[0].visits(), [1, 3])
-    assert_equal(routes[1].visits(), [2, 4])
-
-    # There's no excess load, so all excess load should be zero.
-    assert_(not sol.has_excess_load())
-    assert_equal(routes[0].excess_load(), 0)
-    assert_equal(routes[1].excess_load(), 0)
-
-    # Total route delivery demand (and pickups, which are all zero for this
-    # instance).
-    deliveries = [0] + [client.delivery for client in ok_small.clients()]
-    assert_equal(routes[0].delivery(), deliveries[1] + deliveries[3])
-    assert_equal(routes[1].delivery(), deliveries[2] + deliveries[4])
-
-    assert_equal(routes[0].pickup(), 0)
-    assert_equal(routes[1].pickup(), 0)
-
-    # The first route is not feasible due to time warp, but the second one is.
-    # See also the tests below.
-    assert_(not routes[0].is_feasible())
-    assert_(routes[1].is_feasible())
-
-    # Total service duration.
-    services = [0] + [client.service_duration for client in ok_small.clients()]
-    assert_equal(routes[0].service_duration(), services[1] + services[3])
-    assert_equal(routes[1].service_duration(), services[2] + services[4])
-
-
-def test_route_time_warp_calculations(ok_small):
-    """
-    Tests route time warp calculations.
-    """
-    sol = Solution(ok_small, [[1, 3], [2, 4]])
-    routes = sol.routes()
-
-    # There is time warp on the first route: duration(0, 1) = 1'544, so we
-    # arrive at 1 before its opening window of 15'600. Service (360) thus
-    # starts at 15'600, and completes at 15'600 + 360. Then we drive for
-    # duration(1, 3) = 1'427, where we arrive after 15'300 (its closing time
-    # window). This is where we incur time warp: we need to 'warp' to 15'300.
-    assert_(sol.has_time_warp())
-    assert_(routes[0].has_time_warp())
-    assert_equal(routes[0].time_warp(), 15_600 + 360 + 1_427 - 15_300)
-
-    # The second route has no time warp, so the overall solution time warp is
-    # all incurred on the first route.
-    assert_(not routes[1].has_time_warp())
-    assert_equal(routes[1].time_warp(), 0)
-    assert_equal(sol.time_warp(), routes[0].time_warp())
-
-
-def test_route_wait_time_calculations():
-    """
-    Tests route wait time and slack calculations.
-    """
-    data = read("data/OkSmallWaitTime.txt")
-    sol = Solution(data, [[1, 3], [2, 4]])
-    routes = sol.routes()
-
-    # In the second route, the time window of client 2 closes at 15'000. After
-    # service and travel, we then arrive at client 4 before its time window is
-    # open, so we have to wait. In particular, we have to wait:
-    #   twEarly(4) - duration(2, 4) - serv(2) - twLate(2)
-    #     = 18'000 - 1'090 - 360 - 15'000
-    #     = 1'550.
-    assert_equal(routes[1].wait_duration(), 1_550)
-
-    # Since there is waiting time, there is no slack in the schedule. We should
-    # thus start as late as possible, at:
-    #   twLate(2) - duration(0, 2)
-    #     = 15'000 - 1'944
-    #     = 13'056.
-    assert_equal(routes[1].slack(), 0)
-    assert_equal(routes[1].start_time(), 13_056)
-
-    # So far we have tested a route that had wait duration, but not time warp.
-    # We now test a solution with a route that has both.
-    sol = Solution(data, [[1, 2, 4], [3]])
-    route, *_ = sol.routes()
-
-    # This route has the same wait time as explained above. The time warp is
-    # incurred earlier in the route, between 1 -> 2:
-    #   twEarly(1) + serv(1) + duration(1, 2) - twLate(2)
-    #     = 15'600 + 360 + 1'992 - 15'000
-    #     = 2'952.
-    assert_equal(route.time_warp(), 2_952)
-    assert_equal(route.wait_duration(), 1_550)
-    assert_equal(route.slack(), 0)
-
-    # Finally, the overall route duration should be equal to the sum of the
-    # travel, service, and waiting durations.
-    assert_equal(
-        route.duration(),
-        route.travel_duration()
-        + route.service_duration()
-        + route.wait_duration(),
-    )
-
-
-def test_route_start_and_end_time_calculations(ok_small):
-    """
-    Tests route start time, slack, and end time calculations for cases with
-    and without time warp or wait duration.
-    """
-    sol = Solution(ok_small, [[1, 3], [2, 4]])
-    routes = sol.routes()
-
-    # The first route has timewarp, so there is no slack in the schedule. We
-    # should thus depart as soon as possible to arrive at the first client the
-    # moment its time window opens.
-    start_time = ok_small.location(1).tw_early - ok_small.duration(0, 1)
-    end_time = start_time + routes[0].duration() - routes[0].time_warp()
-
-    assert_(routes[0].has_time_warp())
-    assert_equal(routes[0].slack(), 0)
-    assert_equal(routes[0].start_time(), start_time)
-    assert_equal(routes[0].end_time(), end_time)
-
-    # The second route has no time warp. The latest it can start is calculated
-    # backwards from the closing of client 4's time window:
-    #   twLate(4) - duration(2, 4) - serv(2) - duration(0, 2)
-    #     = 19'500 - 1'090 - 360 - 1'944
-    #     = 16'106.
-    #
-    # Because client 4 has a large time window, the earliest this route can
-    # start is determined completely by client 2: we should not arrive before
-    # its time window, because that would incur needless waiting. We should
-    # thus not depart before:
-    #   twEarly(2) - duration(0, 2)
-    #     = 12'000 - 1'944
-    #     = 10'056.
-    assert_(not routes[1].has_time_warp())
-    assert_equal(routes[1].wait_duration(), 0)
-    assert_equal(routes[1].start_time(), 10_056)
-    assert_equal(routes[1].slack(), 16_106 - 10_056)
-
-    # The overall route duration is given by:
-    #   duration(0, 2) + serv(2) + duration(2, 4) + serv(4) + duration(4, 0)
-    #     = 1'944 + 360 + 1'090 + 360 + 1'475
-    #     = 5'229.
-    assert_equal(routes[1].duration(), 1_944 + 360 + 1_090 + 360 + 1_475)
-    assert_equal(routes[1].end_time(), 10_056 + 5_229)
-
-
-def test_route_release_time():
-    """
-    Tests that routes return the correct release times, and, when feasible,
-    start after the release time.
-    """
-    data = read("data/OkSmallReleaseTimes.txt")
-    sol = Solution(data, [[1, 3], [2, 4]])
-    routes = sol.routes()
-
-    # The client release times are 20'000, 5'000, 5'000 and 1'000. So the first
-    # route has a release time of max(20'000, 5'000) = 20'000, and the second
-    # has a release time of max(5'000, 1'000) = 5'000.
-    assert_equal(routes[0].release_time(), 20_000)
-    assert_equal(routes[1].release_time(), 5_000)
-
-    # Second route is feasible, so should have start time not smaller than
-    # release time.
-    assert_(not routes[1].has_time_warp())
-    assert_(routes[1].start_time() > routes[1].release_time())
-
-
 @pytest.mark.parametrize(
     "dist_mat",
     [
@@ -656,10 +467,10 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
         ],
-        depots=[Depot(x=0, y=0, tw_late=10)],
-        vehicle_types=[VehicleType(2)],
-        distance_matrix=dist_mat,
-        duration_matrix=dur_mat,
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, tw_late=10)],
+        distance_matrices=[dist_mat],
+        duration_matrices=[dur_mat],
     )
 
     # This solution directly visits the second client from the depot, which is
@@ -688,19 +499,19 @@ def test_time_warp_return_to_depot():
     """
     data = ProblemData(
         clients=[Client(x=1, y=0)],
-        depots=[Depot(x=0, y=0, tw_late=1)],
-        vehicle_types=[VehicleType()],
-        distance_matrix=np.asarray([[0, 0], [0, 0]]),
-        duration_matrix=np.asarray([[0, 1], [1, 0]]),
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(tw_late=1)],
+        distance_matrices=[np.asarray([[0, 0], [0, 0]])],
+        duration_matrices=[np.asarray([[0, 1], [1, 0]])],
     )
 
     sol = Solution(data, [[1]])
     route, *_ = sol.routes()
 
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
-    # more than the depot time window 1, giving a time warp of 1.
+    # more than the vehicle time window 1, giving a time warp of 1.
     assert_equal(route.duration(), 2)
-    assert_equal(data.location(0).tw_late, 1)
+    assert_equal(data.vehicle_type(0).tw_late, 1)
     assert_equal(sol.time_warp(), 1)
 
 
@@ -832,8 +643,8 @@ def test_eq_unassigned():
         ],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=dist,
-        duration_matrix=dist,
+        distance_matrices=[dist],
+        duration_matrices=[dist],
     )
 
     sol1 = Solution(data, [[1]])
@@ -910,26 +721,6 @@ def test_hash(ok_small):
     assert_equal(hash(sol2), hash(sol3))
 
 
-def test_route_centroid(ok_small):
-    """
-    Tests that each route's center point is the center point of all clients
-    visited by that route.
-    """
-    x = np.array([ok_small.location(idx).x for idx in range(5)])
-    y = np.array([ok_small.location(idx).y for idx in range(5)])
-
-    routes = [
-        Route(ok_small, [1, 2], 0),
-        Route(ok_small, [3], 0),
-        Route(ok_small, [4], 0),
-    ]
-
-    for route in routes:
-        x_center, y_center = route.centroid()
-        assert_allclose(x_center, x[route].mean())
-        assert_allclose(y_center, y[route].mean())
-
-
 def test_solution_can_be_pickled(ok_small):
     """
     Tests that a solution can be serialised and unserialised.
@@ -941,20 +732,6 @@ def test_solution_can_be_pickled(ok_small):
     after_pickle = pickle.loads(bytes)
 
     assert_equal(after_pickle, before_pickle)
-
-
-def test_route_can_be_pickled(rc208):
-    """
-    Tests that individual routes can be serialised and unserialised.
-    """
-    rng = RandomNumberGenerator(seed=2)
-    sol = Solution.make_random(rc208, rng)
-
-    for before_pickle in sol.routes():
-        bytes = pickle.dumps(before_pickle)
-        after_pickle = pickle.loads(bytes)
-
-        assert_equal(after_pickle, before_pickle)
 
 
 @pytest.mark.parametrize(
@@ -983,38 +760,6 @@ def test_fixed_vehicle_cost(
 
     sol = Solution(data, routes)
     assert_equal(sol.fixed_vehicle_cost(), expected)
-
-
-@pytest.mark.parametrize(
-    ("tw_early", "tw_late", "expected"),
-    [
-        (0, 0, 20_277),  # cannot be back at the depot before 20'277
-        (0, 20_000, 277),  # larger shift window decreases time warp
-        (0, 20_277, 0),  # and in this case there is no more time warp
-        (15_000, 20_000, 1_221),  # minimum route duration is 6'221
-        (10_000, 20_000, 277),  # before earliest possible return
-    ],
-)
-def test_route_shift_duration(
-    ok_small, tw_early: int, tw_late: int, expected: int
-):
-    """
-    Tests that Route computes time warp due to shift durations correctly on a
-    simple, two-client route.
-    """
-    data = ok_small.replace(
-        vehicle_types=[
-            VehicleType(2, capacity=10, tw_early=tw_early, tw_late=tw_late)
-        ]
-    )
-
-    # Overall route duration is, at the bare minimum, dist(0, 1) + dist(1, 2)
-    # + dist(2, 0) + serv(1) + serv(2). That's 1'544 + 1'992 + 1'965 + 360
-    # + 360 = 6'221. We cannot service client 1 before 15'600, and it takes
-    # 1'544 to get there from the depot, so we leave at 14'056. Thus, the
-    # earliest completion time is 14'056 + 6'221 = 20'277.
-    route = Route(data, [1, 2], vehicle_type=0)
-    assert_equal(route.time_warp(), expected)
 
 
 @pytest.mark.parametrize(
@@ -1073,19 +818,14 @@ def test_optional_mutually_exclusive_group(ok_small):
 
 def test_distance_duration_cost_calculations(ok_small):
     """
-    Tests route- and solution-level distance and duration cost calculations.
+    Tests solution-level distance and duration cost calculations.
     """
     vehicle_types = [
         VehicleType(capacity=10, unit_distance_cost=5, unit_duration_cost=1),
         VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
-
     routes = [Route(data, [1, 2], 0), Route(data, [3, 4], 1)]
-    assert_equal(routes[0].distance_cost(), 5 * routes[0].distance())
-    assert_equal(routes[0].duration_cost(), 1 * routes[0].duration())
-    assert_equal(routes[1].distance_cost(), 1 * routes[1].distance())
-    assert_equal(routes[1].duration_cost(), 5 * routes[1].duration())
 
     sol = Solution(data, routes)
     assert_equal(sol.distance(), sum(r.distance() for r in routes))

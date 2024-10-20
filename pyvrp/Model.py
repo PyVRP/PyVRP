@@ -24,6 +24,12 @@ if TYPE_CHECKING:
 class Edge:
     """
     Stores an edge connecting two locations.
+
+    Raises
+    ------
+    ValueError
+        When either distance or duration is a negative value, or when self
+        loops have nonzero distance or duration values.
     """
 
     __slots__ = ["frm", "to", "distance", "duration"]
@@ -35,10 +41,54 @@ class Edge:
         distance: int,
         duration: int,
     ):
+        if distance < 0 or duration < 0:
+            raise ValueError("Cannot have negative edge distance or duration.")
+
+        if id(frm) == id(to) and (distance != 0 or duration != 0):
+            raise ValueError("A self loop must have 0 distance and duration.")
+
+        if max(distance, duration) > MAX_VALUE:
+            msg = """
+            The given distance or duration value is very large. This may impact
+            numerical stability. Consider rescaling your input data.
+            """
+            warn(msg, ScalingWarning)
+
         self.frm = frm
         self.to = to
         self.distance = distance
         self.duration = duration
+
+
+class Profile:
+    """
+    Stores a routing profile.
+
+    A routing profile is a collection of edges with distance and duration
+    attributes that together define a complete distance and duration matrix.
+    These can be used to model, for example, the road uses of different types
+    of vehicles, like trucks, cars, or bicyclists. Each
+    :class:`~pyvrp._pyvrp.VehicleType` is associated with a routing profile.
+    """
+
+    edges: list[Edge]
+
+    def __init__(self):
+        self.edges = []
+
+    def add_edge(
+        self,
+        frm: Union[Client, Depot],
+        to: Union[Client, Depot],
+        distance: int,
+        duration: int = 0,
+    ) -> Edge:
+        """
+        Adds a new edge to this routing profile.
+        """
+        edge = Edge(frm, to, distance, duration)
+        self.edges.append(edge)
+        return edge
 
 
 class Model:
@@ -51,6 +101,7 @@ class Model:
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
         self._groups: list[ClientGroup] = []
+        self._profiles: list[Profile] = []
         self._vehicle_types: list[VehicleType] = []
 
     @property
@@ -68,6 +119,13 @@ class Model:
         Returns all client groups currently in the model.
         """
         return self._groups
+
+    @property
+    def profiles(self) -> list[Profile]:
+        """
+        Returns all routing profiles currently in the model.
+        """
+        return self._profiles
 
     @property
     def vehicle_types(self) -> list[VehicleType]:
@@ -97,22 +155,27 @@ class Model:
         depots = data.depots()
         clients = data.clients()
         locs = depots + clients
-        edges = [
-            Edge(
-                frm=locs[frm],
-                to=locs[to],
-                distance=data.dist(frm, to),
-                duration=data.duration(frm, to),
-            )
-            for frm in range(data.num_locations)
-            for to in range(data.num_locations)
-        ]
+
+        profiles = [Profile() for _ in range(data.num_profiles)]
+        for idx, profile in enumerate(profiles):
+            distances = data.distance_matrix(profile=idx)
+            durations = data.duration_matrix(profile=idx)
+            profile.edges = [
+                Edge(
+                    frm=locs[frm],
+                    to=locs[to],
+                    distance=distances[frm, to],
+                    duration=durations[frm, to],
+                )
+                for frm in range(data.num_locations)
+                for to in range(data.num_locations)
+            ]
 
         self = Model()
         self._clients = clients
         self._depots = depots
-        self._edges = edges
         self._groups = data.groups()
+        self._profiles = profiles
         self._vehicle_types = data.vehicle_types()
 
         return self
@@ -191,8 +254,6 @@ class Model:
         self,
         x: int,
         y: int,
-        tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
         *,
         name: str = "",
     ) -> Depot:
@@ -200,7 +261,7 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
+        depot = Depot(x=x, y=y, name=name)
         self._depots.append(depot)
 
         for group in self._groups:  # new depot invalidates client indices
@@ -218,6 +279,7 @@ class Model:
         to: Union[Client, Depot],
         distance: int,
         duration: int = 0,
+        profile: Optional[Profile] = None,
     ) -> Edge:
         """
         Adds an edge :math:`(i, j)` between ``frm`` (:math:`i`) and ``to``
@@ -225,34 +287,34 @@ class Model:
         Distance is required, but the default duration is zero. Returns the
         created edge.
 
-        Raises
-        ------
-        ValueError
-            When either distance or duration is a negative value, or when self
-            loops have nonzero distance or duration values.
+        .. note::
+
+           If ``profile`` is not provided, the edge is a base edge that will be
+           set for all profiles in the model. Any profile-specific edge takes
+           precendence over a base edge with the same ``frm`` and ``to``
+           locations.
         """
-        if distance < 0 or duration < 0:
-            raise ValueError("Cannot have negative edge distance or duration.")
-
-        if frm == to and (distance != 0 or duration != 0):
-            raise ValueError("A self loop must have 0 distance and duration.")
-
-        if max(distance, duration) > MAX_VALUE:
-            msg = """
-            The given distance or duration value is very large. This may impact
-            numerical stability. Consider rescaling your input data.
-            """
-            warn(msg, ScalingWarning)
+        if profile is not None:
+            return profile.add_edge(frm, to, distance, duration)
 
         edge = Edge(frm=frm, to=to, distance=distance, duration=duration)
         self._edges.append(edge)
         return edge
 
+    def add_profile(self) -> Profile:
+        """
+        Adds a new routing profile to the model.
+        """
+        profile = Profile()
+        self._profiles.append(profile)
+        return profile
+
     def add_vehicle_type(
         self,
         num_available: int = 1,
         capacity: int = 0,
-        depot: Optional[Depot] = None,
+        start_depot: Optional[Depot] = None,
+        end_depot: Optional[Depot] = None,
         fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
@@ -260,6 +322,7 @@ class Model:
         max_distance: int = np.iinfo(np.int64).max,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
+        profile: Optional[Profile] = None,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -269,25 +332,41 @@ class Model:
 
         .. note::
 
-           The vehicle type is assigned to the first depot if ``depot`` is not
-           provided.
+           The vehicle type is assigned to the first depot if no depot
+           information is provided.
 
         Raises
         ------
         ValueError
-            When the given ``depot`` is not in this model instance.
+            When the given ``depot`` or ``profile`` arguments are not in this
+            model instance.
         """
-        if depot is None:
-            depot_idx = 0
-        elif depot in self._depots:
-            depot_idx = self._depots.index(depot)
+        if start_depot is None:
+            start_idx = 0
+        elif start_depot in self._depots:
+            start_idx = self._depots.index(start_depot)
         else:
-            raise ValueError("The given depot is not in this model instance.")
+            raise ValueError("The given start depot is not in this model.")
+
+        if end_depot is None:
+            end_idx = 0
+        elif end_depot in self._depots:
+            end_idx = self._depots.index(end_depot)
+        else:
+            raise ValueError("The given end depot is not in this model.")
+
+        if profile is None:
+            profile_idx = 0
+        elif profile in self._profiles:
+            profile_idx = self._profiles.index(profile)
+        else:
+            raise ValueError("The given profile is not in this model.")
 
         vehicle_type = VehicleType(
             num_available=num_available,
             capacity=capacity,
-            depot=depot_idx,
+            start_depot=start_idx,
+            end_depot=end_idx,
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -295,6 +374,7 @@ class Model:
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
+            profile=profile_idx,
             name=name,
         )
 
@@ -309,18 +389,42 @@ class Model:
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
-        # Default value is a sufficiently large value to make sure any edges
-        # not set below are never traversed.
-        distances = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
-        durations = np.full((len(locs), len(locs)), MAX_VALUE, dtype=np.int64)
-        np.fill_diagonal(distances, 0)
-        np.fill_diagonal(durations, 0)
+        # First we create the base distance and duration matrices. These are
+        # shared by all routing profiles. If an edge was not specified, we use
+        # a large default value here.
+        base_distance = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
+        base_duration = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
+        np.fill_diagonal(base_distance, 0)
+        np.fill_diagonal(base_duration, 0)
 
         for edge in self._edges:
             frm = loc2idx[id(edge.frm)]
             to = loc2idx[id(edge.to)]
-            distances[frm, to] = edge.distance
-            durations[frm, to] = edge.duration
+            base_distance[frm, to] = edge.distance
+            base_duration[frm, to] = edge.duration
+
+        # Now we create the profile-specific distance and duration matrices.
+        # These are based on the base matrices.
+        distances = []
+        durations = []
+        for profile in self._profiles:
+            prof_distance = base_distance.copy()
+            prof_duration = base_duration.copy()
+
+            for edge in profile.edges:
+                frm = loc2idx[id(edge.frm)]
+                to = loc2idx[id(edge.to)]
+                prof_distance[frm, to] = edge.distance
+                prof_duration[frm, to] = edge.duration
+
+            distances.append(prof_distance)
+            durations.append(prof_duration)
+
+        # When the user has not provided any profiles, we create an implicit
+        # first profile from the base matrices.
+        if not self._profiles:
+            distances = [base_distance]
+            durations = [base_duration]
 
         return ProblemData(
             self._clients,

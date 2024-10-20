@@ -11,44 +11,60 @@ project(
     ]
 )
 
-if get_option('buildtype') == 'debug'
-    compiler = meson.get_compiler('cpp')
-
-    if compiler.has_argument('-fprofile-abs-path')
-        # clang does not have this particular flag, so we only add it when
-        # compiling with gcc. It's helpful in determining code coverage.
-        add_project_arguments('-fprofile-abs-path', language: 'cpp')
-    endif
-
-    add_project_arguments('--coverage', language: 'cpp')
-    add_project_link_arguments('--coverage', language: 'cpp')
+compiler = meson.get_compiler('cpp')
+if compiler.has_argument('-Wno-dangling-reference')
+    # This is a new diagnostic in GCC 13 and up, but it is a bit buggy right
+    # now and issues false positives for some of our code. See #656 and #657
+    # for details.
+    add_project_arguments('-Wno-dangling-reference', language: 'cpp')
 endif
 
-# We first compile a common library that contains all regular, C++ code. This
-# is then linked against by the extension modules. We also define source and
-# installation directories here, as a shorthand.
-INST_DIR = 'pyvrp'
+# We first compile static libraries that contains all regular, C++ code, one
+# per extension module. These are linked against when we compile the actual 
+# Python extension modules down below. We also define the top-level source 
+# directory here, for convenience.
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
 
-libcommon = static_library(
-    'common',
+libpyvrp = static_library(
+    'pyvrp',
     [
         SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'DistanceSegment.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'RandomNumberGenerator.cpp',
+        SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
         SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
+    ],
+    include_directories: INCLUDES,
+)
+
+libcrossover = static_library(
+    'crossover',
+    [
         SRC_DIR / 'crossover' / 'ordered_crossover.cpp',
         SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: libpyvrp,
+)
+
+libdiversity = static_library(
+    'diversity',
+    [
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
-        SRC_DIR / 'repair' / 'greedy_repair.cpp',
-        SRC_DIR / 'repair' / 'nearest_route_insert.cpp',
-        SRC_DIR / 'repair' / 'repair.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: libpyvrp,
+)
+
+libsearch = static_library(
+    'search',
+    [
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'primitives.cpp',
@@ -57,22 +73,35 @@ libcommon = static_library(
         SRC_DIR / 'search' / 'SwapTails.cpp',
     ],
     include_directories: INCLUDES,
+    link_with: libpyvrp,
 )
 
-# Next we get the extension dependencies.
+librepair = static_library(
+    'repair',
+    [
+        SRC_DIR / 'repair' / 'greedy_repair.cpp',
+        SRC_DIR / 'repair' / 'nearest_route_insert.cpp',
+        SRC_DIR / 'repair' / 'repair.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: [libpyvrp, libsearch],  # uses search to evaluate repair moves
+)
+
+# Extension as [extension name, subdirectory, core C++ library]. The extension
+# name names the eventual module name, subdirectory gives the source and
+# installation directories (relative to top-level directories), and the core 
+# C++ library is one of the static libraries we defined above.
+extensions = [
+    ['pyvrp', '', libpyvrp],
+    ['crossover', 'crossover', libcrossover],
+    ['diversity', 'diversity', libdiversity],
+    ['repair', 'repair', librepair],
+    ['search', 'search', libsearch],
+]
+
+# Extension dependencies: Python itself, and pybind11.
 py = import('python').find_installation()
 dependencies = [py.dependency(), dependency('pybind11')]
-
-# Extension as [extension name, subdirectory]. The 'extension name' names the
-# eventual module name, and 'subdirectory' gives the source and installation 
-# directories (relative to SRC_DIR and INST_DIR).
-extensions = [
-    ['pyvrp', ''],
-    ['crossover', 'crossover'],
-    ['diversity', 'diversity'],
-    ['repair', 'repair'],
-    ['search', 'search'],
-]
 
 foreach extension : extensions
     rawname = extension[0]
@@ -100,9 +129,9 @@ foreach extension : extensions
         name,
         [SRC_DIR / subdir / 'bindings.cpp', doc_output_header],
         dependencies: dependencies,
-        link_with: libcommon,
+        link_with: extension[2],
         install: true,
-        subdir: INST_DIR / subdir,
+        subdir: 'pyvrp' / subdir,
         include_directories: INCLUDES,
     )
 endforeach

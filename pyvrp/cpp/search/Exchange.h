@@ -1,5 +1,5 @@
-#ifndef PYVRP_EXCHANGE_H
-#define PYVRP_EXCHANGE_H
+#ifndef PYVRP_SEARCH_EXCHANGE_H
+#define PYVRP_SEARCH_EXCHANGE_H
 
 #include "LocalSearchOperator.h"
 #include "Route.h"
@@ -244,4 +244,4 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 }
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_EXCHANGE_H
+#endif  // PYVRP_SEARCH_EXCHANGE_H

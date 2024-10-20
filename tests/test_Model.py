@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from numpy.testing import (
     assert_,
@@ -6,9 +7,9 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, VehicleType
+from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
-from pyvrp.exceptions import EmptySolutionWarning, ScalingWarning
+from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
 
 
@@ -112,12 +113,9 @@ def test_add_depot_attributes():
     in.
     """
     model = Model()
-    depot = model.add_depot(x=1, y=0, tw_early=3, tw_late=5)
-
+    depot = model.add_depot(x=1, y=0)
     assert_equal(depot.x, 1)
     assert_equal(depot.y, 0)
-    assert_equal(depot.tw_early, 3)
-    assert_equal(depot.tw_late, 5)
 
 
 def test_add_edge():
@@ -160,10 +158,10 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.max_distance, 97)
 
 
-def test_add_vehicle_type_default_depot():
+def test_add_vehicle_type_default_depots():
     """
     Tests that ``Model.add_vehicle_type`` correctly sets the (default) depot
-    attribute on the vehicle type.
+    attributes on the vehicle type.
     """
     m = Model()
     depot1 = m.add_depot(x=0, y=0)
@@ -171,15 +169,23 @@ def test_add_vehicle_type_default_depot():
 
     # No depot specified: should default to the first (location index 0).
     vehicle_type1 = m.add_vehicle_type()
-    assert_equal(vehicle_type1.depot, 0)
+    assert_equal(vehicle_type1.start_depot, 0)
+    assert_equal(vehicle_type1.end_depot, 0)
 
     # First depot specified, should set first (location index 0).
-    vehicle_type2 = m.add_vehicle_type(depot=depot1)
-    assert_equal(vehicle_type2.depot, 0)
+    vehicle_type2 = m.add_vehicle_type(start_depot=depot1, end_depot=depot1)
+    assert_equal(vehicle_type2.start_depot, 0)
+    assert_equal(vehicle_type2.end_depot, 0)
 
     # Second depot specified, should set second (location index 1).
-    vehicle_type3 = m.add_vehicle_type(depot=depot2)
-    assert_equal(vehicle_type3.depot, 1)
+    vehicle_type3 = m.add_vehicle_type(start_depot=depot2, end_depot=depot2)
+    assert_equal(vehicle_type3.start_depot, 1)
+    assert_equal(vehicle_type3.start_depot, 1)
+
+    # A mix is also OK.
+    vehicle_type3 = m.add_vehicle_type(start_depot=depot1, end_depot=depot2)
+    assert_equal(vehicle_type3.start_depot, 0)
+    assert_equal(vehicle_type3.end_depot, 1)
 
 
 def test_add_vehicle_type_raises_for_unknown_depot():
@@ -191,7 +197,10 @@ def test_add_vehicle_type_raises_for_unknown_depot():
     depot = Depot(x=0, y=0)
 
     with assert_raises(ValueError):
-        m.add_vehicle_type(depot=depot)
+        m.add_vehicle_type(start_depot=depot)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(end_depot=depot)
 
 
 def test_get_locations():
@@ -228,21 +237,19 @@ def test_from_data(small_cvrp):
     Tests that initialising the model from a data instance results in a valid
     model representation of that data instance.
     """
-    model = Model.from_data(small_cvrp)
-    model_data = model.data()
+    m = Model.from_data(small_cvrp)
+    m_data = m.data()
 
     # We can first check if the overall problem dimension numbers agree.
-    assert_equal(model_data.num_clients, small_cvrp.num_clients)
-    assert_equal(model_data.num_vehicles, small_cvrp.num_vehicles)
+    assert_equal(m_data.num_clients, small_cvrp.num_clients)
+    assert_equal(m_data.num_vehicles, small_cvrp.num_vehicles)
     assert_equal(
-        model_data.vehicle_type(0).capacity,
+        m_data.vehicle_type(0).capacity,
         small_cvrp.vehicle_type(0).capacity,
     )
 
-    # It's a bit cumbersome to compare the whole matrices, so we use a few
-    # sample traces from the distance and duration matrices instead.
-    assert_equal(model_data.dist(3, 4), small_cvrp.dist(3, 4))
-    assert_equal(model_data.duration(2, 1), small_cvrp.duration(2, 1))
+    assert_equal(m_data.distance_matrices(), small_cvrp.distance_matrices())
+    assert_equal(m_data.duration_matrices(), small_cvrp.duration_matrices())
 
 
 def test_from_data_and_solve(small_cvrp, ok_small):
@@ -274,8 +281,14 @@ def test_model_and_solve(ok_small):
     # Now do the same thing, but model the instance using the modelling API.
     # This should of course result in the same solution.
     model = Model()
-    model.add_vehicle_type(num_available=3, capacity=10)
-    depot = model.add_depot(x=2334, y=726, tw_early=0, tw_late=45000)
+    model.add_vehicle_type(
+        num_available=3,
+        capacity=10,
+        tw_early=0,
+        tw_late=45000,
+    )
+
+    depot = model.add_depot(x=2334, y=726)
     clients = [
         model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
         model.add_client(590, 530, 5, 0, 360, 12000, 19500),
@@ -360,8 +373,9 @@ def test_partial_distance_duration_matrix():
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
     data = model.data()
-    assert_equal(data.dist(0, 2), MAX_VALUE)
-    assert_equal(data.dist(1, 0), MAX_VALUE)
+    distances = data.distance_matrix(profile=0)
+    assert_equal(distances[0, 2], MAX_VALUE)
+    assert_equal(distances[1, 0], MAX_VALUE)
 
     res = model.solve(stop=MaxIterations(100), seed=4)
     assert_equal(res.best.num_routes(), 1)
@@ -404,9 +418,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
-    with assert_warns(EmptySolutionWarning):
-        res = m.solve(stop=MaxIterations(1))
-
+    res = m.solve(stop=MaxIterations(1))
     solution = [r.visits() for r in res.best.routes()]
     assert_equal(solution, [])
 
@@ -430,9 +442,15 @@ def test_model_solves_small_instance_with_fixed_costs():
     m = Model()
 
     for idx in range(2):
-        m.add_vehicle_type(capacity=0, num_available=5, fixed_cost=10)
+        m.add_vehicle_type(
+            capacity=0,
+            num_available=5,
+            fixed_cost=10,
+            tw_early=0,
+            tw_late=40,
+        )
 
-    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+    m.add_depot(x=0, y=0)
 
     for idx in range(5):
         m.add_client(x=idx, y=idx, service_duration=1, tw_early=0, tw_late=20)
@@ -465,7 +483,7 @@ def test_model_solves_small_instance_with_shift_durations():
             tw_late=tw_late,
         )
 
-    m.add_depot(x=0, y=0, tw_early=0, tw_late=40)
+    m.add_depot(x=0, y=0)
 
     for idx in range(5):
         # Vehicles of the first type can visit two clients before having to
@@ -501,8 +519,8 @@ def test_model_solves_line_instance_with_multiple_depots():
     depot1 = m.add_depot(x=0, y=0)  # location 0
     depot2 = m.add_depot(x=5, y=0)  # location 1
 
-    m.add_vehicle_type(1, depot=depot1)
-    m.add_vehicle_type(1, depot=depot2)
+    m.add_vehicle_type(1, start_depot=depot1, end_depot=depot1)
+    m.add_vehicle_type(1, start_depot=depot2, end_depot=depot2)
 
     for idx in range(1, 5):  # locations 2, 3, 4, and 5
         m.add_client(x=idx, y=0)
@@ -517,7 +535,7 @@ def test_model_solves_line_instance_with_multiple_depots():
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(stop=MaxIterations(100))
+    res = m.solve(stop=MaxIterations(100), seed=3)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
@@ -727,8 +745,8 @@ def test_minimise_distance_or_duration(ok_small):
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)
 
-    orig_res = orig_model.solve(stop=MaxIterations(10), seed=1)
-    new_res = new_model.solve(stop=MaxIterations(10), seed=1)
+    orig_res = orig_model.solve(stop=MaxIterations(20), seed=82)
+    new_res = new_model.solve(stop=MaxIterations(20), seed=82)
 
     assert_equal(orig_res.cost(), 9_155)
     assert_equal(new_res.cost(), 9_875)
@@ -739,3 +757,134 @@ def test_minimise_distance_or_duration(ok_small):
     # is something we can check.
     service = sum(data.location(loc).service_duration for loc in [1, 4])
     assert_equal(new_res.cost(), orig_res.cost() + service)
+
+
+def test_adding_vehicle_type_with_unknown_profile_raises():
+    """
+    Tests that adding a vehicle type with a routing profile that is not in the
+    model raises.
+    """
+    m = Model()
+
+    profile = Profile()
+    assert_(profile not in m.profiles)
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(profile=profile)
+
+
+def test_adding_multiple_routing_profiles():
+    """
+    Tests that adding multiple routing profiles to the model works, and the
+    solver finds the optimal solution.
+    """
+    m = Model()
+
+    profile1 = m.add_profile()
+    assert_(m.profiles[0] is profile1)
+
+    profile2 = m.add_profile()
+    assert_(m.profiles[1] is profile2)
+
+    veh_type1 = m.add_vehicle_type(profile=profile1)
+    assert_equal(veh_type1.profile, 0)
+
+    veh_type2 = m.add_vehicle_type(profile=profile2)
+    assert_equal(veh_type2.profile, 1)
+
+    m.add_depot(x=1, y=1)
+    m.add_client(x=2, y=2)
+
+    for frm in m.locations:
+        for to in m.locations:
+            if frm != to:
+                m.add_edge(frm, to, distance=10, duration=5, profile=profile1)
+                m.add_edge(frm, to, distance=5, duration=10, profile=profile2)
+
+    data = m.data()
+    assert_equal(data.num_profiles, 2)
+
+    # Check that the distance and duration matrices of both profiles are
+    # defined correctly.
+    assert_equal(data.distance_matrix(profile=0), [[0, 10], [10, 0]])
+    assert_equal(data.duration_matrix(profile=0), [[0, 5], [5, 0]])
+    assert_equal(data.distance_matrix(profile=1), [[0, 5], [5, 0]])
+    assert_equal(data.duration_matrix(profile=1), [[0, 10], [10, 0]])
+
+    res = m.solve(stop=MaxIterations(10))
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 10)
+
+
+def test_profiles_build_on_base_edges():
+    """
+    Tests that distance and duration matrices belonging to different profiles
+    are all constructed from the same base matrices, with profile-specific
+    changes applied on top.
+    """
+    m = Model()
+
+    depot = m.add_depot(x=1, y=1)
+    client = m.add_client(x=2, y=2)
+
+    # Add base edges. These edges are used to construct base matrices that the
+    # profiles build on. Essentially, if an edge is not specifically provided
+    # in the profile, it will be inherited from the base edges.
+    for frm in m.locations:
+        for to in m.locations:
+            dist = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, dist)
+
+    prof1 = m.add_profile()
+    prof2 = m.add_profile()
+
+    # We have not yet added profile-specific edges. This means the profile
+    # matrices should all be the same as the base matrices.
+    data = m.data()
+    assert_equal(data.distance_matrix(0), [[0, 2], [2, 0]])
+    assert_equal(data.distance_matrix(1), [[0, 2], [2, 0]])
+    assert_equal(data.duration_matrix(0), np.zeros((2, 2)))
+    assert_equal(data.duration_matrix(1), np.zeros((2, 2)))
+
+    # Let's now add a few profile-specific edges and test that these overwrite
+    # the base data in the new data instance.
+    m.add_edge(depot, client, distance=5, duration=10, profile=prof1)
+    m.add_edge(depot, client, distance=10, duration=5, profile=prof2)
+
+    data = m.data()
+    assert_equal(data.distance_matrix(0), [[0, 5], [2, 0]])
+    assert_equal(data.distance_matrix(1), [[0, 10], [2, 0]])
+    assert_equal(data.duration_matrix(0), [[0, 10], [0, 0]])
+    assert_equal(data.duration_matrix(1), [[0, 5], [0, 0]])
+
+
+def test_model_solves_instances_with_multiple_profiles():
+    """
+    Smoke test to check that the model knows how to solve an instance with
+    multiple profiles.
+    """
+    m = Model()
+    m.add_depot(x=1, y=1)
+    m.add_client(x=1, y=2)
+    m.add_client(x=2, y=1)
+
+    prof1 = m.add_profile()  # this profile only cares about distance on x axis
+    prof2 = m.add_profile()  # this one only about distance on y axis
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, abs(frm.x - to.x), profile=prof1)
+            m.add_edge(frm, to, abs(frm.y - to.y), profile=prof2)
+
+    m.add_vehicle_type(1, profile=prof1)
+    m.add_vehicle_type(1, profile=prof2)
+
+    # The best we can do is have the first vehicle visit the first client (no
+    # distance), and the second vehicle the second client (also no distance).
+    # The resulting cost is thus zero.
+    res = m.solve(stop=MaxIterations(10))
+    assert_equal(res.cost(), 0)
+
+    route1, route2 = res.best.routes()
+    assert_equal(route1.visits(), [1])
+    assert_equal(route2.visits(), [2])

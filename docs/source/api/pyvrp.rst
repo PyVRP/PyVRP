@@ -19,8 +19,11 @@ This object can be used to obtain the best observed solution, and detailed runti
 
    .. autoclass:: Model
       :members:
-   
+
    .. autoclass:: Edge
+      :members:
+
+   .. autoclass:: Profile
       :members:
 
 .. automodule:: pyvrp.GeneticAlgorithm
@@ -30,6 +33,9 @@ This object can be used to obtain the best observed solution, and detailed runti
 
    .. autoclass:: GeneticAlgorithm
       :members:
+
+.. automodule:: pyvrp.minimise_fleet
+   :members:
 
 .. automodule:: pyvrp.PenaltyManager
 
@@ -108,8 +114,8 @@ This object can be used to obtain the best observed solution, and detailed runti
 
 .. automodule:: pyvrp.exceptions
 
-   .. autoexception:: EmptySolutionWarning
-
    .. autoexception:: ScalingWarning
 
    .. autoexception:: TspWarning
+
+   .. autoexception:: PenaltyBoundWarning

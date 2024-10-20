@@ -1,3 +1,4 @@
+import pickle
 from typing import Optional
 
 import numpy as np
@@ -134,27 +135,6 @@ def test_raises_for_invalid_client_data(
         )
 
 
-@pytest.mark.parametrize(
-    ("x", "y", "tw_early", "tw_late"),
-    [
-        (0, 0, 1, 0),  # tw_early > tw_late
-        (0, 0, -1, 0),  # tw_early < 0
-        (0, 0, 0, -1),  # tw_late < 0
-    ],
-)
-def test_raises_for_invalid_depot_data(
-    x: int,
-    y: int,
-    tw_early: int,
-    tw_late: int,
-):
-    """
-    Tests that an invalid depot configuration is not accepted.
-    """
-    with assert_raises(ValueError):
-        Depot(x, y, tw_early, tw_late)
-
-
 def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
@@ -165,8 +145,8 @@ def test_problem_data_raises_when_no_depot_is_provided():
             clients=[],
             depots=[],
             vehicle_types=[VehicleType(2, capacity=1)],
-            distance_matrix=np.asarray([[]], dtype=int),
-            duration_matrix=np.asarray([[]], dtype=int),
+            distance_matrices=[np.asarray([[]], dtype=int)],
+            duration_matrices=[np.asarray([[]], dtype=int)],
         )
 
     # One (or more) depots should not raise.
@@ -174,8 +154,8 @@ def test_problem_data_raises_when_no_depot_is_provided():
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=np.asarray([[0]]),
-        duration_matrix=np.asarray([[0]]),
+        distance_matrices=[np.asarray([[0]])],
+        duration_matrices=[np.asarray([[0]])],
     )
 
 
@@ -200,10 +180,10 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, matrix, other_matrix)
+        ProblemData(clients, depots, vehicle_types, [matrix], [other_matrix])
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, other_matrix, matrix)
+        ProblemData(clients, depots, vehicle_types, [other_matrix], [matrix])
 
 
 @pytest.mark.parametrize(
@@ -224,7 +204,7 @@ def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
     vehicle_types = [VehicleType(2, capacity=1)]
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, dist_mat, dur_mat)
+        ProblemData(clients, depots, vehicle_types, [dist_mat], [dur_mat])
 
 
 def test_problem_data_replace_no_changes():
@@ -236,7 +216,7 @@ def test_problem_data_replace_no_changes():
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, depots, vehicle_types, mat, mat)
+    original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     new = original.replace()
 
@@ -255,11 +235,15 @@ def test_problem_data_replace_no_changes():
         assert_equal(new_veh_type.capacity, og_veh_type.capacity)
         assert_equal(new_veh_type.num_available, og_veh_type.num_available)
 
-    assert_(new.distance_matrix() is not original.distance_matrix())
-    assert_equal(new.distance_matrix(), original.distance_matrix())
+    new_dist = new.distance_matrix(profile=0)
+    orig_dist = original.distance_matrix(profile=0)
+    assert_(new_dist is not orig_dist)
+    assert_equal(new_dist, orig_dist)
 
-    assert_(new.duration_matrix() is not original.duration_matrix())
-    assert_equal(new.duration_matrix(), original.duration_matrix())
+    new_dur = new.duration_matrix(profile=0)
+    orig_dur = original.duration_matrix(profile=0)
+    assert_(new_dur is not orig_dur)
+    assert_equal(new_dur, orig_dur)
 
     assert_equal(new.num_clients, original.num_clients)
     assert_equal(new.num_vehicle_types, original.num_vehicle_types)
@@ -274,7 +258,7 @@ def test_problem_data_replace_with_changes():
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, depots, vehicle_types, mat, mat)
+    original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     # Let's replace the clients, vehicle types, and the distance matrix, each
     # with different values than in the original data. The duration matrix
@@ -282,7 +266,7 @@ def test_problem_data_replace_with_changes():
     new = original.replace(
         clients=[Client(x=1, y=1)],
         vehicle_types=[VehicleType(3, 4), VehicleType(5, 6)],
-        distance_matrix=np.where(np.eye(2), 0, 2),
+        distance_matrices=[np.where(np.eye(2), 0, 2)],
     )
 
     assert_(new is not original)
@@ -298,12 +282,12 @@ def test_problem_data_replace_with_changes():
         assert_(new_veh_type.capacity != og_veh_type.capacity)
         assert_(new_veh_type.num_available != og_veh_type.num_available)
 
-    assert_(new.distance_matrix() is not original.distance_matrix())
+    assert_(new.distance_matrix(0) is not original.distance_matrix(0))
     with assert_raises(AssertionError):
-        assert_equal(new.distance_matrix(), original.distance_matrix())
+        assert_equal(new.distance_matrix(0), original.distance_matrix(0))
 
-    assert_(new.duration_matrix() is not original.duration_matrix())
-    assert_equal(new.duration_matrix(), original.duration_matrix())
+    assert_(new.duration_matrix(0) is not original.duration_matrix(0))
+    assert_equal(new.duration_matrix(0), original.duration_matrix(0))
 
     assert_equal(new.num_clients, original.num_clients)
     assert_(new.num_vehicle_types != original.num_vehicle_types)
@@ -318,22 +302,22 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=1)]
     mat = np.zeros((2, 2), dtype=int)
-    data = ProblemData(clients, depots, vehicle_types, mat, mat)
+    data = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
-    with assert_raises(ValueError):
-        data.replace(clients=[])  # matrices are 2x2
+    with assert_raises(ValueError):  # matrices are 2x2
+        data.replace(clients=[])
 
-    with assert_raises(ValueError):
-        data.replace(distance_matrix=np.where(np.eye(3), 0, 1))  # two clients
+    with assert_raises(ValueError):  # two clients
+        data.replace(distance_matrices=[np.where(np.eye(3), 0, 1)])
 
-    with assert_raises(ValueError):
-        data.replace(duration_matrix=np.where(np.eye(3), 0, 1))  # two clients
+    with assert_raises(ValueError):  # two clients
+        data.replace(duration_matrices=[np.where(np.eye(3), 0, 1)])
 
     with assert_raises(ValueError):
         data.replace(
             clients=[Client(x=1, y=1)],
-            distance_matrix=np.where(np.eye(3), 0, 1),
-            duration_matrix=np.where(np.eye(3), 0, 1),
+            distance_matrices=[np.where(np.eye(3), 0, 1)],
+            duration_matrices=[np.where(np.eye(3), 0, 1)],
         )
 
 
@@ -351,8 +335,8 @@ def test_centroid(ok_small):
 
 def test_matrix_access():
     """
-    Tests that the ``duration()`` and ``dist()`` methods (and their matrix
-    access equivalents) correctly index the underlying data matrices.
+    Tests that the ``duration_matrix()`` and ``distance_matrix()`` methods
+    correctly return the underlying data matrices.
     """
     gen = default_rng(seed=42)
     size = 6
@@ -362,23 +346,16 @@ def test_matrix_access():
     np.fill_diagonal(dist_mat, 0)
     np.fill_diagonal(dur_mat, 0)
 
-    depot = Depot(x=0, y=0, tw_late=10)
-    clients = [Client(x=0, y=0, tw_late=10) for _ in range(size - 1)]
     data = ProblemData(
-        clients=clients,
-        depots=[depot],
+        clients=[Client(x=0, y=0, tw_late=10) for _ in range(size - 1)],
+        depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=dist_mat,
-        duration_matrix=dur_mat,
+        distance_matrices=[dist_mat],
+        duration_matrices=[dur_mat],
     )
 
-    assert_equal(data.distance_matrix(), dist_mat)
-    assert_equal(data.duration_matrix(), dur_mat)
-
-    for frm in range(size):
-        for to in range(size):
-            assert_equal(data.dist(frm, to), dist_mat[frm, to])
-            assert_equal(data.duration(frm, to), dur_mat[frm, to])
+    assert_equal(data.distance_matrix(profile=0), dist_mat)
+    assert_equal(data.duration_matrix(profile=0), dur_mat)
 
 
 def test_matrices_are_not_writeable():
@@ -394,12 +371,12 @@ def test_matrices_are_not_writeable():
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=np.array([[0]]),
-        duration_matrix=np.array([[0]]),
+        distance_matrices=[np.array([[0]])],
+        duration_matrices=[np.array([[0]])],
     )
 
-    dist_mat = data.distance_matrix()
-    dur_mat = data.duration_matrix()
+    dist_mat = data.distance_matrix(profile=0)
+    dur_mat = data.duration_matrix(profile=0)
 
     with assert_raises(ValueError):
         dist_mat[0, 0] = 1_000
@@ -419,24 +396,24 @@ def test_matrices_are_not_copies():
         clients=[Client(x=0, y=1)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2, capacity=1)],
-        distance_matrix=mat,
-        duration_matrix=mat,
+        distance_matrices=[mat],
+        duration_matrices=[mat],
     )
 
     # Ownership is taken, so the memory that's referenced is not that of the
     # matrices that are passed into ProblemData's constructor.
-    assert_(data.distance_matrix().base is not mat)
-    assert_(data.duration_matrix().base is not mat)
+    assert_(data.distance_matrix(profile=0).base is not mat)
+    assert_(data.duration_matrix(profile=0).base is not mat)
 
     # Repeated calls should return matrices that reference the same base data,
     # implying nothing is copied: the memory is not owned by the matrix.
-    dist1 = data.distance_matrix()
-    dist2 = data.distance_matrix()
+    dist1 = data.distance_matrix(profile=0)
+    dist2 = data.distance_matrix(profile=0)
     assert_(not dist1.flags["OWNDATA"])
     assert_(dist1.base is dist2.base)
 
-    dur1 = data.duration_matrix()
-    dur2 = data.duration_matrix()
+    dur1 = data.duration_matrix(profile=0)
+    dur2 = data.duration_matrix(profile=0)
     assert_(not dur1.flags["OWNDATA"])
     assert_(dur1.base is dur2.base)
 
@@ -486,7 +463,6 @@ def test_vehicle_type_raises_invalid_data(
         VehicleType(
             num_available=num_available,
             capacity=capacity,
-            depot=0,
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -505,7 +481,8 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     vehicle_type = VehicleType(
         num_available=1,
         capacity=0,
-        depot=0,
+        start_depot=0,
+        end_depot=0,
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
@@ -516,7 +493,8 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     )
 
     assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.depot, 0)
+    assert_equal(vehicle_type.start_depot, 0)
+    assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
@@ -534,7 +512,8 @@ def test_vehicle_type_default_values():
     """
     vehicle_type = VehicleType()
     assert_equal(vehicle_type.num_available, 1)
-    assert_equal(vehicle_type.depot, 0)
+    assert_equal(vehicle_type.start_depot, 0)
+    assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, 0)
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
@@ -556,7 +535,8 @@ def test_vehicle_type_attribute_access():
     """
     vehicle_type = VehicleType(
         num_available=7,
-        depot=29,
+        start_depot=29,
+        end_depot=43,
         capacity=13,
         fixed_cost=3,
         tw_early=17,
@@ -569,7 +549,8 @@ def test_vehicle_type_attribute_access():
     )
 
     assert_equal(vehicle_type.num_available, 7)
-    assert_equal(vehicle_type.depot, 29)
+    assert_equal(vehicle_type.start_depot, 29)
+    assert_equal(vehicle_type.end_depot, 43)
     assert_equal(vehicle_type.capacity, 13)
     assert_equal(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.tw_early, 17)
@@ -581,6 +562,24 @@ def test_vehicle_type_attribute_access():
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
+
+
+def test_vehicle_type_replace():
+    """
+    Tests that calling replace() on a VehicleType functions correctly.
+    """
+    vehicle_type = VehicleType(num_available=7, capacity=10, name="test")
+    assert_equal(vehicle_type.num_available, 7)
+    assert_equal(vehicle_type.capacity, 10)
+    assert_equal(vehicle_type.name, "test")
+
+    # Replacing the number of available vehicles and name should be reflected
+    # in the returned vehicle type, but any other values should remain the same
+    # as the original. In particular, capacity should not be changed.
+    new = vehicle_type.replace(num_available=5, name="new")
+    assert_equal(new.num_available, 5)
+    assert_equal(new.capacity, 10)
+    assert_equal(new.name, "new")
 
 
 @pytest.mark.parametrize("idx", [5, 6])
@@ -596,15 +595,17 @@ def test_location_raises_invalid_index(ok_small, idx: int):
 
 
 @pytest.mark.parametrize(
-    ("depot", "should_raise"),
+    ("start_depot", "end_depot", "should_raise"),
     [
-        (0, False),  # correct index - should not raise
-        (1, True),  # index is the number of depots: too large; should raise
-        (2, True),  # index is too large; should raise
+        (0, 0, False),  # correct; index smaller than number of depots
+        (1, 0, True),  # index is too large; same as number of depots
+        (0, 1, True),  # index is too large; same as number of depots
+        (2, 0, True),  # index is too large; bigger than number of depots
+        (0, 2, True),  # index is too large; bigger than number of depots
     ],
 )
 def test_raises_invalid_vehicle_depot_indices(
-    ok_small, depot: int, should_raise: bool
+    ok_small, start_depot: int, end_depot: int, should_raise: bool
 ):
     """
     Tests that setting the depot index on a VehicleType to a value that's not
@@ -614,11 +615,48 @@ def test_raises_invalid_vehicle_depot_indices(
     assert_equal(ok_small.num_depots, 1)
 
     if not should_raise:
-        ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
+        veh_types = [VehicleType(start_depot=start_depot, end_depot=end_depot)]
+        ok_small.replace(vehicle_types=veh_types)
         return
 
     with assert_raises(IndexError):
-        ok_small.replace(vehicle_types=[VehicleType(depot=depot)])
+        veh_types = [VehicleType(start_depot=start_depot, end_depot=end_depot)]
+        ok_small.replace(vehicle_types=veh_types)
+
+
+def test_raises_invalid_vehicle_profile_index(ok_small):
+    """
+    Tests that setting the profile index on a VehicleType to a value that's
+    outside the range of available profiles raises.
+    """
+    assert_equal(ok_small.num_profiles, 1)
+
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[VehicleType(profile=1)])
+
+
+@pytest.mark.parametrize(
+    ("distances", "durations"), [([], []), ([], None), (None, [])]
+)
+def test_raises_no_profiles(ok_small, distances, durations):
+    """
+    Tests that passing no profiles (i.e., no distance and duration matrices)
+    raises an error.
+    """
+    with assert_raises((ValueError, IndexError)):
+        ok_small.replace(
+            distance_matrices=distances,
+            duration_matrices=durations,
+        )
+
+
+def test_raises_inconsistent_profiles(ok_small):
+    """
+    Tests that passing an inconsistent number of distance and duration matrices
+    raises an error.
+    """
+    with assert_raises(ValueError):
+        ok_small.replace(distance_matrices=ok_small.distance_matrices() * 2)
 
 
 def test_raises_empty_group():
@@ -630,8 +668,8 @@ def test_raises_empty_group():
             clients=[],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=[[0]],
-            duration_matrix=[[0]],
+            distance_matrices=[[[0]]],
+            duration_matrices=[[[0]]],
             groups=[ClientGroup()],  # empty group - this should raise
         )
 
@@ -656,8 +694,8 @@ def test_raises_invalid_client_group_indices(
             clients=[Client(1, 1, required=False, group=index)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((2, 2)),
-            duration_matrix=np.zeros((2, 2)),
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
             groups=groups,
         )
 
@@ -675,8 +713,8 @@ def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
             clients=[Client(1, 1, required=False, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((2, 2)),
-            duration_matrix=np.zeros((2, 2)),
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
             groups=groups,
         )
 
@@ -697,8 +735,8 @@ def test_raises_wrong_mutual_group_referencing():
             ],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((3, 3)),
-            duration_matrix=np.zeros((3, 3)),
+            distance_matrices=[np.zeros((3, 3))],
+            duration_matrices=[np.zeros((3, 3))],
             groups=[ClientGroup([2])],
         )
 
@@ -707,8 +745,8 @@ def test_raises_wrong_mutual_group_referencing():
             clients=[Client(1, 1), Client(2, 2)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((3, 3)),
-            duration_matrix=np.zeros((3, 3)),
+            distance_matrices=[np.zeros((3, 3))],
+            duration_matrices=[np.zeros((3, 3))],
             # Group references a client that is not in the group. That should
             # raise as well.
             groups=[ClientGroup([1])],
@@ -727,8 +765,8 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             clients=[Client(1, 1, required=True, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
-            distance_matrix=np.zeros((2, 2)),
-            duration_matrix=np.zeros((2, 2)),
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
             groups=[ClientGroup([1])],
         )
 
@@ -764,3 +802,106 @@ def test_replacing_client_groups(ok_small):
     # client as its only member.
     assert_equal(data.num_groups, 1)
     assert_equal(data.group(0).clients, [1])
+
+
+def test_client_eq():
+    """
+    Tests the client's equality operator.
+    """
+    client1 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=0)
+    client2 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=1)
+    assert_(client1 != client2)
+
+    # This client is equivalent to client1.
+    client3 = Client(x=0, y=0, delivery=1, pickup=2, tw_late=3, group=0)
+    assert_(client1 == client3)
+    assert_(client3 == client3)
+
+    # And some things that are not clients.
+    assert_(client1 != "text")
+    assert_(client1 != 1)
+
+
+def test_depot_eq():
+    """
+    Tests the depot's equality operator.
+    """
+    depot1 = Depot(x=0, y=0)
+    depot2 = Depot(x=0, y=1)
+    assert_(depot1 != depot2)
+
+    # This depot is equivalent to depot1.
+    depot3 = Depot(x=0, y=0)
+    assert_(depot1 == depot3)
+    assert_(depot3 == depot3)
+
+    # And some things that are not depots.
+    assert_(depot1 != "text")
+    assert_(depot1 != 3)
+
+
+def test_vehicle_type_eq():
+    """
+    Tests the vehicle type's equality operator.
+    """
+    veh_type1 = VehicleType(num_available=3, profile=0)
+    veh_type2 = VehicleType(num_available=3, profile=1)
+    assert_(veh_type1 != veh_type2)
+
+    # This vehicle type is equivalent to veh_type1.
+    veh_type3 = VehicleType(num_available=3, profile=0)
+    assert_(veh_type1 == veh_type3)
+
+    # And some things that are not vehicle types.
+    assert_(veh_type1 != "text")
+    assert_(veh_type1 != 5)
+
+
+def test_eq_checks_names():
+    """
+    Tests that the equality operators on named objects also considers the name
+    when determining equality.
+    """
+    x, y = 0, 0
+    assert_(Client(x, y, name="1") != Client(x, y, name="2"))
+    assert_(Depot(x, y, name="1") != Depot(x, y, name="2"))
+    assert_(VehicleType(name="1") != VehicleType(name="2"))
+
+
+@pytest.mark.parametrize("cls", (Client, Depot))
+def test_pickle_locations(cls):
+    """
+    Tests that client and depot locations can be serialised and unserialised.
+    """
+    before_pickle = cls(x=0, y=1, name="test")
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_client_group():
+    """
+    Tests that client groups can be serialised and unserialised.
+    """
+    before_pickle = ClientGroup(clients=[1, 2, 3], required=False)
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_vehicle_type():
+    """
+    Tests that vehicle types can be serialised and unserialised.
+    """
+    before_pickle = VehicleType(num_available=12, capacity=3, name="test123")
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)
+
+
+def test_pickle_data(ok_small, rc208):
+    """
+    Tests that problem data instances can be serialised and unserialised.
+    """
+    bytes = pickle.dumps(ok_small)
+    assert_equal(pickle.loads(bytes), ok_small)
+
+    bytes = pickle.dumps(rc208)
+    assert_equal(pickle.loads(bytes), rc208)

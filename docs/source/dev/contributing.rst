@@ -45,10 +45,26 @@ Now make sure everything runs smoothly, by executing the test suite:
    After this completes, style and typing issues are automatically checked whenever you make a new commit to your feature branch.
 
 
-Building the Python extensions
-------------------------------
+Setting up Github Codespaces
+----------------------------
 
-PyVRP uses a number of Python extensions that are written in C++ for performance.
+If you are having trouble building PyVRP from source or setting up your local development environment, you can try to build PyVRP online, using `GitHub Codespaces <https://docs.github.com/en/codespaces>`_.
+Github Codespaces allows you to create a development environment directly in your browser.
+
+To launch Github Codespaces, go to the `PyVRP repository <https://github.com/PyVRP/PyVRP>`_ and click on the green button.
+Select the Codespaces tab and click on the `+` icon to create a Codespaces environment.
+This environment is configured with all necessary dependencies to build PyVRP.
+Once the setup completes, execute the test suite to verify everything runs smoothly:
+
+.. code-block:: shell
+
+   poetry run pytest
+
+
+Building the extensions
+-----------------------
+
+PyVRP uses a number of native Python extensions that are written in C++ for performance.
 These extensions are built every time ``poetry install`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
 These (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
@@ -67,6 +83,94 @@ We use the Meson build system to compile the C++ extensions.
 Meson is configured using the ``meson.build`` file in the repository root. 
 You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
 
+
+Debugging the extensions
+------------------------
+
+This section explains how to perform cross-debugging for mixed Python and C++ code.
+We will use the `Visual Studio Code <https://code.visualstudio.com/>`_ IDE and the `Python C++ Debug <https://github.com/benibenj/vscode-pythonCpp>`_ extension.
+
+First, build PyVRP in debug mode:
+
+.. code-block:: shell
+
+   poetry run python build_extensions.py --build_type debug
+
+Create a test Python file that calls some C++ code, like so:
+
+.. code-block:: python
+
+   from pyvrp import Client
+
+   Client(x=0, y=0)
+
+Set breakpoints in ``pyvrp/cpp/ProblemData.cpp`` within the ``Client`` constructor.
+Next, set-up your debugger configuration by creating the ``.vscode/launch.json`` file, with the following content:
+
+.. code-block:: json
+
+   {
+       "version": "0.2.0",
+       "configurations": [
+           {
+               "name": "Python C++ Debugger",
+               "type": "pythoncpp",
+               "request": "launch",
+               "pythonConfig": "default",
+               "cppConfig": "default (gdb) Attach"
+           }
+       ]
+   }
+
+Start the debugger in Visual Studio Code and step through the code.
+The debugger should break at the breakpoints that you set in ``pvvrp/cpp/ProblemData.cpp``.
+
+
+Profiling the extensions
+------------------------
+
+Typically, the most computationally intense components in PyVRP are written in C++, as native extensions.
+While developing new functionality that touches the C++ components, it is important to pay attention to performance.
+For this, profiling is an incredibly useful tool.
+There are many ways to get started with profiling, but the following may be helpful.
+
+First, build a debug optimised build of PyVRP, as follows:
+
+.. code-block:: shell
+
+   poetry run python build_extensions.py --build_type debugoptimized
+
+This ensures all debug symbols are retained, so the profiling output contains meaningful information.
+Next, we need to use a profiling tool, which varies based on your operating system.
+
+.. md-tab-set::
+
+    .. md-tab-item:: Linux
+
+        Make sure you install ``perf``, the Linux profiling tool.
+        Now, all we need to do is let ``perf`` record PyVRP doing some work, like for example:
+
+        .. code-block:: shell
+
+            poetry run perf record pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 5
+
+        The resulting ``perf.data`` file will contain all relevant profiling results.
+        Such a file can be inspected using ``perf`` on the command line, or with a GUI using, for example, KDAB's `hotspot <https://github.com/KDAB/hotspot>`_ program.
+
+    .. md-tab-item:: macOS
+
+        macOS comes with a profiling tool named Instruments, which is bundled inside Apple's `Xcode <https://developer.apple.com/xcode/>`_.
+        First, make sure you have Xcode installed.
+        Now, run PyVRP for a period of time long enough that we can attach to the corresponding process, like for example:
+
+        .. code-block:: shell
+
+            poetry run pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 60
+
+        Next, open the Instruments application.
+        Select the "CPU Profiler" template, click on the search bar at the top of the window, and select the corresponding Python process as your target, which is usually the most recent one.
+        Start profiling by clicking on the red circle in the top-left corner.
+        Once you are ready, you can stop the profiling and analyze the results.
 
 Committing changes
 ------------------
@@ -91,3 +195,13 @@ This greatly reduces the job of maintaining and releasing the software.
 .. note::
 
    Please use the "Pull request" template on GitHub when opening a pull request.
+
+
+Licensing
+---------
+
+PyVRP is licensed under the MIT license.
+All code, documentation and other files added to PyVRP by contributors is licensed under this license, unless another license is explicitly specified in the source file.
+For your contribution, please check that it can be included into PyVRP under the MIT license.
+If you did not write the code yourself, you must ensure that the existing license is compatible and include the license information in the contributed files, or obtain permission from the original author to relicense the contributed code.
+Contributors keep the copyright for code they wrote and submit for inclusion to PyVRP.

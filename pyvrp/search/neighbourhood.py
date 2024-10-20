@@ -17,11 +17,11 @@ class NeighbourhoodParams:
     Attributes
     ----------
     weight_wait_time
-        Weight given to the minimum wait time aspect of the proximity
+        Penalty weight given to the minimum wait time aspect of the proximity
         calculation. A large wait time indicates the clients are far apart
         in duration/time.
     weight_time_warp
-        Weight given to the minimum time warp aspect of the proximity
+        Penalty weight given to the minimum time warp aspect of the proximity
         calculation. A large time warp indicates the clients are far apart in
         duration/time.
     nb_granular
@@ -139,10 +139,11 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    clients = [data.location(loc) for loc in range(data.num_locations)]
+    early = np.zeros((data.num_locations,))
+    early[data.num_depots :] = np.asarray([c.tw_early for c in data.clients()])
 
-    early = np.asarray([c.tw_early for c in clients])
-    late = np.asarray([c.tw_late for c in clients])
+    late = np.zeros((data.num_locations,))
+    late[data.num_depots :] = np.asarray([c.tw_late for c in data.clients()])
 
     service = np.zeros_like(early)
     service[data.num_depots :] = [c.service_duration for c in data.clients()]
@@ -150,15 +151,26 @@ def _compute_proximity(
     prize = np.zeros_like(early)
     prize[data.num_depots :] = [client.prize for client in data.clients()]
 
-    duration = data.duration_matrix()
+    # We first determine the elementwise minimum cost across all vehicle types.
+    # This is the cheapest way any edge can be traversed.
+    distances = data.distance_matrices()
+    durations = data.duration_matrices()
+    edge_costs = [  # edge costs per vehicle type
+        veh_type.unit_distance_cost * distances[veh_type.profile]
+        + veh_type.unit_duration_cost * durations[veh_type.profile]
+        for veh_type in data.vehicle_types()
+    ]
 
     # Minimum wait time and time warp of visiting j directly after i.
-    min_wait = early[None, :] - duration - service[:, None] - late[:, None]
-    min_tw = early[:, None] + service[:, None] + duration - late[None, :]
+    min_duration = np.minimum.reduce(durations)
+    min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]
+    min_tw = early[:, None] + service[:, None] + min_duration - late[None, :]
 
+    # Proximity is based on edge costs (and rewards) and penalties for known
+    # time-related violations.
     return (
-        np.asarray(data.distance_matrix(), dtype=float)
+        np.minimum.reduce(edge_costs, dtype=float)
+        - prize[None, :]
         + weight_wait_time * np.maximum(min_wait, 0)
         + weight_time_warp * np.maximum(min_tw, 0)
-        - prize[None, :]
     )

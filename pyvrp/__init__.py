@@ -1,6 +1,8 @@
 from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
 from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
+from .Model import Edge as Edge
 from .Model import Model as Model
+from .Model import Profile as Profile
 from .PenaltyManager import PenaltyManager as PenaltyManager
 from .PenaltyManager import PenaltyParams as PenaltyParams
 from .Population import Population as Population
@@ -17,6 +19,7 @@ from ._pyvrp import RandomNumberGenerator as RandomNumberGenerator
 from ._pyvrp import Route as Route
 from ._pyvrp import Solution as Solution
 from ._pyvrp import VehicleType as VehicleType
+from .minimise_fleet import minimise_fleet as minimise_fleet
 from .read import read as read
 from .read import read_solution as read_solution
 from .show_versions import show_versions as show_versions

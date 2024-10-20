@@ -7,7 +7,7 @@
 
 using Client = size_t;
 using Clients = std::vector<Client>;
-using Route = pyvrp::Solution::Route;
+using Route = pyvrp::Route;
 using Routes = std::vector<Route>;
 
 namespace

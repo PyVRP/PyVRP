@@ -233,20 +233,17 @@ bool LocalSearch::applyRouteOps(Route *U,
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
+    assert(U->route());
+
     auto begin = routes.begin();
-    for (size_t t = 0; t != data.numVehicleTypes(); t++)
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
     {
-        // Check move involving empty route of each vehicle type
-        // (if such a route exists).
-        auto const end = begin + data.vehicleType(t).numAvailable;
-        auto pred = [](auto const &route) { return route.empty(); };
+        auto const end = begin + data.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
         begin = end;
 
-        if (empty == end)
-            continue;
-
-        if (U->route())  // try inserting U into the empty route.
+        if (empty != end)  // try inserting U into the empty route.
             applyNodeOps(U, (*empty)[0], costEvaluator);
     }
 }
@@ -414,7 +411,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
 Solution LocalSearch::exportSolution() const
 {
-    std::vector<Solution::Route> solRoutes;
+    std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
     for (auto const &route : routes)

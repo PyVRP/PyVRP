@@ -14,8 +14,8 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       vehicleType_(data.vehicleType(vehicleType)),
       vehTypeIdx_(vehicleType),
       idx_(idx),
-      startDepot(vehicleType_.depot),
-      endDepot(vehicleType_.depot)
+      startDepot_(vehicleType_.startDepot),
+      endDepot_(vehicleType_.endDepot)
 {
     clear();
 }
@@ -73,29 +73,18 @@ void Route::clear()
     }
 
     nodes.clear();  // clear nodes and reinsert the depots.
-    nodes.push_back(&startDepot);
-    nodes.push_back(&endDepot);
+    nodes.push_back(&startDepot_);
+    nodes.push_back(&endDepot_);
 
-    startDepot.idx_ = 0;
-    startDepot.route_ = this;
+    startDepot_.idx_ = 0;
+    startDepot_.route_ = this;
 
-    endDepot.idx_ = 1;
-    endDepot.route_ = this;
-
-    // Time window is limited by both the depot open and closing times, and
-    // the vehicle's start and end of shift, whichever is tighter.
-    ProblemData::Depot const &depot = data.location(vehicleType_.depot);
-    DurationSegment depotDS(vehicleType_.depot,
-                            vehicleType_.depot,
-                            0,
-                            0,
-                            std::max(depot.twEarly, vehicleType_.twEarly),
-                            std::min(depot.twLate, vehicleType_.twLate),
-                            0);
+    endDepot_.idx_ = 1;
+    endDepot_.route_ = this;
 
     // Clear all existing statistics and reinsert depot statistics.
-    distAt = {DistanceSegment(vehicleType_.depot),
-              DistanceSegment(vehicleType_.depot)};
+    distAt = {DistanceSegment(vehicleType_.startDepot),
+              DistanceSegment(vehicleType_.endDepot)};
     distAfter = distAt;
     distBefore = distAt;
 
@@ -103,7 +92,8 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
-    durAt = {depotDS, depotDS};
+    durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
+             DurationSegment(vehicleType_.endDepot, vehicleType_)};
     durAfter = durAt;
     durBefore = durAt;
 
@@ -232,27 +222,27 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         distBefore[idx] = DistanceSegment::merge(
-            data.distanceMatrix(), distBefore[idx - 1], distAt[idx]);
+            data.distanceMatrix(profile()), distBefore[idx - 1], distAt[idx]);
 
         loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
 
         if (data.characteristics().hasDuration)
             durBefore[idx] = DurationSegment::merge(
-                data.durationMatrix(), durBefore[idx - 1], durAt[idx]);
+                data.durationMatrix(profile()), durBefore[idx - 1], durAt[idx]);
     }
 
     // Forward segments (client -> depot).
     for (auto idx = nodes.size() - 1; idx != 0; --idx)
     {
         distAfter[idx - 1] = DistanceSegment::merge(
-            data.distanceMatrix(), distAt[idx - 1], distAfter[idx]);
+            data.distanceMatrix(profile()), distAt[idx - 1], distAfter[idx]);
 
         loadAfter[idx - 1]
             = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
 
         if (data.characteristics().hasDuration)
             durAfter[idx - 1] = DurationSegment::merge(
-                data.durationMatrix(), durAt[idx - 1], durAfter[idx]);
+                data.durationMatrix(profile()), durAt[idx - 1], durAfter[idx]);
     }
 
 #ifndef NDEBUG
