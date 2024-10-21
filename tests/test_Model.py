@@ -906,16 +906,16 @@ def test_model_solves_instance_with_zero_load_dims():
     """
     m = Model()
     m.add_depot(x=1, y=1)
-    m.add_client(x=1, y=2, delivery=[], pickup=[])
-    m.add_client(x=2, y=1, delivery=[], pickup=[])
-    m.add_client(x=2, y=2, delivery=[], pickup=[])
+    m.add_client(x=1, y=2)
+    m.add_client(x=2, y=1)
+    m.add_client(x=2, y=2)
 
     for frm in m.locations:
         for to in m.locations:
             manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
             m.add_edge(frm, to, distance=manhattan)
 
-    m.add_vehicle_type(1, capacity=[])
+    m.add_vehicle_type(1)
 
     assert_equal(m.data().num_load_dimensions, 0)
 

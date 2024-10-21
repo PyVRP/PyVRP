@@ -172,8 +172,8 @@ public:
 
         Client(Coordinate x,
                Coordinate y,
-               std::vector<Load> delivery = {0},
-               std::vector<Load> pickup = {0},
+               std::vector<Load> delivery = {},
+               std::vector<Load> pickup = {},
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = std::numeric_limits<Duration>::max(),
@@ -413,7 +413,7 @@ public:
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
-                    std::vector<Load> capacity = {0},
+                    std::vector<Load> capacity = {},
                     size_t startDepot = 0,
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
