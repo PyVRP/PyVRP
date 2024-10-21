@@ -145,13 +145,13 @@ def test_wrong_load_calculation_bug():
     """
     data = ProblemData(
         clients=[
-            Client(x=1, y=1, delivery=0),
-            Client(x=2, y=2, delivery=0),
-            Client(x=3, y=3, delivery=15),
-            Client(x=4, y=4, delivery=0),
+            Client(x=1, y=1, delivery=[0]),
+            Client(x=2, y=2, delivery=[0]),
+            Client(x=3, y=3, delivery=[15]),
+            Client(x=4, y=4, delivery=[0]),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(num_available=2, capacity=12)],
+        vehicle_types=[VehicleType(num_available=2, capacity=[12])],
         distance_matrices=[
             np.asarray(
                 [
@@ -237,7 +237,7 @@ def test_max_distance(ok_small):
 
     # Now restrict the maximum route distance to 5_000, so that aspect needs
     # to be taken into account as well.
-    vehicle_type = VehicleType(3, capacity=10, max_distance=5_000)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     # Same route plan remains optimal, but now there is a large cost reduction

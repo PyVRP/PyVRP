@@ -171,7 +171,7 @@ class PenaltyManager:
         avg_duration = np.minimum.reduce(durations).mean()
 
         avg_load = 0
-        if data.num_clients != 0:
+        if data.num_clients != 0 and data.num_load_dimensions != 0:
             pickups = np.array([c.pickup for c in data.clients()])
             deliveries = np.array([c.delivery for c in data.clients()])
             avg_load = np.maximum(pickups, deliveries).mean()

@@ -16,11 +16,11 @@ namespace pyvrp
  * Parameters
  * ----------
  * delivery
- *     Total delivery amount on this segment.
+ *     Total delivery amount on this segment for a single load dimension.
  * pickup
- *     Total pickup amount on this segment.
+ *     Total pickup amount on this segment for a single load dimension.
  * load
- *     Maximum load on this segment.
+ *     Maximum load on this segment for a single load dimension.
  */
 class LoadSegment
 {
@@ -35,22 +35,24 @@ public:
 
     /**
      * Returns the delivery amount, that is, the total amount of load delivered
-     * to clients on this segment.
+     * to clients on this segment for a single load dimension.
      */
     [[nodiscard]] Load delivery() const;
 
     /**
-     * Returns the amount picked up from clients on this segment.
+     * Returns the amount picked up from clients on this segment for a single
+     * load dimension.
      */
     [[nodiscard]] Load pickup() const;
 
     /**
-     * Returns the maximum load encountered on this segment.
+     * Returns the maximum load encountered on this segment for a single load
+     * dimension.
      */
     [[nodiscard]] inline Load load() const;
 
-    // Construct from attributes of the given client.
-    LoadSegment(ProblemData::Client const &client);
+    // Construct from attributes of the given client at a given load dimension.
+    LoadSegment(ProblemData::Client const &client, size_t const dimension);
 
     // Construct from raw data.
     inline LoadSegment(Load delivery, Load pickup, Load load);
