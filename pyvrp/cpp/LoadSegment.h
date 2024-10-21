@@ -4,8 +4,6 @@
 #include "Measure.h"
 #include "ProblemData.h"
 
-#include <cassert>
-
 namespace pyvrp
 {
 /**
