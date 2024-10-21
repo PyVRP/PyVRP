@@ -1,5 +1,6 @@
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <cstring>
 #include <numeric>
 #include <stdexcept>
@@ -23,6 +24,15 @@ static char *duplicate(char const *src)
     return dst;
 }
 }  // namespace
+
+ProblemData::Characteristics::Characteristics(ProblemData const &data)
+    : hasDuration(std::any_of(data.durationMatrices().begin(),
+                              data.durationMatrices().end(),
+                              [](Matrix<Duration> const &mat)
+                              { return mat.size() > 0 && mat.max() > 0; }))
+{
+    // TODO
+}
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
@@ -528,7 +538,8 @@ ProblemData::ProblemData(std::vector<Client> clients,
                                    vehicleTypes_.end(),
                                    0,
                                    [](auto sum, VehicleType const &type)
-                                   { return sum + type.numAvailable; }))
+                                   { return sum + type.numAvailable; })),
+      characteristics_(*this)
 {
     for (auto const &client : clients_)
     {
