@@ -77,6 +77,7 @@ def _solve(
     stats_dir: Optional[Path],
     sol_dir: Optional[Path],
     algorithm: str,
+    display: bool,
     **kwargs,
 ) -> tuple[str, str, float, int, float]:
     """
@@ -103,6 +104,8 @@ def _solve(
         The directory to write runtime statistics to.
     sol_dir
         The directory to write the best found solutions to.
+    display
+        Whether to display the solver progress.
     algorithm
         Algorithm to use. One of ['ils', 'hgs'].
 
@@ -133,7 +136,13 @@ def _solve(
     )
 
     solve = solve_hgs if algorithm == "hgs" else solve_ils
-    result = solve(data, stop, seed, collect_stats=True, display=True)
+    result = solve(
+        data,
+        stop,
+        seed,
+        collect_stats=bool(stats_dir) or display,
+        display=display,
+    )
     instance_name = data_loc.stem
 
     if stats_dir:
@@ -254,6 +263,9 @@ def main():
 
     msg = "Whether to scale stopping criteria values by the number of clients."
     stop.add_argument("--per_client", action="store_true")
+
+    msg = "Whether to display the solver progress."
+    parser.add_argument("--display", action="store_true", help=msg)
 
     msg = "Algorithm to use for solving. One of ['ils', 'hgs']."
     parser.add_argument("--algorithm", choices=["ils", "hgs"], default="hgs")

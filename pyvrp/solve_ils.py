@@ -162,7 +162,6 @@ def solve(
     VALUE = 1_000_000
     penalty_params = PenaltyParams(solutions_between_updates=VALUE)
     pm = PenaltyManager(penalty_params, initial_penalties=3 * [VALUE])
-    pm = PenaltyManager(PenaltyParams(repair_booster=10))
 
     max_runtime = stop.criteria[0]._max_runtime  # HACK
     accept = RecordToRecord(0.01, 0.00, max_runtime)  # type: ignore
