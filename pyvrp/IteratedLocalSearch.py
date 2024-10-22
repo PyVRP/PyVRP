@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from importlib.metadata import version
 from typing import TYPE_CHECKING
 
 from pyvrp.Result import Result
@@ -18,6 +19,123 @@ if TYPE_CHECKING:
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
 
+# Templates for various different outputs.
+_ITERATION = (
+    "{special} {iters:>7} {elapsed:>6}s | {curr:>8} {cand:>8} {best:>8}"
+)
+
+_START = """PyVRP v{version}
+
+Solving an instance with:
+    {depot_text}
+    {client_text}
+    {vehicle_text} ({vehicle_type_text})
+
+                  |   Cost (feasible)
+    Iters    Time |   Curr    Cand     Best"""
+
+_END = """
+Search terminated in {runtime:.2f}s after {iters} iterations.
+Best-found solution has cost {best_cost}.
+
+{summary}
+"""
+
+NUM_ITERS_PRINT = 10
+
+
+class ProgressPrinter:
+    """
+    A helper class that prints relevant solver progress information to the
+    console, if desired.
+
+    Parameters
+    ----------
+    should_print
+        Whether to print information to the console. When ``False``, nothing is
+        printed.
+    """
+
+    def __init__(self, should_print: bool):
+        self._print = should_print
+        self._best_cost = float("inf")
+
+    def iteration(self, stats: Statistics):
+        """
+        Outputs relevant information every few hundred iterations. The output
+        contains information about the feasible and infeasible populations,
+        whether a new best solution has been found, and the search duration.
+        """
+        should_print = (
+            self._print
+            and stats.is_collecting()
+            and stats.num_iterations % NUM_ITERS_PRINT == 0
+        )
+
+        if not should_print:
+            return
+
+        data = stats.data[-1]
+
+        def format_cost(cost, is_feas):
+            return f"{round(cost)} {'(F)' if is_feas else '(I)'}"
+
+        msg = _ITERATION.format(
+            special="H" if data.best_cost < self._best_cost else " ",
+            iters=stats.num_iterations,
+            elapsed=round(sum(stats.runtimes)),
+            curr=format_cost(data.current_cost, data.current_feas),
+            cand=format_cost(data.candidate_cost, data.candidate_feas),
+            best=format_cost(data.best_cost, data.best_feas),
+        )
+        print(msg)
+
+        if data.best_cost < self._best_cost:
+            self._best_cost = data.best_cost
+
+    def start(self, data: ProblemData):
+        """
+        Outputs information about PyVRP and the data instance that is being
+        solved.
+        """
+        if not self._print:
+            return
+
+        num_d = data.num_depots
+        depot_text = f"{num_d} depot{'s' if num_d > 1 else ''}"
+
+        num_c = data.num_clients
+        client_text = f"{num_c} client{'s' if num_c > 1 else ''}"
+
+        num_v = data.num_vehicles
+        vehicle_text = f"{num_v} vehicle{'s' if num_v > 1 else ''}"
+
+        num_vt = data.num_vehicle_types
+        vehicle_type_text = f"{num_vt} vehicle type{'s' if num_vt > 1 else ''}"
+
+        msg = _START.format(
+            version=version("pyvrp"),
+            depot_text=depot_text,
+            client_text=client_text,
+            vehicle_text=vehicle_text,
+            vehicle_type_text=vehicle_type_text,
+        )
+        print(msg)
+
+    def end(self, result: Result):
+        """
+        Outputs information about the search duration and the best-found
+        solution.
+        """
+        if self._print:
+            msg = _END.format(
+                iters=result.num_iterations,
+                runtime=result.runtime,
+                best_cost=round(result.cost(), 2),
+                summary=result.summary(),
+            )
+            print(msg)
+
 
 @dataclass
 class _Datum:
@@ -26,8 +144,11 @@ class _Datum:
     """
 
     current_cost: float
+    current_feas: bool
     candidate_cost: float
+    candidate_feas: bool
     best_cost: float
+    best_feas: bool
 
 
 class Statistics:
@@ -36,9 +157,9 @@ class Statistics:
     """
 
     def __init__(self, collect_stats: bool = True):
-        self.runtimes = []
+        self.runtimes: list[float] = []
         self.num_iterations = 0
-        self.stats = []
+        self.data: list[_Datum] = []
 
         self._clock = time.perf_counter()
         self._collect_stats = collect_stats
@@ -46,7 +167,15 @@ class Statistics:
     def is_collecting(self) -> bool:
         return self._collect_stats
 
-    def collect(self, current: float, candidate: float, best: float):
+    def collect(
+        self,
+        current_cost: float,
+        current_feas: bool,
+        candidate_cost: float,
+        candidate_feas: bool,
+        best_cost: float,
+        best_feas: bool,
+    ):
         """
         Collects statistics from the ILS iteration.
         """
@@ -59,17 +188,15 @@ class Statistics:
         self.runtimes.append(self._clock - start)
         self.num_iterations += 1
 
-        self.stats.append(_Datum(current, candidate, best))
-
-        # Hacky "progress printer"
-        if self.num_iterations % 50 == 0:
-            print(
-                "Iter: ",
-                self.num_iterations,
-                "Time (s): ",
-                f"{sum(self.runtimes):.2f}",
-                self.stats[-1],
-            )
+        datum = _Datum(
+            current_cost,
+            current_feas,
+            candidate_cost,
+            candidate_feas,
+            best_cost,
+            best_feas,
+        )
+        self.data.append(datum)
 
 
 @dataclass
@@ -147,17 +274,20 @@ class IteratedLocalSearch:
             Whether to collect statistics about the solver's progress. Default
             ``True``.
         """
-        best = current = initial_solution
+        print_progress = ProgressPrinter(should_print=display)
+        print_progress.start(self._data)
 
         start = time.perf_counter()
         stats = Statistics(collect_stats=collect_stats)
         iters = 0
+        best = current = initial_solution
 
         while not stop(self._cost_evaluator.cost(best)):
             iters += 1
 
-            perturbed = self._perturb(current, self._cost_evaluator)
-            candidate = self._search(perturbed, self._cost_evaluator)
+            candidate = current
+            # perturbed = self._perturb(current, self._cost_evaluator)
+            # candidate = self._search(perturbed, self._cost_evaluator)
             self._pm.register(candidate)
 
             if not candidate.is_feasible():
@@ -168,19 +298,29 @@ class IteratedLocalSearch:
             cand_cost = self._cost_evaluator.cost(candidate)
             best_cost = self._cost_evaluator.cost(best)
             curr_cost = self._cost_evaluator.cost(current)
-            stats.collect(curr_cost, cand_cost, best_cost)
+            stats.collect(
+                curr_cost,
+                current.is_feasible(),
+                cand_cost,
+                candidate.is_feasible(),
+                best_cost,
+                best.is_feasible(),
+            )
+            print_progress.iteration(stats)
 
             if cand_cost < best_cost:
                 best, current = candidate, candidate
             elif self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
 
-        end = time.perf_counter()
-        runtime = end - start
-
-        return Result(
+        runtime = time.perf_counter() - start
+        res = Result(
             best,
             stats,
             iters,
             runtime,
         )
+
+        print_progress.end(res)
+
+        return res
