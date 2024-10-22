@@ -44,7 +44,7 @@ class Edge:
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
 
-        if frm == to and (distance != 0 or duration != 0):
+        if id(frm) == id(to) and (distance != 0 or duration != 0):
             raise ValueError("A self loop must have 0 distance and duration.")
 
         if max(distance, duration) > MAX_VALUE:

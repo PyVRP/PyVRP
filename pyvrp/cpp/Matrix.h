@@ -28,6 +28,8 @@ public:
 
     explicit Matrix(std::vector<T> data, size_t nRows, size_t nCols);
 
+    bool operator==(Matrix const &other) const = default;
+
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col);
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
 
