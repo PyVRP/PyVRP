@@ -1,5 +1,4 @@
 import time
-from typing import Optional
 
 
 class MaxRuntime:
@@ -12,7 +11,7 @@ class MaxRuntime:
             raise ValueError("max_runtime < 0 not understood.")
 
         self._max_runtime = max_runtime
-        self._start_runtime: Optional[float] = None
+        self._start_runtime: float | None = None
 
     def __call__(self, best_cost: float) -> bool:
         if self._start_runtime is None:

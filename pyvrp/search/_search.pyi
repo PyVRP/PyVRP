@@ -1,4 +1,4 @@
-from typing import Iterator, Optional
+from typing import Iterator
 
 from pyvrp._pyvrp import (
     CostEvaluator,
@@ -130,7 +130,7 @@ class Node:
     @property
     def idx(self) -> int: ...
     @property
-    def route(self) -> Optional[Route]: ...
+    def route(self) -> Route | None: ...
     def is_depot(self) -> bool: ...
 
 def insert_cost(

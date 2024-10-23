@@ -1,12 +1,10 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pyvrp.Result import Result
 
 
-def plot_runtimes(result: Result, ax: Optional[plt.Axes] = None):
+def plot_runtimes(result: Result, ax: plt.Axes | None = None):
     """
     Plots iteration runtimes.
 

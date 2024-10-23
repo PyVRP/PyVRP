@@ -2,7 +2,7 @@ import pathlib
 from collections import defaultdict
 from itertools import count
 from numbers import Number
-from typing import Callable, Optional, Union
+from typing import Callable
 from warnings import warn
 
 import numpy as np
@@ -28,8 +28,8 @@ ROUND_FUNCS: dict[str, _RoundingFunc] = {
 
 
 def read(
-    where: Union[str, pathlib.Path],
-    round_func: Union[str, _RoundingFunc] = "none",
+    where: str | pathlib.Path,
+    round_func: str | _RoundingFunc = "none",
 ) -> ProblemData:
     """
     Reads the ``VRPLIB`` file at the given location, and returns a
@@ -83,7 +83,7 @@ def read(
     return builder.data()
 
 
-def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
+def read_solution(where: str | pathlib.Path) -> _Routes:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
     returns the routes contained in it.
@@ -313,7 +313,7 @@ class _ProblemDataBuilder:
         groups = self.parser.mutually_exclusive_groups()
         num_locs = self.parser.num_locations
 
-        idx2group: list[Optional[int]] = [None for _ in range(num_locs)]
+        idx2group: list[int | None] = [None for _ in range(num_locs)]
         for group, members in enumerate(groups):
             for client in members:
                 idx2group[client] = group

@@ -1,5 +1,4 @@
 import pickle
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -47,7 +46,7 @@ def test_client_constructor_initialises_data_fields_correctly(
     release_time: int,
     prize: int,
     required: bool,
-    group: Optional[int],
+    group: int | None,
     name: str,
 ):
     """
