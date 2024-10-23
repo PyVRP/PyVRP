@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -9,7 +7,7 @@ from pyvrp import ProblemData
 def plot_coordinates(
     data: ProblemData,
     title: str = "Coordinates",
-    ax: Optional[plt.Axes] = None,
+    ax: plt.Axes | None = None,
 ):
     """
     Plots coordinates for clients and depot.

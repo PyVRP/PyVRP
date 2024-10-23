@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
@@ -10,7 +8,7 @@ from pyvrp import ProblemData
 def plot_time_windows(
     data: ProblemData,
     title: str = "Time windows",
-    ax: Optional[plt.Axes] = None,
+    ax: plt.Axes | None = None,
 ):
     """
     Plots client time windows, as vertical bars sorted by time window.

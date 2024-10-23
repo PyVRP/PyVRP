@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 from warnings import warn
 
 import numpy as np
@@ -36,8 +36,8 @@ class Edge:
 
     def __init__(
         self,
-        frm: Union[Client, Depot],
-        to: Union[Client, Depot],
+        frm: Client | Depot,
+        to: Client | Depot,
         distance: int,
         duration: int,
     ):
@@ -78,8 +78,8 @@ class Profile:
 
     def add_edge(
         self,
-        frm: Union[Client, Depot],
-        to: Union[Client, Depot],
+        frm: Client | Depot,
+        to: Client | Depot,
         distance: int,
         duration: int = 0,
     ) -> Edge:
@@ -105,7 +105,7 @@ class Model:
         self._vehicle_types: list[VehicleType] = []
 
     @property
-    def locations(self) -> list[Union[Client, Depot]]:
+    def locations(self) -> list[Client | Depot]:
         """
         Returns all locations (depots and clients) in the current model. The
         clients in the routes of the solution returned by :meth:`~solve` can be
@@ -184,15 +184,15 @@ class Model:
         self,
         x: int,
         y: int,
-        delivery: Union[int, list[int]] = [],
-        pickup: Union[int, list[int]] = [],
+        delivery: int | list[int] = [],
+        pickup: int | list[int] = [],
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
-        group: Optional[ClientGroup] = None,
+        group: ClientGroup | None = None,
         *,
         name: str = "",
     ) -> Client:
@@ -275,11 +275,11 @@ class Model:
 
     def add_edge(
         self,
-        frm: Union[Client, Depot],
-        to: Union[Client, Depot],
+        frm: Client | Depot,
+        to: Client | Depot,
         distance: int,
         duration: int = 0,
-        profile: Optional[Profile] = None,
+        profile: Profile | None = None,
     ) -> Edge:
         """
         Adds an edge :math:`(i, j)` between ``frm`` (:math:`i`) and ``to``
@@ -312,9 +312,9 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        capacity: Union[int, list[int]] = [],
-        start_depot: Optional[Depot] = None,
-        end_depot: Optional[Depot] = None,
+        capacity: int | list[int] = [],
+        start_depot: Depot | None = None,
+        end_depot: Depot | None = None,
         fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
@@ -322,7 +322,7 @@ class Model:
         max_distance: int = np.iinfo(np.int64).max,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
-        profile: Optional[Profile] = None,
+        profile: Profile | None = None,
         *,
         name: str = "",
     ) -> VehicleType:

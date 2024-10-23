@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
@@ -12,8 +10,8 @@ def plot_route_schedule(
     route: Route,
     load_dimension: int = 0,
     legend: bool = True,
-    title: Optional[str] = None,
-    ax: Optional[plt.Axes] = None,
+    title: str | None = None,
+    ax: plt.Axes | None = None,
 ):
     """
     Plots a route schedule. This function plots multiple time statistics

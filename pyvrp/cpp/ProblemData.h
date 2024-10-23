@@ -78,7 +78,7 @@ public:
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
-     *    group: Optional[int] = None,
+     *    group: int | None = None,
      *    *,
      *    name: str = "",
      * )

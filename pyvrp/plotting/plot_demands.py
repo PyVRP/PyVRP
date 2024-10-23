@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -8,8 +6,8 @@ from pyvrp import ProblemData
 
 def plot_demands(
     data: ProblemData,
-    title: Optional[str] = None,
-    ax: Optional[plt.Axes] = None,
+    title: str | None = None,
+    ax: plt.Axes | None = None,
     dimension: int = 0,
 ):
     """
