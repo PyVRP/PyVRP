@@ -49,9 +49,9 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.9,<4.0"
+python = "^3.10,<3.14"
 numpy = [
-    # Numpy 1.26 is the first version of numpy that supports Python 3.12.
+    # Numpy 1.26 is the first version of numpy that supports Python 3.12+.
     { version = ">=1.15.2", python = "<3.12" },
     { version = ">=1.26.0", python = ">=3.12" }
 ]
@@ -147,9 +147,9 @@ exclude_lines = [
 
 
 [tool.cibuildwheel]
-# We do not support old Python versions (<3.9) and somewhat uncommon platforms.
-# For musllinux-based builds we assume users can compile the thing themselves.
-skip = "cp36-* cp37-* cp38-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+# We do not support old Python versions and somewhat uncommon platforms. For
+# musllinux-based builds we assume users can compile the thing themselves.
+skip = "cp36-* cp37-* cp38-* cp39-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-frontend = "build"
 test-requires = "pytest>=6.0.0 pytest-cov>=2.6.1"
 test-command = "pytest {package}/tests"
