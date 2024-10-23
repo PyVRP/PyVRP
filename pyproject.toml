@@ -149,7 +149,8 @@ exclude_lines = [
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms. For
 # musllinux-based builds we assume users can compile the thing themselves.
-skip = "cp36-* cp37-* cp38-* cp39-* pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+build = "cp310-* cp311-* cp312-* cp313-*"
+skip = "pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-frontend = "build"
 test-requires = "pytest>=6.0.0 pytest-cov>=2.6.1"
 test-command = "pytest {package}/tests"
