@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 
 from pyvrp import ProblemData
@@ -8,7 +6,7 @@ from pyvrp.plotting.plot_demands import plot_demands
 from pyvrp.plotting.plot_time_windows import plot_time_windows
 
 
-def plot_instance(data: ProblemData, fig: Optional[plt.Figure] = None):
+def plot_instance(data: ProblemData, fig: plt.Figure | None = None):
     """
     Plots client coordinate, time window and demand data of the given instance.
 

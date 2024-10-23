@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Type, Union
+from typing import TYPE_CHECKING
 
 import tomli
 
@@ -55,8 +55,8 @@ class SolveParams:
         penalty: PenaltyParams = PenaltyParams(),
         population: PopulationParams = PopulationParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        node_ops: list[Type[NodeOperator]] = NODE_OPERATORS,
-        route_ops: list[Type[RouteOperator]] = ROUTE_OPERATORS,
+        node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
+        route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
     ):
         self._genetic = genetic
         self._penalty = penalty
@@ -101,7 +101,7 @@ class SolveParams:
         return self._route_ops
 
     @classmethod
-    def from_file(cls, loc: Union[str, pathlib.Path]):
+    def from_file(cls, loc: str | pathlib.Path):
         """
         Loads the solver parameters from a TOML file.
         """
