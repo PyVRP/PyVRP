@@ -52,7 +52,7 @@ class Solution
     Duration duration_ = 0;         // Total duration over all routes
     Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
-    Load excessLoad_ = 0;           // Total excess load over all routes
+    std::vector<Load> excessLoad_;  // Total excess load over all routes
     Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
@@ -74,6 +74,12 @@ class Solution
     Solution &operator=(Solution &&other) = default;
 
 public:
+    /**
+     * Number of load dimensions in the problem instance corresponding to this
+     * solution.
+     */
+    [[nodiscard]] size_t numLoadDimensions() const;
+
     // Solution is empty when it has no routes and no clients.
     [[nodiscard]] bool empty() const;
 
@@ -183,9 +189,19 @@ public:
     [[nodiscard]] Cost durationCost() const;
 
     /**
-     * Returns the total excess load over all routes.
+     * Total excess load over all routes for the given load dimension.
+     *
+     * Parameters
+     * ----------
+     * dimension
+     *     Load dimension for which to return the total excess load amount.
+     *
+     * Raises
+     * ------
+     * IndexError
+     *     When the given load dimension is out of range.
      */
-    [[nodiscard]] Load excessLoad() const;
+    [[nodiscard]] Load excessLoad(size_t dimension) const;
 
     /**
      * Returns the total distance in excess of maximum duration constraints,
@@ -253,7 +269,7 @@ public:
              Duration duration,
              Cost durationCost,
              Distance excessDistance,
-             Load excessLoad,
+             std::vector<Load> const &excessLoad,
              Cost fixedVehicleCost,
              Cost prizes,
              Cost uncollectedPrizes,
@@ -273,7 +289,7 @@ template <> struct std::hash<pyvrp::Solution>
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(sol.numRoutes());
         res = res * 31 + std::hash<pyvrp::Distance>()(sol.distance());
-        res = res * 31 + std::hash<pyvrp::Load>()(sol.excessLoad());
+        res = res * 31 + std::hash<pyvrp::Duration>()(sol.duration());
         res = res * 31 + std::hash<pyvrp::Duration>()(sol.timeWarp());
 
         return res;

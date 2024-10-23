@@ -88,7 +88,8 @@ void Route::clear()
     distAfter = distAt;
     distBefore = distAt;
 
-    loadAt = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
+    LoadSegments depotLoad(data.numLoadDimensions(), LoadSegment(0, 0, 0));
+    loadAt = {depotLoad, depotLoad};
     loadAfter = loadAt;
     loadBefore = loadAt;
 
@@ -122,9 +123,14 @@ void Route::insert(size_t idx, Node *node)
 
     ProblemData::Client const &client = data.location(node->client());
 
-    loadAt.emplace(loadAt.begin() + idx, client);
-    loadAfter.emplace(loadAfter.begin() + idx, client);
-    loadBefore.emplace(loadBefore.begin() + idx, client);
+    LoadSegments clientLoadSegments;
+    clientLoadSegments.reserve(data.numLoadDimensions());
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+        clientLoadSegments.emplace_back(client, dim);
+
+    loadAt.insert(loadAt.begin() + idx, clientLoadSegments);
+    loadAfter.insert(loadAfter.begin() + idx, clientLoadSegments);
+    loadBefore.insert(loadBefore.begin() + idx, clientLoadSegments);
 
     durAt.emplace(durAt.begin() + idx, node->client(), client);
     durAfter.emplace(durAfter.begin() + idx, node->client(), client);
@@ -224,7 +230,9 @@ void Route::update()
         distBefore[idx] = DistanceSegment::merge(
             data.distanceMatrix(profile()), distBefore[idx - 1], distAt[idx]);
 
-        loadBefore[idx] = LoadSegment::merge(loadBefore[idx - 1], loadAt[idx]);
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+            loadBefore[idx][dim] = LoadSegment::merge(loadBefore[idx - 1][dim],
+                                                      loadAt[idx][dim]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
         durBefore[idx] = DurationSegment::merge(
@@ -238,8 +246,9 @@ void Route::update()
         distAfter[idx - 1] = DistanceSegment::merge(
             data.distanceMatrix(profile()), distAt[idx - 1], distAfter[idx]);
 
-        loadAfter[idx - 1]
-            = LoadSegment::merge(loadAt[idx - 1], loadAfter[idx]);
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+            loadAfter[idx - 1][dim]
+                = LoadSegment::merge(loadAt[idx - 1][dim], loadAfter[idx][dim]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
         durAfter[idx - 1] = DurationSegment::merge(

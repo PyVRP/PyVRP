@@ -184,8 +184,8 @@ class Model:
         self,
         x: int,
         y: int,
-        delivery: int = 0,
-        pickup: int = 0,
+        delivery: int | list[int] = [],
+        pickup: int | list[int] = [],
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
@@ -222,8 +222,8 @@ class Model:
         client = Client(
             x=x,
             y=y,
-            delivery=delivery,
-            pickup=pickup,
+            delivery=[delivery] if isinstance(delivery, int) else delivery,
+            pickup=[pickup] if isinstance(pickup, int) else pickup,
             service_duration=service_duration,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -312,7 +312,7 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        capacity: int = 0,
+        capacity: int | list[int] = [],
         start_depot: Depot | None = None,
         end_depot: Depot | None = None,
         fixed_cost: int = 0,
@@ -364,7 +364,7 @@ class Model:
 
         vehicle_type = VehicleType(
             num_available=num_available,
-            capacity=capacity,
+            capacity=[capacity] if isinstance(capacity, int) else capacity,
             start_depot=start_idx,
             end_depot=end_idx,
             fixed_cost=fixed_cost,
