@@ -47,7 +47,7 @@ public:
     template <typename... Segments> class Proposal
     {
         Route const *current;
-        ProblemData const &data;
+        ProblemData const &data_;
         std::tuple<Segments...> segments;
 
     public:
@@ -56,6 +56,7 @@ public:
                  Segments &&...segments);
 
         Route const *route() const;
+        ProblemData const &data() const;
 
         DistanceSegment distanceSegment() const;
         DurationSegment durationSegment() const;
@@ -621,12 +622,8 @@ bool Route::hasExcessDistance() const
 
 bool Route::hasTimeWarp() const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return false;
-#else
     assert(!dirty);
     return timeWarp() > 0;
-#endif
 }
 
 size_t Route::idx() const { return idx_; }
@@ -746,7 +743,7 @@ Route::Proposal<Segments...>::Proposal(Route const *current,
                                        ProblemData const &data,
                                        Segments &&...segments)
     : current(current),
-      data(data),
+      data_(data),
       segments(std::forward<Segments>(segments)...)
 {
 }
@@ -758,13 +755,19 @@ Route const *Route::Proposal<Segments...>::route() const
 }
 
 template <typename... Segments>
+ProblemData const &Route::Proposal<Segments...>::data() const
+{
+    return data_;
+}
+
+template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
     return std::apply(
         [&](auto &&...args)
         {
             return DistanceSegment::merge(
-                data.distanceMatrix(current->profile()),
+                data_.distanceMatrix(current->profile()),
                 args.distance(current->profile())...);
         },
         segments);
@@ -777,7 +780,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         [&](auto &&...args)
         {
             return DurationSegment::merge(
-                data.durationMatrix(current->profile()),
+                data_.durationMatrix(current->profile()),
                 args.duration(current->profile())...);
         },
         segments);

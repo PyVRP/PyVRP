@@ -19,12 +19,6 @@ def parse_args():
         help="The type of build to provide. Defaults to release mode.",
     )
     parser.add_argument(
-        "--problem",
-        default="vrptw",
-        choices=["cvrp", "vrptw"],
-        help="Which type of solver to compile. Defaults to 'vrptw'.",
-    )
-    parser.add_argument(
         "--clean",
         action="store_true",
         help="Clean build and installation directories before building.",
@@ -62,7 +56,6 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
 def configure(
     build_dir: pathlib.Path,
     build_type: str,
-    problem: str,
     *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
@@ -71,7 +64,6 @@ def configure(
         build_dir,
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
-        f"-Dproblem={problem}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         f"-Db_coverage={'true' if build_type != 'release' else 'false'}",
         *additional,
@@ -94,14 +86,12 @@ def install(build_dir: pathlib.Path):
 def build(
     build_dir: pathlib.Path,
     build_type: str,
-    problem: str,
     verbose: bool,
     *additional: list[str],
 ):
     configure(
         build_dir,
         build_type,
-        problem,
         *additional,
     )
     compile(build_dir, verbose)
@@ -136,7 +126,6 @@ def main():
     build_args = (
         build_dir,
         args.build_type,
-        args.problem,
         args.verbose,
         *args.additional,
     )
