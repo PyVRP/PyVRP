@@ -199,20 +199,23 @@ PYBIND11_MODULE(_search, m)
         .def("__call__",
              &LocalSearch::operator(),
              py::arg("solution"),
-             py::arg("cost_evaluator"))
+             py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>())
         .def("search",
              py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &>(
                  &LocalSearch::search),
              py::arg("solution"),
-             py::arg("cost_evaluator"))
+             py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>())
         .def("intensify",
              py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &,
                                double const>(&LocalSearch::intensify),
              py::arg("solution"),
              py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance") = 0.05)
+             py::arg("overlap_tolerance") = 0.05,
+             py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
