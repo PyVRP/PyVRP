@@ -110,6 +110,7 @@ dev = [
 # and generating docs (docblock) and coverage reports (gcovr).
 build = [
     "hatchling>=1.13",
+    "editables>=0.5",
     "meson~=1.0",
     "ninja~=1.11",
     "gcovr~=7.2",

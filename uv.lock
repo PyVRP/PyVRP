@@ -569,6 +569,15 @@ wheels = [
 ]
 
 [[package]]
+name = "editables"
+version = "0.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/4a/986d35164e2033ddfb44515168a281a7986e260d344cf369c3f52d4c3275/editables-0.5.tar.gz", hash = "sha256:309627d9b5c4adc0e668d8c6fa7bac1ba7c8c5d415c2d27f60f081f8e80d1de2", size = 14744 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6b/be/0f2f4a5e8adc114a02b63d92bf8edbfa24db6fc602fca83c885af2479e0e/editables-0.5-py3-none-any.whl", hash = "sha256:61e5ffa82629e0d8bfe09bc44a07db3c1ab8ed1ce78a6980732870f19b5e7d4c", size = 5098 },
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2022,6 +2031,7 @@ dependencies = [
 [package.dependency-groups]
 build = [
     { name = "docblock" },
+    { name = "editables" },
     { name = "gcovr" },
     { name = "hatchling" },
     { name = "meson" },
@@ -2058,6 +2068,7 @@ requires-dist = [
 [package.metadata.dependency-groups]
 build = [
     { name = "docblock", specifier = "~=0.1" },
+    { name = "editables", specifier = ">=0.5" },
     { name = "gcovr", specifier = "~=7.2" },
     { name = "hatchling", specifier = ">=1.13" },
     { name = "meson", specifier = "~=1.0" },
