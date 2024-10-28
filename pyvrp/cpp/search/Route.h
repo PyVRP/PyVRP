@@ -189,6 +189,8 @@ private:
     std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
     std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
 
+    // Load data, for each load dimension. These vectors form matrices, where
+    // the rows index the load dimension, and the columns the nodes.
     std::vector<LoadSegments> loadAt;      // Load data at each node
     std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
     std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
@@ -511,7 +513,7 @@ Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
 
 LoadSegment Route::SegmentAt::load(size_t dimension) const
 {
-    return route->loadAt[idx][dimension];
+    return route->loadAt[dimension][idx];
 }
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
@@ -534,7 +536,7 @@ DurationSegment Route::SegmentAfter::duration(size_t profile) const
 
 LoadSegment Route::SegmentAfter::load(size_t dimension) const
 {
-    return route->loadAfter[start][dimension];
+    return route->loadAfter[dimension][start];
 }
 
 DistanceSegment Route::SegmentBefore::distance(size_t profile) const
@@ -557,7 +559,7 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
 
 LoadSegment Route::SegmentBefore::load(size_t dimension) const
 {
-    return route->loadBefore[end][dimension];
+    return route->loadBefore[dimension][end];
 }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
@@ -601,10 +603,11 @@ DurationSegment Route::SegmentBetween::duration(size_t profile) const
 
 LoadSegment Route::SegmentBetween::load(size_t dimension) const
 {
-    auto loadSegment = route->loadAt[start][dimension];
+    auto const &loads = route->loadAt[dimension];
+
+    auto loadSegment = loads[start];
     for (size_t step = start; step != end; ++step)
-        loadSegment = LoadSegment::merge(loadSegment,
-                                         route->loadAt[step + 1][dimension]);
+        loadSegment = LoadSegment::merge(loadSegment, loads[step + 1]);
 
     return loadSegment;
 }
