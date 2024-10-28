@@ -204,7 +204,11 @@ Cost SwapStar::evaluate(Route *routeU,
             // calculating remove and insert costs - that is all handled here.
             // So it's pretty rough but fast and seems to work well enough for
             // most instances.
-            deltaCost += costEvaluator.loadPenalty(deltaExcessLoad(U, V), 0);
+            auto const diffExcessLoad = deltaExcessLoad(U, V);
+            if (diffExcessLoad < 0)
+                deltaCost -= costEvaluator.loadPenalty(-diffExcessLoad, 0);
+            else
+                deltaCost += costEvaluator.loadPenalty(diffExcessLoad, 0);
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
