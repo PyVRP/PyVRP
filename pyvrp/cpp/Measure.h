@@ -12,7 +12,7 @@
 
 namespace pyvrp
 {
-using Value = double;
+using Value = float;
 
 enum class MeasureType
 {
