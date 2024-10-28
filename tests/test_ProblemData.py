@@ -890,16 +890,6 @@ def test_pickle_locations(cls):
     assert_equal(pickle.loads(bytes), before_pickle)
 
 
-def test_pickle_client_with_multiple_load_dimensions():
-    """
-    Tests that clients with multiple load dimensions can be serialised and
-    unserialised.
-    """
-    before_pickle = Client(x=0, y=1, delivery=[1, 2, 3], pickup=[4, 5, 6])
-    bytes = pickle.dumps(before_pickle)
-    assert_equal(pickle.loads(bytes), before_pickle)
-
-
 def test_pickle_client_group():
     """
     Tests that client groups can be serialised and unserialised.

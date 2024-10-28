@@ -454,14 +454,12 @@ def test_excess_load_calculation_with_multiple_load_dimensions(
     Tests several cases with multiple load dimensions to ensure excess load is
     calculated correctly.
     """
-    depot = Depot(0, 0)
-    clients = [
-        Client(1, 0, delivery1),
-        Client(2, 0, delivery2),
-    ]
     data = ProblemData(
-        clients=clients,
-        depots=[depot],
+        clients=[
+            Client(1, 0, delivery1),
+            Client(2, 0, delivery2),
+        ],
+        depots=[Depot(0, 0)],
         vehicle_types=[VehicleType(1, capacity=capacity)],
         distance_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
         duration_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
