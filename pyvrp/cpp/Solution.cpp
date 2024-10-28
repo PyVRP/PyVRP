@@ -280,13 +280,13 @@ Solution::Solution(size_t numClients,
                    Duration duration,
                    Cost durationCost,
                    Distance excessDistance,
-                   std::vector<Load> const &excessLoad,
+                   std::vector<Load> excessLoad,
                    Cost fixedVehicleCost,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
                    bool isGroupFeasible,
-                   Routes const &routes,
+                   Routes routes,
                    Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
@@ -295,14 +295,14 @@ Solution::Solution(size_t numClients,
       duration_(duration),
       durationCost_(durationCost),
       excessDistance_(excessDistance),
-      excessLoad_(excessLoad),
+      excessLoad_(std::move(excessLoad)),
       fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
       isGroupFeas_(isGroupFeasible),
-      routes_(routes),
-      neighbours_(neighbours)
+      routes_(std::move(routes)),
+      neighbours_(std::move(neighbours))
 {
 }
 

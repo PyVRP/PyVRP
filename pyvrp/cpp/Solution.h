@@ -254,13 +254,13 @@ public:
              Duration duration,
              Cost durationCost,
              Distance excessDistance,
-             std::vector<Load> const &excessLoad,
+             std::vector<Load> excessLoad,
              Cost fixedVehicleCost,
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
              bool isGroupFeasible,
-             Routes const &routes,
+             Routes routes,
              Neighbours neighbours);
 };
 }  // namespace pyvrp
