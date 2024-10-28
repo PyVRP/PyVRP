@@ -22,10 +22,7 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     endDepot_ = vehType.endDepot;
 
     DurationSegment ds = {startDepot_, vehType};
-    std::vector<LoadSegment> loadSegments;
-    loadSegments.reserve(data.numLoadDimensions());
-    for (size_t i = 0; i != data.numLoadDimensions(); ++i)
-        loadSegments.emplace_back(0, 0, 0);
+    std::vector<LoadSegment> loadSegments(data.numLoadDimensions(), {0, 0, 0});
 
     size_t prevClient = startDepot_;
 
@@ -48,10 +45,10 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
         auto const clientDS = DurationSegment(client, clientData);
         ds = DurationSegment::merge(durations, ds, clientDS);
 
-        for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
         {
-            auto const clientLs = LoadSegment(clientData, i);
-            loadSegments[i] = LoadSegment::merge(loadSegments[i], clientLs);
+            auto const clientLs = LoadSegment(clientData, dim);
+            loadSegments[dim] = LoadSegment::merge(loadSegments[dim], clientLs);
         }
 
         prevClient = client;
@@ -67,12 +64,12 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     delivery_.reserve(data.numLoadDimensions());
     pickup_.reserve(data.numLoadDimensions());
     excessLoad_.reserve(data.numLoadDimensions());
-    for (size_t i = 0; i != data.numLoadDimensions(); ++i)
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        delivery_.push_back(loadSegments[i].delivery());
-        pickup_.push_back(loadSegments[i].pickup());
-        excessLoad_.push_back(
-            std::max<Load>(loadSegments[i].load() - vehType.capacity[i], 0));
+        delivery_.push_back(loadSegments[dim].delivery());
+        pickup_.push_back(loadSegments[dim].pickup());
+        excessLoad_.push_back(std::max<Load>(
+            loadSegments[dim].load() - vehType.capacity[dim], 0));
     }
 
     DurationSegment endDS(endDepot_, vehType);
