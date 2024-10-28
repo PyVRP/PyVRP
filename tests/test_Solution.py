@@ -444,12 +444,16 @@ def test_excess_load_calculation(ok_small):
         ([10, 1], [1, 10], [5, 11], [6, 0]),
     ],
 )
-def test_excess_multidimensional_load_calculation(
+def test_excess_load_calculation_with_multiple_load_dimensions(
     delivery1,
     delivery2,
     capacity,
     expected_excess_load,
 ):
+    """
+    Tests several cases with multiple load dimensions to ensure excess load is
+    calculated correctly.
+    """
     depot = Depot(0, 0)
     clients = [
         Client(1, 0, delivery1),

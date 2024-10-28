@@ -899,7 +899,7 @@ def test_model_solves_instances_with_multiple_profiles():
     assert_equal(route2.visits(), [2])
 
 
-def test_model_solves_instance_with_zero_load_dims():
+def test_model_solves_instance_with_zero_load_dimensions():
     """
     Smoke test to check that the model can solve an instance with zero load
     dimensions.
