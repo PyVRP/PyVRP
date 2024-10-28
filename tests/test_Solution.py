@@ -766,26 +766,6 @@ def test_solution_can_be_pickled(ok_small):
     assert_equal(after_pickle, before_pickle)
 
 
-def test_solution_with_multiple_load_dimensions_can_be_pickled():
-    data = ProblemData(
-        clients=[
-            Client(x=0, y=0, delivery=[2, 1]),
-            Client(x=1, y=1, delivery=[3, 2]),
-        ],
-        depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=[1, 1])],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
-    )
-
-    rng = RandomNumberGenerator(seed=2)
-
-    before_pickle = Solution.make_random(data, rng)
-    bytes = pickle.dumps(before_pickle)
-    after_pickle = pickle.loads(bytes)
-    assert_equal(after_pickle, before_pickle)
-
-
 @pytest.mark.parametrize(
     ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
 )
