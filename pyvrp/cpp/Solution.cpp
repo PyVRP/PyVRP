@@ -74,11 +74,9 @@ bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
 bool Solution::hasExcessLoad() const
 {
-    for (Load const &load : excessLoad_)
-        if (load > 0)
-            return true;
-
-    return false;
+    return std::any_of(excessLoad_.begin(),
+                       excessLoad_.end(),
+                       [](auto const excess) { return excess > 0; });
 }
 
 bool Solution::hasExcessDistance() const { return excessDistance_ > 0; }

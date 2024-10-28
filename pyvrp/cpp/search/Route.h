@@ -6,6 +6,7 @@
 #include "LoadSegment.h"
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <cassert>
 #include <iosfwd>
 
@@ -192,8 +193,8 @@ private:
     std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
     std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
 
-    std::vector<Load> load_;        // TODO
-    std::vector<Load> excessLoad_;  // TODO
+    std::vector<Load> load_;        // Route loads (for each dimension)
+    std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
 
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
@@ -617,13 +618,9 @@ bool Route::isFeasible() const
 bool Route::hasExcessLoad() const
 {
     assert(!dirty);
-    // Note that the result of this method is not cached, as this method is not
-    // called during move evaluations.
-    for (size_t i = 0; i != data.numLoadDimensions(); ++i)
-        if (excessLoad_[i] > 0)
-            return true;
-
-    return false;
+    return std::any_of(excessLoad_.begin(),
+                       excessLoad_.end(),
+                       [](auto const excess) { return excess > 0; });
 }
 
 bool Route::hasExcessDistance() const

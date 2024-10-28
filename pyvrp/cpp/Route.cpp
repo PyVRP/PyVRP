@@ -191,11 +191,9 @@ bool Route::isFeasible() const
 
 bool Route::hasExcessLoad() const
 {
-    for (Load const &load : excessLoad_)
-        if (load > 0)
-            return true;
-
-    return false;
+    return std::any_of(excessLoad_.begin(),
+                       excessLoad_.end(),
+                       [](auto const excess) { return excess > 0; });
 }
 
 bool Route::hasExcessDistance() const { return excessDistance_ > 0; }
