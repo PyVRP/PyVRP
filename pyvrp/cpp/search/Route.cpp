@@ -93,6 +93,9 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
+    load_ = {data.numLoadDimensions(), 0};
+    excessLoad_ = {data.numLoadDimensions(), 0};
+
     durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
              DurationSegment(vehicleType_.endDepot, vehicleType_)};
     durAfter = durAt;
@@ -238,6 +241,13 @@ void Route::update()
         durBefore[idx] = DurationSegment::merge(
             data.durationMatrix(profile()), durBefore[idx - 1], durAt[idx]);
 #endif
+    }
+
+    auto const &loads = loadBefore.back();
+    for (size_t dim = 0; dim != loads.size(); ++dim)
+    {
+        load_[dim] = loads[dim].load();
+        excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
     }
 
     // Forward segments (client -> depot).

@@ -3,6 +3,7 @@
 #include <cassert>
 
 using pyvrp::Cost;
+using pyvrp::Load;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 
@@ -74,6 +75,37 @@ void SwapStar::updateInsertionCost(Route *R,
         auto *V = (*R)[idx];
         insertPositions.maybeAdd(deltaCost, V);
     }
+}
+
+Load SwapStar::deltaExcessLoad(Route::Node *U, Route::Node *V) const
+{
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
+
+    ProblemData::Client const &uClient = data.location(U->client());
+    ProblemData::Client const &vClient = data.location(V->client());
+
+    auto const &uLoad = uRoute->load();
+    auto const &uCapacity = uRoute->capacity();
+
+    auto const &vLoad = vRoute->load();
+    auto const &vCapacity = vRoute->capacity();
+
+    Load diffExcess = 0;
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+    {
+        auto const loadDiff
+            = std::max(uClient.delivery[dim], uClient.pickup[dim])
+              - std::max(vClient.delivery[dim], vClient.pickup[dim]);
+
+        diffExcess += std::max<Load>(uLoad[dim] - loadDiff - uCapacity[dim], 0);
+        diffExcess -= std::max<Load>(uLoad[dim] - uCapacity[dim], 0);
+
+        diffExcess += std::max<Load>(vLoad[dim] + loadDiff - vCapacity[dim], 0);
+        diffExcess -= std::max<Load>(vLoad[dim] - vCapacity[dim], 0);
+    }
+
+    return diffExcess;
 }
 
 std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
@@ -172,27 +204,7 @@ Cost SwapStar::evaluate(Route *routeU,
             // calculating remove and insert costs - that is all handled here.
             // So it's pretty rough but fast and seems to work well enough for
             // most instances.
-            ProblemData::Client const &uClient = data.location(U->client());
-            ProblemData::Client const &vClient = data.location(V->client());
-
-            for (size_t i = 0; i != data.numLoadDimensions(); ++i)
-            {
-                Load const uLoad
-                    = std::max<Load>(uClient.delivery[i], uClient.pickup[i]);
-                Load const vLoad
-                    = std::max<Load>(vClient.delivery[i], vClient.pickup[i]);
-                Load const loadDiff = uLoad - vLoad;
-
-                deltaCost += costEvaluator.loadPenalty(
-                    routeU->load(i) - loadDiff, routeU->capacity(i));
-                deltaCost -= costEvaluator.loadPenalty(routeU->load(i),
-                                                       routeU->capacity(i));
-
-                deltaCost += costEvaluator.loadPenalty(
-                    routeV->load(i) + loadDiff, routeV->capacity(i));
-                deltaCost -= costEvaluator.loadPenalty(routeV->load(i),
-                                                       routeV->capacity(i));
-            }
+            deltaCost += costEvaluator.loadPenalty(deltaExcessLoad(U, V), 0);
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());

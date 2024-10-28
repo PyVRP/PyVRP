@@ -130,8 +130,6 @@ Route::Route(Visits visits,
 {
 }
 
-size_t Route::numLoadDimensions() const { return excessLoad_.size(); }
-
 bool Route::empty() const { return visits_.empty(); }
 
 size_t Route::size() const { return visits_.size(); }
@@ -150,32 +148,11 @@ Cost Route::distanceCost() const { return distanceCost_; }
 
 Distance Route::excessDistance() const { return excessDistance_; }
 
-Load Route::delivery(size_t dimension) const
-{
-    if (dimension >= delivery_.size())
-        throw std::out_of_range(
-            "Dimension is out of range for the route's delivery load.");
+std::vector<Load> const &Route::delivery() const { return delivery_; }
 
-    return delivery_[dimension];
-}
+std::vector<Load> const &Route::pickup() const { return pickup_; }
 
-Load Route::pickup(size_t dimension) const
-{
-    if (dimension >= pickup_.size())
-        throw std::out_of_range(
-            "Dimension is out of range for the route's pickup load.");
-
-    return pickup_[dimension];
-}
-
-Load Route::excessLoad(size_t dimension) const
-{
-    if (dimension >= excessLoad_.size())
-        throw std::out_of_range(
-            "Dimension is out of range for the route's excess load.");
-
-    return excessLoad_[dimension];
-}
+std::vector<Load> const &Route::excessLoad() const { return excessLoad_; }
 
 Duration Route::duration() const { return duration_; }
 

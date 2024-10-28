@@ -192,6 +192,9 @@ private:
     std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
     std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
 
+    std::vector<Load> load_;        // TODO
+    std::vector<Load> excessLoad_;  // TODO
+
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
     std::vector<DurationSegment> durBefore;  // Dur of depot -> client (incl.)
@@ -262,17 +265,14 @@ public:
     [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
-     * @param dimension The load dimension to query.
-     * @return Total load on this route for the given load dimension.
+     * Total loads on this route.
      */
-    [[nodiscard]] inline Load load(size_t dimension) const;
+    [[nodiscard]] inline std::vector<Load> const &load() const;
 
     /**
-     * @param dimension The load dimension to query.
-     * @return Load (as a consequence of pickup and deliveries) in excess of
-     * the vehicle's capacity for the given dimension.
+     * Pickup or delivery loads in excess of the vehicle's capacity.
      */
-    [[nodiscard]] inline Load excessLoad(size_t dimension) const;
+    [[nodiscard]] inline std::vector<Load> const &excessLoad() const;
 
     /**
      * Travel distance in excess of the assigned vehicle type's maximum
@@ -281,11 +281,9 @@ public:
     [[nodiscard]] inline Distance excessDistance() const;
 
     /**
-     * @param dimension The load dimension to query.
-     * @return The load capacity of this route's vehicle type for the given
-     * dimension.
+     * Capacity of the vehicle servicing this route.
      */
-    [[nodiscard]] inline Load capacity(size_t dimension) const;
+    [[nodiscard]] inline std::vector<Load> const &capacity() const;
 
     /**
      * @return The location index of this route's starting depot.
@@ -353,11 +351,6 @@ public:
      * @return The routing profile of the vehicle servicing this route.
      */
     [[nodiscard]] inline size_t profile() const;
-
-    /**
-     * @return The number of load dimensions in this route's problem instance.
-     */
-    [[nodiscard]] inline size_t numLoadDimensions() const;
 
     /**
      * @return true if this route is empty, false otherwise.
@@ -627,7 +620,7 @@ bool Route::hasExcessLoad() const
     // Note that the result of this method is not cached, as this method is not
     // called during move evaluations.
     for (size_t i = 0; i != data.numLoadDimensions(); ++i)
-        if (excessLoad(i) > 0)
+        if (excessLoad_[i] > 0)
             return true;
 
     return false;
@@ -663,16 +656,16 @@ Route::Proposal<Segments...> Route::proposal(Segments &&...segments) const
     return {this, data, std::forward<Segments>(segments)...};
 }
 
-Load Route::load(size_t dimension) const
+std::vector<Load> const &Route::load() const
 {
     assert(!dirty);
-    return loadBefore.back()[dimension].load();
+    return load_;
 }
 
-Load Route::excessLoad(size_t dimension) const
+std::vector<Load> const &Route::excessLoad() const
 {
     assert(!dirty);
-    return std::max<Load>(load(dimension) - capacity(dimension), 0);
+    return excessLoad_;
 }
 
 Distance Route::excessDistance() const
@@ -681,9 +674,9 @@ Distance Route::excessDistance() const
     return std::max<Distance>(distance() - maxDistance(), 0);
 }
 
-Load Route::capacity(size_t dimension) const
+std::vector<Load> const &Route::capacity() const
 {
-    return vehicleType_.capacity[dimension];
+    return vehicleType_.capacity;
 }
 
 size_t Route::startDepot() const { return vehicleType_.startDepot; }
@@ -731,8 +724,6 @@ Duration Route::timeWarp() const
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
-
-size_t Route::numLoadDimensions() const { return data.numLoadDimensions(); }
 
 bool Route::empty() const { return size() == 0; }
 

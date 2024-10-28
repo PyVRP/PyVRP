@@ -47,11 +47,6 @@ class Route
     Depot endDepot_;                      // Assigned end depot
 
 public:
-    /**
-     * Number of load dimensions in this route's problem instance.
-     */
-    [[nodiscard]] size_t numLoadDimensions() const;
-
     [[nodiscard]] bool empty() const;
 
     /**
@@ -85,50 +80,19 @@ public:
     [[nodiscard]] Distance excessDistance() const;
 
     /**
-     * Total client delivery load on this route for the given load dimension.
-     *
-     * Parameters
-     * ----------
-     * dimension
-     *     Load dimension for which to return the delivery amount.
-     *
-     * Raises
-     * ------
-     * IndexError
-     *     When the given load dimension is out of range.
+     * Total client delivery load on this route.
      */
-    [[nodiscard]] Load delivery(size_t dimension) const;
+    [[nodiscard]] std::vector<Load> const &delivery() const;
 
     /**
-     * Total client pickup load on this route for the given load dimension.
-     *
-     * Parameters
-     * ----------
-     * dimension
-     *     Load dimension for which to return the pickup amount.
-     *
-     * Raises
-     * ------
-     * IndexError
-     *     When the given load dimension is out of range.
+     * Total client pickup load on this route.
      */
-    [[nodiscard]] Load pickup(size_t dimension) const;
+    [[nodiscard]] std::vector<Load> const &pickup() const;
 
     /**
-     * Pickup or delivery load in excess of the vehicle's capacity for the
-     * given load dimension.
-     *
-     * Parameters
-     * ----------
-     * dimension
-     *     Load dimension for which to return the excess load amount.
-     *
-     * Raises
-     * ------
-     * IndexError
-     *     When the given load dimension is out of range.
+     * Pickup or delivery loads in excess of the vehicle's capacity.
      */
-    [[nodiscard]] Load excessLoad(size_t dimension) const;
+    [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
      * Total route duration, including travel, service and waiting time.

@@ -464,18 +464,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("excess_distance",
              &Route::excessDistance,
              DOC(pyvrp, Route, excessDistance))
-        .def("delivery",
-             &Route::delivery,
-             py::arg("dimension") = 0,
-             DOC(pyvrp, Route, delivery))
-        .def("pickup",
-             &Route::pickup,
-             py::arg("dimension") = 0,
-             DOC(pyvrp, Route, pickup))
-        .def("excess_load",
-             &Route::excessLoad,
-             py::arg("dimension") = 0,
-             DOC(pyvrp, Route, excessLoad))
+        .def("delivery", &Route::delivery, DOC(pyvrp, Route, delivery))
+        .def("pickup", &Route::pickup, DOC(pyvrp, Route, pickup))
+        .def("excess_load", &Route::excessLoad, DOC(pyvrp, Route, excessLoad))
         .def("duration", &Route::duration, DOC(pyvrp, Route, duration))
         .def("duration_cost",
              &Route::durationCost,
@@ -531,24 +522,14 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](Route const &route) {  // __getstate__
-                std::vector<pyvrp::Value> delivery(route.numLoadDimensions());
-                std::vector<pyvrp::Value> pickup(route.numLoadDimensions());
-                std::vector<pyvrp::Value> excessLoad(route.numLoadDimensions());
-
-                for (size_t i = 0; i != route.numLoadDimensions(); ++i)
-                {
-                    delivery[i] = route.delivery(i).get();
-                    pickup[i] = route.pickup(i).get();
-                    excessLoad[i] = route.excessLoad(i).get();
-                }
                 // Returns a tuple that completely encodes the route's state.
                 return py::make_tuple(route.visits(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
-                                      delivery,
-                                      pickup,
-                                      excessLoad,
+                                      route.delivery(),
+                                      route.pickup(),
+                                      route.excessLoad(),
                                       route.duration(),
                                       route.durationCost(),
                                       route.timeWarp(),
@@ -669,7 +650,6 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, Solution, durationCost))
         .def("excess_load",
              &Solution::excessLoad,
-             py::arg("dimension") = 0,
              DOC(pyvrp, Solution, excessLoad))
         .def("excess_distance",
              &Solution::excessDistance,
@@ -692,10 +672,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](Solution const &sol) {  // __getstate__
-                std::vector<pyvrp::Value> excessLoad(sol.numLoadDimensions());
-                for (size_t i = 0; i != sol.numLoadDimensions(); ++i)
-                    excessLoad[i] = sol.excessLoad(i).get();
-
                 // Returns a tuple that completely encodes the solution's state.
                 return py::make_tuple(sol.numClients(),
                                       sol.numMissingClients(),
@@ -704,7 +680,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.duration(),
                                       sol.durationCost(),
                                       sol.excessDistance(),
-                                      excessLoad,
+                                      sol.excessLoad(),
                                       sol.fixedVehicleCost(),
                                       sol.prizes(),
                                       sol.uncollectedPrizes(),

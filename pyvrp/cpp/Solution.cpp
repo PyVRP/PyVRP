@@ -37,14 +37,13 @@ void Solution::evaluate(ProblemData const &data)
         timeWarp_ += route.timeWarp();
         fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
 
-        for (size_t i = 0; i != data.numLoadDimensions(); ++i)
-            excessLoad_[i] += route.excessLoad(i);
+        auto const &excessLoad = route.excessLoad();
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+            excessLoad_[dim] += excessLoad[dim];
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
 }
-
-size_t Solution::numLoadDimensions() const { return excessLoad_.size(); }
 
 bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
 
@@ -94,14 +93,7 @@ Duration Solution::duration() const { return duration_; }
 
 Cost Solution::durationCost() const { return durationCost_; }
 
-Load Solution::excessLoad(size_t dimension) const
-{
-    if (dimension >= excessLoad_.size())
-        throw std::out_of_range(
-            "Dimension is out of range for the solution's excess load.");
-
-    return excessLoad_[dimension];
-}
+std::vector<Load> const &Solution::excessLoad() const { return excessLoad_; }
 
 Distance Solution::excessDistance() const { return excessDistance_; }
 

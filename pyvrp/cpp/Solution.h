@@ -74,12 +74,6 @@ class Solution
     Solution &operator=(Solution &&other) = default;
 
 public:
-    /**
-     * Number of load dimensions in the problem instance corresponding to this
-     * solution.
-     */
-    [[nodiscard]] size_t numLoadDimensions() const;
-
     // Solution is empty when it has no routes and no clients.
     [[nodiscard]] bool empty() const;
 
@@ -189,19 +183,10 @@ public:
     [[nodiscard]] Cost durationCost() const;
 
     /**
-     * Total excess load over all routes for the given load dimension.
-     *
-     * Parameters
-     * ----------
-     * dimension
-     *     Load dimension for which to return the total excess load amount.
-     *
-     * Raises
-     * ------
-     * IndexError
-     *     When the given load dimension is out of range.
+     * Aggregate pickup or delivery loads in excess of the vehicle's capacity
+     * of all routes.
      */
-    [[nodiscard]] Load excessLoad(size_t dimension) const;
+    [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
      * Returns the total distance in excess of maximum duration constraints,

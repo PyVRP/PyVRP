@@ -12,14 +12,13 @@ namespace pyvrp
 // The following methods must be implemented for a type to be evaluatable by
 // the CostEvaluator.
 template <typename T>
-concept CostEvaluatable = requires(T arg, size_t dimension) {
+concept CostEvaluatable = requires(T arg) {
     { arg.distanceCost() } -> std::same_as<Cost>;
     { arg.durationCost() } -> std::same_as<Cost>;
     { arg.fixedVehicleCost() } -> std::same_as<Cost>;
-    { arg.excessLoad(dimension) } -> std::same_as<Load>;
+    { arg.excessLoad() } -> std::convertible_to<std::vector<Load>>;
     { arg.excessDistance() } -> std::same_as<Distance>;
     { arg.timeWarp() } -> std::same_as<Duration>;
-    { arg.numLoadDimensions() } -> std::same_as<size_t>;
     { arg.empty() } -> std::same_as<bool>;
     { arg.isFeasible() } -> std::same_as<bool>;
 };
@@ -198,8 +197,9 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
                 + twPenalty(arg.timeWarp())
                 + distPenalty(arg.excessDistance(), 0);
 
-    for (size_t i = 0; i != arg.numLoadDimensions(); ++i)
-        cost += loadPenalty(arg.excessLoad(i), 0);
+    auto const &excessLoad = arg.excessLoad();
+    for (size_t dim = 0; dim != excessLoad.size(); ++dim)
+        cost += loadPenalty(excessLoad[dim], 0);
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
@@ -229,8 +229,8 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out -= distPenalty(route->distance(), route->maxDistance());
 
     if constexpr (!skipLoad)
-        for (size_t i = 0; i != route->numLoadDimensions(); ++i)
-            out -= loadPenalty(route->load(i), route->capacity(i));
+        for (auto const excess : route->excessLoad())
+            out -= loadPenalty(excess, 0);
 
     out -= route->durationCost();
     out -= twPenalty(route->timeWarp());
@@ -244,11 +244,11 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
             return false;
 
     if constexpr (!skipLoad)
-        for (size_t i = 0; i != route->numLoadDimensions(); ++i)
-        {
-            auto const load = proposal.loadSegment(i);
-            out += loadPenalty(load.load(), route->capacity(i));
-        }
+    {
+        auto const &capacity = route->capacity();
+        for (size_t dim = 0; dim != capacity.size(); ++dim)
+            out += loadPenalty(proposal.loadSegment(dim).load(), capacity[dim]);
+    }
 
     auto const duration = proposal.durationSegment();
     out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
@@ -272,9 +272,6 @@ bool CostEvaluator::deltaCost(Cost &out,
     auto const *uRoute = uProposal.route();
     auto const *vRoute = vProposal.route();
 
-    assert(uRoute->numLoadDimensions() == vRoute->numLoadDimensions());
-    auto const numLoadDimensions = uRoute->numLoadDimensions();
-
     out -= uRoute->distanceCost();
     out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
 
@@ -282,11 +279,15 @@ bool CostEvaluator::deltaCost(Cost &out,
     out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
     if constexpr (!skipLoad)
-        for (size_t i = 0; i != numLoadDimensions; ++i)
-        {
-            out -= loadPenalty(uRoute->load(i), uRoute->capacity(i));
-            out -= loadPenalty(vRoute->load(i), vRoute->capacity(i));
-        }
+    {
+        auto const &uExcessLoad = uRoute->excessLoad();
+        for (size_t dim = 0; dim != uExcessLoad.size(); ++dim)
+            out -= loadPenalty(uExcessLoad[dim], 0);
+
+        auto const &vExcessLoad = vRoute->excessLoad();
+        for (size_t dim = 0; dim != vExcessLoad.size(); ++dim)
+            out -= loadPenalty(vExcessLoad[dim], 0);
+    }
 
     out -= uRoute->durationCost();
     out -= twPenalty(uRoute->timeWarp());
@@ -307,14 +308,17 @@ bool CostEvaluator::deltaCost(Cost &out,
             return false;
 
     if constexpr (!skipLoad)
-        for (size_t i = 0; i != numLoadDimensions; ++i)
-        {
-            auto const uLoad = uProposal.loadSegment(i);
-            out += loadPenalty(uLoad.load(), uRoute->capacity(i));
+    {
+        auto const &uCapacity = uRoute->capacity();
+        for (size_t dim = 0; dim != uCapacity.size(); ++dim)
+            out += loadPenalty(uProposal.loadSegment(dim).load(),
+                               uCapacity[dim]);
 
-            auto const vLoad = vProposal.loadSegment(i);
-            out += loadPenalty(vLoad.load(), vRoute->capacity(i));
-        }
+        auto const &vCapacity = vRoute->capacity();
+        for (size_t dim = 0; dim != vCapacity.size(); ++dim)
+            out += loadPenalty(vProposal.loadSegment(dim).load(),
+                               vCapacity[dim]);
+    }
 
     if constexpr (!exact)
         if (out >= 0)

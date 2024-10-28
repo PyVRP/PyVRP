@@ -64,6 +64,8 @@ class SwapStar : public LocalSearchOperator<Route>
                              Route::Node *U,
                              CostEvaluator const &costEvaluator);
 
+    Load deltaExcessLoad(Route::Node *U, Route::Node *V) const;
+
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
     std::pair<Cost, Route::Node *> getBestInsertPoint(
