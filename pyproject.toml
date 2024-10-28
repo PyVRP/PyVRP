@@ -44,60 +44,91 @@ classifiers = [
 ]
 
 
-[tool.poetry.urls]
-"Tracker" = "https://github.com/PyVRP/PyVRP/issues"
-
-
-[tool.poetry.dependencies]
-python = "^3.10,<3.14"
-numpy = [
-    # Numpy 1.26 is the first version of numpy that supports Python 3.12+.
-    { version = ">=1.15.2", python = "<3.12" },
-    { version = ">=1.26.0", python = ">=3.12" }
-]
-matplotlib = ">=2.2.0"
-vrplib = "^1.4.0"
-tqdm = "^4.64.1"
-tomli = "^2.0.1"
-
-
-[tool.poetry.group.docs]
-optional = true
-
-
-[tool.poetry.group.docs.dependencies]
-sphinx = ">=7.3.0"
-nbsphinx = ">=0.8.9"
-ipython = ">=8.6.0"
-numpydoc = ">=1.5.0"
-sphinx-immaterial = ">=0.11.12"
-
-
-[tool.poetry.group.examples]
-optional = true
-
-
-[tool.poetry.group.examples.dependencies]
-jupyter = ">=1.0.0"
-tabulate = "^0.9.0"
-
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^2.20.0"
-pytest = ">=6.0.0"
-pytest-cov = ">=2.6.1"
-codecov = "*"
-
-# These are used in the build script: for compiling the library (meson, ninja)
-# and generating docs (docblock) and coverage reports (gcovr).
-meson = "^1.0.0"
-ninja = "^1.11.1"
-gcovr = "^7.2"
-docblock = "^0.1.5"
-
-
 [tool.poetry.scripts]
 pyvrp = "pyvrp.cli:main"
+
+
+[project]
+name = "pyvrp"
+version = "0.10.0a0"
+description = "A state-of-the-art vehicle routing problem solver."
+authors = [
+    { name = "Niels Wouda", email = "nielswouda@gmail.com" },
+    { name = "Leon Lan", email = "leon.lanyidong@gmail.com" },
+    { name = "Wouter Kool", email = "wouter.kool@ortec.com" }
+]
+license = { text = "MIT License" }
+readme = "README.md"
+keywords = [
+    "vehicle routing problem",
+    "hybrid genetic search",
+    "metaheuristic",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.15.2; python_version < '3.12'",
+    "numpy>=1.26.0; python_version >= '3.12'",
+    "matplotlib>=2.2.0",
+    "vrplib~=1.4",
+    "tqdm~=4.64",
+    "tomli~=2.0"
+]
+
+
+[project.urls]
+Homepage = "https://pyvrp.org/"
+Documentation = "https://pyvrp.org/"
+Repository = "https://github.com/PyVRP/PyVRP"
+Issues = "https://github.com/PyVRP/PyVRP/issues"
+
+
+[project.scripts]
+pyvrp = "pyvrp.cli:main"
+
+
+[dependency-groups]
+dev = [
+    "pre-commit~=2.20",
+    "pytest>=6.0.0",
+    "pytest-cov>=2.6.1",
+    "codecov"
+]
+# These are used in the build script: for compiling the library (meson, ninja)
+# and generating docs (docblock) and coverage reports (gcovr).
+build = [
+    "meson~=1.0",
+    "ninja~=1.11",
+    "gcovr~=7.2",
+    "docblock~=0.1"
+]
+docs = [
+    "sphinx>=7.3.0",
+    "nbsphinx>=0.8.9",
+    "ipython>=8.6.0",
+    "numpydoc>=1.5.0",
+    "sphinx-immaterial>=0.11.12"
+]
+examples = [
+    "jupyter>=1.0.0",
+    "tabulate~=0.9.0",
+]
+
+
+[tool.uv]
+default-groups = ["dev", "build"]
 
 
 [tool.black]
