@@ -1,7 +1,7 @@
 project(
     'pyvrp',
     'cpp',
-    version: run_command('poetry', 'version', '--short', check: true).stdout(),
+    # version: run_command('poetry', 'version', '--short', check: true).stdout(),
     default_options: [
         'cpp_std=c++20',
         'b_ndebug=if-release',  # disables asserts in release builds

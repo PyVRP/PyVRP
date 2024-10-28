@@ -3,6 +3,20 @@ import os
 import pathlib
 from subprocess import check_call
 
+from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+
+
+class CustomBuildHook(BuildHookInterface):
+    """
+    Simple build hook that compiles the native extensions when hatchling is
+    used.
+    """
+
+    def initialize(self, version, build_data) -> None:
+        build_data["infer_tag"] = True
+        build_data["pure_python"] = False
+        main()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="build_extensions")

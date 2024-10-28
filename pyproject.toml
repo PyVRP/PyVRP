@@ -109,10 +109,11 @@ dev = [
 # These are used in the build script: for compiling the library (meson, ninja)
 # and generating docs (docblock) and coverage reports (gcovr).
 build = [
+    "hatchling>=1.13",
     "meson~=1.0",
     "ninja~=1.11",
     "gcovr~=7.2",
-    "docblock~=0.1"
+    "docblock~=0.1",
 ]
 docs = [
     "sphinx>=7.3.0",
@@ -129,6 +130,7 @@ examples = [
 
 [tool.uv]
 default-groups = ["dev", "build"]
+no-build-isolation-package = ["pyvrp"]
 
 
 [tool.black]
@@ -187,13 +189,17 @@ test-requires = "pytest>=6.0.0 pytest-cov>=2.6.1"
 test-command = "pytest {package}/tests"
 
 
-[tool.poetry.build]
-generate-setup-file = false
-script = "build_extensions.py"
-
-
 [build-system]
-# We need meson and ninja to build the C++ extensions, and docblock to extract
-# documentation for the extensions.
-requires = ["poetry", "meson", "ninja", "docblock"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+    "pyvrp/**/*.so",
+    "pyvrp/**/*.pyd",
+]
+
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "build_extensions.py"
