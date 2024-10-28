@@ -57,7 +57,7 @@ authors = [
     { name = "Leon Lan", email = "leon.lanyidong@gmail.com" },
     { name = "Wouter Kool", email = "wouter.kool@ortec.com" }
 ]
-license = { text = "MIT License" }
+license = { file = "LICENSE.md" }
 readme = "README.md"
 keywords = [
     "vehicle routing problem",
@@ -192,6 +192,22 @@ test-command = "pytest {package}/tests"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "docs/",
+    "tests/",
+    "meson.build",
+    "meson_options.txt",
+    "build_extensions.py",
+    "extract_docstrings.py",
+    "subprojects/*.wrap",
+]
+exclude = [
+    "docs/build",
+    "subprojects/*/",
+]
 
 
 [tool.hatch.build.targets.wheel]
