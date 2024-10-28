@@ -9,18 +9,19 @@ namespace pyvrp
 /**
  * LoadSegment(delivery: int = 0, pickup: int = 0, load: int = 0)
  *
- * Creates a new load segment. Load segments can be efficiently concatenated,
- * and track statistics about capacity violations resulting from visiting
- * clients in the concatenated order.
+ * Creates a new load segment for delivery and pickup loads in a single
+ * dimension. These load segments can be efficiently concatenated, and track
+ * statistics about capacity violations resulting from visiting clients in the
+ * concatenated order.
  *
  * Parameters
  * ----------
  * delivery
- *     Total delivery amount on this segment for a single load dimension.
+ *     Total delivery amount on this segment.
  * pickup
- *     Total pickup amount on this segment for a single load dimension.
+ *     Total pickup amount on this segment.
  * load
- *     Maximum load on this segment for a single load dimension.
+ *     Maximum load on this segment.
  */
 class LoadSegment
 {
@@ -35,24 +36,22 @@ public:
 
     /**
      * Returns the delivery amount, that is, the total amount of load delivered
-     * to clients on this segment for a single load dimension.
+     * to clients on this segment.
      */
     [[nodiscard]] Load delivery() const;
 
     /**
-     * Returns the amount picked up from clients on this segment for a single
-     * load dimension.
+     * Returns the amount picked up from clients on this segment.
      */
     [[nodiscard]] Load pickup() const;
 
     /**
-     * Returns the maximum load encountered on this segment for a single load
-     * dimension.
+     * Returns the maximum load encountered on this segment.
      */
     [[nodiscard]] inline Load load() const;
 
-    // Construct from attributes of the given client at a given load dimension.
-    LoadSegment(ProblemData::Client const &client, size_t const dimension);
+    // Construct from load attributes of the given client and dimension.
+    LoadSegment(ProblemData::Client const &client, size_t dimension);
 
     // Construct from raw data.
     inline LoadSegment(Load delivery, Load pickup, Load load);
