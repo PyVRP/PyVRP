@@ -206,9 +206,9 @@ def test_excess_load(ok_small):
     # The only vehicle type in the instance has a capacity of 10, so this route
     # has excess load.
     assert_(route.has_excess_load())
-    assert_equal(route.excess_load(), 8)
-    assert_equal(route.load(), 18)
-    assert_equal(route.capacity(), 10)
+    assert_equal(route.excess_load(), [8])
+    assert_equal(route.load(), [18])
+    assert_equal(route.capacity(), [10])
 
 
 @pytest.mark.parametrize("fixed_cost", [0, 9])
@@ -238,10 +238,7 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
-    assert_equal(
-        route.load(dimension=0),
-        ok_small.location(client).delivery[0],
-    )
+    assert_equal(route.load(), ok_small.location(client).delivery)
     assert_equal(
         route.load_between(0, 2, dimension=0).load(),
         ok_small.location(client).delivery[0],

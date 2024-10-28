@@ -160,7 +160,7 @@ def test_penalised_cost(ok_small):
     assert_(not infeas.is_feasible())
 
     # Compute cost associated with violated constraints.
-    load_penalty_cost = penalty_capacity * infeas.excess_load()
+    load_penalty_cost = penalty_capacity * infeas.excess_load()[0]
     tw_penalty_cost = penalty_tw * infeas.time_warp()
     infeas_dist = infeas.distance()
 
@@ -218,15 +218,16 @@ def test_excess_load_penalised_cost():
     assert_(not sol.is_feasible())
     assert_(sol.has_excess_load())
 
+    # Vehicle capacity is 1 for both load dimensions. First client needs 2 of
+    # the first dimension, and one of the second, so the first route should
+    # have excess load in the first dimension. Second client has excess load
+    # in both dimensions. Finally, the solution should aggregate all this.
     routes = sol.routes()
-    assert_equal(routes[0].excess_load(0), 1)  # load 2, capacity 1 => excess 1
-    assert_equal(routes[0].excess_load(1), 0)  # load 1, capacity 1 => excess 0
-    assert_equal(routes[1].excess_load(0), 2)  # load 3, capacity 1 => excess 2
-    assert_equal(routes[1].excess_load(1), 1)  # load 2, capacity 1 => excess 1
-    assert_equal(sol.excess_load(0), 1 + 2)
-    assert_equal(sol.excess_load(1), 0 + 1)
+    assert_equal(routes[0].excess_load(), [1, 0])
+    assert_equal(routes[1].excess_load(), [2, 1])
+    assert_equal(sol.excess_load(), [3, 1])
 
-    # Both dimensions are penalised
+    # Both dimensions are penalised.
     cost_eval = CostEvaluator(10, 0, 0)
     assert_equal(cost_eval.penalised_cost(sol), 10 * (1 + 2) + 10 * (0 + 1))
 

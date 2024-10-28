@@ -431,7 +431,7 @@ def test_excess_load_calculation(ok_small):
     available = ok_small.vehicle_type(0).capacity[0]
     assert_equal(available, 10)
 
-    assert_equal(sol.excess_load(dimension=0), needed - available)
+    assert_equal(sol.excess_load(), [needed - available])
 
 
 @pytest.mark.parametrize(
@@ -465,34 +465,7 @@ def test_excess_multidimensional_load_calculation(
     solution = Solution(data, [[1, 2]])
 
     assert_(solution.has_excess_load())
-    assert_equal(solution.excess_load(), expected_excess_load[0])  # First dim.
-    for dim in range(data.num_load_dimensions):
-        assert_equal(solution.excess_load(dim), expected_excess_load[dim])
-
-
-def test_excess_load_raises_for_dimension_out_of_bounds():
-    """
-    Tests that accessing the excess load of a solution raises an IndexError for
-    out of bounds dimension.
-    """
-    clients = [
-        Client(1, 0, delivery=[], pickup=[]),
-        Client(2, 0, delivery=[], pickup=[]),
-    ]
-    data = ProblemData(
-        clients=clients,
-        depots=[Depot(0, 0)],
-        vehicle_types=[VehicleType(1, capacity=[])],
-        distance_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
-        duration_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
-    )
-
-    assert_equal(data.num_load_dimensions, 0)
-
-    solution = Solution(data, [[1, 2]])
-
-    with assert_raises(IndexError):
-        solution.excess_load(data.num_load_dimensions)
+    assert_equal(solution.excess_load(), expected_excess_load)
 
 
 @pytest.mark.parametrize(

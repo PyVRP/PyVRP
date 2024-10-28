@@ -422,8 +422,8 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     # Route is 1 -> 2 -> 3, and stores 1's pickup amount (5) before dropping
     # off 3's delivery amount (5). So total load is 10, and the excess load 5.
     assert_(not route.is_feasible())
-    assert_equal(route.load(), 10)
-    assert_equal(route.excess_load(), 5)
+    assert_equal(route.load(), [10])
+    assert_equal(route.excess_load(), [5])
 
     # For (1, 0)-exchange, we evaluate inserting 1 after 3. That'd resolve the
     # excess load. For (1, 1)-exchange, we evaluate swapping 1 and 3, which

@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -71,17 +71,17 @@ def test_route_access_methods(ok_small):
     assert_equal(routes[1].visits(), [2, 4])
 
     # There's no excess load, so all excess load should be zero.
-    assert_equal(routes[0].excess_load(), 0)
-    assert_equal(routes[1].excess_load(), 0)
+    assert_equal(routes[0].excess_load(), [0])
+    assert_equal(routes[1].excess_load(), [0])
 
     # Total route delivery demand (and pickups, which are all zero for this
     # instance).
     deliveries = [0] + [client.delivery[0] for client in ok_small.clients()]
-    assert_equal(routes[0].delivery(), deliveries[1] + deliveries[3])
-    assert_equal(routes[1].delivery(), deliveries[2] + deliveries[4])
+    assert_equal(routes[0].delivery(), [deliveries[1] + deliveries[3]])
+    assert_equal(routes[1].delivery(), [deliveries[2] + deliveries[4]])
 
-    assert_equal(routes[0].pickup(), 0)
-    assert_equal(routes[1].pickup(), 0)
+    assert_equal(routes[0].pickup(), [0])
+    assert_equal(routes[1].pickup(), [0])
 
     # The first route is not feasible due to time warp, but the second one is.
     # See also the tests below.
@@ -92,24 +92,6 @@ def test_route_access_methods(ok_small):
     services = [0] + [client.service_duration for client in ok_small.clients()]
     assert_equal(routes[0].service_duration(), services[1] + services[3])
     assert_equal(routes[1].service_duration(), services[2] + services[4])
-
-
-def test_route_load_access_methods_raise_for_dimension_out_of_bounds(ok_small):
-    """
-    Tests that accessing the route's delivery, pickup and excess load amount
-    raises an IndexError for out of bounds dimension.
-    """
-    route = Route(ok_small, [1, 2, 3, 4], 0)
-    num_load_dimensions = ok_small.num_load_dimensions
-
-    with assert_raises(IndexError):
-        route.delivery(num_load_dimensions)
-
-    with assert_raises(IndexError):
-        route.pickup(num_load_dimensions)
-
-    with assert_raises(IndexError):
-        route.excess_load(num_load_dimensions)
 
 
 def test_route_time_warp_calculations(ok_small):

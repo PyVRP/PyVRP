@@ -93,8 +93,8 @@ void Route::clear()
     loadAfter = loadAt;
     loadBefore = loadAt;
 
-    load_ = {data.numLoadDimensions(), 0};
-    excessLoad_ = {data.numLoadDimensions(), 0};
+    load_ = std::vector<Load>(data.numLoadDimensions(), 0);
+    excessLoad_ = load_;
 
     durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
              DurationSegment(vehicleType_.endDepot, vehicleType_)};

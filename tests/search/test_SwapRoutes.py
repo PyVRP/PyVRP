@@ -136,11 +136,11 @@ def test_evaluate_capacity_differences(ok_small):
     # route1 has vehicle type 0, which has capacity 10. So there is excess load
     # since its client delivery demand sums to 15.
     assert_(route1.has_excess_load())
-    assert_equal(route1.load(), 15)
+    assert_equal(route1.load(), [15])
 
     # route2, on the other hand, has capacity 20 and a load of only 3.
     assert_(not route2.has_excess_load())
-    assert_equal(route2.load(), 3)
+    assert_equal(route2.load(), [3])
 
     op = SwapRoutes(data)
     cost_eval = CostEvaluator(40, 1, 0)

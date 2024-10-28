@@ -54,7 +54,7 @@ def plot_route_schedule(
     drive_time = 0
     serv_time = 0
     dist = 0
-    load = route.delivery(load_dimension)
+    load = route.delivery()[load_dimension]
     slack = horizon
 
     # Traces and objects used for plotting

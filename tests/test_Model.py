@@ -619,7 +619,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     res = m.solve(stop=MaxIterations(100))
     route = res.best.routes()[0]
 
-    assert_equal(route.excess_load(), expected_excess_load)
+    assert_equal(route.excess_load(), [expected_excess_load])
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
 
 
