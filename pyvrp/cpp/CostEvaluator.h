@@ -197,9 +197,8 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
                 + twPenalty(arg.timeWarp())
                 + distPenalty(arg.excessDistance(), 0);
 
-    auto const &excessLoad = arg.excessLoad();
-    for (size_t dim = 0; dim != excessLoad.size(); ++dim)
-        cost += loadPenalty(excessLoad[dim], 0);
+    for (auto const excess : arg.excessLoad())
+        cost += loadPenalty(excess, 0);
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
@@ -280,13 +279,11 @@ bool CostEvaluator::deltaCost(Cost &out,
 
     if constexpr (!skipLoad)
     {
-        auto const &uExcessLoad = uRoute->excessLoad();
-        for (size_t dim = 0; dim != uExcessLoad.size(); ++dim)
-            out -= loadPenalty(uExcessLoad[dim], 0);
+        for (auto const excess : uRoute->excessLoad())
+            out -= loadPenalty(excess, 0);
 
-        auto const &vExcessLoad = vRoute->excessLoad();
-        for (size_t dim = 0; dim != vExcessLoad.size(); ++dim)
-            out -= loadPenalty(vExcessLoad[dim], 0);
+        for (auto const excess : vRoute->excessLoad())
+            out -= loadPenalty(excess, 0);
     }
 
     out -= uRoute->durationCost();

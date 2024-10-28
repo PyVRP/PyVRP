@@ -11,7 +11,6 @@ LoadSegment::LoadSegment(ProblemData::Client const &client,
                          size_t const dimension)
     : delivery_(client.delivery[dimension]),
       pickup_(client.pickup[dimension]),
-      load_(
-          std::max<Load>(client.delivery[dimension], client.pickup[dimension]))
+      load_(std::max<Load>(delivery_, pickup_))
 {
 }
