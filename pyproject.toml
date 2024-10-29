@@ -17,6 +17,7 @@ keywords = [
     "metaheuristic",
 ]
 include = [
+    { path = "benchmarks/", format = "sdist" },
     { path = "docs/", format = "sdist" },
     { path = "tests/", format = "sdist" },
 
