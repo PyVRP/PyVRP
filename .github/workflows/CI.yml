@@ -86,11 +86,11 @@ jobs:
         # release mode by default.
         run: poetry install --only-root
       - name: Run benchmarks
-        # Using the release build, we evaluate the microbenchmarks.
+        # We evaluate the microbenchmarks using the release build.
         uses: CodSpeedHQ/action@v3
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
-          run: poetry run pytest --codspeed
+          run: poetry run pytest benchmarks/ --codspeed
       - name: Run tests and generate coverage reports
         # Now, we recompile a clean debug build. This will be used to evaluate
         # the tests and determine code coverage.
