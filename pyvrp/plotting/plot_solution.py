@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -10,7 +8,7 @@ def plot_solution(
     solution: Solution,
     data: ProblemData,
     plot_clients: bool = False,
-    ax: Optional[plt.Axes] = None,
+    ax: plt.Axes | None = None,
 ):
     """
     Plots the given solution.

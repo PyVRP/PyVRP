@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 
 from pyvrp import ProblemData
@@ -11,7 +9,7 @@ from pyvrp.plotting.plot_solution import plot_solution
 
 
 def plot_result(
-    result: Result, data: ProblemData, fig: Optional[plt.Figure] = None
+    result: Result, data: ProblemData, fig: plt.Figure | None = None
 ):
     """
     Plots the results of a run, including the best solution and detailed

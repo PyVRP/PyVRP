@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class NoImprovement:
     """
     Criterion that stops if the best solution has not been improved for a fixed
@@ -17,7 +14,7 @@ class NoImprovement:
             raise ValueError("max_iterations < 0 not understood.")
 
         self._max_iterations = max_iterations
-        self._target: Optional[float] = None
+        self._target: float | None = None
         self._counter = 0
 
     def __call__(self, best_cost: float) -> bool:

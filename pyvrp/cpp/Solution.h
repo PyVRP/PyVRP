@@ -14,7 +14,7 @@
 namespace pyvrp
 {
 /**
- * Solution(data: ProblemData, routes: Union[list[Route], list[list[int]]])
+ * Solution(data: ProblemData, routes: list[Route] | list[list[int]])
  *
  * Encodes VRP solutions.
  *

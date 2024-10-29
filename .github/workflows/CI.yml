@@ -22,16 +22,16 @@ jobs:
         include:
           - compiler: gcc  # minimum gcc version
             compiler-version: '10'
-            python-version: '3.9'
+            python-version: '3.10'
           - compiler: gcc  # recent gcc version
             compiler-version: '14'
-            python-version: '3.12'
+            python-version: '3.13'
           - compiler: clang  # minimum clang version
             compiler-version: '14'
-            python-version: '3.9'
+            python-version: '3.10'
           - compiler: clang  # recent clang version
             compiler-version: '18'
-            python-version: '3.12'
+            python-version: '3.13'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -81,15 +81,21 @@ jobs:
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
-        # This step consists of two commands. First, we install the project into
-        # the poetry environment. This ensures imports like "from pyvrp import X"
-        # work. But poetry builds in release mode by default, which is undesirable
-        # for testing. So we also compile a debug build directly afterwards.
-        run: |
-          poetry install --only-root
-          poetry run python build_extensions.py --build_type debug --clean
+        # First, we install the project into the poetry environment. This
+        # ensures imports like "from pyvrp import X" work. This builds in
+        # release mode by default.
+        run: poetry install --only-root
+      - name: Run benchmarks
+        # We evaluate the microbenchmarks using the release build.
+        uses: CodSpeedHQ/action@v3
+        with:
+          token: ${{ secrets.CODSPEED_TOKEN }}
+          run: poetry run pytest benchmarks/ --codspeed
       - name: Run tests and generate coverage reports
+        # Now, we recompile a clean debug build. This will be used to evaluate
+        # the tests and determine code coverage.
         run: |
+          poetry run python build_extensions.py --build_type debug --clean
           poetry run pytest
           poetry run ninja coverage-xml -C build
       - uses: codecov/codecov-action@v4
