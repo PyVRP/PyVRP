@@ -7,7 +7,7 @@ from pyvrp.stop import MaxIterations
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
 def test_solve(instance, benchmark, request):
     """
-    Tests runtime performance of solving various instances.
+    Tests performance of solving various instances.
     """
     data = request.getfixturevalue(instance)
     benchmark(solve, data, stop=MaxIterations(1), seed=0)

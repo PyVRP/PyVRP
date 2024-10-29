@@ -12,7 +12,8 @@ from pyvrp.search import (
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
 def test_all_operators(instance, benchmark, request):
     """
-    Tests the local search (with all default operators) on a few instances.
+    Tests performance of the local search (with all default operators) on a few
+    instances.
     """
     data = request.getfixturevalue(instance)
     rng = RandomNumberGenerator(seed=0)
@@ -33,7 +34,7 @@ def test_all_operators(instance, benchmark, request):
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
 def test_each_node_operator(node_op, instance, benchmark, request):
     """
-    Tests each route operator on a few instances.
+    Tests performance of each node operator on a few instances.
     """
     data = request.getfixturevalue(instance)
     rng = RandomNumberGenerator(seed=42)
@@ -49,7 +50,7 @@ def test_each_node_operator(node_op, instance, benchmark, request):
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
 def test_each_route_operator(route_op, instance, benchmark, request):
     """
-    Tests each route operator on a few instances.
+    Tests performance of each route operator on a few instances.
     """
     data = request.getfixturevalue(instance)
     rng = RandomNumberGenerator(seed=42)
