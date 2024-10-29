@@ -134,9 +134,10 @@ omit = [
     "extract_docstrings.py",  # build script
     "pyvrp/show_versions.py",  # only prints debug information
     "pyvrp/cli.py",  # tested in other ways than unit tests
-    "*/tests/*",
-    "venv/*",
+    ".venv/*",
+    "benchmarks/*",
     "docs/*",
+    "tests/*",
 ]
 
 
