@@ -1,6 +1,6 @@
 import pytest
 
-from pyvrp import CostEvaluator, RandomNumberGenerator, Solution, read
+from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
@@ -9,13 +9,13 @@ from pyvrp.search import (
 )
 
 
-@pytest.mark.parametrize("seed", range(5))
-def test_RC208_all_operators(seed: int, benchmark):
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+def test_all_operators(instance, benchmark, request):
     """
-    Tests the local search (with all default operators) on a VRPTW instance.
+    Tests the local search (with all default operators) on a few instances.
     """
-    data = read("tests/data/RC208.vrp")
-    rng = RandomNumberGenerator(seed=seed)
+    data = request.getfixturevalue(instance)
+    rng = RandomNumberGenerator(seed=0)
     ls = LocalSearch(data, rng, compute_neighbours(data))
 
     for node_op in NODE_OPERATORS:
@@ -23,6 +23,38 @@ def test_RC208_all_operators(seed: int, benchmark):
 
     for route_op in ROUTE_OPERATORS:
         ls.add_route_operator(route_op(data))
+
+    sol = Solution.make_random(data, rng)
+    cost_evaluator = CostEvaluator(20, 6, 6)
+    benchmark(ls, sol, cost_evaluator)
+
+
+@pytest.mark.parametrize("node_op", NODE_OPERATORS)
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+def test_each_node_operator(node_op, instance, benchmark, request):
+    """
+    Tests each route operator on a few instances.
+    """
+    data = request.getfixturevalue(instance)
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(node_op(data))
+
+    sol = Solution.make_random(data, rng)
+    cost_evaluator = CostEvaluator(20, 6, 6)
+    benchmark(ls, sol, cost_evaluator)
+
+
+@pytest.mark.parametrize("route_op", ROUTE_OPERATORS)
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+def test_each_route_operator(route_op, instance, benchmark, request):
+    """
+    Tests each route operator on a few instances.
+    """
+    data = request.getfixturevalue(instance)
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_route_operator(route_op(data))
 
     sol = Solution.make_random(data, rng)
     cost_evaluator = CostEvaluator(20, 6, 6)
