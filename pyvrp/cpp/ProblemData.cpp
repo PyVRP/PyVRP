@@ -475,6 +475,9 @@ void ProblemData::validate() const
     }
 
     // Vehicle type checks.
+    if (vehicleTypes_.empty())
+        throw std::invalid_argument("Expected at least one vehicle type.");
+
     for (auto const &vehicleType : vehicleTypes_)
     {
         if (vehicleType.capacity.size() != numLoadDimensions_)
