@@ -83,9 +83,9 @@ jobs:
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
-        # First, we install the project into the poetry environment. This
-        # ensures imports like "from pyvrp import X" work. This builds in
-        # release mode by default, but we need a debug build for test coverage.
+        # First, we install the project into the poetry environment. Ensures
+        # imports like "from pyvrp import X" work. This builds in release mode
+        # by default, but we need a debug build for test coverage.
         run: |
           poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean
