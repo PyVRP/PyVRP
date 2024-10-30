@@ -19,6 +19,8 @@ jobs:
         os: [ ubuntu-22.04, windows-2022, macos-14 ]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Install toolchain
         if: ${{ runner.os == 'Windows' }}
         run: |
@@ -41,6 +43,8 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'created'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

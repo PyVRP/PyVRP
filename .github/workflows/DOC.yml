@@ -4,25 +4,18 @@ on:
   push:
     branches: [ main ]
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: "Build and deploy documentation"
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
+    name: "Build documentation"
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up pages
         uses: actions/configure-pages@v4
       - name: Set up Python
@@ -56,6 +49,20 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'docs/build/html'
+
+  deploy:
+    name: "Deploy documentation"
+    needs: [ build ]
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/main'
+    steps:
       - name: Deploy documentation
         id: deployment
         uses: actions/deploy-pages@v4
