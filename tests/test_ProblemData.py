@@ -168,15 +168,15 @@ def test_problem_data_raises_when_no_vehicle_type_is_provided():
             clients=[],
             depots=[Depot(x=0, y=0)],
             vehicle_types=[],
-            distance_matrices=[np.asarray([[]], dtype=int)],
-            duration_matrices=[np.asarray([[]], dtype=int)],
+            distance_matrices=[np.asarray([[0]])],
+            duration_matrices=[np.asarray([[0]])],
         )
 
     # One (or more) vehicle types should not raise.
     ProblemData(
         clients=[],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(2, capacity=1)],
+        vehicle_types=[VehicleType()],
         distance_matrices=[np.asarray([[0]])],
         duration_matrices=[np.asarray([[0]])],
     )
