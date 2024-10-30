@@ -85,19 +85,12 @@ jobs:
       - name: Build pyvrp
         # First, we install the project into the poetry environment. This
         # ensures imports like "from pyvrp import X" work. This builds in
-        # release mode by default.
-        run: poetry install --only-root
-      - name: Run benchmarks
-        # We evaluate the microbenchmarks using the release build.
-        uses: CodSpeedHQ/action@v3
-        with:
-          token: ${{ secrets.CODSPEED_TOKEN }}
-          run: poetry run pytest benchmarks/ --codspeed
-      - name: Run tests and generate coverage reports
-        # Now, we recompile a clean debug build. This will be used to evaluate
-        # the tests and determine code coverage.
+        # release mode by default, but we need a debug build for test coverage.
         run: |
+          poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean
+      - name: Run tests and generate coverage reports
+        run: |
           poetry run pytest
           poetry run ninja coverage-xml -C build
       - uses: codecov/codecov-action@v4
