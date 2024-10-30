@@ -158,6 +158,30 @@ def test_problem_data_raises_when_no_depot_is_provided():
     )
 
 
+def test_problem_data_raises_when_no_vehicle_type_is_provided():
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    no vehicle types are provided.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(x=0, y=0)],
+            vehicle_types=[],
+            distance_matrices=[np.asarray([[]], dtype=int)],
+            duration_matrices=[np.asarray([[]], dtype=int)],
+        )
+
+    # One (or more) vehicle types should not raise.
+    ProblemData(
+        clients=[],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=1)],
+        distance_matrices=[np.asarray([[0]])],
+        duration_matrices=[np.asarray([[0]])],
+    )
+
+
 @pytest.mark.parametrize(
     "matrix",
     [
