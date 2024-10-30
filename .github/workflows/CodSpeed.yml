@@ -11,7 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  bench:
+    name: Run benchmarks
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
