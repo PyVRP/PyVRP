@@ -15,5 +15,5 @@ How do I...
 
    ... compile PyVRP from source on Windows machines?
 
-      We do not know either.
-      We use `CIBW <https://github.com/pypa/cibuildwheel>`_ via GitHub Actions to produce Windows binaries for us, because none of the PyVRP developers have a functioning Windows enviroment available either.
+      None of the PyVRP developers have a functioning Windows development enviroment available, so we cannot help you troubleshoot this.
+      If you have difficulty figuring out how to build PyVRP on Windows, consider using the `Windows Subsystem for Linux (WSL) <https://learn.microsoft.com/en-us/windows/wsl/>`_ instead.
