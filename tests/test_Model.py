@@ -660,6 +660,7 @@ def test_to_data_client_group():
     """
     m = Model()
     m.add_depot(1, 1)
+    m.add_vehicle_type()
 
     group = m.add_client_group()
     m.add_client(1, 1, required=False, group=group)
@@ -826,6 +827,7 @@ def test_profiles_build_on_base_edges():
 
     depot = m.add_depot(x=1, y=1)
     client = m.add_client(x=2, y=2)
+    m.add_vehicle_type()
 
     # Add base edges. These edges are used to construct base matrices that the
     # profiles build on. Essentially, if an edge is not specifically provided

@@ -34,6 +34,8 @@ jobs:
             python-version: '3.13'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -81,21 +83,14 @@ jobs:
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
-        # First, we install the project into the poetry environment. This
-        # ensures imports like "from pyvrp import X" work. This builds in
-        # release mode by default.
-        run: poetry install --only-root
-      - name: Run benchmarks
-        # We evaluate the microbenchmarks using the release build.
-        uses: CodSpeedHQ/action@v3
-        with:
-          token: ${{ secrets.CODSPEED_TOKEN }}
-          run: poetry run pytest benchmarks/ --codspeed
-      - name: Run tests and generate coverage reports
-        # Now, we recompile a clean debug build. This will be used to evaluate
-        # the tests and determine code coverage.
+        # First, we install the project into the poetry environment. Ensures
+        # imports like "from pyvrp import X" work. This builds in release mode
+        # by default, but we need a debug build for test coverage.
         run: |
+          poetry install --only-root
           poetry run python build_extensions.py --build_type debug --clean
+      - name: Run tests and generate coverage reports
+        run: |
           poetry run pytest
           poetry run ninja coverage-xml -C build
       - uses: codecov/codecov-action@v4
