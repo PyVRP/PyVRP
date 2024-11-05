@@ -64,7 +64,6 @@ Contents
    :caption: Developing PyVRP
 
    dev/benchmarking
-   dev/core_ideas
    dev/overview
    dev/contributing
    dev/supported_vrplib_fields
