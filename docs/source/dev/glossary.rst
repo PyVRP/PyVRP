@@ -1,7 +1,7 @@
 Glossary
 ========
 
-Glossary of terms we use regularly, but aren't specifically defined anywhere else.
+This is a glossary of terms we use regularly, but are not defined anywhere else.
 Feel free to suggest new entries!
 
 .. glossary::
