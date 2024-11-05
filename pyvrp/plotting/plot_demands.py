@@ -6,9 +6,9 @@ from pyvrp import ProblemData
 
 def plot_demands(
     data: ProblemData,
+    dimension: int = 0,
     title: str | None = None,
     ax: plt.Axes | None = None,
-    dimension: int = 0,
 ):
     """
     Plots demands for clients, as vertical bars sorted by demand.
@@ -17,13 +17,21 @@ def plot_demands(
     ----------
     data
         Data instance.
+    dimension
+        Load dimension to plot. Defaults to the first dimension.
     title
         Title to add to the plot.
     ax
         Axes object to draw the plot on. One will be created if not provided.
-    dimension
-        Load dimension to plot. Default 0.
+
+    Raises
+    ------
+    ValueError
+        When the load dimension is out of bounds for the given data instance.
     """
+    if dimension >= data.num_load_dimensions:
+        raise ValueError(f"Load dimension '{dimension}' is not understood.")
+
     if not ax:
         _, ax = plt.subplots()
 

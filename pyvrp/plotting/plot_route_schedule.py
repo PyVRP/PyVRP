@@ -33,7 +33,7 @@ def plot_route_schedule(
     route
         Route (list of clients) whose schedule to plot.
     load_dimension
-        Load dimension to plot. Default 0.
+        Load dimension to plot. Defaults to the first dimension, if it exists.
     legend
         Whether or not to show the legends. Default True.
     title
@@ -49,13 +49,18 @@ def plot_route_schedule(
     durations = data.duration_matrix(vehicle_type.profile)
     horizon = vehicle_type.tw_late - vehicle_type.tw_early
 
+    track_load = load_dimension < data.num_load_dimensions
+
     # Initialise tracking variables
     t = route.release_time()
     drive_time = 0
     serv_time = 0
     dist = 0
-    load = route.delivery()[load_dimension]
     slack = horizon
+
+    load = 0
+    if track_load:
+        load = route.delivery()[load_dimension]
 
     # Traces and objects used for plotting
     trace_time = []
@@ -101,7 +106,7 @@ def plot_route_schedule(
             timewarp_lines.append(((dist, t), (dist, tw_late)))
             t = tw_late
 
-        if isinstance(stop, Client):
+        if isinstance(stop, Client) and track_load:
             load -= stop.delivery[load_dimension]
             load += stop.pickup[load_dimension]
 
@@ -152,18 +157,20 @@ def plot_route_schedule(
     )
 
     # Plot remaining load on second axis
+    capacity = 0
+    if track_load:
+        capacity = vehicle_type.capacity[load_dimension]
+
     twin1 = ax.twinx()
     twin1.fill_between(
         *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
     )
-    twin1.set_ylim([0, vehicle_type.capacity[load_dimension]])
+    twin1.set_ylim([0, capacity])
 
     # Set labels, legends and title
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(
-        f"Load (capacity = {vehicle_type.capacity[load_dimension]:.0f})"
-    )
+    twin1.set_ylabel(f"Load (capacity = {capacity:.0f})")
 
     if legend:
         twin1.legend(loc="upper right")
