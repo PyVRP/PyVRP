@@ -1,6 +1,20 @@
 Glossary
 ========
 
-TODO
+Glossary of terms we use regularly, but aren't specifically defined anywhere else.
+Feel free to suggest new entries!
 
-(important and specific terms; ubiquitous language)
+.. glossary::
+   :sorted:
+
+   Concatenation scheme
+
+      TODO
+
+   Objective
+
+      TODO
+
+   Penalised objective
+
+      TODO
