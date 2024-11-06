@@ -77,7 +77,9 @@ void SwapStar::updateInsertionCost(Route *R,
     }
 }
 
-Load SwapStar::deltaExcessLoad(Route::Node *U, Route::Node *V) const
+Cost SwapStar::deltaLoadCost(Route::Node *U,
+                             Route::Node *V,
+                             CostEvaluator const &costEvaluator) const
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -86,26 +88,31 @@ Load SwapStar::deltaExcessLoad(Route::Node *U, Route::Node *V) const
     ProblemData::Client const &vClient = data.location(V->client());
 
     auto const &uLoad = uRoute->load();
-    auto const &uCapacity = uRoute->capacity();
+    auto const &uCap = uRoute->capacity();
 
     auto const &vLoad = vRoute->load();
-    auto const &vCapacity = vRoute->capacity();
+    auto const &vCap = vRoute->capacity();
 
-    Load diffExcess = 0;
+    // Separating removal and insertion means that the effects on load are not
+    // counted correctly: during insert, U is still in the route, and now V is
+    // added as well. The following addresses this issue with an approximation,
+    // which is inexact when there are both pickups and deliveries in the data.
+    // So it's pretty rough but fast and seems to mostly work well enough.
+    Cost delta = 0;
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         auto const loadDiff
             = std::max(uClient.delivery[dim], uClient.pickup[dim])
               - std::max(vClient.delivery[dim], vClient.pickup[dim]);
 
-        diffExcess += std::max<Load>(uLoad[dim] - loadDiff - uCapacity[dim], 0);
-        diffExcess -= std::max<Load>(uLoad[dim] - uCapacity[dim], 0);
+        delta += costEvaluator.loadPenalty(uLoad[dim] - loadDiff, uCap[dim]);
+        delta -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim]);
 
-        diffExcess += std::max<Load>(vLoad[dim] + loadDiff - vCapacity[dim], 0);
-        diffExcess -= std::max<Load>(vLoad[dim] - vCapacity[dim], 0);
+        delta += costEvaluator.loadPenalty(vLoad[dim] + loadDiff, vCap[dim]);
+        delta -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim]);
     }
 
-    return diffExcess;
+    return delta;
 }
 
 std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
@@ -196,19 +203,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // its route, V will be inserted (and vice versa).
             Cost deltaCost = 0;
 
-            // Separating removal and insertion means that the effects on load
-            // are not counted correctly: during insert, U is still in the
-            // route, and now V is added as well. The following addresses this
-            // issue with an approximation, which is inexact when there are both
-            // pickups and deliveries in the data. We do not evaluate load when
-            // calculating remove and insert costs - that is all handled here.
-            // So it's pretty rough but fast and seems to work well enough for
-            // most instances.
-            auto const diffExcessLoad = deltaExcessLoad(U, V);
-            if (diffExcessLoad < 0)
-                deltaCost -= costEvaluator.loadPenalty(-diffExcessLoad, 0);
-            else
-                deltaCost += costEvaluator.loadPenalty(diffExcessLoad, 0);
+            // Load is a bit tricky, so we compute that separately.
+            deltaCost += deltaLoadCost(U, V, costEvaluator);
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());

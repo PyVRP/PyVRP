@@ -64,7 +64,9 @@ class SwapStar : public LocalSearchOperator<Route>
                              Route::Node *U,
                              CostEvaluator const &costEvaluator);
 
-    Load deltaExcessLoad(Route::Node *U, Route::Node *V) const;
+    Cost deltaLoadCost(Route::Node *U,
+                       Route::Node *V,
+                       CostEvaluator const &costEvaluator) const;
 
     // Gets the delta cost and reinsert point for U in the route of V, assuming
     // V is removed.
