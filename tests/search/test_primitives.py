@@ -78,7 +78,7 @@ def test_insert_cost_between_different_depots(ok_small_multi_depot):
     Tests that insert_cost() correctly determines the delta distance cost of
     inserting a new node in an empty route with two different depots.
     """
-    vehicle_type = VehicleType(3, 10, start_depot=0, end_depot=1)
+    vehicle_type = VehicleType(3, [10], start_depot=0, end_depot=1)
     data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, idx=0, vehicle_type=0)

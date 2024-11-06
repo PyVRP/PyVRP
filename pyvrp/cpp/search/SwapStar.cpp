@@ -3,6 +3,7 @@
 #include <cassert>
 
 using pyvrp::Cost;
+using pyvrp::Load;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 
@@ -74,6 +75,44 @@ void SwapStar::updateInsertionCost(Route *R,
         auto *V = (*R)[idx];
         insertPositions.maybeAdd(deltaCost, V);
     }
+}
+
+Cost SwapStar::deltaLoadCost(Route::Node *U,
+                             Route::Node *V,
+                             CostEvaluator const &costEvaluator) const
+{
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
+
+    ProblemData::Client const &uClient = data.location(U->client());
+    ProblemData::Client const &vClient = data.location(V->client());
+
+    auto const &uLoad = uRoute->load();
+    auto const &uCap = uRoute->capacity();
+
+    auto const &vLoad = vRoute->load();
+    auto const &vCap = vRoute->capacity();
+
+    // Separating removal and insertion means that the effects on load are not
+    // counted correctly: during insert, U is still in the route, and now V is
+    // added as well. The following addresses this issue with an approximation,
+    // which is inexact when there are both pickups and deliveries in the data.
+    // So it's pretty rough but fast and seems to mostly work well enough.
+    Cost delta = 0;
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+    {
+        auto const loadDiff
+            = std::max(uClient.delivery[dim], uClient.pickup[dim])
+              - std::max(vClient.delivery[dim], vClient.pickup[dim]);
+
+        delta += costEvaluator.loadPenalty(uLoad[dim] - loadDiff, uCap[dim]);
+        delta -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim]);
+
+        delta += costEvaluator.loadPenalty(vLoad[dim] + loadDiff, vCap[dim]);
+        delta -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim]);
+    }
+
+    return delta;
 }
 
 std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
@@ -164,29 +203,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // its route, V will be inserted (and vice versa).
             Cost deltaCost = 0;
 
-            // Separating removal and insertion means that the effects on load
-            // are not counted correctly: during insert, U is still in the
-            // route, and now V is added as well. The following addresses this
-            // issue with an approximation, which is inexact when there are both
-            // pickups and deliveries in the data. We do not evaluate load when
-            // calculating remove and insert costs - that is all handled here.
-            // So it's pretty rough but fast and seems to work well enough for
-            // most instances.
-            ProblemData::Client const &uClient = data.location(U->client());
-            ProblemData::Client const &vClient = data.location(V->client());
-            auto const uLoad = std::max(uClient.delivery, uClient.pickup);
-            auto const vLoad = std::max(vClient.delivery, vClient.pickup);
-            auto const loadDiff = uLoad - vLoad;
-
-            deltaCost += costEvaluator.loadPenalty(routeU->load() - loadDiff,
-                                                   routeU->capacity());
-            deltaCost -= costEvaluator.loadPenalty(routeU->load(),
-                                                   routeU->capacity());
-
-            deltaCost += costEvaluator.loadPenalty(routeV->load() + loadDiff,
-                                                   routeV->capacity());
-            deltaCost -= costEvaluator.loadPenalty(routeV->load(),
-                                                   routeV->capacity());
+            // Load is a bit tricky, so we compute that separately.
+            deltaCost += deltaLoadCost(U, V, costEvaluator);
 
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());

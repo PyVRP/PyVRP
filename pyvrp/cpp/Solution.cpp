@@ -1,6 +1,5 @@
 #include "Solution.h"
 #include "DurationSegment.h"
-#include "LoadSegment.h"
 
 #include <algorithm>
 #include <fstream>
@@ -24,6 +23,7 @@ void Solution::evaluate(ProblemData const &data)
     for (auto const &client : data.clients())
         allPrizes += client.prize;
 
+    excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
@@ -35,8 +35,11 @@ void Solution::evaluate(ProblemData const &data)
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
-        excessLoad_ += route.excessLoad();
         fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
+
+        auto const &excessLoad = route.excessLoad();
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+            excessLoad_[dim] += excessLoad[dim];
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
@@ -69,7 +72,12 @@ bool Solution::isGroupFeasible() const { return isGroupFeas_; }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
-bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::hasExcessLoad() const
+{
+    return std::any_of(excessLoad_.begin(),
+                       excessLoad_.end(),
+                       [](auto const excess) { return excess > 0; });
+}
 
 bool Solution::hasExcessDistance() const { return excessDistance_ > 0; }
 
@@ -83,7 +91,7 @@ Duration Solution::duration() const { return duration_; }
 
 Cost Solution::durationCost() const { return durationCost_; }
 
-Load Solution::excessLoad() const { return excessLoad_; }
+std::vector<Load> const &Solution::excessLoad() const { return excessLoad_; }
 
 Distance Solution::excessDistance() const { return excessDistance_; }
 
@@ -117,7 +125,6 @@ bool Solution::operator==(Solution const &other) const
                               && duration_ == other.duration_
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
-                              && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_
                               && routes_.size() == other.routes_.size()
@@ -273,13 +280,13 @@ Solution::Solution(size_t numClients,
                    Duration duration,
                    Cost durationCost,
                    Distance excessDistance,
-                   Load excessLoad,
+                   std::vector<Load> excessLoad,
                    Cost fixedVehicleCost,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
                    bool isGroupFeasible,
-                   Routes const &routes,
+                   Routes routes,
                    Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
@@ -288,14 +295,14 @@ Solution::Solution(size_t numClients,
       duration_(duration),
       durationCost_(durationCost),
       excessDistance_(excessDistance),
-      excessLoad_(excessLoad),
+      excessLoad_(std::move(excessLoad)),
       fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
       isGroupFeas_(isGroupFeasible),
-      routes_(routes),
-      neighbours_(neighbours)
+      routes_(std::move(routes)),
+      neighbours_(std::move(neighbours))
 {
 }
 

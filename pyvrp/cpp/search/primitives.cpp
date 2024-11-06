@@ -28,10 +28,10 @@ public:
         return pyvrp::DurationSegment(client, clientData);
     }
 
-    pyvrp::LoadSegment load() const
+    pyvrp::LoadSegment load(size_t dimension) const
     {
         pyvrp::ProblemData::Client const &clientData = data.location(client);
-        return pyvrp::LoadSegment(clientData);
+        return pyvrp::LoadSegment(clientData, dimension);
     }
 };
 }  // namespace

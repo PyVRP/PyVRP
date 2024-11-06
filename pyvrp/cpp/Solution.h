@@ -52,7 +52,7 @@ class Solution
     Duration duration_ = 0;         // Total duration over all routes
     Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
-    Load excessLoad_ = 0;           // Total excess load over all routes
+    std::vector<Load> excessLoad_;  // Total excess load over all routes
     Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
@@ -183,9 +183,10 @@ public:
     [[nodiscard]] Cost durationCost() const;
 
     /**
-     * Returns the total excess load over all routes.
+     * Aggregate pickup or delivery loads in excess of the vehicle's capacity
+     * of all routes.
      */
-    [[nodiscard]] Load excessLoad() const;
+    [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
      * Returns the total distance in excess of maximum duration constraints,
@@ -253,13 +254,13 @@ public:
              Duration duration,
              Cost durationCost,
              Distance excessDistance,
-             Load excessLoad,
+             std::vector<Load> excessLoad,
              Cost fixedVehicleCost,
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
              bool isGroupFeasible,
-             Routes const &routes,
+             Routes routes,
              Neighbours neighbours);
 };
 }  // namespace pyvrp
@@ -273,7 +274,7 @@ template <> struct std::hash<pyvrp::Solution>
         size_t res = 17;
         res = res * 31 + std::hash<size_t>()(sol.numRoutes());
         res = res * 31 + std::hash<pyvrp::Distance>()(sol.distance());
-        res = res * 31 + std::hash<pyvrp::Load>()(sol.excessLoad());
+        res = res * 31 + std::hash<pyvrp::Duration>()(sol.duration());
         res = res * 31 + std::hash<pyvrp::Duration>()(sol.timeWarp());
 
         return res;

@@ -140,13 +140,13 @@ class _InstanceParser:
 
     def backhauls(self) -> np.ndarray:
         if "backhaul" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(self.instance["backhaul"])
 
     def demands(self) -> np.ndarray:
         if "demand" not in self.instance and "linehaul" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(
             self.instance.get("demand", self.instance.get("linehaul"))
@@ -331,8 +331,8 @@ class _ProblemDataBuilder:
             Client(
                 x=coords[idx][0],
                 y=coords[idx][1],
-                delivery=demands[idx],
-                pickup=backhauls[idx],
+                delivery=np.atleast_1d(demands[idx]),
+                pickup=np.atleast_1d(backhauls[idx]),
                 service_duration=service_duration[idx],
                 tw_early=time_windows[idx][0],
                 tw_late=time_windows[idx][1],
@@ -364,8 +364,9 @@ class _ProblemDataBuilder:
         # VRPLIB instances includes data for each available vehicle. We group
         # vehicles by their attributes to create unique vehicle types.
         type2idcs = defaultdict(list)
-        for vehicle, veh_type in enumerate(zip(*vehicles_data)):
-            type2idcs[veh_type].append(vehicle)
+        for vehicle, (capacity, *veh_type) in enumerate(zip(*vehicles_data)):
+            capacity = tuple(np.atleast_1d(capacity))
+            type2idcs[(capacity, *veh_type)].append(vehicle)
 
         client2profile = self._allowed2profile()
         time_windows = self.parser.time_windows()
