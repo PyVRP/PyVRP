@@ -122,7 +122,6 @@ def plot_route_schedule(
 
         prev_idx = idx
 
-    # Plot primary traces
     xs, ys = zip(*trace_time)
     ax.plot(xs, ys, label="Time (earliest)")
     if slack > 0:
@@ -135,7 +134,6 @@ def plot_route_schedule(
     )
     ax.plot(*zip(*trace_drive), linestyle=":", label="Drive time")
 
-    # Plot time windows & time warps
     lc_time_windows = LineCollection(
         timewindow_lines,
         colors="grey",
@@ -157,23 +155,27 @@ def plot_route_schedule(
     )
 
     # Plot remaining load on second axis
-    capacity = 0
     if track_load:
         capacity = vehicle_type.capacity[load_dimension]
 
-    twin1 = ax.twinx()
-    twin1.fill_between(
-        *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
-    )
-    twin1.set_ylim([0, capacity])
+        twin1 = ax.twinx()
+        twin1.fill_between(
+            *zip(*trace_load),
+            color="black",
+            alpha=0.1,
+            label="Load in vehicle",
+        )
 
-    # Set labels, legends and title
+        twin1.set_ylim([0, capacity])
+        twin1.set_ylabel(f"Load (capacity = {capacity:.0f})")
+
+        if legend:
+            twin1.legend(loc="upper right")
+
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {capacity:.0f})")
 
     if legend:
-        twin1.legend(loc="upper right")
         ax.legend(loc="upper left")
 
     if title:
