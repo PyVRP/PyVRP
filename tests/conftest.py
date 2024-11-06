@@ -66,6 +66,15 @@ def ok_small_multi_depot():
 
 
 @pytest.fixture(scope="session")
+def ok_small_multiple_load():
+    """
+    Fixture that returns the OkSmall instance, but where the vehicles and
+    clients have two load dimensions.
+    """
+    return read("data/OkSmallMultipleLoad.txt")
+
+
+@pytest.fixture(scope="session")
 def ok_small_mutually_exclusive_groups():
     """
     Fixture that returns the OkSmall instance, but where the first three
@@ -102,7 +111,7 @@ def ok_small_two_profiles(ok_small):
         duration_matrices=[durations, 2 * durations],
         distance_matrices=[distances, 2 * distances],
         vehicle_types=[
-            VehicleType(3, 10, profile=0),
-            VehicleType(3, 10, profile=1),
+            VehicleType(3, [10], profile=0),
+            VehicleType(3, [10], profile=1),
         ],
     )

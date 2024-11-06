@@ -22,7 +22,8 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     endDepot_ = vehType.endDepot;
 
     DurationSegment ds = {startDepot_, vehType};
-    auto ls = LoadSegment(0, 0, 0);
+    std::vector<LoadSegment> loadSegments(data.numLoadDimensions(), {0, 0, 0});
+
     size_t prevClient = startDepot_;
 
     auto const &distances = data.distanceMatrix(vehType.profile);
@@ -44,8 +45,11 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
         auto const clientDS = DurationSegment(client, clientData);
         ds = DurationSegment::merge(durations, ds, clientDS);
 
-        auto const clientLs = LoadSegment(clientData);
-        ls = LoadSegment::merge(ls, clientLs);
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+        {
+            auto const clientLs = LoadSegment(clientData, dim);
+            loadSegments[dim] = LoadSegment::merge(loadSegments[dim], clientLs);
+        }
 
         prevClient = client;
     }
@@ -57,9 +61,16 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
 
     travel_ += durations(last, endDepot_);
 
-    delivery_ = ls.delivery();
-    pickup_ = ls.pickup();
-    excessLoad_ = std::max<Load>(ls.load() - vehType.capacity, 0);
+    delivery_.reserve(data.numLoadDimensions());
+    pickup_.reserve(data.numLoadDimensions());
+    excessLoad_.reserve(data.numLoadDimensions());
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+    {
+        delivery_.push_back(loadSegments[dim].delivery());
+        pickup_.push_back(loadSegments[dim].pickup());
+        excessLoad_.push_back(std::max<Load>(
+            loadSegments[dim].load() - vehType.capacity[dim], 0));
+    }
 
     DurationSegment endDS(endDepot_, vehType);
     ds = DurationSegment::merge(durations, ds, endDS);
@@ -75,9 +86,9 @@ Route::Route(Visits visits,
              Distance distance,
              Cost distanceCost,
              Distance excessDistance,
-             Load delivery,
-             Load pickup,
-             Load excessLoad,
+             std::vector<Load> delivery,
+             std::vector<Load> pickup,
+             std::vector<Load> excessLoad,
              Duration duration,
              Cost durationCost,
              Duration timeWarp,
@@ -96,9 +107,9 @@ Route::Route(Visits visits,
       distance_(distance),
       distanceCost_(distanceCost),
       excessDistance_(excessDistance),
-      delivery_(delivery),
-      pickup_(pickup),
-      excessLoad_(excessLoad),
+      delivery_(std::move(delivery)),
+      pickup_(std::move(pickup)),
+      excessLoad_(std::move(excessLoad)),
       duration_(duration),
       durationCost_(durationCost),
       timeWarp_(timeWarp),
@@ -134,11 +145,11 @@ Cost Route::distanceCost() const { return distanceCost_; }
 
 Distance Route::excessDistance() const { return excessDistance_; }
 
-Load Route::delivery() const { return delivery_; }
+std::vector<Load> const &Route::delivery() const { return delivery_; }
 
-Load Route::pickup() const { return pickup_; }
+std::vector<Load> const &Route::pickup() const { return pickup_; }
 
-Load Route::excessLoad() const { return excessLoad_; }
+std::vector<Load> const &Route::excessLoad() const { return excessLoad_; }
 
 Duration Route::duration() const { return duration_; }
 
@@ -175,7 +186,12 @@ bool Route::isFeasible() const
     return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 
-bool Route::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Route::hasExcessLoad() const
+{
+    return std::any_of(excessLoad_.begin(),
+                       excessLoad_.end(),
+                       [](auto const excess) { return excess > 0; });
+}
 
 bool Route::hasExcessDistance() const { return excessDistance_ > 0; }
 
@@ -187,8 +203,7 @@ bool Route::operator==(Route const &other) const
     // Only when these are the same we test if the visits are all equal.
     // clang-format off
     return distance_ == other.distance_
-        && delivery_ == other.delivery_
-        && pickup_ == other.pickup_
+        && duration_ == other.duration_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;

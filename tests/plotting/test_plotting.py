@@ -1,14 +1,19 @@
+import numpy as np
 from matplotlib.testing.decorators import image_comparison as img_comp
+from numpy.testing import assert_equal, assert_raises
 
 from pyvrp import (
     CostEvaluator,
+    Depot,
     Population,
     PopulationParams,
+    ProblemData,
     RandomNumberGenerator,
     Result,
     Route,
     Solution,
     Statistics,
+    VehicleType,
     plotting,
 )
 from pyvrp.diversity import broken_pairs_distance
@@ -128,3 +133,22 @@ def test_plot_route_schedule():
     bks = read_solution("data/RC208.sol")
     sol = Solution(data, bks)
     plotting.plot_route_schedule(data, sol.routes()[0])
+
+
+def test_plot_demands_raises_for_out_of_bounds_load_dimension():
+    """
+    Tests that calling ``plot_demands`` on an instance with no load data at all
+    raises a ValueError.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.array([[0]])],
+        duration_matrices=[np.array([[0]])],
+    )
+
+    assert_equal(data.num_load_dimensions, 0)
+
+    with assert_raises(ValueError):
+        plotting.plot_demands(data)
