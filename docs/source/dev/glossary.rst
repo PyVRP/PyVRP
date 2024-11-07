@@ -9,12 +9,14 @@ Feel free to suggest new entries!
 
    Concatenation scheme
 
-      TODO
+      These are used in the C++ part of the codebase to quickly compute statistics of a :term:`Route segment`.
+      See the ``DistanceSegment`` or ``DurationSegment`` in the codebase for examples.
 
-   Objective
+   Penalised cost
 
-      TODO
+      The cost function :meth:`~pyvrp._pyvrp.CostEvaluator.cost` plus penalty terms for infeasibilities.
+      The penalty terms vary dynamically based on recent feasibility; this is handled by the :class:`~pyvrp.PenaltyManager`.
 
-   Penalised objective
+   Route segment
 
-      TODO
+      A contiguous part of a route, that is, one or more customers visited in sequence. 
