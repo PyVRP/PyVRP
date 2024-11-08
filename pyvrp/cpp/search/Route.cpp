@@ -82,24 +82,8 @@ void Route::clear()
     endDepot_.idx_ = 1;
     endDepot_.route_ = this;
 
-    // Clear all existing statistics and reinsert depot statistics.
-    distAt = {DistanceSegment(vehicleType_.startDepot),
-              DistanceSegment(vehicleType_.endDepot)};
-    distAfter = distAt;
-    distBefore = distAt;
-
-    LoadSegments depotLoad = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
-    loadAt = std::vector<LoadSegments>(data.numLoadDimensions(), depotLoad);
-    loadAfter = loadAt;
-    loadBefore = loadAt;
-
     load_ = std::vector<Load>(data.numLoadDimensions(), 0);
     excessLoad_ = load_;
-
-    durAt = {DurationSegment(vehicleType_.startDepot, vehicleType_),
-             DurationSegment(vehicleType_.endDepot, vehicleType_)};
-    durAfter = durAt;
-    durBefore = durAt;
 
 #ifndef NDEBUG
     dirty = false;
@@ -117,26 +101,6 @@ void Route::insert(size_t idx, Node *node)
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
-
-    // We do not need to update the statistics; Route::update() will handle
-    // that later. We just need to ensure the right client data is inserted.
-    distAt.emplace(distAt.begin() + idx, node->client());
-    distBefore.emplace(distBefore.begin() + idx, node->client());
-    distAfter.emplace(distAfter.begin() + idx, node->client());
-
-    ProblemData::Client const &client = data.location(node->client());
-
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-    {
-        auto const clientLs = LoadSegment(client, dim);
-        loadAt[dim].insert(loadAt[dim].begin() + idx, clientLs);
-        loadAfter[dim].insert(loadAfter[dim].begin() + idx, clientLs);
-        loadBefore[dim].insert(loadBefore[dim].begin() + idx, clientLs);
-    }
-
-    durAt.emplace(durAt.begin() + idx, node->client(), client);
-    durAfter.emplace(durAfter.begin() + idx, node->client(), client);
-    durBefore.emplace(durBefore.begin() + idx, node->client(), client);
 
 #ifndef NDEBUG
     dirty = true;
@@ -167,21 +131,6 @@ void Route::remove(size_t idx)
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 
-    distAt.erase(distAt.begin() + idx);
-    distBefore.erase(distBefore.begin() + idx);
-    distAfter.erase(distAfter.begin() + idx);
-
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-    {
-        loadAt[dim].erase(loadAt[dim].begin() + idx);
-        loadBefore[dim].erase(loadBefore[dim].begin() + idx);
-        loadAfter[dim].erase(loadAfter[dim].begin() + idx);
-    }
-
-    durAt.erase(durAt.begin() + idx);
-    durBefore.erase(durBefore.begin() + idx);
-    durAfter.erase(durAfter.begin() + idx);
-
 #ifndef NDEBUG
     dirty = true;
 #endif
@@ -192,18 +141,6 @@ void Route::swap(Node *first, Node *second)
     // TODO specialise std::swap for Node
     std::swap(first->route_->nodes[first->idx_],
               second->route_->nodes[second->idx_]);
-
-    // Only need to swap the segments *at* the client's index. Other cached
-    // values are recomputed based on these values, and that recompute will
-    // overwrite the other outdated (cached) segments.
-    std::swap(first->route_->distAt[first->idx_],
-              second->route_->distAt[second->idx_]);
-    std::swap(first->route_->durAt[first->idx_],
-              second->route_->durAt[second->idx_]);
-
-    for (size_t dim = 0; dim != first->route_->data.numLoadDimensions(); ++dim)
-        std::swap(first->route_->loadAt[dim][first->idx_],
-                  second->route_->loadAt[dim][second->idx_]);
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
@@ -231,39 +168,19 @@ void Route::update()
         }
     }
 
-    // Distance.
-    for (size_t idx = 1; idx != nodes.size(); ++idx)
-        distBefore[idx] = DistanceSegment::merge(
-            data.distanceMatrix(profile()), distBefore[idx - 1], distAt[idx]);
-
-    for (auto idx = nodes.size() - 1; idx != 0; --idx)
-        distAfter[idx - 1] = DistanceSegment::merge(
-            data.distanceMatrix(profile()), distAt[idx - 1], distAfter[idx]);
-
-#ifndef PYVRP_NO_TIME_WINDOWS
-    // Duration.
-    for (size_t idx = 1; idx != nodes.size(); ++idx)
-        durBefore[idx] = DurationSegment::merge(
-            data.durationMatrix(profile()), durBefore[idx - 1], durAt[idx]);
-
-    for (auto idx = nodes.size() - 1; idx != 0; --idx)
-        durAfter[idx - 1] = DurationSegment::merge(
-            data.durationMatrix(profile()), durAt[idx - 1], durAfter[idx]);
-#endif
-
     // Load.
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        for (size_t idx = 1; idx != nodes.size(); ++idx)
-            loadBefore[dim][idx] = LoadSegment::merge(loadBefore[dim][idx - 1],
-                                                      loadAt[dim][idx]);
+        LoadSegment segment(0, 0, 0);
+        for (size_t idx = 1; !nodes[idx]->isDepot(); ++idx)
+        {
+            ProblemData::Client const &client
+                = data.location(nodes[idx]->client());
+            segment = LoadSegment::merge(segment, {client, dim});
+        }
 
-        load_[dim] = loadBefore[dim].back().load();
+        load_[dim] = segment.load();
         excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
-
-        for (auto idx = nodes.size() - 1; idx != 0; --idx)
-            loadAfter[dim][idx - 1]
-                = LoadSegment::merge(loadAt[dim][idx - 1], loadAfter[dim][idx]);
     }
 
 #ifndef NDEBUG

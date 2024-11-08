@@ -135,22 +135,8 @@ private:
     Node startDepot_;  // Departure depot for this route
     Node endDepot_;    // Return depot for this route
 
-    std::vector<DistanceSegment> distAt;      // Dist data at each node
-    std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
-    std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
-
-    // Load data, for each load dimension. These vectors form matrices, where
-    // the rows index the load dimension, and the columns the nodes.
-    std::vector<LoadSegments> loadAt;      // Load data at each node
-    std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
-    std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
-
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
-
-    std::vector<DurationSegment> durAt;      // Duration data at each node
-    std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
-    std::vector<DurationSegment> durBefore;  // Dur of depot -> client (incl.)
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -430,52 +416,73 @@ Route::Segment::Segment(Route const &route, size_t start, size_t end)
 
 DistanceSegment Route::Segment::distance(size_t profile) const
 {
-    if (profile != route->profile())  // then we have to compute the distance
-    {                                 // segment from scratch.
-        auto distSegment = route->distAt[start];
+    auto const *node = route->nodes[start];
+    DistanceSegment segment = {node->client()};
 
-        for (size_t step = start; step != end; ++step)
-        {
-            auto const &mat = route->data.distanceMatrix(profile);
-            auto const &distAt = route->distAt[step + 1];
-            distSegment = DistanceSegment::merge(mat, distSegment, distAt);
-        }
-
-        return distSegment;
+    for (size_t step = start; step != end; ++step)
+    {
+        auto const &mat = route->data.distanceMatrix(profile);
+        node = route->nodes[step + 1];
+        DistanceSegment const distAt = {node->client()};
+        segment = DistanceSegment::merge(mat, segment, distAt);
     }
 
-    auto const &startDist = route->distBefore[start];
-    auto const &endDist = route->distBefore[end];
-
-    assert(startDist.distance() <= endDist.distance());
-    return DistanceSegment(route->nodes[start]->client(),
-                           route->nodes[end]->client(),
-                           endDist.distance() - startDist.distance());
+    return segment;
 }
 
 DurationSegment Route::Segment::duration(size_t profile) const
 {
-    auto durSegment = route->durAt[start];
+    auto const *node = route->nodes[start];
+
+    auto segment
+        = node->isDepot()
+              ? (node == &route->startDepot_)
+                    ? DurationSegment(route->startDepot(), route->vehicleType_)
+                    : DurationSegment(route->endDepot(), route->vehicleType_)
+              : DurationSegment(node->client(),
+                                route->data.location(node->client()));
 
     for (size_t step = start; step != end; ++step)
     {
         auto const &mat = route->data.durationMatrix(profile);
-        auto const &durAt = route->durAt[step + 1];
-        durSegment = DurationSegment::merge(mat, durSegment, durAt);
+        node = route->nodes[step + 1];
+        auto const durAt
+            = node->isDepot()
+                  ? (node == &route->startDepot_)
+                        ? DurationSegment(route->startDepot(),
+                                          route->vehicleType_)
+                        : DurationSegment(route->endDepot(),
+                                          route->vehicleType_)
+                  : DurationSegment(node->client(),
+                                    route->data.location(node->client()));
+
+        segment = DurationSegment::merge(mat, segment, durAt);
     }
 
-    return durSegment;
+    return segment;
 }
 
 LoadSegment Route::Segment::load(size_t dimension) const
 {
-    auto const &loads = route->loadAt[dimension];
+    auto const *node = route->nodes[start];
+    auto segment
+        = node->isDepot()
+              ? LoadSegment(0, 0, 0)
+              : LoadSegment(route->data.location(node->client()), dimension);
 
-    auto loadSegment = loads[start];
     for (size_t step = start; step != end; ++step)
-        loadSegment = LoadSegment::merge(loadSegment, loads[step + 1]);
+    {
+        node = route->nodes[step + 1];
+        auto const loadAt
+            = node->isDepot()
+                  ? LoadSegment(0, 0, 0)
+                  : LoadSegment(route->data.location(node->client()),
+                                dimension);
 
-    return loadSegment;
+        segment = LoadSegment::merge(segment, loadAt);
+    }
+
+    return segment;
 }
 
 bool Route::isFeasible() const
@@ -554,7 +561,8 @@ Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 Distance Route::distance() const
 {
     assert(!dirty);
-    return distBefore.back().distance();
+    auto const segment = after(0);
+    return segment.distance(profile()).distance();
 }
 
 Cost Route::distanceCost() const
@@ -568,7 +576,8 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 Duration Route::duration() const
 {
     assert(!dirty);
-    return durBefore.back().duration();
+    auto const segment = after(0);
+    return segment.duration(profile()).duration();
 }
 
 Cost Route::durationCost() const
@@ -586,7 +595,8 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return durBefore.back().timeWarp(maxDuration());
+    auto const segment = after(0);
+    return segment.duration(profile()).timeWarp(maxDuration());
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
