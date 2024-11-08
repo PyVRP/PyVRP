@@ -470,7 +470,8 @@ bool Route::Node::isDepot() const
 {
     // We need to be in a route to be the depot. If we are, then we need to
     // be either the route's start or end depot.
-    return route_ && (idx_ == 0 || idx_ == route_->size() + 1);
+    return route_
+           && (this == &route_->startDepot_ || this == &route_->endDepot_);
 }
 
 Route::SegmentAt::SegmentAt(Route const &route, size_t idx)
