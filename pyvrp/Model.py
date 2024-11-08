@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
 import numpy as np
@@ -209,8 +209,8 @@ class Model:
         """
         if group is None:
             group_idx = None
-        elif group in self._groups:
-            group_idx = self._groups.index(group)
+        elif (idx := _idx_by_id(group, self._groups)) is not None:
+            group_idx = idx
         else:
             raise ValueError("The given group is not in this model instance.")
 
@@ -343,22 +343,22 @@ class Model:
         """
         if start_depot is None:
             start_idx = 0
-        elif start_depot in self._depots:
-            start_idx = self._depots.index(start_depot)
+        elif (idx := _idx_by_id(start_depot, self._depots)) is not None:
+            start_idx = idx
         else:
             raise ValueError("The given start depot is not in this model.")
 
         if end_depot is None:
             end_idx = 0
-        elif end_depot in self._depots:
-            end_idx = self._depots.index(end_depot)
+        elif (idx := _idx_by_id(end_depot, self._depots)) is not None:
+            end_idx = idx
         else:
             raise ValueError("The given end depot is not in this model.")
 
         if profile is None:
             profile_idx = 0
-        elif profile in self._profiles:
-            profile_idx = self._profiles.index(profile)
+        elif (idx := _idx_by_id(profile, self._profiles)) is not None:
+            profile_idx = idx
         else:
             raise ValueError("The given profile is not in this model.")
 
@@ -469,3 +469,17 @@ class Model:
             found solution.
         """
         return solve(self.data(), stop, seed, collect_stats, display, params)
+
+
+def _idx_by_id(item: object, container: Sequence[object]) -> int | None:
+    """
+    Obtains the index of item in the container by identity rather than equality
+    (as would happen with index()). This is important for various objects in
+    the Model, because objects that compare equal may not be the same as the
+    one intended. See #681 for a bug caused by this.
+    """
+    for idx, other in enumerate(container):
+        if id(item) == id(other):
+            return idx
+
+    return None
