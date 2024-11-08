@@ -875,6 +875,9 @@ def test_depot_eq():
     assert_(depot1 != "text")
     assert_(depot1 != 3)
 
+    depot4 = Depot(x=0, y=0, name="test")
+    assert_(depot1 != depot4)
+
 
 def test_vehicle_type_eq():
     """
