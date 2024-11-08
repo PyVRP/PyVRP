@@ -33,12 +33,9 @@ class Route
 {
     using LoadSegments = std::vector<LoadSegment>;
 
-    // These classes (defined further below) handle transparent access to the
+    // This class (defined further below) handles transparent access to the
     // route's segment-specific concatenation schemes.
-    friend class SegmentAt;
-    friend class SegmentAfter;
-    friend class SegmentBefore;
-    friend class SegmentBetween;
+    friend class Segment;
 
 public:
     /**
@@ -107,64 +104,17 @@ public:
 
 private:
     /**
-     * Class storing data related to the route location at ``idx``.
-     */
-    class SegmentAt
-    {
-        Route const *route;
-        size_t const idx;
-
-    public:
-        inline SegmentAt(Route const &route, size_t idx);
-        inline DistanceSegment distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
-    };
-
-    /**
-     * Class storing data related to the route segment starting at ``start``,
-     * and ending at the depot (inclusive).
-     */
-    class SegmentAfter
-    {
-        Route const *route;
-        size_t const start;
-
-    public:
-        inline SegmentAfter(Route const &route, size_t start);
-        inline DistanceSegment distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
-    };
-
-    /**
-     * Class storing data related to the route segment starting at the depot,
-     * and ending at ``end`` (inclusive).
-     */
-    class SegmentBefore
-    {
-        Route const *route;
-        size_t const end;
-
-    public:
-        inline SegmentBefore(Route const &route, size_t end);
-        inline DistanceSegment distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
-    };
-
-    /**
      * Class storing data related to the route segment starting at ``start``,
      * and ending at ``end`` (inclusive).
      */
-    class SegmentBetween
+    class Segment
     {
         Route const *route;
         size_t const start;
         size_t const end;
 
     public:
-        inline SegmentBetween(Route const &route, size_t start, size_t end);
+        inline Segment(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
         inline LoadSegment load(size_t dimension) const;
@@ -369,25 +319,25 @@ public:
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
-    [[nodiscard]] inline SegmentAt at(size_t idx) const;
+    [[nodiscard]] inline Segment at(size_t idx) const;
 
     /**
      * Returns an object that can be queried for data associated with the
      * segment starting at start.
      */
-    [[nodiscard]] inline SegmentAfter after(size_t start) const;
+    [[nodiscard]] inline Segment after(size_t start) const;
 
     /**
      * Returns an object that can be queried for data associated with the
      * segment ending at end.
      */
-    [[nodiscard]] inline SegmentBefore before(size_t end) const;
+    [[nodiscard]] inline Segment before(size_t end) const;
 
     /**
      * Returns an object that can be queried for data associated with the
      * segment between [start, end].
      */
-    [[nodiscard]] inline SegmentBetween between(size_t start, size_t end) const;
+    [[nodiscard]] inline Segment between(size_t start, size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -472,96 +422,13 @@ bool Route::Node::isDepot() const
            && (this == &route_->startDepot_ || this == &route_->endDepot_);
 }
 
-Route::SegmentAt::SegmentAt(Route const &route, size_t idx)
-    : route(&route), idx(idx)
-{
-    assert(idx < route.nodes.size());
-}
-
-Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
-    : route(&route), start(start)
-{
-    assert(start < route.nodes.size());
-}
-
-Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
-    : route(&route), end(end)
-{
-    assert(end < route.nodes.size());
-}
-
-Route::SegmentBetween::SegmentBetween(Route const &route,
-                                      size_t start,
-                                      size_t end)
+Route::Segment::Segment(Route const &route, size_t start, size_t end)
     : route(&route), start(start), end(end)
 {
     assert(start <= end && end < route.nodes.size());
 }
 
-DistanceSegment
-Route::SegmentAt::distance([[maybe_unused]] size_t profile) const
-{
-    return route->distAt[idx];
-}
-
-DurationSegment
-Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
-{
-    return route->durAt[idx];
-}
-
-LoadSegment Route::SegmentAt::load(size_t dimension) const
-{
-    return route->loadAt[dimension][idx];
-}
-
-DistanceSegment Route::SegmentAfter::distance(size_t profile) const
-{
-    if (profile == route->profile())
-        return route->distAfter[start];
-
-    auto const between = SegmentBetween(*route, start, route->size() + 1);
-    return between.distance(profile);
-}
-
-DurationSegment Route::SegmentAfter::duration(size_t profile) const
-{
-    if (profile == route->profile())
-        return route->durAfter[start];
-
-    auto const between = SegmentBetween(*route, start, route->size() + 1);
-    return between.duration(profile);
-}
-
-LoadSegment Route::SegmentAfter::load(size_t dimension) const
-{
-    return route->loadAfter[dimension][start];
-}
-
-DistanceSegment Route::SegmentBefore::distance(size_t profile) const
-{
-    if (profile == route->profile())
-        return route->distBefore[end];
-
-    auto const between = SegmentBetween(*route, size_t(0), end);
-    return between.distance(profile);
-}
-
-DurationSegment Route::SegmentBefore::duration(size_t profile) const
-{
-    if (profile == route->profile())
-        return route->durBefore[end];
-
-    auto const between = SegmentBetween(*route, size_t(0), end);
-    return between.duration(profile);
-}
-
-LoadSegment Route::SegmentBefore::load(size_t dimension) const
-{
-    return route->loadBefore[dimension][end];
-}
-
-DistanceSegment Route::SegmentBetween::distance(size_t profile) const
+DistanceSegment Route::Segment::distance(size_t profile) const
 {
     if (profile != route->profile())  // then we have to compute the distance
     {                                 // segment from scratch.
@@ -586,7 +453,7 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
                            endDist.distance() - startDist.distance());
 }
 
-DurationSegment Route::SegmentBetween::duration(size_t profile) const
+DurationSegment Route::Segment::duration(size_t profile) const
 {
     auto durSegment = route->durAt[start];
 
@@ -600,7 +467,7 @@ DurationSegment Route::SegmentBetween::duration(size_t profile) const
     return durSegment;
 }
 
-LoadSegment Route::SegmentBetween::load(size_t dimension) const
+LoadSegment Route::Segment::load(size_t dimension) const
 {
     auto const &loads = route->loadAt[dimension];
 
@@ -732,28 +599,28 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-Route::SegmentAt Route::at(size_t idx) const
+Route::Segment Route::at(size_t idx) const
 {
     assert(!dirty);
-    return SegmentAt(*this, idx);
+    return Segment(*this, idx, idx);
 }
 
-Route::SegmentAfter Route::after(size_t start) const
+Route::Segment Route::after(size_t start) const
 {
     assert(!dirty);
-    return SegmentAfter(*this, start);
+    return Segment(*this, start, size() + 1);
 }
 
-Route::SegmentBefore Route::before(size_t end) const
+Route::Segment Route::before(size_t end) const
 {
     assert(!dirty);
-    return SegmentBefore(*this, end);
+    return Segment(*this, 0, end);
 }
 
-Route::SegmentBetween Route::between(size_t start, size_t end) const
+Route::Segment Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
-    return SegmentBetween(*this, start, end);
+    return Segment(*this, start, end);
 }
 
 template <typename... Segments>
