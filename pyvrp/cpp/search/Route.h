@@ -468,8 +468,6 @@ Route *Route::Node::route() const { return route_; }
 
 bool Route::Node::isDepot() const
 {
-    // We need to be in a route to be the depot. If we are, then we need to
-    // be either the route's start or end depot.
     return route_
            && (this == &route_->startDepot_ || this == &route_->endDepot_);
 }
