@@ -1,4 +1,5 @@
 #include "LocalSearch.h"
+#include "DynamicBitset.h"
 #include "Measure.h"
 #include "primitives.h"
 
@@ -53,14 +54,14 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     // last *actually* modified.
     std::vector<int> lastTestedNodes(data.numLocations(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
-
-    searchCompleted = false;
     numMoves = 0;
 
-    for (int step = 0; !searchCompleted; ++step)
-    {
-        searchCompleted = true;
+    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+        candidates[idx] = true;
 
+    bool firstStep = true;
+    while (candidates.any())
+    {
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
@@ -79,8 +80,14 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
-            // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where both U and V are in the solution.
+            // We next evaluate node operators that work on pairs of nodes
+            // of nodes (U, V), where both U and V are in the solution. We
+            // only do this if U is a promising candidate for improvement.
+            if (!candidates[uClient])
+                continue;
+
+            candidates[uClient] = false;
+
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
@@ -101,9 +108,11 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             // Moves involving empty routes are not tested in the first
             // iteration to avoid using too many routes.
-            if (step > 0)
+            if (!firstStep)
                 applyEmptyRouteMoves(U, costEvaluator);
         }
+
+        firstStep = false;
     }
 }
 
@@ -373,6 +382,12 @@ void LocalSearch::update(Route *U, Route *V)
         for (auto *op : routeOps)  // this is used by some route operators
             op->update(V);         // to keep caches in sync.
     }
+
+    for (auto *node : *U)
+        candidates[node->client()] = true;
+
+    for (auto *node : *V)
+        candidates[node->client()] = true;
 }
 
 void LocalSearch::loadSolution(Solution const &solution)
@@ -470,6 +485,7 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       neighbours_(data.numLocations()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
+      candidates(data.numLocations()),
       lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);
