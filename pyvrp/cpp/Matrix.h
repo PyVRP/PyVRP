@@ -23,8 +23,9 @@ public:
      *
      * @param nRows Number of rows.
      * @param nCols Number of columns.
+     * @param value Initial value to fill the matrix with.
      */
-    explicit Matrix(size_t nRows, size_t nCols);
+    explicit Matrix(size_t nRows, size_t nCols, T value = {});
 
     explicit Matrix(std::vector<T> data, size_t nRows, size_t nCols);
 
@@ -32,6 +33,12 @@ public:
 
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col);
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
+
+    std::vector<T>::const_iterator begin() const;
+    std::vector<T>::iterator begin();
+
+    std::vector<T>::const_iterator end() const;
+    std::vector<T>::iterator end();
 
     [[nodiscard]] T *data();
     [[nodiscard]] T const *data() const;
@@ -46,14 +53,19 @@ public:
     [[nodiscard]] T max() const;
 
     /**
+     * Resizes the matrix to fit the given number of rows and columns.
+     */
+    void resize(size_t nRows, size_t nCols);
+
+    /**
      * @return Matrix size.
      */
     [[nodiscard]] size_t size() const;
 };
 
 template <typename T>
-Matrix<T>::Matrix(size_t nRows, size_t nCols)
-    : cols_(nCols), rows_(nRows), data_(nRows * nCols)
+Matrix<T>::Matrix(size_t nRows, size_t nCols, T value = {})
+    : cols_(nCols), rows_(nRows), data_(nRows * nCols, value)
 {
 }
 
@@ -76,6 +88,26 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
     return data_[cols_ * row + col];
 }
 
+template <typename T> std::vector<T>::const_iterator Matrix<T>::begin() const
+{
+    return data_.begin();
+}
+
+template <typename T> std::vector<T>::iterator Matrix<T>::begin()
+{
+    return data_.begin();
+}
+
+template <typename T> std::vector<T>::const_iterator Matrix<T>::end() const
+{
+    return data_.end();
+}
+
+template <typename T> std::vector<T>::iterator Matrix<T>::end()
+{
+    return data_.end();
+}
+
 template <typename T> T *Matrix<T>::data() { return data_.data(); }
 template <typename T> T const *Matrix<T>::data() const { return data_.data(); }
 
@@ -86,6 +118,13 @@ template <typename T> size_t Matrix<T>::numRows() const { return rows_; }
 template <typename T> T Matrix<T>::max() const
 {
     return *std::max_element(data_.begin(), data_.end());
+}
+
+template <typename T> void Matrix<T>::resize(size_t nRows, size_t nCols)
+{
+    cols_ = nCols;
+    rows_ = nRows;
+    data_.resize(cols_ * rows_);
 }
 
 template <typename T> size_t Matrix<T>::size() const { return data_.size(); }
