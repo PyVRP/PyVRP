@@ -240,10 +240,11 @@ def test_different_routing_costs(ok_small):
     # vehicle type is like the original and cares only about distance, whereas
     # the second type aims to minimise route duration. This should result in a
     # different neighbourhood structure.
+    orig_type = ok_small.vehicle_type(0)
     different_cost_data = new_data.replace(
         vehicle_types=[
-            VehicleType(3, unit_distance_cost=1, unit_duration_cost=0),
-            VehicleType(3, unit_distance_cost=0, unit_duration_cost=1),
+            orig_type.replace(unit_distance_cost=1, unit_duration_cost=0),
+            orig_type.replace(unit_distance_cost=0, unit_duration_cost=1),
         ],
     )
     different_cost_neighbours = compute_neighbours(different_cost_data)
@@ -257,7 +258,10 @@ def test_multiple_routing_profiles(ok_small):
     """
     huge_mat = np.where(np.eye(ok_small.num_locations), 0, 10_000)
     data = ok_small.replace(
-        vehicle_types=[VehicleType(1, profile=1), *ok_small.vehicle_types()],
+        vehicle_types=[
+            VehicleType(1, capacity=[10], profile=1),
+            *ok_small.vehicle_types(),
+        ],
         distance_matrices=[huge_mat, *ok_small.distance_matrices()],
         duration_matrices=[huge_mat, *ok_small.duration_matrices()],
     )

@@ -9,9 +9,10 @@ namespace pyvrp
 /**
  * LoadSegment(delivery: int = 0, pickup: int = 0, load: int = 0)
  *
- * Creates a new load segment. Load segments can be efficiently concatenated,
- * and track statistics about capacity violations resulting from visiting
- * clients in the concatenated order.
+ * Creates a new load segment for delivery and pickup loads in a single
+ * dimension. These load segments can be efficiently concatenated, and track
+ * statistics about capacity violations resulting from visiting clients in the
+ * concatenated order.
  *
  * Parameters
  * ----------
@@ -49,8 +50,8 @@ public:
      */
     [[nodiscard]] inline Load load() const;
 
-    // Construct from attributes of the given client.
-    LoadSegment(ProblemData::Client const &client);
+    // Construct from load attributes of the given client and dimension.
+    LoadSegment(ProblemData::Client const &client, size_t dimension);
 
     // Construct from raw data.
     inline LoadSegment(Load delivery, Load pickup, Load load);

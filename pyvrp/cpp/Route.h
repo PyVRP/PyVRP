@@ -27,19 +27,19 @@ class Route
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
-    Load delivery_ = 0;            // Total delivery amount served on this route
-    Load pickup_ = 0;              // Total pickup amount gathered on this route
-    Load excessLoad_ = 0;          // Excess pickup or delivery demand
-    Duration duration_ = 0;        // Total duration of this route
-    Cost durationCost_ = 0;        // Total cost of route duration
-    Duration timeWarp_ = 0;        // Total time warp on this route
-    Duration travel_ = 0;          // Total *travel* duration on this route
-    Duration service_ = 0;         // Total *service* duration on this route
-    Duration wait_ = 0;            // Total *waiting* duration on this route
-    Duration release_ = 0;         // Release time of this route
-    Duration startTime_ = 0;       // (earliest) start time of this route
-    Duration slack_ = 0;           // Total time slack on this route
-    Cost prizes_ = 0;              // Total value of prizes on this route
+    std::vector<Load> delivery_;   // Total delivery amount served on this route
+    std::vector<Load> pickup_;     // Total pickup amount gathered on this route
+    std::vector<Load> excessLoad_;  // Excess pickup or delivery demand
+    Duration duration_ = 0;         // Total duration of this route
+    Cost durationCost_ = 0;         // Total cost of route duration
+    Duration timeWarp_ = 0;         // Total time warp on this route
+    Duration travel_ = 0;           // Total *travel* duration on this route
+    Duration service_ = 0;          // Total *service* duration on this route
+    Duration wait_ = 0;             // Total *waiting* duration on this route
+    Duration release_ = 0;          // Release time of this route
+    Duration startTime_ = 0;        // (earliest) start time of this route
+    Duration slack_ = 0;            // Total time slack on this route
+    Cost prizes_ = 0;               // Total value of prizes on this route
 
     std::pair<double, double> centroid_;  // Route center
     VehicleType vehicleType_;             // Type of vehicle
@@ -82,17 +82,17 @@ public:
     /**
      * Total client delivery load on this route.
      */
-    [[nodiscard]] Load delivery() const;
+    [[nodiscard]] std::vector<Load> const &delivery() const;
 
     /**
      * Total client pickup load on this route.
      */
-    [[nodiscard]] Load pickup() const;
+    [[nodiscard]] std::vector<Load> const &pickup() const;
 
     /**
-     * Pickup or delivery load in excess of the vehicle's capacity.
+     * Pickup or delivery loads in excess of the vehicle's capacity.
      */
-    [[nodiscard]] Load excessLoad() const;
+    [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
      * Total route duration, including travel, service and waiting time.
@@ -223,9 +223,9 @@ public:
           Distance distance,
           Cost distanceCost,
           Distance excessDistance,
-          Load delivery,
-          Load pickup,
-          Load excessLoad,
+          std::vector<Load> delivery,
+          std::vector<Load> pickup,
+          std::vector<Load> excessLoad,
           Duration duration,
           Cost durationCost,
           Duration timeWarp,

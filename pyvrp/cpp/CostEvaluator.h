@@ -16,7 +16,7 @@ concept CostEvaluatable = requires(T arg) {
     { arg.distanceCost() } -> std::same_as<Cost>;
     { arg.durationCost() } -> std::same_as<Cost>;
     { arg.fixedVehicleCost() } -> std::same_as<Cost>;
-    { arg.excessLoad() } -> std::same_as<Load>;
+    { arg.excessLoad() } -> std::convertible_to<std::vector<Load>>;
     { arg.excessDistance() } -> std::same_as<Distance>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.empty() } -> std::same_as<bool>;
@@ -34,12 +34,12 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
 // The following methods must be available before a type's delta cost can be
 // evaluated by the CostEvaluator.
 template <typename T>
-concept DeltaCostEvaluatable = requires(T arg) {
+concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
     { arg.data() };
     { arg.distanceSegment() };
     { arg.durationSegment() };
-    { arg.loadSegment() };
+    { arg.loadSegment(dimension) };
 };
 
 /**
@@ -189,11 +189,13 @@ template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
     // Standard objective plus infeasibility-related penalty terms.
-    auto const cost = arg.distanceCost() + arg.durationCost()
-                      + (!arg.empty() ? arg.fixedVehicleCost() : 0)
-                      + loadPenalty(arg.excessLoad(), 0)
-                      + twPenalty(arg.timeWarp())
-                      + distPenalty(arg.excessDistance(), 0);
+    auto cost = arg.distanceCost() + arg.durationCost()
+                + (!arg.empty() ? arg.fixedVehicleCost() : 0)
+                + twPenalty(arg.timeWarp())
+                + distPenalty(arg.excessDistance(), 0);
+
+    for (auto const excess : arg.excessLoad())
+        cost += loadPenalty(excess, 0);
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
@@ -224,7 +226,8 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out -= distPenalty(route->distance(), route->maxDistance());
 
     if constexpr (!skipLoad)
-        out -= loadPenalty(route->load(), route->capacity());
+        for (auto const excess : route->excessLoad())
+            out -= loadPenalty(excess, 0);
 
     if (data.characteristics().hasDuration)
     {
@@ -242,8 +245,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 
     if constexpr (!skipLoad)
     {
-        auto const load = proposal.loadSegment();
-        out += loadPenalty(load.load(), route->capacity());
+        auto const &capacity = route->capacity();
+        for (size_t dim = 0; dim != capacity.size(); ++dim)
+            out += loadPenalty(proposal.loadSegment(dim).load(), capacity[dim]);
     }
 
     if (!data.characteristics().hasDuration)
@@ -281,8 +285,11 @@ bool CostEvaluator::deltaCost(Cost &out,
 
     if constexpr (!skipLoad)
     {
-        out -= loadPenalty(uRoute->load(), uRoute->capacity());
-        out -= loadPenalty(vRoute->load(), vRoute->capacity());
+        for (auto const excess : uRoute->excessLoad())
+            out -= loadPenalty(excess, 0);
+
+        for (auto const excess : vRoute->excessLoad())
+            out -= loadPenalty(excess, 0);
     }
 
     if (data.characteristics().hasDuration)
@@ -308,11 +315,15 @@ bool CostEvaluator::deltaCost(Cost &out,
 
     if constexpr (!skipLoad)
     {
-        auto const uLoad = uProposal.loadSegment();
-        out += loadPenalty(uLoad.load(), uRoute->capacity());
+        auto const &uCapacity = uRoute->capacity();
+        for (size_t dim = 0; dim != uCapacity.size(); ++dim)
+            out += loadPenalty(uProposal.loadSegment(dim).load(),
+                               uCapacity[dim]);
 
-        auto const vLoad = vProposal.loadSegment();
-        out += loadPenalty(vLoad.load(), vRoute->capacity());
+        auto const &vCapacity = vRoute->capacity();
+        for (size_t dim = 0; dim != vCapacity.size(); ++dim)
+            out += loadPenalty(vProposal.loadSegment(dim).load(),
+                               vCapacity[dim]);
     }
 
     if constexpr (!exact)

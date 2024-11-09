@@ -97,14 +97,25 @@ def test_add_client_attributes():
 
     assert_equal(client.x, 1)
     assert_equal(client.y, 2)
-    assert_equal(client.delivery, 3)
-    assert_equal(client.pickup, 9)
+    assert_equal(client.delivery, [3])
+    assert_equal(client.pickup, [9])
     assert_equal(client.service_duration, 4)
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
     assert_equal(client.release_time, 0)
     assert_equal(client.prize, 8)
     assert_(not client.required)
+
+
+def test_add_client_with_multidimensional_load():
+    """
+    Smoke test that checks if multidimensional load is set correctly.
+    """
+    model = Model()
+    client = model.add_client(x=1, y=2, delivery=[3, 4], pickup=[5, 6])
+
+    assert_equal(client.delivery, [3, 4])
+    assert_equal(client.pickup, [5, 6])
 
 
 def test_add_depot_attributes():
@@ -150,7 +161,7 @@ def test_add_vehicle_type():
     )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, 998)
+    assert_equal(vehicle_type.capacity, [998])
     assert_equal(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
@@ -368,7 +379,7 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type(capacity=0, num_available=1)
+    model.add_vehicle_type(num_available=1)
 
     # These edges were not set, so their distance values should default to the
     # maximum value we use for such edges.
@@ -414,7 +425,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     could not solve an instance with zero clients or just one client.
     """
     m = Model()
-    m.add_vehicle_type(capacity=15, num_available=1)
+    m.add_vehicle_type(num_available=1)
     depot = m.add_depot(x=0, y=0)
 
     # Solve an instance with no clients.
@@ -443,7 +454,6 @@ def test_model_solves_small_instance_with_fixed_costs():
 
     for idx in range(2):
         m.add_vehicle_type(
-            capacity=0,
             num_available=5,
             fixed_cost=10,
             tw_early=0,
@@ -477,7 +487,6 @@ def test_model_solves_small_instance_with_shift_durations():
     # vehicles in total, two for each vehicle type.
     for tw_early, tw_late in [(0, 15), (5, 25)]:
         m.add_vehicle_type(
-            capacity=0,
             num_available=2,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -610,7 +619,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     res = m.solve(stop=MaxIterations(100))
     route = res.best.routes()[0]
 
-    assert_equal(route.excess_load(), expected_excess_load)
+    assert_equal(route.excess_load(), [expected_excess_load])
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
 
 
@@ -632,8 +641,8 @@ def test_from_data_client_group(ok_small):
     correctly sets up the client groups in the model.
     """
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, required=False, group=0)
-    clients[1] = Client(1, 1, required=False, group=0)
+    clients[0] = Client(1, 1, delivery=[1], required=False, group=0)
+    clients[1] = Client(1, 1, delivery=[1], required=False, group=0)
 
     group = ClientGroup([1, 2])
 
@@ -740,8 +749,8 @@ def test_minimise_distance_or_duration(ok_small):
     orig_model = Model.from_data(ok_small)
 
     vehicle_types = [
-        VehicleType(capacity=10, unit_distance_cost=1, unit_duration_cost=0),
-        VehicleType(capacity=10, unit_distance_cost=0, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=0),
+        VehicleType(capacity=[10], unit_distance_cost=0, unit_duration_cost=1),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
     new_model = Model.from_data(data)
@@ -890,3 +899,58 @@ def test_model_solves_instances_with_multiple_profiles():
     route1, route2 = res.best.routes()
     assert_equal(route1.visits(), [1])
     assert_equal(route2.visits(), [2])
+
+
+def test_model_solves_instance_with_zero_load_dimensions():
+    """
+    Smoke test to check that the model can solve an instance with zero load
+    dimensions.
+    """
+    m = Model()
+    m.add_depot(x=1, y=1)
+    m.add_client(x=1, y=2)
+    m.add_client(x=2, y=1)
+    m.add_client(x=2, y=2)
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    m.add_vehicle_type(1)
+
+    assert_equal(m.data().num_load_dimensions, 0)
+
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.best.num_routes(), 1)
+
+    # The best we can do is to first visit client 1 or 3, then visit client 2,
+    # then the remaining client (1 or 3), and finally return to the depot. This
+    # results in a distance of 1 + 1 + 1 + 1 = 4.
+    route = res.best.routes()[0]
+    assert_equal(route.distance(), 4)
+
+
+def test_bug_client_group_indices():
+    """
+    Tests the bug of #681. Because empty client groups compare equal, the
+    group to index implementation returned the first object that compared
+    equal, in this case resulting in both clients being inserted into the
+    first client group rather than the each into one.
+    """
+    m = Model()
+    m.add_depot(x=0, y=0)
+
+    group1 = m.add_client_group()
+    group2 = m.add_client_group()
+
+    client1 = m.add_client(x=0, y=0, required=False, group=group2)
+    assert_equal(client1.group, 1)
+
+    client2 = m.add_client(x=0, y=0, required=False, group=group1)
+    assert_equal(client2.group, 0)
+
+    assert_equal(len(group1), 1)
+    assert_equal(len(group2), 1)
