@@ -11,8 +11,8 @@ namespace pyvrp
 {
 template <typename T> class Matrix
 {
-    typedef typename std::vector<T>::const_iterator const_iterator;
-    typedef typename std::vector<T>::iterator iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+    using iterator = typename std::vector<T>::iterator;
 
     size_t cols_ = 0;           // The number of columns of the matrix
     size_t rows_ = 0;           // The number of rows of the matrix
