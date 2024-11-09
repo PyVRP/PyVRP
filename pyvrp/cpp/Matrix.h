@@ -64,7 +64,7 @@ public:
 };
 
 template <typename T>
-Matrix<T>::Matrix(size_t nRows, size_t nCols, T value = {})
+Matrix<T>::Matrix(size_t nRows, size_t nCols, T value)
     : cols_(nCols), rows_(nRows), data_(nRows * nCols, value)
 {
 }
