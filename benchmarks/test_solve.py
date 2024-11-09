@@ -4,9 +4,9 @@ from pyvrp import solve
 from pyvrp.stop import MaxIterations
 
 
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
 @pytest.mark.parametrize("iterations", [1, 10])
-def test_solve_one(instance, iterations, benchmark, request):
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+def test_solve(instance, iterations, benchmark, request):
     """
     Tests performance of solving various instances.
     """
