@@ -31,8 +31,6 @@ namespace pyvrp::search
  */
 class Route
 {
-    using LoadSegments = std::vector<LoadSegment>;
-
     // This class (defined further below) handles transparent access to the
     // route's segment-specific concatenation schemes.
     friend class Segment;
@@ -134,6 +132,13 @@ private:
 
     Node startDepot_;  // Departure depot for this route
     Node endDepot_;    // Return depot for this route
+
+    std::vector<DistanceSegment> distanceSegments;  // Node distance segments
+    std::vector<DurationSegment> durationSegments;  // Node duration segments
+
+    // Node load segments, for each load dimension. Rows index the load
+    // dimension, and the columns the nodes.
+    std::vector<std::vector<LoadSegment>> loadSegments;
 
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
@@ -416,15 +421,13 @@ Route::Segment::Segment(Route const &route, size_t start, size_t end)
 
 DistanceSegment Route::Segment::distance(size_t profile) const
 {
-    auto const *node = route->nodes[start];
-    DistanceSegment segment = {node->client()};
+    auto segment = route->distanceSegments[start];
 
     for (size_t step = start; step != end; ++step)
     {
         auto const &mat = route->data.distanceMatrix(profile);
-        node = route->nodes[step + 1];
-        DistanceSegment const distAt = {node->client()};
-        segment = DistanceSegment::merge(mat, segment, distAt);
+        segment = DistanceSegment::merge(
+            mat, segment, route->distanceSegments[step + 1]);
     }
 
     return segment;
@@ -432,31 +435,13 @@ DistanceSegment Route::Segment::distance(size_t profile) const
 
 DurationSegment Route::Segment::duration(size_t profile) const
 {
-    auto const *node = route->nodes[start];
-
-    auto segment
-        = node->isDepot()
-              ? (node == &route->startDepot_)
-                    ? DurationSegment(route->startDepot(), route->vehicleType_)
-                    : DurationSegment(route->endDepot(), route->vehicleType_)
-              : DurationSegment(node->client(),
-                                route->data.location(node->client()));
+    auto segment = route->durationSegments[start];
 
     for (size_t step = start; step != end; ++step)
     {
         auto const &mat = route->data.durationMatrix(profile);
-        node = route->nodes[step + 1];
-        auto const durAt
-            = node->isDepot()
-                  ? (node == &route->startDepot_)
-                        ? DurationSegment(route->startDepot(),
-                                          route->vehicleType_)
-                        : DurationSegment(route->endDepot(),
-                                          route->vehicleType_)
-                  : DurationSegment(node->client(),
-                                    route->data.location(node->client()));
-
-        segment = DurationSegment::merge(mat, segment, durAt);
+        segment = DurationSegment::merge(
+            mat, segment, route->durationSegments[step + 1]);
     }
 
     return segment;
@@ -464,23 +449,11 @@ DurationSegment Route::Segment::duration(size_t profile) const
 
 LoadSegment Route::Segment::load(size_t dimension) const
 {
-    auto const *node = route->nodes[start];
-    auto segment
-        = node->isDepot()
-              ? LoadSegment(0, 0, 0)
-              : LoadSegment(route->data.location(node->client()), dimension);
+    auto const &loads = route->loadSegments[dimension];
+    auto segment = loads[start];
 
     for (size_t step = start; step != end; ++step)
-    {
-        node = route->nodes[step + 1];
-        auto const loadAt
-            = node->isDepot()
-                  ? LoadSegment(0, 0, 0)
-                  : LoadSegment(route->data.location(node->client()),
-                                dimension);
-
-        segment = LoadSegment::merge(segment, loadAt);
-    }
+        segment = LoadSegment::merge(segment, loads[step + 1]);
 
     return segment;
 }

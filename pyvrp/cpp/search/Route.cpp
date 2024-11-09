@@ -15,7 +15,10 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       vehTypeIdx_(vehicleType),
       idx_(idx),
       startDepot_(vehicleType_.startDepot),
-      endDepot_(vehicleType_.endDepot)
+      endDepot_(vehicleType_.endDepot),
+      loadSegments(data.numLoadDimensions()),
+      load_(data.numLoadDimensions(), 0),
+      excessLoad_(data.numLoadDimensions(), 0)
 {
     clear();
 }
@@ -82,8 +85,7 @@ void Route::clear()
     endDepot_.idx_ = 1;
     endDepot_.route_ = this;
 
-    load_ = std::vector<Load>(data.numLoadDimensions(), 0);
-    excessLoad_ = load_;
+    update();
 
 #ifndef NDEBUG
     dirty = false;
@@ -168,16 +170,36 @@ void Route::update()
         }
     }
 
-    // Load.
+    distanceSegments.clear();
+    for (auto const *node : nodes)
+        distanceSegments.emplace_back(node->client());
+
+    durationSegments.clear();
+    for (auto const *node : nodes)
+    {
+        if (node->isDepot())
+            durationSegments.emplace_back(node->client(), vehicleType_);
+        else
+            durationSegments.emplace_back(node->client(),
+                                          data.location(node->client()));
+    }
+
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
+        loadSegments[dim].clear();
+
+        for (auto const *node : nodes)
+        {
+            if (node->isDepot())
+                loadSegments[dim].emplace_back(0, 0, 0);
+            else
+                loadSegments[dim].emplace_back(data.location(node->client()),
+                                               dim);
+        }
+
         LoadSegment segment(0, 0, 0);
         for (size_t idx = 1; !nodes[idx]->isDepot(); ++idx)
-        {
-            ProblemData::Client const &client
-                = data.location(nodes[idx]->client());
-            segment = LoadSegment::merge(segment, {client, dim});
-        }
+            segment = LoadSegment::merge(segment, loadSegments[dim][idx]);
 
         load_[dim] = segment.load();
         excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
