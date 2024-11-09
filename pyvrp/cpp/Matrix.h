@@ -11,9 +11,6 @@ namespace pyvrp
 {
 template <typename T> class Matrix
 {
-    using const_iterator = typename std::vector<T>::const_iterator;
-    using iterator = typename std::vector<T>::iterator;
-
     size_t cols_ = 0;           // The number of columns of the matrix
     size_t rows_ = 0;           // The number of rows of the matrix
     std::vector<T> data_ = {};  // Data vector
@@ -37,11 +34,11 @@ public:
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col);
     [[nodiscard]] decltype(auto) operator()(size_t row, size_t col) const;
 
-    const_iterator begin() const;
-    const_iterator end() const;
+    typename std::vector<T>::const_iterator begin() const;
+    typename std::vector<T>::const_iterator end() const;
 
-    iterator begin();
-    iterator end();
+    typename std::vector<T>::iterator begin();
+    typename std::vector<T>::iterator end();
 
     [[nodiscard]] T *data();
     [[nodiscard]] T const *data() const;
@@ -91,22 +88,24 @@ decltype(auto) Matrix<T>::operator()(size_t row, size_t col) const
     return data_[cols_ * row + col];
 }
 
-template <typename T> Matrix<T>::const_iterator Matrix<T>::begin() const
+template <typename T>
+typename std::vector<T>::const_iterator Matrix<T>::begin() const
 {
     return data_.begin();
 }
 
-template <typename T> Matrix<T>::const_iterator Matrix<T>::end() const
+template <typename T>
+typename std::vector<T>::const_iterator Matrix<T>::end() const
 {
     return data_.end();
 }
 
-template <typename T> Matrix<T>::iterator Matrix<T>::begin()
+template <typename T> typename std::vector<T>::iterator Matrix<T>::begin()
 {
     return data_.begin();
 }
 
-template <typename T> Matrix<T>::iterator Matrix<T>::end()
+template <typename T> typename std::vector<T>::iterator Matrix<T>::end()
 {
     return data_.end();
 }
