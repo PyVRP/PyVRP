@@ -29,9 +29,9 @@ namespace pyvrp
  */
 class DistanceSegment
 {
-    size_t idxFirst_;    // Index of the first client in the segment
-    size_t idxLast_;     // Index of the last client in the segment
-    Distance distance_;  // Total distance
+    size_t idxFirst_ = 0;    // Index of the first client in the segment
+    size_t idxLast_ = 0;     // Index of the last client in the segment
+    Distance distance_ = 0;  // Total distance
 
 public:
     template <typename... Args>
@@ -45,6 +45,8 @@ public:
      * The total distance of this route segment.
      */
     [[nodiscard]] inline Distance distance() const;
+
+    DistanceSegment() = default;  // default is all zero.
 
     // Construct an empty distance segment for the given client index.
     DistanceSegment(size_t idx);

@@ -168,6 +168,7 @@ release/
 
 # Profiler results
 *.prof
+perf.data*
 
 # Data files
 data/
