@@ -4,11 +4,13 @@
 #include "DistanceSegment.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
+#include "Matrix.h"
 #include "ProblemData.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iosfwd>
+#include <optional>
 
 namespace pyvrp::search
 {
@@ -113,9 +115,9 @@ private:
 
     public:
         inline Segment(Route const &route, size_t start, size_t end);
-        inline DistanceSegment distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
+        inline DistanceSegment const &distance(size_t profile) const;
+        inline DurationSegment const &duration(size_t profile) const;
+        inline LoadSegment const &load(size_t dimension) const;
     };
 
     ProblemData const &data;
@@ -133,12 +135,9 @@ private:
     Node startDepot_;  // Departure depot for this route
     Node endDepot_;    // Return depot for this route
 
-    std::vector<DistanceSegment> distanceSegments;  // Node distance segments
-    std::vector<DurationSegment> durationSegments;  // Node duration segments
-
-    // Node load segments, for each load dimension. Rows index the load
-    // dimension, and the columns the nodes.
-    std::vector<std::vector<LoadSegment>> loadSegments;
+    mutable std::vector<Matrix<std::optional<DistanceSegment>>> distCache;
+    mutable std::vector<Matrix<std::optional<DurationSegment>>> durCache;
+    mutable std::vector<Matrix<std::optional<LoadSegment>>> loadCache;
 
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
@@ -419,43 +418,75 @@ Route::Segment::Segment(Route const &route, size_t start, size_t end)
     assert(start <= end && end < route.nodes.size());
 }
 
-DistanceSegment Route::Segment::distance(size_t profile) const
+DistanceSegment const &Route::Segment::distance(size_t profile) const
 {
-    auto segment = route->distanceSegments[start];
+    auto &cache = route->distCache[profile];
+
+    if (cache(start, end))
+        return cache(start, end).value();
+
+    assert(cache(start, start));
+    auto segment = cache(start, start).value();
 
     for (size_t step = start; step != end; ++step)
     {
+        assert(cache(step + 1, step + 1));
+        auto const &other = cache(step + 1, step + 1);
+
         auto const &mat = route->data.distanceMatrix(profile);
-        segment = DistanceSegment::merge(
-            mat, segment, route->distanceSegments[step + 1]);
+        segment = DistanceSegment::merge(mat, segment, other.value());
+        cache(start, step + 1) = segment;
     }
 
-    return segment;
+    assert(cache(start, end));
+    return cache(start, end).value();
 }
 
-DurationSegment Route::Segment::duration(size_t profile) const
+DurationSegment const &Route::Segment::duration(size_t profile) const
 {
-    auto segment = route->durationSegments[start];
+    auto &cache = route->durCache[profile];
+
+    if (cache(start, end))
+        return cache(start, end).value();
+
+    assert(cache(start, start));
+    auto segment = cache(start, start).value();
 
     for (size_t step = start; step != end; ++step)
     {
+        assert(cache(step + 1, step + 1));
+        auto const &other = cache(step + 1, step + 1);
+
         auto const &mat = route->data.durationMatrix(profile);
-        segment = DurationSegment::merge(
-            mat, segment, route->durationSegments[step + 1]);
+        segment = DurationSegment::merge(mat, segment, other.value());
+        cache(start, step + 1) = segment;
     }
 
-    return segment;
+    assert(cache(start, end));
+    return cache(start, end).value();
 }
 
-LoadSegment Route::Segment::load(size_t dimension) const
+LoadSegment const &Route::Segment::load(size_t dimension) const
 {
-    auto const &loads = route->loadSegments[dimension];
-    auto segment = loads[start];
+    auto &cache = route->loadCache[dimension];
+
+    if (cache(start, end))
+        return cache(start, end).value();
+
+    assert(cache(start, start));
+    auto segment = cache(start, start).value();
 
     for (size_t step = start; step != end; ++step)
-        segment = LoadSegment::merge(segment, loads[step + 1]);
+    {
+        assert(cache(step + 1, step + 1));
+        auto const &other = cache(step + 1, step + 1);
 
-    return segment;
+        segment = LoadSegment::merge(segment, other.value());
+        cache(start, step + 1) = segment;
+    }
+
+    assert(cache(start, end));
+    return cache(start, end).value();
 }
 
 bool Route::isFeasible() const
