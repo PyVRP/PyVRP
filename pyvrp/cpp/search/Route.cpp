@@ -159,42 +159,39 @@ void Route::update()
 {
     centroid_ = {0, 0};
 
-    for (size_t idx = 1; idx != nodes.size(); ++idx)
+    for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
         auto const *node = nodes[idx];
-        size_t const client = node->client();
+        assert(!node->isDepot());
 
-        if (!node->isDepot())
-        {
-            ProblemData::Client const &clientData = data.location(client);
-            centroid_.first += static_cast<double>(clientData.x) / size();
-            centroid_.second += static_cast<double>(clientData.y) / size();
-        }
+        ProblemData::Client const &clientData = data.location(node->client());
+        centroid_.first += static_cast<double>(clientData.x) / size();
+        centroid_.second += static_cast<double>(clientData.y) / size();
     }
 
     // Set-up node concatenation schemes for distance and duration profiles.
     for (size_t profile = 0; profile != data.numProfiles(); ++profile)
     {
         auto &dists = distCache[profile];
-        auto &durs = durCache[profile];
-
         dists.resize(nodes.size(), nodes.size());
         std::fill(dists.begin(), dists.end(), std::nullopt);
 
+        for (size_t idx = 0; idx != nodes.size(); ++idx)
+            dists(idx, idx) = {nodes[idx]->client()};
+
+        auto &durs = durCache[profile];
         durs.resize(nodes.size(), nodes.size());
         std::fill(durs.begin(), durs.end(), std::nullopt);
 
-        for (size_t idx = 0; idx != nodes.size(); ++idx)
+        durs(0, 0) = {vehicleType_.startDepot, vehicleType_};
+        durs(nodes.size() - 1, nodes.size() - 1)
+            = {vehicleType_.endDepot, vehicleType_};
+
+        for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
         {
             auto const *node = nodes[idx];
             auto const client = node->client();
-
-            dists(idx, idx) = {client};
-
-            if (node->isDepot())
-                durs(idx, idx) = {client, vehicleType_};
-            else
-                durs(idx, idx) = {client, data.location(client)};
+            durs(idx, idx) = {client, data.location(client)};
         }
     }
 
@@ -205,27 +202,23 @@ void Route::update()
         loads.resize(nodes.size(), nodes.size());
         std::fill(loads.begin(), loads.end(), std::nullopt);
 
-        for (size_t idx = 0; idx != nodes.size(); ++idx)
+        loads(0, 0) = {0, 0, 0};
+        loads(nodes.size() - 1, nodes.size() - 1) = {0, 0, 0};
+
+        for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
         {
             auto const *node = nodes[idx];
             auto const client = node->client();
+            loads(idx, idx) = {data.location(client), dim};
 
-            if (node->isDepot())
-                loads(idx, idx) = {0, 0, 0};
-            else
-                loads(idx, idx) = {data.location(client), dim};
-        }
-
-        // We also compute the load prefix segments from the depot, since we
-        // need this anyway for the cached load and excess load values below.
-        for (size_t idx = 1; idx != nodes.size(); ++idx)
-        {
-            assert(loads(0, idx - 1) && loads(idx, idx));
+            // We also compute the load prefix segments from the depot, since we
+            // need this for the cached load and excess load values below.
             loads(0, idx) = LoadSegment::merge(loads(0, idx - 1).value(),
                                                loads(idx, idx).value());
         }
 
-        load_[dim] = loads(0, nodes.size() - 1).value().load();
+        assert(loads(0, nodes.size() - 2));
+        load_[dim] = loads(0, nodes.size() - 2).value().load();
         excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
     }
 
