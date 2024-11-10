@@ -25,9 +25,9 @@ namespace pyvrp
  */
 class LoadSegment
 {
-    Load delivery_;
-    Load pickup_;
-    Load load_;
+    Load delivery_ = 0;
+    Load pickup_ = 0;
+    Load load_ = 0;
 
 public:
     template <typename... Args>
@@ -49,6 +49,8 @@ public:
      * Returns the maximum load encountered on this segment.
      */
     [[nodiscard]] inline Load load() const;
+
+    LoadSegment() = default;  // default is all zero
 
     // Construct from load attributes of the given client and dimension.
     LoadSegment(ProblemData::Client const &client, size_t dimension);

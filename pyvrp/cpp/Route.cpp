@@ -22,7 +22,7 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     endDepot_ = vehType.endDepot;
 
     DurationSegment ds = {startDepot_, vehType};
-    std::vector<LoadSegment> loadSegments(data.numLoadDimensions(), {0, 0, 0});
+    std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
 
     size_t prevClient = startDepot_;
 

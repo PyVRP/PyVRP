@@ -88,8 +88,7 @@ void Route::clear()
     distAfter = distAt;
     distBefore = distAt;
 
-    LoadSegments depotLoad = {LoadSegment(0, 0, 0), LoadSegment(0, 0, 0)};
-    loadAt = std::vector<LoadSegments>(data.numLoadDimensions(), depotLoad);
+    loadAt = std::vector<LoadSegments>(data.numLoadDimensions(), {{}, {}});
     loadAfter = loadAt;
     loadBefore = loadAt;
 
