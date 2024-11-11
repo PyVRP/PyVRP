@@ -30,9 +30,8 @@ class LoadSegment
     Load load_ = 0;
 
 public:
-    template <typename... Args>
-    [[nodiscard]] static LoadSegment
-    merge(LoadSegment const &first, LoadSegment const &second, Args &&...args);
+    [[nodiscard]] static inline LoadSegment merge(LoadSegment const &first,
+                                                  LoadSegment const &second);
 
     /**
      * Returns the delivery amount, that is, the total amount of load delivered
@@ -67,22 +66,15 @@ public:
     inline LoadSegment &operator=(LoadSegment &&) = default;
 };
 
-template <typename... Args>
 LoadSegment LoadSegment::merge(LoadSegment const &first,
-                               LoadSegment const &second,
-                               Args &&...args)
+                               LoadSegment const &second)
 {
     // See Vidal et al. (2014) for details. This function implements equations
     // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
-    LoadSegment const res = {
+    return {
         first.delivery_ + second.delivery_,
         first.pickup_ + second.pickup_,
         std::max(first.load_ + second.delivery_, second.load_ + first.pickup_)};
-
-    if constexpr (sizeof...(args) == 0)
-        return res;
-    else
-        return merge(res, args...);
 }
 
 Load LoadSegment::load() const { return load_; }

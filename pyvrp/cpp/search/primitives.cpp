@@ -19,19 +19,17 @@ public:
 
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
     {
-        return pyvrp::DistanceSegment(client);
+        return {};
     }
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(client);
-        return pyvrp::DurationSegment(client, clientData);
+        return {data.location(client)};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(client);
-        return pyvrp::LoadSegment(clientData, dimension);
+        return {data.location(client), dimension};
     }
 };
 }  // namespace

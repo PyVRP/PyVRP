@@ -565,13 +565,16 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 {
     if (profile != route->profile())  // then we have to compute the distance
     {                                 // segment from scratch.
+        auto const &mat = route->data.distanceMatrix(profile);
         auto distSegment = route->distAt[start];
 
         for (size_t step = start; step != end; ++step)
         {
-            auto const &mat = route->data.distanceMatrix(profile);
+            auto const from = route->nodes[step]->client();
+            auto const to = route->nodes[step + 1]->client();
             auto const &distAt = route->distAt[step + 1];
-            distSegment = DistanceSegment::merge(mat, distSegment, distAt);
+            distSegment
+                = DistanceSegment::merge(mat(from, to), distSegment, distAt);
         }
 
         return distSegment;
@@ -581,20 +584,20 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
     auto const &endDist = route->distBefore[end];
 
     assert(startDist.distance() <= endDist.distance());
-    return DistanceSegment(route->nodes[start]->client(),
-                           route->nodes[end]->client(),
-                           endDist.distance() - startDist.distance());
+    return DistanceSegment(endDist.distance() - startDist.distance());
 }
 
 DurationSegment Route::SegmentBetween::duration(size_t profile) const
 {
+    auto const &mat = route->data.durationMatrix(profile);
     auto durSegment = route->durAt[start];
 
     for (size_t step = start; step != end; ++step)
     {
-        auto const &mat = route->data.durationMatrix(profile);
+        auto const from = route->nodes[step]->client();
+        auto const to = route->nodes[step + 1]->client();
         auto const &durAt = route->durAt[step + 1];
-        durSegment = DurationSegment::merge(mat, durSegment, durAt);
+        durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
     }
 
     return durSegment;
@@ -775,35 +778,39 @@ Route const *Route::Proposal<Segments...>::route() const
 template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
-    return std::apply(
-        [&](auto &&...args)
-        {
-            return DistanceSegment::merge(
-                data.distanceMatrix(current->profile()),
-                args.distance(current->profile())...);
-        },
-        segments);
+    return {};
+    // return std::apply(
+    //     [&](auto &&...args)
+    //     {
+    //         return DistanceSegment::merge(
+    //             data.distanceMatrix(current->profile()),
+    //             args.distance(current->profile())...);
+    //     },
+    //     segments);
 }
 
 template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
-    return std::apply(
-        [&](auto &&...args)
-        {
-            return DurationSegment::merge(
-                data.durationMatrix(current->profile()),
-                args.duration(current->profile())...);
-        },
-        segments);
+    return {};
+    // return std::apply(
+    //     [&](auto &&...args)
+    //     {
+    //         return DurationSegment::merge(
+    //             data.durationMatrix(current->profile()),
+    //             args.duration(current->profile())...);
+    //     },
+    //     segments);
 }
 
 template <typename... Segments>
-LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
+LoadSegment Route::Proposal<Segments...>::loadSegment(
+    [[maybe_unused]] size_t dimension) const
 {
-    return std::apply([dimension](auto &&...args)
-                      { return LoadSegment::merge(args.load(dimension)...); },
-                      segments);
+    return {};
+    // return std::apply([dimension](auto &&...args)
+    //                   { return LoadSegment::merge(args.load(dimension)...);
+    //                   }, segments);
 }
 
 }  // namespace pyvrp::search
