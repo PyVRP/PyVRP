@@ -87,9 +87,7 @@ void Route::clear()
     endDepot_.idx_ = 1;
     endDepot_.route_ = this;
 
-#ifndef NDEBUG
-    dirty = false;
-#endif
+    update();
 }
 
 void Route::insert(size_t idx, Node *node)
@@ -174,14 +172,12 @@ void Route::update()
     distBefore.resize(nodes.size());
     distBefore[0] = distAt[0];
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-    {
         distBefore[idx] = DistanceSegment::merge(
             data.distanceMatrix(profile()), distBefore[idx - 1], distAt[idx]);
-    }
 
     distAfter.resize(nodes.size());
     distAfter[nodes.size() - 1] = distAt[nodes.size() - 1];
-    for (auto idx = nodes.size() - 1; idx != 0; --idx)
+    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
         distAfter[idx - 1] = DistanceSegment::merge(
             data.distanceMatrix(profile()), distAt[idx - 1], distAfter[idx]);
 
@@ -194,7 +190,7 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
         auto const client = nodes[idx]->client();
-        durAt.emplace_back(client, data.location(client));
+        durAt[idx] = {client, data.location(client)};
     }
 
     durBefore.resize(nodes.size());
@@ -204,8 +200,8 @@ void Route::update()
             data.durationMatrix(profile()), durBefore[idx - 1], durAt[idx]);
 
     durAfter.resize(nodes.size());
-    durAfter[nodes.size() - 1] = durAfter[nodes.size() - 1];
-    for (auto idx = nodes.size() - 1; idx != 0; --idx)
+    durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
+    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
         durAfter[idx - 1] = DurationSegment::merge(
             data.durationMatrix(profile()), durAt[idx - 1], durAfter[idx]);
 #endif
@@ -233,8 +229,8 @@ void Route::update()
         excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
 
         loadAfter[dim].resize(nodes.size());
-        loadAfter[dim][nodes.size() - 1] = loadAfter[dim][nodes.size() - 1];
-        for (auto idx = nodes.size() - 1; idx != 0; --idx)
+        loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
+        for (size_t idx = nodes.size() - 1; idx != 0; --idx)
             loadAfter[dim][idx - 1]
                 = LoadSegment::merge(loadAt[dim][idx - 1], loadAfter[dim][idx]);
     }
