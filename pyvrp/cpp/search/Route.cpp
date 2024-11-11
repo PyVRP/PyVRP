@@ -165,8 +165,6 @@ void Route::update()
     }
 
     // Distance.
-    distAt.resize(nodes.size());
-
     auto const &distMat = data.distanceMatrix(profile());
 
     distBefore.resize(nodes.size());
@@ -176,17 +174,17 @@ void Route::update()
         auto const from = nodes[idx - 1]->client();
         auto const to = nodes[idx]->client();
         distBefore[idx] = DistanceSegment::merge(
-            distMat(from, to), distBefore[idx - 1], distAt[idx]);
+            distMat(from, to), distBefore[idx - 1], {0});
     }
 
     distAfter.resize(nodes.size());
-    distAfter[nodes.size() - 1] = distAt[nodes.size() - 1];
+    distAfter[nodes.size() - 1] = {0};
     for (size_t idx = nodes.size() - 1; idx != 0; --idx)
     {
         auto const from = nodes[idx - 1]->client();
         auto const to = nodes[idx]->client();
-        distAfter[idx - 1] = DistanceSegment::merge(
-            distMat(from, to), distAt[idx - 1], distAfter[idx]);
+        distAfter[idx - 1]
+            = DistanceSegment::merge(distMat(from, to), {0}, distAfter[idx]);
     }
 
 #ifndef PYVRP_NO_TIME_WINDOWS

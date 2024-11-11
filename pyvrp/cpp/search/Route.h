@@ -197,7 +197,6 @@ private:
     Node startDepot_;  // Departure depot for this route
     Node endDepot_;    // Return depot for this route
 
-    std::vector<DistanceSegment> distAt;      // Dist data at each node
     std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
     std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
 
@@ -513,7 +512,7 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 DistanceSegment
 Route::SegmentAt::distance([[maybe_unused]] size_t profile) const
 {
-    return route->distAt[idx];
+    return {0};
 }
 
 DurationSegment
@@ -608,15 +607,14 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
     if (profile != route->profile())  // then we have to compute the distance
     {                                 // segment from scratch.
         auto const &mat = route->data.distanceMatrix(profile);
-        auto distSegment = route->distAt[start];
+        DistanceSegment distSegment = {0};
 
         for (size_t step = start; step != end; ++step)
         {
             auto const from = route->nodes[step]->client();
             auto const to = route->nodes[step + 1]->client();
-            auto const &distAt = route->distAt[step + 1];
             distSegment
-                = DistanceSegment::merge(mat(from, to), distSegment, distAt);
+                = DistanceSegment::merge(mat(from, to), distSegment, {0});
         }
 
         return distSegment;
