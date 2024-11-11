@@ -191,7 +191,8 @@ private:
     size_t const vehTypeIdx_;
     size_t const idx_;
 
-    std::vector<Node *> nodes;  // Nodes in this route, including depots
+    std::vector<Node *> nodes;   // Nodes in this route, including depots
+    std::vector<size_t> visits;  // Locations in this route, incl. depots
     std::pair<double, double> centroid_;  // Center point of route's clients
 
     Node startDepot_;  // Departure depot for this route
@@ -572,35 +573,17 @@ LoadSegment Route::SegmentBefore::load(size_t dimension) const
     return route->loadBefore[dimension][end];
 }
 
-size_t Route::SegmentAt::first() const { return route->nodes[idx]->client(); }
-size_t Route::SegmentAt::last() const { return route->nodes[idx]->client(); }
+size_t Route::SegmentAt::first() const { return route->visits[idx]; }
+size_t Route::SegmentAt::last() const { return route->visits[idx]; }
 
-size_t Route::SegmentBefore::first() const
-{
-    return route->vehicleType_.startDepot;
-}
-size_t Route::SegmentBefore::last() const
-{
-    return route->nodes[end]->client();
-}
+size_t Route::SegmentBefore::first() const { return route->visits.front(); }
+size_t Route::SegmentBefore::last() const { return route->visits[end]; }
 
-size_t Route::SegmentAfter::first() const
-{
-    return route->nodes[start]->client();
-}
-size_t Route::SegmentAfter::last() const
-{
-    return route->vehicleType_.endDepot;
-}
+size_t Route::SegmentAfter::first() const { return route->visits[start]; }
+size_t Route::SegmentAfter::last() const { return route->visits.back(); }
 
-size_t Route::SegmentBetween::first() const
-{
-    return route->nodes[start]->client();
-}
-size_t Route::SegmentBetween::last() const
-{
-    return route->nodes[end]->client();
-}
+size_t Route::SegmentBetween::first() const { return route->visits[start]; }
+size_t Route::SegmentBetween::last() const { return route->visits[end]; }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 {
@@ -611,8 +594,8 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 
         for (size_t step = start; step != end; ++step)
         {
-            auto const from = route->nodes[step]->client();
-            auto const to = route->nodes[step + 1]->client();
+            auto const from = route->visits[step];
+            auto const to = route->visits[step + 1];
             distSegment
                 = DistanceSegment::merge(mat(from, to), distSegment, {0});
         }
@@ -634,8 +617,8 @@ DurationSegment Route::SegmentBetween::duration(size_t profile) const
 
     for (size_t step = start; step != end; ++step)
     {
-        auto const from = route->nodes[step]->client();
-        auto const to = route->nodes[step + 1]->client();
+        auto const from = route->visits[step];
+        auto const to = route->visits[step + 1];
         auto const &durAt = route->durAt[step + 1];
         durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
     }

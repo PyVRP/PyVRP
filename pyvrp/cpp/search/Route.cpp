@@ -153,13 +153,14 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    centroid_ = {0, 0};
+    visits.clear();
+    for (auto const *node : nodes)
+        visits.emplace_back(node->client());
 
+    centroid_ = {0, 0};
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
-        auto const *node = nodes[idx];
-        ProblemData::Client const &clientData = data.location(node->client());
-
+        ProblemData::Client const &clientData = data.location(visits[idx]);
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
     }
@@ -170,22 +171,14 @@ void Route::update()
     distBefore.resize(nodes.size());
     distBefore[0] = {0};
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-    {
-        auto const from = nodes[idx - 1]->client();
-        auto const to = nodes[idx]->client();
         distBefore[idx] = DistanceSegment::merge(
-            distMat(from, to), distBefore[idx - 1], {0});
-    }
+            distMat(visits[idx - 1], visits[idx]), distBefore[idx - 1], {0});
 
     distAfter.resize(nodes.size());
     distAfter[nodes.size() - 1] = {0};
     for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-    {
-        auto const from = nodes[idx - 1]->client();
-        auto const to = nodes[idx]->client();
-        distAfter[idx - 1]
-            = DistanceSegment::merge(distMat(from, to), {0}, distAfter[idx]);
-    }
+        distAfter[idx - 1] = DistanceSegment::merge(
+            distMat(visits[idx - 1], visits[idx]), {0}, distAfter[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
@@ -194,32 +187,25 @@ void Route::update()
     durAt[nodes.size() - 1] = {vehicleType_};
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-    {
-        auto const client = nodes[idx]->client();
-        durAt[idx] = {data.location(client)};
-    }
+        durAt[idx] = {data.location(visits[idx])};
 
     auto const &durMat = data.durationMatrix(profile());
 
     durBefore.resize(nodes.size());
     durBefore[0] = durAt[0];
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-    {
-        auto const from = nodes[idx - 1]->client();
-        auto const to = nodes[idx]->client();
-        durBefore[idx] = DurationSegment::merge(
-            durMat(from, to), durBefore[idx - 1], durAt[idx]);
-    }
+        durBefore[idx]
+            = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
+                                     durBefore[idx - 1],
+                                     durAt[idx]);
 
     durAfter.resize(nodes.size());
     durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
     for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-    {
-        auto const from = nodes[idx - 1]->client();
-        auto const to = nodes[idx]->client();
-        durAfter[idx - 1] = DurationSegment::merge(
-            durMat(from, to), durAt[idx - 1], durAfter[idx]);
-    }
+        durAfter[idx - 1]
+            = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
+                                     durAt[idx - 1],
+                                     durAfter[idx]);
 #endif
 
     // Load.
@@ -230,10 +216,7 @@ void Route::update()
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        {
-            auto const client = nodes[idx]->client();
-            loadAt[dim][idx] = {data.location(client), dim};
-        }
+            loadAt[dim][idx] = {data.location(visits[idx]), dim};
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
