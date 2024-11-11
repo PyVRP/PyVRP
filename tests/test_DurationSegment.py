@@ -1,3 +1,5 @@
+from itertools import pairwise
+
 import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
@@ -95,49 +97,46 @@ def test_max_duration_argument():
     assert_equal(ds.time_warp(max_duration=0), 5)
 
 
-# def test_OkSmall_with_time_warp(ok_small):
-#     """
-#     Tests a small example route using the OkSmall instance. In particular, we
-#     also check that duration does not include time warp.
-#     """
-#     vehicle_type = ok_small.vehicle_type(0)
-#     segments = [
-#         DurationSegment(
-#             idx_first=idx,
-#             idx_last=idx,
-#             duration=loc.service_duration if idx != 0 else 0,
-#             time_warp=0,
-#             tw_early=loc.tw_early if idx > 0 else vehicle_type.tw_early,
-#             tw_late=loc.tw_late if idx > 0 else vehicle_type.tw_late,
-#             release_time=loc.release_time if idx != 0 else 0,
-#         )
-#         for idx, loc in enumerate(ok_small.depots() + ok_small.clients())
-#     ]
+def test_OkSmall_with_time_warp(ok_small):
+    """
+    Tests a small example route using the OkSmall instance. In particular, we
+    also check that duration does not include time warp.
+    """
+    vehicle_type = ok_small.vehicle_type(0)
+    segments = [
+        DurationSegment(
+            duration=loc.service_duration if idx != 0 else 0,
+            time_warp=0,
+            tw_early=loc.tw_early if idx > 0 else vehicle_type.tw_early,
+            tw_late=loc.tw_late if idx > 0 else vehicle_type.tw_late,
+            release_time=loc.release_time if idx != 0 else 0,
+        )
+        for idx, loc in enumerate(ok_small.depots() + ok_small.clients())
+    ]
 
-#     # Create the DS associated with route 0 -> 1 -> 3 -> 0 (so depot to 1,
-#     # to 3, and back to depot).
-#     ds = segments[0]
-#     for idx in [1, 3, 0]:
-#         mat = ok_small.duration_matrix(profile=0)
-#         ds = DurationSegment.merge(mat, ds, segments[idx])
+    # Create the DS associated with route 0 -> 1 -> 3 -> 0.
+    ds = segments[0]
+    for frm, to in pairwise([0, 1, 3, 0]):
+        mat = ok_small.duration_matrix(profile=0)
+        ds = DurationSegment.merge(mat[frm, to], ds, segments[to])
 
-#     # First the route's duration. This depends on travel duration, service
-#     # time, and possible waiting time. We do not have waiting time on this
-#     # route. So all we need to determine is:
-#     #   Travel durations:
-#     #       - 0 -> 1: 1544
-#     #       - 1 -> 3: 1427
-#     #       - 3 -> 0: 2063
-#     #   Service times:
-#     #       - 1: 360
-#     #       - 3: 420
-#     assert_equal(ds.duration(), 1544 + 1427 + 2063 + 360 + 420)
+    # First the route's duration. This depends on travel duration, service
+    # time, and possible waiting time. We do not have waiting time on this
+    # route. So all we need to determine is:
+    #   Travel durations:
+    #       - 0 -> 1: 1544
+    #       - 1 -> 3: 1427
+    #       - 3 -> 0: 2063
+    #   Service times:
+    #       - 1: 360
+    #       - 3: 420
+    assert_equal(ds.duration(), 1544 + 1427 + 2063 + 360 + 420)
 
-#     # But there is time warp as well, because 1's time window opens at 15600,
-#     # while 3's time window closes at 15300. So we leave 1 at 15600 + 360,
-#     # drive 1427 and arrive at 3 at 15600 + 360 + 1427 = 17387. We then warp
-#     # back in time to 15300, for 17387 - 15300 = 2087 time warp.
-#     assert_equal(ds.time_warp(), 2087)
+    # But there is time warp as well, because 1's time window opens at 15600,
+    # while 3's time window closes at 15300. So we leave 1 at 15600 + 360,
+    # drive 1427 and arrive at 3 at 15600 + 360 + 1427 = 17387. We then warp
+    # back in time to 15300, for 17387 - 15300 = 2087 time warp.
+    assert_equal(ds.time_warp(), 2087)
 
 
 def test_bug_fix_overflow_more_timewarp_than_duration():
