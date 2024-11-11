@@ -818,18 +818,19 @@ Route const *Route::Proposal<Segments...>::route() const
 template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
-    auto const fn = [&](auto segment, auto &&...args)
+    auto const profile = current->profile();
+    auto const &matrix = data.distanceMatrix(profile);
+
+    auto const fn = [&matrix, profile](auto segment, auto &&...args)
     {
-        auto distSegment = segment.distance(current->profile());
+        auto distSegment = segment.distance(profile);
         auto last = segment.last();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto const &matrix = data.distanceMatrix(current->profile());
-            distSegment
-                = DistanceSegment::merge(matrix(last, other.first()),
-                                         distSegment,
-                                         other.distance(current->profile()));
+            distSegment = DistanceSegment::merge(matrix(last, other.first()),
+                                                 distSegment,
+                                                 other.distance(profile));
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
@@ -846,18 +847,19 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
-    auto const fn = [&](auto segment, auto &&...args)
+    auto const profile = current->profile();
+    auto const &matrix = data.durationMatrix(profile);
+
+    auto const fn = [&matrix, profile](auto segment, auto &&...args)
     {
-        auto durSegment = segment.duration(current->profile());
+        auto durSegment = segment.duration(profile);
         auto last = segment.last();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto const &matrix = data.durationMatrix(current->profile());
-            durSegment
-                = DurationSegment::merge(matrix(last, other.first()),
-                                         durSegment,
-                                         other.duration(current->profile()));
+            durSegment = DurationSegment::merge(matrix(last, other.first()),
+                                                durSegment,
+                                                other.duration(profile));
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
@@ -874,7 +876,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 template <typename... Segments>
 LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
 {
-    auto const fn = [&](auto &&...args)
+    auto const fn = [dimension](auto &&...args)
     {
         LoadSegment segment;
 
