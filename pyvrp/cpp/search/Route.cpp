@@ -169,17 +169,19 @@ void Route::update()
     for (size_t idx = 0; idx != nodes.size(); ++idx)
         distAt[idx] = {nodes[idx]->client()};
 
+    auto const &distMat = data.distanceMatrix(profile());
+
     distBefore.resize(nodes.size());
     distBefore[0] = distAt[0];
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        distBefore[idx] = DistanceSegment::merge(
-            data.distanceMatrix(profile()), distBefore[idx - 1], distAt[idx]);
+        distBefore[idx]
+            = DistanceSegment::merge(distMat, distBefore[idx - 1], distAt[idx]);
 
     distAfter.resize(nodes.size());
     distAfter[nodes.size() - 1] = distAt[nodes.size() - 1];
     for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-        distAfter[idx - 1] = DistanceSegment::merge(
-            data.distanceMatrix(profile()), distAt[idx - 1], distAfter[idx]);
+        distAfter[idx - 1]
+            = DistanceSegment::merge(distMat, distAt[idx - 1], distAfter[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
@@ -193,17 +195,19 @@ void Route::update()
         durAt[idx] = {client, data.location(client)};
     }
 
+    auto const &durMat = data.durationMatrix(profile());
+
     durBefore.resize(nodes.size());
     durBefore[0] = durAt[0];
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        durBefore[idx] = DurationSegment::merge(
-            data.durationMatrix(profile()), durBefore[idx - 1], durAt[idx]);
+        durBefore[idx]
+            = DurationSegment::merge(durMat, durBefore[idx - 1], durAt[idx]);
 
     durAfter.resize(nodes.size());
     durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
     for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-        durAfter[idx - 1] = DurationSegment::merge(
-            data.durationMatrix(profile()), durAt[idx - 1], durAfter[idx]);
+        durAfter[idx - 1]
+            = DurationSegment::merge(durMat, durAt[idx - 1], durAfter[idx]);
 #endif
 
     // Load.
