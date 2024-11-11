@@ -112,7 +112,8 @@ private:
     class SegmentAt
     {
         Route const *route;
-        size_t const idx;
+        size_t const start;
+        size_t const end;
 
     public:
         inline SegmentAt(Route const &route, size_t idx);
@@ -129,6 +130,7 @@ private:
     {
         Route const *route;
         size_t const start;
+        size_t const end;
 
     public:
         inline SegmentAfter(Route const &route, size_t start);
@@ -144,6 +146,7 @@ private:
     class SegmentBefore
     {
         Route const *route;
+        size_t const start;
         size_t const end;
 
     public:
@@ -473,19 +476,19 @@ bool Route::Node::isDepot() const
 }
 
 Route::SegmentAt::SegmentAt(Route const &route, size_t idx)
-    : route(&route), idx(idx)
+    : route(&route), start(idx), end(idx)
 {
     assert(idx < route.nodes.size());
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
-    : route(&route), start(start)
+    : route(&route), start(start), end(route.nodes.size() - 1)
 {
     assert(start < route.nodes.size());
 }
 
 Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
-    : route(&route), end(end)
+    : route(&route), start(0), end(end)
 {
     assert(end < route.nodes.size());
 }
@@ -501,18 +504,18 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 DistanceSegment
 Route::SegmentAt::distance([[maybe_unused]] size_t profile) const
 {
-    return route->distAt[idx];
+    return route->distAt[start];
 }
 
 DurationSegment
 Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
 {
-    return route->durAt[idx];
+    return route->durAt[start];
 }
 
 LoadSegment Route::SegmentAt::load(size_t dimension) const
 {
-    return route->loadAt[dimension][idx];
+    return route->loadAt[dimension][start];
 }
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
