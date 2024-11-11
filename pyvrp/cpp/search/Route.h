@@ -115,8 +115,8 @@ private:
         size_t const idx;
 
     public:
-        inline size_t first() const;
-        inline size_t last() const;
+        inline size_t first() const;  // client at idx
+        inline size_t last() const;   // client at idx
 
         inline SegmentAt(Route const &route, size_t idx);
         inline DistanceSegment distance(size_t profile) const;
@@ -134,8 +134,8 @@ private:
         size_t const start;
 
     public:
-        inline size_t first() const;
-        inline size_t last() const;
+        inline size_t first() const;  // client at start
+        inline size_t last() const;   // end depot
 
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
@@ -153,8 +153,8 @@ private:
         size_t const end;
 
     public:
-        inline size_t first() const;
-        inline size_t last() const;
+        inline size_t first() const;  // start depot
+        inline size_t last() const;   // client at end
 
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
@@ -173,8 +173,8 @@ private:
         size_t const end;
 
     public:
-        inline size_t first() const;
-        inline size_t last() const;
+        inline size_t first() const;  // client at start
+        inline size_t last() const;   // client at end
 
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
