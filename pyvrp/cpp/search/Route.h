@@ -112,10 +112,12 @@ private:
     class SegmentAt
     {
         Route const *route;
-        size_t const start;
-        size_t const end;
+        size_t const idx;
 
     public:
+        inline size_t first() const;
+        inline size_t last() const;
+
         inline SegmentAt(Route const &route, size_t idx);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
@@ -130,9 +132,11 @@ private:
     {
         Route const *route;
         size_t const start;
-        size_t const end;
 
     public:
+        inline size_t first() const;
+        inline size_t last() const;
+
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
@@ -146,10 +150,12 @@ private:
     class SegmentBefore
     {
         Route const *route;
-        size_t const start;
         size_t const end;
 
     public:
+        inline size_t first() const;
+        inline size_t last() const;
+
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
@@ -167,6 +173,9 @@ private:
         size_t const end;
 
     public:
+        inline size_t first() const;
+        inline size_t last() const;
+
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
@@ -476,19 +485,19 @@ bool Route::Node::isDepot() const
 }
 
 Route::SegmentAt::SegmentAt(Route const &route, size_t idx)
-    : route(&route), start(idx), end(idx)
+    : route(&route), idx(idx)
 {
     assert(idx < route.nodes.size());
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
-    : route(&route), start(start), end(route.nodes.size() - 1)
+    : route(&route), start(start)
 {
     assert(start < route.nodes.size());
 }
 
 Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
-    : route(&route), start(0), end(end)
+    : route(&route), end(end)
 {
     assert(end < route.nodes.size());
 }
@@ -504,18 +513,18 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 DistanceSegment
 Route::SegmentAt::distance([[maybe_unused]] size_t profile) const
 {
-    return route->distAt[start];
+    return route->distAt[idx];
 }
 
 DurationSegment
 Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
 {
-    return route->durAt[start];
+    return route->durAt[idx];
 }
 
 LoadSegment Route::SegmentAt::load(size_t dimension) const
 {
-    return route->loadAt[dimension][start];
+    return route->loadAt[dimension][idx];
 }
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
@@ -562,6 +571,36 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
 LoadSegment Route::SegmentBefore::load(size_t dimension) const
 {
     return route->loadBefore[dimension][end];
+}
+
+size_t Route::SegmentAt::first() const { return route->nodes[idx]->client(); }
+size_t Route::SegmentAt::last() const { return route->nodes[idx]->client(); }
+
+size_t Route::SegmentBefore::first() const
+{
+    return route->vehicleType_.startDepot;
+}
+size_t Route::SegmentBefore::last() const
+{
+    return route->nodes[end]->client();
+}
+
+size_t Route::SegmentAfter::first() const
+{
+    return route->nodes[start]->client();
+}
+size_t Route::SegmentAfter::last() const
+{
+    return route->vehicleType_.endDepot;
+}
+
+size_t Route::SegmentBetween::first() const
+{
+    return route->nodes[start]->client();
+}
+size_t Route::SegmentBetween::last() const
+{
+    return route->nodes[end]->client();
 }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
@@ -781,41 +820,79 @@ Route const *Route::Proposal<Segments...>::route() const
 template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
-    return {};
-    // return std::apply(
-    //     [&](auto &&...args)
-    //     {
-    //         return DistanceSegment::merge(
-    //             data.distanceMatrix(current->profile()),
-    //             args.distance(current->profile())...);
-    //     },
-    //     segments);
+    auto const fn = [&](auto segment, auto &&...args)
+    {
+        auto distSegment = segment.distance(current->profile());
+        auto last = segment.last();
+
+        auto const merge = [&](auto const &self, auto &&other, auto &&...args)
+        {
+            auto const &matrix = data.distanceMatrix(current->profile());
+            distSegment
+                = DistanceSegment::merge(matrix(last, other.first()),
+                                         distSegment,
+                                         other.distance(current->profile()));
+            last = other.last();
+
+            if constexpr (sizeof...(args) != 0)
+                self(self, args...);
+        };
+
+        merge(merge, args...);
+        return distSegment;
+    };
+
+    return std::apply(fn, segments);
 }
 
 template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
-    return {};
-    // return std::apply(
-    //     [&](auto &&...args)
-    //     {
-    //         return DurationSegment::merge(
-    //             data.durationMatrix(current->profile()),
-    //             args.duration(current->profile())...);
-    //     },
-    //     segments);
+    auto const fn = [&](auto segment, auto &&...args)
+    {
+        auto durSegment = segment.duration(current->profile());
+        auto last = segment.last();
+
+        auto const merge = [&](auto const &self, auto &&other, auto &&...args)
+        {
+            auto const &matrix = data.durationMatrix(current->profile());
+            durSegment
+                = DurationSegment::merge(matrix(last, other.first()),
+                                         durSegment,
+                                         other.duration(current->profile()));
+            last = other.last();
+
+            if constexpr (sizeof...(args) != 0)
+                self(self, args...);
+        };
+
+        merge(merge, args...);
+        return durSegment;
+    };
+
+    return std::apply(fn, segments);
 }
 
 template <typename... Segments>
-LoadSegment Route::Proposal<Segments...>::loadSegment(
-    [[maybe_unused]] size_t dimension) const
+LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
 {
-    return {};
-    // return std::apply([dimension](auto &&...args)
-    //                   { return LoadSegment::merge(args.load(dimension)...);
-    //                   }, segments);
-}
+    auto const fn = [&](auto &&...args)
+    {
+        LoadSegment segment;
 
+        auto const merge = [&](auto const &self, auto &&other, auto &&...args)
+        {
+            segment = LoadSegment::merge(segment, other);
+            if constexpr (sizeof...(args) != 0)
+                self(self, args...);
+        };
+
+        merge(merge, args.load(dimension)...);
+        return segment;
+    };
+
+    return std::apply(fn, segments);
+}
 }  // namespace pyvrp::search
 
 // Outputs a route into a given ostream in CVRPLib format

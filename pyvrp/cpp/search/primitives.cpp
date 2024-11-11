@@ -17,6 +17,9 @@ public:
     {
     }
 
+    size_t first() const { return client; }
+    size_t last() const { return client; }
+
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
     {
         return {};
