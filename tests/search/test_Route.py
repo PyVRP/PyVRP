@@ -737,3 +737,37 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
     dur_mat = data.duration_matrix(0)
     assert_equal(route.duration(), dur_mat[0, 1])
+
+
+@pytest.mark.parametrize(
+    ("loc1", "loc2", "in_route1", "in_route2"),
+    [
+        (1, 2, False, False),
+        (1, 2, True, False),
+        (2, 3, False, True),
+        (3, 4, True, True),
+    ],
+)
+def test_route_swap(ok_small, loc1, loc2, in_route1, in_route2):
+    """
+    Tests that the swap method on routes correctly swaps nodes, even when one
+    or both of the nodes are not actually on a route.
+    """
+    route1 = Route(ok_small, 0, 0)
+    route2 = Route(ok_small, 1, 0)
+
+    node1 = Node(loc1)
+    if in_route1:
+        route1.append(node1)
+
+    node2 = Node(loc2)
+    if in_route2:
+        route2.append(node2)
+
+    old_route1 = node1.route
+    old_route2 = node2.route
+
+    Route.swap(node1, node2)
+
+    assert_(node1.route is old_route2)
+    assert_(node2.route is old_route1)
