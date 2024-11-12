@@ -139,15 +139,21 @@ void Route::remove(size_t idx)
 void Route::swap(Node *first, Node *second)
 {
     // TODO specialise std::swap for Node
-    std::swap(first->route_->nodes[first->idx_],
-              second->route_->nodes[second->idx_]);
+    if (first->route_)
+        first->route_->nodes[first->idx_] = second;
+
+    if (second->route_)
+        second->route_->nodes[second->idx_] = first;
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
 
 #ifndef NDEBUG
-    first->route_->dirty = true;
-    second->route_->dirty = true;
+    if (first->route_)
+        first->route_->dirty = true;
+
+    if (second->route_)
+        second->route_->dirty = true;
 #endif
 }
 
