@@ -197,6 +197,26 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             nodeOp->apply(U, V);
             update(rU, rV);
 
+            if (!U->isDepot())
+                candidates[U->client()] = true;
+
+            if (!p(U)->isDepot())
+                candidates[p(U)->client()] = true;
+
+            if (!n(U)->isDepot())
+                candidates[n(U)->client()] = true;
+
+            if (!V->isDepot())
+            {
+                candidates[V->client()] = true;
+
+                if (!p(V)->isDepot())
+                    candidates[p(V)->client()] = true;
+
+                if (!n(V)->isDepot())
+                    candidates[n(V)->client()] = true;
+            }
+
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
@@ -388,12 +408,6 @@ void LocalSearch::update(Route *U, Route *V)
         for (auto *op : routeOps)  // this is used by some route operators
             op->update(V);         // to keep caches in sync.
     }
-
-    for (auto *node : *U)
-        candidates[node->client()] = true;
-
-    for (auto *node : *V)
-        candidates[node->client()] = true;
 }
 
 void LocalSearch::loadSolution(Solution const &solution)
