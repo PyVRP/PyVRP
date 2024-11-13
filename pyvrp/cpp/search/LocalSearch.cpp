@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <numeric>
 
 using pyvrp::Solution;
@@ -13,6 +14,7 @@ using pyvrp::search::LocalSearch;
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
+    numEvaluations = 0;
     loadSolution(solution);
 
     while (true)
@@ -23,6 +25,8 @@ Solution LocalSearch::operator()(Solution const &solution,
         if (numMoves == 0)  // then the current solution is locally optimal.
             break;
     }
+
+    std::cout << numEvaluations << std::endl;
 
     return exportSolution();
 }
@@ -179,6 +183,8 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
     for (auto *nodeOp : nodeOps)
     {
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
+        numEvaluations += 1;
+
         if (deltaCost < 0)
         {
             auto *rU = U->route();  // copy these because the operator can

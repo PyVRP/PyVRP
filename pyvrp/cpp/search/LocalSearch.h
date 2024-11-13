@@ -39,6 +39,7 @@ class LocalSearch
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
+    int numEvaluations = 0;        // Number of delta cost evaluations
     int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
