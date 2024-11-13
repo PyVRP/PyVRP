@@ -1,10 +1,13 @@
-from typing import Callable, Iterator, Optional, Union, overload
+from typing import Callable, Iterator, overload
 
 import numpy as np
 
 class CostEvaluator:
     def __init__(
-        self, load_penalty: int, tw_penalty: int, dist_penalty: int
+        self,
+        load_penalty: int,
+        tw_penalty: int,
+        dist_penalty: int,
     ) -> None: ...
     def load_penalty(self, load: int, capacity: int) -> int: ...
     def tw_penalty(self, time_warp: int) -> int: ...
@@ -31,29 +34,29 @@ class DynamicBitset:
 class Client:
     x: int
     y: int
-    delivery: int
-    pickup: int
+    delivery: list[int]
+    pickup: list[int]
     service_duration: int
     tw_early: int
     tw_late: int
     release_time: int
     prize: int
     required: bool
-    group: Optional[int]
+    group: int | None
     name: str
     def __init__(
         self,
         x: int,
         y: int,
-        delivery: int = 0,
-        pickup: int = 0,
+        delivery: list[int] = [],
+        pickup: list[int] = [],
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
-        group: Optional[int] = None,
+        group: int | None = None,
         *,
         name: str = "",
     ) -> None: ...
@@ -98,7 +101,7 @@ class VehicleType:
     num_available: int
     start_depot: int
     end_depot: int
-    capacity: int
+    capacity: list[int]
     tw_early: int
     tw_late: int
     max_duration: int
@@ -111,7 +114,7 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        capacity: int = 0,
+        capacity: list[int] = [],
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: int = 0,
@@ -127,20 +130,20 @@ class VehicleType:
     ) -> None: ...
     def replace(
         self,
-        num_available: Optional[int] = None,
-        capacity: Optional[int] = None,
-        start_depot: Optional[int] = None,
-        end_depot: Optional[int] = None,
-        fixed_cost: Optional[int] = None,
-        tw_early: Optional[int] = None,
-        tw_late: Optional[int] = None,
-        max_duration: Optional[int] = None,
-        max_distance: Optional[int] = None,
-        unit_distance_cost: Optional[int] = None,
-        unit_duration_cost: Optional[int] = None,
-        profile: Optional[int] = None,
+        num_available: int | None = None,
+        capacity: list[int] | None = None,
+        start_depot: int | None = None,
+        end_depot: int | None = None,
+        fixed_cost: int | None = None,
+        tw_early: int | None = None,
+        tw_late: int | None = None,
+        max_duration: int | None = None,
+        max_distance: int | None = None,
+        unit_distance_cost: int | None = None,
+        unit_duration_cost: int | None = None,
+        profile: int | None = None,
         *,
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> VehicleType: ...
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> tuple: ...
@@ -156,7 +159,7 @@ class ProblemData:
         duration_matrices: list[np.ndarray[int]],
         groups: list[ClientGroup] = [],
     ) -> None: ...
-    def location(self, idx: int) -> Union[Client, Depot]: ...
+    def location(self, idx: int) -> Client | Depot: ...
     def clients(self) -> list[Client]: ...
     def depots(self) -> list[Depot]: ...
     def groups(self) -> list[ClientGroup]: ...
@@ -165,12 +168,12 @@ class ProblemData:
     def duration_matrices(self) -> list[np.ndarray[int]]: ...
     def replace(
         self,
-        clients: Optional[list[Client]] = None,
-        depots: Optional[list[Depot]] = None,
-        vehicle_types: Optional[list[VehicleType]] = None,
-        distance_matrices: Optional[list[np.ndarray[int]]] = None,
-        duration_matrices: Optional[list[np.ndarray[int]]] = None,
-        groups: Optional[list[ClientGroup]] = None,
+        clients: list[Client] | None = None,
+        depots: list[Depot] | None = None,
+        vehicle_types: list[VehicleType] | None = None,
+        distance_matrices: list[np.ndarray[int]] | None = None,
+        duration_matrices: list[np.ndarray[int]] | None = None,
+        groups: list[ClientGroup] | None = None,
     ) -> ProblemData: ...
     def centroid(self) -> tuple[float, float]: ...
     def group(self, group: int) -> ClientGroup: ...
@@ -191,6 +194,8 @@ class ProblemData:
     def num_vehicle_types(self) -> int: ...
     @property
     def num_profiles(self) -> int: ...
+    @property
+    def num_load_dimensions(self) -> int: ...
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
@@ -207,9 +212,9 @@ class Route:
     def has_excess_load(self) -> bool: ...
     def has_excess_distance(self) -> bool: ...
     def has_time_warp(self) -> bool: ...
-    def delivery(self) -> int: ...
-    def pickup(self) -> int: ...
-    def excess_load(self) -> int: ...
+    def delivery(self) -> list[int]: ...
+    def pickup(self) -> list[int]: ...
+    def excess_load(self) -> list[int]: ...
     def excess_distance(self) -> int: ...
     def distance(self) -> int: ...
     def distance_cost(self) -> int: ...
@@ -236,13 +241,13 @@ class Solution:
     def __init__(
         self,
         data: ProblemData,
-        routes: Union[list[Route], list[list[int]]],
+        routes: list[Route] | list[list[int]],
     ) -> None: ...
     @classmethod
     def make_random(
         cls, data: ProblemData, rng: RandomNumberGenerator
     ) -> Solution: ...
-    def neighbours(self) -> list[Optional[tuple[int, int]]]: ...
+    def neighbours(self) -> list[tuple[int, int] | None]: ...
     def routes(self) -> list[Route]: ...
     def has_excess_load(self) -> bool: ...
     def has_excess_distance(self) -> bool: ...
@@ -251,7 +256,7 @@ class Solution:
     def distance_cost(self) -> int: ...
     def duration(self) -> int: ...
     def duration_cost(self) -> int: ...
-    def excess_load(self) -> int: ...
+    def excess_load(self) -> list[int]: ...
     def excess_distance(self) -> int: ...
     def fixed_vehicle_cost(self) -> int: ...
     def time_warp(self) -> int: ...

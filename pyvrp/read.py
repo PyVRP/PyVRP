@@ -2,7 +2,7 @@ import pathlib
 from collections import defaultdict
 from itertools import count
 from numbers import Number
-from typing import Callable, Optional, Union
+from typing import Callable
 from warnings import warn
 
 import numpy as np
@@ -28,8 +28,8 @@ ROUND_FUNCS: dict[str, _RoundingFunc] = {
 
 
 def read(
-    where: Union[str, pathlib.Path],
-    round_func: Union[str, _RoundingFunc] = "none",
+    where: str | pathlib.Path,
+    round_func: str | _RoundingFunc = "none",
 ) -> ProblemData:
     """
     Reads the ``VRPLIB`` file at the given location, and returns a
@@ -83,7 +83,7 @@ def read(
     return builder.data()
 
 
-def read_solution(where: Union[str, pathlib.Path]) -> _Routes:
+def read_solution(where: str | pathlib.Path) -> _Routes:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
     returns the routes contained in it.
@@ -140,13 +140,13 @@ class _InstanceParser:
 
     def backhauls(self) -> np.ndarray:
         if "backhaul" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(self.instance["backhaul"])
 
     def demands(self) -> np.ndarray:
         if "demand" not in self.instance and "linehaul" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(
             self.instance.get("demand", self.instance.get("linehaul"))
@@ -313,7 +313,7 @@ class _ProblemDataBuilder:
         groups = self.parser.mutually_exclusive_groups()
         num_locs = self.parser.num_locations
 
-        idx2group: list[Optional[int]] = [None for _ in range(num_locs)]
+        idx2group: list[int | None] = [None for _ in range(num_locs)]
         for group, members in enumerate(groups):
             for client in members:
                 idx2group[client] = group
@@ -331,8 +331,8 @@ class _ProblemDataBuilder:
             Client(
                 x=coords[idx][0],
                 y=coords[idx][1],
-                delivery=demands[idx],
-                pickup=backhauls[idx],
+                delivery=np.atleast_1d(demands[idx]),
+                pickup=np.atleast_1d(backhauls[idx]),
                 service_duration=service_duration[idx],
                 tw_early=time_windows[idx][0],
                 tw_late=time_windows[idx][1],
@@ -364,8 +364,9 @@ class _ProblemDataBuilder:
         # VRPLIB instances includes data for each available vehicle. We group
         # vehicles by their attributes to create unique vehicle types.
         type2idcs = defaultdict(list)
-        for vehicle, veh_type in enumerate(zip(*vehicles_data)):
-            type2idcs[veh_type].append(vehicle)
+        for vehicle, (capacity, *veh_type) in enumerate(zip(*vehicles_data)):
+            capacity = tuple(np.atleast_1d(capacity))
+            type2idcs[(capacity, *veh_type)].append(vehicle)
 
         client2profile = self._allowed2profile()
         time_windows = self.parser.time_windows()

@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -8,8 +6,8 @@ from pyvrp.Result import Result
 
 def plot_objectives(
     result: Result,
-    num_to_skip: Optional[int] = None,
-    ax: Optional[plt.Axes] = None,
+    num_to_skip: int | None = None,
+    ax: plt.Axes | None = None,
     ylim_adjust: tuple[float, float] = (0.95, 1.15),
 ):
     """

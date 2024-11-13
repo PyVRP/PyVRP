@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
@@ -10,9 +8,10 @@ from pyvrp import Client, ProblemData, Route
 def plot_route_schedule(
     data: ProblemData,
     route: Route,
+    load_dimension: int = 0,
     legend: bool = True,
-    title: Optional[str] = None,
-    ax: Optional[plt.Axes] = None,
+    title: str | None = None,
+    ax: plt.Axes | None = None,
 ):
     """
     Plots a route schedule. This function plots multiple time statistics
@@ -24,7 +23,8 @@ def plot_route_schedule(
       warp on the route.
     * Dash-dotted: driving and service time, excluding wait time and time warp.
     * Dotted: pure driving time.
-    * Grey shaded background: remaining load in the vehicle.
+    * Grey shaded background: remaining load in the vehicle for the provided
+      load dimension.
 
     Parameters
     ----------
@@ -32,6 +32,8 @@ def plot_route_schedule(
         Data instance for which to plot the route schedule.
     route
         Route (list of clients) whose schedule to plot.
+    load_dimension
+        Load dimension to plot. Defaults to the first dimension, if it exists.
     legend
         Whether or not to show the legends. Default True.
     title
@@ -47,13 +49,18 @@ def plot_route_schedule(
     durations = data.duration_matrix(vehicle_type.profile)
     horizon = vehicle_type.tw_late - vehicle_type.tw_early
 
+    track_load = load_dimension < data.num_load_dimensions
+
     # Initialise tracking variables
     t = route.release_time()
     drive_time = 0
     serv_time = 0
     dist = 0
-    load = route.delivery()
     slack = horizon
+
+    load = 0
+    if track_load:
+        load = route.delivery()[load_dimension]
 
     # Traces and objects used for plotting
     trace_time = []
@@ -99,9 +106,9 @@ def plot_route_schedule(
             timewarp_lines.append(((dist, t), (dist, tw_late)))
             t = tw_late
 
-        if isinstance(stop, Client):
-            load -= stop.delivery
-            load += stop.pickup
+        if isinstance(stop, Client) and track_load:
+            load -= stop.delivery[load_dimension]
+            load += stop.pickup[load_dimension]
 
         add_traces(dist, t, drive_time, serv_time, load)
 
@@ -115,7 +122,6 @@ def plot_route_schedule(
 
         prev_idx = idx
 
-    # Plot primary traces
     xs, ys = zip(*trace_time)
     ax.plot(xs, ys, label="Time (earliest)")
     if slack > 0:
@@ -128,7 +134,6 @@ def plot_route_schedule(
     )
     ax.plot(*zip(*trace_drive), linestyle=":", label="Drive time")
 
-    # Plot time windows & time warps
     lc_time_windows = LineCollection(
         timewindow_lines,
         colors="grey",
@@ -150,19 +155,27 @@ def plot_route_schedule(
     )
 
     # Plot remaining load on second axis
-    twin1 = ax.twinx()
-    twin1.fill_between(
-        *zip(*trace_load), color="black", alpha=0.1, label="Load in vehicle"
-    )
-    twin1.set_ylim([0, vehicle_type.capacity])
+    if track_load:
+        capacity = vehicle_type.capacity[load_dimension]
 
-    # Set labels, legends and title
+        twin1 = ax.twinx()
+        twin1.fill_between(
+            *zip(*trace_load),
+            color="black",
+            alpha=0.1,
+            label="Load in vehicle",
+        )
+
+        twin1.set_ylim([0, capacity])
+        twin1.set_ylabel(f"Load (capacity = {capacity:.0f})")
+
+        if legend:
+            twin1.legend(loc="upper right")
+
     ax.set_xlabel("Distance")
     ax.set_ylabel("Time")
-    twin1.set_ylabel(f"Load (capacity = {vehicle_type.capacity:.0f})")
 
     if legend:
-        twin1.legend(loc="upper right")
         ax.legend(loc="upper left")
 
     if title:

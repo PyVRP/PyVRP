@@ -1,11 +1,13 @@
 #include "ProblemData.h"
 
+#include <algorithm>
 #include <cstring>
 #include <numeric>
 #include <stdexcept>
 
 using pyvrp::Distance;
 using pyvrp::Duration;
+using pyvrp::Load;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
 
@@ -22,12 +24,21 @@ static char *duplicate(char const *src)
     std::strcpy(dst, src);
     return dst;
 }
+
+// Pad vec1 with zeroes to the size of vec1 and vec2, whichever is larger.
+auto &pad(auto &vec1, auto const &vec2)
+{
+    vec1.resize(std::max(vec1.size(), vec2.size()));
+    return vec1;
+}
+
+bool isNegative(auto value) { return value < 0; }
 }  // namespace
 
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
-                            Load delivery,
-                            Load pickup,
+                            std::vector<Load> delivery,
+                            std::vector<Load> pickup,
                             Duration serviceDuration,
                             Duration twEarly,
                             Duration twLate,
@@ -38,8 +49,8 @@ ProblemData::Client::Client(Coordinate x,
                             std::string name)
     : x(x),
       y(y),
-      delivery(delivery),
-      pickup(pickup),
+      delivery(pad(delivery, pickup)),
+      pickup(pad(pickup, delivery)),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -49,11 +60,13 @@ ProblemData::Client::Client(Coordinate x,
       group(group),
       name(duplicate(name.data()))
 {
-    if (delivery < 0)
-        throw std::invalid_argument("delivery amount must be >= 0.");
+    assert(delivery.size() == pickup.size());
 
-    if (pickup < 0)
-        throw std::invalid_argument("pickup amount must be >= 0.");
+    if (std::any_of(delivery.begin(), delivery.end(), isNegative<Load>))
+        throw std::invalid_argument("delivery amounts must be >= 0.");
+
+    if (std::any_of(pickup.begin(), pickup.end(), isNegative<Load>))
+        throw std::invalid_argument("pickup amounts must be >= 0.");
 
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0.");
@@ -188,7 +201,7 @@ bool ProblemData::Depot::operator==(Depot const &other) const
 }
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
-                                      Load capacity,
+                                      std::vector<Load> capacity,
                                       size_t startDepot,
                                       size_t endDepot,
                                       Cost fixedCost,
@@ -217,8 +230,8 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
 
-    if (capacity < 0)
-        throw std::invalid_argument("capacity must be >= 0.");
+    if (std::any_of(capacity.begin(), capacity.end(), isNegative<Load>))
+        throw std::invalid_argument("capacity amounts must be >= 0.");
 
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
@@ -281,7 +294,7 @@ ProblemData::VehicleType::~VehicleType() { delete[] name; }
 
 ProblemData::VehicleType
 ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
-                                  std::optional<Load> capacity,
+                                  std::optional<std::vector<Load>> capacity,
                                   std::optional<size_t> startDepot,
                                   std::optional<size_t> endDepot,
                                   std::optional<Cost> fixedCost,
@@ -394,12 +407,27 @@ size_t ProblemData::numProfiles() const
     return dists_.size();
 }
 
+size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
+
 void ProblemData::validate() const
 {
     // Client checks.
     for (size_t idx = numDepots(); idx != numLocations(); ++idx)
     {
         ProblemData::Client const &client = location(idx);
+
+        if (client.delivery.size() != numLoadDimensions_)
+        {
+            auto const *msg = "Client has inconsistent delivery size.";
+            throw std::invalid_argument(msg);
+        }
+
+        if (client.pickup.size() != numLoadDimensions_)
+        {
+            auto const *msg = "Client has inconsistent pickup size.";
+            throw std::invalid_argument(msg);
+        }
+
         if (!client.group)
             continue;
 
@@ -447,8 +475,17 @@ void ProblemData::validate() const
     }
 
     // Vehicle type checks.
+    if (vehicleTypes_.empty())
+        throw std::invalid_argument("Expected at least one vehicle type.");
+
     for (auto const &vehicleType : vehicleTypes_)
     {
+        if (vehicleType.capacity.size() != numLoadDimensions_)
+        {
+            auto const *msg = "Vehicle type has inconsistent capacity size.";
+            throw std::invalid_argument(msg);
+        }
+
         if (vehicleType.startDepot >= numDepots())
             throw std::out_of_range("Vehicle type has invalid start depot.");
 
@@ -528,7 +565,15 @@ ProblemData::ProblemData(std::vector<Client> clients,
                                    vehicleTypes_.end(),
                                    0,
                                    [](auto sum, VehicleType const &type)
-                                   { return sum + type.numAvailable; }))
+                                   { return sum + type.numAvailable; })),
+      numLoadDimensions_(
+          clients_.empty()
+              // If there are no clients we look at the vehicle types. If both
+              // are empty we default to 0. Clients have pickups and deliveries
+              // but the client constructor already ensures those are of equal
+              // size (within a single client).
+              ? (vehicleTypes_.empty() ? 0 : vehicleTypes_[0].capacity.size())
+              : clients_[0].delivery.size())
 {
     for (auto const &client : clients_)
     {

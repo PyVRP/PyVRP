@@ -13,6 +13,7 @@ PYBIND11_MODULE(_crossover, m)
           py::arg("parents"),
           py::arg("data"),
           py::arg("indices"),
+          py::call_guard<py::gil_scoped_release>(),
           DOC(pyvrp, crossover, orderedCrossover));
 
     m.def("selective_route_exchange",
@@ -22,5 +23,6 @@ PYBIND11_MODULE(_crossover, m)
           py::arg("cost_evaluator"),
           py::arg("start_indices"),
           py::arg("num_moved_routes"),
+          py::call_guard<py::gil_scoped_release>(),
           DOC(pyvrp, crossover, selectiveRouteExchange));
 }

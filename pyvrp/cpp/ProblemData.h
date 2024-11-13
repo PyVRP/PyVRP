@@ -70,15 +70,15 @@ public:
      * Client(
      *    x: int,
      *    y: int,
-     *    delivery: int = 0,
-     *    pickup: int = 0,
+     *    delivery: list[int] = [],
+     *    pickup: list[int] = [],
      *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
      *    release_time: int = 0,
      *    prize: int = 0,
      *    required: bool = True,
-     *    group: Optional[int] = None,
+     *    group: int | None = None,
      *    *,
      *    name: str = "",
      * )
@@ -94,9 +94,9 @@ public:
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple.
      * delivery
-     *     The amount this client demands from the depot. Default 0.
+     *     The amounts this client demands from the depot.
      * pickup
-     *     The amount this client ships back to the depot. Default 0.
+     *     The amounts this client ships back to the depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route. Service should start (but not necessarily end)
@@ -133,9 +133,9 @@ public:
      * y
      *     Vertical coordinate of this client.
      * delivery
-     *     Client delivery amount, shipped from depot.
+     *     Client delivery amounts shipped from the depot.
      * pickup
-     *     Client pickup amount, returned back to depot.
+     *     Client pickup amounts returned to the depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route.
@@ -159,8 +159,8 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        Load const delivery;
-        Load const pickup;
+        std::vector<Load> const delivery;
+        std::vector<Load> const pickup;
         Duration const serviceDuration;
         Duration const twEarly;      // Earliest possible start of service
         Duration const twLate;       // Latest possible start of service
@@ -172,8 +172,8 @@ public:
 
         Client(Coordinate x,
                Coordinate y,
-               Load delivery = 0,
-               Load pickup = 0,
+               std::vector<Load> delivery = {},
+               std::vector<Load> pickup = {},
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = std::numeric_limits<Duration>::max(),
@@ -311,7 +311,7 @@ public:
     /**
      * VehicleType(
      *     num_available: int = 1,
-     *     capacity: int = 0,
+     *     capacity: list[int] = [],
      *     start_depot: int = 0,
      *     end_depot: int = 0,
      *     fixed_cost: int = 0,
@@ -334,9 +334,9 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      *     Default 1.
      * capacity
-     *     Capacity of this vehicle type. This is the maximum total delivery or
-     *     pickup amount the vehicle can store along the route. Must be
-     *     non-negative. Default 0.
+     *     Capacities of this vehicle type, per load dimension. This capacity is
+     *     the maximum total delivery or pickup amount that the vehicle can
+     *     store along the route.
      * start_depot
      *     Depot (location index) where vehicles of this type start their
      *     routes. Default 0 (first depot).
@@ -369,7 +369,7 @@ public:
      * num_available
      *     Number of vehicles of this type that are available.
      * capacity
-     *     Capacity (maximum total demand) of this vehicle type.
+     *     Capacities of this vehicle type, per load dimension.
      * start_depot
      *     Start location associated with these vehicles.
      * end_depot
@@ -398,14 +398,14 @@ public:
      */
     struct VehicleType
     {
-        size_t const numAvailable;    // Available vehicles of this type
-        size_t const startDepot;      // Departure depot location
-        size_t const endDepot;        // Return depot location
-        Load const capacity;          // This type's vehicle capacity
-        Duration const twEarly;       // Start of shift
-        Duration const twLate;        // End of shift
-        Duration const maxDuration;   // Maximum route duration
-        Distance const maxDistance;   // Maximum route distance
+        size_t const numAvailable;         // Available vehicles of this type
+        size_t const startDepot;           // Departure depot location
+        size_t const endDepot;             // Return depot location
+        std::vector<Load> const capacity;  // This type's vehicle capacity
+        Duration const twEarly;            // Start of shift
+        Duration const twLate;             // End of shift
+        Duration const maxDuration;        // Maximum route duration
+        Distance const maxDistance;        // Maximum route distance
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
@@ -413,7 +413,7 @@ public:
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
-                    Load capacity = 0,
+                    std::vector<Load> capacity = {},
                     size_t startDepot = 0,
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
@@ -441,7 +441,7 @@ public:
          * for the given parameters, which are used instead.
          */
         VehicleType replace(std::optional<size_t> numAvailable,
-                            std::optional<Load> capacity,
+                            std::optional<std::vector<Load>> capacity,
                             std::optional<size_t> startDepot,
                             std::optional<size_t> endDepot,
                             std::optional<Cost> fixedCost,
@@ -477,6 +477,7 @@ private:
     std::vector<ClientGroup> const groups_;        // Client groups
 
     size_t const numVehicles_;
+    size_t const numLoadDimensions_;
 
 public:
     bool operator==(ProblemData const &other) const = default;
@@ -633,6 +634,11 @@ public:
     [[nodiscard]] size_t numProfiles() const;
 
     /**
+     * Number of load dimensions in this problem instance.
+     */
+    [[nodiscard]] size_t numLoadDimensions() const;
+
+    /**
      * Returns a new ProblemData instance with the same data as this instance,
      * except for the given parameters, which are used instead.
      *
@@ -655,7 +661,7 @@ public:
      * -------
      * ProblemData
      *    A new ProblemData instance with possibly replaced data.
-     * */
+     */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
                         std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,

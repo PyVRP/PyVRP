@@ -1,7 +1,6 @@
 import argparse
 from functools import partial
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from tqdm.contrib.concurrent import process_map
@@ -74,8 +73,8 @@ def _solve(
     max_iterations: int,
     no_improvement: int,
     per_client: bool,
-    stats_dir: Optional[Path],
-    sol_dir: Optional[Path],
+    stats_dir: Path | None,
+    sol_dir: Path | None,
     algorithm: str,
     display: bool,
     **kwargs,

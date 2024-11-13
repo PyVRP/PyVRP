@@ -4,7 +4,6 @@ from math import nan
 from pathlib import Path
 from statistics import fmean
 from time import perf_counter
-from typing import Union
 
 from pyvrp.Population import Population, SubPopulation
 from pyvrp._pyvrp import CostEvaluator
@@ -142,7 +141,7 @@ class Statistics:
         )
 
     @classmethod
-    def from_csv(cls, where: Union[Path, str], delimiter: str = ",", **kwargs):
+    def from_csv(cls, where: Path | str, delimiter: str = ",", **kwargs):
         """
         Reads a Statistics object from the CSV file at the given filesystem
         location.
@@ -191,7 +190,7 @@ class Statistics:
 
     def to_csv(
         self,
-        where: Union[Path, str],
+        where: Path | str,
         delimiter: str = ",",
         quoting: int = csv.QUOTE_MINIMAL,
         **kwargs,

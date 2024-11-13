@@ -22,18 +22,20 @@
 #         include:
 #           - compiler: gcc  # minimum gcc version
 #             compiler-version: '10'
-#             python-version: '3.9'
+#             python-version: '3.10'
 #           - compiler: gcc  # recent gcc version
 #             compiler-version: '14'
-#             python-version: '3.12'
+#             python-version: '3.13'
 #           - compiler: clang  # minimum clang version
 #             compiler-version: '14'
-#             python-version: '3.9'
+#             python-version: '3.10'
 #           - compiler: clang  # recent clang version
 #             compiler-version: '18'
-#             python-version: '3.12'
+#             python-version: '3.13'
 #     steps:
 #       - uses: actions/checkout@v4
+#         with:
+#           persist-credentials: false
 #       - name: Set up Python
 #         uses: actions/setup-python@v5
 #         with:
@@ -81,10 +83,9 @@
 #           echo "CC=gcc" >> $GITHUB_ENV
 #           echo "CXX=g++" >> $GITHUB_ENV
 #       - name: Build pyvrp
-#         # This step consists of two commands. First, we install the project into
-#         # the poetry environment. This ensures imports like "from pyvrp import X"
-#         # work. But poetry builds in release mode by default, which is undesirable
-#         # for testing. So we also compile a debug build directly afterwards.
+#         # First, we install the project into the poetry environment. Ensures
+#         # imports like "from pyvrp import X" work. This builds in release mode
+#         # by default, but we need a debug build for test coverage.
 #         run: |
 #           poetry install --only-root
 #           poetry run python build_extensions.py --build_type debug --clean

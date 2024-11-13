@@ -183,8 +183,8 @@ def test_srex_heterogeneous_changed_start_indices(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=10),
-            VehicleType(1, capacity=20),
+            VehicleType(2, capacity=[10]),
+            VehicleType(1, capacity=[20]),
         ]
     )
     cost_evaluator = CostEvaluator(20, 6, 0)

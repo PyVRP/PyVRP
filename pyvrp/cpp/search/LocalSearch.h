@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -28,6 +29,7 @@ class LocalSearch
 
     std::vector<size_t> orderNodes;   // node order used by LS::search
     std::vector<size_t> orderRoutes;  // route order used by LS::intensify
+    DynamicBitset candidates;         // candidates nodes to consider for moves
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
@@ -37,6 +39,7 @@ class LocalSearch
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
+    int numEvaluations = 0;        // Number of delta cost evaluations
     int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 

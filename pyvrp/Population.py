@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generator, Optional
+from typing import TYPE_CHECKING, Callable, Generator
 
 from pyvrp._pyvrp import PopulationParams, SubPopulation
 
@@ -24,7 +24,7 @@ class Population:
     def __init__(
         self,
         diversity_op: Callable[[Solution, Solution], float],
-        params: Optional[PopulationParams] = None,
+        params: PopulationParams | None = None,
     ):
         self._op = diversity_op
         self._params = params if params is not None else PopulationParams()

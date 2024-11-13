@@ -5,7 +5,6 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Optional
 
 import tomli
 
@@ -34,7 +33,7 @@ autodoc_preserve_defaults = True
 
 
 # -- sphinx.ext.linkcode
-def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
+def linkcode_resolve(domain: str, info: dict) -> str | None:
     """
     Generates a URL pointing to the source code of a specified object located
     in the PyVRP repository.
@@ -50,7 +49,7 @@ def linkcode_resolve(domain: str, info: dict) -> Optional[str]:
 
     Returns
     -------
-    Optional[str]
+    str | None
         URL pointing to the identified object's source code in the PyVRP
         repository, if the object can be identified.
     """
@@ -158,6 +157,11 @@ html_theme_options = {
         {
             "version": "",
             "title": "Development",
+            "aliases": [],
+        },
+        {
+            "version": "https://pyvrp.github.io/v0.10.0",
+            "title": "v0.10.0",
             "aliases": [],
         },
         {
