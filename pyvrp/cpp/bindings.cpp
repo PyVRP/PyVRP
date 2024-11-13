@@ -852,24 +852,15 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<DistanceSegment>(
         m, "DistanceSegment", DOC(pyvrp, DistanceSegment))
-        .def(py::init<size_t, size_t, pyvrp::Distance>(),
-             py::arg("idx_first"),
-             py::arg("idx_last"),
-             py::arg("distance"))
+        .def(py::init<pyvrp::Distance>(), py::arg("distance"))
         .def("distance",
              &DistanceSegment::distance,
              DOC(pyvrp, DistanceSegment, distance))
         .def_static("merge",
-                    &DistanceSegment::merge<>,
-                    py::arg("distance_matrix"),
+                    &DistanceSegment::merge,
+                    py::arg("edge_distance"),
                     py::arg("first"),
-                    py::arg("second"))
-        .def_static("merge",
-                    &DistanceSegment::merge<DistanceSegment const &>,
-                    py::arg("distance_matrix"),
-                    py::arg("first"),
-                    py::arg("second"),
-                    py::arg("third"));
+                    py::arg("second"));
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
         .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
@@ -882,24 +873,15 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
         .def_static(
-            "merge", &LoadSegment::merge<>, py::arg("first"), py::arg("second"))
-        .def_static("merge",
-                    &LoadSegment::merge<LoadSegment const &>,
-                    py::arg("first"),
-                    py::arg("second"),
-                    py::arg("third"));
+            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
 
     py::class_<DurationSegment>(
         m, "DurationSegment", DOC(pyvrp, DurationSegment))
-        .def(py::init<size_t,
-                      size_t,
-                      pyvrp::Duration,
+        .def(py::init<pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration>(),
-             py::arg("idx_first"),
-             py::arg("idx_last"),
              py::arg("duration"),
              py::arg("time_warp"),
              py::arg("tw_early"),
@@ -920,16 +902,10 @@ PYBIND11_MODULE(_pyvrp, m)
              = std::numeric_limits<pyvrp::Duration>::max(),
              DOC(pyvrp, DurationSegment, timeWarp))
         .def_static("merge",
-                    &DurationSegment::merge<>,
-                    py::arg("duration_matrix"),
+                    &DurationSegment::merge,
+                    py::arg("edge_duration"),
                     py::arg("first"),
-                    py::arg("second"))
-        .def_static("merge",
-                    &DurationSegment::merge<DurationSegment const &>,
-                    py::arg("duration_matrix"),
-                    py::arg("first"),
-                    py::arg("second"),
-                    py::arg("third"));
+                    py::arg("second"));
 
     py::class_<RandomNumberGenerator>(
         m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))
