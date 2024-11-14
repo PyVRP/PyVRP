@@ -107,8 +107,12 @@ def test_OkSmall_with_time_warp(ok_small):
         DurationSegment(
             duration=loc.service_duration if idx != 0 else 0,
             time_warp=0,
-            tw_early=loc.tw_early if idx > 0 else vehicle_type.tw_early,
-            tw_late=loc.tw_late if idx > 0 else vehicle_type.tw_late,
+            tw_early=loc.tw_early
+            if idx >= ok_small.num_depots
+            else vehicle_type.earliest_start,
+            tw_late=loc.tw_late
+            if idx >= ok_small.num_depots
+            else vehicle_type.latest_finish,
             release_time=loc.release_time if idx != 0 else 0,
         )
         for idx, loc in enumerate(ok_small.depots() + ok_small.clients())

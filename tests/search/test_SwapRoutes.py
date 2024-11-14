@@ -171,8 +171,18 @@ def test_evaluate_shift_time_window_differences(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(capacity=[10], tw_early=10_000, tw_late=15_000),
-            VehicleType(capacity=[10], tw_early=15_000, tw_late=20_000),
+            VehicleType(
+                capacity=[10],
+                earliest_start=10_000,
+                latest_start=15_000,
+                latest_finish=15_000,
+            ),
+            VehicleType(
+                capacity=[10],
+                earliest_start=15_000,
+                latest_start=20_000,
+                latest_finish=20_000,
+            ),
         ]
     )
 
@@ -196,6 +206,57 @@ def test_evaluate_shift_time_window_differences(ok_small):
     op = SwapRoutes(data)
     cost_eval = CostEvaluator(1, 1, 0)
     assert_(op.evaluate(route1, route2, cost_eval) < 0)
+
+
+def test_evaluate_shift_latest_start_differences(ok_small):
+    """
+    Tests that SwapRoutes correctly evaluates changes in duration due to
+    different shift latest start times.
+    """
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(
+                capacity=[10],
+                earliest_start=10_000,
+                latest_start=14_000,
+                latest_finish=14_000,
+                unit_duration_cost=1,
+            ),
+            VehicleType(
+                capacity=[10],
+                earliest_start=10_000,
+                latest_start=20_000,
+                latest_finish=14_000,
+                unit_duration_cost=1,
+            ),
+        ]
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 4]:  # depot -> 1 -> 4 -> depot
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.update()  # depot -> depot
+
+    # Without shift time windows, the first route would be able to start
+    # between [14'056, 16'003]. Given that the latest start of the assigned
+    # vehicle type is 14'000, there is a wait before the first client of 56
+    # units. Besides, the first route cannot complete its visits before the
+    # latest finish of its assigned vehicle type.
+    # Swapping the vehicle types results in a lower cost, due to decreased wait
+    # time on the route. The time warp is unchanged given that the route ends
+    # at the same time and the latest finish of the new assigned vehicle type
+    # is the same.
+    assert_equal(route1.duration(), 5_388)  # including wait of 56 units
+    assert_(route1.has_time_warp())
+
+    # Swapping the routes results in a reduction of 56 units of duration, since
+    # it is no longer needed to wait before servicing the first client.
+    op = SwapRoutes(data)
+    cost_eval = CostEvaluator(1, 1, 0)
+    assert_equal(op.evaluate(route1, route2, cost_eval), -56)
 
 
 def test_evaluate_max_duration_constraints(ok_small):

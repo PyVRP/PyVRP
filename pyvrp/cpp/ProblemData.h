@@ -315,8 +315,9 @@ public:
      *     start_depot: int = 0,
      *     end_depot: int = 0,
      *     fixed_cost: int = 0,
-     *     tw_early: int = 0,
-     *     tw_late: int = np.iinfo(np.int64).max,
+     *     earliest_start: int = 0,
+     *     latest_start: int = np.iinfo(np.int64).max,
+     *     latest_finish: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
      *     unit_distance_cost: int = 1,
@@ -345,10 +346,14 @@ public:
      *     Default 0 (first depot).
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
-     * tw_early
-     *     Start of the vehicle type's shift. Default 0.
-     * tw_late
-     *     End of the vehicle type's shift. Unconstrained if not provided.
+     * earliest_start
+     *     Earliest start of the vehicle type's shift. Default 0.
+     * latest_start
+     *     Latest start of the vehicle type's shift. Unconstrained if not
+     *     provided.
+     * latest_finish
+     *     Latest finish of the vehicle type's shift. Unconstrained if not
+     *     provided.
      * max_duration
      *     Maximum route duration. Unconstrained if not explicitly provided.
      * max_distance
@@ -376,10 +381,12 @@ public:
      *     End location associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
-     * tw_early
-     *     Start of the vehicle type's shift, if specified.
-     * tw_late
-     *     End of the vehicle type's shift, if specified.
+     * earliest_start
+     *     Earliest start of the vehicle type's shift, if specified.
+     * latest_start
+     *     Latest start of the vehicle type's shift, if specified.
+     * latest_finish
+     *     Latest finish of the vehicle type's shift, if specified.
      * max_duration
      *     Maximum duration of the route this vehicle type is assigned to. This
      *     is a very large number when the maximum duration is unconstrained.
@@ -402,8 +409,9 @@ public:
         size_t const startDepot;           // Departure depot location
         size_t const endDepot;             // Return depot location
         std::vector<Load> const capacity;  // This type's vehicle capacity
-        Duration const twEarly;            // Start of shift
-        Duration const twLate;             // End of shift
+        Duration const earliestStart;      // Earliest start of shift
+        Duration const latestStart;        // Latest start of shift
+        Duration const latestFinish;       // Latest finish of shift
         Duration const maxDuration;        // Maximum route duration
         Distance const maxDistance;        // Maximum route distance
         Cost const fixedCost;         // Fixed cost of using this vehicle type
@@ -417,8 +425,10 @@ public:
                     size_t startDepot = 0,
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
-                    Duration twEarly = 0,
-                    Duration twLate = std::numeric_limits<Duration>::max(),
+                    Duration earliestStart = 0,
+                    Duration latestStart = std::numeric_limits<Duration>::max(),
+                    Duration latestFinish
+                    = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
                     Cost unitDistanceCost = 1,
@@ -445,8 +455,9 @@ public:
                             std::optional<size_t> startDepot,
                             std::optional<size_t> endDepot,
                             std::optional<Cost> fixedCost,
-                            std::optional<Duration> twEarly,
-                            std::optional<Duration> twLate,
+                            std::optional<Duration> earliestStart,
+                            std::optional<Duration> latestStart,
+                            std::optional<Duration> latestFinish,
                             std::optional<Duration> maxDuration,
                             std::optional<Distance> maxDistance,
                             std::optional<Cost> unitDistanceCost,

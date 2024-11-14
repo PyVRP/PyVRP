@@ -446,8 +446,9 @@ def test_matrices_are_not_copies():
     (
         "capacity",
         "num_available",
-        "tw_early",
-        "tw_late",
+        "earliest_start",
+        "latest_start",
+        "latest_finish",
         "max_duration",
         "max_distance",
         "fixed_cost",
@@ -455,24 +456,27 @@ def test_matrices_are_not_copies():
         "unit_duration_cost",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 0, 0, 0, 0, 0, 0),  # early > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1),  # negative unit_duration_cost
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 0, 1, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # earliest start > latest finish
+        (0, 1, 1, 0, 1, 0, 0, 0, 0, 0),  # earliest start > latest start
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative earliest start
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative latest start
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative latest finish
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative unit_duration_cost
     ],
 )
 def test_vehicle_type_raises_invalid_data(
     capacity: int,
     num_available: int,
-    tw_early: int,
-    tw_late: int,
+    earliest_start: int,
+    latest_start: int,
+    latest_finish: int,
     max_duration: int,
     max_distance: int,
     fixed_cost: int,
@@ -488,8 +492,9 @@ def test_vehicle_type_raises_invalid_data(
             num_available=num_available,
             capacity=[capacity],
             fixed_cost=fixed_cost,
-            tw_early=tw_early,
-            tw_late=tw_late,
+            earliest_start=earliest_start,
+            latest_start=latest_start,
+            latest_finish=latest_finish,
             max_duration=max_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
@@ -508,8 +513,9 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
         start_depot=0,
         end_depot=0,
         fixed_cost=0,
-        tw_early=0,
-        tw_late=0,
+        earliest_start=0,
+        latest_start=0,
+        latest_finish=0,
         max_duration=0,
         max_distance=0,
         unit_distance_cost=0,
@@ -521,8 +527,9 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, [])
     assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.tw_late, 0)
+    assert_equal(vehicle_type.earliest_start, 0)
+    assert_equal(vehicle_type.latest_start, 0)
+    assert_equal(vehicle_type.latest_finish, 0)
     assert_equal(vehicle_type.max_duration, 0)
     assert_equal(vehicle_type.max_distance, 0)
     assert_equal(vehicle_type.unit_distance_cost, 0)
@@ -540,14 +547,15 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, [])
     assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.earliest_start, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
     assert_equal(vehicle_type.unit_duration_cost, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
     # integral value.
-    assert_equal(vehicle_type.tw_late, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.latest_start, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.latest_finish, np.iinfo(np.int64).max)
     assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
     assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
 
@@ -563,8 +571,9 @@ def test_vehicle_type_attribute_access():
         end_depot=43,
         capacity=[13],
         fixed_cost=3,
-        tw_early=17,
-        tw_late=19,
+        earliest_start=17,
+        latest_start=18,
+        latest_finish=19,
         max_duration=23,
         max_distance=31,
         unit_distance_cost=37,
@@ -577,8 +586,9 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.end_depot, 43)
     assert_equal(vehicle_type.capacity, [13])
     assert_equal(vehicle_type.fixed_cost, 3)
-    assert_equal(vehicle_type.tw_early, 17)
-    assert_equal(vehicle_type.tw_late, 19)
+    assert_equal(vehicle_type.earliest_start, 17)
+    assert_equal(vehicle_type.latest_start, 18)
+    assert_equal(vehicle_type.latest_finish, 19)
     assert_equal(vehicle_type.max_duration, 23)
     assert_equal(vehicle_type.max_distance, 31)
     assert_equal(vehicle_type.unit_distance_cost, 37)

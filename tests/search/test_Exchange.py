@@ -230,7 +230,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
             Client(x=2, y=0, tw_early=0, tw_late=5),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(1, tw_early=0, tw_late=10)],
+        vehicle_types=[VehicleType(1, earliest_start=0, latest_finish=10)],
         distance_matrices=[
             np.asarray(
                 [

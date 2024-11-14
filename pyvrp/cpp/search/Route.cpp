@@ -189,8 +189,8 @@ void Route::update()
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
     durAt.resize(nodes.size());
-    durAt[0] = {vehicleType_};
-    durAt[nodes.size() - 1] = {vehicleType_};
+    durAt[0] = {vehicleType_, true};
+    durAt[nodes.size() - 1] = {vehicleType_, false};
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
         durAt[idx] = {data.location(visits[idx])};

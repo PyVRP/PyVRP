@@ -154,8 +154,9 @@ def test_add_vehicle_type():
         num_available=10,
         capacity=998,
         fixed_cost=1_001,
-        tw_early=17,
-        tw_late=19,
+        earliest_start=17,
+        latest_start=18,
+        latest_finish=19,
         max_duration=93,
         max_distance=97,
     )
@@ -163,8 +164,9 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.num_available, 10)
     assert_equal(vehicle_type.capacity, [998])
     assert_equal(vehicle_type.fixed_cost, 1_001)
-    assert_equal(vehicle_type.tw_early, 17)
-    assert_equal(vehicle_type.tw_late, 19)
+    assert_equal(vehicle_type.earliest_start, 17)
+    assert_equal(vehicle_type.latest_start, 18)
+    assert_equal(vehicle_type.latest_finish, 19)
     assert_equal(vehicle_type.max_duration, 93)
     assert_equal(vehicle_type.max_distance, 97)
 
@@ -295,8 +297,9 @@ def test_model_and_solve(ok_small):
     model.add_vehicle_type(
         num_available=3,
         capacity=10,
-        tw_early=0,
-        tw_late=45000,
+        earliest_start=0,
+        latest_start=45000,
+        latest_finish=45000,
     )
 
     depot = model.add_depot(x=2334, y=726)
@@ -456,8 +459,8 @@ def test_model_solves_small_instance_with_fixed_costs():
         m.add_vehicle_type(
             num_available=5,
             fixed_cost=10,
-            tw_early=0,
-            tw_late=40,
+            earliest_start=0,
+            latest_finish=40,
         )
 
     m.add_depot(x=0, y=0)
@@ -485,20 +488,20 @@ def test_model_solves_small_instance_with_shift_durations():
     # Two vehicle types with different shift time windows: the first has a
     # shift time window of [0, 15], the second of [5, 25]. There are four
     # vehicles in total, two for each vehicle type.
-    for tw_early, tw_late in [(0, 15), (5, 25)]:
+    for earliest_start, latest_finish in [(0, 15), (5, 25)]:
         m.add_vehicle_type(
             num_available=2,
-            tw_early=tw_early,
-            tw_late=tw_late,
+            earliest_start=earliest_start,
+            latest_finish=latest_finish,
         )
 
     m.add_depot(x=0, y=0)
 
     for idx in range(5):
-        # Vehicles of the first type can visit two clients before having to
-        # return to the depot. The second vehicle type can be used to visit
-        # a single client before having to return to the depot. So we need
-        # at least three routes.
+        # Vehicles of the first type can visit a single client before having to
+        # return to the depot. The second vehicle type can be used to visit two
+        # clients before having to return to the depot. So we need at least
+        # three routes.
         m.add_client(
             x=idx,
             y=idx,

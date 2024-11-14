@@ -382,8 +382,9 @@ class _ProblemDataBuilder:
                 end_depot=depot_idx,
                 # The literature specifies depot time windows. We do not have
                 # depot time windows but instead set those on the vehicles.
-                tw_early=time_windows[depot_idx][0],
-                tw_late=time_windows[depot_idx][1],
+                earliest_start=time_windows[depot_idx][0],
+                latest_start=time_windows[depot_idx][1],
+                latest_finish=time_windows[depot_idx][1],
                 max_duration=max_duration,
                 max_distance=max_dist,
                 profile=client2profile[clients],

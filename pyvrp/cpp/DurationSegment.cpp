@@ -30,11 +30,13 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 {
 }
 
-DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType)
+DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
+                                 bool const isStartSegment)
     : duration_(0),
       timeWarp_(0),
-      twEarly_(vehicleType.twEarly),
-      twLate_(vehicleType.twLate),
+      twEarly_(vehicleType.earliestStart),
+      twLate_(isStartSegment ? vehicleType.latestStart
+                             : vehicleType.latestFinish),
       releaseTime_(0)
 {
 }

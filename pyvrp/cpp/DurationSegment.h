@@ -96,8 +96,12 @@ public:
     // Construct from attributes of the given client.
     DurationSegment(ProblemData::Client const &client);
 
-    // Construct from attributes of the given vehicle type.
-    DurationSegment(ProblemData::VehicleType const &vehicleType);
+    /**
+     * Construct from attributes of the given vehicle type, depending on
+     * whether the segment belongs to the start or end depot.
+     */
+    DurationSegment(ProblemData::VehicleType const &vehicleType,
+                    bool const isStartSegment);
 
     // Construct from raw data.
     inline DurationSegment(Duration duration,

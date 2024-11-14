@@ -282,17 +282,22 @@ def test_route_can_be_pickled(rc208):
 
 
 @pytest.mark.parametrize(
-    ("tw_early", "tw_late", "expected"),
+    ("earliest_start", "latest_start", "latest_finish", "expected"),
     [
-        (0, 0, 20_277),  # cannot be back at the depot before 20'277
-        (0, 20_000, 277),  # larger shift window decreases time warp
-        (0, 20_277, 0),  # and in this case there is no more time warp
-        (15_000, 20_000, 1_221),  # minimum route duration is 6'221
-        (10_000, 20_000, 277),  # before earliest possible return
+        (0, 0, 0, 20_277),  # cannot be back at the depot before 20'277
+        (0, 10_000, 20_000, 277),  # larger shift window decreases time warp
+        (0, 20_000, 20_000, 277),  # latest start does not affect time warp
+        (0, 20_277, 20_277, 0),  # and in this case there is no more time warp
+        (15_000, 15_000, 20_000, 1_221),  # minimum route duration is 6'221
+        (10_000, 20_000, 20_000, 277),  # before earliest possible return
     ],
 )
 def test_route_shift_duration(
-    ok_small, tw_early: int, tw_late: int, expected: int
+    ok_small,
+    earliest_start: int,
+    latest_start: int,
+    latest_finish: int,
+    expected: int,
 ):
     """
     Tests that Route computes time warp due to shift durations correctly on a
@@ -300,7 +305,13 @@ def test_route_shift_duration(
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=[10], tw_early=tw_early, tw_late=tw_late)
+            VehicleType(
+                2,
+                capacity=[10],
+                earliest_start=earliest_start,
+                latest_start=latest_start,
+                latest_finish=latest_finish,
+            )
         ]
     )
 
