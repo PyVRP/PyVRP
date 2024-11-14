@@ -107,7 +107,7 @@ private:
      * Class storing data related to the route segment starting at ``start``,
      * and ending at ``end`` (inclusive).
      */
-    class Segment
+    template <bool depotStart = false, bool depotEnd = false> class Segment
     {
         Route const *route;
         size_t const start;
@@ -322,25 +322,26 @@ public:
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
-    [[nodiscard]] inline Segment at(size_t idx) const;
+    [[nodiscard]] inline Segment<false, false> at(size_t idx) const;
 
     /**
      * Returns an object that can be queried for data associated with the
      * segment starting at start.
      */
-    [[nodiscard]] inline Segment after(size_t start) const;
+    [[nodiscard]] inline Segment<false, true> after(size_t start) const;
 
     /**
      * Returns an object that can be queried for data associated with the
      * segment ending at end.
      */
-    [[nodiscard]] inline Segment before(size_t end) const;
+    [[nodiscard]] inline Segment<true, false> before(size_t end) const;
 
     /**
      * Returns an object that can be queried for data associated with the
      * segment between [start, end].
      */
-    [[nodiscard]] inline Segment between(size_t start, size_t end) const;
+    [[nodiscard]] inline Segment<false, false> between(size_t start,
+                                                       size_t end) const;
 
     /**
      * Center point of the client locations on this route.
@@ -425,16 +426,30 @@ bool Route::Node::isDepot() const
            && (this == &route_->startDepot_ || this == &route_->endDepot_);
 }
 
-Route::Segment::Segment(Route const &route, size_t start, size_t end)
+template <bool depotStart, bool depotEnd>
+Route::Segment<depotStart, depotEnd>::Segment(Route const &route,
+                                              size_t start,
+                                              size_t end)
     : route(&route), start(start), end(end)
 {
     assert(start <= end && end < route.nodes.size());
 }
 
-size_t Route::Segment::first() const { return route->visits[start]; }
-size_t Route::Segment::last() const { return route->visits[end]; }
+template <bool depotStart, bool depotEnd>
+size_t Route::Segment<depotStart, depotEnd>::first() const
+{
+    return route->visits[start];
+}
 
-DistanceSegment Route::Segment::distance(size_t profile) const
+template <bool depotStart, bool depotEnd>
+size_t Route::Segment<depotStart, depotEnd>::last() const
+{
+    return route->visits[end];
+}
+
+template <bool depotStart, bool depotEnd>
+DistanceSegment
+Route::Segment<depotStart, depotEnd>::distance(size_t profile) const
 {
     if (profile != route->profile())  // then we have to compute the distance
     {                                 // segment from scratch.
@@ -452,10 +467,10 @@ DistanceSegment Route::Segment::distance(size_t profile) const
         return distSegment;
     }
 
-    if (start == 0)
+    if constexpr (depotStart)
         return route->distBefore[end];
 
-    if (end == route->nodes.size() - 1)
+    if constexpr (depotEnd)
         return route->distAfter[start];
 
     auto const &startDist = route->distBefore[start];
@@ -465,14 +480,16 @@ DistanceSegment Route::Segment::distance(size_t profile) const
     return DistanceSegment(endDist.distance() - startDist.distance());
 }
 
-DurationSegment Route::Segment::duration(size_t profile) const
+template <bool depotStart, bool depotEnd>
+DurationSegment
+Route::Segment<depotStart, depotEnd>::duration(size_t profile) const
 {
     if (profile == route->profile())
     {
-        if (start == 0)
+        if constexpr (depotStart)
             return route->durBefore[end];
 
-        if (end == route->nodes.size() - 1)
+        if constexpr (depotEnd)
             return route->durAfter[start];
     }
 
@@ -490,12 +507,13 @@ DurationSegment Route::Segment::duration(size_t profile) const
     return durSegment;
 }
 
-LoadSegment Route::Segment::load(size_t dimension) const
+template <bool depotStart, bool depotEnd>
+LoadSegment Route::Segment<depotStart, depotEnd>::load(size_t dimension) const
 {
-    if (start == 0)
+    if constexpr (depotStart)
         return route->loadBefore[dimension][end];
 
-    if (end == route->nodes.size() - 1)
+    if constexpr (depotEnd)
         return route->loadAfter[dimension][start];
 
     auto const &loads = route->loadAt[dimension];
@@ -628,28 +646,28 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-Route::Segment Route::at(size_t idx) const
+Route::Segment<false, false> Route::at(size_t idx) const
 {
     assert(!dirty);
-    return Segment(*this, idx, idx);
+    return {*this, idx, idx};
 }
 
-Route::Segment Route::after(size_t start) const
+Route::Segment<false, true> Route::after(size_t start) const
 {
     assert(!dirty);
-    return Segment(*this, start, nodes.size() - 1);
+    return {*this, start, nodes.size() - 1};
 }
 
-Route::Segment Route::before(size_t end) const
+Route::Segment<true, false> Route::before(size_t end) const
 {
     assert(!dirty);
-    return Segment(*this, 0, end);
+    return {*this, 0, end};
 }
 
-Route::Segment Route::between(size_t start, size_t end) const
+Route::Segment<false, false> Route::between(size_t start, size_t end) const
 {
     assert(!dirty);
-    return Segment(*this, start, end);
+    return {*this, start, end};
 }
 
 template <typename... Segments>
