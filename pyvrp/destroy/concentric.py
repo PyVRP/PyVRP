@@ -14,9 +14,9 @@ def concentric(
     solution: Solution,
     cost_eval: CostEvaluator,
     rng: RandomNumberGenerator,
-    neighbours,
+    neighbours: list[list[int]],
 ):
-    num_destroy = random.randint(10, 20)
+    num_destroy = random.randint(10, 30)
 
     # Find all client indices to skip
     client = rng.randint(data.num_clients) + 1

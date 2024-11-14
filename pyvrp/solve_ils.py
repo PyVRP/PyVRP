@@ -12,6 +12,8 @@ from pyvrp.IteratedLocalSearch import (
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.accept import RecordToRecord
+from pyvrp.destroy.concentric import concentric
+from pyvrp.destroy.strings import SISR
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
@@ -21,7 +23,7 @@ from pyvrp.search import (
     RouteOperator,
     compute_neighbours,
 )
-from pyvrp.search.SISR import SISR
+from pyvrp.search.DestroyRepair import DestroyRepair
 
 if TYPE_CHECKING:
     import pathlib
@@ -161,13 +163,17 @@ def solve(
     # TODO Ignore the penalties for now
     VALUE = 1_000_000
     penalty_params = PenaltyParams(solutions_between_updates=VALUE)
-    pm = PenaltyManager(penalty_params, initial_penalties=3 * [VALUE])
+    pm = PenaltyManager(
+        penalty_params, initial_penalties=(VALUE, VALUE, VALUE)
+    )
 
-    max_runtime = stop.criteria[0]._max_runtime  # HACK
+    max_runtime = stop.criteria[0]._max_runtime  # noqa # type: ignore
     accept = RecordToRecord(0.01, 0.00, max_runtime)  # type: ignore
 
-    nbhd = compute_neighbours(data, NeighbourhoodParams(nb_granular=25))
-    sisr = SISR(data, rng, nbhd)
+    nbhd = compute_neighbours(data)
+    destroy_ops = [SISR(), concentric]
+    repair_ops = []  # let LS handle repair
+    perturb = DestroyRepair(data, rng, nbhd, destroy_ops, repair_ops)
     ls = LocalSearch(data, rng, nbhd)
 
     for node_op in params.node_ops:
@@ -176,8 +182,7 @@ def solve(
     for route_op in params.route_ops:
         ls.add_route_operator(route_op(data))
 
-    ils_args = (data, pm, rng, sisr, ls, accept, params.ils)
+    ils_args = (data, pm, rng, perturb, ls, accept, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
     init = Solution.make_random(data, rng)
-
     return algo.run(stop, init, collect_stats, display)

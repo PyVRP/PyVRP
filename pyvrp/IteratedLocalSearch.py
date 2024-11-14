@@ -41,7 +41,7 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-NUM_ITERS_PRINT = 10
+NUM_ITERS_PRINT = 500
 
 
 class ProgressPrinter:
@@ -286,13 +286,22 @@ class IteratedLocalSearch:
             iters += 1
 
             candidate = current
-            # perturbed = self._perturb(current, self._cost_evaluator)
-            # candidate = self._search(perturbed, self._cost_evaluator)
+            perturbed = self._perturb(current, self._cost_evaluator)
+            candidate_clients = self._diff(perturbed, current)
+            candidate = self._search(
+                perturbed,
+                self._cost_evaluator,
+                candidate_clients,
+            )
             self._pm.register(candidate)
 
             if not candidate.is_feasible():
                 booster_cost_eval = self._pm.booster_cost_evaluator()
-                candidate = self._search(candidate, booster_cost_eval)
+                candidate = self._search(
+                    candidate,
+                    booster_cost_eval,
+                    candidate_clients,
+                )
                 self._pm.register(candidate)
 
             cand_cost = self._cost_evaluator.cost(candidate)
@@ -324,3 +333,12 @@ class IteratedLocalSearch:
         print_progress.end(res)
 
         return res
+
+    def _diff(self, new: Solution, old: Solution) -> list[int]:
+        """
+        Returns the clients that have changed between two solutions.
+        """
+        neighbours1 = new.neighbours()
+        neighbours2 = old.neighbours()
+        clients = range(self._data.num_depots, self._data.num_locations)
+        return [idx for idx in clients if neighbours1[idx] != neighbours2[idx]]

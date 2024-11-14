@@ -111,7 +111,8 @@ public:
      * improvements are made.
      */
     Solution operator()(Solution const &solution,
-                        CostEvaluator const &costEvaluator);
+                        CostEvaluator const &costEvaluator,
+                        std::vector<size_t> const &candidateNodes);
 
     /**
      * Performs regular (node-based) local search around the given solution,

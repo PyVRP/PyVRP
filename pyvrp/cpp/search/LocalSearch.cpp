@@ -5,17 +5,21 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <numeric>
 
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 
 Solution LocalSearch::operator()(Solution const &solution,
-                                 CostEvaluator const &costEvaluator)
+                                 CostEvaluator const &costEvaluator,
+                                 std::vector<size_t> const &candidateNodes)
 {
     numEvaluations = 0;
     loadSolution(solution);
+
+    candidates.reset();
+    for (auto idx : candidateNodes)
+        candidates[idx] = true;
 
     while (true)
     {
@@ -26,7 +30,7 @@ Solution LocalSearch::operator()(Solution const &solution,
             break;
     }
 
-    std::cout << numEvaluations << std::endl;
+    // std::cout << numEvaluations << std::endl;
 
     return exportSolution();
 }
@@ -59,9 +63,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     std::vector<int> lastTestedNodes(data.numLocations(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
     numMoves = 0;
-
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-        candidates[idx] = true;
 
     bool firstStep = true;
     while (candidates.any())
