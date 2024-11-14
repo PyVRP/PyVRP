@@ -12,6 +12,7 @@ class SearchMethod(Protocol):  # pragma: no cover
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
+        candidate_clients: list[int] | None = None,
     ) -> Solution:
         """
         Search around the given solution, and returns a new solution that is
@@ -23,6 +24,8 @@ class SearchMethod(Protocol):  # pragma: no cover
             The solution to improve.
         cost_evaluator
             Cost evaluator to use when evaluating improvements.
+        candidate_nodes
+            The list of candidate clients to consider for moves
 
         Returns
         -------
