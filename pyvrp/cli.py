@@ -5,10 +5,8 @@ from pathlib import Path
 import numpy as np
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import ProblemData, Result, SolveParams
-from pyvrp import solve as solve_hgs
+from pyvrp import ProblemData, Result, SolveParams, solve
 from pyvrp.read import ROUND_FUNCS, read
-from pyvrp.solve_ils import solve as solve_ils
 from pyvrp.stop import (
     MaxIterations,
     MaxRuntime,
@@ -75,7 +73,6 @@ def _solve(
     per_client: bool,
     stats_dir: Path | None,
     sol_dir: Path | None,
-    algorithm: str,
     display: bool,
     **kwargs,
 ) -> tuple[str, str, float, int, float]:
@@ -105,8 +102,6 @@ def _solve(
         The directory to write the best found solutions to.
     display
         Whether to display the solver progress.
-    algorithm
-        Algorithm to use. One of ['ils', 'hgs'].
 
     Returns
     -------
@@ -134,7 +129,6 @@ def _solve(
         ]
     )
 
-    solve = solve_hgs if algorithm == "hgs" else solve_ils
     result = solve(
         data,
         stop,
