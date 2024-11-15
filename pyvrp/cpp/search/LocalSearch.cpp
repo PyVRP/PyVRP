@@ -21,16 +21,8 @@ Solution LocalSearch::operator()(Solution const &solution,
     for (auto idx : candidateNodes)
         candidates[idx] = true;
 
-    while (true)
-    {
-        search(costEvaluator);
-        intensify(costEvaluator);
-
-        if (numMoves == 0)  // then the current solution is locally optimal.
-            break;
-    }
-
-    // std::cout << numEvaluations << std::endl;
+    search(costEvaluator);
+    intensify(costEvaluator);
 
     return exportSolution();
 }
@@ -64,9 +56,17 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     lastModified = std::vector<int>(data.numVehicles(), 0);
     numMoves = 0;
 
-    bool firstStep = true;
-    while (candidates.any())
+    for (auto const uClient : orderNodes)  // insert all customers first
     {
+        auto *U = &nodes[uClient];
+        applyOptionalClientMoves(U, costEvaluator);
+    }
+
+    bool firstStep = true;
+    while (candidates.any() && !searchCompleted)
+    {
+        searchCompleted = true;
+
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
@@ -90,8 +90,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // only do this if U is a promising candidate for improvement.
             if (!candidates[uClient])
                 continue;
-
-            candidates[uClient] = false;
 
             for (auto const vClient : neighbours_[uClient])
             {
