@@ -26,7 +26,7 @@ class SISRParams:
     """
 
     max_string_size: int = 10
-    avg_removals: int = 10
+    avg_removals: int = 20
     split_probability: float = 0.5
     count_probability: float = 0.1
 

@@ -167,7 +167,7 @@ def solve(
         penalty_params, initial_penalties=(VALUE, VALUE, VALUE)
     )
 
-    accept = MovingAverageThreshold(1, 50, stop.criteria[0]._max_runtime)
+    accept = MovingAverageThreshold(0.5, 30, stop.criteria[0]._max_runtime)
 
     nbhd = compute_neighbours(data)
     destroy_ops = [SISR(), concentric]
