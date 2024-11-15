@@ -1,6 +1,6 @@
 from collections import deque
 from statistics import mean
-from typing import Deque, List
+from time import perf_counter
 
 
 class MovingAverageThreshold:
@@ -23,7 +23,9 @@ class MovingAverageThreshold:
            1108 - 1119.
     """
 
-    def __init__(self, eta: float, history_size: int):
+    def __init__(
+        self, eta: float, history_size: int, max_runtime: float = float("inf")
+    ):
         if not (0 <= eta <= 1):
             raise ValueError("eta must be in [0, 1].")
 
@@ -32,7 +34,9 @@ class MovingAverageThreshold:
 
         self._eta = eta
         self._history_size = history_size
-        self._history: Deque[float] = deque(maxlen=history_size)
+        self._max_runtime = max_runtime
+        self._history: deque[float] = deque(maxlen=history_size)
+        self._start_time = None
 
     @property
     def eta(self) -> float:
@@ -43,13 +47,23 @@ class MovingAverageThreshold:
         return self._history_size
 
     @property
-    def history(self) -> List[float]:
+    def max_runtime(self) -> float:
+        return self._max_runtime
+
+    @property
+    def history(self) -> list[float]:
         return list(self._history)
 
     def __call__(self, best, current, candidate) -> bool:
+        if self._start_time is None:
+            self._start_time = perf_counter()
+
         self._history.append(candidate)
         recent_best = min(self._history)
         recent_avg = mean(self._history)
 
-        threshold = recent_best + self._eta * (recent_avg - recent_best)
+        pct_time = (perf_counter() - self._start_time) / self.max_runtime
+        factor = max(self._eta * (1 - pct_time), 0.01)
+        threshold = recent_best + factor * (recent_avg - recent_best)
+
         return candidate <= threshold
