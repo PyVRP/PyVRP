@@ -317,7 +317,9 @@ class IteratedLocalSearch:
             )
             print_progress.iteration(stats)
 
-            if cand_cost < best_cost:
+            if not candidate.is_feasible():
+                continue  # skip infeasible solutiosn for now
+            elif cand_cost < best_cost:
                 best, current = candidate, candidate
             elif self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
