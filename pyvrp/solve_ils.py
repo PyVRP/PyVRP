@@ -11,7 +11,7 @@ from pyvrp.IteratedLocalSearch import (
 )
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
-from pyvrp.accept import RecordToRecord
+from pyvrp.accept.MovingAverageThreshold import MovingAverageThreshold
 from pyvrp.destroy.concentric import concentric
 from pyvrp.destroy.strings import SISR
 from pyvrp.search import (
@@ -167,8 +167,7 @@ def solve(
         penalty_params, initial_penalties=(VALUE, VALUE, VALUE)
     )
 
-    max_runtime = stop.criteria[0]._max_runtime  # noqa # type: ignore
-    accept = RecordToRecord(0.01, 0.00, max_runtime)  # type: ignore
+    accept = MovingAverageThreshold(0.1, 50)
 
     nbhd = compute_neighbours(data)
     destroy_ops = [SISR(), concentric]
