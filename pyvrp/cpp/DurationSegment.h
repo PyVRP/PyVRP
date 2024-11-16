@@ -10,7 +10,6 @@ namespace pyvrp
 /**
  * DurationSegment(
  *     duration: int,
- *     travel_duration: int,
  *     time_warp: int,
  *     tw_early: int,
  *     tw_late: int,
@@ -26,9 +25,7 @@ namespace pyvrp
  * Parameters
  * ----------
  * duration
- *     Total duration, including waiting and service time.
- * travel_duration
- *     Total travel duration.
+ *     Total duration, including waiting time.
  * time_warp
  *     Total time warp on the route segment.
  * tw_early
@@ -40,12 +37,11 @@ namespace pyvrp
  */
 class DurationSegment
 {
-    Duration duration_ = 0;        // Total, incl. waiting and servicing
-    Duration travelDuration_ = 0;  // Total travel duration
-    Duration timeWarp_ = 0;        // Cumulative time warp
-    Duration twEarly_ = 0;         // Earliest visit moment of first client
-    Duration twLate_ = 0;          // Latest visit moment of first client
-    Duration releaseTime_ = 0;     // Earliest allowed moment to leave the depot
+    Duration duration_ = 0;     // Total duration, incl. waiting and servicing
+    Duration timeWarp_ = 0;     // Cumulative time warp
+    Duration twEarly_ = 0;      // Earliest visit moment of first client
+    Duration twLate_ = 0;       // Latest visit moment of first client
+    Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
 
 public:
     [[nodiscard]] static inline DurationSegment
@@ -57,11 +53,6 @@ public:
      * The total duration of this route segment.
      */
     [[nodiscard]] inline Duration duration() const;
-
-    /**
-     * Total travel duration on this segment.
-     */
-    [[nodiscard]] inline Duration travelDuration() const;
 
     /**
      * Returns the time warp on this route segment. Additionally, any time warp
@@ -110,7 +101,6 @@ public:
 
     // Construct from raw data.
     inline DurationSegment(Duration duration,
-                           Duration travelDuration,
                            Duration timeWarp,
                            Duration twEarly,
                            Duration twLate,
@@ -156,7 +146,6 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
               : second.twLate_;
 
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
-            first.travelDuration_ + second.travelDuration_ + edgeDuration,
             first.timeWarp_ + second.timeWarp_ + diffTw,
             std::max(second.twEarly_ - atSecond, first.twEarly_) - diffWait,
             std::min(secondLate, first.twLate_) + diffTw,
@@ -165,8 +154,6 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 }
 
 Duration DurationSegment::duration() const { return duration_; }
-
-Duration DurationSegment::travelDuration() const { return travelDuration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
@@ -180,13 +167,11 @@ Duration DurationSegment::timeWarp(Duration const maxDuration) const
 }
 
 DurationSegment::DurationSegment(Duration duration,
-                                 Duration travelDuration,
                                  Duration timeWarp,
                                  Duration twEarly,
                                  Duration twLate,
                                  Duration releaseTime)
     : duration_(duration),
-      travelDuration_(travelDuration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),

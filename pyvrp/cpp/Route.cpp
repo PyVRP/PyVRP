@@ -35,6 +35,7 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
         ProblemData::Client const &clientData = data.location(client);
 
         distance_ += distances(prevClient, client);
+        travel_ += durations(prevClient, client);
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
@@ -59,6 +60,8 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
 
+    travel_ += durations(last, endDepot_);
+
     delivery_.reserve(data.numLoadDimensions());
     pickup_.reserve(data.numLoadDimensions());
     excessLoad_.reserve(data.numLoadDimensions());
@@ -74,7 +77,6 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     ds = DurationSegment::merge(durations(last, endDepot_), ds, endDS);
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-    travel_ = ds.travelDuration();
     startTime_ = ds.twEarly();
     slack_ = ds.twLate() - ds.twEarly();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
