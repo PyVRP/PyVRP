@@ -523,8 +523,8 @@ LoadSegment Route::Segment<depotStart, depotEnd>::load(size_t dimension) const
         // immediately determine the load as the difference between the start
         // and end loadBefore segments. Note that the [start, end] segment
         // includes the load of the starting location, so we need to be careful
-        // when determining startLoad here.
-        auto const &startLoad = start == 0 ? before[0] : before[start - 1];
+        // when determining startLoad here (start - 1 if start > 0).
+        auto const &startLoad = before[start - (start > 0)];
         auto const &endLoad = before[end];
 
         assert(startLoad.delivery() <= endLoad.delivery());
