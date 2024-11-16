@@ -9,8 +9,6 @@ namespace pyvrp
 {
 /**
  * DurationSegment(
- *     idx_first: int,
- *     idx_last: int,
  *     duration: int,
  *     time_warp: int,
  *     tw_early: int,
@@ -26,10 +24,6 @@ namespace pyvrp
  *
  * Parameters
  * ----------
- * idx_first
- *     Index of the first client in the route segment.
- * idx_last
- *     Index of the last client in the route segment.
  * duration
  *     Total duration, including waiting time.
  * time_warp
@@ -43,25 +37,17 @@ namespace pyvrp
  */
 class DurationSegment
 {
-    size_t idxFirst_;       // Index of the first client in the segment
-    size_t idxLast_;        // Index of the last client in the segment
-    Duration duration_;     // Total duration, incl. waiting and servicing
-    Duration timeWarp_;     // Cumulative time warp
-    Duration twEarly_;      // Earliest visit moment of first client
-    Duration twLate_;       // Latest visit moment of first client
-    Duration releaseTime_;  // Earliest allowed moment to leave the depot
-
-    [[nodiscard]] inline DurationSegment
-    merge(Matrix<Duration> const &durationMatrix,
-          DurationSegment const &other) const;
+    Duration duration_ = 0;     // Total duration, incl. waiting and servicing
+    Duration timeWarp_ = 0;     // Cumulative time warp
+    Duration twEarly_ = 0;      // Earliest visit moment of first client
+    Duration twLate_ = 0;       // Latest visit moment of first client
+    Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
 
 public:
-    template <typename... Args>
-    [[nodiscard]] static DurationSegment
-    merge(Matrix<Duration> const &durationMatrix,
+    [[nodiscard]] static inline DurationSegment
+    merge(Duration const edgeDuration,
           DurationSegment const &first,
-          DurationSegment const &second,
-          Args &&...args);
+          DurationSegment const &second);
 
     /**
      * The total duration of this route segment.
@@ -105,16 +91,16 @@ public:
      */
     [[nodiscard]] Duration releaseTime() const;
 
+    DurationSegment() = default;  // default is all zero
+
     // Construct from attributes of the given client.
-    DurationSegment(size_t idx, ProblemData::Client const &client);
+    DurationSegment(ProblemData::Client const &client);
 
     // Construct from attributes of the given vehicle type.
-    DurationSegment(size_t depot, ProblemData::VehicleType const &vehicleType);
+    DurationSegment(ProblemData::VehicleType const &vehicleType);
 
     // Construct from raw data.
-    inline DurationSegment(size_t idxFirst,
-                           size_t idxLast,
-                           Duration duration,
+    inline DurationSegment(Duration duration,
                            Duration timeWarp,
                            Duration twEarly,
                            Duration twLate,
@@ -129,57 +115,39 @@ public:
     inline DurationSegment &operator=(DurationSegment &&) = default;
 };
 
-DurationSegment DurationSegment::merge(Matrix<Duration> const &durationMatrix,
-                                       DurationSegment const &other) const
+DurationSegment
+DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
+                       [[maybe_unused]] DurationSegment const &first,
+                       [[maybe_unused]] DurationSegment const &second)
 {
     // Because clients' default time windows are [0, INT_MAX], the ternaries in
     // this method are carefully designed to avoid integer over- and underflow
     // issues. Be very careful when changing things here!
-    using Dur = pyvrp::Duration;
 
-    // edgeDuration is the travel duration from our last to the other's first
-    // client, and atOther the time (relative to our starting time) at which we
-    // arrive there.
-    Dur const edgeDuration = durationMatrix(idxLast_, other.idxFirst_);
-    Dur const atOther = duration_ - timeWarp_ + edgeDuration;
+    // atSecond is the time (relative to our starting time) at which we arrive
+    // at the second's initial location.
+    auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
 
-    // Time warp increases when we arrive at other after its time window closes.
-    Dur const diffTw = twEarly_ + atOther > other.twLate_
-                           ? twEarly_ + atOther - other.twLate_
-                           : 0;
+    // Time warp increases when we arrive after the time window closes.
+    auto const diffTw = first.twEarly_ + atSecond > second.twLate_
+                            ? first.twEarly_ + atSecond - second.twLate_
+                            : 0;
 
-    // Wait duration increases if we arrive there before its time window opens.
-    Dur const diffWait = other.twEarly_ - atOther > twLate_
-                             ? other.twEarly_ - atOther - twLate_
-                             : 0;
+    // Wait duration increases if we arrive before the time window opens.
+    auto const diffWait = second.twEarly_ - atSecond > first.twLate_
+                              ? second.twEarly_ - atSecond - first.twLate_
+                              : 0;
 
-    Dur const otherLate  // new twLate for the other segment
-        = atOther > other.twLate_ - std::numeric_limits<Dur>::max()
-              ? other.twLate_ - atOther
-              : other.twLate_;
+    auto const secondLate  // new twLate for the second segment
+        = atSecond > second.twLate_ - std::numeric_limits<Duration>::max()
+              ? second.twLate_ - atSecond
+              : second.twLate_;
 
-    return {idxFirst_,
-            other.idxLast_,
-            duration_ + other.duration_ + edgeDuration + diffWait,
-            timeWarp_ + other.timeWarp_ + diffTw,
-            std::max(other.twEarly_ - atOther, twEarly_) - diffWait,
-            std::min(otherLate, twLate_) + diffTw,
-            std::max(releaseTime_, other.releaseTime_)};
-}
-
-template <typename... Args>
-DurationSegment
-DurationSegment::merge([[maybe_unused]] Matrix<Duration> const &durationMatrix,
-                       [[maybe_unused]] DurationSegment const &first,
-                       [[maybe_unused]] DurationSegment const &second,
-                       [[maybe_unused]] Args &&...args)
-{
-    auto const res = first.merge(durationMatrix, second);
-
-    if constexpr (sizeof...(args) == 0)
-        return res;
-    else
-        return merge(durationMatrix, res, args...);
+    return {first.duration_ + second.duration_ + edgeDuration + diffWait,
+            first.timeWarp_ + second.timeWarp_ + diffTw,
+            std::max(second.twEarly_ - atSecond, first.twEarly_) - diffWait,
+            std::min(secondLate, first.twLate_) + diffTw,
+            std::max(first.releaseTime_, second.releaseTime_)};
 }
 
 Duration DurationSegment::duration() const { return duration_; }
@@ -195,16 +163,12 @@ Duration DurationSegment::timeWarp(Duration const maxDuration) const
                   : 0);
 }
 
-DurationSegment::DurationSegment(size_t idxFirst,
-                                 size_t idxLast,
-                                 Duration duration,
+DurationSegment::DurationSegment(Duration duration,
                                  Duration timeWarp,
                                  Duration twEarly,
                                  Duration twLate,
                                  Duration releaseTime)
-    : idxFirst_(idxFirst),
-      idxLast_(idxLast),
-      duration_(duration),
+    : duration_(duration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),

@@ -357,6 +357,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("node"),
              py::keep_alive<1, 3>(),  // keep node alive
              py::keep_alive<3, 1>())  // keep route alive
+        .def_static("swap", &Route::swap, py::arg("first"), py::arg("second"))
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))

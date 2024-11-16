@@ -318,49 +318,19 @@ class SubPopulationItem:
     def avg_distance_closest(self) -> float: ...
 
 class DistanceSegment:
-    def __init__(
-        self,
-        idx_first: int,
-        idx_last: int,
-        distance: int,
-    ) -> None: ...
-    @overload
+    def __init__(self, distance: int) -> None: ...
     @staticmethod
     def merge(
-        distance_matrix: np.ndarray[int],
+        edge_distance: int,
         first: DistanceSegment,
         second: DistanceSegment,
-    ) -> DistanceSegment: ...
-    @overload
-    @staticmethod
-    def merge(
-        distance_matrix: np.ndarray[int],
-        first: DistanceSegment,
-        second: DistanceSegment,
-        third: DistanceSegment,
     ) -> DistanceSegment: ...
     def distance(self) -> int: ...
 
 class LoadSegment:
-    def __init__(
-        self,
-        delivery: int,
-        pickup: int,
-        load: int,
-    ) -> None: ...
-    @overload
+    def __init__(self, delivery: int, pickup: int, load: int) -> None: ...
     @staticmethod
-    def merge(
-        first: LoadSegment,
-        second: LoadSegment,
-    ) -> LoadSegment: ...
-    @overload
-    @staticmethod
-    def merge(
-        first: LoadSegment,
-        second: LoadSegment,
-        third: LoadSegment,
-    ) -> LoadSegment: ...
+    def merge(first: LoadSegment, second: LoadSegment) -> LoadSegment: ...
     def delivery(self) -> int: ...
     def pickup(self) -> int: ...
     def load(self) -> int: ...
@@ -368,28 +338,17 @@ class LoadSegment:
 class DurationSegment:
     def __init__(
         self,
-        idx_first: int,
-        idx_last: int,
         duration: int,
         time_warp: int,
         tw_early: int,
         tw_late: int,
         release_time: int,
     ) -> None: ...
-    @overload
     @staticmethod
     def merge(
-        duration_matrix: np.ndarray[int],
+        edge_duration: int,
         first: DurationSegment,
         second: DurationSegment,
-    ) -> DurationSegment: ...
-    @overload
-    @staticmethod
-    def merge(
-        duration_matrix: np.ndarray[int],
-        first: DurationSegment,
-        second: DurationSegment,
-        third: DurationSegment,
     ) -> DurationSegment: ...
     def duration(self) -> int: ...
     def tw_early(self) -> int: ...
