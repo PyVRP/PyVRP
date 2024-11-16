@@ -516,6 +516,25 @@ LoadSegment Route::Segment<depotStart, depotEnd>::load(size_t dimension) const
     if constexpr (depotEnd)
         return route->loadAfter[dimension][start];
 
+    auto const &before = route->loadBefore[dimension];
+    if (before[end].delivery() == 0 || before[end].pickup() == 0)
+    {
+        // We can shortcut because this dimension is not mixed backhaul: we can
+        // immediately determine the load as the difference between the start
+        // and end loadBefore segments. Note that the [start, end] segment
+        // includes the load of the starting location, so we need to be careful
+        // when determining startLoad here.
+        auto const &startLoad = start == 0 ? before[0] : before[start - 1];
+        auto const &endLoad = before[end];
+
+        assert(startLoad.delivery() <= endLoad.delivery());
+        assert(startLoad.pickup() <= endLoad.pickup());
+        auto const delivery = endLoad.delivery() - startLoad.delivery();
+        auto const pickup = endLoad.pickup() - startLoad.pickup();
+
+        return {delivery, pickup, std::max(delivery, pickup)};
+    }
+
     auto const &loads = route->loadAt[dimension];
 
     auto loadSegment = loads[start];
