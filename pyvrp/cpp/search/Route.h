@@ -94,6 +94,16 @@ public:
          * it is in a route.
          */
         [[nodiscard]] inline bool isDepot() const;
+
+        /**
+         * Assigns the node to the given route, at the given index.
+         */
+        void assign(Route *route, size_t idx);
+
+        /**
+         * Removes the node from its assigned route, if any.
+         */
+        void unassign();
     };
 
 private:
