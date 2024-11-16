@@ -99,10 +99,6 @@ public:
 private:
     using LoadSegments = std::vector<LoadSegment>;
 
-    friend class SegmentAfter;
-    friend class SegmentBefore;
-    friend class SegmentBetween;
-
     /**
      * Class storing data related to the route segment starting at ``start``,
      * and ending at the depot (inclusive).
@@ -119,7 +115,7 @@ private:
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
+        inline LoadSegment const &load(size_t dimension) const;
     };
 
     /**
@@ -138,7 +134,7 @@ private:
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
+        inline LoadSegment const &load(size_t dimension) const;
     };
 
     /**
@@ -501,7 +497,7 @@ DurationSegment Route::SegmentAfter::duration(size_t profile) const
     return between.duration(profile);
 }
 
-LoadSegment Route::SegmentAfter::load(size_t dimension) const
+LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
 {
     return route.loadAfter[dimension][start];
 }
@@ -524,7 +520,7 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
     return between.duration(profile);
 }
 
-LoadSegment Route::SegmentBefore::load(size_t dimension) const
+LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 {
     return route.loadBefore[dimension][end];
 }
@@ -770,10 +766,10 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
-                self(self, args...);
+                self(self, std::forward<decltype(args)>(args)...);
         };
 
-        merge(merge, args...);
+        merge(merge, std::forward<decltype(args)>(args)...);
         return distSegment;
     };
 
@@ -799,10 +795,10 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
-                self(self, args...);
+                self(self, std::forward<decltype(args)>(args)...);
         };
 
-        merge(merge, args...);
+        merge(merge, std::forward<decltype(args)>(args)...);
         return durSegment;
     };
 
@@ -820,7 +816,7 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
         {
             segment = LoadSegment::merge(segment, other);
             if constexpr (sizeof...(args) != 0)
-                self(self, args...);
+                self(self, std::forward<decltype(args)>(args)...);
         };
 
         merge(merge, args.load(dimension)...);
