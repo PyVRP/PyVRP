@@ -491,18 +491,6 @@ Route::Segment<depotStart, depotEnd>::duration(size_t profile) const
 
         if constexpr (depotEnd)
             return route->durAfter[start];
-
-        auto durSegment = route->durAt[start];
-        for (size_t step = start; step != end; ++step)
-        {
-            auto const &durAt = route->durAt[step + 1];
-            auto const edgeDur = route->durBefore[step + 1].travelDuration()
-                                 - route->durBefore[step].travelDuration();
-
-            durSegment = DurationSegment::merge(edgeDur, durSegment, durAt);
-        }
-
-        return durSegment;
     }
 
     auto const &mat = route->data.durationMatrix(profile);
@@ -527,25 +515,6 @@ LoadSegment Route::Segment<depotStart, depotEnd>::load(size_t dimension) const
 
     if constexpr (depotEnd)
         return route->loadAfter[dimension][start];
-
-    auto const &before = route->loadBefore[dimension];
-    if (before[end].delivery() == 0 || before[end].pickup() == 0)
-    {
-        // We can shortcut because this dimension is not mixed backhaul: we can
-        // immediately determine the load as the difference between the start
-        // and end loadBefore segments. Note that the [start, end] segment
-        // includes the load of the starting location, so we need to be careful
-        // when determining startLoad here (start - 1 if start > 0).
-        auto const &startLoad = before[start - (start > 0)];
-        auto const &endLoad = before[end];
-
-        assert(startLoad.delivery() <= endLoad.delivery());
-        assert(startLoad.pickup() <= endLoad.pickup());
-        auto const delivery = endLoad.delivery() - startLoad.delivery();
-        auto const pickup = endLoad.pickup() - startLoad.pickup();
-
-        return {delivery, pickup, std::max(delivery, pickup)};
-    }
 
     auto const &loads = route->loadAt[dimension];
 

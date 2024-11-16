@@ -37,12 +37,12 @@ public:
      * Returns the delivery amount, that is, the total amount of load delivered
      * to clients on this segment.
      */
-    [[nodiscard]] inline Load delivery() const;
+    [[nodiscard]] Load delivery() const;
 
     /**
      * Returns the amount picked up from clients on this segment.
      */
-    [[nodiscard]] inline Load pickup() const;
+    [[nodiscard]] Load pickup() const;
 
     /**
      * Returns the maximum load encountered on this segment.
@@ -76,10 +76,6 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
         first.pickup_ + second.pickup_,
         std::max(first.load_ + second.delivery_, second.load_ + first.pickup_)};
 }
-
-Load LoadSegment::delivery() const { return delivery_; }
-
-Load LoadSegment::pickup() const { return pickup_; }
 
 Load LoadSegment::load() const { return load_; }
 
