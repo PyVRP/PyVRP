@@ -1,5 +1,3 @@
-import random
-
 from pyvrp._pyvrp import (
     CostEvaluator,
     ProblemData,
@@ -16,15 +14,31 @@ def concentric(
     rng: RandomNumberGenerator,
     neighbours: list[list[int]],
 ):
-    num_destroy = random.randint(10, 30)
+    """
+    Removes a number of clients that are closest to a randomly selected client.
 
-    # Find all client indices to skip
+    Parameters
+    ----------
+    data
+        The problem data.
+    solution
+        The solution to destroy.
+    cost_eval
+        The cost evaluator.
+    rng
+        The random number generator.
+    neighbours
+        The neighbourhood to use.
+    """
+    num_destroy = rng.randint(15) + 10
+
+    # Find all client indices to remove.
     client = rng.randint(data.num_clients) + 1
     closest = data.distance_matrix(0)[client].argsort().tolist()
     closest.remove(client)
     top_k = closest[:num_destroy]
 
-    # Rebuild the Solution but skip those clients
+    # Rebuild the Solution but remove selected clients.
     routes = []
     for route in solution.routes():
         if visits := [idx for idx in route.visits() if idx not in top_k]:
