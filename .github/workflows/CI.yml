@@ -1,16 +1,21 @@
-# name: CI
+name: CI
 
-# on:
-#   push:
-#     branches: [ main ]
-#   pull_request:
-#     branches: [ main ]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 # concurrency:
 #   group: ${{ github.workflow }}-${{ github.ref }}
 #   cancel-in-progress: true
 
-# jobs:
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+    - name: No operation
+
 #   build:
 #     name: >
 #       Build and test pyvrp using ${{ matrix.compiler }}
