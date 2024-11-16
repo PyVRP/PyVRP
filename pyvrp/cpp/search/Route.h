@@ -451,33 +451,32 @@ template <bool depotStart, bool depotEnd>
 DistanceSegment
 Route::Segment<depotStart, depotEnd>::distance(size_t profile) const
 {
-    if (profile != route->profile())  // then we have to compute the distance
-    {                                 // segment from scratch.
-        auto const &mat = route->data.distanceMatrix(profile);
-        DistanceSegment distSegment = {0};
+    if (profile == route->profile())
+    {
+        if constexpr (depotStart)
+            return route->distBefore[end];
 
-        for (size_t step = start; step != end; ++step)
-        {
-            auto const from = route->visits[step];
-            auto const to = route->visits[step + 1];
-            distSegment
-                = DistanceSegment::merge(mat(from, to), distSegment, {0});
-        }
+        if constexpr (depotEnd)
+            return route->distAfter[start];
 
-        return distSegment;
+        auto const &startDist = route->distBefore[start];
+        auto const &endDist = route->distBefore[end];
+
+        assert(startDist.distance() <= endDist.distance());
+        return {endDist.distance() - startDist.distance()};
     }
 
-    if constexpr (depotStart)
-        return route->distBefore[end];
+    auto const &mat = route->data.distanceMatrix(profile);
+    DistanceSegment distSegment = {0};
 
-    if constexpr (depotEnd)
-        return route->distAfter[start];
+    for (size_t step = start; step != end; ++step)
+    {
+        auto const from = route->visits[step];
+        auto const to = route->visits[step + 1];
+        distSegment = DistanceSegment::merge(mat(from, to), distSegment, {0});
+    }
 
-    auto const &startDist = route->distBefore[start];
-    auto const &endDist = route->distBefore[end];
-
-    assert(startDist.distance() <= endDist.distance());
-    return DistanceSegment(endDist.distance() - startDist.distance());
+    return distSegment;
 }
 
 template <bool depotStart, bool depotEnd>
