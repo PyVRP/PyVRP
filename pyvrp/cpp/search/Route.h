@@ -31,15 +31,6 @@ namespace pyvrp::search
  */
 class Route
 {
-    using LoadSegments = std::vector<LoadSegment>;
-
-    // These classes (defined further below) handle transparent access to the
-    // route's segment-specific concatenation schemes.
-    friend class SegmentAt;
-    friend class SegmentAfter;
-    friend class SegmentBefore;
-    friend class SegmentBetween;
-
 public:
     /**
      * A simple class that tracks a new proposed structure for a given route.
@@ -106,23 +97,11 @@ public:
     };
 
 private:
-    /**
-     * Class storing data related to the route location at ``idx``.
-     */
-    class SegmentAt
-    {
-        Route const &route;
-        size_t const idx;
+    using LoadSegments = std::vector<LoadSegment>;
 
-    public:
-        inline size_t first() const;  // client at idx
-        inline size_t last() const;   // client at idx
-
-        inline SegmentAt(Route const &route, size_t idx);
-        inline DistanceSegment distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
-        inline LoadSegment load(size_t dimension) const;
-    };
+    friend class SegmentAfter;
+    friend class SegmentBefore;
+    friend class SegmentBetween;
 
     /**
      * Class storing data related to the route segment starting at ``start``,
@@ -381,7 +360,7 @@ public:
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
-    [[nodiscard]] inline SegmentAt at(size_t idx) const;
+    [[nodiscard]] inline SegmentBetween at(size_t idx) const;
 
     /**
      * Returns an object that can be queried for data associated with the
@@ -484,12 +463,6 @@ bool Route::Node::isDepot() const
            && (this == &route_->startDepot_ || this == &route_->endDepot_);
 }
 
-Route::SegmentAt::SegmentAt(Route const &route, size_t idx)
-    : route(route), idx(idx)
-{
-    assert(idx < route.nodes.size());
-}
-
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route(route), start(start)
 {
@@ -508,23 +481,6 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
     : route(route), start(start), end(end)
 {
     assert(start <= end && end < route.nodes.size());
-}
-
-DistanceSegment
-Route::SegmentAt::distance([[maybe_unused]] size_t profile) const
-{
-    return {0};
-}
-
-DurationSegment
-Route::SegmentAt::duration([[maybe_unused]] size_t profile) const
-{
-    return route.durAt[idx];
-}
-
-LoadSegment Route::SegmentAt::load(size_t dimension) const
-{
-    return route.loadAt[dimension][idx];
 }
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
@@ -572,9 +528,6 @@ LoadSegment Route::SegmentBefore::load(size_t dimension) const
 {
     return route.loadBefore[dimension][end];
 }
-
-size_t Route::SegmentAt::first() const { return route.visits[idx]; }
-size_t Route::SegmentAt::last() const { return route.visits[idx]; }
 
 size_t Route::SegmentBefore::first() const { return route.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route.visits[end]; }
@@ -758,10 +711,10 @@ size_t Route::size() const
     return nodes.size() - 2;
 }
 
-Route::SegmentAt Route::at(size_t idx) const
+Route::SegmentBetween Route::at(size_t idx) const
 {
     assert(!dirty);
-    return {*this, idx};
+    return {*this, idx, idx};
 }
 
 Route::SegmentAfter Route::after(size_t start) const
