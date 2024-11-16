@@ -31,12 +31,6 @@ namespace pyvrp::search
  */
 class Route
 {
-    using LoadSegments = std::vector<LoadSegment>;
-
-    // This class (defined below) handles transparent access to the route's
-    // segment-specific concatenation schemes.
-    friend class Segment;
-
 public:
     /**
      * A simple class that tracks a new proposed structure for a given route.
@@ -103,13 +97,17 @@ public:
     };
 
 private:
+    using LoadSegments = std::vector<LoadSegment>;
+
+    friend class Segment;
+
     /**
      * Class storing data related to the route segment starting at ``start``,
      * and ending at ``end`` (inclusive).
      */
     template <bool depotStart = false, bool depotEnd = false> class Segment
     {
-        Route const *route;
+        Route const &route;
         size_t const start;
         size_t const end;
 
@@ -430,7 +428,7 @@ template <bool depotStart, bool depotEnd>
 Route::Segment<depotStart, depotEnd>::Segment(Route const &route,
                                               size_t start,
                                               size_t end)
-    : route(&route), start(start), end(end)
+    : route(route), start(start), end(end)
 {
     assert(start <= end && end < route.nodes.size());
 }
@@ -438,41 +436,41 @@ Route::Segment<depotStart, depotEnd>::Segment(Route const &route,
 template <bool depotStart, bool depotEnd>
 size_t Route::Segment<depotStart, depotEnd>::first() const
 {
-    return route->visits[start];
+    return route.visits[start];
 }
 
 template <bool depotStart, bool depotEnd>
 size_t Route::Segment<depotStart, depotEnd>::last() const
 {
-    return route->visits[end];
+    return route.visits[end];
 }
 
 template <bool depotStart, bool depotEnd>
 DistanceSegment
 Route::Segment<depotStart, depotEnd>::distance(size_t profile) const
 {
-    if (profile == route->profile())
+    if (profile == route.profile())
     {
         if constexpr (depotStart)
-            return route->distBefore[end];
+            return route.distBefore[end];
 
         if constexpr (depotEnd)
-            return route->distAfter[start];
+            return route.distAfter[start];
 
-        auto const &startDist = route->distBefore[start];
-        auto const &endDist = route->distBefore[end];
+        auto const &startDist = route.distBefore[start];
+        auto const &endDist = route.distBefore[end];
 
         assert(startDist.distance() <= endDist.distance());
         return {endDist.distance() - startDist.distance()};
     }
 
-    auto const &mat = route->data.distanceMatrix(profile);
+    auto const &mat = route.data.distanceMatrix(profile);
     DistanceSegment distSegment = {0};
 
     for (size_t step = start; step != end; ++step)
     {
-        auto const from = route->visits[step];
-        auto const to = route->visits[step + 1];
+        auto const from = route.visits[step];
+        auto const to = route.visits[step + 1];
         distSegment = DistanceSegment::merge(mat(from, to), distSegment, {0});
     }
 
@@ -483,23 +481,23 @@ template <bool depotStart, bool depotEnd>
 DurationSegment
 Route::Segment<depotStart, depotEnd>::duration(size_t profile) const
 {
-    if (profile == route->profile())
+    if (profile == route.profile())
     {
         if constexpr (depotStart)
-            return route->durBefore[end];
+            return route.durBefore[end];
 
         if constexpr (depotEnd)
-            return route->durAfter[start];
+            return route.durAfter[start];
     }
 
-    auto const &mat = route->data.durationMatrix(profile);
-    auto durSegment = route->durAt[start];
+    auto const &mat = route.data.durationMatrix(profile);
+    auto durSegment = route.durAt[start];
 
     for (size_t step = start; step != end; ++step)
     {
-        auto const from = route->visits[step];
-        auto const to = route->visits[step + 1];
-        auto const &durAt = route->durAt[step + 1];
+        auto const from = route.visits[step];
+        auto const to = route.visits[step + 1];
+        auto const &durAt = route.durAt[step + 1];
         durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
     }
 
@@ -510,12 +508,12 @@ template <bool depotStart, bool depotEnd>
 LoadSegment Route::Segment<depotStart, depotEnd>::load(size_t dimension) const
 {
     if constexpr (depotStart)
-        return route->loadBefore[dimension][end];
+        return route.loadBefore[dimension][end];
 
     if constexpr (depotEnd)
-        return route->loadAfter[dimension][start];
+        return route.loadAfter[dimension][start];
 
-    auto const &loads = route->loadAt[dimension];
+    auto const &loads = route.loadAt[dimension];
 
     auto loadSegment = loads[start];
     for (size_t step = start; step != end; ++step)
