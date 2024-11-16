@@ -479,7 +479,7 @@ def _idx_by_id(item: object, container: Sequence[object]) -> int | None:
     one intended. See #681 for a bug caused by this.
     """
     for idx, other in enumerate(container):
-        if id(item) == id(other):
+        if item is other:
             return idx
 
     return None

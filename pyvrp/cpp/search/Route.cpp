@@ -9,6 +9,19 @@ using pyvrp::search::Route;
 
 Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
+void Route::Node::assign(Route *route, size_t idx)
+{
+    assert(!route_);  // must not currently be assigned
+    idx_ = idx;
+    route_ = route;
+}
+
+void Route::Node::unassign()
+{
+    idx_ = 0;
+    route_ = nullptr;
+}
+
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
@@ -71,21 +84,15 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
-    for (auto *node : nodes)  // unassign all nodes from route.
-    {
-        node->idx_ = 0;
-        node->route_ = nullptr;
-    }
+    for (auto *node : nodes)
+        node->unassign();
 
     nodes.clear();  // clear nodes and reinsert the depots.
     nodes.push_back(&startDepot_);
     nodes.push_back(&endDepot_);
 
-    startDepot_.idx_ = 0;
-    startDepot_.route_ = this;
-
-    endDepot_.idx_ = 1;
-    endDepot_.route_ = this;
+    startDepot_.assign(this, 0);
+    endDepot_.assign(this, 1);
 
     update();
 }
@@ -93,10 +100,8 @@ void Route::clear()
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
-    assert(!node->route());  // must previously have been unassigned
 
-    node->idx_ = idx;
-    node->route_ = this;
+    node->assign(this, idx);
     nodes.insert(nodes.begin() + idx, node);
 
     for (size_t after = idx; after != nodes.size(); ++after)
@@ -121,11 +126,7 @@ void Route::remove(size_t idx)
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
-    auto *node = nodes[idx];
-
-    node->idx_ = 0;
-    node->route_ = nullptr;
-
+    nodes[idx]->unassign();
     nodes.erase(nodes.begin() + idx);
 
     for (auto after = idx; after != nodes.size(); ++after)
