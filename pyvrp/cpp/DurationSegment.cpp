@@ -23,6 +23,7 @@ Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
 DurationSegment::DurationSegment(ProblemData::Client const &client)
     : duration_(client.serviceDuration),
+      travelDuration_(0),
       timeWarp_(0),
       twEarly_(client.twEarly),
       twLate_(client.twLate),
@@ -32,6 +33,7 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 
 DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType)
     : duration_(0),
+      travelDuration_(0),
       timeWarp_(0),
       twEarly_(vehicleType.twEarly),
       twLate_(vehicleType.twLate),

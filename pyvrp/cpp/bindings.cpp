@@ -881,8 +881,10 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
+                      pyvrp::Duration,
                       pyvrp::Duration>(),
              py::arg("duration"),
+             py::arg("travel_duration"),
              py::arg("time_warp"),
              py::arg("tw_early"),
              py::arg("tw_late"),
@@ -890,6 +892,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("duration",
              &DurationSegment::duration,
              DOC(pyvrp, DurationSegment, duration))
+        .def("travel_duration",
+             &DurationSegment::travelDuration,
+             DOC(pyvrp, DurationSegment, travelDuration))
         .def("tw_early",
              &DurationSegment::twEarly,
              DOC(pyvrp, DurationSegment, twEarly))

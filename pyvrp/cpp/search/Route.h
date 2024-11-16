@@ -491,6 +491,18 @@ Route::Segment<depotStart, depotEnd>::duration(size_t profile) const
 
         if constexpr (depotEnd)
             return route->durAfter[start];
+
+        auto durSegment = route->durAt[start];
+        for (size_t step = start; step != end; ++step)
+        {
+            auto const &durAt = route->durAt[step + 1];
+            auto const edgeDur = route->durBefore[step + 1].travelDuration()
+                                 - route->durBefore[step].travelDuration();
+
+            durSegment = DurationSegment::merge(edgeDur, durSegment, durAt);
+        }
+
+        return durSegment;
     }
 
     auto const &mat = route->data.durationMatrix(profile);
