@@ -63,10 +63,7 @@ std::pair<double, double> const &Route::centroid() const
 size_t Route::vehicleType() const
 {
     auto const &vehicleTypes = data.vehicleTypes();
-    auto const idx = &vehicleType_ - &vehicleTypes[0];
-
-    assert(idx >= 0 && size_t(idx) < data.numVehicleTypes());
-    return idx;
+    return std::distance(&vehicleTypes[0], &vehicleType_);
 }
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
