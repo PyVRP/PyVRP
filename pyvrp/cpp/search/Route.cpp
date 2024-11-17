@@ -178,17 +178,10 @@ void Route::update()
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
 
-    distBefore.resize(nodes.size());
-    distBefore[0] = {0};
+    cumDist.resize(nodes.size());
+    cumDist[0] = 0;
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        distBefore[idx] = DistanceSegment::merge(
-            distMat(visits[idx - 1], visits[idx]), distBefore[idx - 1], {0});
-
-    distAfter.resize(nodes.size());
-    distAfter[nodes.size() - 1] = {0};
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-        distAfter[idx - 1] = DistanceSegment::merge(
-            distMat(visits[idx - 1], visits[idx]), {0}, distAfter[idx]);
+        cumDist[idx] = cumDist[idx - 1] + distMat(visits[idx - 1], visits[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
