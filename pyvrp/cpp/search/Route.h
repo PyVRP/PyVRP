@@ -486,6 +486,9 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
 {
+    if (profile == route.profile())
+        return {route.cumDist.back() - route.cumDist[start]};
+
     auto const between = SegmentBetween(route, start, route.size() + 1);
     return between.distance(profile);
 }
