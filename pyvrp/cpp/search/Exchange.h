@@ -60,7 +60,7 @@ bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
     // size() is the position of the last client in the route. So the segment
     // must include the depot if idx + move length - 1 (-1 since we're also
     // moving the node *at* idx) is larger than size().
-    return node->isDepot()
+    return node->idx() == 0
            || (node->idx() + segLength - 1 > node->route()->size());
 }
 
