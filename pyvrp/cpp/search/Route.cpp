@@ -25,7 +25,6 @@ void Route::Node::unassign()
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
-      vehTypeIdx_(vehicleType),
       idx_(idx),
       startDepot_(vehicleType_.startDepot),
       endDepot_(vehicleType_.endDepot),
@@ -61,7 +60,11 @@ std::pair<double, double> const &Route::centroid() const
     return centroid_;
 }
 
-size_t Route::vehicleType() const { return vehTypeIdx_; }
+size_t Route::vehicleType() const
+{
+    auto const &vehicleTypes = data.vehicleTypes();
+    return std::distance(&vehicleTypes[0], &vehicleType_);
+}
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {

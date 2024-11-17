@@ -169,19 +169,15 @@ private:
 
     ProblemData const &data;
 
-    // Cache the vehicle type object here. Since the vehicle type's properties
-    // are called quite often, it's much better to have this object readily
-    // available, rather than take it by reference.
-    ProblemData::VehicleType const vehicleType_;
-    size_t const vehTypeIdx_;
+    ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
+
+    Node startDepot_;  // Departure depot for this route
+    Node endDepot_;    // Return depot for this route
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
     std::pair<double, double> centroid_;  // Center point of route's clients
-
-    Node startDepot_;  // Departure depot for this route
-    Node endDepot_;    // Return depot for this route
 
     std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
     std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
