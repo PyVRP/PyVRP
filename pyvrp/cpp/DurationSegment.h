@@ -97,11 +97,10 @@ public:
     DurationSegment(ProblemData::Client const &client);
 
     /**
-     * Construct from attributes of the given vehicle type, depending on
-     * whether the segment belongs to the start or end depot.
+     * Construct from attributes of the given vehicle type and latest finish.
      */
     DurationSegment(ProblemData::VehicleType const &vehicleType,
-                    bool const isStartSegment);
+                    Duration const twLate);
 
     // Construct from raw data.
     inline DurationSegment(Duration duration,

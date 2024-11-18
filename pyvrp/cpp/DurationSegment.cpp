@@ -31,11 +31,11 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 }
 
 DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
-                                 bool const isStartSegment)
+                                 Duration const twLate)
     : duration_(0),
       timeWarp_(0),
       twEarly_(vehicleType.twEarly),
-      twLate_(isStartSegment ? vehicleType.startLate : vehicleType.twLate),
+      twLate_(twLate),
       releaseTime_(0)
 {
 }
