@@ -9,10 +9,22 @@ using pyvrp::search::Route;
 
 Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
 
+void Route::Node::assign(Route *route, size_t idx)
+{
+    assert(!route_);  // must not currently be assigned
+    idx_ = idx;
+    route_ = route;
+}
+
+void Route::Node::unassign()
+{
+    idx_ = 0;
+    route_ = nullptr;
+}
+
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
-      vehTypeIdx_(vehicleType),
       idx_(idx),
       startDepot_(vehicleType_.startDepot),
       endDepot_(vehicleType_.endDepot),
@@ -48,7 +60,11 @@ std::pair<double, double> const &Route::centroid() const
     return centroid_;
 }
 
-size_t Route::vehicleType() const { return vehTypeIdx_; }
+size_t Route::vehicleType() const
+{
+    auto const &vehicleTypes = data.vehicleTypes();
+    return std::distance(&vehicleTypes[0], &vehicleType_);
+}
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
@@ -71,21 +87,15 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
-    for (auto *node : nodes)  // unassign all nodes from route.
-    {
-        node->idx_ = 0;
-        node->route_ = nullptr;
-    }
+    for (auto *node : nodes)
+        node->unassign();
 
     nodes.clear();  // clear nodes and reinsert the depots.
     nodes.push_back(&startDepot_);
     nodes.push_back(&endDepot_);
 
-    startDepot_.idx_ = 0;
-    startDepot_.route_ = this;
-
-    endDepot_.idx_ = 1;
-    endDepot_.route_ = this;
+    startDepot_.assign(this, 0);
+    endDepot_.assign(this, 1);
 
     update();
 }
@@ -93,10 +103,8 @@ void Route::clear()
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
-    assert(!node->route());  // must previously have been unassigned
 
-    node->idx_ = idx;
-    node->route_ = this;
+    node->assign(this, idx);
     nodes.insert(nodes.begin() + idx, node);
 
     for (size_t after = idx; after != nodes.size(); ++after)
@@ -121,11 +129,7 @@ void Route::remove(size_t idx)
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
-    auto *node = nodes[idx];
-
-    node->idx_ = 0;
-    node->route_ = nullptr;
-
+    nodes[idx]->unassign();
     nodes.erase(nodes.begin() + idx);
 
     for (auto after = idx; after != nodes.size(); ++after)
@@ -174,17 +178,10 @@ void Route::update()
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
 
-    distBefore.resize(nodes.size());
-    distBefore[0] = {0};
+    cumDist.resize(nodes.size());
+    cumDist[0] = 0;
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        distBefore[idx] = DistanceSegment::merge(
-            distMat(visits[idx - 1], visits[idx]), distBefore[idx - 1], {0});
-
-    distAfter.resize(nodes.size());
-    distAfter[nodes.size() - 1] = {0};
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-        distAfter[idx - 1] = DistanceSegment::merge(
-            distMat(visits[idx - 1], visits[idx]), {0}, distAfter[idx]);
+        cumDist[idx] = cumDist[idx - 1] + distMat(visits[idx - 1], visits[idx]);
 
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
