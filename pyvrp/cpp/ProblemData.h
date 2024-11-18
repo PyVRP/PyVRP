@@ -316,7 +316,7 @@ public:
      *     end_depot: int = 0,
      *     fixed_cost: int = 0,
      *     tw_early: int = 0,
-     *     start_late: int = np.iinfo(np.int64).max,
+     *     start_late: int | None = None,
      *     tw_late: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
@@ -349,8 +349,7 @@ public:
      * tw_early
      *     Earliest start of the vehicle type's shift. Default 0.
      * start_late
-     *     Latest start of the vehicle type's shift. Unconstrained if not
-     *     provided.
+     *     Latest start of the vehicle type's shift. Default None.
      * tw_late
      *     Latest finish of the vehicle type's shift. Unconstrained if not
      *     provided.
@@ -384,7 +383,8 @@ public:
      * tw_early
      *     Earliest start of the vehicle type's shift, if specified.
      * start_late
-     *     Latest start of the vehicle type's shift, if specified.
+     *     Latest start of the vehicle type's shift. Equal to tw_late, if not
+     *     specified.
      * tw_late
      *     Latest finish of the vehicle type's shift, if specified.
      * max_duration
@@ -426,7 +426,7 @@ public:
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
                     Duration twEarly = 0,
-                    Duration startLate = std::numeric_limits<Duration>::max(),
+                    std::optional<Duration> startLate = std::nullopt,
                     Duration twLate = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),

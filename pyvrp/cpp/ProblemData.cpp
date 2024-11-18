@@ -206,7 +206,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       size_t endDepot,
                                       Cost fixedCost,
                                       Duration twEarly,
-                                      Duration startLate,
+                                      std::optional<Duration> startLate,
                                       Duration twLate,
                                       Duration maxDuration,
                                       Distance maxDistance,
@@ -219,7 +219,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       endDepot(endDepot),
       capacity(capacity),
       twEarly(twEarly),
-      startLate(startLate),
+      startLate(startLate.value_or(twLate)),
       twLate(twLate),
       maxDuration(maxDuration),
       maxDistance(maxDistance),
@@ -237,7 +237,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     // Note that startLate <= twLate is not required, so a route can start
     // after its latest finish time (but this will result in time warp).
-    if (twEarly > startLate)
+    if (twEarly > this->startLate)
         throw std::invalid_argument("tw_early must be <= start_late.");
 
     if (twEarly > twLate)

@@ -210,7 +210,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Cost,
                       pyvrp::Duration,
-                      pyvrp::Duration,
+                      std::optional<pyvrp::Duration>,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Distance,
@@ -224,8 +224,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("end_depot") = 0,
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = 0,
-             py::arg("start_late")
-             = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("start_late") = py::none(),
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),

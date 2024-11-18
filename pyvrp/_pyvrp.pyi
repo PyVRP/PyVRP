@@ -120,7 +120,7 @@ class VehicleType:
         end_depot: int = 0,
         fixed_cost: int = 0,
         tw_early: int = 0,
-        start_late: int = ...,
+        start_late: int | None = None,
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
