@@ -205,9 +205,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       size_t startDepot,
                                       size_t endDepot,
                                       Cost fixedCost,
-                                      Duration earliestStart,
-                                      Duration latestStart,
-                                      Duration latestFinish,
+                                      Duration twEarly,
+                                      Duration startLate,
+                                      Duration twLate,
                                       Duration maxDuration,
                                       Distance maxDistance,
                                       Cost unitDistanceCost,
@@ -218,9 +218,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       startDepot(startDepot),
       endDepot(endDepot),
       capacity(capacity),
-      earliestStart(earliestStart),
-      latestStart(latestStart),
-      latestFinish(latestFinish),
+      twEarly(twEarly),
+      startLate(startLate),
+      twLate(twLate),
       maxDuration(maxDuration),
       maxDistance(maxDistance),
       fixedCost(fixedCost),
@@ -235,16 +235,16 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (std::any_of(capacity.begin(), capacity.end(), isNegative<Load>))
         throw std::invalid_argument("capacity amounts must be >= 0.");
 
-    // Note that latestStart <= latestFinish is not required, so a route can
-    // start after its latest finish time (but this will result in time warp).
-    if (earliestStart > latestStart)
-        throw std::invalid_argument("earliest_start must be <= latest_start.");
+    // Note that startLate <= twLate is not required, so a route can start
+    // after its latest finish time (but this will result in time warp).
+    if (twEarly > startLate)
+        throw std::invalid_argument("tw_early must be <= start_late.");
 
-    if (earliestStart > latestFinish)
-        throw std::invalid_argument("earliest_start must be <= latest_finish.");
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
 
-    if (earliestStart < 0)
-        throw std::invalid_argument("earliest_start must be >= 0.");
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
 
     if (maxDuration < 0)
         throw std::invalid_argument("max_duration must be >= 0.");
@@ -267,9 +267,9 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       startDepot(vehicleType.startDepot),
       endDepot(vehicleType.endDepot),
       capacity(vehicleType.capacity),
-      earliestStart(vehicleType.earliestStart),
-      latestStart(vehicleType.latestStart),
-      latestFinish(vehicleType.latestFinish),
+      twEarly(vehicleType.twEarly),
+      startLate(vehicleType.startLate),
+      twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
       fixedCost(vehicleType.fixedCost),
@@ -285,9 +285,9 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       startDepot(vehicleType.startDepot),
       endDepot(vehicleType.endDepot),
       capacity(vehicleType.capacity),
-      earliestStart(vehicleType.earliestStart),
-      latestStart(vehicleType.latestStart),
-      latestFinish(vehicleType.latestFinish),
+      twEarly(vehicleType.twEarly),
+      startLate(vehicleType.startLate),
+      twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
       maxDistance(vehicleType.maxDistance),
       fixedCost(vehicleType.fixedCost),
@@ -307,9 +307,9 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
                                   std::optional<size_t> startDepot,
                                   std::optional<size_t> endDepot,
                                   std::optional<Cost> fixedCost,
-                                  std::optional<Duration> earliestStart,
-                                  std::optional<Duration> latestStart,
-                                  std::optional<Duration> latestFinish,
+                                  std::optional<Duration> twEarly,
+                                  std::optional<Duration> startLate,
+                                  std::optional<Duration> twLate,
                                   std::optional<Duration> maxDuration,
                                   std::optional<Distance> maxDistance,
                                   std::optional<Cost> unitDistanceCost,
@@ -322,9 +322,9 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             startDepot.value_or(this->startDepot),
             endDepot.value_or(this->endDepot),
             fixedCost.value_or(this->fixedCost),
-            earliestStart.value_or(this->earliestStart),
-            latestStart.value_or(this->latestStart),
-            latestFinish.value_or(this->latestFinish),
+            twEarly.value_or(this->twEarly),
+            startLate.value_or(this->startLate),
+            twLate.value_or(this->twLate),
             maxDuration.value_or(this->maxDuration),
             maxDistance.value_or(this->maxDistance),
             unitDistanceCost.value_or(this->unitDistanceCost),
@@ -341,9 +341,9 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && startDepot == other.startDepot
         && endDepot == other.endDepot
         && fixedCost == other.fixedCost
-        && earliestStart == other.earliestStart
-        && latestStart == other.latestStart
-        && latestFinish == other.latestFinish
+        && twEarly == other.twEarly
+        && startLate == other.startLate
+        && twLate == other.twLate
         && maxDuration == other.maxDuration
         && maxDistance == other.maxDistance
         && unitDistanceCost == other.unitDistanceCost

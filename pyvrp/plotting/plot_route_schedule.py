@@ -47,7 +47,7 @@ def plot_route_schedule(
     vehicle_type = data.vehicle_type(route.vehicle_type())
     distances = data.distance_matrix(vehicle_type.profile)
     durations = data.duration_matrix(vehicle_type.profile)
-    horizon = vehicle_type.latest_finish - vehicle_type.earliest_start
+    horizon = vehicle_type.tw_late - vehicle_type.tw_early
 
     track_load = load_dimension < data.num_load_dimensions
 
@@ -87,8 +87,8 @@ def plot_route_schedule(
             tw_early = stop.tw_early
             tw_late = stop.tw_late
         else:
-            tw_early = vehicle_type.earliest_start
-            tw_late = vehicle_type.latest_finish
+            tw_early = vehicle_type.tw_early
+            tw_late = vehicle_type.tw_late
 
         delta_time = durations[prev_idx, idx]
         delta_dist = distances[prev_idx, idx]
@@ -150,8 +150,8 @@ def plot_route_schedule(
     )
     ax.add_collection(lc_timewarps)
     ax.set_ylim(
-        bottom=vehicle_type.earliest_start,
-        top=max(vehicle_type.latest_finish, max(t for _, t in trace_time)),
+        bottom=vehicle_type.tw_early,
+        top=max(vehicle_type.tw_late, max(t for _, t in trace_time)),
     )
 
     # Plot remaining load on second axis

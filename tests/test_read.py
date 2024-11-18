@@ -112,9 +112,9 @@ def test_reading_OkSmall_instance():
     # TIME_WINDOW_SECTION of the file. Vehicle latest start is not supported in
     # the VRPLIB format, so it is set to the depot's latest finish.
     vehicle_type = data.vehicle_type(0)
-    assert_equal(vehicle_type.earliest_start, expected[0][0])
-    assert_equal(vehicle_type.latest_start, expected[0][1])
-    assert_equal(vehicle_type.latest_finish, expected[0][1])
+    assert_equal(vehicle_type.tw_early, expected[0][0])
+    assert_equal(vehicle_type.start_late, expected[0][1])
+    assert_equal(vehicle_type.tw_late, expected[0][1])
 
     # From the SERVICE_TIME_SECTION in the file
     expected = [0, 360, 360, 420, 360]
@@ -257,9 +257,9 @@ def test_multiple_depots():
     assert_equal(veh_type1.start_depot, 0)
     assert_equal(veh_type1.end_depot, 0)
     assert_equal(veh_type1.num_available, 2)
-    assert_equal(veh_type1.earliest_start, 0)
-    assert_equal(veh_type1.latest_start, 45_000)
-    assert_equal(veh_type1.latest_finish, 45_000)
+    assert_equal(veh_type1.tw_early, 0)
+    assert_equal(veh_type1.start_late, 45_000)
+    assert_equal(veh_type1.tw_late, 45_000)
 
     # Second vehicle type should have one vehicle at the second depot. The
     # vehicle should have a tighter time window than that associated with the
@@ -269,9 +269,9 @@ def test_multiple_depots():
     assert_equal(veh_type2.start_depot, 1)
     assert_equal(veh_type2.end_depot, 1)
     assert_equal(veh_type2.num_available, 1)
-    assert_equal(veh_type2.earliest_start, 5_000)
-    assert_equal(veh_type2.latest_start, 20_000)
-    assert_equal(veh_type2.latest_finish, 20_000)
+    assert_equal(veh_type2.tw_early, 5_000)
+    assert_equal(veh_type2.start_late, 20_000)
+    assert_equal(veh_type2.tw_late, 20_000)
 
     depot1, depot2 = data.depots()
 

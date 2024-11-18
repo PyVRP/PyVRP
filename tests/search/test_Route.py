@@ -326,7 +326,7 @@ def test_route_duration_access(ok_small):
     route. The start depot's segment differs from the end depot's segment due
     to different latest start and latest finish on the vehicle type.
     """
-    vehicle_type = ok_small.vehicle_type(0).replace(latest_start=10_000)
+    vehicle_type = ok_small.vehicle_type(0).replace(start_late=10_000)
     ok_small = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(ok_small, idx=0, vehicle_type=0)
@@ -341,12 +341,12 @@ def test_route_duration_access(ok_small):
         assert_equal(ds.time_warp(), 0)
 
         if idx == 0:  # start depot
-            assert_equal(ds.tw_early(), vehicle_type.earliest_start)
-            assert_equal(ds.tw_late(), vehicle_type.latest_start)
+            assert_equal(ds.tw_early(), vehicle_type.tw_early)
+            assert_equal(ds.tw_late(), vehicle_type.start_late)
             assert_equal(ds.duration(), 0)
         elif idx == len(route) + 1:  # end depot
-            assert_equal(ds.tw_early(), vehicle_type.earliest_start)
-            assert_equal(ds.tw_late(), vehicle_type.latest_finish)
+            assert_equal(ds.tw_early(), vehicle_type.tw_early)
+            assert_equal(ds.tw_late(), vehicle_type.tw_late)
             assert_equal(ds.duration(), 0)
         else:
             assert_equal(ds.tw_early(), loc.tw_early)
@@ -355,7 +355,7 @@ def test_route_duration_access(ok_small):
 
 
 @pytest.mark.parametrize(
-    ("latest_start", "expected"),
+    ("start_late", "expected"),
     [
         (100_000, 3_630),  # large enough, so duration without wait time
         (14_056, 3_630),  # minimum latest start without wait time
@@ -364,12 +364,12 @@ def test_route_duration_access(ok_small):
         (0, 17_686),  # the wait time scales linearly
     ],
 )
-def test_latest_start(ok_small: ProblemData, latest_start: int, expected: int):
+def test_latest_start(ok_small: ProblemData, start_late: int, expected: int):
     """
-    Tests that the latest start attribute of vehicle types is reflected in the
+    Tests that the start late attribute of vehicle types is reflected in the
     route's duration calculations.
     """
-    vehicle_type = VehicleType(1, capacity=[10], latest_start=latest_start)
+    vehicle_type = VehicleType(1, capacity=[10], start_late=start_late)
     ok_small = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(ok_small, idx=0, vehicle_type=0)
@@ -379,7 +379,7 @@ def test_latest_start(ok_small: ProblemData, latest_start: int, expected: int):
     assert_equal(route.duration(), expected)
     # Starting the route before 14'056 results in wait time, so tw_early should
     # be this start time if this does not exceed the latest start of the route.
-    assert_equal(route.duration_after(0).tw_early(), min(latest_start, 14_056))
+    assert_equal(route.duration_after(0).tw_early(), min(start_late, 14_056))
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])

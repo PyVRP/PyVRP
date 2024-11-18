@@ -102,9 +102,9 @@ class VehicleType:
     start_depot: int
     end_depot: int
     capacity: list[int]
-    earliest_start: int
-    latest_start: int
-    latest_finish: int
+    tw_early: int
+    start_late: int
+    tw_late: int
     max_duration: int
     max_distance: int
     fixed_cost: int
@@ -119,9 +119,9 @@ class VehicleType:
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: int = 0,
-        earliest_start: int = 0,
-        latest_start: int = ...,
-        latest_finish: int = ...,
+        tw_early: int = 0,
+        start_late: int = ...,
+        tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
         unit_distance_cost: int = 1,
@@ -137,9 +137,9 @@ class VehicleType:
         start_depot: int | None = None,
         end_depot: int | None = None,
         fixed_cost: int | None = None,
-        earliest_start: int | None = None,
-        latest_start: int | None = None,
-        latest_finish: int | None = None,
+        tw_early: int | None = None,
+        start_late: int | None = None,
+        tw_late: int | None = None,
         max_duration: int | None = None,
         max_distance: int | None = None,
         unit_distance_cost: int | None = None,

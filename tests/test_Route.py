@@ -282,7 +282,7 @@ def test_route_can_be_pickled(rc208):
 
 
 @pytest.mark.parametrize(
-    ("earliest_start", "latest_start", "latest_finish", "expected"),
+    ("tw_early", "start_late", "tw_late", "expected"),
     [
         (0, 0, 0, 20_277),  # cannot be back at the depot before 20'277
         (0, 10_000, 20_000, 277),  # larger shift window decreases time warp
@@ -294,9 +294,9 @@ def test_route_can_be_pickled(rc208):
 )
 def test_route_shift_duration(
     ok_small,
-    earliest_start: int,
-    latest_start: int,
-    latest_finish: int,
+    tw_early: int,
+    start_late: int,
+    tw_late: int,
     expected: int,
 ):
     """
@@ -308,9 +308,9 @@ def test_route_shift_duration(
             VehicleType(
                 2,
                 capacity=[10],
-                earliest_start=earliest_start,
-                latest_start=latest_start,
-                latest_finish=latest_finish,
+                tw_early=tw_early,
+                start_late=start_late,
+                tw_late=tw_late,
             )
         ]
     )

@@ -34,9 +34,8 @@ DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
                                  bool const isStartSegment)
     : duration_(0),
       timeWarp_(0),
-      twEarly_(vehicleType.earliestStart),
-      twLate_(isStartSegment ? vehicleType.latestStart
-                             : vehicleType.latestFinish),
+      twEarly_(vehicleType.twEarly),
+      twLate_(isStartSegment ? vehicleType.startLate : vehicleType.twLate),
       releaseTime_(0)
 {
 }

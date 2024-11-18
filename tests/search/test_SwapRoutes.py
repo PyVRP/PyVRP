@@ -173,15 +173,15 @@ def test_evaluate_shift_time_window_differences(ok_small):
         vehicle_types=[
             VehicleType(
                 capacity=[10],
-                earliest_start=10_000,
-                latest_start=15_000,
-                latest_finish=15_000,
+                tw_early=10_000,
+                start_late=15_000,
+                tw_late=15_000,
             ),
             VehicleType(
                 capacity=[10],
-                earliest_start=15_000,
-                latest_start=20_000,
-                latest_finish=20_000,
+                tw_early=15_000,
+                start_late=20_000,
+                tw_late=20_000,
             ),
         ]
     )
@@ -217,16 +217,16 @@ def test_evaluate_shift_latest_start_differences(ok_small):
         vehicle_types=[
             VehicleType(
                 capacity=[10],
-                earliest_start=10_000,
-                latest_start=14_000,
-                latest_finish=14_000,
+                tw_early=10_000,
+                start_late=14_000,
+                tw_late=14_000,
                 unit_duration_cost=1,
             ),
             VehicleType(
                 capacity=[10],
-                earliest_start=10_000,
-                latest_start=20_000,
-                latest_finish=14_000,
+                tw_early=10_000,
+                start_late=20_000,
+                tw_late=14_000,
                 unit_duration_cost=1,
             ),
         ]
