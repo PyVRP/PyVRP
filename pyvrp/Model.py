@@ -317,7 +317,7 @@ class Model:
         end_depot: Depot | None = None,
         fixed_cost: int = 0,
         tw_early: int = 0,
-        start_late: int = np.iinfo(np.int64).max,
+        start_late: int | None = None,
         tw_late: int = np.iinfo(np.int64).max,
         max_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,

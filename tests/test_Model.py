@@ -298,7 +298,6 @@ def test_model_and_solve(ok_small):
         num_available=3,
         capacity=10,
         tw_early=0,
-        start_late=45000,
         tw_late=45000,
     )
 
