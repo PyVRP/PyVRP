@@ -395,7 +395,7 @@
       "id": "FyKvuky1CeypA0ZC4kwBt",
       "type": "line",
       "x": 970.0001220703125,
-      "y": 559.3628029758959,
+      "y": 543.5431947962318,
       "width": 578.6666259765625,
       "height": 56.65099703542506,
       "angle": 0,
@@ -423,19 +423,19 @@
       "points": [
         [
           0,
-          -15.819608179664051
+          0
         ],
         [
           72.6663818359375,
-          -72.47060521508911
+          -56.65099703542506
         ],
         [
           513.9998779296875,
-          -72.32006148354301
+          -56.50045330387896
         ],
         [
           578.6666259765625,
-          -18.362802975906384
+          -2.5431947962423322
         ]
       ],
       "lastCommittedPoint": null,
@@ -447,9 +447,9 @@
     {
       "id": "Va-L5mbCKfLiGuH7pzcLn",
       "type": "text",
-      "x": 1002.66650390625,
-      "y": 447.6667175292969,
-      "width": 502.3597106933594,
+      "x": 1059.9998779296875,
+      "y": 450.3333435058594,
+      "width": 385.93975830078125,
       "height": 25,
       "angle": 0,
       "strokeColor": "#e03131",
@@ -464,20 +464,20 @@
       "index": "b3Y",
       "roundness": null,
       "seed": 1994569120,
-      "version": 425,
-      "versionNonce": 49570639,
+      "version": 487,
+      "versionNonce": 1563255190,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1732035971511,
+      "updated": 1732036817540,
       "link": null,
       "locked": false,
-      "text": "The vehicle shift takes at most max_duration time",
+      "text": "Shift takes at most max_duration time",
       "fontSize": 20,
       "fontFamily": 5,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "The vehicle shift takes at most max_duration time",
+      "originalText": "Shift takes at most max_duration time",
       "autoResize": true,
       "lineHeight": 1.25
     },
