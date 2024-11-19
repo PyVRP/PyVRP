@@ -169,22 +169,17 @@ private:
 
     ProblemData const &data;
 
-    // Cache the vehicle type object here. Since the vehicle type's properties
-    // are called quite often, it's much better to have this object readily
-    // available, rather than take it by reference.
-    ProblemData::VehicleType const vehicleType_;
-    size_t const vehTypeIdx_;
+    ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
+
+    Node startDepot_;  // Departure depot for this route
+    Node endDepot_;    // Return depot for this route
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
     std::pair<double, double> centroid_;  // Center point of route's clients
 
-    Node startDepot_;  // Departure depot for this route
-    Node endDepot_;    // Return depot for this route
-
-    std::vector<DistanceSegment> distBefore;  // Dist of depot -> client (incl.)
-    std::vector<DistanceSegment> distAfter;   // Dist of client -> depot (incl.)
+    std::vector<Distance> cumDist;  // Dist of depot -> client (incl.)
 
     // Load data, for each load dimension. These vectors form matrices, where
     // the rows index the load dimension, and the columns the nodes.
@@ -492,7 +487,7 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
 {
     if (profile == route.profile())
-        return route.distAfter[start];
+        return {route.cumDist.back() - route.cumDist[start]};
 
     auto const between = SegmentBetween(route, start, route.size() + 1);
     return between.distance(profile);
@@ -515,7 +510,7 @@ LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
 DistanceSegment Route::SegmentBefore::distance(size_t profile) const
 {
     if (profile == route.profile())
-        return route.distBefore[end];
+        return {route.cumDist[end]};
 
     auto const between = SegmentBetween(route, 0, end);
     return between.distance(profile);
@@ -562,11 +557,11 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
         return distSegment;
     }
 
-    auto const &startDist = route.distBefore[start];
-    auto const &endDist = route.distBefore[end];
+    auto const startDist = route.cumDist[start];
+    auto const endDist = route.cumDist[end];
 
-    assert(startDist.distance() <= endDist.distance());
-    return DistanceSegment(endDist.distance() - startDist.distance());
+    assert(startDist <= endDist);
+    return {endDist - startDist};
 }
 
 DurationSegment Route::SegmentBetween::duration(size_t profile) const
@@ -672,7 +667,7 @@ Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 Distance Route::distance() const
 {
     assert(!dirty);
-    return distBefore.back().distance();
+    return cumDist.back();
 }
 
 Cost Route::distanceCost() const
