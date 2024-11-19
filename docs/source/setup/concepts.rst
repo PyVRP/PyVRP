@@ -8,6 +8,8 @@ Time and duration constraints
 -----------------------------
 
 Clients and vehicles are equipped with time windows, and a number of other time and duration-related attributes.
+Together, these attributes can be used to model a rich set of constraints.
+Below, we explain the attributes, and how these can be used to enforce different constraints.
 
 Clients
 ^^^^^^^
@@ -30,9 +32,11 @@ The following figure explains this graphically.
 Vehicles
 ^^^^^^^^
 
-Vehicles modelled using the :class:`~pyvrp._pyvrp.VehicleType` object also support a rich set of duration constraints.
-These are described graphically in the following figure.
-TODO
+Vehicles modelled using the :class:`~pyvrp._pyvrp.VehicleType` object also support several duration constraints.
+In particular, vehicles are equipped with time window attributes indicating the earliest start and latest completion times of a vehicle's assigned route.
+Between these two times, a vehicle may execute a route of a given maximum duration.
+Additionally, the starting time of the vehicle's assigned route may be further constrained to happen during the beginning of the time window. 
+The following figure explains this graphically.
 
 .. figure:: ../assets/images/duration-vehicletype.svg
    :alt: Duration attributes of ``VehicleType`` objects.
