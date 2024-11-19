@@ -32,8 +32,8 @@ The following figure explains this graphically.
 Vehicles
 ^^^^^^^^
 
-Vehicles modelled using the :class:`~pyvrp._pyvrp.VehicleType` object also support several duration constraints.
-In particular, vehicles are equipped with time window attributes indicating the earliest start and latest completion times of a vehicle's assigned route.
+Vehicles modelled using the :class:`~pyvrp._pyvrp.VehicleType` object support several duration constraints.
+In particular, vehicles are equipped with time window attributes limiting the earliest start and latest completion times of a vehicle's assigned route.
 Between these two times, a vehicle may execute a route of a given maximum duration.
 Additionally, the starting time of the vehicle's assigned route may be further constrained to happen during the beginning of the time window. 
 The following figure explains this graphically.
