@@ -210,13 +210,13 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Cost,
                       pyvrp::Duration,
-                      std::optional<pyvrp::Duration>,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Distance,
                       pyvrp::Cost,
                       pyvrp::Cost,
                       size_t,
+                      std::optional<pyvrp::Duration>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -224,7 +224,6 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("end_depot") = 0,
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = 0,
-             py::arg("start_late") = py::none(),
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
@@ -233,6 +232,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_distance_cost") = 1,
              py::arg("unit_duration_cost") = 0,
              py::arg("profile") = 0,
+             py::arg("start_late") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -241,7 +241,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("end_depot", &ProblemData::VehicleType::endDepot)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
-        .def_readonly("start_late", &ProblemData::VehicleType::startLate)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
@@ -250,6 +249,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("unit_duration_cost",
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
+        .def_readonly("start_late", &ProblemData::VehicleType::startLate)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -261,13 +261,13 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("end_depot") = py::none(),
              py::arg("fixed_cost") = py::none(),
              py::arg("tw_early") = py::none(),
-             py::arg("start_late") = py::none(),
              py::arg("tw_late") = py::none(),
              py::arg("max_duration") = py::none(),
              py::arg("max_distance") = py::none(),
              py::arg("unit_distance_cost") = py::none(),
              py::arg("unit_duration_cost") = py::none(),
              py::arg("profile") = py::none(),
+             py::arg("start_late") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -280,13 +280,13 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.endDepot,
                                       vehicleType.fixedCost,
                                       vehicleType.twEarly,
-                                      vehicleType.startLate,
                                       vehicleType.twLate,
                                       vehicleType.maxDuration,
                                       vehicleType.maxDistance,
                                       vehicleType.unitDistanceCost,
                                       vehicleType.unitDurationCost,
                                       vehicleType.profile,
+                                      vehicleType.startLate,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -297,14 +297,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[3].cast<size_t>(),                    // end depot
                     t[4].cast<pyvrp::Cost>(),               // fixed cost
                     t[5].cast<pyvrp::Duration>(),           // tw early
-                    t[6].cast<pyvrp::Duration>(),           // start late
-                    t[7].cast<pyvrp::Duration>(),           // tw late
-                    t[8].cast<pyvrp::Duration>(),           // max duration
-                    t[9].cast<pyvrp::Distance>(),           // max distance
-                    t[10].cast<pyvrp::Cost>(),   // unit distance cost
-                    t[11].cast<pyvrp::Cost>(),   // unit duration cost
-                    t[12].cast<size_t>(),        // profile
-                    t[13].cast<std::string>());  // name
+                    t[6].cast<pyvrp::Duration>(),           // tw late
+                    t[7].cast<pyvrp::Duration>(),           // max duration
+                    t[8].cast<pyvrp::Distance>(),           // max distance
+                    t[9].cast<pyvrp::Cost>(),       // unit distance cost
+                    t[10].cast<pyvrp::Cost>(),      // unit duration cost
+                    t[11].cast<size_t>(),           // profile
+                    t[12].cast<pyvrp::Duration>(),  // start late
+                    t[13].cast<std::string>());     // name
 
                 return vehicleType;
             }))

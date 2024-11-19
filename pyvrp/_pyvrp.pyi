@@ -103,7 +103,6 @@ class VehicleType:
     end_depot: int
     capacity: list[int]
     tw_early: int
-    start_late: int
     tw_late: int
     max_duration: int
     max_distance: int
@@ -111,6 +110,7 @@ class VehicleType:
     unit_distance_cost: int
     unit_duration_cost: int
     profile: int
+    start_late: int
     name: str
     def __init__(
         self,
@@ -120,13 +120,13 @@ class VehicleType:
         end_depot: int = 0,
         fixed_cost: int = 0,
         tw_early: int = 0,
-        start_late: int | None = None,
         tw_late: int = ...,
         max_duration: int = ...,
         max_distance: int = ...,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: int = 0,
+        start_late: int | None = None,
         *,
         name: str = "",
     ) -> None: ...
@@ -138,13 +138,13 @@ class VehicleType:
         end_depot: int | None = None,
         fixed_cost: int | None = None,
         tw_early: int | None = None,
-        start_late: int | None = None,
         tw_late: int | None = None,
         max_duration: int | None = None,
         max_distance: int | None = None,
         unit_distance_cost: int | None = None,
         unit_duration_cost: int | None = None,
         profile: int | None = None,
+        start_late: int | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

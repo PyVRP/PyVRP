@@ -309,8 +309,8 @@ def test_route_shift_duration(
                 2,
                 capacity=[10],
                 tw_early=tw_early,
-                start_late=start_late,
                 tw_late=tw_late,
+                start_late=start_late,
             )
         ]
     )

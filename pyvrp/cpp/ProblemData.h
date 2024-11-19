@@ -316,13 +316,13 @@ public:
      *     end_depot: int = 0,
      *     fixed_cost: int = 0,
      *     tw_early: int = 0,
-     *     start_late: int | None = None,
      *     tw_late: int = np.iinfo(np.int64).max,
      *     max_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
+     *     start_late: int | None = None,
      *     *,
      *     name: str = "",
      * )
@@ -347,12 +347,9 @@ public:
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
-     *     Earliest start of the vehicle type's shift. Default 0.
-     * start_late
-     *     Latest start of the vehicle type's shift. Default None.
+     *     Start of the vehicle type's shift. Default 0.
      * tw_late
-     *     Latest finish of the vehicle type's shift. Unconstrained if not
-     *     provided.
+     *     End of the vehicle type's shift. Unconstrained if not provided.
      * max_duration
      *     Maximum route duration. Unconstrained if not explicitly provided.
      * max_distance
@@ -365,6 +362,8 @@ public:
      *     type. Default 0.
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. Default None.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -381,12 +380,9 @@ public:
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early
-     *     Earliest start of the vehicle type's shift, if specified.
-     * start_late
-     *     Latest start of the vehicle type's shift. Equal to tw_late, if not
-     *     specified.
+     *     Start of the vehicle type's shift, if specified.
      * tw_late
-     *     Latest finish of the vehicle type's shift, if specified.
+     *     End of the vehicle type's shift, if specified.
      * max_duration
      *     Maximum duration of the route this vehicle type is assigned to. This
      *     is a very large number when the maximum duration is unconstrained.
@@ -400,6 +396,9 @@ public:
      *     Cost per unit of duration on routes using vehicles of this type.
      * profile
      *     This vehicle type's routing profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. Equal to tw_late, if not
+     *     specified.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -409,15 +408,15 @@ public:
         size_t const startDepot;           // Departure depot location
         size_t const endDepot;             // Return depot location
         std::vector<Load> const capacity;  // This type's vehicle capacity
-        Duration const twEarly;            // Earliest start of shift
-        Duration const startLate;          // Latest start of shift
-        Duration const twLate;             // Latest finish of shift
+        Duration const twEarly;            // Start of shift
+        Duration const twLate;             // End of shift
         Duration const maxDuration;        // Maximum route duration
         Distance const maxDistance;        // Maximum route distance
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
+        Duration const startLate;     // Latest start of shift
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -426,13 +425,13 @@ public:
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
                     Duration twEarly = 0,
-                    std::optional<Duration> startLate = std::nullopt,
                     Duration twLate = std::numeric_limits<Duration>::max(),
                     Duration maxDuration = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
+                    std::optional<Duration> startLate = std::nullopt,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -455,13 +454,13 @@ public:
                             std::optional<size_t> endDepot,
                             std::optional<Cost> fixedCost,
                             std::optional<Duration> twEarly,
-                            std::optional<Duration> startLate,
                             std::optional<Duration> twLate,
                             std::optional<Duration> maxDuration,
                             std::optional<Distance> maxDistance,
                             std::optional<Cost> unitDistanceCost,
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
+                            std::optional<Duration> startLate,
                             std::optional<std::string> name) const;
     };
 

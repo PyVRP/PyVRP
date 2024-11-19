@@ -323,28 +323,22 @@ def test_str_contains_route(ok_small, locs: list[int]):
 def test_route_duration_access(ok_small):
     """
     Tests access to a client's or depot's duration segment, as tracked by the
-    route. The start depot's segment differs from the end depot's segment due
-    to different latest start and latest finish on the vehicle type.
+    route.
     """
-    vehicle_type = ok_small.vehicle_type(0).replace(start_late=10_000)
-    ok_small = ok_small.replace(vehicle_types=[vehicle_type])
-
     route = Route(ok_small, idx=0, vehicle_type=0)
     for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
     route.update()
 
     for idx in range(len(route) + 2):
+        is_depot = idx % (len(route) + 1) == 0
         loc = ok_small.location(idx % (len(route) + 1))
         ds = route.duration_at(idx)
 
         assert_equal(ds.time_warp(), 0)
 
-        if idx == 0:  # start depot
-            assert_equal(ds.tw_early(), vehicle_type.tw_early)
-            assert_equal(ds.tw_late(), vehicle_type.start_late)
-            assert_equal(ds.duration(), 0)
-        elif idx == len(route) + 1:  # end depot
+        if is_depot:
+            vehicle_type = ok_small.vehicle_type(route.vehicle_type)
             assert_equal(ds.tw_early(), vehicle_type.tw_early)
             assert_equal(ds.tw_late(), vehicle_type.tw_late)
             assert_equal(ds.duration(), 0)
@@ -352,6 +346,31 @@ def test_route_duration_access(ok_small):
             assert_equal(ds.tw_early(), loc.tw_early)
             assert_equal(ds.tw_late(), loc.tw_late)
             assert_equal(ds.duration(), loc.service_duration)
+
+
+def test_route_duration_access_with_latest_start(ok_small):
+    """
+    Tests access to a depot's duration segment, as tracked by the route. The
+    start depot's segment differs from the end depot's segment due to different
+    latest start and latest finish on the vehicle type.
+    """
+    vehicle_type = ok_small.vehicle_type(0).replace(start_late=10_000)
+    ok_small = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    route.update()
+
+    # Start depot
+    start_ds = route.duration_at(0)
+    assert_equal(start_ds.tw_early(), vehicle_type.tw_early)
+    assert_equal(start_ds.tw_late(), vehicle_type.start_late)
+    assert_equal(start_ds.duration(), 0)
+
+    # End depot
+    end_ds = route.duration_at(1)
+    assert_equal(end_ds.tw_early(), vehicle_type.tw_early)
+    assert_equal(end_ds.tw_late(), vehicle_type.tw_late)
+    assert_equal(end_ds.duration(), 0)
 
 
 @pytest.mark.parametrize(

@@ -155,10 +155,10 @@ def test_add_vehicle_type():
         capacity=998,
         fixed_cost=1_001,
         tw_early=17,
-        start_late=18,
         tw_late=19,
         max_duration=93,
         max_distance=97,
+        start_late=18,
     )
 
     assert_equal(vehicle_type.num_available, 10)
