@@ -363,7 +363,8 @@ public:
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
      * start_late
-     *     Latest start of the vehicle type's shift. Default None.
+     *     Latest start of the vehicle type's shift. Unconstrained if not
+     *     provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -397,8 +398,8 @@ public:
      * profile
      *     This vehicle type's routing profile.
      * start_late
-     *     Latest start of the vehicle type's shift. Equal to tw_late, if not
-     *     specified.
+     *     Latest start of the vehicle type's shift. This is equal to
+     *     ``tw_late`` when the latest start is not constrained.
      * name
      *     Free-form name field for this vehicle type.
      */
