@@ -158,12 +158,14 @@ def test_add_vehicle_type():
         tw_late=19,
         max_duration=93,
         max_distance=97,
+        start_late=18,
     )
 
     assert_equal(vehicle_type.num_available, 10)
     assert_equal(vehicle_type.capacity, [998])
     assert_equal(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
+    assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.tw_late, 19)
     assert_equal(vehicle_type.max_duration, 93)
     assert_equal(vehicle_type.max_distance, 97)
@@ -495,10 +497,10 @@ def test_model_solves_small_instance_with_shift_durations():
     m.add_depot(x=0, y=0)
 
     for idx in range(5):
-        # Vehicles of the first type can visit two clients before having to
-        # return to the depot. The second vehicle type can be used to visit
-        # a single client before having to return to the depot. So we need
-        # at least three routes.
+        # Vehicles of the first type can visit a single client before having to
+        # return to the depot. The second vehicle type can be used to visit two
+        # clients before having to return to the depot. So we need at least
+        # three routes.
         m.add_client(
             x=idx,
             y=idx,

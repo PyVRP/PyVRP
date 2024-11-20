@@ -323,6 +323,7 @@ class Model:
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: Profile | None = None,
+        start_late: int | None = None,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -375,6 +376,7 @@ class Model:
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             profile=profile_idx,
+            start_late=start_late,
             name=name,
         )
 

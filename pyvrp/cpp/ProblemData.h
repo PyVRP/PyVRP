@@ -322,6 +322,7 @@ public:
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
+     *     start_late: int | None = None,
      *     *,
      *     name: str = "",
      * )
@@ -361,6 +362,8 @@ public:
      *     type. Default 0.
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. Default None.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -393,6 +396,9 @@ public:
      *     Cost per unit of duration on routes using vehicles of this type.
      * profile
      *     This vehicle type's routing profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. Equal to tw_late, if not
+     *     specified.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -410,6 +416,7 @@ public:
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
+        Duration const startLate;     // Latest start of shift
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -424,6 +431,7 @@ public:
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
+                    std::optional<Duration> startLate = std::nullopt,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -452,6 +460,7 @@ public:
                             std::optional<Cost> unitDistanceCost,
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
+                            std::optional<Duration> startLate,
                             std::optional<std::string> name) const;
     };
 
