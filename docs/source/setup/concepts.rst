@@ -25,10 +25,6 @@ The following figure explains this graphically.
    :alt: Duration attributes of ``Client`` objects.
    :figwidth: 100%
 
-.. hint::
-
-   You can model clients with multiple time windows using a mutually exclusive client group.
-
 Vehicles
 ^^^^^^^^
 
