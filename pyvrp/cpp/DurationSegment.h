@@ -96,8 +96,11 @@ public:
     // Construct from attributes of the given client.
     DurationSegment(ProblemData::Client const &client);
 
-    // Construct from attributes of the given vehicle type.
-    DurationSegment(ProblemData::VehicleType const &vehicleType);
+    /**
+     * Construct from attributes of the given vehicle type and latest finish.
+     */
+    DurationSegment(ProblemData::VehicleType const &vehicleType,
+                    Duration const twLate);
 
     // Construct from raw data.
     inline DurationSegment(Duration duration,

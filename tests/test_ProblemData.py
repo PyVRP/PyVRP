@@ -453,19 +453,22 @@ def test_matrices_are_not_copies():
         "fixed_cost",
         "unit_distance_cost",
         "unit_duration_cost",
+        "start_late",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 0, 0, 0, 0, 0, 0),  # early > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1),  # negative unit_duration_cost
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # early > start late
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2),  # start late > late
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative early
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative late
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative unit_duration_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative start late
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -478,6 +481,7 @@ def test_vehicle_type_raises_invalid_data(
     fixed_cost: int,
     unit_distance_cost: int,
     unit_duration_cost: int,
+    start_late: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
@@ -494,6 +498,7 @@ def test_vehicle_type_raises_invalid_data(
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
+            start_late=start_late,
         )
 
 
@@ -514,6 +519,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
         max_distance=0,
         unit_distance_cost=0,
         unit_duration_cost=0,
+        start_late=0,
     )
 
     assert_equal(vehicle_type.num_available, 1)
@@ -527,6 +533,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.max_distance, 0)
     assert_equal(vehicle_type.unit_distance_cost, 0)
     assert_equal(vehicle_type.unit_duration_cost, 0)
+    assert_equal(vehicle_type.start_late, 0)
 
 
 def test_vehicle_type_default_values():
@@ -551,6 +558,9 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
     assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
 
+    # The default value for start_late is the value of tw_late.
+    assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
+
 
 def test_vehicle_type_attribute_access():
     """
@@ -569,6 +579,7 @@ def test_vehicle_type_attribute_access():
         max_distance=31,
         unit_distance_cost=37,
         unit_duration_cost=41,
+        start_late=18,
         name="vehicle_type name",
     )
 
@@ -583,6 +594,7 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.max_distance, 31)
     assert_equal(vehicle_type.unit_distance_cost, 37)
     assert_equal(vehicle_type.unit_duration_cost, 41)
+    assert_equal(vehicle_type.start_late, 18)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
