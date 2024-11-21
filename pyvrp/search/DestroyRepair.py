@@ -27,6 +27,7 @@ class DestroyRepair:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
+        num_destroy: int,
         neighbours: Optional[list[list[int]]] = None,
     ) -> Solution:
         """
@@ -57,4 +58,6 @@ class DestroyRepair:
         d_op = self._destroy_ops[d_idx]
 
         # NOTE only destroy now, LS handles repair.
-        return d_op(self._data, solution, cost_evaluator, rng, self._nbhd)
+        return d_op(
+            self._data, solution, cost_evaluator, rng, self._nbhd, num_destroy
+        )

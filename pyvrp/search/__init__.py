@@ -22,17 +22,17 @@ from .neighbourhood import compute_neighbours as compute_neighbours
 NODE_OPERATORS: list[Type[NodeOperator]] = [
     Exchange10,
     Exchange20,
-    Exchange30,
+    # Exchange30,
     Exchange11,
     Exchange21,
-    Exchange31,
+    # Exchange31,
     Exchange22,
-    Exchange32,
-    Exchange33,
+    # Exchange32,
+    # Exchange33,
     SwapTails,
 ]
 
 ROUTE_OPERATORS: list[Type[RouteOperator]] = [
     SwapRoutes,
-    SwapStar,
+    # SwapStar,
 ]

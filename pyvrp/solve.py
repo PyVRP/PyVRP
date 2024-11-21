@@ -167,10 +167,13 @@ def solve(
         penalty_params, initial_penalties=(VALUE, VALUE, VALUE)
     )
 
-    accept = MovingAverageThreshold(0.5, 30, stop.criteria[0]._max_runtime)
+    accept = MovingAverageThreshold(1, 50, stop.criteria[0]._max_runtime)
 
     nbhd = compute_neighbours(data)
-    destroy_ops = [SISR(), concentric]
+    destroy_ops = [
+        SISR(),
+        concentric,
+    ]
     repair_ops = []  # let LS handle repair
     perturb = DestroyRepair(data, rng, nbhd, destroy_ops, repair_ops)
     ls = LocalSearch(data, rng, nbhd)

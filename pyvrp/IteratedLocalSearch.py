@@ -285,8 +285,14 @@ class IteratedLocalSearch:
         while not stop(self._cost_evaluator.cost(best)):
             iters += 1
 
-            candidate = current
-            perturbed = self._perturb(current, self._cost_evaluator)
+            start = stop.criteria[0]._start_runtime
+            max_runtime = stop.criteria[0]._max_runtime
+            elapsed = (time.perf_counter() - start) / max_runtime
+            num_destroy = int(10 + 15 * (1 - elapsed))
+
+            perturbed = self._perturb(
+                current, self._cost_evaluator, num_destroy
+            )
             candidate_clients = self._diff(perturbed, current)
             candidate = self._search(
                 perturbed,
@@ -294,15 +300,6 @@ class IteratedLocalSearch:
                 candidate_clients,
             )
             self._pm.register(candidate)
-
-            if not candidate.is_feasible():
-                booster_cost_eval = self._pm.booster_cost_evaluator()
-                candidate = self._search(
-                    candidate,
-                    booster_cost_eval,
-                    candidate_clients,
-                )
-                self._pm.register(candidate)
 
             cand_cost = self._cost_evaluator.cost(candidate)
             best_cost = self._cost_evaluator.cost(best)

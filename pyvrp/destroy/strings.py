@@ -19,14 +19,11 @@ class SISRParams:
     ----------
     max_string_size
         Maximum size of the string to remove.
-    avg_removals
-        Average number clients to remove in total.
     split_probability
         Probability of selecting the split-string operator.
     """
 
     max_string_size: int = 10
-    avg_removals: int = 20
     split_probability: float = 0.5
     count_probability: float = 0.1
 
@@ -51,15 +48,14 @@ class SISR:
         cost_eval: CostEvaluator,
         rng: RandomNumberGenerator,
         neighbors: list[list[int]],
+        num_destroy: int,
     ):
         """
         Destroys a solution by removing a number of strings.
         """
         avg_route_size = abs(solution.num_clients() // solution.num_routes())
         max_string_size = min(self._params.max_string_size, avg_route_size)
-        max_num_strings = round(
-            (4 * self._params.avg_removals) / (max_string_size + 1) - 1
-        )
+        max_num_strings = round((4 * num_destroy) / (max_string_size + 1) - 1)
         num_strings = rng.randint(max_num_strings) + 1
 
         # Select a random client to start the removal process.

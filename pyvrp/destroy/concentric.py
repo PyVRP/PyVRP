@@ -13,6 +13,7 @@ def concentric(
     cost_eval: CostEvaluator,
     rng: RandomNumberGenerator,
     neighbours: list[list[int]],
+    num_destroy: int,
 ):
     """
     Removes a number of clients that are closest to a randomly selected client.
@@ -30,8 +31,6 @@ def concentric(
     neighbours
         The neighbourhood to use.
     """
-    num_destroy = rng.randint(15) + 10
-
     # Find all client indices to remove.
     client = rng.randint(data.num_clients) + 1
     closest = data.distance_matrix(0)[client].argsort().tolist()
