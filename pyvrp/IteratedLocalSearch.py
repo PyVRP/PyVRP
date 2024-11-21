@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import time
 from dataclasses import dataclass
 from importlib.metadata import version
@@ -149,6 +150,7 @@ class _Datum:
     candidate_feas: bool
     best_cost: float
     best_feas: bool
+    diversity: int
 
 
 class Statistics:
@@ -175,6 +177,7 @@ class Statistics:
         candidate_feas: bool,
         best_cost: float,
         best_feas: bool,
+        diversity: int,
     ):
         """
         Collects statistics from the ILS iteration.
@@ -195,8 +198,46 @@ class Statistics:
             candidate_feas,
             best_cost,
             best_feas,
+            diversity,
         )
         self.data.append(datum)
+
+    def to_csv(self, file_path: str):
+        """
+        Exports the collected statistics to a CSV file.
+
+        Parameters:
+            file_path (str): The file path where the CSV will be saved.
+        """
+        if not self.data:
+            print("No data to export.")
+            return
+
+        headers = [
+            "current_cost",
+            "current_feas",
+            "candidate_cost",
+            "candidate_feas",
+            "best_cost",
+            "best_feas",
+            "diversity",
+        ]
+
+        with open(file_path, mode="w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(headers)
+            for datum in self.data:
+                writer.writerow(
+                    [
+                        datum.current_cost,
+                        datum.current_feas,
+                        datum.candidate_cost,
+                        datum.candidate_feas,
+                        datum.best_cost,
+                        datum.best_feas,
+                        datum.diversity,
+                    ]
+                )
 
 
 @dataclass
@@ -311,6 +352,7 @@ class IteratedLocalSearch:
                 candidate.is_feasible(),
                 best_cost,
                 best.is_feasible(),
+                len(self._diff(candidate, current)),
             )
             print_progress.iteration(stats)
 
