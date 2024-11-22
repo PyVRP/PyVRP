@@ -323,6 +323,7 @@ public:
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
      *     start_late: int | None = None,
+     *     max_trips: int = 1,
      *     *,
      *     name: str = "",
      * )
@@ -365,6 +366,8 @@ public:
      * start_late
      *     Latest start of the vehicle type's shift. Unconstrained if not
      *     provided.
+     * max_trips
+     *     Maximum number of trips vehicles of this type can perform. Default 1.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -400,6 +403,8 @@ public:
      * start_late
      *     Latest start of the vehicle type's shift. This is equal to
      *     ``tw_late`` when the latest start is not constrained.
+     * max_trips
+     *     Maximum number of trips for these vehicles.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -418,6 +423,7 @@ public:
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
+        size_t const maxTrips;        // Maximum number of trips
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -433,6 +439,7 @@ public:
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
+                    size_t maxTrips = 1,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -462,6 +469,7 @@ public:
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
+                            std::optional<size_t> maxTrips,
                             std::optional<std::string> name) const;
     };
 

@@ -111,6 +111,7 @@ class VehicleType:
     unit_duration_cost: int
     profile: int
     start_late: int
+    max_trips: int
     name: str
     def __init__(
         self,
@@ -127,6 +128,7 @@ class VehicleType:
         unit_duration_cost: int = 0,
         profile: int = 0,
         start_late: int | None = None,
+        max_trips: int = 1,
         *,
         name: str = "",
     ) -> None: ...
@@ -145,6 +147,7 @@ class VehicleType:
         unit_duration_cost: int | None = None,
         profile: int | None = None,
         start_late: int | None = None,
+        max_trips: int | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

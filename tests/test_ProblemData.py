@@ -454,21 +454,23 @@ def test_matrices_are_not_copies():
         "unit_distance_cost",
         "unit_duration_cost",
         "start_late",
+        "max_trips",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # early > start late
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2),  # start late > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative unit_duration_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative start late
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1),  # early > start late
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 1),  # start late > late
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 1),  # negative early
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1),  # negative late
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1),  # negative max_duration
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 1),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 1),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 1),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0, 1),  # negative unit_duration_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 1),  # negative start late
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # max_trips must be positive
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -482,6 +484,7 @@ def test_vehicle_type_raises_invalid_data(
     unit_distance_cost: int,
     unit_duration_cost: int,
     start_late: int,
+    max_trips: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
@@ -499,6 +502,7 @@ def test_vehicle_type_raises_invalid_data(
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             start_late=start_late,
+            max_trips=max_trips,
         )
 
 
@@ -520,6 +524,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
         unit_distance_cost=0,
         unit_duration_cost=0,
         start_late=0,
+        max_trips=1,
     )
 
     assert_equal(vehicle_type.num_available, 1)
@@ -534,6 +539,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.unit_distance_cost, 0)
     assert_equal(vehicle_type.unit_duration_cost, 0)
     assert_equal(vehicle_type.start_late, 0)
+    assert_equal(vehicle_type.max_trips, 1)
 
 
 def test_vehicle_type_default_values():
@@ -550,6 +556,7 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
     assert_equal(vehicle_type.unit_duration_cost, 0)
+    assert_equal(vehicle_type.max_trips, 1)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
@@ -580,6 +587,7 @@ def test_vehicle_type_attribute_access():
         unit_distance_cost=37,
         unit_duration_cost=41,
         start_late=18,
+        max_trips=3,
         name="vehicle_type name",
     )
 
@@ -595,6 +603,7 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.unit_distance_cost, 37)
     assert_equal(vehicle_type.unit_duration_cost, 41)
     assert_equal(vehicle_type.start_late, 18)
+    assert_equal(vehicle_type.max_trips, 3)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
@@ -1058,3 +1067,20 @@ def test_problem_data_constructor_valid_load_dimensions():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
     assert_equal(data.num_load_dimensions, 2)
+
+
+def test_problem_data_raises_when_both_release_times_and_multi_trip():
+    """
+    Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
+    there are clients with non-zero release times in combination with vehicle
+    types supporting multiple trips.
+    """
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[Client(1, 1, release_time=1)],
+            depots=[Depot(1, 1)],
+            vehicle_types=[VehicleType(max_trips=2)],
+            distance_matrices=[np.zeros((2, 2))],
+            duration_matrices=[np.zeros((2, 2))],
+            groups=[ClientGroup([1])],
+        )
