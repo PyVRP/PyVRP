@@ -324,6 +324,7 @@ class Model:
         unit_duration_cost: int = 0,
         profile: Profile | None = None,
         start_late: int | None = None,
+        max_trips: int = 1,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -377,6 +378,7 @@ class Model:
             unit_duration_cost=unit_duration_cost,
             profile=profile_idx,
             start_late=start_late,
+            max_trips=max_trips,
             name=name,
         )
 
