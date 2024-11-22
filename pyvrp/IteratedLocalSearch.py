@@ -150,6 +150,8 @@ class _Datum:
     candidate_feas: bool
     best_cost: float
     best_feas: bool
+    num_destroy: int
+    num_candidates: int
     diversity: int
 
 
@@ -177,6 +179,8 @@ class Statistics:
         candidate_feas: bool,
         best_cost: float,
         best_feas: bool,
+        num_destroy: int,
+        num_candidates: int,
         diversity: int,
     ):
         """
@@ -198,6 +202,8 @@ class Statistics:
             candidate_feas,
             best_cost,
             best_feas,
+            num_destroy,
+            num_candidates,
             diversity,
         )
         self.data.append(datum)
@@ -220,6 +226,8 @@ class Statistics:
             "candidate_feas",
             "best_cost",
             "best_feas",
+            "num_destroy",
+            "num_candidates",
             "diversity",
         ]
 
@@ -235,6 +243,8 @@ class Statistics:
                         datum.candidate_feas,
                         datum.best_cost,
                         datum.best_feas,
+                        datum.num_destroy,
+                        datum.num_candidates,
                         datum.diversity,
                     ]
                 )
@@ -352,6 +362,8 @@ class IteratedLocalSearch:
                 candidate.is_feasible(),
                 best_cost,
                 best.is_feasible(),
+                num_destroy,
+                len(candidate_clients),
                 len(self._diff(candidate, current)),
             )
             print_progress.iteration(stats)
@@ -380,6 +392,6 @@ class IteratedLocalSearch:
         Returns the clients that have changed between two solutions.
         """
         neighbours1 = new.neighbours()
-        neighbours2 = old.neighbours()
+        old.neighbours()
         clients = range(self._data.num_depots, self._data.num_locations)
-        return [idx for idx in clients if neighbours1[idx] != neighbours2[idx]]
+        return [idx for idx in clients if neighbours1[idx] is None]
