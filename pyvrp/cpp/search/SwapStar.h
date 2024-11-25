@@ -14,10 +14,10 @@ namespace pyvrp::search
 /**
  * SwapStar(data: ProblemData)
  *
- * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood explores
- * free form re-insertions of clients :math:`U` and :math:`V` in the given
- * routes (so the clients are exchanged between routes, but they are not
- * necessarily inserted in the place of the other exchanged client).
+ * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood consists
+ * of free form re-insertions of clients :math:`U` and :math:`V` in the given
+ * routes (so the clients are swapped, but they are not necessarily inserted
+ * in the place of the other swapped client).
  *
  * References
  * ----------
@@ -29,7 +29,6 @@ class SwapStar : public LocalSearchOperator<Route>
 {
     struct ThreeBest  // stores three best SWAP* insertion points
     {
-        bool shouldUpdate = true;
         std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
         std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max(),
@@ -49,9 +48,17 @@ class SwapStar : public LocalSearchOperator<Route>
         Route::Node *VAfter = nullptr;  // insert V after this node in U's route
     };
 
-    Matrix<ThreeBest> cache;
+    // Tracks the three best insert locations, for each route and client.
+    Matrix<ThreeBest> insertCache;
+
+    // Tracks whether the insert locations and removal costs are still up to
+    // date. In particular, isCached(R, 0) tracks route-wise removal cost
+    // validity, while isCached(R, U) with U > 0 tracks (route, client) insert
+    // location validity.
+    Matrix<bool> isCached;
+
+    // Tracks the removal costs of removing a client from its route.
     Matrix<Cost> removalCosts;
-    std::vector<bool> updated;
 
     BestMove best;
 
@@ -90,13 +97,7 @@ public:
 
     void update(Route *U) override;
 
-    explicit SwapStar(ProblemData const &data)
-        : LocalSearchOperator<Route>(data),
-          cache(data.numVehicles(), data.numLocations()),
-          removalCosts(data.numVehicles(), data.numLocations()),
-          updated(data.numVehicles(), true)
-    {
-    }
+    explicit SwapStar(ProblemData const &data);
 };
 }  // namespace pyvrp::search
 
