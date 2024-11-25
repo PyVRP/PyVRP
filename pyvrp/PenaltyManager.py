@@ -116,9 +116,9 @@ class PenaltyManager:
         MAX_PENALTY]``.
     """
 
-    MIN_PENALTY = 1
-    MAX_PENALTY = 100_000
-    FEAS_TOL = 0.05
+    MIN_PENALTY: float = 1.0
+    MAX_PENALTY: float = 100_000.0
+    FEAS_TOL: float = 0.05
 
     def __init__(
         self,
@@ -178,9 +178,9 @@ class PenaltyManager:
 
         # Initial penalty parameters are meant to weigh an average increase
         # in the relevant value by the same amount as the average edge cost.
-        init_load = round(avg_cost / max(avg_load, 1))
-        init_tw = round(avg_cost / max(avg_duration, 1))
-        init_dist = round(avg_cost / max(avg_distance, 1))
+        init_load = avg_cost / max(avg_load, 1)
+        init_tw = avg_cost / max(avg_duration, 1)
+        init_dist = avg_cost / max(avg_distance, 1)
         return cls(params, (init_load, init_tw, init_dist))
 
     def _compute(self, penalty: int, feas_percentage: float) -> int:
@@ -191,13 +191,12 @@ class PenaltyManager:
         if abs(diff) < self.FEAS_TOL:
             return penalty
 
-        # +/- 1 to ensure we do not get stuck at the same integer values.
         if diff > 0:
-            new_penalty = self._params.penalty_increase * penalty + 1
+            new_penalty = self._params.penalty_increase * penalty
         else:
-            new_penalty = self._params.penalty_decrease * penalty - 1
+            new_penalty = self._params.penalty_decrease * penalty
 
-        clipped = int(np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY))
+        clipped = np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY)
 
         if clipped == self.MAX_PENALTY:
             msg = """
