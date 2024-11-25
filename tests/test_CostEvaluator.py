@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
@@ -111,7 +113,7 @@ def test_cost(ok_small):
     infeas_sol = Solution(ok_small, [[1, 2, 3, 4]])  # infeasible solution
     assert_(not infeas_sol.is_feasible())
 
-    infeas_cost = np.iinfo(np.int64).max
+    infeas_cost = sys.float_info.max
     assert_equal(cost_evaluator.cost(infeas_sol), infeas_cost)
     assert_equal(default_cost_evaluator.cost(infeas_sol), infeas_cost)
 
@@ -209,8 +211,8 @@ def test_excess_load_penalised_cost():
         vehicle_types=[
             VehicleType(2, capacity=[1, 1]),
         ],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],  # zero distance
-        duration_matrices=[np.zeros((3, 3), dtype=int)],  # zero duration
+        distance_matrices=[np.zeros((3, 3))],  # zero distance
+        duration_matrices=[np.zeros((3, 3))],  # zero duration
     )
     assert_equal(data.num_load_dimensions, 2)
 

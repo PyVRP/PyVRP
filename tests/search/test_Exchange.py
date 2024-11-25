@@ -409,7 +409,7 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(capacity=[5])],
         distance_matrices=[np.where(np.eye(4), 0, 1)],
-        duration_matrices=[np.zeros((4, 4), dtype=int)],
+        duration_matrices=[np.zeros((4, 4))],
     )
 
     op = operator(data)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
@@ -187,8 +188,8 @@ class Model:
         delivery: int | list[int] = [],
         pickup: int | list[int] = [],
         service_duration: int = 0,
-        tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
+        tw_early: float = 0,
+        tw_late: float = sys.float_info.max,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
@@ -317,9 +318,9 @@ class Model:
         end_depot: Depot | None = None,
         fixed_cost: int = 0,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
-        max_duration: int = np.iinfo(np.int64).max,
-        max_distance: int = np.iinfo(np.int64).max,
+        tw_late: float = sys.float_info.max,
+        max_duration: float = sys.float_info.max,
+        max_distance: float = sys.float_info.max,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: Profile | None = None,

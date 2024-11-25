@@ -123,9 +123,6 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
                        [[maybe_unused]] DurationSegment const &first,
                        [[maybe_unused]] DurationSegment const &second)
 {
-    // Because clients' default time windows are [0, INT_MAX], the ternaries in
-    // this method are carefully designed to avoid integer over- and underflow
-    // issues. Be very careful when changing things here!
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
@@ -134,19 +131,14 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
     auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
 
     // Time warp increases when we arrive after the time window closes.
-    auto const diffTw = first.twEarly_ + atSecond > second.twLate_
-                            ? first.twEarly_ + atSecond - second.twLate_
-                            : 0;
+    auto const diffTw
+        = std::max<Duration>(first.twEarly_ + atSecond - second.twLate_, 0);
 
     // Wait duration increases if we arrive before the time window opens.
-    auto const diffWait = second.twEarly_ - atSecond > first.twLate_
-                              ? second.twEarly_ - atSecond - first.twLate_
-                              : 0;
+    auto const diffWait
+        = std::max<Duration>(second.twEarly_ - atSecond - first.twLate_, 0);
 
-    auto const secondLate  // new twLate for the second segment
-        = atSecond > second.twLate_ - std::numeric_limits<Duration>::max()
-              ? second.twLate_ - atSecond
-              : second.twLate_;
+    auto const secondLate = second.twLate_ - std::max<Duration>(atSecond, 0);
 
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
             first.timeWarp_ + second.timeWarp_ + diffTw,
@@ -160,13 +152,11 @@ Duration DurationSegment::duration() const { return duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
-    return timeWarp_
+    // clang-format off
+    return timeWarp_ 
            + std::max<Duration>(releaseTime_ - twLate_, 0)
-           // Max duration constraint applies only to net route duration,
-           // subtracting existing time warp. Use ternary to avoid underflow.
-           + (duration_ - timeWarp_ > maxDuration
-                  ? duration_ - timeWarp_ - maxDuration
-                  : 0);
+           + std::max<Duration>(duration_ - timeWarp_ - maxDuration, 0);
+    // clang-format on
 }
 
 DurationSegment::DurationSegment(Duration duration,

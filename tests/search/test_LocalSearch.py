@@ -427,7 +427,7 @@ def test_local_search_does_not_remove_required_clients():
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(1, capacity=[50])],
         distance_matrices=[np.where(np.eye(3), 0, 10)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3))],
     )
 
     ls = LocalSearch(data, rng, compute_neighbours(data))

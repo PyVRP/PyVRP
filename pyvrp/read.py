@@ -1,4 +1,5 @@
 import pathlib
+import sys
 from collections import defaultdict
 from itertools import count
 from numbers import Number
@@ -14,9 +15,6 @@ from pyvrp.exceptions import ScalingWarning
 
 _Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
-
-_INT_MAX = np.iinfo(np.int64).max
-
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": lambda vals: np.round(vals).astype(np.int64),
@@ -140,13 +138,13 @@ class _InstanceParser:
 
     def backhauls(self) -> np.ndarray:
         if "backhaul" not in self.instance:
-            return np.zeros((self.num_locations, 1), dtype=np.int64)
+            return np.zeros((self.num_locations, 1))
 
         return self.round_func(self.instance["backhaul"])
 
     def demands(self) -> np.ndarray:
         if "demand" not in self.instance and "linehaul" not in self.instance:
-            return np.zeros((self.num_locations, 1), dtype=np.int64)
+            return np.zeros((self.num_locations, 1))
 
         return self.round_func(
             self.instance.get("demand", self.instance.get("linehaul"))
@@ -154,13 +152,13 @@ class _InstanceParser:
 
     def coords(self) -> np.ndarray:
         if "node_coord" not in self.instance:
-            return np.zeros((self.num_locations, 2), dtype=np.int64)
+            return np.zeros((self.num_locations, 2))
 
         return self.round_func(self.instance["node_coord"])
 
     def service_times(self) -> np.ndarray:
         if "service_time" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros(self.num_locations)
 
         service_times = self.instance["service_time"]
 
@@ -174,28 +172,28 @@ class _InstanceParser:
 
     def time_windows(self) -> np.ndarray:
         if "time_window" not in self.instance:
-            time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
+            time_windows = np.empty((self.num_locations, 2))
             time_windows[:, 0] = 0
-            time_windows[:, 1] = _INT_MAX
+            time_windows[:, 1] = sys.float_info.max
             return time_windows
 
         return self.round_func(self.instance["time_window"])
 
     def release_times(self) -> np.ndarray:
         if "release_time" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros(self.num_locations)
 
         return self.round_func(self.instance["release_time"])
 
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros(self.num_locations)
 
         return self.round_func(self.instance["prize"])
 
     def capacities(self) -> np.ndarray:
         if "capacity" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, sys.float_info.max)
 
         capacities = self.instance["capacity"]
 
@@ -225,7 +223,7 @@ class _InstanceParser:
 
     def max_distances(self) -> np.ndarray:
         if "vehicles_max_distance" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, sys.float_info.max)
 
         max_distances = self.instance["vehicles_max_distance"]
 
@@ -238,7 +236,7 @@ class _InstanceParser:
 
     def max_durations(self) -> np.ndarray:
         if "vehicles_max_duration" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, sys.float_info.max)
 
         max_durations = self.instance["vehicles_max_duration"]
 

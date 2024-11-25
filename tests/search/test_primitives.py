@@ -140,8 +140,8 @@ def test_insert_fixed_vehicle_cost():
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((3, 3))],
+        duration_matrices=[np.zeros((3, 3))],
     )
 
     # All distances, durations, and loads are equal. So the only cost change
@@ -167,8 +167,8 @@ def test_remove_fixed_vehicle_cost():
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((3, 3))],
+        duration_matrices=[np.zeros((3, 3))],
     )
 
     # All distances, durations, and loads are equal. So the only cost change

@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 import numpy as np
 import pytest
@@ -144,8 +145,8 @@ def test_problem_data_raises_when_no_depot_is_provided():
             clients=[],
             depots=[],
             vehicle_types=[VehicleType()],
-            distance_matrices=[np.asarray([[]], dtype=int)],
-            duration_matrices=[np.asarray([[]], dtype=int)],
+            distance_matrices=[np.asarray([[]])],
+            duration_matrices=[np.asarray([[]])],
         )
 
     # One (or more) depots should not raise.
@@ -200,7 +201,7 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType()]
-    other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
+    other_matrix = np.zeros((2, 2))  # this one's OK
 
     with assert_raises(ValueError):
         ProblemData(clients, depots, vehicle_types, [matrix], [other_matrix])
@@ -212,9 +213,9 @@ def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
 @pytest.mark.parametrize(
     ("dist_mat", "dur_mat"),
     [
-        (np.eye(2, dtype=int), np.zeros((2, 2), dtype=int)),  # distance diag
-        (np.zeros((2, 2), dtype=int), np.eye(2, dtype=int)),  # duration diag
-        (np.eye(2, dtype=int), np.eye(2, dtype=int)),  # both diags nonzero
+        (np.eye(2), np.zeros((2, 2))),  # distance diag
+        (np.zeros((2, 2)), np.eye(2)),  # duration diag
+        (np.eye(2), np.eye(2)),  # both diags nonzero
     ],
 )
 def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
@@ -238,7 +239,7 @@ def test_problem_data_replace_no_changes():
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType()]
-    mat = np.zeros((2, 2), dtype=int)
+    mat = np.zeros((2, 2))
     original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     new = original.replace()
@@ -281,7 +282,7 @@ def test_problem_data_replace_with_changes():
     clients = [Client(x=0, y=0, delivery=[0])]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2, capacity=[1])]
-    mat = np.zeros((2, 2), dtype=int)
+    mat = np.zeros((2, 2))
     original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     # Let's replace the clients, vehicle types, and the distance matrix, each
@@ -325,7 +326,7 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType(2)]
-    mat = np.zeros((2, 2), dtype=int)
+    mat = np.zeros((2, 2))
     data = ProblemData(clients, depots, vehicle_types, [mat], [mat])
 
     with assert_raises(ValueError):  # matrices are 2x2
@@ -552,11 +553,9 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.unit_duration_cost, 0)
     assert_equal(vehicle_type.name, "")
 
-    # The default value for the following fields is the largest representable
-    # integral value.
-    assert_equal(vehicle_type.tw_late, np.iinfo(np.int64).max)
-    assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
-    assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.tw_late, sys.float_info.max)
+    assert_equal(vehicle_type.max_duration, sys.float_info.max)
+    assert_equal(vehicle_type.max_distance, sys.float_info.max)
 
     # The default value for start_late is the value of tw_late.
     assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
@@ -996,8 +995,8 @@ def test_problem_data_raises_when_pickup_and_delivery_dimensions_differ():
             ],
             depots=[Depot(x=0, y=0)],
             vehicle_types=[],
-            distance_matrices=[np.zeros((3, 3), dtype=int)],
-            duration_matrices=[np.zeros((3, 3), dtype=int)],
+            distance_matrices=[np.zeros((3, 3))],
+            duration_matrices=[np.zeros((3, 3))],
         )
 
 
@@ -1014,8 +1013,8 @@ def test_problem_data_raises_when_capacity_dimensions_differ():
                 VehicleType(2, capacity=[1, 2]),
                 VehicleType(2, capacity=[1, 2, 3]),
             ],
-            distance_matrices=[np.zeros((1, 1), dtype=int)],
-            duration_matrices=[np.zeros((1, 1), dtype=int)],
+            distance_matrices=[np.zeros((1, 1))],
+            duration_matrices=[np.zeros((1, 1))],
         )
 
 
@@ -1033,8 +1032,8 @@ def test_problem_data_raises_when_pickup_delivery_capacity_dimensions_differ():
             ],
             depots=[Depot(x=0, y=0)],
             vehicle_types=[VehicleType(2, capacity=[1, 2, 3])],
-            distance_matrices=[np.zeros((3, 3), dtype=int)],
-            duration_matrices=[np.zeros((3, 3), dtype=int)],
+            distance_matrices=[np.zeros((3, 3))],
+            duration_matrices=[np.zeros((3, 3))],
         )
 
 
@@ -1054,7 +1053,7 @@ def test_problem_data_constructor_valid_load_dimensions():
             VehicleType(2, capacity=[1, 2]),
             VehicleType(2, capacity=[1, 2]),
         ],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((3, 3))],
+        duration_matrices=[np.zeros((3, 3))],
     )
     assert_equal(data.num_load_dimensions, 2)

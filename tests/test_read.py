@@ -1,3 +1,4 @@
+import sys
 from math import sqrt
 
 import numpy as np
@@ -160,7 +161,7 @@ def test_reading_vrplib_instance():
     for loc in range(1, data.num_locations):
         assert_equal(data.location(loc).service_duration, 0)
         assert_equal(data.location(loc).tw_early, 0)
-        assert_equal(data.location(loc).tw_late, np.iinfo(np.int64).max)
+        assert_equal(data.location(loc).tw_late, sys.float_info.max)
         assert_equal(data.location(loc).release_time, 0)
         assert_equal(data.location(loc).prize, 0)
         assert_equal(data.location(loc).required, True)

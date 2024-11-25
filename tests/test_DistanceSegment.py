@@ -1,13 +1,15 @@
-import numpy as np
+import sys
+
 import pytest
 from numpy.testing import assert_equal
 
 from pyvrp._pyvrp import DistanceSegment
 
-_INT_MAX = np.iinfo(np.int32).max
 
-
-@pytest.mark.parametrize("distance", [-_INT_MAX, 0, 1_00, _INT_MAX])
+@pytest.mark.parametrize(
+    "distance",
+    [sys.float_info.min, 0, 1_00, sys.float_info.max],
+)
 def test_attribute_getter(distance: int):
     """
     Tests that the distance segment correctly returns the passed-in distance.

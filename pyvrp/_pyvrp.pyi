@@ -37,8 +37,8 @@ class Client:
     delivery: list[int]
     pickup: list[int]
     service_duration: int
-    tw_early: int
-    tw_late: int
+    tw_early: float
+    tw_late: float
     release_time: int
     prize: int
     required: bool
@@ -51,8 +51,8 @@ class Client:
         delivery: list[int] = [],
         pickup: list[int] = [],
         service_duration: int = 0,
-        tw_early: int = 0,
-        tw_late: int = ...,
+        tw_early: float = 0,
+        tw_late: float = ...,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
@@ -102,10 +102,10 @@ class VehicleType:
     start_depot: int
     end_depot: int
     capacity: list[int]
-    tw_early: int
-    tw_late: int
-    max_duration: int
-    max_distance: int
+    tw_early: float
+    tw_late: float
+    max_duration: float
+    max_distance: float
     fixed_cost: int
     unit_distance_cost: int
     unit_duration_cost: int
@@ -119,10 +119,10 @@ class VehicleType:
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: int = 0,
-        tw_early: int = 0,
-        tw_late: int = ...,
-        max_duration: int = ...,
-        max_distance: int = ...,
+        tw_early: float = 0,
+        tw_late: float = ...,
+        max_duration: float = ...,
+        max_distance: float = ...,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: int = 0,

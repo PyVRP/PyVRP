@@ -75,8 +75,8 @@ def test_move_involving_empty_routes():
             VehicleType(fixed_cost=10),
             VehicleType(fixed_cost=100),
         ],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((3, 3))],
+        duration_matrices=[np.zeros((3, 3))],
     )
 
     route1 = Route(data, idx=0, vehicle_type=0)
@@ -147,7 +147,7 @@ def test_move_involving_multiple_depots():
                 [8, 2, 6, 0],
             ]
         ],
-        duration_matrices=[np.zeros((4, 4), dtype=int)],
+        duration_matrices=[np.zeros((4, 4))],
     )
 
     # First route is 0 -> 3 -> 0.

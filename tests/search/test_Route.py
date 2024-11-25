@@ -671,8 +671,8 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
         ],
         depots=[Depot(0, 0)],
         vehicle_types=[VehicleType(1, capacity=[10, 10])],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((3, 3))],
+        duration_matrices=[np.zeros((3, 3))],
     )
 
     route = Route(data, idx=0, vehicle_type=0)

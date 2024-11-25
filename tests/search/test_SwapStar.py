@@ -107,7 +107,7 @@ def test_swap_star_can_swap_in_place():
                 ]
             ),
         ],
-        duration_matrices=[np.zeros((4, 4), dtype=int)],
+        duration_matrices=[np.zeros((4, 4))],
     )
 
     nodes = [Node(loc=loc) for loc in range(data.num_locations)]
@@ -163,7 +163,7 @@ def test_wrong_load_calculation_bug():
                 ]
             ),
         ],
-        duration_matrices=[np.zeros((5, 5), dtype=int)],
+        duration_matrices=[np.zeros((5, 5))],
     )
 
     nodes = [Node(loc=loc) for loc in range(data.num_locations)]

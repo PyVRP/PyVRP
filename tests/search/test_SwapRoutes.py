@@ -304,7 +304,7 @@ def test_evaluate_with_different_depots():
                 [8, 2, 6, 0],
             ]
         ],
-        duration_matrices=[np.zeros((4, 4), dtype=int)],
+        duration_matrices=[np.zeros((4, 4))],
     )
 
     # First route is first depot -> second client -> first depot.

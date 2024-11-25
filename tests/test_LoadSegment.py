@@ -1,15 +1,12 @@
-import numpy as np
 import pytest
 from numpy.testing import assert_equal
 
 from pyvrp._pyvrp import LoadSegment
 
-_INT_MAX = np.iinfo(np.int64).max
-
 
 @pytest.mark.parametrize(
     ("delivery", "pickup", "load"),
-    [(1, 2, 3), (0, 0, 0), (_INT_MAX, _INT_MAX, _INT_MAX)],
+    [(1, 2, 3), (0, 0, 0), (10_000, 100_000, 1_000_000)],
 )
 def test_attribute_getters(delivery: int, pickup: int, load: int):
     """

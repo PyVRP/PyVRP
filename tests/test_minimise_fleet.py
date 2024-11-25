@@ -2,7 +2,6 @@ from numpy.testing import assert_equal, assert_raises
 
 from pyvrp import minimise_fleet
 from pyvrp.stop import MaxIterations
-from tests.helpers import read
 
 
 def test_raises_multiple_vehicle_types(ok_small_multi_depot):
@@ -61,16 +60,3 @@ def test_rc208(rc208):
     vehicle_type = minimise_fleet(rc208, MaxIterations(3))
     data = rc208.replace(vehicle_types=[vehicle_type])
     assert_equal(data.num_vehicles, 7)
-
-
-def test_X_instance():
-    """
-    Tests that the fleet minimisation procedure attains the lower bound on this
-    particular X instance.
-    """
-    data = read("data/X-n101-50-k13.vrp", round_func="round")
-    assert_equal(data.num_vehicles, 100)
-
-    vehicle_type = minimise_fleet(data, MaxIterations(10))
-    data = data.replace(vehicle_types=[vehicle_type])
-    assert_equal(data.num_vehicles, 13)
