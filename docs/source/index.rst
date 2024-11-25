@@ -36,6 +36,7 @@ Contents
    setup/installation
    setup/getting_help
    setup/faq
+   setup/concepts
    setup/benchmarks
    setup/citing
 

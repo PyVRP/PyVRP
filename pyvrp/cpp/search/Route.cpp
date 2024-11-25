@@ -25,7 +25,6 @@ void Route::Node::unassign()
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
-      vehTypeIdx_(vehicleType),
       idx_(idx),
       startDepot_(vehicleType_.startDepot),
       endDepot_(vehicleType_.endDepot),
@@ -61,7 +60,11 @@ std::pair<double, double> const &Route::centroid() const
     return centroid_;
 }
 
-size_t Route::vehicleType() const { return vehTypeIdx_; }
+size_t Route::vehicleType() const
+{
+    auto const &vehicleTypes = data.vehicleTypes();
+    return std::distance(&vehicleTypes[0], &vehicleType_);
+}
 
 bool Route::overlapsWith(Route const &other, double tolerance) const
 {
@@ -175,31 +178,24 @@ void Route::update()
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
 
-    distBefore.resize(nodes.size());
-    distBefore[0] = {0};
+    cumDist.resize(nodes.size());
+    cumDist[0] = 0;
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        distBefore[idx] = DistanceSegment::merge(
-            distMat(visits[idx - 1], visits[idx]), distBefore[idx - 1], {0});
-
-    distAfter.resize(nodes.size());
-    distAfter[nodes.size() - 1] = {0};
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-        distAfter[idx - 1] = DistanceSegment::merge(
-            distMat(visits[idx - 1], visits[idx]), {0}, distAfter[idx]);
+        cumDist[idx] = cumDist[idx - 1] + distMat(visits[idx - 1], visits[idx]);
 
     durAt.resize(nodes.size());
+    durAt[0] = {vehicleType_, vehicleType_.startLate};
+    durAt[nodes.size() - 1] = {vehicleType_, vehicleType_.twLate};
+
+    for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
+        durAt[idx] = {data.location(visits[idx])};
+
+    auto const &durMat = data.durationMatrix(profile());
+
     durBefore.resize(nodes.size());
     durAfter.resize(nodes.size());
     if (data.characteristics().hasDuration)  // Duration.
     {
-        durAt[0] = {vehicleType_};
-        durAt[nodes.size() - 1] = {vehicleType_};
-
-        for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            durAt[idx] = {data.location(visits[idx])};
-
-        auto const &durMat = data.durationMatrix(profile());
-
         durBefore[0] = durAt[0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
             durBefore[idx]
