@@ -138,12 +138,10 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
     auto const diffWait
         = std::max<Duration>(second.twEarly_ - atSecond - first.twLate_, 0);
 
-    auto const secondLate = second.twLate_ - std::max<Duration>(atSecond, 0);
-
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
             first.timeWarp_ + second.timeWarp_ + diffTw,
             std::max(second.twEarly_ - atSecond, first.twEarly_) - diffWait,
-            std::min(secondLate, first.twLate_) + diffTw,
+            std::min(second.twLate_ - atSecond, first.twLate_) + diffTw,
             std::max(first.releaseTime_, second.releaseTime_)};
 #endif
 }
