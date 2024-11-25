@@ -47,8 +47,7 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        auto const *U = (*R)[idx];
-        removalCosts(R->idx(), U->client()) = deltaCost;
+        removalCosts(R->idx(), idx) = deltaCost;
     }
 
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
@@ -206,8 +205,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // Load is a bit tricky, so we compute that separately.
             deltaCost += deltaLoadCost(U, V, costEvaluator);
 
-            deltaCost += removalCosts(routeU->idx(), U->client());
-            deltaCost += removalCosts(routeV->idx(), V->client());
+            deltaCost += removalCosts(routeU->idx(), U->idx());
+            deltaCost += removalCosts(routeV->idx(), V->idx());
 
             auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;
