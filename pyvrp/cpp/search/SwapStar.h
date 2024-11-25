@@ -31,9 +31,9 @@ class SwapStar : public LocalSearchOperator<Route>
     {
         bool shouldUpdate = true;
         std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
-        std::array<Cost, 3> costs = {std::numeric_limits<Cost>::infinity(),
-                                     std::numeric_limits<Cost>::infinity(),
-                                     std::numeric_limits<Cost>::infinity()};
+        std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
+                                     std::numeric_limits<Cost>::max(),
+                                     std::numeric_limits<Cost>::max()};
 
         void maybeAdd(Cost costInsert, Route::Node *placeInsert);
     };

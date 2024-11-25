@@ -122,7 +122,12 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
 template <MeasureType Type>
 bool Measure<Type>::operator==(Measure<Type> const &other) const
 {
-    return std::abs(value - other.value) < 1e-5;  // HGS-CVRP tolerance value
+    // This implements "approximately equal to" of Knuth's Art of Computer
+    // Programming, Vol. 2 (3rd ed.), p. 233.
+    auto const eps = 1e-5;  // HGS-CVRP value
+    auto const lhs = std::abs(value - other.value);
+    auto const rhs = std::max(std::abs(value), std::abs(other.value)) * eps;
+    return lhs <= rhs;
 }
 
 template <MeasureType Type>
