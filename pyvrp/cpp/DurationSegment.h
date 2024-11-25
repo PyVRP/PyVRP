@@ -153,6 +153,8 @@ Duration DurationSegment::timeWarp(Duration const maxDuration) const
     // clang-format off
     return timeWarp_ 
            + std::max<Duration>(releaseTime_ - twLate_, 0)
+           // Max duration constraint applies only to net route duration,
+           // subtracting existing time warp.
            + std::max<Duration>(duration_ - timeWarp_ - maxDuration, 0);
     // clang-format on
 }
