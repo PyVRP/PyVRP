@@ -1,6 +1,6 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
-from pytest import mark
 
 from pyvrp import (
     Client,
@@ -45,7 +45,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     assert_equal(ls.search(sol, cost_evaluator), sol)
 
 
-@mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
+@pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     """
     Tests that the local search raises when the neighbourhood size does not
@@ -81,7 +81,7 @@ def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
         LocalSearch(ok_small, rng, neighbours)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     (
         "weight_wait_time",
         "weight_time_warp",
@@ -292,10 +292,11 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     assert_(improved_cost <= current_cost)
 
 
-def test_intensify_overlap_tolerance(rc208):
+@pytest.mark.parametrize("method", ["__call__", "intensify"])
+def test_intensify_overlap_tolerance(method, rc208):
     """
-    Tests that the local search's intensifying route operators respect the
-    route overlap tolerance argument.
+    Tests that the local search's intensifying procedures respect the overlap
+    tolerance argument.
     """
     rng = RandomNumberGenerator(seed=42)
 
@@ -303,22 +304,24 @@ def test_intensify_overlap_tolerance(rc208):
     ls = LocalSearch(rc208, rng, neighbours)
     ls.add_route_operator(SwapStar(rc208))
 
+    func = getattr(ls, method)
+
     cost_eval = CostEvaluator(1, 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     # Overlap tolerance is zero, so no routes should have overlap and thus
     # no intensification should take place.
-    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance=0)
+    unchanged = func(sol, cost_eval, overlap_tolerance=0)
     assert_equal(unchanged, sol)
 
     # But with full overlap tolerance, all routes should be checked. That
     # should lead to an improvement over the random solution.
-    better = ls.intensify(sol, cost_eval, overlap_tolerance=1)
+    better = func(sol, cost_eval, overlap_tolerance=1)
     assert_(better != sol)
     assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
 
 
-@mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
+@pytest.mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
 def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
     """
     Tests that calling ``intensify()`` raises when the overlap tolerance
