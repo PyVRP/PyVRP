@@ -16,7 +16,7 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
     static_assert(sizeof(T) == sizeof(pyvrp::Value)
                   && std::is_constructible_v<T, pyvrp::Value>);
 
-    PYBIND11_TYPE_CASTER(pyvrp::Matrix<T>, _("numpy.ndarray[int]"));
+    PYBIND11_TYPE_CASTER(pyvrp::Matrix<T>, _("numpy.ndarray[float]"));
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
@@ -64,28 +64,18 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
 
 // On the C++ side we have strong types for different measure values (for
 // example distance, duration, etc.), but on the Python side those things
-// are just ints. This type caster converts between the two.
+// are just doubles. This type caster converts between the two.
 template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
-    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("int"));
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("float"));
 
-    bool load(pybind11::handle src, bool convert)  // Python -> C++
+    bool load(pybind11::handle src,
+              [[maybe_unused]] bool convert)  // Python -> C++
     {
-        static_assert(sizeof(long long) >= sizeof(pyvrp::Value));
+        auto const raw = PyFloat_AsDouble(src.ptr());
 
-        if (!convert && !PyLong_Check(src.ptr()))  // only int when conversion
-            return false;                          // is not allowed.
-
-        PyObject *tmp = PyNumber_Long(src.ptr());  // any argument for which
-        if (!tmp)                                  // Python's int() succeeds.
-            return false;
-
-        auto const raw = PyLong_AsLongLong(tmp);
-        Py_DECREF(tmp);
-
-        // See https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong:
-        // -1 is returned on overflow, and OverflowError is set.
-        if (raw == -1 && PyErr_Occurred())
+        // See https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble.
+        if (raw == -1.0 && PyErr_Occurred())
             throw pybind11::error_already_set();
 
         value = pyvrp::Measure<T>(raw);
@@ -97,7 +87,7 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
          [[maybe_unused]] pybind11::return_value_policy policy,
          [[maybe_unused]] pybind11::handle parent)
     {
-        return PyLong_FromLongLong(src.get());
+        return PyFloat_FromDouble(src.get());
     }
 };
 }  // namespace pybind11::detail

@@ -12,7 +12,7 @@
 
 namespace pyvrp
 {
-using Value = int64_t;
+using Value = double;
 
 enum class MeasureType
 {
@@ -83,7 +83,7 @@ public:
 
     // Comparison operators.
     [[nodiscard]] bool operator==(Measure const &other) const;
-    [[nodiscard]] std::strong_ordering operator<=>(Measure const &other) const;
+    [[nodiscard]] std::partial_ordering operator<=>(Measure const &other) const;
 };
 
 // Retreives the underlying value.
@@ -93,9 +93,6 @@ template <MeasureType Type> Value Measure<Type>::get() const { return value; }
 template <MeasureType Type>
 Measure<Type> &Measure<Type>::operator+=(Measure<Type> const &rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_add_overflow(this->value, rhs.value, &res));
-
     this->value += rhs.value;
     return *this;
 }
@@ -103,9 +100,6 @@ Measure<Type> &Measure<Type>::operator+=(Measure<Type> const &rhs)
 template <MeasureType Type>
 Measure<Type> &Measure<Type>::operator-=(Measure<Type> const &rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_sub_overflow(this->value, rhs.value, &res));
-
     this->value -= rhs.value;
     return *this;
 }
@@ -113,9 +107,6 @@ Measure<Type> &Measure<Type>::operator-=(Measure<Type> const &rhs)
 template <MeasureType Type>
 Measure<Type> &Measure<Type>::operator*=(Measure<Type> const &rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_mul_overflow(this->value, rhs.value, &res));
-
     this->value *= rhs.value;
     return *this;
 }
@@ -131,13 +122,16 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const &rhs)
 template <MeasureType Type>
 bool Measure<Type>::operator==(Measure<Type> const &other) const
 {
-    return value == other.value;
+    return std::abs(value - other.value) < 1e-5;  // HGS-CVRP tolerance value
 }
 
 template <MeasureType Type>
-std::strong_ordering
+std::partial_ordering
 Measure<Type>::operator<=>(Measure<Type> const &other) const
 {
+    if (*this == other)
+        return std::partial_ordering::equivalent;
+
     return value <=> other.value;
 }
 
@@ -145,9 +139,6 @@ Measure<Type>::operator<=>(Measure<Type> const &other) const
 template <MeasureType Type>
 Measure<Type> operator+(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_add_overflow(lhs.get(), rhs.get(), &res));
-
     return lhs.get() + rhs.get();
 }
 
@@ -159,9 +150,6 @@ template <MeasureType Type> Measure<Type> operator+(Measure<Type> const lhs)
 template <MeasureType Type>
 Measure<Type> operator-(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_sub_overflow(lhs.get(), rhs.get(), &res));
-
     return lhs.get() - rhs.get();
 }
 
@@ -173,9 +161,6 @@ template <MeasureType Type> Measure<Type> operator-(Measure<Type> const lhs)
 template <MeasureType Type>
 Measure<Type> operator*(Measure<Type> const lhs, Measure<Type> const rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_mul_overflow(lhs.get(), rhs.get(), &res));
-
     return lhs.get() * rhs.get();
 }
 
@@ -199,7 +184,10 @@ template <pyvrp::MeasureType Type> struct std::hash<pyvrp::Measure<Type>>
 {
     size_t operator()(pyvrp::Measure<Type> const measure) const
     {
-        return std::hash<pyvrp::Value>()(measure.get());
+        // With double precision, this hashes 'equal' items differently when
+        // they are very close to halfway between an integer value. Not ideal,
+        // but this should work well enough for our application.
+        return std::hash<pyvrp::Value>()(std::round(measure.get()));
     }
 };
 
