@@ -13,7 +13,7 @@ For reference, the pull request implementing prize-collecting is available `here
    How to set everything up for development is documented on the :doc:`contributing <contributing>` page.
 
 Adding support for new VRP variants starts with thinking about where to add the new problem data needed to solve it.
-In the case of prize-collecting, this meant adding the ``prize: int`` and ``required: bool`` fields to the :class:`~pyvrp._pyvrp.Client` object:
+In the case of prize-collecting, this meant adding the ``prize`` and ``required`` fields to the :class:`~pyvrp._pyvrp.Client` object:
 
 * The ``prize`` field indicates the prize obtained for visiting the client;
 * The ``required`` field indicates whether the client *must* be part of a feasible solution, regardless of the prize.
