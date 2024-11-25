@@ -14,10 +14,10 @@ namespace pyvrp::search
 /**
  * SwapStar(data: ProblemData)
  *
- * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood explores
- * free form re-insertions of clients :math:`U` and :math:`V` in the given
- * routes (so the clients are exchanged between routes, but they are not
- * necessarily inserted in the place of the other exchanged client).
+ * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood consists
+ * of free form re-insertions of clients :math:`U` and :math:`V` in the given
+ * routes (so the clients are swapped, but they are not necessarily inserted
+ * in the place of the other swapped client).
  *
  * References
  * ----------
