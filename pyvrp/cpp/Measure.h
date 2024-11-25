@@ -195,6 +195,11 @@ template <pyvrp::MeasureType Type>
 class std::numeric_limits<pyvrp::Measure<Type>>
 {
 public:
+    static pyvrp::Measure<Type> infinity()
+    {
+        return std::numeric_limits<pyvrp::Value>::infinity();
+    }
+
     static pyvrp::Measure<Type> max()
     {
         return std::numeric_limits<pyvrp::Value>::max();

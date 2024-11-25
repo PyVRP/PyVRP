@@ -120,9 +120,8 @@ public:
      * .. note::
      *
      *    The above cost computation only holds for feasible solutions. If the
-     *    solution argument is *infeasible*, we return a very large number.
-     *    If that is not what you want, consider calling :meth:`penalised_cost`
-     *    instead.
+     *    solution argument is *infeasible*, we return infinity. If that is not
+     *    what you want, consider calling :meth:`penalised_cost` instead.
      */
     // The docstring above is written for Python, where we only expose this
     // method for the Solution class.
@@ -211,7 +210,7 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
     // Penalties are zero when the solution is feasible, so we can fall back to
     // penalised cost in that case.
     return arg.isFeasible() ? penalisedCost(arg)
-                            : std::numeric_limits<Cost>::max();
+                            : std::numeric_limits<Cost>::infinity();
 }
 
 template <bool exact,
