@@ -461,14 +461,32 @@ PYBIND11_MODULE(_pyvrp, m)
             }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
+        // An empty list matches both constructors, and pybind11 picks the
+        // first one that matches. We want that to be the constructor taking a
+        // list of clients (rather than a list of trips), otherwise it is
+        // possible to create a route without any trips. So we define that one
+        // first.
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
-        .def("visits",
-             &Route::visits,
+        .def(py::init<ProblemData const &,
+                      std::vector<std::vector<size_t>>,
+                      size_t>(),
+             py::arg("data"),
+             py::arg("visits"),
+             py::arg("vehicle_type"))
+        .def("visits", &Route::visits, DOC(pyvrp, Route, visits))
+        .def("trips",
+             &Route::trips,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, Route, visits))
+             DOC(pyvrp, Route, trips))
+        .def("trip",
+             &Route::trip,
+             py::arg("trip"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, trip))
+        .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
         .def("distance", &Route::distance, DOC(pyvrp, Route, distance))
         .def("distance_cost",
              &Route::distanceCost,
@@ -535,7 +553,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
-                return py::make_tuple(route.visits(),
+                return py::make_tuple(route.trips(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
@@ -559,8 +577,8 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 Route route(
-                    t[0].cast<std::vector<size_t>>(),         // visits
-                    t[1].cast<pyvrp::Distance>(),             // distance
+                    t[0].cast<std::vector<std::vector<size_t>>>(),  // trips
+                    t[1].cast<pyvrp::Distance>(),                   // distance
                     t[2].cast<pyvrp::Cost>(),                 // distance cost
                     t[3].cast<pyvrp::Distance>(),             // excess distance
                     t[4].cast<std::vector<pyvrp::Load>>(),    // delivery

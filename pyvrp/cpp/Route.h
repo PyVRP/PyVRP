@@ -12,7 +12,11 @@
 namespace pyvrp
 {
 /**
- * Route(data: ProblemData, visits: list[int], vehicle_type: int)
+ * Route(
+ *     data: ProblemData,
+ *     visits: list[int] | list[list[int]],
+ *     vehicle_type:int
+ * )
  *
  * A simple class that stores the route plan and some statistics.
  */
@@ -21,9 +25,43 @@ class Route
     using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
-    using Visits = std::vector<Client>;
+    using Trip = std::vector<Client>;
+    using Trips = std::vector<Trip>;
 
-    Visits visits_ = {};           // Client visits on this route
+    /**
+     * Forward iterator through the clients visited by this route.
+     */
+    class Iterator
+    {
+        Trips const *trips = nullptr;
+        size_t trip = 0;   // trip index in trips
+        size_t visit = 0;  // visit index into trips[trip]
+
+        Iterator(Trips const &trips, size_t trip, size_t visit);
+
+    public:
+        using difference_type = std::ptrdiff_t;
+        using value_type = Client;
+
+        Iterator() = default;
+        Iterator(Iterator const &other) = default;
+        Iterator(Iterator &&other) = default;
+
+        Iterator &operator=(Iterator const &other) = default;
+        Iterator &operator=(Iterator &&other) = default;
+
+        static Iterator begin(Trips const &trips);
+        static Iterator end(Trips const &trips);
+
+        bool operator==(Iterator const &other) const;
+
+        Client operator*() const;
+
+        Iterator operator++(int);
+        Iterator &operator++();
+    };
+
+    Trips trips_ = {};             // Trips that make up this route
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -56,13 +94,28 @@ public:
 
     [[nodiscard]] Client operator[](size_t idx) const;
 
-    Visits::const_iterator begin() const;
-    Visits::const_iterator end() const;
+    Iterator begin() const;
+    Iterator end() const;
 
     /**
      * Route visits, as a list of clients.
      */
-    [[nodiscard]] Visits const &visits() const;
+    [[nodiscard]] std::vector<Client> const visits() const;
+
+    /**
+     * List of trips that constitute this route.
+     */
+    [[nodiscard]] Trips const &trips() const;
+
+    /**
+     * Returns the trip data of the given trip index.
+     */
+    [[nodiscard]] Trip const &trip(size_t trip) const;
+
+    /**
+     * Number of trips in this route.
+     */
+    [[nodiscard]] size_t numTrips() const;
 
     /**
      * Total distance travelled on this route.
@@ -143,7 +196,7 @@ public:
 
     /**
      * End time of the route. This is equivalent to
-     *  ``start_time + duration - time_warp``.
+     * ``start_time + duration - time_warp``.
      */
     [[nodiscard]] Duration endTime() const;
 
@@ -214,12 +267,14 @@ public:
 
     Route() = delete;
 
-    Route(ProblemData const &data,
-          Visits visits,
-          VehicleType const vehicleType);
+    // Case where the visits are made in a single trip.
+    Route(ProblemData const &data, Trip visits, VehicleType const vehicleType);
+
+    // Case where the visits are made in multiple trips.
+    Route(ProblemData const &data, Trips visits, VehicleType const vehicleType);
 
     // This constructor does *no* validation. Useful when unserialising objects.
-    Route(Visits visits,
+    Route(Trips trips,
           Distance distance,
           Cost distanceCost,
           Distance excessDistance,
