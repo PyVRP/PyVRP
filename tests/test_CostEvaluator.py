@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
@@ -98,8 +96,7 @@ def test_dist_penalty():
 def test_cost(ok_small):
     """
     This test asserts that the cost is computed correctly for feasible
-    solutions, and is a large value (representing infinity) for infeasible
-    solutions.
+    solutions, and is infinity for infeasible solutions.
     """
     default_cost_evaluator = CostEvaluator(0, 0, 0)
     cost_evaluator = CostEvaluator(20, 6, 0)
@@ -113,9 +110,8 @@ def test_cost(ok_small):
     infeas_sol = Solution(ok_small, [[1, 2, 3, 4]])  # infeasible solution
     assert_(not infeas_sol.is_feasible())
 
-    infeas_cost = sys.float_info.max
-    assert_equal(cost_evaluator.cost(infeas_sol), infeas_cost)
-    assert_equal(default_cost_evaluator.cost(infeas_sol), infeas_cost)
+    assert_equal(cost_evaluator.cost(infeas_sol), np.inf)
+    assert_equal(default_cost_evaluator.cost(infeas_sol), np.inf)
 
 
 def test_cost_with_prizes(prize_collecting):
