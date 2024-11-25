@@ -29,7 +29,6 @@ class SwapStar : public LocalSearchOperator<Route>
 {
     struct ThreeBest  // stores three best SWAP* insertion points
     {
-        bool shouldUpdate = true;
         std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
         std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
                                      std::numeric_limits<Cost>::max(),
@@ -49,9 +48,17 @@ class SwapStar : public LocalSearchOperator<Route>
         Route::Node *VAfter = nullptr;  // insert V after this node in U's route
     };
 
-    Matrix<ThreeBest> cache;
+    // Tracks the three best insert locations, for each route and client.
+    Matrix<ThreeBest> insertCache;
+
+    // Tracks whether the insert locations and removal costs are still up to
+    // date. In particular, isCached(R, 0) tracks route-wise removal cost
+    // validity, while isCached(R, U) with U > 0 tracks (route, client) insert
+    // location validity.
+    Matrix<bool> isCached;
+
+    // Tracks the removal costs of removing a client from its route.
     Matrix<Cost> removalCosts;
-    std::vector<bool> updated;
 
     BestMove best;
 
@@ -92,9 +99,9 @@ public:
 
     explicit SwapStar(ProblemData const &data)
         : LocalSearchOperator<Route>(data),
-          cache(data.numVehicles(), data.numLocations()),
-          removalCosts(data.numVehicles(), data.numLocations()),
-          updated(data.numVehicles(), true)
+          insertCache(data.numVehicles(), data.numLocations()),
+          isCached(data.numVehicles(), data.numLocations()),
+          removalCosts(data.numVehicles(), data.numLocations())
     {
     }
 };
