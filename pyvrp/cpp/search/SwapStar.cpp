@@ -192,9 +192,12 @@ Cost SwapStar::evaluate(Route *routeU,
     if (updated[routeV->idx()])
         updateRemovalCosts(routeV, costEvaluator);
 
-    for (auto *U : *routeU)
-        for (auto *V : *routeV)
+    for (size_t idxU = 1; idxU != routeU->size() + 1; ++idxU)
+        for (size_t idxV = 1; idxV != routeV->size() + 1; ++idxV)
         {
+            auto *U = (*routeU)[idxU];
+            auto *V = (*routeV)[idxV];
+
             // The following lines compute a delta cost of removing U and V from
             // their own routes and inserting them into the other's route in the
             // best place. This is approximate since removal and insertion are
@@ -205,8 +208,8 @@ Cost SwapStar::evaluate(Route *routeU,
             // Load is a bit tricky, so we compute that separately.
             deltaCost += deltaLoadCost(U, V, costEvaluator);
 
-            deltaCost += removalCosts(routeU->idx(), U->idx());
-            deltaCost += removalCosts(routeV->idx(), V->idx());
+            deltaCost += removalCosts(routeU->idx(), idxU);
+            deltaCost += removalCosts(routeV->idx(), idxV);
 
             auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;
