@@ -51,6 +51,7 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
+        overlap_tolerance: float = 0.05,
     ) -> Solution: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
     def intensify(

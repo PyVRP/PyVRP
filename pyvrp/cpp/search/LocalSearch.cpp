@@ -10,14 +10,15 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 
 Solution LocalSearch::operator()(Solution const &solution,
-                                 CostEvaluator const &costEvaluator)
+                                 CostEvaluator const &costEvaluator,
+                                 double overlapTolerance)
 {
     loadSolution(solution);
 
     while (true)
     {
         search(costEvaluator);
-        intensify(costEvaluator);
+        intensify(costEvaluator, overlapTolerance);
 
         if (numMoves == 0)  // then the current solution is locally optimal.
             break;
