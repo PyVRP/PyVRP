@@ -53,12 +53,12 @@ def plot_route_schedule(
 
     # Initialise tracking variables
     t = route.release_time()
-    drive_time = 0
-    serv_time = 0
-    dist = 0
+    drive_time = 0.0
+    serv_time = 0.0
+    dist = 0.0
     slack = horizon
 
-    load = 0
+    load = 0.0
     if track_load:
         load = route.delivery()[load_dimension]
 

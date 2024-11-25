@@ -9,11 +9,11 @@ namespace pyvrp
 {
 /**
  * DurationSegment(
- *     duration: int,
- *     time_warp: int,
- *     tw_early: int,
- *     tw_late: int,
- *     release_time: int,
+ *     duration: float,
+ *     time_warp: float,
+ *     tw_early: float,
+ *     tw_late: float,
+ *     release_time: float,
  * )
  *
  * Creates a duration segment.

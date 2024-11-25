@@ -7,7 +7,7 @@
 namespace pyvrp
 {
 /**
- * DistanceSegment(distance: int)
+ * DistanceSegment(distance: float)
  *
  * Creates a distance segment.
  *

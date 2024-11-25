@@ -39,8 +39,8 @@ class Edge:
         self,
         frm: Client | Depot,
         to: Client | Depot,
-        distance: int,
-        duration: int,
+        distance: float,
+        duration: float,
     ):
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
@@ -81,8 +81,8 @@ class Profile:
         self,
         frm: Client | Depot,
         to: Client | Depot,
-        distance: int,
-        duration: int = 0,
+        distance: float,
+        duration: float = 0,
     ) -> Edge:
         """
         Adds a new edge to this routing profile.
@@ -183,15 +183,15 @@ class Model:
 
     def add_client(
         self,
-        x: int,
-        y: int,
-        delivery: int | list[int] = [],
-        pickup: int | list[int] = [],
-        service_duration: int = 0,
+        x: float,
+        y: float,
+        delivery: float | list[float] = [],
+        pickup: float | list[float] = [],
+        service_duration: float = 0,
         tw_early: float = 0,
         tw_late: float = sys.float_info.max,
-        release_time: int = 0,
-        prize: int = 0,
+        release_time: float = 0,
+        prize: float = 0,
         required: bool = True,
         group: ClientGroup | None = None,
         *,
@@ -223,8 +223,8 @@ class Model:
         client = Client(
             x=x,
             y=y,
-            delivery=[delivery] if isinstance(delivery, int) else delivery,
-            pickup=[pickup] if isinstance(pickup, int) else pickup,
+            delivery=delivery if isinstance(delivery, list) else [delivery],
+            pickup=pickup if isinstance(pickup, list) else [pickup],
             service_duration=service_duration,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -253,8 +253,8 @@ class Model:
 
     def add_depot(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         *,
         name: str = "",
     ) -> Depot:
@@ -278,8 +278,8 @@ class Model:
         self,
         frm: Client | Depot,
         to: Client | Depot,
-        distance: int,
-        duration: int = 0,
+        distance: float,
+        duration: float = 0,
         profile: Profile | None = None,
     ) -> Edge:
         """
@@ -313,18 +313,18 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        capacity: int | list[int] = [],
+        capacity: float | list[float] = [],
         start_depot: Depot | None = None,
         end_depot: Depot | None = None,
-        fixed_cost: int = 0,
-        tw_early: int = 0,
+        fixed_cost: float = 0,
+        tw_early: float = 0,
         tw_late: float = sys.float_info.max,
         max_duration: float = sys.float_info.max,
         max_distance: float = sys.float_info.max,
-        unit_distance_cost: int = 1,
-        unit_duration_cost: int = 0,
+        unit_distance_cost: float = 1,
+        unit_duration_cost: float = 0,
         profile: Profile | None = None,
-        start_late: int | None = None,
+        start_late: float | None = None,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -366,7 +366,7 @@ class Model:
 
         vehicle_type = VehicleType(
             num_available=num_available,
-            capacity=[capacity] if isinstance(capacity, int) else capacity,
+            capacity=capacity if isinstance(capacity, list) else [capacity],
             start_depot=start_idx,
             end_depot=end_idx,
             fixed_cost=fixed_cost,
@@ -395,8 +395,8 @@ class Model:
         # First we create the base distance and duration matrices. These are
         # shared by all routing profiles. If an edge was not specified, we use
         # a large default value here.
-        base_distance = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
-        base_duration = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
+        base_distance = np.full((len(locs), len(locs)), MAX_VALUE)
+        base_duration = np.full((len(locs), len(locs)), MAX_VALUE)
         np.fill_diagonal(base_distance, 0)
         np.fill_diagonal(base_duration, 0)
 

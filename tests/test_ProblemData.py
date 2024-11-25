@@ -968,10 +968,10 @@ def test_pickle_data(ok_small, rc208):
     ],
 )
 def test_client_load_dimensions_are_padded_with_zeroes(
-    delivery: list[int],
-    pickup: list[int],
-    exp_delivery: list[int],
-    exp_pickup: list[int],
+    delivery: list[float],
+    pickup: list[float],
+    exp_delivery: list[float],
+    exp_pickup: list[float],
 ):
     """
     Tests that any missing load dimensions for the pickup and delivery Client

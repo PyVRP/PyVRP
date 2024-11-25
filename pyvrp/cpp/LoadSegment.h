@@ -7,7 +7,7 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(delivery: int = 0, pickup: int = 0, load: int = 0)
+ * LoadSegment(delivery: float = 0, pickup: float = 0, load: float = 0)
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
