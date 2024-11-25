@@ -549,13 +549,12 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.capacity, [])
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.unit_distance_cost, 1)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
-    assert_equal(vehicle_type.name, "")
-
     assert_equal(vehicle_type.tw_late, sys.float_info.max)
     assert_equal(vehicle_type.max_duration, sys.float_info.max)
     assert_equal(vehicle_type.max_distance, sys.float_info.max)
+    assert_equal(vehicle_type.unit_distance_cost, 1)
+    assert_equal(vehicle_type.unit_duration_cost, 0)
+    assert_equal(vehicle_type.name, "")
 
     # The default value for start_late is the value of tw_late.
     assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
