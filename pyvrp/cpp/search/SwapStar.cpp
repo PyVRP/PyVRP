@@ -37,7 +37,7 @@ void SwapStar::ThreeBest::maybeAdd(Cost costInsert, Route::Node *placeInsert)
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    updated[R->idx()] = false;
+    isCached(R->idx(), 0) = true;
 
     for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
@@ -52,17 +52,17 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
     }
 
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-        cache(R->idx(), idx).shouldUpdate = true;
+        isCached(R->idx(), idx) = false;
 }
 
 void SwapStar::updateInsertionCost(Route *R,
                                    Route::Node *U,
                                    CostEvaluator const &costEvaluator)
 {
-    auto &insertPositions = cache(R->idx(), U->client());
+    auto &insertPositions = insertCache(R->idx(), U->client());
 
     insertPositions = {};
-    insertPositions.shouldUpdate = false;
+    isCached(R->idx(), U->client()) = true;
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
@@ -119,9 +119,9 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto *route = V->route();
-    auto &best_ = cache(route->idx(), U->client());
+    auto &best_ = insertCache(route->idx(), U->client());
 
-    if (best_.shouldUpdate)  // then we first update the insert positions
+    if (!isCached(route->idx(), U->client()))
         updateInsertionCost(route, U, costEvaluator);
 
     for (size_t idx = 0; idx != 3; ++idx)  // only OK if V is not adjacent
@@ -178,7 +178,8 @@ Cost SwapStar::evaluateMove(Route::Node const *U,
 void SwapStar::init(Solution const &solution)
 {
     LocalSearchOperator<Route>::init(solution);
-    std::fill(updated.begin(), updated.end(), true);
+    for (size_t row = 0; row != isCached.numRows(); ++row)
+        isCached(row, 0) = false;
 }
 
 Cost SwapStar::evaluate(Route *routeU,
@@ -187,10 +188,10 @@ Cost SwapStar::evaluate(Route *routeU,
 {
     best = {};
 
-    if (updated[routeU->idx()])
+    if (!isCached(routeU->idx(), 0))
         updateRemovalCosts(routeU, costEvaluator);
 
-    if (updated[routeV->idx()])
+    if (!isCached(routeV->idx(), 0))
         updateRemovalCosts(routeV, costEvaluator);
 
     for (auto *U : *routeU)
@@ -254,4 +255,12 @@ void SwapStar::apply(Route *U, Route *V) const
     U->insert(best.VAfter->idx() + 1, best.V);
 }
 
-void SwapStar::update(Route *U) { updated[U->idx()] = true; }
+void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }
+
+SwapStar::SwapStar(ProblemData const &data)
+    : LocalSearchOperator<Route>(data),
+      insertCache(data.numVehicles(), data.numLocations()),
+      isCached(data.numVehicles(), data.numLocations()),
+      removalCosts(data.numVehicles(), data.numLocations())
+{
+}
