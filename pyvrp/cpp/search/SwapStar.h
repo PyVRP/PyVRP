@@ -97,13 +97,7 @@ public:
 
     void update(Route *U) override;
 
-    explicit SwapStar(ProblemData const &data)
-        : LocalSearchOperator<Route>(data),
-          insertCache(data.numVehicles(), data.numLocations()),
-          isCached(data.numVehicles(), data.numLocations()),
-          removalCosts(data.numVehicles(), data.numLocations())
-    {
-    }
+    explicit SwapStar(ProblemData const &data);
 };
 }  // namespace pyvrp::search
 

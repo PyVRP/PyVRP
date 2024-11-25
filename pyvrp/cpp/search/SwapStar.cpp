@@ -256,3 +256,11 @@ void SwapStar::apply(Route *U, Route *V) const
 }
 
 void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }
+
+SwapStar::SwapStar(ProblemData const &data)
+    : LocalSearchOperator<Route>(data),
+      insertCache(data.numVehicles(), data.numLocations()),
+      isCached(data.numVehicles(), data.numLocations()),
+      removalCosts(data.numVehicles(), data.numLocations())
+{
+}
