@@ -84,7 +84,7 @@ public:
      * )
      *
      * Simple data object storing all client data as properties. See also
-     * :doc:`../setup/concepts` for additional details about these properties.
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
@@ -329,7 +329,7 @@ public:
      * )
      *
      * Simple data object storing all vehicle type data as properties. See also
-     * :doc:`../setup/concepts` for additional details about these properties.
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
