@@ -42,11 +42,10 @@ void SwapStar::updateInsertPoints(Route *R,
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        auto *V = (*R)[idx];
-
         if (deltaCost >= insertPositions[2].first)
             continue;
 
+        auto *V = (*R)[idx];
         if (deltaCost >= insertPositions[1].first)
             insertPositions[2] = {deltaCost, V};
         else if (deltaCost >= insertPositions[0].first)
