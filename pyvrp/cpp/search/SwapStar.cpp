@@ -7,34 +7,6 @@ using pyvrp::Load;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 
-void SwapStar::ThreeBest::maybeAdd(Cost costInsert, Route::Node *placeInsert)
-{
-    if (costInsert >= costs[2])
-        return;
-
-    if (costInsert >= costs[1])
-    {
-        costs[2] = costInsert;
-        locs[2] = placeInsert;
-    }
-    else if (costInsert >= costs[0])
-    {
-        costs[2] = costs[1];
-        locs[2] = locs[1];
-        costs[1] = costInsert;
-        locs[1] = placeInsert;
-    }
-    else
-    {
-        costs[2] = costs[1];
-        locs[2] = locs[1];
-        costs[1] = costs[0];
-        locs[1] = locs[0];
-        costs[0] = costInsert;
-        locs[0] = placeInsert;
-    }
-}
-
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
     isCached(R->idx(), 0) = true;
@@ -61,7 +33,7 @@ void SwapStar::updateInsertionCost(Route *R,
 {
     auto &insertPositions = insertCache(R->idx(), U->client());
 
-    insertPositions = {};
+    insertPositions.fill({std::numeric_limits<Cost>::max(), nullptr});
     isCached(R->idx(), U->client()) = true;
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
@@ -73,7 +45,23 @@ void SwapStar::updateInsertionCost(Route *R,
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
         auto *V = (*R)[idx];
-        insertPositions.maybeAdd(deltaCost, V);
+
+        if (deltaCost >= insertPositions[2].first)
+            continue;
+
+        if (deltaCost >= insertPositions[1].first)
+            insertPositions[2] = {deltaCost, V};
+        else if (deltaCost >= insertPositions[0].first)
+        {
+            insertPositions[2] = insertPositions[1];
+            insertPositions[1] = {deltaCost, V};
+        }
+        else
+        {
+            insertPositions[2] = insertPositions[1];
+            insertPositions[1] = insertPositions[0];
+            insertPositions[0] = {deltaCost, V};
+        }
     }
 }
 
@@ -124,9 +112,9 @@ std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
     if (!isCached(route->idx(), U->client()))
         updateInsertionCost(route, U, costEvaluator);
 
-    for (size_t idx = 0; idx != 3; ++idx)  // only OK if V is not adjacent
-        if (best_.locs[idx] && best_.locs[idx] != V && n(best_.locs[idx]) != V)
-            return std::make_pair(best_.costs[idx], best_.locs[idx]);
+    for (auto [cost, where] : best_)  // only OK if V is not adjacent
+        if (where && where != V && n(where) != V)
+            return std::make_pair(cost, where);
 
     // As a fallback option, we consider inserting in the place of V.
     Cost deltaCost = 0;

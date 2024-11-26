@@ -27,15 +27,8 @@ namespace pyvrp::search
  */
 class SwapStar : public LocalSearchOperator<Route>
 {
-    struct ThreeBest  // stores three best SWAP* insertion points
-    {
-        std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
-        std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
-                                     std::numeric_limits<Cost>::max(),
-                                     std::numeric_limits<Cost>::max()};
-
-        void maybeAdd(Cost costInsert, Route::Node *placeInsert);
-    };
+    using InsertPoint = std::pair<Cost, Route::Node *>;
+    using ThreeBest = std::array<InsertPoint, 3>;
 
     struct BestMove  // tracks the best SWAP* move
     {
