@@ -60,18 +60,17 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).
-    void updateInsertionCost(Route *R,
-                             Route::Node *U,
-                             CostEvaluator const &costEvaluator);
+    void updateInsertPoints(Route *R,
+                            Route::Node *U,
+                            CostEvaluator const &costEvaluator);
 
     Cost deltaLoadCost(Route::Node *U,
                        Route::Node *V,
                        CostEvaluator const &costEvaluator) const;
 
-    // Gets the delta cost and reinsert point for U in the route of V, assuming
-    // V is removed.
-    std::pair<Cost, Route::Node *> getBestInsertPoint(
-        Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator);
+    InsertPoint bestInsertPoint(Route::Node *U,
+                                Route::Node *V,
+                                CostEvaluator const &costEvaluator);
 
     // Evaluates the delta cost for ``V``'s route of inserting ``U`` after
     // ``V``, while removing ``remove`` from ``V``'s route.

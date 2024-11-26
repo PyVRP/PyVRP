@@ -27,14 +27,12 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
         isCached(R->idx(), idx) = false;
 }
 
-void SwapStar::updateInsertionCost(Route *R,
-                                   Route::Node *U,
-                                   CostEvaluator const &costEvaluator)
+void SwapStar::updateInsertPoints(Route *R,
+                                  Route::Node *U,
+                                  CostEvaluator const &costEvaluator)
 {
     auto &insertPositions = insertCache(R->idx(), U->client());
-
     insertPositions.fill({std::numeric_limits<Cost>::max(), nullptr});
-    isCached(R->idx(), U->client()) = true;
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
@@ -63,6 +61,8 @@ void SwapStar::updateInsertionCost(Route *R,
             insertPositions[0] = {deltaCost, V};
         }
     }
+
+    isCached(R->idx(), U->client()) = true;
 }
 
 Cost SwapStar::deltaLoadCost(Route::Node *U,
@@ -103,14 +103,14 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
     return delta;
 }
 
-std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
+SwapStar::InsertPoint SwapStar::bestInsertPoint(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto *route = V->route();
     auto &best_ = insertCache(route->idx(), U->client());
 
     if (!isCached(route->idx(), U->client()))
-        updateInsertionCost(route, U, costEvaluator);
+        updateInsertPoints(route, U, costEvaluator);
 
     for (auto [cost, where] : best_)  // only OK if V is not adjacent
         if (where && where != V && n(where) != V)
@@ -198,13 +198,13 @@ Cost SwapStar::evaluate(Route *routeU,
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
 
-            auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
+            auto [extraV, UAfter] = bestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;
 
             if (deltaCost >= 0)  // continuing here avoids evaluating another
                 continue;        // costly insertion point below
 
-            auto [extraU, VAfter] = getBestInsertPoint(V, U, costEvaluator);
+            auto [extraU, VAfter] = bestInsertPoint(V, U, costEvaluator);
             deltaCost += extraU;
 
             if (deltaCost < best.cost)
