@@ -1,6 +1,7 @@
 #include "SwapStar.h"
 
 #include <cassert>
+#include <limits>
 
 using pyvrp::Cost;
 using pyvrp::Load;

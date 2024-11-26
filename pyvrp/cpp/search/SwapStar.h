@@ -3,11 +3,9 @@
 
 #include "LocalSearchOperator.h"
 #include "Matrix.h"
-#include "Measure.h"
 
 #include <array>
-#include <limits>
-#include <vector>
+#include <utility>
 
 namespace pyvrp::search
 {
