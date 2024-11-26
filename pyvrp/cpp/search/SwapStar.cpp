@@ -1,44 +1,15 @@
 #include "SwapStar.h"
 
 #include <cassert>
+#include <limits>
 
 using pyvrp::Cost;
 using pyvrp::Load;
 using pyvrp::search::Route;
 using pyvrp::search::SwapStar;
 
-void SwapStar::ThreeBest::maybeAdd(Cost costInsert, Route::Node *placeInsert)
-{
-    if (costInsert >= costs[2])
-        return;
-
-    if (costInsert >= costs[1])
-    {
-        costs[2] = costInsert;
-        locs[2] = placeInsert;
-    }
-    else if (costInsert >= costs[0])
-    {
-        costs[2] = costs[1];
-        locs[2] = locs[1];
-        costs[1] = costInsert;
-        locs[1] = placeInsert;
-    }
-    else
-    {
-        costs[2] = costs[1];
-        locs[2] = locs[1];
-        costs[1] = costs[0];
-        locs[1] = locs[0];
-        costs[0] = costInsert;
-        locs[0] = placeInsert;
-    }
-}
-
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    isCached(R->idx(), 0) = true;
-
     for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
         auto const proposal
@@ -51,18 +22,17 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
+    isCached(R->idx(), 0) = true;  // removal costs are now updated
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-        isCached(R->idx(), idx) = false;
+        isCached(R->idx(), idx) = false;  // but insert costs not yet
 }
 
-void SwapStar::updateInsertionCost(Route *R,
-                                   Route::Node *U,
-                                   CostEvaluator const &costEvaluator)
+void SwapStar::updateInsertPoints(Route *R,
+                                  Route::Node *U,
+                                  CostEvaluator const &costEvaluator)
 {
     auto &insertPositions = insertCache(R->idx(), U->client());
-
-    insertPositions = {};
-    isCached(R->idx(), U->client()) = true;
+    insertPositions.fill({std::numeric_limits<Cost>::max(), nullptr});
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
@@ -72,9 +42,26 @@ void SwapStar::updateInsertionCost(Route *R,
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
+        if (deltaCost >= insertPositions[2].first)
+            continue;
+
         auto *V = (*R)[idx];
-        insertPositions.maybeAdd(deltaCost, V);
+        if (deltaCost >= insertPositions[1].first)
+            insertPositions[2] = {deltaCost, V};
+        else if (deltaCost >= insertPositions[0].first)
+        {
+            insertPositions[2] = insertPositions[1];
+            insertPositions[1] = {deltaCost, V};
+        }
+        else
+        {
+            insertPositions[2] = insertPositions[1];
+            insertPositions[1] = insertPositions[0];
+            insertPositions[0] = {deltaCost, V};
+        }
     }
+
+    isCached(R->idx(), U->client()) = true;
 }
 
 Cost SwapStar::deltaLoadCost(Route::Node *U,
@@ -115,18 +102,17 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
     return delta;
 }
 
-std::pair<Cost, Route::Node *> SwapStar::getBestInsertPoint(
+SwapStar::InsertPoint SwapStar::bestInsertPoint(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto *route = V->route();
-    auto &best_ = insertCache(route->idx(), U->client());
 
     if (!isCached(route->idx(), U->client()))
-        updateInsertionCost(route, U, costEvaluator);
+        updateInsertPoints(route, U, costEvaluator);
 
-    for (size_t idx = 0; idx != 3; ++idx)  // only OK if V is not adjacent
-        if (best_.locs[idx] && best_.locs[idx] != V && n(best_.locs[idx]) != V)
-            return std::make_pair(best_.costs[idx], best_.locs[idx]);
+    for (auto [cost, where] : insertCache(route->idx(), U->client()))
+        if (where && where != V && n(where) != V)  // only if V is not adjacent
+            return std::make_pair(cost, where);
 
     // As a fallback option, we consider inserting in the place of V.
     Cost deltaCost = 0;
@@ -210,13 +196,13 @@ Cost SwapStar::evaluate(Route *routeU,
             deltaCost += removalCosts(routeU->idx(), U->client());
             deltaCost += removalCosts(routeV->idx(), V->client());
 
-            auto [extraV, UAfter] = getBestInsertPoint(U, V, costEvaluator);
+            auto [extraV, UAfter] = bestInsertPoint(U, V, costEvaluator);
             deltaCost += extraV;
 
             if (deltaCost >= 0)  // continuing here avoids evaluating another
                 continue;        // costly insertion point below
 
-            auto [extraU, VAfter] = getBestInsertPoint(V, U, costEvaluator);
+            auto [extraU, VAfter] = bestInsertPoint(V, U, costEvaluator);
             deltaCost += extraU;
 
             if (deltaCost < best.cost)
