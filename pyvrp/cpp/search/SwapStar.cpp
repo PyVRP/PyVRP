@@ -9,8 +9,6 @@ using pyvrp::search::SwapStar;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    isCached(R->idx(), 0) = true;
-
     for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
         auto const proposal
@@ -23,8 +21,9 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
+    isCached(R->idx(), 0) = true;  // removal costs are now updated
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-        isCached(R->idx(), idx) = false;
+        isCached(R->idx(), idx) = false;  // but insert costs not yet
 }
 
 void SwapStar::updateInsertPoints(Route *R,
@@ -106,13 +105,12 @@ SwapStar::InsertPoint SwapStar::bestInsertPoint(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto *route = V->route();
-    auto &best_ = insertCache(route->idx(), U->client());
 
     if (!isCached(route->idx(), U->client()))
         updateInsertPoints(route, U, costEvaluator);
 
-    for (auto [cost, where] : best_)  // only OK if V is not adjacent
-        if (where && where != V && n(where) != V)
+    for (auto [cost, where] : insertCache(route->idx(), U->client()))
+        if (where && where != V && n(where) != V)  // only if V is not adjacent
             return std::make_pair(cost, where);
 
     // As a fallback option, we consider inserting in the place of V.
