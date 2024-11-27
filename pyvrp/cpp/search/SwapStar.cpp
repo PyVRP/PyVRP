@@ -31,8 +31,8 @@ void SwapStar::updateInsertPoints(Route *R,
                                   Route::Node *U,
                                   CostEvaluator const &costEvaluator)
 {
-    auto &insertPositions = insertCache(R->idx(), U->client());
-    insertPositions.fill({std::numeric_limits<Cost>::max(), nullptr});
+    auto &insertPoints = insertCache(R->idx(), U->client());
+    insertPoints.fill({std::numeric_limits<Cost>::max(), nullptr});
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
@@ -42,23 +42,20 @@ void SwapStar::updateInsertPoints(Route *R,
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        if (deltaCost >= insertPositions[2].first)
-            continue;
-
         auto *V = (*R)[idx];
-        if (deltaCost >= insertPositions[1].first)
-            insertPositions[2] = {deltaCost, V};
-        else if (deltaCost >= insertPositions[0].first)
+        if (deltaCost < insertPoints[0].first)
         {
-            insertPositions[2] = insertPositions[1];
-            insertPositions[1] = {deltaCost, V};
+            insertPoints[2] = insertPoints[1];
+            insertPoints[1] = insertPoints[0];
+            insertPoints[0] = {deltaCost, V};
         }
-        else
+        else if (deltaCost < insertPoints[1].first)
         {
-            insertPositions[2] = insertPositions[1];
-            insertPositions[1] = insertPositions[0];
-            insertPositions[0] = {deltaCost, V};
+            insertPoints[2] = insertPoints[1];
+            insertPoints[1] = {deltaCost, V};
         }
+        else if (deltaCost < insertPoints[2].first)
+            insertPoints[2] = {deltaCost, V};
     }
 
     isCached(R->idx(), U->client()) = true;
