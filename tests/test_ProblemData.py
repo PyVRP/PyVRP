@@ -506,6 +506,15 @@ def test_vehicle_type_raises_invalid_data(
         )
 
 
+def test_vehicle_type_raises_multiple_trips_for_different_depots():
+    """
+    Tests that the vehicle type constructor raises when setting max_trips to a
+    value greater than 1 when the start and end depots are different.
+    """
+    with assert_raises(ValueError):
+        VehicleType(start_depot=1, end_depot=2, max_trips=2)
+
+
 def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     """
     The vehicle type constructor should allow the following edge case where all
@@ -587,7 +596,7 @@ def test_vehicle_type_attribute_access():
         unit_distance_cost=37,
         unit_duration_cost=41,
         start_late=18,
-        max_trips=3,
+        max_trips=1,
         name="vehicle_type name",
     )
 
@@ -603,7 +612,7 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.unit_distance_cost, 37)
     assert_equal(vehicle_type.unit_duration_cost, 41)
     assert_equal(vehicle_type.start_late, 18)
-    assert_equal(vehicle_type.max_trips, 3)
+    assert_equal(vehicle_type.max_trips, 1)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")

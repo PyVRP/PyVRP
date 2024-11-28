@@ -263,6 +263,10 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (maxTrips < 1)
         throw std::invalid_argument("max_trips must be >= 1.");
+
+    if (maxTrips > 1 && startDepot != endDepot)
+        throw std::invalid_argument(
+            "max_trips can only be > 1 when start_depot == end_depot.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)

@@ -84,6 +84,15 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
 
+    // Check max trips is not exceeded for vehicle type.
+    if (trips_.size() > vehType.maxTrips)
+    {
+        std::ostringstream msg;
+        msg << "Number of trips exceeds vehicle type limit (" << trips_.size()
+            << " > " << vehType.maxTrips << ").";
+        throw std::runtime_error(msg.str());
+    }
+
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
@@ -94,7 +103,8 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
     DurationSegment routeDs = {vehType, vehType.startLate};
     for (size_t trip = 0; trip != trips_.size(); ++trip)
     {
-        size_t prev = trip == 0 ? startDepot_ : endDepot_;
+        // Every trip starts at the start depot and ends at the end depot.
+        size_t prev = startDepot_;
         Duration const depotTwLate
             = trip == 0 ? vehType.startLate : vehType.twLate;
 
@@ -126,7 +136,7 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
             prev = client;
         }
 
-        size_t end = endDepot_;  // Trips always end at the end depot.
+        size_t end = endDepot_;
         distance_ += distances(prev, end);
         distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
         excessDistance_

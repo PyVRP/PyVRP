@@ -387,7 +387,7 @@ def test_indexing(ok_small, visits):
     Tests that routes are properly indexed with one or multiple trips, and
     raise an index error when the given argument is out-of-bounds.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(3, [10])])
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=3)])
     route = Route(data, visits, 0)
 
     assert_equal(len(route), 4)
@@ -409,7 +409,7 @@ def test_trip_access(ok_small):
     Tests that accessing trips and client visits in a multi-trip route works
     correctly.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(3, [10])])
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=2)])
     route = Route(data, [[1, 2], [3, 4]], 0)
 
     assert_equal(len(route), 4)
@@ -435,7 +435,7 @@ def test_load_multi_trip(ok_small):
     """
     Tests that Route properly evaluates load violations with multiple trips.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType(3, [10])])
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=2)])
 
     # Route wants to visit every client in a single trip. That does not fit in
     # the vehicle's capacity, so this has excess load.
@@ -455,7 +455,7 @@ def test_distance_multi_trip(ok_small):
     Tests that Route properly evaluates travel distance and maximum distance
     violations with multiple trips.
     """
-    vehicle_type = VehicleType(3, [10], max_distance=7_000)
+    vehicle_type = VehicleType(3, [10], max_distance=7_000, max_trips=2)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     dist = data.distance_matrix(0)
 
@@ -476,7 +476,7 @@ def test_duration_multi_trip(ok_small):
     Tests that Route properly evaluates travel duration and time warp on routes
     with multiple trips.
     """
-    vehicle_type = VehicleType(3, [10])
+    vehicle_type = VehicleType(3, [10], max_trips=2)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     duration = data.duration_matrix(0)
 
