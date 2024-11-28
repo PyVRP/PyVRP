@@ -114,15 +114,11 @@ void Solution::makeNeighbours(ProblemData const &data)
         for (size_t tripIdx = 0; tripIdx != route.numTrips(); ++tripIdx)
         {
             auto const &trip = route.trip(tripIdx);
-            for (size_t clientIdx = 0; clientIdx != trip.size(); ++clientIdx)
-            {
-                auto pred = clientIdx == 0
-                                ? (tripIdx == 0 ? startDepot : endDepot)
-                                : trip[clientIdx - 1];
-                auto succ = clientIdx == trip.size() - 1 ? endDepot
-                                                         : trip[clientIdx + 1];
-                neighbours_[trip[clientIdx]] = {pred, succ};
-            }
+            for (size_t idx = 0; idx != trip.size(); ++idx)
+                // Every trip starts at start depot and ends at end depot.
+                neighbours_[trip[idx]] = {
+                    idx == 0 ? startDepot : trip[idx - 1],               // pred
+                    idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ
         }
     }
 }
@@ -236,11 +232,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
     {
         if (route.empty())
             throw std::runtime_error("Solution should not have empty routes.");
-
-        for (auto const &trip : route.trips())
-            if (trip.empty())
-                throw std::runtime_error(
-                    "Solution should not have empty trips.");
 
         usedVehicles[route.vehicleType()]++;
         for (auto const client : route)

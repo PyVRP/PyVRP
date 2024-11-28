@@ -21,12 +21,11 @@ Route::Iterator::Iterator(Trips const &trips, size_t trip, size_t visit)
 
 Route::Iterator Route::Iterator::begin(Trips const &trips)
 {
-    // Skip empty trips.
-    for (size_t trip = 0; trip != trips.size(); ++trip)
-        if (!trips[trip].empty())
-            return Iterator(trips, trip, 0);
+    // If first trip is empty, then there are no visits, so return end.
+    if (trips.empty() || trips[0].empty())
+        return Iterator(trips, trips.size(), 0);
 
-    return Iterator(trips, trips.size(), 0);
+    return Iterator(trips, 0, 0);
 }
 
 Route::Iterator Route::Iterator::end(Trips const &trips)
@@ -59,10 +58,8 @@ Route::Iterator &Route::Iterator::operator++()
 
     if (visit + 1 >= tripSize)
     {
-        // Skip empty trips
-        while (trip + 1 < trips->size() && (*trips)[trip + 1].empty())
-            ++trip;
-
+        // Empty trips are not allowed after the first trip, so there should
+        // always be a visit in the next trip.
         ++trip;
         visit = 0;
     }
@@ -93,6 +90,17 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
         throw std::runtime_error(msg.str());
     }
 
+    if (trips_.empty())
+        throw std::runtime_error("Route must have at least one trip.");
+
+    // Check that there are no empty trips. Only the first trip may be empty if
+    // the route consists of a single trip.
+    if (trips_.size() > 1
+        && std::any_of(trips_.begin(),
+                       trips_.end(),
+                       [](auto const &trip) { return trip.empty(); }))
+        throw std::runtime_error("Empty trips are not allowed.");
+
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
@@ -105,11 +113,7 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
     {
         // Every trip starts at the start depot and ends at the end depot.
         size_t prev = startDepot_;
-        Duration const depotTwLate
-            = trip == 0 ? vehType.startLate : vehType.twLate;
-
         std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
-        DurationSegment ds = {vehType, depotTwLate};
 
         for (auto const client : trips_[trip])
         {
@@ -124,7 +128,8 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
             centroid_.second += static_cast<double>(clientData.y) / size();
 
             auto const clientDS = DurationSegment(clientData);
-            ds = DurationSegment::merge(durations(prev, client), ds, clientDS);
+            routeDs = DurationSegment::merge(
+                durations(prev, client), routeDs, clientDS);
 
             for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
             {
@@ -138,10 +143,6 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
 
         size_t end = endDepot_;
         distance_ += distances(prev, end);
-        distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
-        excessDistance_
-            = std::max<Distance>(distance_ - vehType.maxDistance, 0);
-
         travel_ += durations(prev, end);
 
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
@@ -153,12 +154,12 @@ Route::Route(ProblemData const &data, Trips visits, size_t const vehicleType)
         }
 
         DurationSegment endDS(vehType, vehType.twLate);
-        ds = DurationSegment::merge(durations(prev, endDepot_), ds, endDS);
-
-        // No edge duration between trips.
-        routeDs = DurationSegment::merge(0, routeDs, ds);
+        routeDs = DurationSegment::merge(
+            durations(prev, endDepot_), routeDs, endDS);
     }
 
+    distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
+    excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
     duration_ = routeDs.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
     startTime_ = routeDs.twEarly();
@@ -325,11 +326,11 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
 {
     for (size_t i = 0; i != route.numTrips(); ++i)
     {
+        if (i > 0)
+            out << " | ";
+
         for (auto const client : route.trip(i))
             out << client << ' ';
-
-        if (i != route.numTrips() - 1)
-            out << " | ";
     }
 
     return out;

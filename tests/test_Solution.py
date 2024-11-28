@@ -281,6 +281,32 @@ def test_neighbours_multi_depot(ok_small):
         assert_equal(neighbours[loc], expected[loc])
 
 
+def test_neighbours_multi_trip(ok_small):
+    """
+    Tests that the neighbour structure of (pred, succ) pairs for each client in
+    the solution works correctly when there are multiple trips.
+    """
+    assert_equal(ok_small.num_clients, 4)
+
+    ok_small = ok_small.replace(
+        vehicle_types=[VehicleType(capacity=[10], max_trips=2)]
+    )
+    sol = Solution(ok_small, [Route(ok_small, [[1, 2, 3], [4]], 0)])
+    assert_(sol.is_complete())
+
+    neighbours = sol.neighbours()
+    expected = [
+        None,  # 0: is depot
+        (0, 2),  # 1: between depot (0) and 2
+        (1, 3),  # 2: between 1 and 3
+        (2, 0),  # 3: between 2 and depot (0)
+        (0, 0),  # 4: between depot (0) and depot (0)
+    ]
+
+    for loc in range(ok_small.num_locations):
+        assert_equal(neighbours[loc], expected[loc])
+
+
 def test_feasibility(ok_small):
     """
     Tests that solutions are infeasible when they have load or time window
