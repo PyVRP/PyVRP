@@ -7,7 +7,10 @@
 
 using pyvrp::search::Route;
 
-Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
+Route::Node::Node(size_t loc, NodeType type)
+    : loc_(loc), idx_(0), route_(nullptr), type_(type)
+{
+}
 
 void Route::Node::assign(Route *route, size_t idx)
 {
@@ -26,12 +29,10 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
       idx_(idx),
-      startDepot_(vehicleType_.startDepot),
-      endDepot_(vehicleType_.endDepot),
       loadAt(data.numLoadDimensions()),
       loadAfter(data.numLoadDimensions()),
       loadBefore(data.numLoadDimensions()),
-      load_(data.numLoadDimensions()),
+      loadPerTrip_(data.numLoadDimensions()),
       excessLoad_(data.numLoadDimensions())
 {
     clear();
@@ -41,18 +42,15 @@ Route::~Route() { clear(); }
 
 std::vector<Route::Node *>::const_iterator Route::begin() const
 {
-    return nodes.begin() + 1;
+    return nodes.begin();
 }
 std::vector<Route::Node *>::const_iterator Route::end() const
 {
-    return nodes.end() - 1;
+    return nodes.end();
 }
 
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
+std::vector<Route::Node *>::iterator Route::begin() { return nodes.begin(); }
+std::vector<Route::Node *>::iterator Route::end() { return nodes.end(); }
 
 std::pair<double, double> const &Route::centroid() const
 {
@@ -90,12 +88,17 @@ void Route::clear()
     for (auto *node : nodes)
         node->unassign();
 
-    nodes.clear();  // clear nodes and reinsert the depots.
-    nodes.push_back(&startDepot_);
-    nodes.push_back(&endDepot_);
+    // Clear nodes and reinsert depot nodes of first trip.
+    nodes.clear();
+    depotNodes.clear();
+    depotNodes.emplace_back(vehicleType_.startDepot, Node::NodeType::DepotLoad);
+    depotNodes.emplace_back(vehicleType_.endDepot, Node::NodeType::DepotUnload);
 
-    startDepot_.assign(this, 0);
-    endDepot_.assign(this, 1);
+    nodes.push_back(&depotNodes[0]);
+    nodes.push_back(&depotNodes[1]);
+
+    depotNodes[0].assign(this, 0);
+    depotNodes[1].assign(this, 1);
 
     update();
 }
@@ -117,7 +120,22 @@ void Route::insert(size_t idx, Node *node)
 
 void Route::push_back(Node *node)
 {
-    insert(size() + 1, node);
+    // Inserts before the last depot node.
+    insert(nodes.size() - 1, node);
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
+}
+
+void Route::emplace_back_depot(size_t depotIdx, Node::NodeType type)
+{
+    assert(depotIdx == vehicleType_.startDepot
+           || depotIdx == vehicleType_.endDepot);
+
+    auto &depotNode = depotNodes.emplace_back(depotIdx, type);
+    depotNode.assign(this, nodes.size());
+    nodes.push_back(&depotNode);
 
 #ifndef NDEBUG
     dirty = true;
@@ -126,6 +144,8 @@ void Route::push_back(Node *node)
 
 void Route::remove(size_t idx)
 {
+    // TODO: remove trip depot nodes if the trip becomes empty (except if it is
+    // the only trip).
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
@@ -143,6 +163,7 @@ void Route::remove(size_t idx)
 void Route::swap(Node *first, Node *second)
 {
     // TODO specialise std::swap for Node
+    // TODO not allowed to swap depot nodes?
     if (first->route_)
         first->route_->nodes[first->idx_] = second;
 
@@ -163,17 +184,37 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
+    assert(nodes.size() >= 2);  // Depot nodes of first trip must be included.
+
+    size_t numClients = 0;
     visits.clear();
     for (auto const *node : nodes)
+    {
         visits.emplace_back(node->client());
+        if (node->type() == Node::NodeType::Client)
+            ++numClients;
+    }
 
     centroid_ = {0, 0};
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
+        if (visits[idx] < data.numDepots())
+            continue;
+
         ProblemData::Client const &clientData = data.location(visits[idx]);
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
+        centroid_.first += static_cast<double>(clientData.x) / numClients;
+        centroid_.second += static_cast<double>(clientData.y) / numClients;
     }
+
+    // Trip idx.
+    tripIdx.resize(nodes.size());
+    tripIdx[0] = 0;
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        tripIdx[idx] = nodes[idx]->type() == Node::NodeType::DepotLoad
+                           ? tripIdx[idx - 1] + 1
+                           : tripIdx[idx - 1];
+
+    size_t numTrips = tripIdx.back() + 1;
 
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
@@ -187,10 +228,10 @@ void Route::update()
     // Duration.
     durAt.resize(nodes.size());
     durAt[0] = {vehicleType_, vehicleType_.startLate};
-    durAt[nodes.size() - 1] = {vehicleType_, vehicleType_.twLate};
-
-    for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        durAt[idx] = {data.location(visits[idx])};
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        durAt[idx] = nodes[idx]->type() == Node::NodeType::Client
+                         ? DurationSegment(data.location(visits[idx]))
+                         : DurationSegment(vehicleType_, vehicleType_.twLate);
 
     auto const &durMat = data.durationMatrix(profile());
 
@@ -215,26 +256,44 @@ void Route::update()
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         loadAt[dim].resize(nodes.size());
-        loadAt[dim][0] = {};
-        loadAt[dim][nodes.size() - 1] = {};
-
-        for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            loadAt[dim][idx] = {data.location(visits[idx]), dim};
+        for (size_t idx = 0; idx != nodes.size(); ++idx)
+            loadAt[dim][idx]
+                = nodes[idx]->type() == Node::NodeType::Client
+                      ? LoadSegment(data.location(visits[idx]), dim)
+                      : LoadSegment();
 
         loadBefore[dim].resize(nodes.size());
-        loadBefore[dim][0] = loadAt[dim][0];
-        for (size_t idx = 1; idx != nodes.size(); ++idx)
-            loadBefore[dim][idx] = LoadSegment::merge(loadBefore[dim][idx - 1],
-                                                      loadAt[dim][idx]);
+        loadPerTrip_[dim].resize(numTrips);
+        for (size_t idx = 0; idx != nodes.size(); ++idx)
+        {
+            if (nodes[idx]->type() == Node::NodeType::DepotLoad)
+                loadBefore[dim][idx] = loadAt[dim][idx];
+            else
+                loadBefore[dim][idx] = LoadSegment::merge(
+                    loadBefore[dim][idx - 1], loadAt[dim][idx]);
 
-        load_[dim] = loadBefore[dim].back().load();
-        excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
+            // Update the load per trip.
+            if (nodes[idx]->type() == Node::NodeType::DepotUnload)
+                loadPerTrip_[dim][tripIdx[idx]] = loadBefore[dim][idx].load();
+        }
+
+        excessLoad_[dim] = 0;
+        for (size_t trip = 0; trip != numTrips; ++trip)
+        {
+            Load const tripLoad = loadPerTrip_[dim][trip];
+            excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
+        }
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            loadAfter[dim][idx - 1]
-                = LoadSegment::merge(loadAt[dim][idx - 1], loadAfter[dim][idx]);
+        {
+            if (nodes[idx - 1]->type() == Node::NodeType::DepotUnload)
+                loadAfter[dim][idx - 1] = loadAt[dim][idx - 1];
+            else
+                loadAfter[dim][idx - 1] = LoadSegment::merge(
+                    loadAt[dim][idx - 1], loadAfter[dim][idx]);
+        }
     }
 
 #ifndef NDEBUG
@@ -246,7 +305,13 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
     out << "Route #" << route.idx() + 1 << ":";  // route number
     for (auto *node : route)
-        out << ' ' << node->client();  // client index
+    {
+        if (node->type() == Route::Node::NodeType::Client)
+            out << ' ' << node->client();  // client index
+        else if (node->type() == Route::Node::NodeType::DepotLoad
+                 && node != *route.begin())
+            out << " |";  // trip delimiter
+    }
     out << '\n';
 
     return out;

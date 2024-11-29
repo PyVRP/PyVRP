@@ -83,6 +83,7 @@ def test_route_depots_are_depots(ok_small):
         # The depots flank the clients at indices {1, ..., len(route)}. Thus,
         # depots are at indices 0 and len(route) + 1.
         route.append(Node(loc=loc))
+        route.update()
         assert_(route[0].is_depot())
         assert_(route[len(route) + 1].is_depot())
 
@@ -96,11 +97,13 @@ def test_route_append_increases_route_len(ok_small):
 
     node = Node(loc=1)
     route.append(node)
+    route.update()
     assert_equal(len(route), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
     node = Node(loc=2)
     route.append(node)
+    route.update()
     assert_equal(len(route), 2)
     assert_(route[2] is node)  # pointers, so must be same object
 
@@ -116,12 +119,14 @@ def test_route_insert(ok_small):
     # Insert a few nodes so we have an actual route.
     route.append(Node(loc=1))
     route.append(Node(loc=2))
+    route.update()
     assert_equal(len(route), 2)
     assert_equal(route[1].client, 1)
     assert_equal(route[2].client, 2)
 
-    # # Now insert a new nodes at index 1.
+    # Now insert a new nodes at index 1.
     route.insert(1, Node(loc=3))
+    route.update()
     assert_equal(len(route), 3)
     assert_equal(route[1].client, 3)
     assert_equal(route[2].client, 1)
@@ -130,22 +135,24 @@ def test_route_insert(ok_small):
 
 def test_route_iter_returns_all_clients(ok_small):
     """
-    Tests that iterating over a route returns all clients in the route, but
-    not the depots.
+    Tests that iterating over a route returns all depots and clients in the
+    route.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
 
     for loc in [1, 2, 3]:
         route.append(Node(loc=loc))
 
+    route.update()
     nodes = [node for node in route]
-    assert_equal(len(nodes), len(route))
+    assert_equal(len(nodes), len(route) + 2)  # num nodes = num clients + 2
 
-    # Iterating the Route object returns all clients, not the depots at index
-    # ``0`` and index ``len(route) + 1`` in the Route object.
-    assert_equal(nodes[0], route[1])
-    assert_equal(nodes[1], route[2])
-    assert_equal(nodes[2], route[3])
+    # Iterating the Route object returns all clients and depots in the route.
+    assert_equal(nodes[0], route[0])
+    assert_equal(nodes[1], route[1])
+    assert_equal(nodes[2], route[2])
+    assert_equal(nodes[3], route[3])
+    assert_equal(nodes[4], route[4])
 
 
 def test_route_add_and_delete_client_leaves_route_empty(ok_small):
@@ -155,9 +162,11 @@ def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     route = Route(ok_small, idx=0, vehicle_type=0)
 
     route.append(Node(loc=1))
+    route.update()
     assert_equal(len(route), 1)
 
     del route[1]
+    route.update()
     assert_equal(len(route), 0)
 
 
@@ -169,9 +178,11 @@ def test_route_delete_reduces_size_by_one(ok_small):
 
     route.append(Node(loc=1))
     route.append(Node(loc=2))
+    route.update()
     assert_equal(len(route), 2)
 
     del route[1]
+    route.update()
     assert_equal(len(route), 1)
     assert_equal(route[1].client, 2)
 
@@ -187,6 +198,7 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     for loc in range(1, num_nodes + 1):
         route.append(Node(loc=loc))
 
+    route.update()
     assert_equal(len(route), num_nodes)
 
     route.clear()
@@ -457,9 +469,9 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
+    route.update()
     assert_equal(len(route), ok_small.num_clients)
 
-    route.update()
     assert_(route.has_time_warp())
     assert_equal(route.duration_between(0, 5).time_warp(), route.time_warp())
 

@@ -54,12 +54,15 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
         auto &route = *std::min_element(routes.begin(), routes.end(), cmp);
 
         // Find best insertion point in selected route, either after a client,
-        // or, initially, after the depot.
-        Cost bestCost = insertCost(U, route[0], data, costEvaluator);
-        auto offset = 1;
+        // or, after the start depot of a trip.
+        Cost bestCost = std::numeric_limits<pyvrp::Cost>::max();
+        std::optional<size_t> offset = std::nullopt;
 
         for (auto *V : route)  // evaluate after V
         {
+            if (V->type() == SearchRoute::Node::NodeType::DepotUnload)
+                continue;
+
             auto const cost = insertCost(U, V, data, costEvaluator);
             if (cost < bestCost)
             {
@@ -68,7 +71,8 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
             }
         }
 
-        route.insert(offset, U);
+        assert(offset.has_value());
+        route.insert(offset.value(), U);
         route.update();
     }
 

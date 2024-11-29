@@ -35,15 +35,11 @@ pyvrp::repair::greedyRepair(std::vector<SolRoute> const &solRoutes,
 
         for (auto &route : routes)
         {
-            auto const cost = insertCost(U, route[0], data, costEvaluator);
-            if (cost < deltaCost)  // evaluate after depot
+            for (auto *V : route)
             {
-                deltaCost = cost;
-                UAfter = route[0];
-            }
+                if (V->type() == SearchRoute::Node::NodeType::DepotUnload)
+                    continue;
 
-            for (auto *V : route)  // evaluate after V
-            {
                 auto const cost = insertCost(U, V, data, costEvaluator);
                 if (cost < deltaCost)
                 {

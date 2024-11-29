@@ -20,14 +20,33 @@ void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
     routes.reserve(solRoutes.size());
 
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
-        locs.emplace_back(loc);
+        locs.emplace_back(loc,
+                          loc < data.numDepots()
+                              ? SearchRoute::Node::NodeType::DepotLoad
+                              : SearchRoute::Node::NodeType::Client);
 
     size_t idx = 0;
     for (auto const &solRoute : solRoutes)
     {
+        auto const &vehicleType = data.vehicleType(solRoute.vehicleType());
         auto &route = routes.emplace_back(data, idx++, solRoute.vehicleType());
-        for (auto const client : solRoute)
-            route.push_back(&locs[client]);
+
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            if (tripIdx > 0)  // Create and insert depot nodes for new trip.
+            {
+                route.emplace_back_depot(
+                    vehicleType.startDepot,
+                    SearchRoute::Node::NodeType::DepotLoad);
+                route.emplace_back_depot(
+                    vehicleType.endDepot,
+                    SearchRoute::Node::NodeType::DepotUnload);
+            }
+
+            auto const &trip = solRoute.trip(tripIdx);
+            for (auto const client : trip)
+                route.push_back(&locs[client]);
+        }
 
         route.update();
     }
@@ -42,13 +61,26 @@ pyvrp::repair::exportRoutes(ProblemData const &data,
 
     for (auto const &route : routes)
     {
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
+        if (route.empty())
+            continue;
 
+        std::vector<std::vector<size_t>> trips;
+        trips.reserve(route.numTrips());
+
+        std::vector<size_t> trip;
+        trip.reserve(route.size());  // upper bound
         for (auto *node : route)
-            visits.push_back(node->client());
+        {
+            if (node->type()
+                == SearchRoute::Node::NodeType::DepotLoad)  // start trip
+                trip.clear();
+            else if (node->type() == SearchRoute::Node::NodeType::Client)
+                trip.push_back(node->client());
+            else  // depot unload -> end of trip
+                trips.push_back(trip);
+        }
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return solRoutes;

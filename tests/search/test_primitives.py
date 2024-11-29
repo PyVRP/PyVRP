@@ -202,6 +202,7 @@ def test_inplace_cost_zero_when_shortcutting_on_guard_clauses(ok_small):
     # node1 is in the route, so it cannot be inserted in place of node2, which
     # is not in a route. This should shortcut to return 0.
     route.append(node1)
+    route.update()
     assert_(node1.route and not node2.route)
     assert_equal(inplace_cost(node1, node2, ok_small, cost_eval), 0)
 
@@ -214,6 +215,7 @@ def test_inplace_cost_zero_when_shortcutting_on_guard_clauses(ok_small):
     # already in a route. That should shortcut.
     route.append(node1)
     route.append(node2)
+    route.update()
     assert_(node1.route and node2.route)
     assert_equal(inplace_cost(node1, node2, ok_small, cost_eval), 0)
 

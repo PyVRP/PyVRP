@@ -265,6 +265,8 @@ PYBIND11_MODULE(_search, m)
         .def("max_distance", &Route::maxDistance)
         .def("time_warp", &Route::timeWarp)
         .def("profile", &Route::profile)
+        .def("num_trips", &Route::numTrips)
+        .def("max_trips", &Route::maxTrips)
         .def(
             "dist_at",
             [](Route const &route, size_t idx, size_t profile)
@@ -360,11 +362,20 @@ PYBIND11_MODULE(_search, m)
         .def_static("swap", &Route::swap, py::arg("first"), py::arg("second"))
         .def("update", &Route::update);
 
+    py::enum_<Route::Node::NodeType>(m, "NodeType")
+        .value("CLIENT", Route::Node::NodeType::Client)
+        .value("DEPOT_LOAD", Route::Node::NodeType::DepotLoad)
+        .value("DEPOT_UNLOAD", Route::Node::NodeType::DepotUnload)
+        .export_values();
+
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
-        .def(py::init<size_t>(), py::arg("loc"))
+        .def(py::init<size_t, Route::Node::NodeType>(),
+             py::arg("loc"),
+             py::arg("type") = Route::Node::NodeType::Client)
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("route", &Route::Node::route)
+        .def_property_readonly("type", &Route::Node::type)
         .def("is_depot", &Route::Node::isDepot);
 
     m.def("insert_cost",

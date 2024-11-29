@@ -38,7 +38,7 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
     { arg.distanceSegment() };
     { arg.durationSegment() };
-    { arg.loadSegment(dimension) };
+    { arg.excessLoad(dimension) };
 };
 
 /**
@@ -246,7 +246,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     {
         auto const &capacity = route->capacity();
         for (size_t dim = 0; dim != capacity.size(); ++dim)
-            out += loadPenalty(proposal.loadSegment(dim).load(), capacity[dim]);
+            out += loadPenalty(proposal.excessLoad(dim), 0);
     }
 
     auto const duration = proposal.durationSegment();
@@ -308,13 +308,11 @@ bool CostEvaluator::deltaCost(Cost &out,
     {
         auto const &uCapacity = uRoute->capacity();
         for (size_t dim = 0; dim != uCapacity.size(); ++dim)
-            out += loadPenalty(uProposal.loadSegment(dim).load(),
-                               uCapacity[dim]);
+            out += loadPenalty(uProposal.excessLoad(dim), 0);
 
         auto const &vCapacity = vRoute->capacity();
         for (size_t dim = 0; dim != vCapacity.size(); ++dim)
-            out += loadPenalty(vProposal.loadSegment(dim).load(),
-                               vCapacity[dim]);
+            out += loadPenalty(vProposal.excessLoad(dim), 0);
     }
 
     if constexpr (!exact)

@@ -96,6 +96,13 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
                     if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
                         continue;
+
+                    // Introduce new trip
+                    // if (n(V)->type() == Route::Node::NodeType::DepotUnload
+                    //     && n(V)->route()->numTrips() <
+                    //     n(V)->route()->maxTrips()
+                    //     && applyNodeOps(U, n(V), costEvaluator))
+                    //     continue;
                 }
             }
 
@@ -395,12 +402,25 @@ void LocalSearch::loadSolution(Solution const &solution)
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
+        auto const &vehicleType = data.vehicleType(solRoute.vehicleType());
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route &route = routes[r];
 
         assert(route.empty());  // should have been emptied above.
-        for (auto const client : solRoute)
-            route.push_back(&nodes[client]);
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            if (tripIdx > 0)  // Create and insert depot nodes for new trip.
+            {
+                route.emplace_back_depot(vehicleType.startDepot,
+                                         Route::Node::NodeType::DepotLoad);
+                route.emplace_back_depot(vehicleType.endDepot,
+                                         Route::Node::NodeType::DepotUnload);
+            }
+
+            auto const &trip = solRoute.trip(tripIdx);
+            for (auto const client : trip)
+                route.push_back(&nodes[client]);
+        }
 
         route.update();
     }
@@ -419,13 +439,22 @@ Solution LocalSearch::exportSolution() const
         if (route.empty())
             continue;
 
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
+        std::vector<std::vector<size_t>> trips;
+        trips.reserve(route.numTrips());
 
+        std::vector<size_t> trip;
+        trip.reserve(route.size());  // upper bound
         for (auto *node : route)
-            visits.push_back(node->client());
+        {
+            if (node->type() == Route::Node::NodeType::DepotLoad)  // start trip
+                trip.clear();
+            else if (node->type() == Route::Node::NodeType::Client)
+                trip.push_back(node->client());
+            else  // depot unload -> end of trip
+                trips.push_back(trip);
+        }
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return {data, solRoutes};
@@ -479,7 +508,10 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
-        nodes.emplace_back(loc);
+        nodes.emplace_back(loc,
+                           loc < data.numDepots()
+                               ? Route::Node::NodeType::DepotLoad
+                               : Route::Node::NodeType::Client);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;

@@ -192,8 +192,8 @@ def test_wrong_load_calculation_bug():
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -36)
     swap_star.apply(route1, route2)
 
-    assert_equal([node.client for node in route1], [3, 1])
-    assert_equal([node.client for node in route2], [4, 2])
+    assert_equal([node.client for node in route1], [0, 3, 1, 0])
+    assert_equal([node.client for node in route2], [0, 4, 2, 0])
 
 
 def test_max_distance(ok_small):
