@@ -111,11 +111,13 @@ void Solution::makeNeighbours(ProblemData const &data)
         auto const startDepot = vehicleType.startDepot;
         auto const endDepot = vehicleType.endDepot;
 
+        // Every trip starts at start depot and ends at end depot.
+        assert(route.numTrips() == 1 || startDepot == endDepot);
+
         for (size_t tripIdx = 0; tripIdx != route.numTrips(); ++tripIdx)
         {
             auto const &trip = route.trip(tripIdx);
             for (size_t idx = 0; idx != trip.size(); ++idx)
-                // Every trip starts at start depot and ends at end depot.
                 neighbours_[trip[idx]] = {
                     idx == 0 ? startDepot : trip[idx - 1],               // pred
                     idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ

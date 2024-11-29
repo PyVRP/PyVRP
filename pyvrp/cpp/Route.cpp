@@ -21,9 +21,13 @@ Route::Iterator::Iterator(Trips const &trips, size_t trip, size_t visit)
 
 Route::Iterator Route::Iterator::begin(Trips const &trips)
 {
+    assert(trips.size() >= 1);
     // If first trip is empty, then there are no visits, so return end.
-    if (trips.empty() || trips[0].empty())
+    if (trips[0].empty())
+    {
+        assert(trips.size() == 1);
         return Iterator(trips, trips.size(), 0);
+    }
 
     return Iterator(trips, 0, 0);
 }
@@ -60,6 +64,7 @@ Route::Iterator &Route::Iterator::operator++()
     {
         // Empty trips are not allowed after the first trip, so there should
         // always be a visit in the next trip.
+        assert(trip + 1 == trips->size() || !(*trips)[trip + 1].empty());
         ++trip;
         visit = 0;
     }
