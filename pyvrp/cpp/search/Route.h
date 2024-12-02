@@ -239,12 +239,11 @@ public:
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
 
-    // First client in the route if the route is non-empty. Else it is the
-    // end depot. In either case the iterator is valid!
+    // First depot in the route.
     [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
     [[nodiscard]] std::vector<Node *>::iterator begin();
 
-    // End depot. The iterator is valid!
+    // One element past the end depot.
     [[nodiscard]] std::vector<Node *>::const_iterator end() const;
     [[nodiscard]] std::vector<Node *>::iterator end();
 
@@ -378,9 +377,14 @@ public:
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * @return Number of clients in this route.
+     * @return Number of nodes (clients + depots) in this route.
      */
     [[nodiscard]] inline size_t size() const;
+
+    /**
+     * @return Number of clients in this route.
+     */
+    [[nodiscard]] inline size_t numClients() const;
 
     /**
      * @return Number of trips in this route.
@@ -752,13 +756,14 @@ Duration Route::timeWarp() const
 
 size_t Route::profile() const { return vehicleType_.profile; }
 
-bool Route::empty() const { return size() == 0; }
+bool Route::empty() const { return numClients() == 0; }
 
-size_t Route::size() const
+size_t Route::size() const { return nodes.size(); }
+
+size_t Route::numClients() const
 {
-    assert(!dirty);
-    assert(nodes.size() >= numTrips() * 2);  // excl. depots (2 nodes per trip)
-    return nodes.size() - (numTrips() * 2);
+    // Number of clients is the number of nodes minus the number of depot nodes.
+    return nodes.size() - depotNodes.size();
 }
 
 size_t Route::numTrips() const

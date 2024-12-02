@@ -265,6 +265,7 @@ PYBIND11_MODULE(_search, m)
         .def("max_distance", &Route::maxDistance)
         .def("time_warp", &Route::timeWarp)
         .def("profile", &Route::profile)
+        .def("num_clients", &Route::numClients)
         .def("num_trips", &Route::numTrips)
         .def("max_trips", &Route::maxTrips)
         .def(

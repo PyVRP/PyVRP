@@ -39,15 +39,18 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
     updated[R->idx()] = false;
 
-    for (size_t idx = 1; idx != R->size() + 1; ++idx)
+    for (size_t idx = 0; idx != R->size(); ++idx)
     {
+        auto const *U = (*R)[idx];
+        if (U->isDepot())
+            continue;
+
         auto const proposal
             = R->proposal(R->before(idx - 1), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
@@ -64,15 +67,19 @@ void SwapStar::updateInsertionCost(Route *R,
     insertPositions = {};
     insertPositions.shouldUpdate = false;
 
-    for (size_t idx = 0; idx != R->size() + 1; ++idx)
+    for (size_t idx = 0; idx != R->size(); ++idx)
     {
+        // Skip points which would lead to new trip.
+        auto *V = (*R)[idx];
+        if (V->type() == Route::Node::NodeType::DepotUnload)
+            continue;
+
         auto const proposal = R->proposal(
             R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        auto *V = (*R)[idx];
         insertPositions.maybeAdd(deltaCost, V);
     }
 }

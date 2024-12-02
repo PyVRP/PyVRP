@@ -71,7 +71,8 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
     ProblemData::Client const &client = data.location(U->client());
 
     Cost deltaCost
-        = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
+        = client.prize
+          - Cost(route->numClients() == 1) * route->fixedVehicleCost();
 
     costEvaluator.deltaCost<true>(deltaCost,
                                   route->proposal(route->before(U->idx() - 1),
