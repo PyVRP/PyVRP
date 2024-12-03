@@ -192,8 +192,8 @@ private:
     ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
 
-    std::vector<Node> depotNodes;  // Depot nodes in this route, for every trip
-                                   // a departure and return depot node
+    std::vector<std::pair<Node, Node>>
+        depotNodes;  // Every trip has departure and return depot node pair.
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
@@ -205,13 +205,13 @@ private:
 
     // Load data, for each load dimension. These vectors form matrices, where
     // the rows index the load dimension, and the columns the nodes.
-    std::vector<LoadSegments> loadAt;      // Load data at each node
-    std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
-    std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
+    std::vector<LoadSegments> loadAt;          // Load data at each node
+    std::vector<LoadSegments> tripLoadAfter;   // Load of client -> depot (incl)
+    std::vector<LoadSegments> tripLoadBefore;  // Load of depot -> client (incl)
 
     // Load per trip, for each load dimension. This vector forms a matrix,
     // where the rows index the load dimension, and the columns the trips.
-    std::vector<std::vector<Load>> loadPerTrip_;
+    std::vector<std::vector<Load>> tripLoad_;
 
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
 
@@ -398,6 +398,11 @@ public:
     [[nodiscard]] inline size_t maxTrips() const;
 
     /**
+     * @return Whether this route contains a depot at the given segment.
+     */
+    [[nodiscard]] inline bool containsDepot(size_t startIdx, size_t length);
+
+    /**
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
@@ -455,9 +460,9 @@ public:
     void push_back(Node *node);
 
     /**
-     * Creates and inserts the depot load/unload node at the back of the route.
+     * Creates and inserts the depot load/unload pair at the back of the route.
      */
-    void emplace_back_depot(size_t depotIdx, Node::NodeType type);
+    void emplace_back_depot(size_t startDepotIdx, size_t endDepotIdx);
 
     /**
      * Removes the node at ``idx`` from the route.
@@ -547,7 +552,7 @@ DurationSegment Route::SegmentAfter::duration(size_t profile) const
 
 LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
 {
-    return route.loadAfter[dimension][start];
+    return route.tripLoadAfter[dimension][start];
 }
 
 DistanceSegment Route::SegmentBefore::distance(size_t profile) const
@@ -570,7 +575,7 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
 
 LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 {
-    return route.loadBefore[dimension][end];
+    return route.tripLoadBefore[dimension][end];
 }
 
 size_t Route::SegmentBefore::first() const { return route.visits.front(); }
@@ -685,10 +690,8 @@ std::vector<Load> const Route::load() const
     assert(!dirty);
     std::vector<Load> loads(data.numLoadDimensions(), 0);
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-    {
         loads[dim] = std::accumulate(
-            loadPerTrip_[dim].begin(), loadPerTrip_[dim].end(), Load(0));
-    }
+            tripLoad_[dim].begin(), tripLoad_[dim].end(), Load(0));
 
     return loads;
 }
@@ -762,17 +765,27 @@ size_t Route::size() const { return nodes.size(); }
 
 size_t Route::numClients() const
 {
-    // Number of clients is the number of nodes minus the number of depot nodes.
-    return nodes.size() - depotNodes.size();
+    // Number of clients equals the number of nodes minus the number of depot
+    // nodes (2 per trip).
+    assert(nodes.size() >= 2 * numTrips());
+    return nodes.size() - 2 * numTrips();
 }
 
 size_t Route::numTrips() const
 {
-    assert(!dirty);
-    return tripIdx.back() + 1;
+    assert(depotNodes.size() > 0);
+    return depotNodes.size();
 }
 
 size_t Route::maxTrips() const { return vehicleType_.maxTrips; }
+
+bool Route::containsDepot(size_t startIdx, size_t length)
+{
+    assert(startIdx < nodes.size());
+    return std::any_of(nodes.begin() + startIdx,
+                       nodes.begin() + startIdx + length,
+                       [](auto node) { return node->isDepot(); });
+}
 
 Route::SegmentBetween Route::at(size_t idx) const
 {
@@ -891,7 +904,8 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
         return segment;
     };
 
-    return std::apply(fn, segments).load() - current->capacity()[dimension];
+    return std::max<Load>(
+        std::apply(fn, segments).load() - current->capacity()[dimension], 0);
 }
 }  // namespace pyvrp::search
 

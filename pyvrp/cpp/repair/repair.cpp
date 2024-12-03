@@ -34,14 +34,8 @@ void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
         for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
         {
             if (tripIdx > 0)  // Create and insert depot nodes for new trip.
-            {
-                route.emplace_back_depot(
-                    vehicleType.startDepot,
-                    SearchRoute::Node::NodeType::DepotLoad);
-                route.emplace_back_depot(
-                    vehicleType.endDepot,
-                    SearchRoute::Node::NodeType::DepotUnload);
-            }
+                route.emplace_back_depot(vehicleType.startDepot,
+                                         vehicleType.endDepot);
 
             auto const &trip = solRoute.trip(tripIdx);
             for (auto const client : trip)
@@ -71,8 +65,7 @@ pyvrp::repair::exportRoutes(ProblemData const &data,
         trip.reserve(route.size());  // upper bound
         for (auto *node : route)
         {
-            if (node->type()
-                == SearchRoute::Node::NodeType::DepotLoad)  // start trip
+            if (node->type() == SearchRoute::Node::NodeType::DepotLoad)
                 trip.clear();
             else if (node->type() == SearchRoute::Node::NodeType::Client)
                 trip.push_back(node->client());

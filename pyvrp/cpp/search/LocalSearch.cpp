@@ -94,13 +94,13 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    if (p(V)->type() == Route::Node::NodeType::DepotLoad
+                        && applyNodeOps(U, p(V), costEvaluator))
                         continue;
 
                     // Introduce new trip
                     // if (n(V)->type() == Route::Node::NodeType::DepotUnload
-                    //     && n(V)->route()->numTrips() <
-                    //     n(V)->route()->maxTrips()
+                    //     && V->route()->numTrips() < V->route()->maxTrips()
                     //     && applyNodeOps(U, n(V), costEvaluator))
                     //     continue;
                 }
@@ -410,15 +410,13 @@ void LocalSearch::loadSolution(Solution const &solution)
         for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
         {
             if (tripIdx > 0)  // Create and insert depot nodes for new trip.
-            {
                 route.emplace_back_depot(vehicleType.startDepot,
-                                         Route::Node::NodeType::DepotLoad);
-                route.emplace_back_depot(vehicleType.endDepot,
-                                         Route::Node::NodeType::DepotUnload);
-            }
+                                         vehicleType.endDepot);
 
             auto const &trip = solRoute.trip(tripIdx);
             for (auto const client : trip)
+                // Note that the ``push_back`` method will insert the client
+                // before the last depot node.
                 route.push_back(&nodes[client]);
         }
 
