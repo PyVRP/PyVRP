@@ -191,14 +191,36 @@ void Route::update()
 {
     assert(nodes.size() >= 2);  // Depot nodes of first trip must be included.
 
+    size_t numTrips = this->numTrips();
+    std::vector<size_t> tripStart;
+    tripStart.reserve(numTrips);
+    std::vector<size_t> tripEnd;
+    tripEnd.reserve(numTrips);
+
     size_t numClients = 0;
     visits.clear();
-    for (auto const *node : nodes)
+
+    tripIdx.resize(nodes.size());
+    size_t currentTripIdx = 0;
+    for (size_t idx = 0; idx != nodes.size(); ++idx)
     {
+        auto const *node = nodes[idx];
         visits.emplace_back(node->client());
+        tripIdx[idx] = currentTripIdx;
+
         if (node->type() == Node::NodeType::Client)
             ++numClients;
+        else if (node->type() == Node::NodeType::DepotLoad)
+            tripStart.push_back(idx);
+        else  // Depot unload
+        {
+            tripEnd.push_back(idx);
+            ++currentTripIdx;
+            assert(tripStart.size() == tripEnd.size());
+        }
     }
+
+    assert(currentTripIdx == numTrips);
 
     centroid_ = {0, 0};
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
@@ -210,16 +232,6 @@ void Route::update()
         centroid_.first += static_cast<double>(clientData.x) / numClients;
         centroid_.second += static_cast<double>(clientData.y) / numClients;
     }
-
-    // Trip idx.
-    tripIdx.resize(nodes.size());
-    tripIdx[0] = 0;
-    for (size_t idx = 1; idx != nodes.size(); ++idx)
-        tripIdx[idx] = nodes[idx]->type() == Node::NodeType::DepotLoad
-                           ? tripIdx[idx - 1] + 1
-                           : tripIdx[idx - 1];
-
-    size_t numTrips = tripIdx.back() + 1;
 
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
@@ -261,41 +273,35 @@ void Route::update()
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         loadAt[dim].resize(nodes.size());
-        for (size_t idx = 0; idx != nodes.size(); ++idx)
-            loadAt[dim][idx]
-                = nodes[idx]->type() == Node::NodeType::Client
-                      ? LoadSegment(data.location(visits[idx]), dim)
-                      : LoadSegment();
+        for (size_t trip = 0; trip != numTrips; ++trip)
+        {
+            loadAt[dim][tripStart[trip]] = LoadSegment();
+            for (size_t idx = tripStart[trip] + 1; idx != tripEnd[trip]; ++idx)
+                loadAt[dim][idx] = LoadSegment(data.location(visits[idx]), dim);
+
+            loadAt[dim][tripEnd[trip]] = LoadSegment();
+        }
 
         tripLoadBefore[dim].resize(nodes.size());
         tripLoad_[dim].resize(numTrips);
-        for (size_t idx = 0; idx != nodes.size(); ++idx)
-        {
-            if (nodes[idx]->type() == Node::NodeType::DepotLoad)
-                tripLoadBefore[dim][idx] = loadAt[dim][idx];
-            else
-                tripLoadBefore[dim][idx] = LoadSegment::merge(
-                    tripLoadBefore[dim][idx - 1], loadAt[dim][idx]);
-
-            // Update the load per trip.
-            if (nodes[idx]->type() == Node::NodeType::DepotUnload)
-                tripLoad_[dim][tripIdx[idx]] = tripLoadBefore[dim][idx].load();
-        }
-
         excessLoad_[dim] = 0;
         for (size_t trip = 0; trip != numTrips; ++trip)
         {
-            Load const tripLoad = tripLoad_[dim][trip];
-            excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
+            tripLoadBefore[dim][tripStart[trip]] = loadAt[dim][tripStart[trip]];
+            for (size_t idx = tripStart[trip]; idx != tripEnd[trip]; ++idx)
+                tripLoadBefore[dim][idx + 1] = LoadSegment::merge(
+                    tripLoadBefore[dim][idx], loadAt[dim][idx + 1]);
+
+            tripLoad_[dim][trip] = tripLoadBefore[dim][tripEnd[trip]].load();
+            excessLoad_[dim]
+                += std::max<Load>(tripLoad_[dim][trip] - capacity()[dim], 0);
         }
 
         tripLoadAfter[dim].resize(nodes.size());
-        tripLoadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
-        for (size_t idx = nodes.size() - 1; idx != 0; --idx)
+        for (size_t trip = 0; trip != numTrips; ++trip)
         {
-            if (nodes[idx - 1]->type() == Node::NodeType::DepotUnload)
-                tripLoadAfter[dim][idx - 1] = loadAt[dim][idx - 1];
-            else
+            tripLoadAfter[dim][tripEnd[trip]] = loadAt[dim][tripEnd[trip]];
+            for (size_t idx = tripEnd[trip]; idx != tripStart[trip]; --idx)
                 tripLoadAfter[dim][idx - 1] = LoadSegment::merge(
                     loadAt[dim][idx - 1], tripLoadAfter[dim][idx]);
         }
