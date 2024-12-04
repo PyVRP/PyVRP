@@ -292,9 +292,9 @@ void Route::update()
                 tripLoadBefore[dim][idx + 1] = LoadSegment::merge(
                     tripLoadBefore[dim][idx], loadAt[dim][idx + 1]);
 
-            tripLoad_[dim][trip] = tripLoadBefore[dim][tripEnd[trip]].load();
-            excessLoad_[dim]
-                += std::max<Load>(tripLoad_[dim][trip] - capacity()[dim], 0);
+            tripLoad_[dim][trip] = tripLoadBefore[dim][tripEnd[trip]];
+            excessLoad_[dim] += std::max<Load>(
+                tripLoad_[dim][trip].load() - capacity()[dim], 0);
         }
 
         tripLoadAfter[dim].resize(nodes.size());
