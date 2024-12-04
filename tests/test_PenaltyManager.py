@@ -1,6 +1,12 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises, assert_warns
+from numpy.testing import (
+    assert_,
+    assert_allclose,
+    assert_equal,
+    assert_raises,
+    assert_warns,
+)
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
 from pyvrp.exceptions import PenaltyBoundWarning
@@ -150,14 +156,14 @@ def test_load_penalty_update_decrease(ok_small):
         pm.register(sol)
     assert_equal(pm.cost_evaluator().load_penalty(2, 1), 90)
 
-    # Test that the penalty cannot decrease beyond 1, its minimum value.
+    # Test that the penalty cannot decrease beyond MIN_PENALTY.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 1, 1))
+    pm = PenaltyManager(params, initial_penalties=(0.1, 1, 1))
 
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(11, 1), 1)
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(11, 1), 1)
 
 
 def test_time_warp_penalty_update_increase(ok_small):
@@ -238,14 +244,14 @@ def test_time_warp_penalty_update_decrease(ok_small):
         pm.register(sol)
     assert_equal(pm.cost_evaluator().tw_penalty(1), 90)
 
-    # Test that the penalty cannot decrease beyond 1, its minimum value.
+    # Test that the penalty cannot decrease beyond MIN_PENALTY.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 1, 1))
+    pm = PenaltyManager(params, initial_penalties=(1, 0.1, 1))
 
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 1)
+    assert_equal(pm.cost_evaluator().tw_penalty(10), 1)
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 1)
+    assert_equal(pm.cost_evaluator().tw_penalty(10), 1)
 
 
 def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
@@ -320,7 +326,9 @@ def test_max_min_penalty(ok_small):
     # should drop to zero due to the penalty_decrease parameter. But penalty
     # parameters cannot drop below MIN_PENALTY.
     pm.register(feas)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), PenaltyManager.MIN_PENALTY)
+    assert_allclose(
+        pm.cost_evaluator().tw_penalty(10), 10 * PenaltyManager.MIN_PENALTY
+    )
 
 
 def test_warns_max_penalty_value(ok_small):
@@ -398,6 +406,9 @@ def test_init_clips_penalties():
     pm = PenaltyManager(initial_penalties=penalties)
 
     cost_eval = pm.cost_evaluator()
-    assert_equal(cost_eval.load_penalty(1, 0), 1)  # set to MIN
+    assert_allclose(  # MIN
+        cost_eval.load_penalty(10, 0),
+        10 * PenaltyManager.MIN_PENALTY,
+    )
     assert_equal(cost_eval.tw_penalty(1), PenaltyManager.MAX_PENALTY)  # MAX
     assert_equal(cost_eval.dist_penalty(1, 0), 2)  # already OK, so unchanged

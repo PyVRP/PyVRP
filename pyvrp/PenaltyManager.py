@@ -116,7 +116,7 @@ class PenaltyManager:
         MAX_PENALTY]``.
     """
 
-    MIN_PENALTY: float = 1.0
+    MIN_PENALTY: float = 0.1
     MAX_PENALTY: float = 100_000.0
     FEAS_TOL: float = 0.05
 
