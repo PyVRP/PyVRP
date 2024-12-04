@@ -57,6 +57,10 @@ public:
 template <size_t N, size_t M>
 bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 {
+    // Segment exceeds route size, so it must contain a depot.
+    if (node->idx() + segLength >= node->route()->size())
+        return true;
+
     return node->route()->containsDepot(node->idx(), segLength);
 }
 

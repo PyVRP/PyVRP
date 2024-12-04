@@ -781,10 +781,17 @@ size_t Route::maxTrips() const { return vehicleType_.maxTrips; }
 
 bool Route::containsDepot(size_t startIdx, size_t length)
 {
-    assert(startIdx < nodes.size());
-    return std::any_of(nodes.begin() + startIdx,
-                       nodes.begin() + startIdx + length,
-                       [](auto node) { return node->isDepot(); });
+    assert(!dirty);
+    assert(startIdx + length - 1 < nodes.size());
+
+    // First and last nodes are always depots
+    if (startIdx == 0 || startIdx + length >= nodes.size())
+        return true;
+
+    // 3 possible cases: depot at start, end or in between.
+    // To find depots at start or end, we comapre the trip indices of the
+    // previous node before start and the node after end segment.
+    return tripIdx[startIdx - 1] != tripIdx[startIdx + length];
 }
 
 Route::SegmentBetween Route::at(size_t idx) const
