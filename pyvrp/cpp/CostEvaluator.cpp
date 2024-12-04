@@ -2,7 +2,9 @@
 
 using pyvrp::CostEvaluator;
 
-CostEvaluator::CostEvaluator(Cost loadPenalty, Cost twPenalty, Cost distPenalty)
+CostEvaluator::CostEvaluator(double loadPenalty,
+                             double twPenalty,
+                             double distPenalty)
     : loadPenalty_(loadPenalty),
       twPenalty_(twPenalty),
       distPenalty_(distPenalty)
