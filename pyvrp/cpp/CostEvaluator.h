@@ -58,8 +58,8 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  * Parameters
  * ----------
  * load_penalties
- *    The penalty terms per load dimension for each unit of excess load over
- *    the vehicle capacity.
+ *    The penalty terms (one for each load dimension) for each unit of load in
+ *    excess of the vehicle capacity.
  * tw_penalty
  *    The penalty for each unit of time warp.
  * dist_penalty

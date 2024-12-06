@@ -339,6 +339,7 @@ def test_warns_max_penalty_value(ok_small):
     params = PenaltyParams(solutions_between_updates=1)
     initial = ([1], PenaltyManager.MAX_PENALTY, 1)
     pm = PenaltyManager(initial, params)
+    assert_equal(pm.penalties, initial)
 
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
@@ -419,14 +420,14 @@ def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     Tests that init_from correctly sets up multiple, different load penalties,
     one for each load dimension.
     """
-    assert_equal(ok_small_multiple_load.num_load_dimensions, 2)
-
-    # The instance has two load dimensions, so there should be four penalties
-    # in total: 2 for load, one for duration, and another for distance.
     pm = PenaltyManager.init_from(ok_small_multiple_load)
-    assert_equal(len(pm.penalties), 4)
+    load_penalties, *_ = pm.penalties
+    assert_equal(
+        len(load_penalties),
+        ok_small_multiple_load.num_load_dimensions,
+    )
 
     # The first load dimension has 18 total demand. The second 5. The ratio of
     # the load penalties should reflect this difference.
-    load_penalty1, load_penalty2 = pm.penalties[:2]
+    load_penalty1, load_penalty2 = load_penalties
     assert_allclose(load_penalty1 / load_penalty2, 5 / 18)

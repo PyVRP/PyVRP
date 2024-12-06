@@ -137,11 +137,15 @@ class PenaltyManager:
         ]
 
     @property
-    def penalties(self) -> np.ndarray[float]:
+    def penalties(self) -> tuple[list[float], float, float]:
         """
-        Returns an array of current penalty values.
+        Returns the current penalty values.
         """
-        return self._penalties
+        return (
+            self._penalties[:-2].tolist(),
+            self._penalties[-2],
+            self._penalties[-1],
+        )
 
     @classmethod
     def init_from(
