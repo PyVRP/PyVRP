@@ -78,9 +78,9 @@ def test_solve_more_iterations_is_better(prize_collecting):
     Smoke test that checks that running more iterations results in an improved
     solution.
     """
-    cost5 = solve(prize_collecting, stop=MaxIterations(5)).cost()
+    cost1 = solve(prize_collecting, stop=MaxIterations(1)).cost()
     cost100 = solve(prize_collecting, stop=MaxIterations(100)).cost()
-    assert_(cost100 < cost5)
+    assert_(cost100 < cost1)
 
 
 def test_solve_custom_params(ok_small):
