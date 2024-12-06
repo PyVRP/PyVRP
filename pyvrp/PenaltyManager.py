@@ -142,9 +142,9 @@ class PenaltyManager:
         Returns the current penalty values.
         """
         return (
-            self._penalties[:-2].tolist(),
-            self._penalties[-2],
-            self._penalties[-1],
+            self._penalties[:-2].tolist(),  # loads
+            self._penalties[-2],  # duration
+            self._penalties[-1],  # distance
         )
 
     @classmethod
