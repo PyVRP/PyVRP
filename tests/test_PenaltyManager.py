@@ -412,3 +412,17 @@ def test_init_clips_penalties():
     )
     assert_equal(cost_eval.tw_penalty(1), PenaltyManager.MAX_PENALTY)  # MAX
     assert_equal(cost_eval.dist_penalty(1, 0), 2)  # already OK, so unchanged
+
+
+def test_init_from_multiple_load_penalties(ok_small_multiple_load):
+    """
+    Tests that init_from correctly sets up multiple, different load penalties,
+    one for each load dimension.
+    """
+    pm = PenaltyManager.init_from(ok_small_multiple_load)
+    assert_equal(len(pm.penalties), 4)
+
+    # The first load dimension has 18 total demand. The second 5. The ratio of
+    # the load penalties should reflect this difference.
+    load_penalty1, load_penalty2 = pm.penalties[:2]
+    assert_allclose(load_penalty1 / load_penalty2, 5 / 18)
