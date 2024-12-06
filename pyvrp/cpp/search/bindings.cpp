@@ -353,6 +353,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("node"),
              py::keep_alive<1, 2>(),  // keep node alive
              py::keep_alive<2, 1>())  // keep route alive
+        .def("append_depot", &Route::emplaceBackDepot)
         .def("clear", &Route::clear)
         .def("insert",
              &Route::insert,

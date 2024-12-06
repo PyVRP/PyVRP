@@ -937,6 +937,35 @@ def test_model_solves_instance_with_zero_load_dimensions():
     assert_equal(route.distance(), 4)
 
 
+def test_model_solves_instance_with_multiple_trips():
+    """
+    Smoke test to check that the model can solve an instance with multiple
+    trips.
+    """
+    m = Model()
+    m.add_depot(x=1, y=1)
+    m.add_client(x=1, y=2, delivery=[5])
+    m.add_client(x=2, y=1, delivery=[5])
+    m.add_client(x=2, y=2, delivery=[5])
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    m.add_vehicle_type(1, capacity=[5], max_trips=3)
+
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.best.num_routes(), 1)
+
+    route = res.best.routes()[0]
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.num_trips(), 3)
+    assert_equal(route.delivery(), [15])
+
+
 def test_bug_client_group_indices():
     """
     Tests the bug of #681. Because empty client groups compare equal, the

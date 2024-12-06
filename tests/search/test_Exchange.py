@@ -572,3 +572,243 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
+
+
+def test_relocate_new_trip_at_end_of_route(ok_small):
+    """
+    Tests that a relocate move correctly evaluates when a new trip is created
+    at the end of a single route. An improving move is tested which increases
+    overall distance, but reduces load penalty.
+    """
+    # Only two clients fit in a vehicle, so we need two trips to serve all
+    # four clients without load penalty.
+    vehicle_type = VehicleType(1, capacity=[10], max_trips=2)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    assert_(route.has_excess_load())
+    assert_equal(route.excess_load(), [8])  # Total load is 18, capacity 10
+    assert_equal(route.distance(), 6_450)
+    assert_equal(route.num_trips(), 1)
+
+    cost_eval = CostEvaluator(1_000, 0, 0)
+    op = Exchange10(data)
+
+    # Moving client #1 to a new trip does not improve the overall distance, but
+    # can be helpful in reducing load violations.
+    # Distance after move: 8_128 => delta: 8_128 - 6_450 = 1_678
+    # Excess load after move: 3 => delta: 3 - 8 = -5
+    # Delta cost move: -5 * 1_000 + 1_678 = -3_322
+    assert_equal(
+        op.evaluate(route[1], route[len(route) - 1], cost_eval), -3_322
+    )
+    op.apply(route[1], route[len(route) - 1])
+
+    route.update()
+    assert_(route.has_excess_load())
+    assert_equal(route.excess_load(), [3])
+    assert_equal(route.distance(), 8_128)
+    assert_equal(route.num_trips(), 2)
+
+
+def test_relocate_new_trip_in_middle_of_route(ok_small):
+    """
+    Tests that a relocate move correctly evaluates when a new trip is created
+    in the middle of a single route. An improving move is tested which
+    increases overall distance, but reduces load penalty.
+    """
+    # Only one client fits in a vehicle
+    vehicle_type = VehicleType(1, capacity=[5], max_trips=4)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route.append(Node(loc=loc))
+
+    route.append_depot()  # second trip
+    route.append(Node(loc=3))
+
+    route.append_depot()  # third trip
+    route.append(Node(loc=4))
+    route.update()
+
+    # Load per trip: 10, 3, 5 => only the first trip has excess load of 5
+    assert_(route.has_excess_load())
+    assert_equal(route.excess_load(), [5])
+    assert_equal(route.distance(), 12_446)
+    assert_equal(route.num_trips(), 3)
+
+    cost_eval = CostEvaluator(1_000, 0, 0)
+    op = Exchange10(data)
+
+    # Moving client #1 to a new trip does not improve the overall distance, but
+    # can be helpful in reducing load violations.
+    # Distance after move: 14_124 => delta: 14_124 - 12_446 = 1_678
+    # Excess load after move: 0 => delta: 0 - 5 = -5
+    # Delta cost move: -5 * 1_000 + 1_678 = -3_322
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), -3_322)
+    op.apply(route[1], route[3])
+
+    route.update()
+    assert_(not route.has_excess_load())
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.distance(), 14_124)
+    assert_equal(route.num_trips(), 4)
+
+
+def test_relocate_empty_trip_at_end_route(ok_small):
+    """
+    Tests that a relocate move correctly evaluates when a trip becomes empty
+    at the end of a route. An improving move is tested which decreases overall
+    distance by removing a trip.
+    """
+    # Two clients can fit in a vehicle.
+    vehicle_type = VehicleType(1, capacity=[10], max_trips=4)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route.append(Node(loc=loc))
+
+    route.append_depot()  # second trip
+    route.append(Node(loc=3))
+
+    route.append_depot()  # third trip
+    route.append(Node(loc=4))
+    route.update()
+
+    # Load per trip: 10, 3, 5 => no excess load
+    assert_(not route.has_excess_load())
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.distance(), 12_446)
+    assert_equal(route.num_trips(), 3)
+
+    cost_eval = CostEvaluator(1_000, 0, 0)
+    op = Exchange10(data)
+
+    # Moving client #4 to directly after client #3 removes an existing trip
+    # and improves the overall distance without increasing load violations.
+    # Distance after move: 9_725 => delta: 9_725 - 12_446 = -2_721
+    # Excess load after move: 0 => delta: 0 - 0 = 0
+    # Delta cost move: 0 - 2_721 = -2_721
+    assert_equal(op.evaluate(route[8], route[5], cost_eval), -2_721)
+    op.apply(route[8], route[5])
+
+    route.update()
+    assert_(not route.has_excess_load())
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.distance(), 9_725)
+    assert_equal(route.num_trips(), 2)  # Last trip is removed
+
+
+def test_relocate_empty_trip_in_middle_route(ok_small):
+    """
+    Tests that a relocate move correctly evaluates when a trip becomes empty in
+    the middle of a route. An improving move is tested which decreases overall
+    distance by removing a trip.
+    """
+    # Two clients can fit in a vehicle.
+    vehicle_type = VehicleType(1, capacity=[10], max_trips=4)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route.append(Node(loc=loc))
+
+    route.append_depot()  # second trip
+    route.append(Node(loc=3))
+
+    route.append_depot()  # third trip
+    route.append(Node(loc=4))
+    route.update()
+
+    # Load per trip: 10, 3, 5 => no excess load
+    assert_(not route.has_excess_load())
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.distance(), 12_446)
+    assert_equal(route.num_trips(), 3)
+
+    cost_eval = CostEvaluator(1_000, 0, 0)
+    op = Exchange10(data)
+
+    # Moving client #3 to directly before client #4 removes an existing trip
+    # and improves the overall distance without increasing load violations.
+    # Distance after move: 9_725 => delta: 9_725 - 12_446 = -2_721
+    # Excess load after move: 0 => delta: 0 - 0 = 0
+    # Delta cost move: 0 - 2_721 = -2_721
+    assert_equal(op.evaluate(route[5], route[7], cost_eval), -2_721)
+    op.apply(route[5], route[7])
+
+    route.update()
+    assert_(not route.has_excess_load())
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.distance(), 9_725)
+    assert_equal(route.num_trips(), 2)  # Middle trip is removed
+
+
+def test_relocate_trip_to_other_route(ok_small):
+    """
+    Tests that a relocate move correctly evaluates when a trip is moved to
+    another route. An improving move is tested where the distance is unchanged,
+    but the load penalty is reduced.
+    """
+    # Only one client fits in the vehicle of first vehicle type, where two
+    # clients fit in the second vehicle type.
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(1, capacity=[5], max_trips=2),
+            VehicleType(1, capacity=[10], max_trips=2),
+        ]
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [1, 2]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=0, vehicle_type=1)
+    for loc in [3, 4]:
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    assert_(route1.has_excess_load())
+    assert_equal(route1.excess_load(), [5])  # Total load is 10, capacity 5
+    assert_equal(route1.distance(), 5_501)
+    assert_equal(route1.num_trips(), 1)
+
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.excess_load(), [0])  # Total load is 8, capacity 10
+    assert_equal(route2.distance(), 4_224)
+    assert_equal(route2.num_trips(), 1)
+
+    cost_eval = CostEvaluator(1_000, 0, 0)
+    op = Exchange20(data)
+
+    # Moving clients #1 and #2 to the second route in a new trip does not
+    # improve the overall distance, but does reduce load violations.
+    # Distance after move: 9_725 => delta: 9_725 - 9_725 = 0
+    # Excess load after move: 0 => delta: 0 - 5 = -5
+    # Delta cost move: -5 * 1_000 + 0 = -5_000
+    assert_equal(
+        op.evaluate(route1[1], route2[len(route2) - 1], cost_eval), -5_000
+    )
+    op.apply(route1[1], route2[len(route2) - 1])
+
+    route1.update()
+    route2.update()
+
+    assert_equal(route1.num_clients(), 0)
+    assert_(not route1.has_excess_load())
+    assert_equal(route1.excess_load(), [0])
+    assert_equal(route1.distance(), 0)
+    assert_equal(route1.num_trips(), 1)
+
+    assert_equal(route2.num_clients(), 4)
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.excess_load(), [0])
+    assert_equal(route2.distance(), 9_725)
+    assert_equal(route2.num_trips(), 2)
