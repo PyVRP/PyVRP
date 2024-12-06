@@ -6,6 +6,7 @@
 
 #include <concepts>
 #include <limits>
+#include <vector>
 
 namespace pyvrp
 {
@@ -61,7 +62,7 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  */
 class CostEvaluator
 {
-    double loadPenalty_;
+    std::vector<double> loadPenalty_;
     double twPenalty_;
     double distPenalty_;
 
@@ -170,7 +171,7 @@ public:
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
     auto const excessLoad = std::max<Load>(load - capacity, 0);
-    return static_cast<Cost>(excessLoad.get() * loadPenalty_);
+    return static_cast<Cost>(excessLoad.get() * loadPenalty_[0]);
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
