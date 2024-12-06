@@ -135,7 +135,7 @@ def test_insert_fixed_vehicle_cost():
     """
     Tests that insert_cost() adds the fixed vehicle cost if the route is empty.
     """
-    cost_eval = CostEvaluator([0], 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
@@ -162,7 +162,7 @@ def test_remove_fixed_vehicle_cost():
     Tests that remove_cost() subtracts the fixed vehicle cost if the route will
     be left empty.
     """
-    cost_eval = CostEvaluator([0], 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],

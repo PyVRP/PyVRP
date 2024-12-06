@@ -19,22 +19,22 @@ def test_load_penalty():
     """
     cost_evaluator = CostEvaluator([2], 1, 0)
 
-    assert_equal(cost_evaluator.load_penalty(0, 1), 0)  # below capacity
-    assert_equal(cost_evaluator.load_penalty(1, 1), 0)  # at capacity
+    assert_equal(cost_evaluator.load_penalty(0, 1, 0), 0)  # below capacity
+    assert_equal(cost_evaluator.load_penalty(1, 1, 0), 0)  # at capacity
 
     # Penalty per unit excess capacity is 2
-    # 1 unit above capacity
-    assert_equal(cost_evaluator.load_penalty(2, 1), 2)
+    # 1 unit above , 0capacity
+    assert_equal(cost_evaluator.load_penalty(2, 1, 0), 2)
     # 2 units above capacity
-    assert_equal(cost_evaluator.load_penalty(3, 1), 4)
+    assert_equal(cost_evaluator.load_penalty(3, 1, 0), 4)
 
     # Penalty per unit excess capacity is 4
     cost_evaluator = CostEvaluator([4], 1, 0)
 
     # 1 unit above capacity
-    assert_equal(cost_evaluator.load_penalty(2, 1), 4)
+    assert_equal(cost_evaluator.load_penalty(2, 1, 0), 4)
     # 2 units above capacity
-    assert_equal(cost_evaluator.load_penalty(3, 1), 8)
+    assert_equal(cost_evaluator.load_penalty(3, 1, 0), 8)
 
 
 @mark.parametrize("cap", [5, 15, 29, 51, 103])
@@ -46,11 +46,11 @@ def test_load_penalty_always_zero_when_below_capacity(cap: int):
     penalty = 2
     cost_eval = CostEvaluator([penalty], 1, 0)
 
-    assert_equal(cost_eval.load_penalty(0, cap), 0)  # below cap
-    assert_equal(cost_eval.load_penalty(cap - 1, cap), 0)
-    assert_equal(cost_eval.load_penalty(cap, cap), 0)  # at cap
-    assert_equal(cost_eval.load_penalty(cap + 1, cap), penalty)  # above cap
-    assert_equal(cost_eval.load_penalty(cap + 2, cap), 2 * penalty)
+    assert_equal(cost_eval.load_penalty(0, cap, 0), 0)  # below cap
+    assert_equal(cost_eval.load_penalty(cap - 1, cap, 0), 0)
+    assert_equal(cost_eval.load_penalty(cap, cap, 0), 0)  # at cap
+    assert_equal(cost_eval.load_penalty(cap + 1, cap, 0), penalty)  # above cap
+    assert_equal(cost_eval.load_penalty(cap + 2, cap, 0), 2 * penalty)
 
 
 def test_tw_penalty():
@@ -227,8 +227,7 @@ def test_excess_load_penalised_cost():
     assert_equal(routes[1].excess_load(), [2, 1])
     assert_equal(sol.excess_load(), [3, 1])
 
-    # Both dimensions are penalised.
-    cost_eval = CostEvaluator([10], 0, 0)
+    cost_eval = CostEvaluator([10, 10], 0, 0)
     assert_equal(cost_eval.penalised_cost(sol), 10 * (1 + 2) + 10 * (0 + 1))
 
 

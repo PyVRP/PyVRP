@@ -89,7 +89,7 @@ def test_move_involving_empty_routes():
     route2.update()  # depot -> depot
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator([0], 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_equal(op.evaluate(route1[2], route2[0], cost_eval), 0)
@@ -164,7 +164,7 @@ def test_move_involving_multiple_depots():
     assert_equal(route2.distance(), 16)
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator([1], 1, 0)
+    cost_eval = CostEvaluator([], 1, 0)
 
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
 

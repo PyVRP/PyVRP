@@ -123,7 +123,7 @@ def test_swap_star_can_swap_in_place():
     route2.append(nodes[3])
     route2.update()
 
-    cost_eval = CostEvaluator([1], 1, 0)
+    cost_eval = CostEvaluator([], 1, 0)
     swap_star = SwapStar(data)
 
     # Best is to exchange clients 1 and 3. The cost delta is all distance: it

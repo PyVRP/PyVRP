@@ -318,7 +318,7 @@ def test_evaluate_with_different_depots():
     route2.update()
 
     op = SwapRoutes(data)
-    cost_eval = CostEvaluator([1], 1, 0)
+    cost_eval = CostEvaluator([], 1, 0)
 
     # The routes each cost 16 distance which is not as efficient as swapping
     # them, as that would reduce each route's cost to 4, for an improvement

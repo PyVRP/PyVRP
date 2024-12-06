@@ -736,6 +736,7 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::loadPenalty,
              py::arg("load"),
              py::arg("capacity"),
+             py::arg("dimension"),
              DOC(pyvrp, CostEvaluator, loadPenalty))
         .def("tw_penalty",
              &CostEvaluator::twPenalty,

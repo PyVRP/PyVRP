@@ -262,7 +262,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     assert_(distance_optimal.distance() < duration_optimal.distance())
     assert_(duration_optimal.time_warp() < distance_optimal.time_warp())
 
-    cost_evaluator = CostEvaluator([1], 1, 0)
+    cost_evaluator = CostEvaluator([], 1, 0)
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
