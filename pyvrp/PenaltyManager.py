@@ -107,13 +107,12 @@ class PenaltyManager:
 
     Parameters
     ----------
-    params
-        PenaltyManager parameters. If not provided, a default will be used.
     initial_penalties
         Initial penalty values for unit load (idx 0), duration (1), and
-        distance (2) violations. Defaults to ``(20, 6, 6)`` for backwards
-        compatibility. These values are clipped to the range ``[MIN_PENALTY,
-        MAX_PENALTY]``.
+        distance (2) violations. These values are clipped to the range
+        ``[MIN_PENALTY, MAX_PENALTY]``.
+    params
+        PenaltyManager parameters. If not provided, a default will be used.
     """
 
     MIN_PENALTY: float = 0.1
@@ -122,12 +121,12 @@ class PenaltyManager:
 
     def __init__(
         self,
+        initial_penalties: tuple[list[float], float, float],
         params: PenaltyParams = PenaltyParams(),
-        initial_penalties: tuple[float, float, float] = (20, 6, 6),
     ):
         self._params = params
         self._penalties = np.clip(
-            initial_penalties,
+            initial_penalties[0] + list(initial_penalties[1:]),
             self.MIN_PENALTY,
             self.MAX_PENALTY,
         )
@@ -181,7 +180,7 @@ class PenaltyManager:
         init_load = avg_cost / max(avg_load, 1)
         init_tw = avg_cost / max(avg_duration, 1)
         init_dist = avg_cost / max(avg_distance, 1)
-        return cls(params, (init_load, init_tw, init_dist))
+        return cls(([init_load], init_tw, init_dist), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
         # Computes and returns the new penalty value, given the current value
@@ -239,12 +238,12 @@ class PenaltyManager:
         """
         Get a cost evaluator using the current penalty values.
         """
-        load, *others = self._penalties
-        return CostEvaluator([load], *others)
+        *loads, tw, dist = self._penalties
+        return CostEvaluator(loads, tw, dist)
 
     def booster_cost_evaluator(self) -> CostEvaluator:
         """
         Get a cost evaluator using the boosted current penalty values.
         """
-        load, *others = self._penalties * self._params.repair_booster
-        return CostEvaluator([load], *others)
+        *loads, tw, dist = self._penalties * self._params.repair_booster
+        return CostEvaluator(loads, tw, dist)
