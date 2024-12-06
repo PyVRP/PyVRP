@@ -11,7 +11,7 @@ def test_raises_given_no_routes_and_unplanned_clients(ok_small):
     to insert unplanned clients into. Greedy repair does not create new routes,
     so this is an impossible situation.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # This call should not raise since unplanned is empty: there are no routes
     # to insert into, which is OK since we have nothing to insert.
@@ -27,7 +27,7 @@ def test_insert_into_empty_route(ok_small):
     Although greedy repair does not create *new* routes, existing empty routes
     will be used if they're available.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # We want to insert client one into an empty route. That should result in
     # a single route with just client 1.
@@ -41,7 +41,7 @@ def test_empty_routes_or_unplanned_is_a_no_op(ok_small):
     If there are no routes, or no unplanned clients, then the returned routes
     should be the same as those given as an argument.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # When unplanned is empty, there is nothing for greedy repair to do, so it
     # should return the exact same routes it received.
@@ -66,7 +66,7 @@ def test_after_depot(ok_small):
     """
     Tests moves where it is optimal to insert directly after the depot.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # We want to insert client 4 into the following route. It is optimal to do
     # so directly after the depot, just before client 3.
@@ -86,7 +86,7 @@ def test_OkSmall(ok_small):
     """
     Tests greedy repair on a small instance.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # We want to insert 1 and 4 into these routes. Both 1 and 4 are close to
     # 3, so it would be cheapest to insert these into the second route.
@@ -116,7 +116,7 @@ def test_RC208(rc208, seed: int):
     routes = [[idx + 1] for idx in range(rc208.num_vehicles)]
     to_repair = Solution(rc208, routes).routes()
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     unplanned = list(range(rc208.num_vehicles + 1, rc208.num_locations))
 
     # Greedily repair by inserting all clients that are not already in the

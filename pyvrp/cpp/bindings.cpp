@@ -728,14 +728,15 @@ PYBIND11_MODULE(_pyvrp, m)
              });
 
     py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
-        .def(py::init<double, double, double>(),
-             py::arg("load_penalty"),
+        .def(py::init<std::vector<double>, double, double>(),
+             py::arg("load_penalties"),
              py::arg("tw_penalty"),
              py::arg("dist_penalty"))
         .def("load_penalty",
              &CostEvaluator::loadPenalty,
              py::arg("load"),
              py::arg("capacity"),
+             py::arg("dimension"),
              DOC(pyvrp, CostEvaluator, loadPenalty))
         .def("tw_penalty",
              &CostEvaluator::twPenalty,

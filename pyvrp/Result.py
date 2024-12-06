@@ -48,7 +48,8 @@ class Result:
         if not self.best.is_feasible():
             return math.inf
 
-        return CostEvaluator(0, 0, 0).cost(self.best)
+        num_load_dims = len(self.best.excess_load())
+        return CostEvaluator([0] * num_load_dims, 0, 0).cost(self.best)
 
     def is_feasible(self) -> bool:
         """

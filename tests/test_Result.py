@@ -27,7 +27,7 @@ def test_fields_are_correctly_set(ok_small, routes, num_iterations, runtime):
     assert_allclose(res.runtime, runtime)
 
     if sol.is_feasible():
-        assert_equal(res.cost(), CostEvaluator(0, 0, 0).cost(sol))
+        assert_equal(res.cost(), CostEvaluator([0], 0, 0).cost(sol))
     else:
         assert_equal(res.cost(), math.inf)
 
@@ -54,7 +54,7 @@ def test_num_iterations(ok_small, num_iterations: int):
     """
     Tests access to the ``num_iterations`` property.
     """
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
@@ -81,7 +81,7 @@ def test_summary_contains_essential_information(ok_small, routes):
 
     # Test that feasibility status and solution cost are presented.
     if sol.is_feasible():
-        cost = CostEvaluator(0, 0, 0).cost(sol)
+        cost = CostEvaluator([0], 0, 0).cost(sol)
         assert_(str(cost) in summary)
     else:
         assert_("INFEASIBLE" in summary)
@@ -120,7 +120,7 @@ def test_result_can_be_pickled(ok_small, num_iterations: int):
     Tests that a ``Result`` object can be pickled: it can be serialised and
     unserialised. This is useful for e.g. storing results to disk.
     """
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
     pop = Population(broken_pairs_distance)
     stats = Statistics()
