@@ -972,19 +972,11 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
     Load excessLoad = 0;
     LoadSegment currentLoadSegment;
-    bool endTrip = true;
 
     auto processSegment = [&](auto const &segment)
     {
         auto const tripLoadSegments = segment.load(dimension);
         assert(tripLoadSegments.size() > 0);
-
-        // Start new trip and check excess load for previous trip.
-        if (!endTrip && segment.firstType() == Route::Node::NodeType::DepotLoad)
-        {
-            excessLoad += calculateExcessLoad(currentLoadSegment);
-            currentLoadSegment = LoadSegment();
-        }
 
         currentLoadSegment
             = LoadSegment::merge(currentLoadSegment, tripLoadSegments.front());
@@ -999,11 +991,9 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
         if (tripLoadSegments.size() > 1)
             currentLoadSegment = tripLoadSegments.back();
 
-        endTrip = false;
         // Check if we have excess load for the last trip in the segment.
         if (segment.lastType() == Route::Node::NodeType::DepotUnload)
         {
-            endTrip = true;
             excessLoad += calculateExcessLoad(currentLoadSegment);
             currentLoadSegment = LoadSegment();
         }
@@ -1011,11 +1001,6 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
     std::apply([&](auto const &...segment) { (processSegment(segment), ...); },
                segments);
-
-    // Check excess load for the last trip in the segment if this trip did not
-    // end with a depot unload node.
-    if (!endTrip)
-        excessLoad += calculateExcessLoad(currentLoadSegment);
 
     return excessLoad;
 }
