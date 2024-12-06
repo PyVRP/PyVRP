@@ -80,6 +80,7 @@ def test_solve_more_iterations_is_better(prize_collecting):
     """
     cost10 = solve(prize_collecting, stop=MaxIterations(10)).cost()
     cost100 = solve(prize_collecting, stop=MaxIterations(100)).cost()
+    print(cost10, cost100)
     assert_(cost100 < cost10)
 
 
