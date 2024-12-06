@@ -8,20 +8,22 @@
 using pyvrp::search::Route;
 
 Route::Node::Node(size_t loc, NodeType type)
-    : loc_(loc), idx_(0), route_(nullptr), type_(type)
+    : loc_(loc), idx_(0), tripIdx_(0), route_(nullptr), type_(type)
 {
 }
 
-void Route::Node::assign(Route *route, size_t idx)
+void Route::Node::assign(Route *route, size_t idx, size_t tripIdx)
 {
     assert(!route_);  // must not currently be assigned
     idx_ = idx;
+    tripIdx_ = tripIdx;
     route_ = route;
 }
 
 void Route::Node::unassign()
 {
     idx_ = 0;
+    tripIdx_ = 0;
     route_ = nullptr;
 }
 
@@ -91,6 +93,9 @@ void Route::clear()
     // Clear nodes and reinsert depot nodes of first trip.
     nodes.clear();
     depotNodes.clear();
+    // Reserve maximum possible trips, otherwise we may need to reallocate which
+    // invalidates the node pointers!
+    depotNodes.reserve(vehicleType_.maxTrips);
     depotNodes.emplace_back(
         Node(vehicleType_.startDepot, Node::NodeType::DepotLoad),
         Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
@@ -98,8 +103,8 @@ void Route::clear()
     nodes.push_back(&depotNodes[0].first);
     nodes.push_back(&depotNodes[0].second);
 
-    depotNodes[0].first.assign(this, 0);
-    depotNodes[0].second.assign(this, 1);
+    depotNodes[0].first.assign(this, 0, 0);
+    depotNodes[0].second.assign(this, 1, 0);
 
     update();
 }
@@ -107,11 +112,14 @@ void Route::clear()
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
+    assert(!node->isDepot());
 
-    node->assign(this, idx);
+    // Note that trip indices do not change when only inserting clients.
+    size_t tripIdx = nodes[idx - 1]->tripIdx();
+    node->assign(this, idx, tripIdx);
     nodes.insert(nodes.begin() + idx, node);
 
-    for (size_t after = idx; after != nodes.size(); ++after)
+    for (size_t after = idx + 1; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 
 #ifndef NDEBUG
@@ -129,18 +137,54 @@ void Route::push_back(Node *node)
 #endif
 }
 
-void Route::emplace_back_depot(size_t startDepotIdx, size_t endDepotIdx)
+void Route::insertEmptyTrip(size_t idx)
 {
-    assert(startDepotIdx == vehicleType_.startDepot
-           && endDepotIdx == vehicleType_.endDepot);
+    assert(idx <= nodes.size());
+    assert(idx == 0 || nodes[idx - 1]->type() == Node::NodeType::DepotUnload);
 
+    size_t const trip
+        = idx == nodes.size() ? numTrips() : nodes[idx]->tripIdx();
+    auto depotPair = depotNodes.emplace(
+        depotNodes.begin() + trip,
+        Node(vehicleType_.startDepot, Node::NodeType::DepotLoad),
+        Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
+
+    depotPair->first.assign(this, idx, trip);
+    depotPair->second.assign(this, idx + 1, trip);
+
+    nodes.insert(nodes.begin() + idx, &depotPair->first);
+    nodes.insert(nodes.begin() + idx + 1, &depotPair->second);
+
+    // Update depot node pointers.
+    depotPair++;
+    for (size_t after = idx + 2; after != nodes.size(); ++after)
+    {
+        if (nodes[after]->type() == Node::NodeType::DepotLoad)
+            nodes[after] = &depotPair->first;
+        else if (nodes[after]->type() == Node::NodeType::DepotUnload)
+        {
+            nodes[after] = &depotPair->second;
+            depotPair++;
+        }
+
+        nodes[after]->idx_ = after;
+        nodes[after]->tripIdx_++;
+    }
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
+}
+
+void Route::emplaceBackDepot()
+{
     auto &depotPair = depotNodes.emplace_back(
-        Node(startDepotIdx, Node::NodeType::DepotLoad),
-        Node(endDepotIdx, Node::NodeType::DepotUnload));
-    depotPair.first.assign(this, nodes.size());
-    depotPair.second.assign(this, nodes.size() + 1);
-    nodes.push_back(&depotPair.first);
-    nodes.push_back(&depotPair.second);
+        Node(vehicleType_.startDepot, Node::NodeType::DepotLoad),
+        Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
+    depotPair.first.assign(this, nodes.size(), depotNodes.size() - 1);
+    depotPair.second.assign(this, nodes.size() + 1, depotNodes.size() - 1);
+    nodes.push_back(&(depotPair.first));
+    nodes.push_back(&(depotPair.second));
 
 #ifndef NDEBUG
     dirty = true;
@@ -149,10 +193,9 @@ void Route::emplace_back_depot(size_t startDepotIdx, size_t endDepotIdx)
 
 void Route::remove(size_t idx)
 {
-    // TODO: remove trip depot nodes if the trip becomes empty (except if it is
-    // the only trip).
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
+    assert(!nodes[idx]->isDepot());  // otherwise trip indices must be updated
 
     nodes[idx]->unassign();
     nodes.erase(nodes.begin() + idx);
@@ -165,10 +208,53 @@ void Route::remove(size_t idx)
 #endif
 }
 
+void Route::removeEmptyTrip(size_t tripIdx)
+{
+    assert(tripIdx < numTrips());
+
+    auto depotLoadNode = depotNodes[tripIdx].first;
+    auto depotUnloadNode = depotNodes[tripIdx].second;
+
+    assert(depotLoadNode.tripIdx() == tripIdx);
+    assert(depotUnloadNode.tripIdx() == tripIdx);
+    assert(depotLoadNode.route() == this);
+    assert(depotUnloadNode.route() == this);
+
+    size_t const startIdx = depotLoadNode.idx();
+    size_t const endIdx = depotUnloadNode.idx();
+    assert(startIdx + 1 == endIdx);  // Trip must be empty.
+
+    nodes.erase(nodes.begin() + endIdx);    // Removes depot unload node.
+    nodes.erase(nodes.begin() + startIdx);  // Removes depot load node.
+
+    auto depotPair = depotNodes.erase(depotNodes.begin() + tripIdx);
+
+    // Update depot node pointers.
+    for (auto after = startIdx; after != nodes.size(); ++after)
+    {
+        if (nodes[after]->type() == Node::NodeType::DepotLoad)
+            nodes[after] = &depotPair->first;
+        else if (nodes[after]->type() == Node::NodeType::DepotUnload)
+        {
+            nodes[after] = &depotPair->second;
+            depotPair++;
+        }
+
+        nodes[after]->idx_ = after;
+        nodes[after]->tripIdx_--;
+    }
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
+}
+
 void Route::swap(Node *first, Node *second)
 {
     // TODO specialise std::swap for Node
-    // TODO not allowed to swap depot nodes?
+    assert(!first->isDepot());
+    assert(!second->isDepot());
+
     if (first->route_)
         first->route_->nodes[first->idx_] = second;
 
@@ -177,6 +263,7 @@ void Route::swap(Node *first, Node *second)
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
+    std::swap(first->tripIdx_, second->tripIdx_);
 
 #ifndef NDEBUG
     if (first->route_)
@@ -189,9 +276,12 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
+    assert(depotNodes.size() >= 1);
     assert(nodes.size() >= 2);  // Depot nodes of first trip must be included.
 
     size_t numTrips = this->numTrips();
+    assert(numTrips == nodes.back()->tripIdx() + 1);
+
     std::vector<size_t> tripStart;
     tripStart.reserve(numTrips);
     std::vector<size_t> tripEnd;
@@ -200,13 +290,10 @@ void Route::update()
     size_t numClients = 0;
     visits.clear();
 
-    tripIdx.resize(nodes.size());
-    size_t currentTripIdx = 0;
     for (size_t idx = 0; idx != nodes.size(); ++idx)
     {
         auto const *node = nodes[idx];
         visits.emplace_back(node->client());
-        tripIdx[idx] = currentTripIdx;
 
         if (node->type() == Node::NodeType::Client)
             ++numClients;
@@ -215,12 +302,9 @@ void Route::update()
         else  // Depot unload
         {
             tripEnd.push_back(idx);
-            ++currentTripIdx;
             assert(tripStart.size() == tripEnd.size());
         }
     }
-
-    assert(currentTripIdx == numTrips);
 
     centroid_ = {0, 0};
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)

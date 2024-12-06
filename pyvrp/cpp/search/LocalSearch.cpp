@@ -98,11 +98,13 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
 
-                    // Introduce new trip
-                    // if (n(V)->type() == Route::Node::NodeType::DepotUnload
-                    //     && V->route()->numTrips() < V->route()->maxTrips()
-                    //     && applyNodeOps(U, n(V), costEvaluator))
-                    //     continue;
+                    // Possibly introducing new trip
+                    // TODO check if maxTrips check should be here or in the
+                    // operators.
+                    if (n(V)->type() == Route::Node::NodeType::DepotUnload
+                        && V->route()->numTrips() < V->route()->maxTrips()
+                        && applyNodeOps(U, n(V), costEvaluator))
+                        continue;
                 }
             }
 
@@ -402,7 +404,6 @@ void LocalSearch::loadSolution(Solution const &solution)
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
-        auto const &vehicleType = data.vehicleType(solRoute.vehicleType());
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route &route = routes[r];
 
@@ -410,8 +411,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
         {
             if (tripIdx > 0)  // Create and insert depot nodes for new trip.
-                route.emplace_back_depot(vehicleType.startDepot,
-                                         vehicleType.endDepot);
+                route.emplaceBackDepot();
 
             auto const &trip = solRoute.trip(tripIdx);
             for (auto const client : trip)

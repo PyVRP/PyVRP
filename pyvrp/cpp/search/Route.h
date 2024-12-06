@@ -79,10 +79,11 @@ public:
     private:
         friend class Route;
 
-        size_t loc_;     // Location represented by this node
-        size_t idx_;     // Position in the route
-        Route *route_;   // Indicates membership of a route, if any
-        NodeType type_;  // Type of the node
+        size_t loc_;      // Location represented by this node
+        size_t idx_;      // Position in the route
+        size_t tripIdx_;  // Trip index at this node
+        Route *route_;    // Indicates membership of a route, if any
+        NodeType type_;   // Type of the node
 
     public:
         Node(size_t loc, NodeType type = NodeType::Client);
@@ -97,6 +98,13 @@ public:
          * the node is *not* in a route.
          */
         [[nodiscard]] inline size_t idx() const;
+
+        /**
+         * Returns the trip index at this node. Note that the value ``0`` can
+         * either mean that the node is *not* in a route, or that it is in the
+         * first trip of a route.
+         */
+        [[nodiscard]] inline size_t tripIdx() const;
 
         /**
          * Returns the route this node is currently in. If the node is not in
@@ -116,9 +124,10 @@ public:
         [[nodiscard]] inline bool isDepot() const;
 
         /**
-         * Assigns the node to the given route, at the given index.
+         * Assigns the node to the given route, at the given position index and
+         * trip index.
          */
-        void assign(Route *route, size_t idx);
+        void assign(Route *route, size_t idx, size_t tripIdx);
 
         /**
          * Removes the node from its assigned route, if any.
@@ -204,8 +213,6 @@ private:
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
     std::pair<double, double> centroid_;  // Center point of route's clients
-
-    std::vector<size_t> tripIdx;  // Trip index at each node
 
     std::vector<Distance> cumDist;  // Dist of depot -> client (incl.)
 
@@ -415,6 +422,18 @@ public:
     [[nodiscard]] inline SegmentBetween at(size_t idx) const;
 
     /**
+     * Returns an object that can be queried for data associated with the node
+     * corresponding to the start depot.
+     */
+    [[nodiscard]] inline SegmentBetween startDepotSegment() const;
+
+    /**
+     * Returns an object that can be queried for data associated with the node
+     * corresponding to the end depot.
+     */
+    [[nodiscard]] inline SegmentBetween endDepotSegment() const;
+
+    /**
      * Returns an object that can be queried for data associated with the
      * segment starting at start.
      */
@@ -455,25 +474,36 @@ public:
     void clear();
 
     /**
-     * Inserts the given node at index ``idx``. Assumes the given index is
-     * valid.
+     * Inserts the given client node at index ``idx``. Assumes the given index
+     * is valid.
      */
     void insert(size_t idx, Node *node);
 
     /**
-     * Inserts the given node at the back of the route.
+     * Inserts the given client node at the back of the route.
      */
     void push_back(Node *node);
 
     /**
-     * Creates and inserts the depot load/unload pair at the back of the route.
+     * Creates and inserts the depot load/unload pair at index ``idx`` to
+     * create an empty trip. Assumes the given index is valid.
      */
-    void emplace_back_depot(size_t startDepotIdx, size_t endDepotIdx);
+    void insertEmptyTrip(size_t idx);
 
     /**
-     * Removes the node at ``idx`` from the route.
+     * Creates and inserts the depot load/unload pair at the back of the route.
+     */
+    void emplaceBackDepot();
+
+    /**
+     * Removes the client node at ``idx`` from the route.
      */
     void remove(size_t idx);
+
+    /**
+     * Removes the depot load/unload pair at the given trip index.
+     */
+    void removeEmptyTrip(size_t tripIdx);
 
     /**
      * Swaps the given nodes.
@@ -511,6 +541,8 @@ inline Route::Node *n(Route::Node *node)
 size_t Route::Node::client() const { return loc_; }
 
 size_t Route::Node::idx() const { return idx_; }
+
+size_t Route::Node::tripIdx() const { return tripIdx_; }
 
 Route *Route::Node::route() const { return route_; }
 
@@ -566,7 +598,8 @@ std::vector<LoadSegment> Route::SegmentAfter::load(size_t dimension) const
     loadSegments.push_back(route.tripLoadAfter[dimension][start]);
 
     // Load for the remaining (complete) trips in the segment.
-    for (size_t trip = route.tripIdx[start] + 1; trip < numTrips; ++trip)
+    for (size_t trip = route.nodes[start]->tripIdx() + 1; trip < numTrips;
+         ++trip)
         loadSegments.push_back(route.tripLoad_[dimension][trip]);
 
     return loadSegments;
@@ -597,7 +630,7 @@ std::vector<LoadSegment> Route::SegmentBefore::load(size_t dimension) const
     loadSegments.reserve(numTrips);  // upper bound
 
     // Load for the complete trips in this segment.
-    for (size_t trip = 0; trip != route.tripIdx[end]; ++trip)
+    for (size_t trip = 0; trip != route.nodes[end]->tripIdx(); ++trip)
         loadSegments.push_back(route.tripLoad_[dimension][trip]);
 
     // Load for the last (partial) trip in the segment.
@@ -860,13 +893,30 @@ bool Route::containsDepot(size_t startIdx, size_t length)
     // 3 possible cases: depot at start, end or in between.
     // To find depots at start or end, we comapre the trip indices of the
     // previous node before start and the node after end segment.
-    return tripIdx[startIdx - 1] != tripIdx[startIdx + length];
+    return nodes[startIdx - 1]->tripIdx()
+           != nodes[startIdx + length]->tripIdx();
 }
 
 Route::SegmentBetween Route::at(size_t idx) const
 {
     assert(!dirty);
     return {*this, idx, idx};
+}
+
+Route::SegmentBetween Route::startDepotSegment() const
+{
+    assert(!dirty);
+    assert(nodes[0]->type() == Node::NodeType::DepotLoad);
+    // First node must be corresponding to the start depot (of the first trip).
+    return {*this, 0, 0};
+}
+
+Route::SegmentBetween Route::endDepotSegment() const
+{
+    assert(!dirty);
+    assert(nodes.back()->type() == Node::NodeType::DepotUnload);
+    // Last node must be corresponding to the end depot (of the last trip).
+    return {*this, nodes.size() - 1, nodes.size() - 1};
 }
 
 Route::SegmentAfter Route::after(size_t start) const
