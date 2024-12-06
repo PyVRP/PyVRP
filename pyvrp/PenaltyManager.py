@@ -239,10 +239,12 @@ class PenaltyManager:
         """
         Get a cost evaluator using the current penalty values.
         """
-        return CostEvaluator(*self._penalties)
+        load, *others = self._penalties
+        return CostEvaluator([load], *others)
 
     def booster_cost_evaluator(self) -> CostEvaluator:
         """
         Get a cost evaluator using the boosted current penalty values.
         """
-        return CostEvaluator(*(self._penalties * self._params.repair_booster))
+        load, *others = self._penalties * self._params.repair_booster
+        return CostEvaluator([load], *others)

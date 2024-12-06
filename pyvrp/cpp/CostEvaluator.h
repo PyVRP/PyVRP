@@ -43,7 +43,11 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
 };
 
 /**
- * CostEvaluator(load_penalty: float, tw_penalty: float, dist_penalty: float)
+ * CostEvaluator(
+ *     load_penalties: list[float],
+ *     tw_penalty: float,
+ *     dist_penalty: float,
+ * )
  *
  * Creates a CostEvaluator instance.
  *
@@ -52,8 +56,9 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  *
  * Parameters
  * ----------
- * load_penalty
- *    The penalty for each unit of excess load over the vehicle capacity.
+ * load_penalties
+ *    The penalty terms per load dimension for each unit of excess load over
+ *    the vehicle capacity.
  * tw_penalty
  *    The penalty for each unit of time warp.
  * dist_penalty
@@ -62,12 +67,14 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  */
 class CostEvaluator
 {
-    std::vector<double> loadPenalty_;
+    std::vector<double> loadPenalties_;
     double twPenalty_;
     double distPenalty_;
 
 public:
-    CostEvaluator(double loadPenalty, double twPenalty, double distPenalty);
+    CostEvaluator(std::vector<double> loadPenalties,
+                  double twPenalty,
+                  double distPenalty);
 
     /**
      * Computes the total excess load penalty for the given load and vehicle
@@ -171,7 +178,7 @@ public:
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
     auto const excessLoad = std::max<Load>(load - capacity, 0);
-    return static_cast<Cost>(excessLoad.get() * loadPenalty_[0]);
+    return static_cast<Cost>(excessLoad.get() * loadPenalties_[0]);
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const

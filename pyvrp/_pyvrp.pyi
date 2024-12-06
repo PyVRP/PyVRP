@@ -5,7 +5,7 @@ import numpy as np
 class CostEvaluator:
     def __init__(
         self,
-        load_penalty: float,
+        load_penalties: list[float],
         tw_penalty: float,
         dist_penalty: float,
     ) -> None: ...

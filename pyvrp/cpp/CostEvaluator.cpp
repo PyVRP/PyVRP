@@ -2,10 +2,10 @@
 
 using pyvrp::CostEvaluator;
 
-CostEvaluator::CostEvaluator(double loadPenalty,
+CostEvaluator::CostEvaluator(std::vector<double> loadPenalties,
                              double twPenalty,
                              double distPenalty)
-    : loadPenalty_({loadPenalty}),
+    : loadPenalties_(std::move(loadPenalties)),
       twPenalty_(twPenalty),
       distPenalty_(distPenalty)
 {
