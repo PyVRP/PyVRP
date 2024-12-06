@@ -377,32 +377,49 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
-    // First empty all routes.
-    for (auto &route : routes)
-        route.clear();
+    std::vector<bool> routesToLoad(solution.numRoutes(), true);
+    auto const &solRoutes = solution.routes();
 
-    // Determine offsets for vehicle types.
-    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
-    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    // Clear LS routes that are no longer part of the solution.
+    for (auto &route : routes)
     {
-        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
-        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+        if (route.empty())
+            continue;
+
+        std::vector<size_t> visits;  // excl. depots
+        visits.reserve(route.size() - 1);
+        for (size_t idx = 1; idx != route.size() + 1; ++idx)
+            visits.push_back(route[idx]->client());
+
+        bool clear = true;
+        for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
+            if (solRoutes[idx].vehicleType() == route.vehicleType()
+                && solRoutes[idx].visits() == visits)
+            {
+                clear = false;
+                routesToLoad[idx] = false;
+                break;
+            }
+
+        if (clear)
+            route.clear();
     }
 
-    // Load routes from solution.
-    for (auto const &solRoute : solution.routes())
+    // Load new solution routes only.
+    for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
     {
-        // Determine index of next route of this type to load, where we rely
-        // on solution to be valid to not exceed the number of vehicles per
-        // vehicle type.
-        auto const r = vehicleOffset[solRoute.vehicleType()]++;
-        Route &route = routes[r];
+        if (!routesToLoad[idx])
+            continue;
 
-        assert(route.empty());  // should have been emptied above.
-        for (auto const client : solRoute)
-            route.push_back(&nodes[client]);
+        for (auto &r : routes)
+            if (r.empty() && r.vehicleType() == solRoutes[idx].vehicleType())
+            {
+                for (auto const client : solRoutes[idx])
+                    r.push_back(&nodes[client]);
 
-        route.update();
+                r.update();
+                break;
+            }
     }
 
     for (auto *routeOp : routeOps)
