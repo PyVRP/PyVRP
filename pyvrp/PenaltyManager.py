@@ -116,14 +116,14 @@ class PenaltyManager:
         MAX_PENALTY]``.
     """
 
-    MIN_PENALTY = 1
-    MAX_PENALTY = 100_000
-    FEAS_TOL = 0.05
+    MIN_PENALTY: float = 0.1
+    MAX_PENALTY: float = 100_000.0
+    FEAS_TOL: float = 0.05
 
     def __init__(
         self,
         params: PenaltyParams = PenaltyParams(),
-        initial_penalties: tuple[int, int, int] = (20, 6, 6),
+        initial_penalties: tuple[float, float, float] = (20, 6, 6),
     ):
         self._params = params
         self._penalties = np.clip(
@@ -178,12 +178,12 @@ class PenaltyManager:
 
         # Initial penalty parameters are meant to weigh an average increase
         # in the relevant value by the same amount as the average edge cost.
-        init_load = round(avg_cost / max(avg_load, 1))
-        init_tw = round(avg_cost / max(avg_duration, 1))
-        init_dist = round(avg_cost / max(avg_distance, 1))
+        init_load = avg_cost / max(avg_load, 1)
+        init_tw = avg_cost / max(avg_duration, 1)
+        init_dist = avg_cost / max(avg_distance, 1)
         return cls(params, (init_load, init_tw, init_dist))
 
-    def _compute(self, penalty: int, feas_percentage: float) -> int:
+    def _compute(self, penalty: float, feas_percentage: float) -> float:
         # Computes and returns the new penalty value, given the current value
         # and the percentage of feasible solutions since the last update.
         diff = self._params.target_feasible - feas_percentage
@@ -191,13 +191,12 @@ class PenaltyManager:
         if abs(diff) < self.FEAS_TOL:
             return penalty
 
-        # +/- 1 to ensure we do not get stuck at the same integer values.
         if diff > 0:
-            new_penalty = self._params.penalty_increase * penalty + 1
+            new_penalty = self._params.penalty_increase * penalty
         else:
-            new_penalty = self._params.penalty_decrease * penalty - 1
+            new_penalty = self._params.penalty_decrease * penalty
 
-        clipped = int(np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY))
+        clipped = np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY)
 
         if clipped == self.MAX_PENALTY:
             msg = """
@@ -211,7 +210,7 @@ class PenaltyManager:
 
         return clipped
 
-    def _register(self, feas_list: list[bool], penalty: int, is_feas: bool):
+    def _register(self, feas_list: list[bool], penalty: float, is_feas: bool):
         feas_list.append(is_feas)
 
         if len(feas_list) != self._params.solutions_between_updates:

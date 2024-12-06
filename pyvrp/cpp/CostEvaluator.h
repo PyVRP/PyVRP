@@ -42,7 +42,7 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
 };
 
 /**
- * CostEvaluator(load_penalty: int, tw_penalty: int, dist_penalty: int)
+ * CostEvaluator(load_penalty: float, tw_penalty: float, dist_penalty: float)
  *
  * Creates a CostEvaluator instance.
  *
@@ -61,12 +61,12 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  */
 class CostEvaluator
 {
-    Cost loadPenalty_;
-    Cost twPenalty_;
-    Cost distPenalty_;
+    double loadPenalty_;
+    double twPenalty_;
+    double distPenalty_;
 
 public:
-    CostEvaluator(Cost loadPenalty, Cost twPenalty, Cost distPenalty);
+    CostEvaluator(double loadPenalty, double twPenalty, double distPenalty);
 
     /**
      * Computes the total excess load penalty for the given load and vehicle
@@ -170,7 +170,7 @@ public:
 Cost CostEvaluator::loadPenalty(Load load, Load capacity) const
 {
     auto const excessLoad = std::max<Load>(load - capacity, 0);
-    return static_cast<Cost>(excessLoad) * loadPenalty_;
+    return static_cast<Cost>(excessLoad.get() * loadPenalty_);
 }
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
@@ -178,14 +178,14 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 #ifdef PYVRP_NO_TIME_WINDOWS
     return 0;
 #else
-    return static_cast<Cost>(timeWarp) * twPenalty_;
+    return static_cast<Cost>(timeWarp.get() * twPenalty_);
 #endif
 }
 
 Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 {
     auto const excessDistance = std::max<Distance>(distance - maxDistance, 0);
-    return static_cast<Cost>(excessDistance) * distPenalty_;
+    return static_cast<Cost>(excessDistance.get() * distPenalty_);
 }
 
 template <CostEvaluatable T>

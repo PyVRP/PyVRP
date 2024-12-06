@@ -728,7 +728,7 @@ PYBIND11_MODULE(_pyvrp, m)
              });
 
     py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
-        .def(py::init<pyvrp::Cost, pyvrp::Cost, pyvrp::Cost>(),
+        .def(py::init<double, double, double>(),
              py::arg("load_penalty"),
              py::arg("tw_penalty"),
              py::arg("dist_penalty"))
