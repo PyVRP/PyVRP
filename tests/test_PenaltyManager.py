@@ -339,7 +339,7 @@ def test_warns_max_penalty_value(ok_small):
     params = PenaltyParams(solutions_between_updates=1)
     initial = ([1], PenaltyManager.MAX_PENALTY, 1)
     pm = PenaltyManager(initial, params)
-    assert_equal(pm.penalties, initial)
+    assert_equal(pm.penalties(), initial)
 
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
@@ -421,7 +421,7 @@ def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     one for each load dimension.
     """
     pm = PenaltyManager.init_from(ok_small_multiple_load)
-    load_penalties, *_ = pm.penalties
+    load_penalties, *_ = pm.penalties()
     assert_equal(
         len(load_penalties),
         ok_small_multiple_load.num_load_dimensions,

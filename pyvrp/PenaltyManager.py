@@ -136,7 +136,6 @@ class PenaltyManager:
             [] for _ in range(len(self._penalties))
         ]
 
-    @property
     def penalties(self) -> tuple[list[float], float, float]:
         """
         Returns the current penalty values.
