@@ -82,21 +82,21 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
     // added as well. The following addresses this issue with an approximation,
     // which is inexact when there are both pickups and deliveries in the data.
     // So it's pretty rough but fast and seems to mostly work well enough.
-    Cost delta = 0;
+    Cost cost = 0;
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        auto const loadDiff
+        auto const delta
             = std::max(uClient.delivery[dim], uClient.pickup[dim])
               - std::max(vClient.delivery[dim], vClient.pickup[dim]);
 
-        delta += costEvaluator.loadPenalty(uLoad[dim] - loadDiff, uCap[dim]);
-        delta -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim]);
+        cost += costEvaluator.loadPenalty(uLoad[dim] - delta, uCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim], dim);
 
-        delta += costEvaluator.loadPenalty(vLoad[dim] + loadDiff, vCap[dim]);
-        delta -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim]);
+        cost += costEvaluator.loadPenalty(vLoad[dim] + delta, vCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim], dim);
     }
 
-    return delta;
+    return cost;
 }
 
 SwapStar::InsertPoint SwapStar::bestInsertPoint(

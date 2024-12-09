@@ -37,7 +37,7 @@ def test_OkSmall_multiple_vehicle_types(
     """
     data = ok_small.replace(vehicle_types=vehicle_types)
 
-    cost_evaluator = CostEvaluator(10_000, 6, 0)  # large load penalty
+    cost_evaluator = CostEvaluator([10_000], 6, 0)  # large load penalty
     rng = RandomNumberGenerator(seed=42)
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
@@ -89,7 +89,7 @@ def test_move_involving_empty_routes():
     route2.update()  # depot -> depot
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_equal(op.evaluate(route1[2], route2[0], cost_eval), 0)
@@ -164,7 +164,7 @@ def test_move_involving_multiple_depots():
     assert_equal(route2.distance(), 16)
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([], 1, 0)
 
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
 
@@ -194,7 +194,7 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     route2.update()
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(0, 0, 0)  # all zero so no costs from penalties
+    cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
 
     # First route has profile 0, and its distance is thus computed using the
     # first distance matrix.

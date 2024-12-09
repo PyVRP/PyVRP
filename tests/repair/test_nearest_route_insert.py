@@ -11,7 +11,7 @@ def test_raises_given_no_routes_and_unplanned_clients(ok_small):
     unplanned clients into. The operator does not create new routes, so this is
     an impossible situation.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # This call should not raise since unplanned is empty: there are no routes
     # to insert into, which is OK since we have nothing to insert.
@@ -27,7 +27,7 @@ def test_insert_into_empty_route(ok_small):
     Although nearest route insert does not create *new* routes, existing empty
     routes will be used if they're the only ones available.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # We want to insert client one into an empty route. That should result in
     # a single route with just client 1.
@@ -41,7 +41,7 @@ def test_empty_routes_or_unplanned_is_a_no_op(ok_small):
     If there are no routes, or no unplanned clients, then the returned routes
     should be the same as those given as an argument.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # When unplanned is empty, there is nothing for the operator to do, so it
     # should return the exact same routes it received.
@@ -69,7 +69,7 @@ def test_OkSmall(ok_small):
     """
     Tests nearest route insert on a small instance.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     routes = Solution(ok_small, [[2], [3]]).routes()
     unplanned = [1, 4]
@@ -99,7 +99,7 @@ def test_RC208(rc208, seed: int):
     # same number of vehicles, we initialise dummy routes.
     routes = [Route(rc208, [idx + 1], 0) for idx in range(rc208.num_vehicles)]
     unplanned = list(range(rc208.num_vehicles + 1, rc208.num_clients + 1))
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # Repair inserting all clients that are not already in the dummy routes.
     nearest = nearest_route_insert(routes, unplanned, rc208, cost_eval)

@@ -65,7 +65,7 @@ def test_raises_when_no_initial_solutions(rc208):
     Tests that GeneticAlgorithm raises when no initial solutions are provided,
     since that is insufficient to do crossover.
     """
-    pen_manager = PenaltyManager()
+    pen_manager = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
 
@@ -86,7 +86,7 @@ def test_initial_solutions_added_when_running(rc208):
     Tests that GeneticAlgorithm adds initial solutions to the population
     when running the algorithm.
     """
-    pm = PenaltyManager()
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
@@ -107,7 +107,7 @@ def test_initial_solutions_added_when_restarting(rc208):
     Tests that GeneticAlgorithm clears the population and adds the initial
     solutions when restarting.
     """
-    pm = PenaltyManager()
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
@@ -144,7 +144,7 @@ def test_best_solution_improves_with_more_iterations(rc208):
     execution.
     """
     rng = RandomNumberGenerator(seed=42)
-    pm = PenaltyManager()
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
     pop_params = PopulationParams()
     pop = Population(bpd, params=pop_params)
     init = [
@@ -173,7 +173,7 @@ def test_best_initial_solution(rc208):
     the best found solution.
     """
     rng = RandomNumberGenerator(seed=42)
-    pm = PenaltyManager()
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
     pop = Population(bpd)
 
     init = [Solution.make_random(rc208, rng) for _ in range(24)]
@@ -197,7 +197,7 @@ def test_infeasible_offspring_is_repaired(rc208):
     """
     bks = Solution(rc208, read_solution("data/RC208.sol"))
 
-    pm = PenaltyManager()
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(seed=42)
     pop = Population(bpd)
 
@@ -229,7 +229,7 @@ def test_never_repairs_when_zero_repair_probability(rc208):
     probability parameter is set to zero.
     """
     rng = RandomNumberGenerator(seed=42)
-    pm = PenaltyManager(PenaltyParams(repair_booster=10))
+    pm = PenaltyManager(([20], 6, 6), PenaltyParams(repair_booster=10))
     pop = Population(bpd)
 
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
@@ -246,7 +246,7 @@ def test_never_repairs_when_zero_repair_probability(rc208):
     # Now we patch the penalty manager: when asked for a booster cost evaluator
     # (as used during repair), this will now raise a runtime error. Since the
     # repair probability is still 100%, this should certainly raise.
-    def raise_when_called(self):
+    def raise_when_called(_):
         raise RuntimeError
 
     pm.booster_cost_evaluator = MethodType(raise_when_called, pm)

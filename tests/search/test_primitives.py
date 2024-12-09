@@ -16,7 +16,7 @@ def test_insert_cost_zero_when_not_allowed(ok_small):
     Tests that insert_cost() returns zero when a move is not possible. This is
     the only case where it shortcuts to return a non-negative delta cost.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     route = Route(ok_small, idx=0, vehicle_type=0)
     for loc in [1, 2]:
@@ -35,7 +35,7 @@ def test_insert_cost(ok_small):
     """
     Tests that the insert_cost() method works correctly on a few basic cases.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     route = Route(ok_small, idx=0, vehicle_type=0)
     for loc in [1, 2]:
@@ -84,7 +84,7 @@ def test_insert_cost_between_different_depots(ok_small_multi_depot):
     route = Route(data, idx=0, vehicle_type=0)
     route.update()
 
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([0], 0, 0)
     dist_mat = data.distance_matrix(0)
 
     delta = dist_mat[0, 2] + dist_mat[2, 1] - dist_mat[0, 1]
@@ -96,7 +96,7 @@ def test_remove_cost_zero_when_not_allowed(ok_small):
     Tests that remove_cost() returns zero when a move is not possible. This is
     the only case where it shortcuts to return a non-negative delta cost.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     route = Route(ok_small, idx=0, vehicle_type=0)
     for loc in [1, 2]:
@@ -115,7 +115,7 @@ def test_remove(ok_small):
     """
     Tests that the remove_cost() method works correctly on a few basic cases.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     route = Route(ok_small, idx=0, vehicle_type=0)
     for loc in [1, 2]:
@@ -135,7 +135,7 @@ def test_insert_fixed_vehicle_cost():
     """
     Tests that insert_cost() adds the fixed vehicle cost if the route is empty.
     """
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
@@ -162,7 +162,7 @@ def test_remove_fixed_vehicle_cost():
     Tests that remove_cost() subtracts the fixed vehicle cost if the route will
     be left empty.
     """
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
@@ -194,7 +194,7 @@ def test_inplace_cost_zero_when_shortcutting_on_guard_clauses(ok_small):
     clauses: either when the first node is in a route, or the second node is
     not.
     """
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     route = Route(ok_small, idx=0, vehicle_type=0)
     node1 = Node(loc=1)
     node2 = Node(loc=2)
@@ -238,5 +238,5 @@ def test_inplace_cost_delta_distance_computation(ok_small):
     #   dist(0, 1) + dist(1, 2) = 3536
     #   dist(0, 3) + dist(3, 2) = 2578
     #                     delta = -958
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(inplace_cost(node3, node1, ok_small, cost_eval), -958)
