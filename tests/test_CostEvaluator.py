@@ -1,6 +1,6 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_equal
-from pytest import mark
 
 from pyvrp import (
     Client,
@@ -13,31 +13,36 @@ from pyvrp import (
 )
 
 
-def test_load_penalty():
+@pytest.mark.parametrize("load_penalty", (2, 4))
+def test_load_penalty(load_penalty: float):
     """
     This test asserts that load penalty computations are correct.
     """
-    cost_evaluator = CostEvaluator([2], 1, 0)
+    pen = load_penalty
+    cost_eval = CostEvaluator([pen], 1, 0)
 
-    assert_equal(cost_evaluator.load_penalty(0, 1, 0), 0)  # below capacity
-    assert_equal(cost_evaluator.load_penalty(1, 1, 0), 0)  # at capacity
-
-    # Penalty per unit excess capacity is 2
-    # 1 unit above , 0capacity
-    assert_equal(cost_evaluator.load_penalty(2, 1, 0), 2)
-    # 2 units above capacity
-    assert_equal(cost_evaluator.load_penalty(3, 1, 0), 4)
-
-    # Penalty per unit excess capacity is 4
-    cost_evaluator = CostEvaluator([4], 1, 0)
-
-    # 1 unit above capacity
-    assert_equal(cost_evaluator.load_penalty(2, 1, 0), 4)
-    # 2 units above capacity
-    assert_equal(cost_evaluator.load_penalty(3, 1, 0), 8)
+    assert_equal(cost_eval.load_penalty(0, 1, 0), 0)  # below capacity
+    assert_equal(cost_eval.load_penalty(1, 1, 0), 0)  # at capacity
+    assert_equal(cost_eval.load_penalty(2, 1, 0), 1 * pen)  # 1 above cap
+    assert_equal(cost_eval.load_penalty(3, 1, 0), 2 * pen)  # 2 above cap
 
 
-@mark.parametrize("cap", [5, 15, 29, 51, 103])
+def test_load_penalty_multiple_dimensions():
+    """
+    Tests that the load penalty computation uses the correct penalty value for
+    each load dimension.
+    """
+    load_penalties = [1, 2]
+    cost_eval = CostEvaluator(load_penalties, 0, 0)
+
+    for dim, pen in enumerate(load_penalties):
+        assert_equal(cost_eval.load_penalty(0, 1, dim), 0)  # below capacity
+        assert_equal(cost_eval.load_penalty(1, 1, dim), 0)  # at capacity
+        assert_equal(cost_eval.load_penalty(2, 1, dim), 1 * pen)  # 1 above cap
+        assert_equal(cost_eval.load_penalty(3, 1, dim), 2 * pen)  # 2 above cap
+
+
+@pytest.mark.parametrize("cap", [5, 15, 29, 51, 103])
 def test_load_penalty_always_zero_when_below_capacity(cap: int):
     """
     This test asserts that load penalties are only applied to excess load, that
@@ -231,7 +236,7 @@ def test_excess_load_penalised_cost():
     assert_equal(cost_eval.penalised_cost(sol), 10 * (1 + 2) + 10 * (0 + 1))
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
 )
 def test_cost_with_fixed_vehicle_cost(
