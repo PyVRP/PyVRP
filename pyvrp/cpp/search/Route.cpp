@@ -93,9 +93,11 @@ void Route::clear()
     // Clear nodes and reinsert depot nodes of first trip.
     nodes.clear();
     depotNodes.clear();
-    // Reserve maximum possible trips, otherwise we may need to reallocate which
-    // invalidates the node pointers!
-    depotNodes.reserve(vehicleType_.maxTrips);
+    // We should never reallocate this vector which would invalidate the node
+    // pointers of the depots! Therefore, enough space must be reserved which is
+    // the maximum number of trips plus one, such that there can be
+    // (temporarily) one extra trip in the route when applying a SwapTails move.
+    depotNodes.reserve(vehicleType_.maxTrips + 1);
     depotNodes.emplace_back(
         Node(vehicleType_.startDepot, Node::NodeType::DepotLoad),
         Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
@@ -183,8 +185,8 @@ void Route::emplaceBackDepot()
         Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
     depotPair.first.assign(this, nodes.size(), depotNodes.size() - 1);
     depotPair.second.assign(this, nodes.size() + 1, depotNodes.size() - 1);
-    nodes.push_back(&(depotPair.first));
-    nodes.push_back(&(depotPair.second));
+    nodes.push_back(&depotPair.first);
+    nodes.push_back(&depotPair.second);
 
 #ifndef NDEBUG
     dirty = true;
@@ -211,6 +213,7 @@ void Route::remove(size_t idx)
 void Route::removeEmptyTrip(size_t tripIdx)
 {
     assert(tripIdx < numTrips());
+    assert(numTrips() > 1);
 
     auto depotLoadNode = depotNodes[tripIdx].first;
     auto depotUnloadNode = depotNodes[tripIdx].second;
@@ -281,6 +284,7 @@ void Route::update()
 
     size_t numTrips = this->numTrips();
     assert(numTrips == nodes.back()->tripIdx() + 1);
+    assert(numTrips <= vehicleType_.maxTrips);
 
     std::vector<size_t> tripStart;
     tripStart.reserve(numTrips);
@@ -290,21 +294,36 @@ void Route::update()
     size_t numClients = 0;
     visits.clear();
 
+    size_t depotBalance = 0;
     for (size_t idx = 0; idx != nodes.size(); ++idx)
     {
         auto const *node = nodes[idx];
         visits.emplace_back(node->client());
 
         if (node->type() == Node::NodeType::Client)
+        {
             ++numClients;
+            assert(depotBalance == 1);
+        }
         else if (node->type() == Node::NodeType::DepotLoad)
+        {
+            assert(depotBalance == 0);
+            depotBalance++;
             tripStart.push_back(idx);
+        }
         else  // Depot unload
         {
+            assert(depotBalance == 1);
+            depotBalance--;
             tripEnd.push_back(idx);
             assert(tripStart.size() == tripEnd.size());
         }
     }
+
+    // Assert no empty trips, unless there is one single empty trip.
+    if (numTrips > 1)
+        for (size_t trip = 0; trip != numTrips; ++trip)
+            assert(tripEnd[trip] > tripStart[trip] + 1);
 
     centroid_ = {0, 0};
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)

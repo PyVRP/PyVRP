@@ -98,11 +98,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
 
-                    // Possibly introducing new trip
-                    // TODO check if maxTrips check should be here or in the
-                    // operators.
                     if (n(V)->type() == Route::Node::NodeType::DepotUnload
-                        && V->route()->numTrips() < V->route()->maxTrips()
                         && applyNodeOps(U, n(V), costEvaluator))
                         continue;
                 }

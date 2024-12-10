@@ -88,6 +88,7 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
                              Route::Node *V,
                              CostEvaluator const &costEvaluator) const
 {
+    // TODO: investigate if this must be updated for multi-trip
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 

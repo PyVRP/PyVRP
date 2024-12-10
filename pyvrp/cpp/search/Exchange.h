@@ -264,6 +264,11 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
         if (V->type() != Route::Node::NodeType::DepotUnload && U == n(V))
             return 0;
 
+        // Cannot exceed max trips.
+        if (V->type() == Route::Node::NodeType::DepotUnload
+            && V->route()->numTrips() == V->route()->maxTrips())
+            return 0;
+
         return evalRelocateMove(U, V, costEvaluator);
     }
     else
