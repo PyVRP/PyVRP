@@ -217,7 +217,7 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), delta)
 
 
-def test_swapping_routes_move_multiple_trips():
+def test_swapping_routes_with_multiple_trips():
     """
     Tests that SwapTails correctly evaluates and applies a move where two
     routes are swapped both consisting of multiple trips.
@@ -555,5 +555,109 @@ def test_move_not_exceeding_max_trips():
     assert_equal(len(route2), 5)
 
 
-def test_move_with_routes_with_different_depots():
-    pass
+def test_move_exceeding_max_trips():
+    """
+    Tests that SwapTails correctly evaluates moves where the maximum number of
+    trips is exceeded.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[
+            VehicleType(capacity=[5], max_trips=2),
+            VehicleType(capacity=[15], max_trips=1),
+        ],
+        distance_matrices=[np.zeros((7, 7), dtype=int)],
+        duration_matrices=[np.zeros((7, 7), dtype=int)],
+    )
+
+    # First route is 0 -> 3 -> 4 -> 0 -> 0 -> 5 -> 2 -> 6 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=3))
+    route1.append(Node(loc=4))
+    route1.append_depot()
+    route1.append(Node(loc=5))
+    route1.append(Node(loc=2))
+    route1.append(Node(loc=6))
+    route1.update()
+
+    # Second route is 0 -> 1 -> 0.
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=1))
+    route2.update()
+
+    assert_(route1.has_excess_load())
+    assert_equal(route1.excess_load(), [15])
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.excess_load(), [0])
+
+    op = SwapTails(data)
+    cost_eval = CostEvaluator(1, 0, 0)
+
+    # The first route becomes: 0 -> 3 -> 1 -> 0. The second route becomes:
+    # 0 -> 4 -> 0 -> 0 -> 5 -> 2 -> 6 -> 0.
+    # The first trip of the first route has an excess load of 5, where the
+    # second trip has no excess load. Thus delta cost would have been -10, but
+    # the second route can only have one trip so this move evaluates to 0.
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+
+
+def test_move_multiple_trips_with_different_depots():
+    """
+    Tests that SwapTails correctly evaluates moves concerning multiple trips
+    where the routes have different depots.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+            Client(x=0, y=0, delivery=[5]),
+        ],
+        depots=[Depot(x=0, y=0), Depot(x=1, y=1)],
+        vehicle_types=[
+            VehicleType(capacity=[5], max_trips=2, start_depot=0, end_depot=0),
+            VehicleType(
+                capacity=[10], max_trips=2, start_depot=1, end_depot=1
+            ),
+        ],
+        distance_matrices=[np.zeros((8, 8), dtype=int)],
+        duration_matrices=[np.zeros((8, 8), dtype=int)],
+    )
+
+    # First route is 0 -> 4 -> 5 -> 0 -> 0 -> 6 -> 7 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=4))
+    route1.append(Node(loc=5))
+    route1.append_depot()
+    route1.append(Node(loc=6))
+    route1.append(Node(loc=7))
+    route1.update()
+
+    # Second route is 1 -> 2 -> 1 -> 1 -> 3 -> 1.
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=2))
+    route2.append_depot()
+    route2.append(Node(loc=3))
+    route2.update()
+
+    assert_(route1.has_excess_load())
+    assert_equal(route1.excess_load(), [10])  # Both trips have 5 excess load
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.excess_load(), [0])
+
+    op = SwapTails(data)
+    cost_eval = CostEvaluator(1, 0, 0)
+
+    # It is not allowed to swap the tails of routes with different depots when
+    # at least one of the tails consists of multiple trips.
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
