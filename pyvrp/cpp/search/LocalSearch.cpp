@@ -437,7 +437,7 @@ Solution LocalSearch::exportSolution() const
         trips.reserve(route.numTrips());
 
         std::vector<size_t> trip;
-        trip.reserve(route.size());  // upper bound
+        trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
         {
             if (node->type() == Route::Node::NodeType::DepotLoad)  // start trip

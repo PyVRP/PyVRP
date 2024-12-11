@@ -297,6 +297,12 @@ public:
     [[nodiscard]] inline bool hasTimeWarp() const;
 
     /**
+     * @return The total load for the given load dimension and given trip on
+     * this route.
+     */
+    [[nodiscard]] inline Load const tripLoad(size_t dim, size_t tripIdx) const;
+
+    /**
      * Total loads on this route.
      */
     [[nodiscard]] inline std::vector<Load> const load() const;
@@ -782,6 +788,12 @@ template <typename... Segments>
 Route::Proposal<Segments...> Route::proposal(Segments &&...segments) const
 {
     return {this, data, std::forward<Segments>(segments)...};
+}
+
+Load const Route::tripLoad(size_t dim, size_t tripIdx) const
+{
+    assert(!dirty);
+    return tripLoad_[dim][tripIdx].load();
 }
 
 std::vector<Load> const Route::load() const

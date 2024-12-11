@@ -60,7 +60,7 @@ pyvrp::repair::exportRoutes(ProblemData const &data,
         trips.reserve(route.numTrips());
 
         std::vector<size_t> trip;
-        trip.reserve(route.size());  // upper bound
+        trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
         {
             if (node->type() == SearchRoute::Node::NodeType::DepotLoad)

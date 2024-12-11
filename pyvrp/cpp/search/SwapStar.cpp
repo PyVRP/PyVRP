@@ -88,24 +88,24 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
                              Route::Node *V,
                              CostEvaluator const &costEvaluator) const
 {
-    // TODO: investigate if this must be updated for multi-trip
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
     ProblemData::Client const &uClient = data.location(U->client());
     ProblemData::Client const &vClient = data.location(V->client());
 
-    auto const &uLoad = uRoute->load();
     auto const &uCap = uRoute->capacity();
-
-    auto const &vLoad = vRoute->load();
     auto const &vCap = vRoute->capacity();
 
     // Separating removal and insertion means that the effects on load are not
     // counted correctly: during insert, U is still in the route, and now V is
     // added as well. The following addresses this issue with an approximation,
-    // which is inexact when there are both pickups and deliveries in the data.
-    // So it's pretty rough but fast and seems to mostly work well enough.
+    // which is inexact when there are both pickups and deliveries in the data,
+    // and when there are multiple trips in the route. In this approximation it
+    // is assumed that V is added in the trip of U for the delta load cost
+    // calculation. So it's pretty rough but fast and seems to mostly work well
+    // enough.
+    // TODO investigate if this is still good enough for multi-trip cases.
     Cost delta = 0;
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
@@ -113,11 +113,14 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
             = std::max(uClient.delivery[dim], uClient.pickup[dim])
               - std::max(vClient.delivery[dim], vClient.pickup[dim]);
 
-        delta += costEvaluator.loadPenalty(uLoad[dim] - loadDiff, uCap[dim]);
-        delta -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim]);
+        auto const uLoad = uRoute->tripLoad(dim, U->tripIdx());
+        auto const vLoad = vRoute->tripLoad(dim, V->tripIdx());
 
-        delta += costEvaluator.loadPenalty(vLoad[dim] + loadDiff, vCap[dim]);
-        delta -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim]);
+        delta += costEvaluator.loadPenalty(uLoad - loadDiff, uCap[dim]);
+        delta -= costEvaluator.loadPenalty(uLoad, uCap[dim]);
+
+        delta += costEvaluator.loadPenalty(vLoad + loadDiff, vCap[dim]);
+        delta -= costEvaluator.loadPenalty(vLoad, vCap[dim]);
     }
 
     return delta;

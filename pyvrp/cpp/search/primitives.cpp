@@ -51,7 +51,8 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
                                       ProblemData const &data,
                                       CostEvaluator const &costEvaluator)
 {
-    if (!V->route() || U->isDepot())
+    if (!V->route() || U->isDepot()
+        || V->type() == Route::Node::NodeType::DepotUnload)
         return 0;
 
     auto *route = V->route();
@@ -95,7 +96,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
                                        ProblemData const &data,
                                        CostEvaluator const &costEvaluator)
 {
-    if (U->route() || !V->route())
+    if (U->route() || !V->route() || U->isDepot() || V->isDepot())
         return 0;
 
     auto const *route = V->route();

@@ -320,6 +320,8 @@ void Route::update()
         }
     }
 
+    assert(numClients == this->numClients());
+
     // Assert no empty trips, unless there is one single empty trip.
     if (numTrips > 1)
         for (size_t trip = 0; trip != numTrips; ++trip)
