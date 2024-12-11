@@ -58,12 +58,12 @@ def test_repair_booster():
     penalises constraint violations much more severely.
     """
     params = PenaltyParams(5, 1, 1, 1, 1)
-    pm = PenaltyManager(params, initial_penalties=(1, 1, 1))
+    pm = PenaltyManager(([1], 1, 1), params)
 
     cost_evaluator = pm.cost_evaluator()
 
     assert_equal(cost_evaluator.tw_penalty(1), 1)
-    assert_equal(cost_evaluator.load_penalty(2, 1), 1)  # 1 unit above capacity
+    assert_equal(cost_evaluator.load_penalty(2, 1, 0), 1)  # 1 unit above cap
 
     # With the booster, the penalty values are multiplied by the
     # repairBooster term (x5 in this case).
@@ -71,12 +71,12 @@ def test_repair_booster():
     assert_equal(booster.tw_penalty(1), 5)
     assert_equal(booster.tw_penalty(2), 10)
 
-    assert_equal(booster.load_penalty(2, 1), 5)  # 1 unit above capacity
-    assert_equal(booster.load_penalty(3, 1), 10)  # 2 units above capacity
+    assert_equal(booster.load_penalty(2, 1, 0), 5)  # 1 unit above capacity
+    assert_equal(booster.load_penalty(3, 1, 0), 10)  # 2 units above capacity
 
     # Test that using booster did not affect normal cost_evaluator.
     assert_equal(cost_evaluator.tw_penalty(1), 1)
-    assert_equal(cost_evaluator.load_penalty(2, 1), 1)  # 1 unit above capacity
+    assert_equal(cost_evaluator.load_penalty(2, 1, 0), 1)  # 1 unit above cap
 
 
 def test_load_penalty_update_increase(ok_small):
@@ -86,10 +86,10 @@ def test_load_penalty_update_increase(ok_small):
     """
     num_registrations = 4
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 1, 1))
+    pm = PenaltyManager(([1], 1, 1), params)
 
     # Within bandwidth, so penalty should not change.
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 1)
 
     feas = Solution(ok_small, [[1, 2]])
     infeas = Solution(ok_small, [[1, 2, 3]])
@@ -99,23 +99,23 @@ def test_load_penalty_update_increase(ok_small):
 
     for sol in [feas, infeas, feas, infeas]:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 1)
 
     # Below targetFeasible, so should increase the loadPenalty to 1.1 due to
     # penaltyIncrease, and then int((2 - 1) * 1.1) = 1.
     for sol in [infeas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 1)
 
     # Now we start from a much bigger initial loadPenalty. Here we want the
     # penalty to increase by 10% due to penaltyIncrease = 1.1.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(100, 1, 1))
+    pm = PenaltyManager(([100], 1, 1), params)
 
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 100)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 100)
     for sol in [infeas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 110)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 110)
 
 
 def test_load_penalty_update_decrease(ok_small):
@@ -125,7 +125,7 @@ def test_load_penalty_update_decrease(ok_small):
     """
     num_registrations = 4
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(4, 1, 1))
+    pm = PenaltyManager(([4], 1, 1), params)
 
     feas = Solution(ok_small, [[1, 2]])
     infeas = Solution(ok_small, [[1, 2, 3]])
@@ -134,36 +134,36 @@ def test_load_penalty_update_decrease(ok_small):
     assert_(infeas.has_excess_load())
 
     # Within bandwidth, so penalty should not change.
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
     for sol in [feas, infeas, feas, infeas]:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
 
     # Above targetFeasible, so should decrease the loadPenalty to 90%, and -1
     # from the bounds check. So 0.9 * 4 = 3.6, and int(3.6) = 3.
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 3)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 3)
 
     # Now we start from a much bigger initial loadPenalty. Here we want the
     # penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due to
     # double -> int.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(100, 1, 1))
+    pm = PenaltyManager(([100], 1, 1), params)
 
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 100)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 100)
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 90)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 90)
 
     # Test that the penalty cannot decrease beyond MIN_PENALTY.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(0.1, 1, 1))
+    pm = PenaltyManager(([0.1], 1, 1), params)
 
-    assert_equal(pm.cost_evaluator().load_penalty(11, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(11, 1, 0), 1)
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(11, 1), 1)
+    assert_equal(pm.cost_evaluator().load_penalty(11, 1, 0), 1)
 
 
 def test_time_warp_penalty_update_increase(ok_small):
@@ -173,7 +173,7 @@ def test_time_warp_penalty_update_increase(ok_small):
     """
     num_registrations = 4
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 1, 1))
+    pm = PenaltyManager(([1], 1, 1), params)
 
     feas = Solution(ok_small, [[1, 2]])
     infeas = Solution(ok_small, [[1, 2, 3]])
@@ -197,7 +197,7 @@ def test_time_warp_penalty_update_increase(ok_small):
     # penalty to increase by 10% due to penaltyIncrease = 1.1, and +1 due
     # to double -> int.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 100, 1))
+    pm = PenaltyManager(([1], 100, 1), params)
 
     assert_equal(pm.cost_evaluator().tw_penalty(1), 100)
     for sol in [infeas] * num_registrations:
@@ -213,7 +213,7 @@ def test_time_warp_penalty_update_decrease(ok_small):
     """
     num_registrations = 4
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 4, 1))
+    pm = PenaltyManager(([1], 4, 1), params)
 
     feas = Solution(ok_small, [[1, 2]])
     infeas = Solution(ok_small, [[1, 2, 3]])
@@ -237,7 +237,7 @@ def test_time_warp_penalty_update_decrease(ok_small):
     # penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
     # to double -> int.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 100, 1))
+    pm = PenaltyManager(([1], 100, 1), params)
 
     assert_equal(pm.cost_evaluator().tw_penalty(1), 100)
     for sol in [feas] * num_registrations:
@@ -246,7 +246,7 @@ def test_time_warp_penalty_update_decrease(ok_small):
 
     # Test that the penalty cannot decrease beyond MIN_PENALTY.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(1, 0.1, 1))
+    pm = PenaltyManager(([1], 0.1, 1), params)
 
     assert_equal(pm.cost_evaluator().tw_penalty(10), 1)
     for sol in [feas] * num_registrations:
@@ -264,7 +264,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
 
     num_registrations = 4
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(params, initial_penalties=(4, 4, 4))
+    pm = PenaltyManager(([4], 4, 4), params)
 
     feas = Solution(data, [[1, 2], [3, 4]])
     infeas = Solution(data, [[1, 2, 3, 4]])
@@ -274,7 +274,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
 
     # Both have four initial penalty, and vehicle capacity is one.
     assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
     assert_equal(pm.cost_evaluator().dist_penalty(2, 1), 4)
 
     # Register three times. We need at least four registrations before the
@@ -282,13 +282,13 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     for sol in [feas, infeas, feas]:
         pm.register(sol)
         assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
-        assert_equal(pm.cost_evaluator().load_penalty(2, 1), 4)
+        assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
         assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 4)
 
     # Register a fourth time. Now the penalties should change. Since there are
     # more feasible registrations than desired, the penalties should decrease.
     pm.register(feas)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1), 3)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 3)
     assert_equal(pm.cost_evaluator().tw_penalty(1), 3)
     assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 3)
 
@@ -304,7 +304,7 @@ def test_max_min_penalty(ok_small):
         penalty_decrease=0,
         penalty_increase=2,
     )
-    pm = PenaltyManager(params, (20, PenaltyManager.MAX_PENALTY, 6))
+    pm = PenaltyManager(([20], PenaltyManager.MAX_PENALTY, 6), params)
 
     # Initial penalty is MAX_PENALTY, so one unit of time warp should be
     # penalised by that value.
@@ -337,8 +337,9 @@ def test_warns_max_penalty_value(ok_small):
     This typically indicates a data issue that PyVRP is struggling with.
     """
     params = PenaltyParams(solutions_between_updates=1)
-    initial = (1, PenaltyManager.MAX_PENALTY, 1)
-    pm = PenaltyManager(params, initial_penalties=initial)
+    initial = ([1], PenaltyManager.MAX_PENALTY, 1)
+    pm = PenaltyManager(initial, params)
+    assert_equal(pm.penalties(), initial)
 
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
@@ -357,7 +358,7 @@ def test_init_from_load_penalty_value(ok_small):
 
     avg_cost = ok_small.distance_matrix(0).mean()
     avg_load = np.mean([c.delivery for c in ok_small.clients()])
-    assert_equal(cost_eval.load_penalty(1, 0), int(avg_cost / avg_load))
+    assert_equal(cost_eval.load_penalty(1, 0, 0), int(avg_cost / avg_load))
 
 
 def test_init_from_tw_penalty_value(ok_small):
@@ -402,13 +403,31 @@ def test_init_clips_penalties():
     Tests that the initial penalty values are clipped to the [MIN_PENALTY,
     MAX_PENALTY] range.
     """
-    penalties = (0, PenaltyManager.MAX_PENALTY + 1, 2)
+    penalties = ([0], PenaltyManager.MAX_PENALTY + 1, 2)
     pm = PenaltyManager(initial_penalties=penalties)
 
     cost_eval = pm.cost_evaluator()
     assert_allclose(  # MIN
-        cost_eval.load_penalty(10, 0),
+        cost_eval.load_penalty(10, 0, 0),
         10 * PenaltyManager.MIN_PENALTY,
     )
     assert_equal(cost_eval.tw_penalty(1), PenaltyManager.MAX_PENALTY)  # MAX
     assert_equal(cost_eval.dist_penalty(1, 0), 2)  # already OK, so unchanged
+
+
+def test_init_from_multiple_load_penalties(ok_small_multiple_load):
+    """
+    Tests that init_from correctly sets up multiple, different load penalties,
+    one for each load dimension.
+    """
+    pm = PenaltyManager.init_from(ok_small_multiple_load)
+    load_penalties, *_ = pm.penalties()
+    assert_equal(
+        len(load_penalties),
+        ok_small_multiple_load.num_load_dimensions,
+    )
+
+    # The first load dimension has 18 total demand. The second 5. The ratio of
+    # the load penalties should reflect this difference.
+    load_penalty1, load_penalty2 = load_penalties
+    assert_allclose(load_penalty1 / load_penalty2, 5 / 18)
