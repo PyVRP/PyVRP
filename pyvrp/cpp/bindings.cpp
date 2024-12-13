@@ -454,6 +454,13 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
+    py::class_<Route::VisitDatum>(
+        m, "VisitDatum", DOC(pyvrp, Route, VisitDatum))
+        .def_readonly("arrive_time", &Route::VisitDatum::arriveTime)
+        .def_readonly("depart_time", &Route::VisitDatum::departTime)
+        .def_readonly("service_duration", &Route::VisitDatum::serviceDuration)
+        .def_readonly("wait_duration", &Route::VisitDatum::waitDuration);
+
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
              py::arg("data"),
@@ -508,6 +515,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("has_time_warp",
              &Route::hasTimeWarp,
              DOC(pyvrp, Route, hasTimeWarp))
+        .def("schedule", &Route::schedule, DOC(pyvrp, Route, schedule))
         .def("__len__", &Route::size, DOC(pyvrp, Route, size))
         .def(
             "__iter__",
@@ -549,9 +557,12 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.centroid(),
                                       route.vehicleType(),
                                       route.startDepot(),
-                                      route.endDepot());
+                                      route.endDepot(),
+                                      route.schedule());
             },
             [](py::tuple t) {  // __setstate__
+                using Schedule = std::vector<Route::VisitDatum>;
+
                 Route route(
                     t[0].cast<std::vector<size_t>>(),         // visits
                     t[1].cast<pyvrp::Distance>(),             // distance
@@ -573,7 +584,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[17].cast<std::pair<double, double>>(),  // centroid
                     t[18].cast<size_t>(),                     // vehicle type
                     t[19].cast<size_t>(),                     // start depot
-                    t[20].cast<size_t>());                    // end depot
+                    t[20].cast<size_t>(),                     // end depot
+                    t[21].cast<Schedule>());                  // visit schedule
 
                 return route;
             }))

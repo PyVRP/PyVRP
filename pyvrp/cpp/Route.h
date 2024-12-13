@@ -18,12 +18,26 @@ namespace pyvrp
  */
 class Route
 {
+public:
+    /**
+     * Simple object that stores some data about a client visit.
+     */
+    struct VisitDatum
+    {
+        Duration const arriveTime = 0;
+        Duration const departTime = 0;
+        Duration const serviceDuration = 0;
+        Duration const waitDuration = 0;
+    };
+
+private:
     using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
     using Visits = std::vector<Client>;
 
-    Visits visits_ = {};           // Client visits on this route
+    Visits visits_ = {};                     // Client visits on this route
+    std::vector<VisitDatum> schedule_ = {};  // Client visit schedule data
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -63,6 +77,11 @@ public:
      * Route visits, as a list of clients.
      */
     [[nodiscard]] Visits const &visits() const;
+
+    /**
+     * Statistics about each client visit and the overall route schedule.
+     */
+    [[nodiscard]] std::vector<VisitDatum> const &schedule() const;
 
     /**
      * Total distance travelled on this route.
@@ -239,7 +258,8 @@ public:
           std::pair<double, double> centroid,
           VehicleType vehicleType,
           Depot startDepot,
-          Depot endDepot);
+          Depot endDepot,
+          std::vector<VisitDatum> schedule);
 };
 }  // namespace pyvrp
 

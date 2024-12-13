@@ -103,8 +103,10 @@ Route::Route(Visits visits,
              std::pair<double, double> centroid,
              size_t vehicleType,
              size_t startDepot,
-             size_t endDepot)
+             size_t endDepot,
+             std::vector<VisitDatum> schedule)
     : visits_(std::move(visits)),
+      schedule_(std::move(schedule)),
       distance_(distance),
       distanceCost_(distanceCost),
       excessDistance_(excessDistance),
@@ -139,6 +141,11 @@ Route::Visits::const_iterator Route::begin() const { return visits_.cbegin(); }
 Route::Visits::const_iterator Route::end() const { return visits_.cend(); }
 
 Route::Visits const &Route::visits() const { return visits_; }
+
+std::vector<Route::VisitDatum> const &Route::schedule() const
+{
+    return schedule_;
+}
 
 Distance Route::distance() const { return distance_; }
 
