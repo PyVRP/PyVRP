@@ -210,6 +210,8 @@ class VisitDatum:
     depart_time: int
     service_duration: int
     wait_duration: int
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
 
 class Route:
     def __init__(

@@ -81,6 +81,31 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     slack_ = ds.twLate() - ds.twEarly();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
     release_ = ds.releaseTime();
+
+    auto now = startTime_;
+    prevClient = startDepot_;
+    for (auto const client : visits_)
+    {
+        auto const travel = durations(prevClient, client);
+        now += travel;
+
+        ProblemData::Client const &clientData = data.location(client);
+
+        Duration const arriveTime = now;
+        Duration waitDuration = 0;
+        if (now < clientData.twEarly)
+        {
+            waitDuration = clientData.twEarly - now;
+            now = clientData.twEarly;
+        }
+
+        if (now > clientData.twLate)  // infeasible
+            now = clientData.twLate;
+
+        now += clientData.serviceDuration;
+        schedule_.emplace_back(
+            arriveTime, now, clientData.serviceDuration, waitDuration);
+    }
 }
 
 Route::Route(Visits visits,

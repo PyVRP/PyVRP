@@ -459,7 +459,23 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("arrive_time", &Route::VisitDatum::arriveTime)
         .def_readonly("depart_time", &Route::VisitDatum::departTime)
         .def_readonly("service_duration", &Route::VisitDatum::serviceDuration)
-        .def_readonly("wait_duration", &Route::VisitDatum::waitDuration);
+        .def_readonly("wait_duration", &Route::VisitDatum::waitDuration)
+        .def(py::pickle(
+            [](Route::VisitDatum const &datum) {  // __getstate__
+                return py::make_tuple(datum.arriveTime,
+                                      datum.departTime,
+                                      datum.serviceDuration,
+                                      datum.waitDuration);
+            },
+            [](py::tuple t) {  // __setstate__
+                Route::VisitDatum datum(
+                    t[0].cast<pyvrp::Duration>(),   // arrive time
+                    t[1].cast<pyvrp::Duration>(),   // depart time
+                    t[2].cast<pyvrp::Duration>(),   // service duration
+                    t[3].cast<pyvrp::Duration>());  // wait duration
+
+                return datum;
+            }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
