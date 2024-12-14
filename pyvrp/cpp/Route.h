@@ -21,13 +21,32 @@ class Route
 public:
     /**
      * Simple object that stores some data about a client visit.
+     *
+     * Attributes
+     * ----------
+     * start_service
+     *     Time at which the client service begins.
+     * end_service
+     *     Time at which the client service completes.
+     * wait_duration
+     *     If the vehicle arrives early, this is the duration it has to wait
+     *     until it can begin service.
+     * time_warp
+     *     If the vehicle arrives late, this is the duration it has to 'travel
+     *     back in time' to begin service. Non-zero time warp indicates an
+     *     infeasible route.
      */
     struct VisitDatum
     {
-        Duration const arriveTime = 0;
-        Duration const departTime = 0;
-        Duration const serviceDuration = 0;
+        Duration const startService = 0;
+        Duration const endService = 0;
         Duration const waitDuration = 0;
+        Duration const timeWarp = 0;
+
+        VisitDatum(Duration startService,
+                   Duration endService,
+                   Duration waitDuration,
+                   Duration timeWarp);
     };
 
 private:

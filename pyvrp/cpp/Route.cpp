@@ -14,6 +14,17 @@ using pyvrp::Route;
 
 using Client = size_t;
 
+Route::VisitDatum::VisitDatum(Duration arriveTime,
+                              Duration endService,
+                              Duration waitDuration,
+                              Duration timeWarp)
+    : startService(arriveTime),
+      endService(endService),
+      waitDuration(waitDuration),
+      timeWarp(timeWarp)
+{
+}
+
 Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
@@ -91,7 +102,6 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
 
         ProblemData::Client const &clientData = data.location(client);
 
-        Duration const arriveTime = now;
         Duration waitDuration = 0;
         if (now < clientData.twEarly)
         {
@@ -99,12 +109,16 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
             now = clientData.twEarly;
         }
 
-        if (now > clientData.twLate)  // infeasible
+        Duration timeWarp = 0;
+        if (now > clientData.twLate)
+        {
+            timeWarp = now - clientData.twLate;
             now = clientData.twLate;
+        }
 
+        Duration const startService = now;
         now += clientData.serviceDuration;
-        schedule_.emplace_back(
-            arriveTime, now, clientData.serviceDuration, waitDuration);
+        schedule_.emplace_back(startService, now, waitDuration, timeWarp);
     }
 }
 

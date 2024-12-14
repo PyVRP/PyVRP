@@ -206,10 +206,10 @@ class ProblemData:
     def __setstate__(self, state: tuple, /) -> None: ...
 
 class VisitDatum:
-    arrive_time: int
-    depart_time: int
-    service_duration: int
+    start_service: int
+    end_service: int
     wait_duration: int
+    time_warp: int
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
