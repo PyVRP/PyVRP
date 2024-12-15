@@ -42,27 +42,23 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     DurationSegment ds = {vehType, vehType.startLate};
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
 
-    size_t prevClient = startDepot_;
-
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
-    for (size_t idx = 0; idx != size(); ++idx)
+    for (size_t prevClient = startDepot_; auto const client : visits_)
     {
-        auto const client = visits_[idx];
         ProblemData::Client const &clientData = data.location(client);
 
         distance_ += distances(prevClient, client);
-        travel_ += durations(prevClient, client);
         service_ += clientData.serviceDuration;
         prizes_ += clientData.prize;
 
+        auto const edgeDuration = durations(prevClient, client);
+        travel_ += edgeDuration;
+        ds = DurationSegment::merge(edgeDuration, ds, {clientData});
+
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
-
-        auto const clientDS = DurationSegment(clientData);
-        ds = DurationSegment::merge(
-            durations(prevClient, client), ds, clientDS);
 
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
         {
@@ -101,19 +97,16 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     release_ = ds.releaseTime();
 
     schedule_.reserve(size());
-
     auto now = startTime_;
-    prevClient = startDepot_;
-    for (auto const client : visits_)
+    for (size_t prevClient = startDepot_; auto const client : visits_)
     {
-        ProblemData::Client const &clientData = data.location(client);
-
         now += durations(prevClient, client);
 
+        ProblemData::Client const &clientData = data.location(client);
         auto const wait = std::max<Duration>(clientData.twEarly - now, 0);
-        now += wait;
-
         auto const timeWarp = std::max<Duration>(now - clientData.twLate, 0);
+
+        now += wait;
         now -= timeWarp;
 
         schedule_.emplace_back(
