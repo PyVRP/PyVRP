@@ -103,6 +103,10 @@ public:
 
     /**
      * Statistics about each client visit and the overall route schedule.
+     *
+     * .. note::
+     *
+     *    The schedule assumes the route starts at :meth:`~start_time`.
      */
     [[nodiscard]] std::vector<VisitDatum> const &schedule() const;
 

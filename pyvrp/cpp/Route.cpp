@@ -100,32 +100,26 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
     release_ = ds.releaseTime();
 
+    schedule_.reserve(size());
+
     auto now = startTime_;
     prevClient = startDepot_;
     for (auto const client : visits_)
     {
-        now += durations(prevClient, client);
-
         ProblemData::Client const &clientData = data.location(client);
 
-        Duration waitDuration = 0;
-        if (now < clientData.twEarly)
-        {
-            waitDuration = clientData.twEarly - now;
-            now = clientData.twEarly;
-        }
+        now += durations(prevClient, client);
 
-        Duration timeWarp = 0;
-        if (now > clientData.twLate)
-        {
-            timeWarp = now - clientData.twLate;
-            now = clientData.twLate;
-        }
+        auto const wait = std::max<Duration>(clientData.twEarly - now, 0);
+        now += wait;
 
-        Duration const startService = now;
+        auto const timeWarp = std::max<Duration>(now - clientData.twLate, 0);
+        now -= timeWarp;
+
+        schedule_.emplace_back(
+            now, now + clientData.serviceDuration, wait, timeWarp);
+
         now += clientData.serviceDuration;
-        schedule_.emplace_back(startService, now, waitDuration, timeWarp);
-
         prevClient = client;
     }
 }
