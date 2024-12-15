@@ -28,6 +28,8 @@ public:
      *     Time at which the client service begins.
      * end_service
      *     Time at which the client service completes.
+     * service_duration
+     *     Duration of the service.
      * wait_duration
      *     If the vehicle arrives early, this is the duration it has to wait
      *     until it can begin service.
@@ -47,6 +49,8 @@ public:
                    Duration endService,
                    Duration waitDuration,
                    Duration timeWarp);
+
+        [[nodiscard]] Duration serviceDuration() const;
     };
 
 private:

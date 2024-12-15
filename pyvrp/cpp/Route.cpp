@@ -3,6 +3,7 @@
 #include "LoadSegment.h"
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <numeric>
 
@@ -14,15 +15,21 @@ using pyvrp::Route;
 
 using Client = size_t;
 
-Route::VisitDatum::VisitDatum(Duration arriveTime,
+Route::VisitDatum::VisitDatum(Duration startService,
                               Duration endService,
                               Duration waitDuration,
                               Duration timeWarp)
-    : startService(arriveTime),
+    : startService(startService),
       endService(endService),
       waitDuration(waitDuration),
       timeWarp(timeWarp)
 {
+    assert(startService <= endService);
+}
+
+Duration Route::VisitDatum::serviceDuration() const
+{
+    return endService - startService;
 }
 
 Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
@@ -97,8 +104,7 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     prevClient = startDepot_;
     for (auto const client : visits_)
     {
-        auto const travel = durations(prevClient, client);
-        now += travel;
+        now += durations(prevClient, client);
 
         ProblemData::Client const &clientData = data.location(client);
 
@@ -119,6 +125,8 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
         Duration const startService = now;
         now += clientData.serviceDuration;
         schedule_.emplace_back(startService, now, waitDuration, timeWarp);
+
+        prevClient = client;
     }
 }
 

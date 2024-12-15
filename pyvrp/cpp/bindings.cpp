@@ -460,6 +460,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("end_service", &Route::VisitDatum::endService)
         .def_readonly("wait_duration", &Route::VisitDatum::waitDuration)
         .def_readonly("time_warp", &Route::VisitDatum::timeWarp)
+        .def_property_readonly("service_duration",
+                               &Route::VisitDatum::serviceDuration)
         .def(py::pickle(
             [](Route::VisitDatum const &datum) {  // __getstate__
                 return py::make_tuple(datum.startService,
