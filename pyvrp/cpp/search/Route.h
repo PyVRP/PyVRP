@@ -598,14 +598,14 @@ std::vector<LoadSegment> Route::SegmentAfter::load(size_t dimension) const
 {
     std::vector<LoadSegment> loadSegments;
     size_t const numTrips = route.numTrips();
-    loadSegments.reserve(numTrips);  // upper bound
+    size_t const startTrip = route.nodes[start]->tripIdx();
+    loadSegments.reserve(numTrips - startTrip);
 
     // Load for the first (partial) trip in the segment.
     loadSegments.push_back(route.tripLoadAfter[dimension][start]);
 
     // Load for the remaining (complete) trips in the segment.
-    for (size_t trip = route.nodes[start]->tripIdx() + 1; trip < numTrips;
-         ++trip)
+    for (size_t trip = startTrip + 1; trip != numTrips; ++trip)
         loadSegments.push_back(route.tripLoad_[dimension][trip]);
 
     return loadSegments;
@@ -632,11 +632,11 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
 std::vector<LoadSegment> Route::SegmentBefore::load(size_t dimension) const
 {
     std::vector<LoadSegment> loadSegments;
-    size_t const numTrips = route.numTrips();
-    loadSegments.reserve(numTrips);  // upper bound
+    size_t const endTrip = route.nodes[end]->tripIdx();
+    loadSegments.reserve(endTrip + 1);
 
     // Load for the complete trips in this segment.
-    for (size_t trip = 0; trip != route.nodes[end]->tripIdx(); ++trip)
+    for (size_t trip = 0; trip != endTrip; ++trip)
         loadSegments.push_back(route.tripLoad_[dimension][trip]);
 
     // Load for the last (partial) trip in the segment.
@@ -724,7 +724,9 @@ DurationSegment Route::SegmentBetween::duration(size_t profile) const
 std::vector<LoadSegment> Route::SegmentBetween::load(size_t dimension) const
 {
     std::vector<LoadSegment> loadSegments;
-    loadSegments.reserve(route.numTrips());
+    size_t const startTrip = route.nodes[start]->tripIdx();
+    size_t const endTrip = route.nodes[end]->tripIdx();
+    loadSegments.reserve(endTrip - startTrip + 1);
 
     auto const &loads = route.loadAt[dimension];
     auto loadSegment = loads[start];
