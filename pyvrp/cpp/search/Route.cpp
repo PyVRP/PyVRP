@@ -115,6 +115,8 @@ void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
     assert(!node->isDepot());
+    // Not allowed to insert between depot unload and load nodes.
+    assert(nodes[idx - 1]->type() != Node::NodeType::DepotUnload);
 
     // Note that trip indices do not change when only inserting clients.
     size_t tripIdx = nodes[idx - 1]->tripIdx();

@@ -261,8 +261,28 @@ void SwapStar::apply(Route *U, Route *V) const
     assert(best.V);
     assert(best.VAfter);
 
+    // Check whether trip of Node U becomes empty after the move.
+    std::optional<size_t> tripToRemoveU = std::nullopt;
+    if (p(best.U)->type() == Route::Node::NodeType::DepotLoad
+        && n(best.U)->type() == Route::Node::NodeType::DepotUnload
+        && best.VAfter != p(best.U))
+        tripToRemoveU = best.U->tripIdx();
+
+    // Check whether trip of Node V becomes empty after the move.
+    std::optional<size_t> tripToRemoveV = std::nullopt;
+    if (p(best.V)->type() == Route::Node::NodeType::DepotLoad
+        && n(best.V)->type() == Route::Node::NodeType::DepotUnload
+        && best.UAfter != p(best.V))
+        tripToRemoveV = best.V->tripIdx();
+
     U->remove(best.U->idx());
     V->remove(best.V->idx());
+
+    if (tripToRemoveU.has_value())
+        U->removeEmptyTrip(tripToRemoveU.value());
+
+    if (tripToRemoveV.has_value())
+        V->removeEmptyTrip(tripToRemoveV.value());
 
     V->insert(best.UAfter->idx() + 1, best.U);
     U->insert(best.VAfter->idx() + 1, best.V);

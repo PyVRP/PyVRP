@@ -332,7 +332,7 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
     for (size_t i = 0; i != route.numTrips(); ++i)
     {
         if (i > 0)
-            out << " | ";
+            out << "| ";
 
         for (auto const client : route.trip(i))
             out << client << ' ';

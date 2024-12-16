@@ -445,7 +445,10 @@ Solution LocalSearch::exportSolution() const
             else if (node->type() == Route::Node::NodeType::Client)
                 trip.push_back(node->client());
             else  // depot unload -> end of trip
+            {
+                assert(trip.size() > 0);
                 trips.push_back(trip);
+            }
         }
 
         solRoutes.emplace_back(data, trips, route.vehicleType());
