@@ -293,6 +293,8 @@ def test_neighbours_multi_trip(ok_small):
     )
     sol = Solution(ok_small, [Route(ok_small, [[1, 2, 3], [4]], 0)])
     assert_(sol.is_complete())
+    assert_equal(sol.num_routes(), 1)
+    assert_equal(sol.num_trips(), 2)
 
     neighbours = sol.neighbours()
     expected = [

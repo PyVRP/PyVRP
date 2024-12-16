@@ -28,6 +28,7 @@ void Solution::evaluate(ProblemData const &data)
     {
         // Whole solution statistics.
         numClients_ += route.size();
+        numTrips_ += route.numTrips();
         prizes_ += route.prizes();
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();
@@ -52,6 +53,8 @@ size_t Solution::numRoutes() const { return routes_.size(); }
 size_t Solution::numClients() const { return numClients_; }
 
 size_t Solution::numMissingClients() const { return numMissingClients_; }
+
+size_t Solution::numTrips() const { return numTrips_; }
 
 Routes const &Solution::routes() const { return routes_; }
 
@@ -282,6 +285,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
+                   size_t numTrips,
                    Distance distance,
                    Cost distanceCost,
                    Duration duration,
@@ -297,6 +301,7 @@ Solution::Solution(size_t numClients,
                    Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
+      numTrips_(numTrips),
       distance_(distance),
       distanceCost_(distanceCost),
       duration_(duration),
