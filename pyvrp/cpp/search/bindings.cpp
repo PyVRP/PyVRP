@@ -376,6 +376,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("type") = Route::Node::NodeType::Client)
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
+        .def_property_readonly("trip_idx", &Route::Node::tripIdx)
         .def_property_readonly("route", &Route::Node::route)
         .def_property_readonly("type", &Route::Node::type)
         .def("is_depot", &Route::Node::isDepot);

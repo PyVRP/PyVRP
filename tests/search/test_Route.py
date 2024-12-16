@@ -14,6 +14,7 @@ def test_node_init(loc: int):
     node = Node(loc=loc)
     assert_equal(node.client, loc)
     assert_equal(node.idx, 0)
+    assert_equal(node.trip_idx, 0)
     assert_(node.route is None)
 
 
@@ -57,16 +58,54 @@ def test_insert_and_remove_update_node_idx_and_route_properties(ok_small):
     # After construction, the node is not in a route yet.
     node = Node(loc=1)
     assert_equal(node.idx, 0)
+    assert_equal(node.trip_idx, 0)
     assert_(node.route is None)
 
     # Add to the route, test the route and idx properties are updated.
     route.append(node)
     assert_equal(node.idx, 1)
+    assert_equal(node.trip_idx, 0)
     assert_(node.route is route)
 
     # Remove and test the node reverts to its initial state.
     del route[1]
     assert_equal(node.idx, 0)
+    assert_equal(node.trip_idx, 0)
+    assert_(node.route is None)
+
+
+def test_insert_and_remove_update_node_idx_and_trip_idx(ok_small):
+    """
+    Tests that after a node is inserted into a route, its index and trip index
+    are updated to reflect its new position in the route. After the node is
+    removed from the route, these properties revert to their defaults.
+    """
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    for loc in [1, 2]:  # First trip
+        route.append(Node(loc=loc))
+
+    route.append_depot()  # second trip
+    route.append(Node(loc=3))
+
+    # After construction, the node is not in a route yet.
+    # Current route: 0 -> 1 -> 2 -> 0 -> 0 -> 3 -> 0.
+    node = Node(loc=4)
+    assert_equal(node.idx, 0)
+    assert_equal(node.trip_idx, 0)
+    assert_(node.route is None)
+
+    # Add to the route, test the route and (trip) idx properties are updated.
+    # Current route: 0 -> 1 -> 2 -> 0 -> 0 -> 3 -> 4 -> 0.
+    route.append(node)
+    assert_equal(node.idx, 6)  # Inserted before the last depot on idx 6
+    assert_equal(node.trip_idx, 1)
+    assert_(node.route is route)
+
+    # Remove and test the node reverts to its initial state.
+    # Current route: 0 -> 1 -> 2 -> 0 -> 0 -> 3 -> 0.
+    del route[6]
+    assert_equal(node.idx, 0)
+    assert_equal(node.trip_idx, 0)
     assert_(node.route is None)
 
 
