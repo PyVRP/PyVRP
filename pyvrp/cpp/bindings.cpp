@@ -463,20 +463,20 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("service_duration",
                                &Route::ScheduledVisit::serviceDuration)
         .def(py::pickle(
-            [](Route::ScheduledVisit const &datum) {  // __getstate__
-                return py::make_tuple(datum.startService,
-                                      datum.endService,
-                                      datum.waitDuration,
-                                      datum.timeWarp);
+            [](Route::ScheduledVisit const &visit) {  // __getstate__
+                return py::make_tuple(visit.startService,
+                                      visit.endService,
+                                      visit.waitDuration,
+                                      visit.timeWarp);
             },
             [](py::tuple t) {  // __setstate__
-                Route::ScheduledVisit datum(
+                Route::ScheduledVisit visit(
                     t[0].cast<pyvrp::Duration>(),   // start service
                     t[1].cast<pyvrp::Duration>(),   // end service
                     t[2].cast<pyvrp::Duration>(),   // wait duration
                     t[3].cast<pyvrp::Duration>());  // time warp
 
-                return datum;
+                return visit;
             }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
