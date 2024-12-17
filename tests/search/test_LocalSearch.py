@@ -30,7 +30,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     neighbourhood definition, they cannot do anything with an empty
     neighbourhood.
     """
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     neighbours = [[] for _ in range(ok_small.num_locations)]
@@ -161,14 +161,14 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
 
     # With 0 timewarp penalty, the solution should not change since
     # the solution [2, 1, 3, 4] has larger distance.
-    improved_sol = ls.search(sol, CostEvaluator(0, 0, 0))
+    improved_sol = ls.search(sol, CostEvaluator([0], 0, 0))
     assert_equal(sol, improved_sol)
 
     # Now doing it again with a large TW penalty, we must find the alternative
     # solution
     # (previously this was not the case since due to caching the current TW was
     # computed as being zero, causing the move to be evaluated as worse)
-    cost_evaluator_tw = CostEvaluator(0, 1000, 0)
+    cost_evaluator_tw = CostEvaluator([0], 1000, 0)
     improved_sol = ls.search(sol, cost_evaluator_tw)
     improved_cost = cost_evaluator_tw.penalised_cost(improved_sol)
     assert_(improved_cost < cost_evaluator_tw.penalised_cost(sol))
@@ -179,7 +179,7 @@ def test_prize_collecting(prize_collecting):
     Tests that local search works on a small prize-collecting instance.
     """
     rng = RandomNumberGenerator(seed=42)
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
 
     sol = Solution.make_random(prize_collecting, rng)
     sol_cost = cost_evaluator.penalised_cost(sol)
@@ -207,7 +207,7 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     ls.add_node_operator(Exchange10(rc208))
     ls.add_node_operator(Exchange11(rc208))
 
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     # LocalSearch::search is deterministic, so two calls with the same base
@@ -237,7 +237,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_node_operator(Exchange10(rc208))
     ls.add_node_operator(Exchange11(rc208))
 
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     improved = ls.search(sol, cost_evaluator)
@@ -281,7 +281,7 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     ls = cpp_LocalSearch(data, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
 
     current = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
     current_cost = cost_evaluator.penalised_cost(current)
@@ -306,7 +306,7 @@ def test_intensify_overlap_tolerance(method, rc208):
 
     func = getattr(ls, method)
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     # Overlap tolerance is zero, so no routes should have overlap and thus
@@ -333,7 +333,7 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
     ls = LocalSearch(rc208, rng, neighbours)
     ls.add_route_operator(SwapStar(rc208))
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
@@ -348,7 +348,7 @@ def test_no_op_results_in_same_solution(ok_small):
     """
     rng = RandomNumberGenerator(seed=42)
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
 
     # Empty local search does not actually search anything, so it should return
@@ -370,7 +370,7 @@ def test_intensify_can_improve_solution_further(rc208):
     ls.add_node_operator(Exchange11(rc208))
     ls.add_route_operator(SwapStar(rc208))
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # The following solution is locally optimal w.r.t. the node operators. This
     # solution cannot be improved further by repeated calls to ``search()``.
@@ -404,7 +404,7 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     ls = LocalSearch(ok_small_prizes, rng, compute_neighbours(ok_small_prizes))
     ls.add_node_operator(Exchange10(ok_small_prizes))
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution(ok_small_prizes, [[2], [3, 4]])
     assert_(not sol.is_complete())  # 1 is required but not visited
 
@@ -442,7 +442,7 @@ def test_local_search_does_not_remove_required_clients():
     # Test that the improved solution contains the first client, but removes
     # the second. The first client is required, so could not be removed, but
     # the second could and that is an improving move.
-    cost_eval = CostEvaluator(100, 100, 0)
+    cost_eval = CostEvaluator([100], 100, 0)
     new_sol = ls.search(sol, cost_eval)
     assert_equal(new_sol.num_clients(), 1)
     assert_(new_sol.is_complete())
@@ -466,7 +466,7 @@ def test_mutually_exclusive_group(gtsp):
     ls.add_node_operator(Exchange10(gtsp))
 
     sol = Solution.make_random(gtsp, rng)
-    cost_eval = CostEvaluator(20, 6, 0)
+    cost_eval = CostEvaluator([20], 6, 0)
     improved = ls(sol, cost_eval)
 
     assert_(not sol.is_group_feasible())
@@ -493,7 +493,7 @@ def test_mutually_exclusive_group_not_in_solution(
     sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
     assert_(not sol.is_group_feasible())
 
-    improved = ls(sol, CostEvaluator(20, 6, 0))
+    improved = ls(sol, CostEvaluator([20], 6, 0))
     assert_(improved.is_group_feasible())
 
 
@@ -510,7 +510,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
     ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
 
-    cost_eval = CostEvaluator(20, 6, 0)
+    cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(ok_small_mutually_exclusive_groups, [[1, 4]])
     improved = ls(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))

@@ -31,8 +31,8 @@ void SwapStar::updateInsertPoints(Route *R,
                                   Route::Node *U,
                                   CostEvaluator const &costEvaluator)
 {
-    auto &insertPositions = insertCache(R->idx(), U->client());
-    insertPositions.fill({std::numeric_limits<Cost>::max(), nullptr});
+    auto &insertPoints = insertCache(R->idx(), U->client());
+    insertPoints.fill({std::numeric_limits<Cost>::max(), nullptr});
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
@@ -42,23 +42,20 @@ void SwapStar::updateInsertPoints(Route *R,
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        if (deltaCost >= insertPositions[2].first)
-            continue;
-
         auto *V = (*R)[idx];
-        if (deltaCost >= insertPositions[1].first)
-            insertPositions[2] = {deltaCost, V};
-        else if (deltaCost >= insertPositions[0].first)
+        if (deltaCost < insertPoints[0].first)
         {
-            insertPositions[2] = insertPositions[1];
-            insertPositions[1] = {deltaCost, V};
+            insertPoints[2] = insertPoints[1];
+            insertPoints[1] = insertPoints[0];
+            insertPoints[0] = {deltaCost, V};
         }
-        else
+        else if (deltaCost < insertPoints[1].first)
         {
-            insertPositions[2] = insertPositions[1];
-            insertPositions[1] = insertPositions[0];
-            insertPositions[0] = {deltaCost, V};
+            insertPoints[2] = insertPoints[1];
+            insertPoints[1] = {deltaCost, V};
         }
+        else if (deltaCost < insertPoints[2].first)
+            insertPoints[2] = {deltaCost, V};
     }
 
     isCached(R->idx(), U->client()) = true;
@@ -85,21 +82,21 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
     // added as well. The following addresses this issue with an approximation,
     // which is inexact when there are both pickups and deliveries in the data.
     // So it's pretty rough but fast and seems to mostly work well enough.
-    Cost delta = 0;
+    Cost cost = 0;
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        auto const loadDiff
+        auto const delta
             = std::max(uClient.delivery[dim], uClient.pickup[dim])
               - std::max(vClient.delivery[dim], vClient.pickup[dim]);
 
-        delta += costEvaluator.loadPenalty(uLoad[dim] - loadDiff, uCap[dim]);
-        delta -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim]);
+        cost += costEvaluator.loadPenalty(uLoad[dim] - delta, uCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim], dim);
 
-        delta += costEvaluator.loadPenalty(vLoad[dim] + loadDiff, vCap[dim]);
-        delta -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim]);
+        cost += costEvaluator.loadPenalty(vLoad[dim] + delta, vCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim], dim);
     }
 
-    return delta;
+    return cost;
 }
 
 SwapStar::InsertPoint SwapStar::bestInsertPoint(
