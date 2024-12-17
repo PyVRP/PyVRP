@@ -111,7 +111,7 @@ void Route::insert(size_t idx, Node *node)
     assert(0 < idx && idx < nodes.size());
     assert(!node->isDepot());
     // Not allowed to insert between depot unload and load node.
-    assert(nodes[idx - 1]->type() != Node::NodeType::DepotUnload);
+    assert(!nodes[idx - 1]->isDepotUnload());
 
     // Note that trip indices do not change when only inserting clients.
     size_t tripIdx = nodes[idx - 1]->tripIdx();
@@ -140,7 +140,7 @@ void Route::insertTrip(size_t idx)
 {
     assert(idx <= nodes.size());
     // Not allowed to insert new trip in the middle of an other trip.
-    assert(idx == 0 || nodes[idx - 1]->type() == Node::NodeType::DepotUnload);
+    assert(idx == 0 || nodes[idx - 1]->isDepotUnload());
 
     size_t const trip
         = idx == nodes.size() ? numTrips() : nodes[idx]->tripIdx();
@@ -160,9 +160,9 @@ void Route::insertTrip(size_t idx)
     depotPair++;
     for (size_t after = idx + 2; after != nodes.size(); ++after)
     {
-        if (nodes[after]->type() == Node::NodeType::DepotLoad)
+        if (nodes[after]->isDepotLoad())
             nodes[after] = &depotPair->first;
-        else if (nodes[after]->type() == Node::NodeType::DepotUnload)
+        else if (nodes[after]->isDepotUnload())
         {
             nodes[after] = &depotPair->second;
             depotPair++;
@@ -227,9 +227,9 @@ void Route::removeTrip(size_t tripIdx)
     // Update depot node pointers.
     for (auto after = startIdx; after != nodes.size(); ++after)
     {
-        if (nodes[after]->type() == Node::NodeType::DepotLoad)
+        if (nodes[after]->isDepotLoad())
             nodes[after] = &depotPair->first;
-        else if (nodes[after]->type() == Node::NodeType::DepotUnload)
+        else if (nodes[after]->isDepotUnload())
         {
             nodes[after] = &depotPair->second;
             depotPair++;
@@ -292,12 +292,12 @@ void Route::update()
         auto const *node = nodes[idx];
         visits.emplace_back(node->client());
 
-        if (node->type() == Node::NodeType::Client)
+        if (node->isClient())
         {
-            ++numClients;
             assert(depotBalance == 1);
+            ++numClients;
         }
-        else if (node->type() == Node::NodeType::DepotLoad)
+        else if (node->isDepotLoad())
         {
             assert(depotBalance == 0);
             depotBalance++;
@@ -305,6 +305,7 @@ void Route::update()
         }
         else  // Depot unload
         {
+            assert(node->isDepotUnload());
             assert(depotBalance == 1);
             depotBalance--;
             tripEnd.push_back(idx);
@@ -343,7 +344,7 @@ void Route::update()
     durAt.resize(nodes.size());
     durAt[0] = {vehicleType_, vehicleType_.startLate};
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        durAt[idx] = nodes[idx]->type() == Node::NodeType::Client
+        durAt[idx] = nodes[idx]->isClient()
                          ? DurationSegment(data.location(visits[idx]))
                          : DurationSegment(vehicleType_, vehicleType_.twLate);
 
@@ -370,33 +371,32 @@ void Route::update()
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         loadAt[dim].resize(nodes.size());
+        tripLoadBefore[dim].resize(nodes.size());
+        tripLoad_[dim].resize(numTrips);
+        excessLoad_[dim] = 0;
+        tripLoadAfter[dim].resize(nodes.size());
+
         for (size_t trip = 0; trip != numTrips; ++trip)
         {
+            // LoadAt
             loadAt[dim][tripStart[trip]] = LoadSegment();
             for (size_t idx = tripStart[trip] + 1; idx != tripEnd[trip]; ++idx)
                 loadAt[dim][idx] = LoadSegment(data.location(visits[idx]), dim);
 
             loadAt[dim][tripEnd[trip]] = LoadSegment();
-        }
 
-        tripLoadBefore[dim].resize(nodes.size());
-        tripLoad_[dim].resize(numTrips);
-        excessLoad_[dim] = 0;
-        for (size_t trip = 0; trip != numTrips; ++trip)
-        {
+            // TripLoadBefore
             tripLoadBefore[dim][tripStart[trip]] = loadAt[dim][tripStart[trip]];
             for (size_t idx = tripStart[trip]; idx != tripEnd[trip]; ++idx)
                 tripLoadBefore[dim][idx + 1] = LoadSegment::merge(
                     tripLoadBefore[dim][idx], loadAt[dim][idx + 1]);
 
+            // TripLoad and ExcessLoad
             tripLoad_[dim][trip] = tripLoadBefore[dim][tripEnd[trip]];
             excessLoad_[dim] += std::max<Load>(
                 tripLoad_[dim][trip].load() - capacity()[dim], 0);
-        }
 
-        tripLoadAfter[dim].resize(nodes.size());
-        for (size_t trip = 0; trip != numTrips; ++trip)
-        {
+            // TripLoadAfter
             tripLoadAfter[dim][tripEnd[trip]] = loadAt[dim][tripEnd[trip]];
             for (size_t idx = tripEnd[trip]; idx != tripStart[trip]; --idx)
                 tripLoadAfter[dim][idx - 1] = LoadSegment::merge(
@@ -414,10 +414,9 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
     out << "Route #" << route.idx() + 1 << ":";  // route number
     for (auto *node : route)
     {
-        if (node->type() == Route::Node::NodeType::Client)
+        if (node->isClient())
             out << ' ' << node->client();  // client index
-        else if (node->type() == Route::Node::NodeType::DepotLoad
-                 && node != *route.begin())
+        else if (node->isDepotLoad() && node != *route.begin())
             out << " |";  // trip delimiter
     }
     out << '\n';

@@ -37,7 +37,7 @@ pyvrp::repair::greedyRepair(std::vector<SolRoute> const &solRoutes,
         {
             for (auto *V : route)
             {
-                if (V->type() == SearchRoute::Node::NodeType::DepotUnload)
+                if (V->isDepotUnload())
                     continue;
 
                 auto const cost = insertCost(U, V, data, costEvaluator);

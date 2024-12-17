@@ -94,11 +94,11 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->type() == Route::Node::NodeType::DepotLoad
+                    if (p(V)->isDepotLoad()
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
 
-                    if (n(V)->type() == Route::Node::NodeType::DepotUnload
+                    if (n(V)->isDepotUnload()
                         && applyNodeOps(U, n(V), costEvaluator))
                         continue;
                 }
@@ -440,12 +440,13 @@ Solution LocalSearch::exportSolution() const
         trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
         {
-            if (node->type() == Route::Node::NodeType::DepotLoad)  // start trip
+            if (node->isDepotLoad())  // start trip
                 trip.clear();
-            else if (node->type() == Route::Node::NodeType::Client)
+            else if (node->isClient())
                 trip.push_back(node->client());
             else  // depot unload -> end of trip
             {
+                assert(node->isDepotUnload());
                 assert(trip.size() > 0);
                 trips.push_back(trip);
             }

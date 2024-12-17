@@ -19,8 +19,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     // Don't tackle the case that U or V is a depot unload node, which could
     // result in inconsistent routes after swapping. Could end up with trips
     // which do not start and end at a depot load and unload node.
-    if (U->type() == Route::Node::NodeType::DepotUnload
-        || V->type() == Route::Node::NodeType::DepotUnload)
+    if (U->isDepotUnload() || V->isDepotUnload())
         return 0;
 
     Cost deltaCost = 0;
@@ -53,16 +52,14 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     // Maximum number of trips must not be exceeded.
     size_t numTripsU = U->tripIdx() + tripsTailV;
-    if (U->type() == Route::Node::NodeType::DepotLoad
-        && n(V)->type() == Route::Node::NodeType::DepotUnload)
+    if (U->isDepotLoad() && n(V)->isDepotUnload())
         numTripsU--;  // Trip will become empty.
 
     if (numTripsU > uRoute->maxTrips())
         return 0;
 
     size_t numTripsV = V->tripIdx() + tripsTailU;
-    if (V->type() == Route::Node::NodeType::DepotLoad
-        && n(U)->type() == Route::Node::NodeType::DepotUnload)
+    if (V->isDepotLoad() && n(U)->isDepotUnload())
         numTripsV--;  // Trip will become empty.
 
     if (numTripsV > vRoute->maxTrips())
@@ -70,8 +67,11 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     // Note that a proposal can contain an empty trip, but this should not
     // affect delta cost calculation.
-    if (U->idx() < uRoute->size() - 2 && V->idx() < vRoute->size() - 2)
+    size_t const vLastClientIndex = vRoute->size() - 2;
+    size_t const uLastClientIndex = uRoute->size() - 2;
+    if (U->idx() < uLastClientIndex && V->idx() < vLastClientIndex)
     {
+        // Both routes "send and receive" clients to/from each other.
         auto const uProposal = uRoute->proposal(
             uRoute->before(U->idx()),
             vRoute->between(V->idx() + 1, vRoute->size() - 2),
@@ -84,8 +84,9 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (U->idx() < uRoute->size() - 2 && V->idx() >= vRoute->size() - 2)
+    else if (U->idx() < uLastClientIndex && V->idx() >= vLastClientIndex)
     {
+        // Route U "sends" clients to route V, but not the other way around.
         auto const uProposal = uRoute->proposal(uRoute->before(U->idx()),
                                                 uRoute->at(uRoute->size() - 1));
 
@@ -96,8 +97,9 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (U->idx() >= uRoute->size() - 2 && V->idx() < vRoute->size() - 2)
+    else if (U->idx() >= uLastClientIndex && V->idx() < vLastClientIndex)
     {
+        // Route V "sends" clients to route U, but not the other way around.
         auto const uProposal = uRoute->proposal(
             uRoute->before(U->idx()),
             vRoute->between(V->idx() + 1, vRoute->size() - 2),
@@ -155,15 +157,15 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
         {
             auto *prevVAfter = moveVAfter;
             moveVAfter = n(moveVAfter);
-            assert(moveVAfter->type() == Route::Node::NodeType::DepotLoad);
+            assert(moveVAfter->isDepotLoad());
             U->route()->insertTrip(insertIdxU++);
             moveUAfter = n(n(moveUAfter));
-            while (moveVAfter->type() != Route::Node::NodeType::DepotUnload)
+            while (!moveVAfter->isDepotUnload())
             {
                 moveVAfter = n(moveVAfter);
                 auto *node = moveVAfter;
-                assert(node->type() != Route::Node::NodeType::DepotLoad);
-                if (node->type() == Route::Node::NodeType::DepotUnload)
+                assert(!node->isDepotLoad());
+                if (node->isDepotUnload())
                 {
                     insertUAfter = moveUAfter;
                     V->route()->removeTrip(moveVAfter->tripIdx());
@@ -171,7 +173,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
                 }
                 else  // Client
                 {
-                    assert(!node->isDepot());
+                    assert(node->isClient());
                     moveVAfter = p(moveVAfter);
                     V->route()->remove(node->idx());
                     U->route()->insert(insertIdxU++, node);
@@ -185,15 +187,15 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
         {
             auto *prevUAfter = moveUAfter;
             moveUAfter = n(moveUAfter);
-            assert(moveUAfter->type() == Route::Node::NodeType::DepotLoad);
+            assert(moveUAfter->isDepotLoad());
             V->route()->insertTrip(insertIdxV++);
             moveVAfter = n(n(moveVAfter));
-            while (moveUAfter->type() != Route::Node::NodeType::DepotUnload)
+            while (!moveUAfter->isDepotUnload())
             {
                 moveUAfter = n(moveUAfter);
                 auto *node = moveUAfter;
-                assert(node->type() != Route::Node::NodeType::DepotLoad);
-                if (node->type() == Route::Node::NodeType::DepotUnload)
+                assert(!node->isDepotLoad());
+                if (node->isDepotUnload())
                 {
                     insertVAfter = moveVAfter;
                     U->route()->removeTrip(moveUAfter->tripIdx());
@@ -201,7 +203,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
                 }
                 else  // Client
                 {
-                    assert(!node->isDepot());
+                    assert(node->isClient());
                     moveUAfter = p(moveUAfter);
                     U->route()->remove(node->idx());
                     V->route()->insert(insertIdxV++, node);
@@ -211,13 +213,9 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     }
 
     // Remove empty trips as result of first trip swap.
-    if (U->route()->numTrips() > 1
-        && U->type() == Route::Node::NodeType::DepotLoad
-        && n(U)->type() == Route::Node::NodeType::DepotUnload)
+    if (U->route()->numTrips() > 1 && U->isDepotLoad() && n(U)->isDepotUnload())
         U->route()->removeTrip(U->tripIdx());
 
-    if (V->route()->numTrips() > 1
-        && V->type() == Route::Node::NodeType::DepotLoad
-        && n(V)->type() == Route::Node::NodeType::DepotUnload)
+    if (V->route()->numTrips() > 1 && V->isDepotLoad() && n(V)->isDepotUnload())
         V->route()->removeTrip(V->tripIdx());
 }

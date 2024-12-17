@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Iterator
 
 from pyvrp._pyvrp import (
@@ -137,7 +136,7 @@ class Route:
     def update(self) -> None: ...
 
 class Node:
-    def __init__(self, loc: int, type: NodeType = ...) -> None: ...
+    def __init__(self, loc: int) -> None: ...
     @property
     def client(self) -> int: ...
     @property
@@ -146,14 +145,7 @@ class Node:
     def trip_idx(self) -> int: ...
     @property
     def route(self) -> Route | None: ...
-    @property
-    def type(self) -> NodeType: ...
     def is_depot(self) -> bool: ...
-
-class NodeType(Enum):
-    CLIENT = 0
-    DEPOT_LOAD = 1
-    DEPOT_UNLOAD = 2
 
 def insert_cost(
     U: Node, V: Node, data: ProblemData, cost_evaluator: CostEvaluator

@@ -106,7 +106,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const uProposal = uRoute->proposal(uRoute->before(U->idx() - 1),
                                                 uRoute->after(U->idx() + N));
 
-        if (V->type() != Route::Node::NodeType::DepotUnload)
+        if (!V->isDepotUnload())
         {
             auto const vProposal
                 = vRoute->proposal(vRoute->before(V->idx()),
@@ -141,7 +141,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
     {
         auto *route = U->route();
 
-        if (V->type() != Route::Node::NodeType::DepotUnload)
+        if (!V->isDepotUnload())
         {
             if (U->idx() < V->idx())
                 costEvaluator.deltaCost(
@@ -261,11 +261,11 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
-        if (V->type() != Route::Node::NodeType::DepotUnload && U == n(V))
+        if (!V->isDepotUnload() && U == n(V))
             return 0;
 
         // Cannot exceed max trips.
-        if (V->type() == Route::Node::NodeType::DepotUnload
+        if (V->isDepotUnload()
             && V->route()->numTrips() == V->route()->maxTrips())
             return 0;
 
@@ -293,7 +293,7 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     auto *insertUAfter = M == 0 ? V : vRoute[V->idx() + M - 1];
 
     // If inserting after a depot unload node, then a new trip is created.
-    if (insertUAfter->type() == Route::Node::NodeType::DepotUnload)
+    if (insertUAfter->isDepotUnload())
     {
         vRoute.insertTrip(insertUAfter->idx() + 1);
         insertUAfter = n(insertUAfter);
@@ -309,9 +309,8 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     }
 
     // Remove depot nodes if empty trip is left in uRoute.
-    if (uRoute.numTrips() > 1
-        && uToInsert->type() == Route::Node::NodeType::DepotLoad
-        && n(uToInsert)->type() == Route::Node::NodeType::DepotUnload)
+    if (uRoute.numTrips() > 1 && uToInsert->isDepotLoad()
+        && n(uToInsert)->isDepotUnload())
         uRoute.removeTrip(uToInsert->tripIdx());
 
     // ...and swap the overlapping nodes!

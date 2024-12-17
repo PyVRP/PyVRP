@@ -63,12 +63,16 @@ pyvrp::repair::exportRoutes(ProblemData const &data,
         trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
         {
-            if (node->type() == SearchRoute::Node::NodeType::DepotLoad)
+            if (node->isDepotLoad())  // start trip
                 trip.clear();
-            else if (node->type() == SearchRoute::Node::NodeType::Client)
+            else if (node->isClient())
                 trip.push_back(node->client());
             else  // depot unload -> end of trip
+            {
+                assert(node->isDepotUnload());
+                assert(trip.size() > 0);
                 trips.push_back(trip);
+            }
         }
 
         solRoutes.emplace_back(data, trips, route.vehicleType());

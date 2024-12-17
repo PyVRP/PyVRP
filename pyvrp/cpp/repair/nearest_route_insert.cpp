@@ -60,7 +60,7 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
 
         for (auto *V : route)  // evaluate after V
         {
-            if (V->type() == SearchRoute::Node::NodeType::DepotUnload)
+            if (V->isDepotUnload())
                 continue;
 
             auto const cost = insertCost(U, V, data, costEvaluator);

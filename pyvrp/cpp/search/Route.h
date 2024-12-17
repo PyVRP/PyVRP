@@ -124,6 +124,21 @@ public:
         [[nodiscard]] inline bool isDepot() const;
 
         /**
+         * Returns whether this node is a client.
+         */
+        [[nodiscard]] inline bool isClient() const;
+
+        /**
+         * Returns whether this node is a depot load node.
+         */
+        [[nodiscard]] inline bool isDepotLoad() const;
+
+        /**
+         * Returns whether this node is a depot unload node.
+         */
+        [[nodiscard]] inline bool isDepotUnload() const;
+
+        /**
          * Assigns the node to the given route, at the given position index and
          * trip index.
          */
@@ -417,7 +432,8 @@ public:
     [[nodiscard]] inline size_t maxTrips() const;
 
     /**
-     * @return Whether this route contains a depot at the given segment.
+     * @return Whether this route contains a depot in the segment given by
+     * ``startIndex`` and ``length``.
      */
     [[nodiscard]] inline bool containsDepot(size_t startIdx, size_t length);
 
@@ -559,7 +575,16 @@ Route *Route::Node::route() const { return route_; }
 
 Route::Node::NodeType Route::Node::type() const { return type_; }
 
-bool Route::Node::isDepot() const { return type_ != NodeType::Client; }
+bool Route::Node::isDepot() const { return isDepotLoad() || isDepotUnload(); }
+
+bool Route::Node::isClient() const { return type_ == NodeType::Client; }
+
+bool Route::Node::isDepotLoad() const { return type_ == NodeType::DepotLoad; }
+
+bool Route::Node::isDepotUnload() const
+{
+    return type_ == NodeType::DepotUnload;
+}
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route(route), start(start)
@@ -738,7 +763,7 @@ std::vector<LoadSegment> Route::SegmentBetween::load(size_t dimension) const
 
     for (size_t step = start; step != end; ++step)
     {
-        if (route.nodes[step]->type() == Node::NodeType::DepotUnload)
+        if (route.nodes[step]->isDepotUnload())
         {
             // End of a trip, store the load segment.
             loadSegments.push_back(loadSegment);
@@ -906,8 +931,9 @@ bool Route::containsDepot(size_t startIdx, size_t length)
         return true;
 
     // 3 possible cases: depot at start, end or in between.
-    // To find depots at start or end, we comapre the trip indices of the
-    // previous node before start and the node after end segment.
+    // To find depots at the start or end, we compare the trip indices of the
+    // node before the start of the segment and the node after the end of the
+    // segment.
     return nodes[startIdx - 1]->tripIdx()
            != nodes[startIdx + length]->tripIdx();
 }
@@ -921,7 +947,7 @@ Route::SegmentBetween Route::at(size_t idx) const
 Route::SegmentBetween Route::startDepotSegment() const
 {
     assert(!dirty);
-    assert(nodes[0]->type() == Node::NodeType::DepotLoad);
+    assert(nodes[0]->isDepotLoad());
     // First node must be corresponding to the start depot (of the first trip).
     return {*this, 0, 0};
 }
@@ -929,7 +955,7 @@ Route::SegmentBetween Route::startDepotSegment() const
 Route::SegmentBetween Route::endDepotSegment() const
 {
     assert(!dirty);
-    assert(nodes.back()->type() == Node::NodeType::DepotUnload);
+    assert(nodes.back()->isDepotUnload());
     // Last node must be corresponding to the end depot (of the last trip).
     return {*this, nodes.size() - 1, nodes.size() - 1};
 }
