@@ -15,10 +15,10 @@ using pyvrp::Route;
 
 using Client = size_t;
 
-Route::VisitDatum::VisitDatum(Duration startService,
-                              Duration endService,
-                              Duration waitDuration,
-                              Duration timeWarp)
+Route::ScheduledVisit::ScheduledVisit(Duration startService,
+                                      Duration endService,
+                                      Duration waitDuration,
+                                      Duration timeWarp)
     : startService(startService),
       endService(endService),
       waitDuration(waitDuration),
@@ -27,7 +27,7 @@ Route::VisitDatum::VisitDatum(Duration startService,
     assert(startService <= endService);
 }
 
-Duration Route::VisitDatum::serviceDuration() const
+Duration Route::ScheduledVisit::serviceDuration() const
 {
     return endService - startService;
 }
@@ -138,7 +138,7 @@ Route::Route(Visits visits,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
-             std::vector<VisitDatum> schedule)
+             std::vector<ScheduledVisit> schedule)
     : visits_(std::move(visits)),
       schedule_(std::move(schedule)),
       distance_(distance),
@@ -176,7 +176,7 @@ Route::Visits::const_iterator Route::end() const { return visits_.cend(); }
 
 Route::Visits const &Route::visits() const { return visits_; }
 
-std::vector<Route::VisitDatum> const &Route::schedule() const
+std::vector<Route::ScheduledVisit> const &Route::schedule() const
 {
     return schedule_;
 }

@@ -103,7 +103,7 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: ProblemData
       :members:
 
-   .. autoclass:: VisitDatum
+   .. autoclass:: ScheduledVisit
       :members:
 
    .. autoclass:: DynamicBitset

@@ -38,17 +38,17 @@ public:
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
      */
-    struct VisitDatum
+    struct ScheduledVisit
     {
         Duration const startService = 0;
         Duration const endService = 0;
         Duration const waitDuration = 0;
         Duration const timeWarp = 0;
 
-        VisitDatum(Duration startService,
-                   Duration endService,
-                   Duration waitDuration,
-                   Duration timeWarp);
+        ScheduledVisit(Duration startService,
+                       Duration endService,
+                       Duration waitDuration,
+                       Duration timeWarp);
 
         [[nodiscard]] Duration serviceDuration() const;
     };
@@ -59,8 +59,8 @@ private:
     using VehicleType = size_t;
     using Visits = std::vector<Client>;
 
-    Visits visits_ = {};                     // Client visits on this route
-    std::vector<VisitDatum> schedule_ = {};  // Client visit schedule data
+    Visits visits_ = {};                         // Client visits on this route
+    std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -108,7 +108,7 @@ public:
      *
      *    The schedule assumes the route starts at :meth:`~start_time`.
      */
-    [[nodiscard]] std::vector<VisitDatum> const &schedule() const;
+    [[nodiscard]] std::vector<ScheduledVisit> const &schedule() const;
 
     /**
      * Total distance travelled on this route.
@@ -286,7 +286,7 @@ public:
           VehicleType vehicleType,
           Depot startDepot,
           Depot endDepot,
-          std::vector<VisitDatum> schedule);
+          std::vector<ScheduledVisit> schedule);
 };
 }  // namespace pyvrp
 

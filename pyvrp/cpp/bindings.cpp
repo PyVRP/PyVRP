@@ -454,23 +454,23 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
-    py::class_<Route::VisitDatum>(
-        m, "VisitDatum", DOC(pyvrp, Route, VisitDatum))
-        .def_readonly("start_service", &Route::VisitDatum::startService)
-        .def_readonly("end_service", &Route::VisitDatum::endService)
-        .def_readonly("wait_duration", &Route::VisitDatum::waitDuration)
-        .def_readonly("time_warp", &Route::VisitDatum::timeWarp)
+    py::class_<Route::ScheduledVisit>(
+        m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
+        .def_readonly("start_service", &Route::ScheduledVisit::startService)
+        .def_readonly("end_service", &Route::ScheduledVisit::endService)
+        .def_readonly("wait_duration", &Route::ScheduledVisit::waitDuration)
+        .def_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
         .def_property_readonly("service_duration",
-                               &Route::VisitDatum::serviceDuration)
+                               &Route::ScheduledVisit::serviceDuration)
         .def(py::pickle(
-            [](Route::VisitDatum const &datum) {  // __getstate__
+            [](Route::ScheduledVisit const &datum) {  // __getstate__
                 return py::make_tuple(datum.startService,
                                       datum.endService,
                                       datum.waitDuration,
                                       datum.timeWarp);
             },
             [](py::tuple t) {  // __setstate__
-                Route::VisitDatum datum(
+                Route::ScheduledVisit datum(
                     t[0].cast<pyvrp::Duration>(),   // start service
                     t[1].cast<pyvrp::Duration>(),   // end service
                     t[2].cast<pyvrp::Duration>(),   // wait duration
@@ -579,7 +579,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.schedule());
             },
             [](py::tuple t) {  // __setstate__
-                using Schedule = std::vector<Route::VisitDatum>;
+                using Schedule = std::vector<Route::ScheduledVisit>;
 
                 Route route(
                     t[0].cast<std::vector<size_t>>(),         // visits
