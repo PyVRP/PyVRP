@@ -295,29 +295,37 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "load_at",
-            [](Route const &route, size_t idx, size_t dimension)
-            { return route.at(idx).load(dimension); },
+            [](Route const &route, size_t idx, size_t dimension, size_t trip)
+            { return route.at(idx).load(dimension, trip); },
             py::arg("idx"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "load_between",
-            [](Route const &route, size_t start, size_t end, size_t dimension)
-            { return route.between(start, end).load(dimension); },
+            [](Route const &route,
+               size_t start,
+               size_t end,
+               size_t dimension,
+               size_t trip)
+            { return route.between(start, end).load(dimension, trip); },
             py::arg("start"),
             py::arg("end"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "load_after",
-            [](Route const &route, size_t start, size_t dimension)
-            { return route.after(start).load(dimension); },
+            [](Route const &route, size_t start, size_t dimension, size_t trip)
+            { return route.after(start).load(dimension, trip); },
             py::arg("start"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "load_before",
-            [](Route const &route, size_t end, size_t dimension)
-            { return route.before(end).load(dimension); },
+            [](Route const &route, size_t end, size_t dimension, size_t trip)
+            { return route.before(end).load(dimension, trip); },
             py::arg("end"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "duration_at",
             [](Route const &route, size_t idx, size_t profile)

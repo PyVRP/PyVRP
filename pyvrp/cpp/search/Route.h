@@ -163,15 +163,15 @@ private:
         size_t const start;
 
     public:
-        inline size_t first() const;                     // client at start
-        inline size_t last() const;                      // end depot
-        inline Route::Node::NodeType firstType() const;  // start node type
-        inline Route::Node::NodeType lastType() const;   // end node type
+        inline size_t first() const;                    // client at start
+        inline size_t last() const;                     // end depot
+        inline Route::Node::NodeType lastType() const;  // end node type
+        inline size_t numTrips() const;                 // number of trips
 
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline std::vector<LoadSegment> load(size_t dimension) const;
+        inline LoadSegment const &load(size_t dimension, size_t trip) const;
     };
 
     /**
@@ -184,15 +184,15 @@ private:
         size_t const end;
 
     public:
-        inline size_t first() const;                     // start depot
-        inline size_t last() const;                      // client at end
-        inline Route::Node::NodeType firstType() const;  // start node type
-        inline Route::Node::NodeType lastType() const;   // end node type
+        inline size_t first() const;                    // start depot
+        inline size_t last() const;                     // client at end
+        inline Route::Node::NodeType lastType() const;  // end node type
+        inline size_t numTrips() const;                 // number of trips
 
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline std::vector<LoadSegment> load(size_t dimension) const;
+        inline LoadSegment const &load(size_t dimension, size_t trip) const;
     };
 
     /**
@@ -206,15 +206,15 @@ private:
         size_t const end;
 
     public:
-        inline size_t first() const;                     // client at start
-        inline size_t last() const;                      // client at end
-        inline Route::Node::NodeType firstType() const;  // start node type
-        inline Route::Node::NodeType lastType() const;   // end node type
+        inline size_t first() const;                    // client at start
+        inline size_t last() const;                     // client at end
+        inline Route::Node::NodeType lastType() const;  // end node type
+        inline size_t numTrips() const;                 // number of trips
 
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
-        inline std::vector<LoadSegment> load(size_t dimension) const;
+        inline LoadSegment load(size_t dimension, size_t trip) const;
     };
 
     ProblemData const &data;
@@ -624,21 +624,15 @@ DurationSegment Route::SegmentAfter::duration(size_t profile) const
     return between.duration(profile);
 }
 
-std::vector<LoadSegment> Route::SegmentAfter::load(size_t dimension) const
+LoadSegment const &Route::SegmentAfter::load(size_t dimension,
+                                             size_t trip) const
 {
-    std::vector<LoadSegment> loadSegments;
-    size_t const numTrips = route.numTrips();
-    size_t const startTrip = route.nodes[start]->tripIdx();
-    loadSegments.reserve(numTrips - startTrip);
+    assert(trip < numTrips());
+    if (trip == 0)  // Load for the first (partial) trip in the segment.
+        return route.tripLoadAfter[dimension][start];
 
-    // Load for the first (partial) trip in the segment.
-    loadSegments.push_back(route.tripLoadAfter[dimension][start]);
-
-    // Load for the remaining (complete) trips in the segment.
-    for (size_t trip = startTrip + 1; trip != numTrips; ++trip)
-        loadSegments.push_back(route.tripLoad_[dimension][trip]);
-
-    return loadSegments;
+    // Complete trip in the segment.
+    return route.tripLoad_[dimension][route.nodes[start]->tripIdx() + trip];
 }
 
 DistanceSegment Route::SegmentBefore::distance(size_t profile) const
@@ -659,55 +653,49 @@ DurationSegment Route::SegmentBefore::duration(size_t profile) const
     return between.duration(profile);
 }
 
-std::vector<LoadSegment> Route::SegmentBefore::load(size_t dimension) const
+LoadSegment const &Route::SegmentBefore::load(size_t dimension,
+                                              size_t trip) const
 {
-    std::vector<LoadSegment> loadSegments;
-    size_t const endTrip = route.nodes[end]->tripIdx();
-    loadSegments.reserve(endTrip + 1);
-
-    // Load for the complete trips in this segment.
-    for (size_t trip = 0; trip != endTrip; ++trip)
-        loadSegments.push_back(route.tripLoad_[dimension][trip]);
-
+    assert(trip < numTrips());
     // Load for the last (partial) trip in the segment.
-    loadSegments.push_back(route.tripLoadBefore[dimension][end]);
-    return loadSegments;
+    if (trip == numTrips() - 1)
+        return route.tripLoadBefore[dimension][end];
+
+    // Complete trip in the segment.
+    return route.tripLoad_[dimension][trip];
 }
 
 size_t Route::SegmentBefore::first() const { return route.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route.visits[end]; }
-
-Route::Node::NodeType Route::SegmentBefore::firstType() const
-{
-    return Route::Node::NodeType::DepotLoad;
-}
 Route::Node::NodeType Route::SegmentBefore::lastType() const
 {
     return route.nodes[end]->type();
 }
+size_t Route::SegmentBefore::numTrips() const
+{
+    return route.nodes[end]->tripIdx() + 1;
+}
 
 size_t Route::SegmentAfter::first() const { return route.visits[start]; }
 size_t Route::SegmentAfter::last() const { return route.visits.back(); }
-
-Route::Node::NodeType Route::SegmentAfter::firstType() const
-{
-    return route.nodes[start]->type();
-}
 Route::Node::NodeType Route::SegmentAfter::lastType() const
 {
     return Route::Node::NodeType::DepotUnload;
 }
+size_t Route::SegmentAfter::numTrips() const
+{
+    return route.numTrips() - route.nodes[start]->tripIdx();
+}
 
 size_t Route::SegmentBetween::first() const { return route.visits[start]; }
 size_t Route::SegmentBetween::last() const { return route.visits[end]; }
-
-Route::Node::NodeType Route::SegmentBetween::firstType() const
-{
-    return route.nodes[start]->type();
-}
 Route::Node::NodeType Route::SegmentBetween::lastType() const
 {
     return route.nodes[end]->type();
+}
+size_t Route::SegmentBetween::numTrips() const
+{
+    return route.nodes[end]->tripIdx() - route.nodes[start]->tripIdx() + 1;
 }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
@@ -751,31 +739,28 @@ DurationSegment Route::SegmentBetween::duration(size_t profile) const
     return durSegment;
 }
 
-std::vector<LoadSegment> Route::SegmentBetween::load(size_t dimension) const
+LoadSegment Route::SegmentBetween::load(size_t dimension, size_t trip) const
 {
-    std::vector<LoadSegment> loadSegments;
-    size_t const startTrip = route.nodes[start]->tripIdx();
-    size_t const endTrip = route.nodes[end]->tripIdx();
-    loadSegments.reserve(endTrip - startTrip + 1);
-
-    auto const &loads = route.loadAt[dimension];
-    auto loadSegment = loads[start];
-
-    for (size_t step = start; step != end; ++step)
+    assert(trip < numTrips());
+    if (numTrips() == 1)  // Single trip in the segment.
     {
-        if (route.nodes[step]->isDepotUnload())
-        {
-            // End of a trip, store the load segment.
-            loadSegments.push_back(loadSegment);
-            loadSegment = loads[step + 1];
-        }
-        else
+        auto const &loads = route.loadAt[dimension];
+        auto loadSegment = loads[start];
+
+        for (size_t step = start; step != end; ++step)
             loadSegment = LoadSegment::merge(loadSegment, loads[step + 1]);
+
+        return loadSegment;
     }
 
-    loadSegments.push_back(loadSegment);
+    // Multiple trips in the segment.
+    if (trip == 0)
+        return route.tripLoadAfter[dimension][start];
 
-    return loadSegments;
+    if (trip == numTrips() - 1)
+        return route.tripLoadBefore[dimension][end];
+
+    return route.tripLoad_[dimension][route.nodes[start]->tripIdx() + trip];
 }
 
 bool Route::isFeasible() const
@@ -1066,21 +1051,23 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
     auto processSegment = [&](auto const &segment)
     {
-        auto const tripLoadSegments = segment.load(dimension);
-        assert(tripLoadSegments.size() > 0);
+        size_t const segmentTrips = segment.numTrips();
+        assert(segmentTrips > 0);
 
-        currentLoadSegment
-            = LoadSegment::merge(currentLoadSegment, tripLoadSegments.front());
-        if (tripLoadSegments.size() > 1)
-            // End of trip, check if we have excess load
+        currentLoadSegment = LoadSegment::merge(currentLoadSegment,
+                                                segment.load(dimension, 0));
+        if (segmentTrips > 1)
+        {
+            // End of trip, check if we have excess load.
             excessLoad += calculateExcessLoad(currentLoadSegment);
 
-        // Check excess load for full trips.
-        for (size_t idx = 1; idx < tripLoadSegments.size() - 1; ++idx)
-            excessLoad += calculateExcessLoad(tripLoadSegments[idx]);
+            // Check excess load for full trips.
+            for (size_t idx = 1; idx != segmentTrips - 1; ++idx)
+                excessLoad += calculateExcessLoad(segment.load(dimension, idx));
 
-        if (tripLoadSegments.size() > 1)
-            currentLoadSegment = tripLoadSegments.back();
+            // Update current load segment.
+            currentLoadSegment = segment.load(dimension, segmentTrips - 1);
+        }
 
         // Check if we have excess load for the last trip in the segment.
         if (segment.lastType() == Route::Node::NodeType::DepotUnload)

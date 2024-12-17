@@ -292,19 +292,15 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
     assert_equal(route.load(), ok_small.location(client).delivery)
-    loads = route.load_between(0, 2, dimension=0)
-    assert_equal(len(loads), 1)  # Segment is part of one trip
     assert_equal(
-        loads[0].load(),
+        route.load_between(0, 2, dimension=0).load(),
         ok_small.location(client).delivery[0],
     )
 
     # The load_between() function is inclusive.
-    loads = route.load_between(0, 0, dimension=0)
-    assert_equal(loads[0].load(), 0)
-    loads = route.load_between(1, 1, dimension=0)
+    assert_equal(route.load_between(0, 0, dimension=0).load(), 0)
     assert_equal(
-        loads[0].load(),
+        route.load_between(1, 1, dimension=0).load(),
         ok_small.location(client).delivery[0],
     )
 
@@ -687,19 +683,15 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
     for idx in [1, 2, 3, 4]:
         before = route.load_before(idx)
         between_before = route.load_between(0, idx)
-        assert_equal(len(before), len(between_before))
-        assert_equal(len(before), 1)  # Single trip
-        assert_equal(before[0].load(), between_before[0].load())
-        assert_equal(before[0].pickup(), between_before[0].pickup())
-        assert_equal(before[0].delivery(), between_before[0].delivery())
+        assert_equal(before.load(), between_before.load())
+        assert_equal(before.pickup(), between_before.pickup())
+        assert_equal(before.delivery(), between_before.delivery())
 
         after = route.load_after(idx)
         between_after = route.load_between(idx, len(route) - 1)
-        assert_equal(len(after), len(between_after))
-        assert_equal(len(after), 1)  # Single trip
-        assert_equal(after[0].load(), between_after[0].load())
-        assert_equal(after[0].pickup(), between_after[0].pickup())
-        assert_equal(after[0].delivery(), between_after[0].delivery())
+        assert_equal(after.load(), between_after.load())
+        assert_equal(after.pickup(), between_after.pickup())
+        assert_equal(after.delivery(), between_after.delivery())
 
 
 @pytest.mark.parametrize(
@@ -742,9 +734,7 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
     route.append(Node(loc=2))
     route.update()
 
-    loads = route.load_between(frm, to, dimension=dim)
-    assert_equal(len(loads), 1)
-    assert_equal(loads[0].load(), expected)
+    assert_equal(route.load_between(frm, to, dimension=dim).load(), expected)
 
 
 def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
@@ -764,15 +754,15 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
 
     for idx in [1, 2, 3]:
         for dim in range(data.num_load_dimensions):
-            before = route.load_before(idx, dim)[0]
-            between_before = route.load_between(0, idx, dim)[0]
+            before = route.load_before(idx, dim)
+            between_before = route.load_between(0, idx, dim)
 
             assert_equal(before.load(), between_before.load())
             assert_equal(before.pickup(), between_before.pickup())
             assert_equal(before.delivery(), between_before.delivery())
 
-            after = route.load_after(idx, dim)[0]
-            between_after = route.load_between(idx, len(route) - 1, dim)[0]
+            after = route.load_after(idx, dim)
+            between_after = route.load_between(idx, len(route) - 1, dim)
 
             assert_equal(after.load(), between_after.load())
             assert_equal(after.pickup(), between_after.pickup())

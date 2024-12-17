@@ -19,14 +19,11 @@ public:
 
     size_t first() const { return client; }
     size_t last() const { return client; }
-    pyvrp::search::Route::Node::NodeType firstType() const
-    {
-        return pyvrp::search::Route::Node::NodeType::Client;
-    }
     pyvrp::search::Route::Node::NodeType lastType() const
     {
         return pyvrp::search::Route::Node::NodeType::Client;
     }
+    size_t numTrips() const { return 1; }
 
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
     {
@@ -38,10 +35,11 @@ public:
         return {data.location(client)};
     }
 
-    std::vector<pyvrp::LoadSegment> load(size_t dimension) const
+    pyvrp::LoadSegment load(size_t dimension,
+                            [[maybe_unused]] size_t trip) const
     {
-        return std::vector<pyvrp::LoadSegment>{
-            {data.location(client), dimension}};
+        assert(trip < numTrips());
+        return {data.location(client), dimension};
     }
 };
 }  // namespace
