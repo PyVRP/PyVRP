@@ -106,7 +106,8 @@ public:
      *
      * .. note::
      *
-     *    The schedule assumes the route starts at :meth:`~start_time`.
+     *    The schedule assumes the route starts at :meth:`~start_time`. Starting
+     *    later may be feasible, but shifts the schedule.
      */
     [[nodiscard]] std::vector<ScheduledVisit> const &schedule() const;
 
