@@ -24,16 +24,16 @@ public:
      *
      * Attributes
      * ----------
-     * start_service
+     * start_service : int
      *     Time at which the client service begins.
-     * end_service
+     * end_service : int
      *     Time at which the client service completes.
-     * service_duration
+     * service_duration : int
      *     Duration of the service.
-     * wait_duration
+     * wait_duration : int
      *     If the vehicle arrives early, this is the duration it has to wait
      *     until it can begin service.
-     * time_warp
+     * time_warp : int
      *     If the vehicle arrives late, this is the duration it has to 'travel
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
