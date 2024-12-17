@@ -41,7 +41,7 @@ public:
     template <typename... Segments> class Proposal
     {
         Route const *current;
-        ProblemData const &data;
+        ProblemData const &data_;
         std::tuple<Segments...> segments;
 
     public:
@@ -50,6 +50,7 @@ public:
                  Segments &&...segments);
 
         Route const *route() const;
+        ProblemData const &data() const;
 
         DistanceSegment distanceSegment() const;
         DurationSegment durationSegment() const;
@@ -613,12 +614,8 @@ bool Route::hasExcessDistance() const
 
 bool Route::hasTimeWarp() const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return false;
-#else
     assert(!dirty);
     return timeWarp() > 0;
-#endif
 }
 
 size_t Route::idx() const { return idx_; }
@@ -741,7 +738,7 @@ Route::Proposal<Segments...>::Proposal(Route const *current,
                                        ProblemData const &data,
                                        Segments &&...segments)
     : current(current),
-      data(data),
+      data_(data),
       segments(std::forward<Segments>(segments)...)
 {
 }
@@ -753,10 +750,16 @@ Route const *Route::Proposal<Segments...>::route() const
 }
 
 template <typename... Segments>
+ProblemData const &Route::Proposal<Segments...>::data() const
+{
+    return data_;
+}
+
+template <typename... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
     auto const profile = current->profile();
-    auto const &matrix = data.distanceMatrix(profile);
+    auto const &matrix = data_.distanceMatrix(profile);
 
     auto const fn = [&matrix, profile](auto segment, auto &&...args)
     {
@@ -785,7 +788,7 @@ template <typename... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     auto const profile = current->profile();
-    auto const &matrix = data.durationMatrix(profile);
+    auto const &matrix = data_.durationMatrix(profile);
 
     auto const fn = [&matrix, profile](auto segment, auto &&...args)
     {
