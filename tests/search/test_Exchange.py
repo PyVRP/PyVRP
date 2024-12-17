@@ -629,10 +629,10 @@ def test_relocate_new_trip_in_middle_of_route(ok_small):
     for loc in [1, 2]:
         route.append(Node(loc=loc))
 
-    route.append_depot()  # second trip
+    route.append_trip()  # second trip
     route.append(Node(loc=3))
 
-    route.append_depot()  # third trip
+    route.append_trip()  # third trip
     route.append(Node(loc=4))
     route.update()
 
@@ -674,10 +674,10 @@ def test_relocate_empty_trip_at_end_route(ok_small):
     for loc in [1, 2]:
         route.append(Node(loc=loc))
 
-    route.append_depot()  # second trip
+    route.append_trip()  # second trip
     route.append(Node(loc=3))
 
-    route.append_depot()  # third trip
+    route.append_trip()  # third trip
     route.append(Node(loc=4))
     route.update()
 
@@ -719,10 +719,10 @@ def test_relocate_empty_trip_in_middle_route(ok_small):
     for loc in [1, 2]:
         route.append(Node(loc=loc))
 
-    route.append_depot()  # second trip
+    route.append_trip()  # second trip
     route.append(Node(loc=3))
 
-    route.append_depot()  # third trip
+    route.append_trip()  # third trip
     route.append(Node(loc=4))
     route.update()
 

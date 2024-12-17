@@ -279,10 +279,10 @@ void SwapStar::apply(Route *U, Route *V) const
     V->remove(best.V->idx());
 
     if (tripToRemoveU.has_value())
-        U->removeEmptyTrip(tripToRemoveU.value());
+        U->removeTrip(tripToRemoveU.value());
 
     if (tripToRemoveV.has_value())
-        V->removeEmptyTrip(tripToRemoveV.value());
+        V->removeTrip(tripToRemoveV.value());
 
     V->insert(best.UAfter->idx() + 1, best.U);
     U->insert(best.VAfter->idx() + 1, best.V);

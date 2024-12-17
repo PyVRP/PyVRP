@@ -491,15 +491,18 @@ public:
     void push_back(Node *node);
 
     /**
-     * Creates and inserts the depot load/unload pair at index ``idx`` to
-     * create an empty trip. Assumes the given index is valid.
+     * Insert an empty trip. A depot load/unload node pair is created and
+     * inserted at index ``idx``. Assumes the given index is valid such that
+     * the new trip is inserted at the start of the route or directly after the
+     * end of an existing trip.
      */
-    void insertEmptyTrip(size_t idx);
+    void insertTrip(size_t idx);
 
     /**
-     * Creates and inserts the depot load/unload pair at the back of the route.
+     * Inserts an empty trip at the end of the route. A depot load/unload node
+     * pair is created and inserted at the back of the route.
      */
-    void emplaceBackDepot();
+    void addTrip();
 
     /**
      * Removes the client node at ``idx`` from the route.
@@ -507,9 +510,11 @@ public:
     void remove(size_t idx);
 
     /**
-     * Removes the depot load/unload pair at the given trip index.
+     * Removes the trip at ``idx`` from the route. The depot load/unload node
+     * pair for this trip are removed from the route. Assumes that the trip to
+     * be removed is empty.
      */
-    void removeEmptyTrip(size_t tripIdx);
+    void removeTrip(size_t tripIdx);
 
     /**
      * Swaps the given nodes.
@@ -887,11 +892,7 @@ size_t Route::numClients() const
     return nodes.size() - 2 * numTrips();
 }
 
-size_t Route::numTrips() const
-{
-    assert(depotNodes.size() > 0);
-    return depotNodes.size();
-}
+size_t Route::numTrips() const { return depotNodes.size(); }
 
 size_t Route::maxTrips() const { return vehicleType_.maxTrips; }
 

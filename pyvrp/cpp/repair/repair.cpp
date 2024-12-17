@@ -33,7 +33,7 @@ void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
         for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
         {
             if (tripIdx > 0)  // Create and insert depot nodes for new trip.
-                route.emplaceBackDepot();
+                route.addTrip();
 
             auto const &trip = solRoute.trip(tripIdx);
             for (auto const client : trip)

@@ -156,7 +156,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
             auto *prevVAfter = moveVAfter;
             moveVAfter = n(moveVAfter);
             assert(moveVAfter->type() == Route::Node::NodeType::DepotLoad);
-            U->route()->insertEmptyTrip(insertIdxU++);
+            U->route()->insertTrip(insertIdxU++);
             moveUAfter = n(n(moveUAfter));
             while (moveVAfter->type() != Route::Node::NodeType::DepotUnload)
             {
@@ -166,7 +166,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
                 if (node->type() == Route::Node::NodeType::DepotUnload)
                 {
                     insertUAfter = moveUAfter;
-                    V->route()->removeEmptyTrip(moveVAfter->tripIdx());
+                    V->route()->removeTrip(moveVAfter->tripIdx());
                     moveVAfter = prevVAfter;
                 }
                 else  // Client
@@ -186,7 +186,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
             auto *prevUAfter = moveUAfter;
             moveUAfter = n(moveUAfter);
             assert(moveUAfter->type() == Route::Node::NodeType::DepotLoad);
-            V->route()->insertEmptyTrip(insertIdxV++);
+            V->route()->insertTrip(insertIdxV++);
             moveVAfter = n(n(moveVAfter));
             while (moveUAfter->type() != Route::Node::NodeType::DepotUnload)
             {
@@ -196,7 +196,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
                 if (node->type() == Route::Node::NodeType::DepotUnload)
                 {
                     insertVAfter = moveVAfter;
-                    U->route()->removeEmptyTrip(moveUAfter->tripIdx());
+                    U->route()->removeTrip(moveUAfter->tripIdx());
                     moveUAfter = prevUAfter;
                 }
                 else  // Client
@@ -214,10 +214,10 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     if (U->route()->numTrips() > 1
         && U->type() == Route::Node::NodeType::DepotLoad
         && n(U)->type() == Route::Node::NodeType::DepotUnload)
-        U->route()->removeEmptyTrip(U->tripIdx());
+        U->route()->removeTrip(U->tripIdx());
 
     if (V->route()->numTrips() > 1
         && V->type() == Route::Node::NodeType::DepotLoad
         && n(V)->type() == Route::Node::NodeType::DepotUnload)
-        V->route()->removeEmptyTrip(V->tripIdx());
+        V->route()->removeTrip(V->tripIdx());
 }

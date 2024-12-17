@@ -295,7 +295,7 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     // If inserting after a depot unload node, then a new trip is created.
     if (insertUAfter->type() == Route::Node::NodeType::DepotUnload)
     {
-        vRoute.insertEmptyTrip(insertUAfter->idx() + 1);
+        vRoute.insertTrip(insertUAfter->idx() + 1);
         insertUAfter = n(insertUAfter);
     }
 
@@ -312,7 +312,7 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     if (uRoute.numTrips() > 1
         && uToInsert->type() == Route::Node::NodeType::DepotLoad
         && n(uToInsert)->type() == Route::Node::NodeType::DepotUnload)
-        uRoute.removeEmptyTrip(uToInsert->tripIdx());
+        uRoute.removeTrip(uToInsert->tripIdx());
 
     // ...and swap the overlapping nodes!
     for (size_t count = 0; count != M; ++count)
