@@ -377,7 +377,7 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
-    std::vector<bool> routesToLoad(solution.numRoutes(), true);
+    std::vector<size_t> routesToLoad;
     auto const &solRoutes = solution.routes();
 
     // Clear LS routes that are no longer part of the solution.
@@ -391,17 +391,16 @@ void LocalSearch::loadSolution(Solution const &solution)
         for (size_t idx = 1; idx != route.size() + 1; ++idx)
             visits.push_back(route[idx]->client());
 
-        bool clear = true;
-        for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
-            if (solRoutes[idx].vehicleType() == route.vehicleType()
-                && solRoutes[idx].visits() == visits)
-            {
-                clear = false;
-                routesToLoad[idx] = false;
-                break;
-            }
+        auto const pred = [&](auto const &solRoute)
+        {
+            return solRoute.vehicleType() == route.vehicleType()
+                   && solRoute.visits() == visits;
+        };
+        auto solRoute = std::find_if(solRoutes.begin(), solRoutes.end(), pred);
 
-        if (clear)
+        if (solRoute != solRoutes.end())  // route still in solution
+            routesToLoad[solRoute - solRoutes.begin()] = false;
+        else
             route.clear();
     }
 
@@ -411,15 +410,18 @@ void LocalSearch::loadSolution(Solution const &solution)
         if (!routesToLoad[idx])
             continue;
 
-        for (auto &r : routes)
-            if (r.empty() && r.vehicleType() == solRoutes[idx].vehicleType())
-            {
-                for (auto const client : solRoutes[idx])
-                    r.push_back(&nodes[client]);
+        auto const pred = [&](auto const &route)
+        {
+            return route.vehicleType() == solRoutes[idx].vehicleType()
+                   && route.empty();
+        };
+        auto route = std::find_if(routes.begin(), routes.end(), pred);
+        assert(route != routes.end());  // should always find a route
 
-                r.update();
-                break;
-            }
+        for (auto const client : solRoutes[idx])
+            route->push_back(&nodes[client]);
+
+        route->update();
     }
 
     for (auto *routeOp : routeOps)
