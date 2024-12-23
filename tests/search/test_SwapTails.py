@@ -244,7 +244,7 @@ def test_swapping_routes_with_multiple_trips():
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
     route1.append(Node(loc=4))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=5))
     route1.append(Node(loc=6))
     route1.update()
@@ -252,7 +252,7 @@ def test_swapping_routes_with_multiple_trips():
     # Second route is 0 -> 1 -> 0 -> 0 -> 2 -> 0.
     route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=1))
-    route2.append_trip()
+    route2.add_trip()
     route2.append(Node(loc=2))
     route2.update()
 
@@ -309,7 +309,7 @@ def test_move_involving_multiple_trips():
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
     route1.append(Node(loc=4))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=5))
     route1.append(Node(loc=6))
     route1.update()
@@ -317,7 +317,7 @@ def test_move_involving_multiple_trips():
     # Second route is 0 -> 1 -> 0 -> 0 -> 2 -> 0.
     route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=1))
-    route2.append_trip()
+    route2.add_trip()
     route2.append(Node(loc=2))
     route2.update()
 
@@ -375,9 +375,9 @@ def test_move_different_number_of_trips_swapped():
     # First route is 0 -> 3 -> 0 -> 0 -> 4 -> 0 -> 0 -> 5 -> 6 -> 0.
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=4))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=5))
     route1.append(Node(loc=6))
 
@@ -386,7 +386,7 @@ def test_move_different_number_of_trips_swapped():
     # Second route is 0 -> 1 -> 0 -> 0 -> 2 -> 0.
     route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=1))
-    route2.append_trip()
+    route2.add_trip()
     route2.append(Node(loc=2))
     route2.update()
 
@@ -446,7 +446,7 @@ def test_move_losing_trip():
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
     route1.append(Node(loc=4))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=5))
     route1.append(Node(loc=6))
     route1.update()
@@ -454,7 +454,7 @@ def test_move_losing_trip():
     # Second route is 0 -> 1 -> 0 -> 0 -> 2 -> 0.
     route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=1))
-    route2.append_trip()
+    route2.add_trip()
     route2.append(Node(loc=2))
     route2.update()
 
@@ -515,7 +515,7 @@ def test_move_not_exceeding_max_trips():
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
     route1.append(Node(loc=4))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=5))
     route1.append(Node(loc=2))
     route1.append(Node(loc=6))
@@ -582,7 +582,7 @@ def test_move_exceeding_max_trips():
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=3))
     route1.append(Node(loc=4))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=5))
     route1.append(Node(loc=2))
     route1.append(Node(loc=6))
@@ -638,7 +638,7 @@ def test_move_multiple_trips_with_different_depots():
     route1 = Route(data, idx=0, vehicle_type=0)
     route1.append(Node(loc=4))
     route1.append(Node(loc=5))
-    route1.append_trip()
+    route1.add_trip()
     route1.append(Node(loc=6))
     route1.append(Node(loc=7))
     route1.update()
@@ -646,7 +646,7 @@ def test_move_multiple_trips_with_different_depots():
     # Second route is 1 -> 2 -> 1 -> 1 -> 3 -> 1.
     route2 = Route(data, idx=1, vehicle_type=1)
     route2.append(Node(loc=2))
-    route2.append_trip()
+    route2.add_trip()
     route2.append(Node(loc=3))
     route2.update()
 

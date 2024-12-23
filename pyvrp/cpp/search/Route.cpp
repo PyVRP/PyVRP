@@ -111,13 +111,14 @@ void Route::insert(size_t idx, Node *node)
     assert(0 < idx && idx < nodes.size());
     assert(!node->isDepot());
     // Not allowed to insert between depot unload and load node.
-    assert(!nodes[idx - 1]->isDepotUnload());
+    assert(!nodes[idx]->isDepotLoad());
 
-    // Note that trip indices do not change when only inserting clients.
-    size_t tripIdx = nodes[idx - 1]->tripIdx();
+    // Insert the node before the node currently at position ``idx``.
+    size_t tripIdx = nodes[idx]->tripIdx();
     node->assign(this, idx, tripIdx);
     nodes.insert(nodes.begin() + idx, node);
 
+    // Note that trip indices do not change when only inserting clients.
     for (size_t after = idx + 1; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 
@@ -160,6 +161,11 @@ void Route::insertTrip(size_t idx)
     depotPair++;
     for (size_t after = idx + 2; after != nodes.size(); ++after)
     {
+        // Note that the pointer at ``nodes[after]`` is outdated if the node is
+        // a depot since new depot nodes are inserted before this node. However,
+        // this outdated pointer can still be used to determine the type of the
+        // node. If the node is a depot node, then the pointer is updated to the
+        // correct depot node.
         if (nodes[after]->isDepotLoad())
             nodes[after] = &depotPair->first;
         else if (nodes[after]->isDepotUnload())

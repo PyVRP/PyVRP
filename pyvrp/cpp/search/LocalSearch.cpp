@@ -91,13 +91,19 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (lastModified[U->route()->idx()] > lastTestedNode
                     || lastModified[V->route()->idx()] > lastTestedNode)
                 {
+                    // Moves involving clients: swapping or moving clients
+                    // after node V.
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
+                    // Moves involving a load depot: move clients to the
+                    // beginning of a trip (after the depot node p(V)).
                     if (p(V)->isDepotLoad()
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
 
+                    // Moves involving an unload depot: move clients to a new
+                    // trip (after the depot node n(V)).
                     if (n(V)->isDepotUnload()
                         && applyNodeOps(U, n(V), costEvaluator))
                         continue;

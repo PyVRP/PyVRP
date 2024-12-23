@@ -84,7 +84,7 @@ def test_insert_and_remove_update_node_idx_and_trip_idx(ok_small):
     for loc in [1, 2]:  # First trip
         route.append(Node(loc=loc))
 
-    route.append_trip()  # second trip
+    route.add_trip()  # second trip
     route.append(Node(loc=3))
 
     # After construction, the node is not in a route yet.

@@ -261,6 +261,10 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
+        // No change if nodes are inserted in the position they already are.
+        // n(V) does not exist if V is the last (depot unload) node in the
+        // route. U cannot be a depot load node, so guaranteed that we are not
+        // inserting in the same position if V is a depot unload node.
         if (!V->isDepotUnload() && U == n(V))
             return 0;
 
@@ -292,7 +296,7 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     auto *uToInsert = N == 1 ? U : uRoute[U->idx() + N - 1];
     auto *insertUAfter = M == 0 ? V : vRoute[V->idx() + M - 1];
 
-    // If inserting after a depot unload node, then a new trip is created.
+    // If inserting after a depot unload node, a new trip is created.
     if (insertUAfter->isDepotUnload())
     {
         vRoute.insertTrip(insertUAfter->idx() + 1);

@@ -217,6 +217,48 @@ private:
         inline LoadSegment load(size_t dimension, size_t trip) const;
     };
 
+    /**
+     * Class storing data related to the start depot of the route's vehicle
+     * type. This class should be used when inserting a new trip in the middle
+     * or at the end of the route, so not for the first trip in the route.
+     */
+    class SegmentStartDepot
+    {
+        Route const &route;
+
+    public:
+        inline size_t first() const;                    // client at start
+        inline size_t last() const;                     // client at end
+        inline Route::Node::NodeType lastType() const;  // end node type
+        inline size_t numTrips() const;                 // number of trips
+
+        inline SegmentStartDepot(Route const &route);
+        inline DistanceSegment distance(size_t profile) const;
+        inline DurationSegment duration(size_t profile) const;
+        inline LoadSegment load(size_t dimension, size_t trip) const;
+    };
+
+    /**
+     * Class storing data related to the end depot of the route's vehicle type.
+     * This class should be used when inserting a new trip in the middle or at
+     * the end of the route, so not for the first trip in the route.
+     */
+    class SegmentEndDepot
+    {
+        Route const &route;
+
+    public:
+        inline size_t first() const;                    // client at start
+        inline size_t last() const;                     // client at end
+        inline Route::Node::NodeType lastType() const;  // end node type
+        inline size_t numTrips() const;                 // number of trips
+
+        inline SegmentEndDepot(Route const &route);
+        inline DistanceSegment distance(size_t profile) const;
+        inline DurationSegment duration(size_t profile) const;
+        inline LoadSegment load(size_t dimension, size_t trip) const;
+    };
+
     ProblemData const &data;
 
     ProblemData::VehicleType const &vehicleType_;
@@ -444,18 +486,6 @@ public:
     [[nodiscard]] inline SegmentBetween at(size_t idx) const;
 
     /**
-     * Returns an object that can be queried for data associated with the node
-     * corresponding to the start depot.
-     */
-    [[nodiscard]] inline SegmentBetween startDepotSegment() const;
-
-    /**
-     * Returns an object that can be queried for data associated with the node
-     * corresponding to the end depot.
-     */
-    [[nodiscard]] inline SegmentBetween endDepotSegment() const;
-
-    /**
      * Returns an object that can be queried for data associated with the
      * segment starting at start.
      */
@@ -472,6 +502,18 @@ public:
      * segment between [start, end].
      */
     [[nodiscard]] inline SegmentBetween between(size_t start, size_t end) const;
+
+    /**
+     * Returns an object that can be queried for data associated with the node
+     * corresponding to the start depot.
+     */
+    [[nodiscard]] inline SegmentStartDepot startDepotSegment() const;
+
+    /**
+     * Returns an object that can be queried for data associated with the node
+     * corresponding to the end depot.
+     */
+    [[nodiscard]] inline SegmentEndDepot endDepotSegment() const;
 
     /**
      * Center point of the client locations on this route.
@@ -526,9 +568,9 @@ public:
     void remove(size_t idx);
 
     /**
-     * Removes the trip at ``idx`` from the route. The depot load/unload node
-     * pair for this trip are removed from the route. Assumes that the trip to
-     * be removed is empty.
+     * Removes the trip at ``tripIdx`` from the route. The depot load/unload
+     * node pair for this trip are removed from the route. Assumes that the trip
+     * to be removed is empty.
      */
     void removeTrip(size_t tripIdx);
 
@@ -605,6 +647,12 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 {
     assert(start <= end && end < route.nodes.size());
 }
+
+Route::SegmentStartDepot::SegmentStartDepot(Route const &route) : route(route)
+{
+}
+
+Route::SegmentEndDepot::SegmentEndDepot(Route const &route) : route(route) {}
 
 DistanceSegment Route::SegmentAfter::distance(size_t profile) const
 {
@@ -698,6 +746,22 @@ size_t Route::SegmentBetween::numTrips() const
     return route.nodes[end]->tripIdx() - route.nodes[start]->tripIdx() + 1;
 }
 
+size_t Route::SegmentStartDepot::first() const { return route.startDepot(); }
+size_t Route::SegmentStartDepot::last() const { return route.startDepot(); }
+Route::Node::NodeType Route::SegmentStartDepot::lastType() const
+{
+    return Route::Node::NodeType::DepotLoad;
+}
+size_t Route::SegmentStartDepot::numTrips() const { return 1; }
+
+size_t Route::SegmentEndDepot::first() const { return route.endDepot(); }
+size_t Route::SegmentEndDepot::last() const { return route.endDepot(); }
+Route::Node::NodeType Route::SegmentEndDepot::lastType() const
+{
+    return Route::Node::NodeType::DepotUnload;
+}
+size_t Route::SegmentEndDepot::numTrips() const { return 1; }
+
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 {
     if (profile != route.profile())  // then we have to compute the distance
@@ -761,6 +825,47 @@ LoadSegment Route::SegmentBetween::load(size_t dimension, size_t trip) const
         return route.tripLoadBefore[dimension][end];
 
     return route.tripLoad_[dimension][route.nodes[start]->tripIdx() + trip];
+}
+
+DistanceSegment
+Route::SegmentStartDepot::distance([[maybe_unused]] size_t profile) const
+{
+    return {};
+}
+
+DurationSegment
+Route::SegmentStartDepot::duration([[maybe_unused]] size_t profile) const
+{
+    // Note that this depot segment should never correspond to the first depot
+    // in a route, so the ``twLate`` of the vehicle type must be used for the
+    // duration segment instead of the ``startLate`` of the vehicle type.
+    return {route.vehicleType_, route.vehicleType_.twLate};
+}
+
+LoadSegment Route::SegmentStartDepot::load([[maybe_unused]] size_t dimension,
+                                           [[maybe_unused]] size_t trip) const
+{
+    assert(trip < numTrips());
+    return {};
+}
+
+DistanceSegment
+Route::SegmentEndDepot::distance([[maybe_unused]] size_t profile) const
+{
+    return {};
+}
+
+DurationSegment
+Route::SegmentEndDepot::duration([[maybe_unused]] size_t profile) const
+{
+    return {route.vehicleType_, route.vehicleType_.twLate};
+}
+
+LoadSegment Route::SegmentEndDepot::load([[maybe_unused]] size_t dimension,
+                                         [[maybe_unused]] size_t trip) const
+{
+    assert(trip < numTrips());
+    return {};
 }
 
 bool Route::isFeasible() const
@@ -929,22 +1034,6 @@ Route::SegmentBetween Route::at(size_t idx) const
     return {*this, idx, idx};
 }
 
-Route::SegmentBetween Route::startDepotSegment() const
-{
-    assert(!dirty);
-    assert(nodes[0]->isDepotLoad());
-    // First node must be corresponding to the start depot (of the first trip).
-    return {*this, 0, 0};
-}
-
-Route::SegmentBetween Route::endDepotSegment() const
-{
-    assert(!dirty);
-    assert(nodes.back()->isDepotUnload());
-    // Last node must be corresponding to the end depot (of the last trip).
-    return {*this, nodes.size() - 1, nodes.size() - 1};
-}
-
 Route::SegmentAfter Route::after(size_t start) const
 {
     assert(!dirty);
@@ -962,6 +1051,10 @@ Route::SegmentBetween Route::between(size_t start, size_t end) const
     assert(!dirty);
     return {*this, start, end};
 }
+
+Route::SegmentStartDepot Route::startDepotSegment() const { return {*this}; }
+
+Route::SegmentEndDepot Route::endDepotSegment() const { return {*this}; }
 
 template <typename... Segments>
 Route::Proposal<Segments...>::Proposal(Route const *current,

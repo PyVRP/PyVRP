@@ -527,6 +527,15 @@ void ProblemData::validate() const
             throw std::invalid_argument(
                 "Not supported to have non-zero "
                 "release times in combination with multi-trip.");
+
+        // Restrict max trips to avoid reserving too much memory for trip depot
+        // nodes in the search. A route cannot contain more trips than clients,
+        // so limit max trips to the number of clients + 1. The +1 is to support
+        // instances without clients.
+        if (vehicleType.maxTrips > numClients() + 1)
+            throw std::invalid_argument(
+                "Maximum number of trips on vehicle type exceeded the "
+                "number of clients by more than 1.");
     }
 
     // Matrix checks.
