@@ -299,7 +299,7 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     // If inserting after a depot unload node, a new trip is created.
     if (insertUAfter->isDepotUnload())
     {
-        vRoute.insertTrip(insertUAfter->idx() + 1);
+        vRoute.insertTrip(insertUAfter->tripIdx() + 1);
         insertUAfter = n(insertUAfter);
     }
 

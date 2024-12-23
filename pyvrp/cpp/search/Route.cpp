@@ -137,22 +137,26 @@ void Route::push_back(Node *node)
 #endif
 }
 
-void Route::insertTrip(size_t idx)
+void Route::insertTrip(size_t tripIdx)
 {
-    assert(idx <= nodes.size());
+    assert(tripIdx <= depotNodes.size());
+
+    // Get the insert index in the vector of nodes.
+    size_t const idx = tripIdx == depotNodes.size()
+                           ? nodes.size()
+                           : depotNodes[tripIdx].first.idx();
+
     // Not allowed to insert new trip in the middle of an other trip.
     assert(idx == 0 || nodes[idx - 1]->isDepotUnload());
 
-    size_t const trip
-        = idx == nodes.size() ? numTrips() : nodes[idx]->tripIdx();
     auto depotPair = depotNodes.emplace(
-        depotNodes.begin() + trip,
+        depotNodes.begin() + tripIdx,
         Node(vehicleType_.startDepot, Node::NodeType::DepotLoad),
         Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
 
     auto &[tripStartDepot, tripEndDepot] = *depotPair;
-    tripStartDepot.assign(this, idx, trip);
-    tripEndDepot.assign(this, idx + 1, trip);
+    tripStartDepot.assign(this, idx, tripIdx);
+    tripEndDepot.assign(this, idx + 1, tripIdx);
 
     nodes.insert(nodes.begin() + idx, &tripStartDepot);
     nodes.insert(nodes.begin() + idx + 1, &tripEndDepot);
@@ -185,7 +189,7 @@ void Route::insertTrip(size_t idx)
 
 void Route::addTrip()
 {
-    insertTrip(nodes.size());
+    insertTrip(depotNodes.size());
 
 #ifndef NDEBUG
     dirty = true;
@@ -225,8 +229,8 @@ void Route::removeTrip(size_t tripIdx)
     size_t const endIdx = depotUnloadNode.idx();
     assert(startIdx + 1 == endIdx);  // Trip must be empty.
 
-    nodes.erase(nodes.begin() + endIdx);    // Removes depot unload node.
-    nodes.erase(nodes.begin() + startIdx);  // Removes depot load node.
+    // Removes depot load and unload node.
+    nodes.erase(nodes.begin() + startIdx, nodes.begin() + startIdx + 2);
 
     auto depotPair = depotNodes.erase(depotNodes.begin() + tripIdx);
 

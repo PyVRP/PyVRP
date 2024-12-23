@@ -550,11 +550,9 @@ public:
 
     /**
      * Insert an empty trip. A depot load/unload node pair is created and
-     * inserted at index ``idx``. Assumes the given index is valid such that
-     * the new trip is inserted at the start of the route or directly after the
-     * end of an existing trip.
+     * inserted at index ``tripIdx``. Assumes the given index is valid.
      */
-    void insertTrip(size_t idx);
+    void insertTrip(size_t tripIdx);
 
     /**
      * Inserts an empty trip at the end of the route. A depot load/unload node

@@ -158,7 +158,8 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
             auto *prevVAfter = moveVAfter;
             moveVAfter = n(moveVAfter);
             assert(moveVAfter->isDepotLoad());
-            U->route()->insertTrip(insertIdxU++);
+            U->route()->insertTrip(insertUAfter->tripIdx() + 1);
+            insertIdxU++;
             moveUAfter = n(n(moveUAfter));
             while (!moveVAfter->isDepotUnload())
             {
@@ -188,7 +189,8 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
             auto *prevUAfter = moveUAfter;
             moveUAfter = n(moveUAfter);
             assert(moveUAfter->isDepotLoad());
-            V->route()->insertTrip(insertIdxV++);
+            V->route()->insertTrip(insertVAfter->tripIdx() + 1);
+            insertIdxV++;
             moveVAfter = n(n(moveVAfter));
             while (!moveUAfter->isDepotUnload())
             {
