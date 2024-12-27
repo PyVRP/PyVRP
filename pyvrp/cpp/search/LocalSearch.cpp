@@ -377,7 +377,7 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
-    std::vector<size_t> routesToLoad;
+    std::vector<bool> routesToLoad(solution.numRoutes(), true);
     auto const &solRoutes = solution.routes();
 
     // Clear LS routes that are no longer part of the solution.
