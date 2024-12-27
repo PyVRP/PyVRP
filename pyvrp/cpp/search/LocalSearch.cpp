@@ -91,6 +91,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!candidates[uClient])
                 continue;
 
+            candidates[uClient] = false;
+
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
