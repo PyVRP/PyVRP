@@ -86,8 +86,8 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
-    if (nodes.size() == 2)
-        return;
+    if (nodes.size() == 2)  // then the route is already empty and we have
+        return;             // nothing to do.
 
     for (auto *node : nodes)
         node->unassign();
