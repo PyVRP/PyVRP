@@ -240,8 +240,8 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
     {
         auto const end = begin + data.vehicleType(vehType).numAvailable;
-        auto const pred = [](auto const &route) { return route.empty(); };
-        auto empty = std::find_if(begin, end, pred);
+        auto const isEmpty = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, isEmpty);
         begin = end;
 
         if (empty != end)  // try inserting U into the empty route.
@@ -400,7 +400,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         auto solRoute = std::find_if(solRoutes.begin(), solRoutes.end(), pred);
 
         if (solRoute != solRoutes.end())  // route still in solution
-            isNew[solRoute - solRoutes.begin()] = false;
+            isNew[std::distance(solRoutes.begin(), solRoute)] = false;
         else
             route.clear();
     }
@@ -425,7 +425,8 @@ void LocalSearch::loadSolution(Solution const &solution)
                              ? routes.end()
                              : routes.begin() + vehicleOffset[vehicleType + 1];
 
-        auto route = std::find_if(start, end, std::empty<Route>);
+        auto const isEmpty = [](auto const &route) { return route.empty(); };
+        auto route = std::find_if(start, end, isEmpty);
         assert(route != routes.end());
         assert(route->vehicleType() == vehicleType);
 
