@@ -24,6 +24,7 @@ bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
 
     assert(route.size() == solRoute.size());
     for (size_t idx = 0; idx != route.size(); ++idx)
+        // idx + 1 because route includes depots, whereas the solRoute does not.
         if (route[idx + 1]->client() != solRoute[idx])
             return false;
 
@@ -408,8 +409,8 @@ void LocalSearch::loadSolution(Solution const &solution)
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
-    std::vector<bool> isNew(solution.numRoutes(), true);
-    std::vector<bool> keepRoute(routes.size(), false);
+    std::vector<bool> isNewRoute(solution.numRoutes(), true);
+    std::vector<bool> keepExistingRoute(routes.size(), false);
     auto const &solRoutes = solution.routes();
 
     // Identify LS routes that are also in the given solution.
@@ -427,20 +428,20 @@ void LocalSearch::loadSolution(Solution const &solution)
         auto const route = std::find_if(start, end, equal);
         if (route != end)
         {
-            isNew[idx] = false;
-            keepRoute[std::distance(routes.begin(), route)] = true;
+            isNewRoute[idx] = false;
+            keepExistingRoute[std::distance(routes.begin(), route)] = true;
         }
     }
 
     // Clear the routes we do not want to keep.
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        if (!keepRoute[idx])
+        if (!keepExistingRoute[idx])
             routes[idx].clear();
 
     // Load only new solution routes.
     for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
     {
-        if (!isNew[idx])
+        if (!isNewRoute[idx])
             continue;
 
         auto const &solRoute = solRoutes[idx];
