@@ -1,5 +1,4 @@
 #include "LocalSearch.h"
-#include "DynamicBitset.h"
 #include "Measure.h"
 #include "primitives.h"
 
@@ -12,18 +11,18 @@ using pyvrp::search::LocalSearch;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator,
-                                 std::vector<size_t> const &candidateNodes,
                                  double overlapTolerance)
 {
-    numEvaluations = 0;
     loadSolution(solution);
 
-    candidates.reset();
-    for (auto idx : candidateNodes)
-        candidates[idx] = true;
+    while (true)
+    {
+        search(costEvaluator);
+        intensify(costEvaluator, overlapTolerance);
 
-    search(costEvaluator);
-    intensify(costEvaluator, overlapTolerance);
+        if (numMoves == 0)  // then the current solution is locally optimal.
+            break;
+    }
 
     return exportSolution();
 }
@@ -55,16 +54,11 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     // last *actually* modified.
     std::vector<int> lastTestedNodes(data.numLocations(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
+
+    searchCompleted = false;
     numMoves = 0;
 
-    for (auto const uClient : orderNodes)  // insert all customers first
-    {
-        auto *U = &nodes[uClient];
-        applyOptionalClientMoves(U, costEvaluator);
-    }
-
-    bool firstStep = true;
-    while (candidates.any() && !searchCompleted)
+    for (int step = 0; !searchCompleted; ++step)
     {
         searchCompleted = true;
 
@@ -86,14 +80,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
-            // We next evaluate node operators that work on pairs of nodes
-            // of nodes (U, V), where both U and V are in the solution. We
-            // only do this if U is a promising candidate for improvement.
-            if (!candidates[uClient])
-                continue;
-
-            candidates[uClient] = false;
-
+            // We next apply the regular node operators. These work on pairs
+            // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
@@ -114,11 +102,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             // Moves involving empty routes are not tested in the first
             // iteration to avoid using too many routes.
-            if (!firstStep)
+            if (step > 0)
                 applyEmptyRouteMoves(U, costEvaluator);
         }
-
-        firstStep = false;
     }
 }
 
@@ -185,8 +171,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
     for (auto *nodeOp : nodeOps)
     {
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
-        numEvaluations += 1;
-
         if (deltaCost < 0)
         {
             auto *rU = U->route();  // copy these because the operator can
@@ -198,26 +182,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
 
             nodeOp->apply(U, V);
             update(rU, rV);
-
-            if (!U->isDepot())
-                candidates[U->client()] = true;
-
-            if (!p(U)->isDepot())
-                candidates[p(U)->client()] = true;
-
-            if (!n(U)->isDepot())
-                candidates[n(U)->client()] = true;
-
-            if (!V->isDepot())
-            {
-                candidates[V->client()] = true;
-
-                if (!p(V)->isDepot())
-                    candidates[p(V)->client()] = true;
-
-                if (!n(V)->isDepot())
-                    candidates[n(V)->client()] = true;
-            }
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
@@ -429,20 +393,19 @@ void LocalSearch::loadSolution(Solution const &solution)
     // Load routes from solution.
     for (auto const &solRoute : solution.routes())
     {
-        // Determine index of next route of this type to load, where we rely
-        // on solution to be valid to not exceed the number of vehicles per
-        // vehicle type.
-        auto const r = vehicleOffset[solRoute.vehicleType()]++;
-        Route &route = routes[r];
-        assert(route.empty());  // should have been emptied above.
-
+        // Set up a container of all node visits. This lets us insert all nodes
+        // in one go, requiring no intermediate updates.
         std::vector<Route::Node *> visits;
         visits.reserve(solRoute.size());
         for (auto const client : solRoute)
             visits.push_back(&nodes[client]);
 
-        route.insert(1, visits.begin(), visits.end());
-        route.update();
+        // Determine index of next route of this type to load, where we rely
+        // on solution to be valid to not exceed the number of vehicles per
+        // vehicle type.
+        auto const idx = vehicleOffset[solRoute.vehicleType()]++;
+        routes[idx].insert(1, visits.begin(), visits.end());
+        routes[idx].update();
     }
 
     for (auto *routeOp : routeOps)
@@ -510,7 +473,6 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       neighbours_(data.numLocations()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      candidates(data.numLocations()),
       lastModified(data.numVehicles(), -1)
 {
     setNeighbours(neighbours);

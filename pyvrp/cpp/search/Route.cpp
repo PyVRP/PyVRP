@@ -86,8 +86,8 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
-    if (nodes.size() == 2)
-        return;
+    if (nodes.size() == 2)  // then the route is already empty and we have
+        return;             // nothing to do.
 
     for (auto *node : nodes)
         node->unassign();
@@ -105,8 +105,8 @@ void Route::clear()
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
-
     nodes.insert(nodes.begin() + idx, node);
+
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->assign(this, after);
 
