@@ -340,13 +340,14 @@ def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
         ls.intensify(sol, cost_eval, overlap_tolerance=tol)
 
 
-def test_no_op_results_in_same_solution(ok_small):
+@pytest.mark.parametrize("seed", [18, 42, 4096])
+def test_no_op_results_in_same_solution(ok_small, seed: int):
     """
     Tests that calling local search without first adding node or route
     operators is a no-op, and returns the same solution as the one that was
     given to it.
     """
-    rng = RandomNumberGenerator(seed=42)
+    rng = RandomNumberGenerator(seed=seed)
 
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
