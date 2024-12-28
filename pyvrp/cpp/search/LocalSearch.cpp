@@ -413,7 +413,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::vector<bool> keepExistingRoute(routes.size(), false);
     auto const &solRoutes = solution.routes();
 
-    // Identify LS routes that are also in the given solution.
+    // Identify routes that are also in the given solution. Those we can keep.
     for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
     {
         auto const &solRoute = solRoutes[idx];
@@ -438,7 +438,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         if (!keepExistingRoute[idx] && !routes[idx].empty())
             routes[idx].clear();
 
-    // Load only new solution routes.
+    // Load new solution routes into empty routes.
     for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
     {
         if (!isNewRoute[idx])
@@ -447,9 +447,6 @@ void LocalSearch::loadSolution(Solution const &solution)
         auto const &solRoute = solRoutes[idx];
         auto const vehicleType = solRoute.vehicleType();
 
-        // We only need to find an empty route with the same vehicle type as
-        // the given solution route. Since our routes are ordered by vehicle
-        // type, we can constrain the search space to just the relevant routes.
         auto const start = routes.begin() + vehicleOffset[vehicleType];
         auto const end = vehicleType + 1 == data.numVehicleTypes()
                              ? routes.end()
@@ -465,7 +462,7 @@ void LocalSearch::loadSolution(Solution const &solution)
         route->update();
 
         // All previous routes were not empty, and this route now is not either.
-        // Thus, if any empty routes with this vehicle type must be after route.
+        // Thus, any empty routes of this vehicle type must be after route.
         vehicleOffset[vehicleType] = std::distance(routes.begin(), route) + 1;
     }
 
