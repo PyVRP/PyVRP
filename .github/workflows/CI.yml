@@ -14,7 +14,8 @@ jobs:
   noop:
     runs-on: ubuntu-latest
     steps:
-    - name: No operation
+    - name: No-op
+      run: echo "No-op"
 
 #   build:
 #     name: >
