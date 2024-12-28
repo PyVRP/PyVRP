@@ -213,6 +213,7 @@ public:
      * @return The client or depot node at the given ``idx``.
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
+    [[nodiscard]] inline Node *operator[](size_t idx) const;
 
     // First client in the route if the route is non-empty. Else it is the
     // end depot. In either case the iterator is valid!
@@ -624,6 +625,12 @@ bool Route::hasTimeWarp() const
 size_t Route::idx() const { return idx_; }
 
 Route::Node *Route::operator[](size_t idx)
+{
+    assert(idx < nodes.size());
+    return nodes[idx];
+}
+
+Route::Node *Route::operator[](size_t idx) const
 {
     assert(idx < nodes.size());
     return nodes[idx];
